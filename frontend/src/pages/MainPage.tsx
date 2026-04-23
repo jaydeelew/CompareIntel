@@ -1,5 +1,5 @@
-import { lazy, Suspense, useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 import '../styles/hero.css'
 import '../styles/models.css'
@@ -39,7 +39,6 @@ import {
   useAuthModals,
   useBreakoutConversation,
   useGeolocation,
-  useTutorialComplete,
   useSavedSelectionsComplete,
   useMainPageEffects,
 } from '../hooks'
@@ -79,14 +78,9 @@ import {
   modelSupportsVision,
 } from '../utils/visionModels'
 
-const TutorialManagerLazy = lazy(() =>
-  import('../components/tutorial/TutorialManager').then(m => ({ default: m.TutorialManager }))
-)
-
 export function MainPage() {
   const { isAuthenticated, user, refreshUser, refreshToken, isLoading: authLoading } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
 
   const currentView = 'main'
 
@@ -179,11 +173,6 @@ export function MainPage() {
     lastSyncTimeRef,
     getFirstUserMessage,
   } = comparisonHook
-
-  const streamAnswerStarted = useMemo(
-    () => Object.values(streamAnswerStartedByModel).some(Boolean),
-    [streamAnswerStartedByModel]
-  )
 
   const setInputRef = useRef(setInput)
   setInputRef.current = setInput
@@ -353,40 +342,7 @@ export function MainPage() {
     switchResultTab,
   })
 
-  // Combined tutorial hook (replaces useTutorial + useTutorialEffects)
-  const {
-    tutorialState,
-    startTutorial,
-    skipTutorial,
-    completeStep,
-    resetTutorial: _resetTutorial,
-    showWelcomeModal,
-    setShowWelcomeModal,
-    tutorialHasCompletedComparison,
-    setTutorialHasCompletedComparison,
-    tutorialHasBreakout,
-    setTutorialHasBreakout,
-    tutorialHasSavedSelection,
-    setTutorialHasSavedSelection,
-    followUpSubmitStarted,
-  } = useTutorialComplete({
-    currentView,
-    locationPathname: location.pathname,
-    conversations,
-    isLoading,
-    isFollowUpMode,
-    isAuthenticated,
-    authLoading,
-  })
-
-  /** Once the welcome modal was shown, Navigation can tell “Start” dismiss from “never shown”. */
-  const welcomeModalEverShownRef = useRef(false)
-  if (showWelcomeModal && !isAuthenticated) {
-    welcomeModalEverShownRef.current = true
-  }
-  const [welcomeSkipFoldNonce, setWelcomeSkipFoldNonce] = useState(0)
-
-  // Trial modal state (not part of tutorial)
+  // Trial modal state
   const [showTrialWelcomeModal, setShowTrialWelcomeModal] = useState(false)
   const [pendingTrialModalAfterVerification, setPendingTrialModalAfterVerification] =
     useState(false)
@@ -412,7 +368,6 @@ export function MainPage() {
       isModelsHidden,
       isFollowUpMode,
       modelsSectionRef,
-      tutorialIsActive: tutorialState.isActive,
     },
     {
       onCollapseAllDropdowns: collapseAllDropdowns,
@@ -519,11 +474,6 @@ export function MainPage() {
       maxModelsLimit,
       response,
       conversations,
-      onSelectionSaved: () => {
-        if (tutorialState.currentStep === 'save-selection') {
-          setTutorialHasSavedSelection(true)
-        }
-      },
       modelMode,
       temperature,
       topP,
@@ -686,9 +636,7 @@ export function MainPage() {
       const isNotDisabled = !textarea.disabled
 
       if (isVisible && isNotDisabled) {
-        const hasBlockingModal = document.querySelector(
-          '.tutorial-welcome-backdrop, .tutorial-backdrop, [role="dialog"]'
-        )
+        const hasBlockingModal = document.querySelector('[role="dialog"]')
 
         if (!hasBlockingModal) {
           textarea.focus()
@@ -709,8 +657,6 @@ export function MainPage() {
     setActiveTabIndex,
     isTouchDevice,
     currentView,
-    showWelcomeModal,
-    tutorialState,
     attemptFocusTextarea,
     showHistoryDropdown,
     setShowHistoryDropdown,
@@ -1062,7 +1008,6 @@ export function MainPage() {
       setError,
       setIsModelsHidden,
       setAlreadyBrokenOutModels,
-      setTutorialHasBreakout,
     }
   )
 
@@ -1099,8 +1044,6 @@ export function MainPage() {
       setAspectRatio,
       setImageSize,
     })
-
-  // Note: Tutorial effects are now handled by useTutorialComplete hook
 
   // Anonymous credits reset listener
   useEffect(() => {
@@ -1817,20 +1760,6 @@ export function MainPage() {
     showVerificationSuccessModal,
   ])
 
-  const resetAppStateForTutorial = () => {
-    setInput('')
-    setSelectedModels([])
-    setOriginalSelectedModels([])
-    setOpenDropdowns(new Set())
-    setDefaultSelectionOverridden(true)
-    setIsFollowUpMode(false)
-    setConversations([])
-    setResponse(null)
-    setError(null)
-    setClosedCards(new Set())
-    setIsModelsHidden(false)
-  }
-
   // Track model selection changes for default override. When user deselects models,
   // hide the default selection name from the toolbar. When selectedModels is empty
   // during initial load (models still loading), do not set overridden=true so the
@@ -2271,9 +2200,6 @@ export function MainPage() {
           onSignInClick={openLogin}
           onSignUpClick={openRegister}
           hideNavThemeToggleOnMobile
-          tutorialWelcomeModalOpen={showWelcomeModal && !isAuthenticated}
-          welcomeModalEverShown={welcomeModalEverShownRef.current}
-          welcomeSkipFoldNonce={welcomeSkipFoldNonce}
         />
 
         {/* Eager load: lazy ModalManager + Vite dev could load a second React copy and break hooks in modals. */}
@@ -2390,8 +2316,6 @@ export function MainPage() {
           }}
           webSearchEnabled={webSearchEnabled}
           onWebSearchEnabledChange={setWebSearchEnabled}
-          tutorialStep={tutorialState.currentStep}
-          tutorialIsActive={tutorialState.isActive}
           modelsSectionRef={modelsSectionRef}
           creditWarningMessage={creditWarningMessage}
           creditWarningMessageRef={creditWarningMessageRef}
@@ -2425,7 +2349,6 @@ export function MainPage() {
             modelsByProvider: filteredModelsByProvider,
             allModelsByProvider: modelsByProvider,
             imageModelsDisabledForUnregistered: modelMode === 'image' && !isAuthenticated,
-            isTutorialActive: tutorialState.isActive,
             selectedModels,
             originalSelectedModels,
             openDropdowns,
@@ -2567,7 +2490,6 @@ export function MainPage() {
             isScrollLocked,
             showExportMenu,
             isMobileLayout,
-            isTutorialActive: tutorialState.isActive,
             exportMenuRef,
             onToggleScrollLock: () => setIsScrollLocked(!isScrollLocked),
             onToggleExportMenu: () => setShowExportMenu(!showExportMenu),
@@ -2584,39 +2506,6 @@ export function MainPage() {
             streamAnswerStartedByModel,
           }}
         />
-
-        <Suspense fallback={null}>
-          <TutorialManagerLazy
-            showWelcomeModal={showWelcomeModal}
-            setShowWelcomeModal={setShowWelcomeModal}
-            isAuthenticated={isAuthenticated}
-            user={user}
-            resetAppStateForTutorial={resetAppStateForTutorial}
-            startTutorial={startTutorial}
-            skipTutorial={skipTutorial}
-            isTouchDevice={isTouchDevice}
-            currentView={currentView}
-            isMobileLayout={isMobileLayout}
-            modelsByProvider={filteredModelsByProvider}
-            openDropdowns={openDropdowns}
-            selectedModels={selectedModels}
-            input={input}
-            tutorialState={tutorialState}
-            completeStep={completeStep}
-            isFollowUpMode={isFollowUpMode}
-            tutorialHasCompletedComparison={tutorialHasCompletedComparison}
-            tutorialHasBreakout={tutorialHasBreakout}
-            tutorialHasSavedSelection={tutorialHasSavedSelection}
-            showHistoryDropdown={showHistoryDropdown}
-            isLoading={isLoading}
-            streamAnswerStarted={streamAnswerStarted}
-            followUpSubmitStarted={followUpSubmitStarted}
-            setTutorialHasCompletedComparison={setTutorialHasCompletedComparison}
-            setTutorialHasBreakout={setTutorialHasBreakout}
-            setTutorialHasSavedSelection={setTutorialHasSavedSelection}
-            onTutorialWelcomeSkipped={() => setWelcomeSkipFoldNonce(n => n + 1)}
-          />
-        </Suspense>
       </>
     </div>
   )

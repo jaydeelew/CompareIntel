@@ -9,7 +9,6 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { Dispatch, ReactNode, RefObject, SetStateAction } from 'react'
 
 import { useComposerFloat } from '../../hooks/useComposerFloat'
-import type { TutorialStep } from '../../hooks/useTutorial'
 import type { CreditBalance } from '../../services/creditService'
 import type { User, ModelsByProvider } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
@@ -55,8 +54,6 @@ export interface ComparisonPageContentProps {
   fileProps: FileProps
   webSearchEnabled?: boolean
   onWebSearchEnabledChange?: (enabled: boolean) => void
-  tutorialStep?: TutorialStep | null
-  tutorialIsActive?: boolean
   modelsSectionRef?: RefObject<HTMLDivElement | null>
 
   // Credit warning
@@ -123,8 +120,6 @@ export function ComparisonPageContent({
   fileProps,
   webSearchEnabled,
   onWebSearchEnabledChange,
-  tutorialStep,
-  tutorialIsActive,
   modelsSectionRef,
   creditWarningMessage,
   creditWarningMessageRef,
@@ -148,8 +143,7 @@ export function ComparisonPageContent({
   resultsAreaProps,
 }: ComparisonPageContentProps) {
   const composerFloating = useComposerFloat(
-    showFloatingComposer !== undefined ? showFloatingComposer : showResults,
-    tutorialIsActive ?? false
+    showFloatingComposer !== undefined ? showFloatingComposer : showResults
   )
 
   const [afterResultsComposerSlotTarget, setAfterResultsComposerSlotTarget] =
@@ -213,8 +207,6 @@ export function ComparisonPageContent({
             fileProps={fileProps}
             webSearchEnabled={webSearchEnabled}
             onWebSearchEnabledChange={onWebSearchEnabledChange}
-            tutorialStep={tutorialStep}
-            tutorialIsActive={tutorialIsActive}
             modelsSectionRef={modelsSectionRef}
             composerFloating={composerFloating}
             afterResultsComposerSlotTarget={showResults ? afterResultsComposerSlotTarget : null}

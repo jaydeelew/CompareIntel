@@ -15,17 +15,8 @@ import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 
-/** Dismiss tutorial welcome modal if visible (avoids color-contrast violation in overlay during audit) */
-async function dismissTutorialIfVisible(page: Page) {
-  const modal = page.locator('.tutorial-welcome-backdrop')
-  if (!(await modal.isVisible({ timeout: 2000 }).catch(() => false))) return
-  const skipBtn = page.locator('button:has-text("Skip for Now")')
-  if (await skipBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await skipBtn.click({ timeout: 5000 }).catch(() => {})
-    await modal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
-    await page.waitForTimeout(500)
-  }
-}
+/** No-op: guest welcome and guided tutorial were removed from production. */
+async function dismissTutorialIfVisible(_page: Page) {}
 
 // Accessibility test configuration
 const _A11Y_CONFIG = {
@@ -72,7 +63,6 @@ test.describe('Accessibility Tests', () => {
     test('Homepage should meet WCAG 2.1 AA standards', async ({ page }) => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
-      // Dismiss tutorial overlay so audit runs on base homepage (overlay has separate contrast rules)
       await dismissTutorialIfVisible(page)
 
       const results = await runAccessibilityAudit(page)
@@ -177,24 +167,7 @@ test.describe('Accessibility Tests', () => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
 
-      // Dismiss tutorial overlay if present (blocks interactions)
-      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
-      if (overlayVisible) {
-        // Try to find and click skip button
-        const skipButton = page.locator(
-          '.tutorial-welcome-button-secondary, button:has-text("Skip for Now"), .tutorial-close-button, button[aria-label*="Skip"]'
-        )
-        const skipVisible = await skipButton.isVisible({ timeout: 3000 }).catch(() => false)
-        if (skipVisible) {
-          await skipButton.click({ timeout: 5000 }).catch(() => {})
-          await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
-        } else {
-          // Fallback to Escape key
-          await page.keyboard.press('Escape').catch(() => {})
-          await page.waitForTimeout(500)
-        }
-      }
+      await dismissTutorialIfVisible(page)
 
       // Open login modal
       const loginButton = page.getByRole('button', { name: /log in|sign in/i })
@@ -362,22 +335,7 @@ test.describe('Accessibility Tests', () => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
 
-      // Dismiss tutorial overlay if present
-      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
-      if (overlayVisible) {
-        const skipButton = page.locator(
-          '.tutorial-welcome-button-secondary, button:has-text("Skip for Now"), .tutorial-close-button, button[aria-label*="Skip"]'
-        )
-        const skipVisible = await skipButton.isVisible({ timeout: 3000 }).catch(() => false)
-        if (skipVisible) {
-          await skipButton.click({ timeout: 5000 }).catch(() => {})
-          await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
-        } else {
-          await page.keyboard.press('Escape').catch(() => {})
-          await page.waitForTimeout(500)
-        }
-      }
+      await dismissTutorialIfVisible(page)
 
       // Get all headings
       const headings = await page.evaluate(() => {

@@ -161,14 +161,6 @@ App.tsx (Application shell - routing only)
 | `VerificationBanner` | Prompt to verify email |
 | `ResetPassword` | Password reset flow |
 
-#### Tutorial System (`components/tutorial/`)
-
-| Component | Purpose |
-|-----------|---------|
-| `TutorialManager` | Orchestrates tutorial flow for new users |
-| `TutorialOverlay` | Highlight overlays for tutorial steps |
-| `TutorialTooltip` | Instructional tooltips |
-
 #### Shared Components (`components/shared/`)
 
 | Component | Purpose |
@@ -204,7 +196,6 @@ The hooks are organized into three categories based on their responsibility:
 | `useResponsive` | Responsive breakpoint detection |
 | `useBreakpoint` | Named breakpoint hooks (isMobile, isTablet, etc.) |
 | `useTouchDevice` | Detect touch-capable devices |
-| `useTutorial` | Tutorial state and step management |
 
 #### Feature Hooks
 
