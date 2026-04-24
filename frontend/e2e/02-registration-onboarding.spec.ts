@@ -926,9 +926,13 @@ test.describe('Registration and Onboarding', () => {
       const openUserMenu = async () => {
         if (isMobile) {
           await userMenuButton.tap({ timeout: menuClickTimeout })
+        } else if (browserName === 'firefox') {
+          // Firefox: Playwright click / keyboard often fail to run the avatar onClick; DOM click matches UserMenu toggle reliably.
+          await userMenuButton.evaluate((el: HTMLElement) => {
+            el.click()
+          })
         } else {
-          await userMenuButton.focus()
-          await userMenuButton.press('Enter')
+          await userMenuButton.click({ timeout: menuClickTimeout })
         }
       }
 
@@ -943,7 +947,13 @@ test.describe('Registration and Onboarding', () => {
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
         )
         await userMenuButton.scrollIntoViewIfNeeded().catch(() => {})
-        await userMenuButton.click({ timeout: menuClickTimeout, force: true })
+        if (browserName === 'firefox') {
+          await userMenuButton.evaluate((el: HTMLElement) => {
+            el.click()
+          })
+        } else {
+          await userMenuButton.click({ timeout: menuClickTimeout, force: true })
+        }
       }
 
       const logoutButton = page.getByTestId('logout-button')
@@ -956,9 +966,12 @@ test.describe('Registration and Onboarding', () => {
         await safeWait(page, 200)
         if (isMobile) {
           await userMenuButton.tap({ timeout: menuClickTimeout })
+        } else if (browserName === 'firefox') {
+          await userMenuButton.evaluate((el: HTMLElement) => {
+            el.click()
+          })
         } else {
-          await userMenuButton.focus()
-          await userMenuButton.press('Enter')
+          await userMenuButton.click({ timeout: menuClickTimeout })
         }
         await expect(logoutButton).toBeVisible({ timeout: logoutClickTimeout })
       }

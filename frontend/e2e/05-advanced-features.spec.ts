@@ -287,7 +287,7 @@ test.describe('Advanced Features', () => {
     })
   })
 
-  test('User can load saved model selections', async ({ authenticatedPage }) => {
+  test('User can load saved model selections', async ({ authenticatedPage, browserName }) => {
     test.setTimeout(60000) // 60 seconds for this test
     // Skip if saved selections feature is not available
     test.skip(
@@ -414,32 +414,23 @@ test.describe('Advanced Features', () => {
           await savedSelectionsButton2.first().click()
           await safeWait(authenticatedPage, 500)
 
-          // Look for the save button
-          const saveButton = authenticatedPage.locator(
-            'button:has-text("Save Current Selection"), button:has-text("Save")'
+          // Enter save mode via the add button inside the portaled dropdown (avoids global "Save" matches).
+          const addSelectionBtn = authenticatedPage.locator(
+            '.saved-selections-dropdown .saved-selections-add-btn'
           )
-          const saveButtonVisible = await saveButton.isVisible({ timeout: 5000 }).catch(() => false)
-
-          if (!saveButtonVisible) {
-            // Try alternative selector
-            const altSaveButton = authenticatedPage.getByRole('button', {
-              name: /save.*selection/i,
-            })
-            const altVisible = await altSaveButton.isVisible({ timeout: 2000 }).catch(() => false)
-            if (altVisible) {
-              await altSaveButton.click()
-            } else {
-              throw new Error('Save button not found')
-            }
-          } else {
-            await saveButton.click()
-          }
+          await expect(addSelectionBtn).toBeVisible({ timeout: 10000 })
+          await addSelectionBtn.scrollIntoViewIfNeeded().catch(() => {})
+          await addSelectionBtn.click({ timeout: 10000 })
 
           await safeWait(authenticatedPage, 500)
 
-          // Scoped class avoids matching other hidden text inputs on the page (Firefox strict visibility).
-          const nameInput = authenticatedPage.locator('.saved-selections-name-input')
-          await expect(nameInput).toBeVisible({ timeout: 5000 })
+          // Scoped to dropdown — Firefox treats off-screen / portaled inputs as not visible otherwise.
+          const nameInput = authenticatedPage.locator(
+            '.saved-selections-dropdown .saved-selections-name-input'
+          )
+          const nameInputTimeout = browserName === 'firefox' ? 15000 : 5000
+          await nameInput.scrollIntoViewIfNeeded().catch(() => {})
+          await expect(nameInput).toBeVisible({ timeout: nameInputTimeout })
           await nameInput.fill('Test Selection')
 
           // Find the specific Save button in the dialog (not the dropdown button)

@@ -691,9 +691,10 @@ test.describe('Results Display Regression Tests', () => {
           res.url().includes('/conversations/breakout') && res.status() >= 200 && res.status() < 300
 
         await breakoutBtn.scrollIntoViewIfNeeded().catch(() => {})
+        // WebKit: synthesized click is unreliable; Firefox works with Playwright click (evaluate can skip proper event paths).
         const triggerBreakout = isMobile
           ? () => breakoutBtn.tap({ timeout: 15000 })
-          : browserName === 'webkit' || browserName === 'firefox'
+          : browserName === 'webkit'
             ? () =>
                 breakoutBtn.evaluate((el: HTMLElement) => {
                   ;(el as HTMLButtonElement).click()
