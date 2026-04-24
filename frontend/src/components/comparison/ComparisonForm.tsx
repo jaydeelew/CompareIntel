@@ -1017,7 +1017,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     ? 'submit-blocked-image-config'
                     : ''
                 } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
-                data-testid="comparison-submit-button"
+                data-testid={mirror ? undefined : 'comparison-submit-button'}
                 aria-label={submitButtonAriaLabel}
                 aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
               >
@@ -1059,7 +1059,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                         ? 'submit-blocked-image-config'
                         : ''
                     } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
-                    data-testid="comparison-submit-button"
+                    data-testid={mirror ? undefined : 'comparison-submit-button'}
                     aria-label={submitButtonAriaLabel}
                     aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
                   >

@@ -394,6 +394,10 @@ test.describe('Registration and Onboarding', () => {
     await safeWait(page, 300)
 
     await test.step('Register and login', async () => {
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+      )
+      await safeWait(page, 200)
       const signUpBtn = page.getByTestId('nav-sign-up-button')
       await signUpBtn.scrollIntoViewIfNeeded().catch(() => {})
       try {
@@ -403,7 +407,7 @@ test.describe('Registration and Onboarding', () => {
         await safeWait(page, 400)
         await signUpBtn.click({ timeout: 10000, force: true })
       }
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+      await expect(page.getByTestId('auth-modal')).toBeVisible({ timeout: 15000 })
 
       await page.locator('input[type="email"]').first().fill(testEmail)
       await page.locator('input[type="password"]').first().fill(testPassword)
@@ -896,6 +900,12 @@ test.describe('Registration and Onboarding', () => {
       // Wait for button to be visible and stable before clicking (especially important for mobile)
       await expect(userMenuButton).toBeVisible({ timeout: menuClickTimeout })
 
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+      )
+      await userMenuButton.scrollIntoViewIfNeeded().catch(() => {})
+      await safeWait(page, 200)
+
       // For mobile devices, wait a bit longer to ensure button is stable
       if (isMobile) {
         await safeWait(page, 1000)
@@ -920,21 +930,16 @@ test.describe('Registration and Onboarding', () => {
         } else {
           await userMenuButton.click({ timeout: menuClickTimeout })
         }
-      } catch (error) {
+      } catch (_error) {
         if (page.isClosed()) {
           throw new Error('Page was closed during menu interaction')
         }
-        // If tap/click fails, try force click
-        if (isMobile) {
-          // Wait a bit more and try force click
-          await safeWait(page, 1000)
-          if (page.isClosed()) {
-            throw new Error('Page was closed before force click')
-          }
-          await userMenuButton.click({ timeout: menuClickTimeout, force: true })
-        } else {
-          throw error
-        }
+        await safeWait(page, 300)
+        await page.evaluate(() =>
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+        )
+        await userMenuButton.scrollIntoViewIfNeeded().catch(() => {})
+        await userMenuButton.click({ timeout: menuClickTimeout, force: true })
       }
       await safeWait(page, 1000) // Wait longer for menu to open (increased from 500ms)
 
