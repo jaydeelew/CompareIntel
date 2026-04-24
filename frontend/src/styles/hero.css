@@ -145,6 +145,13 @@
    — Keep tiles + title/subtitle in layout; hide with opacity / visibility so the hero height and
      composer position match the normal layout when toggling. */
 
+/* Full-bleed hero background can sit at the same visual position as the sticky navbar
+   (100vw width + negative margins). Disable pointer events on the section itself so clicks
+   fall through to the header beneath.  Interactive children re-enable pointer events below. */
+.hero-section.hero-section--composer-focused {
+  pointer-events: none;
+}
+
 .hero-section.hero-section--composer-focused .hero-capabilities {
   opacity: 0;
   pointer-events: none;
@@ -505,7 +512,8 @@
 }
 
 .hero-section.hero-section--composer-focused .hero-theme-toggle-mobile,
-.hero-section.hero-section--composer-focused .hero-input-section {
+.hero-section.hero-section--composer-focused .hero-input-section,
+.hero-section.hero-section--composer-focused .provider-carousel-front {
   pointer-events: auto;
 }
 

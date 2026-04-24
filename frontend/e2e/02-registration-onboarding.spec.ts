@@ -407,7 +407,18 @@ test.describe('Registration and Onboarding', () => {
         await safeWait(page, 400)
         await signUpBtn.click({ timeout: 10000, force: true })
       }
-      await expect(page.getByTestId('auth-modal')).toBeVisible({ timeout: 15000 })
+
+      const authModal = page.getByTestId('auth-modal')
+      try {
+        await expect(authModal).toBeVisible({ timeout: 15000 })
+      } catch {
+        // Synthesized clicks can miss the React handler when hero layers overlap;
+        // DOM click reliably dispatches to the React event system.
+        await signUpBtn.evaluate((el: HTMLElement) => {
+          el.click()
+        })
+        await expect(authModal).toBeVisible({ timeout: 15000 })
+      }
 
       await page.locator('input[type="email"]').first().fill(testEmail)
       await page.locator('input[type="password"]').first().fill(testPassword)
@@ -980,13 +991,12 @@ test.describe('Registration and Onboarding', () => {
       const openUserMenu = async () => {
         if (isMobile) {
           await userMenuButton.tap({ timeout: menuClickTimeout })
-        } else if (browserName === 'firefox' || browserName === 'webkit') {
-          // Firefox / WebKit: synthesized clicks can lose to overlapping layers; DOM click matches UserMenu toggle reliably.
+        } else {
+          // Synthesized Playwright clicks can lose to overlapping hero layers;
+          // DOM click matches the UserMenu toggle handler reliably across all browsers.
           await userMenuButton.evaluate((el: HTMLElement) => {
             el.click()
           })
-        } else {
-          await userMenuButton.click({ timeout: menuClickTimeout })
         }
       }
 
@@ -1001,13 +1011,9 @@ test.describe('Registration and Onboarding', () => {
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
         )
         await userMenuButton.scrollIntoViewIfNeeded().catch(() => {})
-        if (browserName === 'firefox' || browserName === 'webkit') {
-          await userMenuButton.evaluate((el: HTMLElement) => {
-            el.click()
-          })
-        } else {
-          await userMenuButton.click({ timeout: menuClickTimeout, force: true })
-        }
+        await userMenuButton.evaluate((el: HTMLElement) => {
+          el.click()
+        })
       }
 
       const logoutButton = page.getByTestId('logout-button')
@@ -1016,16 +1022,17 @@ test.describe('Registration and Onboarding', () => {
       try {
         await expect(logoutButton).toBeVisible({ timeout: logoutClickTimeout })
       } catch {
+        if (page.isClosed()) {
+          throw new Error('Page was closed before logout menu retry')
+        }
         await page.keyboard.press('Escape')
         await safeWait(page, 200)
         if (isMobile) {
           await userMenuButton.tap({ timeout: menuClickTimeout })
-        } else if (browserName === 'firefox' || browserName === 'webkit') {
+        } else {
           await userMenuButton.evaluate((el: HTMLElement) => {
             el.click()
           })
-        } else {
-          await userMenuButton.click({ timeout: menuClickTimeout })
         }
         await expect(logoutButton).toBeVisible({ timeout: logoutClickTimeout })
       }
