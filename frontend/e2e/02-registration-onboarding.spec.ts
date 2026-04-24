@@ -4,6 +4,10 @@ import { waitForAuthState, waitForReactHydration } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { test, expect } from './test-setup'
 
+type Env = Record<string, string | undefined>
+
+const env = (globalThis as typeof globalThis & { process?: { env?: Env } }).process?.env ?? {}
+
 /**
  * E2E Tests: Registration and Onboarding
  *
@@ -38,7 +42,7 @@ async function safeWait(page: Page, ms: number) {
  * New registrations are unverified; the verification modal blocks the comparison textarea in CI.
  */
 async function markUserVerifiedViaDevApi(email: string, password: string): Promise<boolean> {
-  const backendURL = process.env.BACKEND_URL || 'http://localhost:8000'
+  const backendURL = env.BACKEND_URL || 'http://localhost:8000'
   try {
     // Use fetch (same as fixtures.ts / global-setup) — Playwright APIRequestContext.post
     // has been unreliable for this endpoint in some environments.
@@ -795,9 +799,8 @@ test.describe('Registration and Onboarding', () => {
   })
 
   test('User can login with existing account', async ({ page }) => {
-    const testEmail = process.env.TEST_FREE_EMAIL || process.env.TEST_USER_EMAIL || 'free@test.com'
-    const testPassword =
-      process.env.TEST_FREE_PASSWORD || process.env.TEST_USER_PASSWORD || 'Test12345678/'
+    const testEmail = env.TEST_FREE_EMAIL || env.TEST_USER_EMAIL || 'free@test.com'
+    const testPassword = env.TEST_FREE_PASSWORD || env.TEST_USER_PASSWORD || 'Test12345678/'
 
     await test.step('Open login modal', async () => {
       // Dismiss tutorial overlay before clicking sign-in button
@@ -867,9 +870,8 @@ test.describe('Registration and Onboarding', () => {
   })
 
   test('User can logout', async ({ page, browserName }) => {
-    const testEmail = process.env.TEST_FREE_EMAIL || process.env.TEST_USER_EMAIL || 'free@test.com'
-    const testPassword =
-      process.env.TEST_FREE_PASSWORD || process.env.TEST_USER_PASSWORD || 'Test12345678/'
+    const testEmail = env.TEST_FREE_EMAIL || env.TEST_USER_EMAIL || 'free@test.com'
+    const testPassword = env.TEST_FREE_PASSWORD || env.TEST_USER_PASSWORD || 'Test12345678/'
 
     // Firefox, WebKit, and mobile devices need longer timeouts
     const isFirefox = browserName === 'firefox'
