@@ -26,21 +26,9 @@ export const MODEL_LIMITS = {
   pro_plus: 12,
 } as const
 
-// Daily Limits per Subscription Tier
+// Comparison history entries (stored conversations) per tier; must match backend HISTORY_ENTRY_LIMITS.
 
-export const DAILY_LIMITS = {
-  unregistered: 10,
-  free: 20,
-  starter: 50,
-  starter_plus: 100,
-  pro: 200,
-  pro_plus: 400,
-} as const
-
-// Conversation History Limits
-// Each conversation (with or without follow-ups) counts as 1 conversation
-
-export const CONVERSATION_LIMITS = {
+export const HISTORY_ENTRY_LIMITS = {
   unregistered: 2,
   free: 3,
   starter: 10,
@@ -61,8 +49,7 @@ export const SAVED_MODEL_SELECTION_LIMITS = {
 } as const
 
 // Credit-Based System Configuration
-// 1 credit = 1,000 effective tokens
-// Effective tokens = input_tokens + (output_tokens × 2.5)
+// Text credits follow provider cost (see docs/features/CREDIT_SYSTEM.md); token weighting is legacy fallback.
 
 // Daily credit limits for free tiers (resets daily)
 export const DAILY_CREDIT_LIMITS = {
@@ -72,24 +59,24 @@ export const DAILY_CREDIT_LIMITS = {
 
 // Monthly credit allocations for paid tiers
 export const MONTHLY_CREDIT_ALLOCATIONS = {
-  starter: 1_250,
-  starter_plus: 2_500,
-  pro: 5_000,
-  pro_plus: 10_000,
+  starter: 720,
+  starter_plus: 1_600,
+  pro: 3_300,
+  pro_plus: 6_700,
 } as const
 
-// Subscription pricing (monthly) - placeholder values, not yet established
+// Subscription pricing (monthly USD) — must match Stripe products and backend TIER_PRICING
 export const TIER_PRICING = {
   unregistered: 0.0,
   free: 0.0,
-  starter: 0,
-  starter_plus: 0,
-  pro: 0,
-  pro_plus: 0,
+  starter: 9,
+  starter_plus: 19,
+  pro: 39,
+  pro_plus: 79,
 } as const
 
-// Overage pricing (per 1,000 credits)
-export const OVERAGE_PRICE_PER_1000_CREDITS = 12.0 // TBD - overage pricing not yet established
+/** Flat USD charged per credit beyond the monthly pool (list rate; same for all paid tiers). */
+export const OVERAGE_USD_PER_CREDIT = 0.013
 
 // Type Exports
 
@@ -108,23 +95,13 @@ export function getModelLimit(tier: SubscriptionTier | string): number {
 }
 
 /**
- * Get daily model response limit for a given subscription tier.
- *
- * @param tier - Subscription tier name
- * @returns Daily limit for model responses
+ * Maximum comparison history entries for a tier (matches backend get_history_entry_limit).
  */
-export function getDailyLimit(tier: SubscriptionTier | string): number {
-  return DAILY_LIMITS[tier as SubscriptionTier] ?? DAILY_LIMITS.unregistered
-}
-
-/**
- * Get conversation history limit for a given subscription tier.
- *
- * @param tier - Subscription tier name
- * @returns Maximum number of conversations stored (each conversation counts as 1)
- */
-export function getConversationLimit(tier: SubscriptionTier | string): number {
-  return CONVERSATION_LIMITS[tier as SubscriptionTier] ?? CONVERSATION_LIMITS.unregistered
+export function getHistoryEntryLimit(tier: SubscriptionTier | string): number {
+  return (
+    HISTORY_ENTRY_LIMITS[tier as keyof typeof HISTORY_ENTRY_LIMITS] ??
+    HISTORY_ENTRY_LIMITS.unregistered
+  )
 }
 
 /**

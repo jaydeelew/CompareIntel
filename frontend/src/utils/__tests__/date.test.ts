@@ -11,6 +11,8 @@ import {
   getCurrentISODate,
   getDateDiff,
   formatLocaleDate,
+  formatCreditsResetAtPhrase,
+  formatCreditsResetAtLabel,
 } from '../date'
 
 describe('date utilities', () => {
@@ -150,6 +152,52 @@ describe('date utilities', () => {
 
     it('should return empty string for invalid dates', () => {
       expect(formatLocaleDate('invalid-date')).toBe('')
+    })
+  })
+
+  describe('formatCreditsResetAtPhrase', () => {
+    it('returns today at time when reset is later the same local day', () => {
+      const phrase = formatCreditsResetAtPhrase('2025-01-15T18:00:00Z')
+      expect(phrase).toMatch(/^today at \d/)
+    })
+
+    it('returns tomorrow at time when reset is the next local day', () => {
+      const phrase = formatCreditsResetAtPhrase('2025-01-16T12:00:00Z')
+      expect(phrase).toMatch(/^tomorrow at \d/)
+    })
+
+    it('returns N/A when reset is in the past', () => {
+      expect(formatCreditsResetAtPhrase('2025-01-10T12:00:00Z')).toBe('N/A')
+    })
+
+    it('returns N/A for invalid input', () => {
+      expect(formatCreditsResetAtPhrase('not-a-date')).toBe('N/A')
+      expect(formatCreditsResetAtPhrase(undefined)).toBe('N/A')
+    })
+
+    it('includes "on" for dates further out', () => {
+      const phrase = formatCreditsResetAtPhrase('2025-02-20T15:30:00Z')
+      expect(phrase.startsWith('on ')).toBe(true)
+      expect(phrase).toContain('at')
+    })
+
+    it('with useUtc appends UTC and uses UTC calendar', () => {
+      const phrase = formatCreditsResetAtPhrase('2025-01-15T18:00:00Z', { useUtc: true })
+      expect(phrase).toMatch(/^today at \d.* UTC$/)
+    })
+  })
+
+  describe('formatCreditsResetAtLabel', () => {
+    it('capitalizes the phrase from formatCreditsResetAtPhrase', () => {
+      const label = formatCreditsResetAtLabel('2025-01-15T18:00:00Z')
+      expect(label[0]).toBe(label[0]?.toUpperCase())
+      expect(label.toLowerCase()).toContain('today at')
+    })
+
+    it('falls back to locale string when reset is in the past', () => {
+      const label = formatCreditsResetAtLabel('2025-01-10T12:00:00Z')
+      expect(label).not.toBe('N/A')
+      expect(label.length).toBeGreaterThan(4)
     })
   })
 })

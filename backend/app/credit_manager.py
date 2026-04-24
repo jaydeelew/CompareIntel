@@ -3,6 +3,9 @@ Credit management - handles allocations, deductions, and resets.
 Uses row-level locking to handle concurrent requests safely.
 """
 
+import logging
+import math
+import time
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_CEILING, Decimal
 from typing import Any
@@ -14,12 +17,15 @@ from sqlalchemy.orm import Session
 from .config.constants import (
     DAILY_CREDIT_LIMITS,
     MONTHLY_CREDIT_ALLOCATIONS,
+    OVERAGE_USD_PER_CREDIT,
 )
 from .models import CreditTransaction, User
 
+logger = logging.getLogger(__name__)
+
 
 def get_user_credits(user_id: int, db: Session) -> int:
-    """Returns remaining credits (allocated - used)."""
+    """Returns remaining credits in the user's monthly subscription pool."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError(f"User {user_id} not found")
@@ -29,13 +35,31 @@ def get_user_credits(user_id: int, db: Session) -> int:
     return max(0, allocated - used)
 
 
+def _overage_budget_remaining(user: User) -> int:
+    """Credits still available via overage. Returns 0 when overage is off or exhausted."""
+    if not user.overage_enabled:
+        return 0
+    used = user.overage_credits_used_this_period or 0
+    if user.overage_spend_limit_cents is None:
+        return 999_999_999  # effectively unlimited
+    limit_credits = math.floor((user.overage_spend_limit_cents / 100) / OVERAGE_USD_PER_CREDIT)
+    return max(0, limit_credits - used)
+
+
 def check_credits_sufficient(user_id: int, required_credits: Decimal, db: Session) -> bool:
-    """Check if user can afford the request. Resets credits first if needed."""
+    """Check if user can afford the request (pool + overage). Resets credits first."""
     check_and_reset_credits_if_needed(user_id, db)
 
     current_credits = get_user_credits(user_id, db)
     required_int = int(required_credits.quantize(Decimal("1"), rounding=ROUND_CEILING))
-    return current_credits >= required_int
+    if current_credits >= required_int:
+        return True
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        return False
+    shortfall = required_int - current_credits
+    return _overage_budget_remaining(user) >= shortfall
 
 
 def deduct_credits(
@@ -45,49 +69,123 @@ def deduct_credits(
     db: Session,
     description: str | None = None,
 ) -> None:
-    """Deduct credits with row-level locking. Creates audit trail."""
+    """Deduct credits: monthly pool -> overage. Creates audit trail.
+
+    Overage consumption is hard-capped at ``overage_spend_limit_cents`` — any
+    actual usage beyond the cap is **absorbed by the platform** (not billed to
+    the user, not reported to Stripe) and emitted as a ``CREDIT_CAP_ABSORBED``
+    warning so the shortfall can be monitored. This protects users from being
+    charged more than the dollar ceiling they explicitly configured, which can
+    otherwise happen when the reserved-credit estimate underestimates actual
+    model output.
+    """
     credits_int = int(round(credits))
 
-    # Use row-level locking for atomic update
-    # SQLite and PostgreSQL handle this differently, so we use a generic approach
     user = db.query(User).filter(User.id == user_id).with_for_update().first()
 
     if not user:
         raise ValueError(f"User {user_id} not found")
 
-    # Calculate new credits_used_this_period
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
-    new_used = used + credits_int
 
-    # Cap credits_used_this_period at allocated amount (zero out credits, don't go negative)
-    # This allows comparisons to proceed even if they exceed remaining credits
-    if new_used > allocated:
-        user.credits_used_this_period = allocated
-        # Still track actual usage in total_credits_used for analytics
-        user.total_credits_used = (user.total_credits_used or 0) + credits_int
+    room_monthly = max(0, allocated - used)
+    take_monthly = min(credits_int, room_monthly)
+    remainder = credits_int - take_monthly
+
+    user.credits_used_this_period = used + take_monthly
+
+    overage_reported = 0
+    absorbed = 0
+    if remainder > 0:
+        if user.overage_enabled:
+            overage_room = _overage_budget_remaining(user)
+            take_overage = min(remainder, overage_room)
+            absorbed = remainder - take_overage
+            user.overage_credits_used_this_period = (
+                user.overage_credits_used_this_period or 0
+            ) + take_overage
+            overage_reported = take_overage
+            remainder = 0
+
+            if absorbed > 0:
+                limit_credits: int | None = None
+                if user.overage_spend_limit_cents is not None:
+                    limit_credits = math.floor(
+                        (user.overage_spend_limit_cents / 100) / OVERAGE_USD_PER_CREDIT
+                    )
+                logger.warning(
+                    "CREDIT_CAP_ABSORBED user_id=%s absorbed_credits=%s absorbed_usd=%.4f "
+                    "requested_credits=%s billed_credits=%s overage_limit_credits=%s "
+                    "overage_spend_limit_cents=%s overage_used_before=%s usage_log_id=%s",
+                    user_id,
+                    absorbed,
+                    absorbed * OVERAGE_USD_PER_CREDIT,
+                    credits_int,
+                    credits_int - absorbed,
+                    limit_credits,
+                    user.overage_spend_limit_cents,
+                    (user.overage_credits_used_this_period or 0) - take_overage,
+                    usage_log_id,
+                )
+        else:
+            # Overage disabled but a shortfall slipped through the admit check
+            # (e.g. race between two in-flight requests). Absorb it rather than
+            # silently inflate total_credits_used.
+            absorbed = remainder
+            remainder = 0
+            logger.warning(
+                "CREDIT_CAP_ABSORBED user_id=%s absorbed_credits=%s reason=overage_disabled "
+                "requested_credits=%s usage_log_id=%s",
+                user_id,
+                absorbed,
+                credits_int,
+                usage_log_id,
+            )
+
+    billed_int = credits_int - absorbed
+    user.total_credits_used = (user.total_credits_used or 0) + billed_int
+
+    if absorbed > 0:
+        # Record the billed amount so the ledger reconciles with Stripe / pool state.
+        credits_millicredits = billed_int * 1000
+        absorbed_usd = absorbed * OVERAGE_USD_PER_CREDIT
+        tx_description = (
+            description or f"Credits used for request ({float(credits):.4f} credits)"
+        ) + f" [cap: absorbed {absorbed} credit(s) ~${absorbed_usd:.4f} beyond overage limit]"
     else:
-        # Normal deduction - credits are sufficient
-        user.credits_used_this_period = new_used
-        user.total_credits_used = (user.total_credits_used or 0) + credits_int
+        credits_millicredits = int(credits * 1000)
+        tx_description = description or f"Credits used for request ({float(credits):.4f} credits)"
 
-    # Create credit transaction record
-    # Store exact Decimal value in transaction (as integer representing millicredits for precision)
-    credits_millicredits = int(credits * 1000)  # Store as millicredits for transaction precision
     transaction = CreditTransaction(
         user_id=user_id,
         transaction_type="usage",
-        credits_amount=-credits_millicredits,  # Negative for usage, stored as millicredits
-        description=description or f"Credits used for request ({float(credits):.4f} credits)",
+        credits_amount=-credits_millicredits,
+        description=tx_description,
         related_usage_log_id=usage_log_id,
     )
     db.add(transaction)
 
     db.commit()
 
+    if overage_reported > 0 and user.stripe_customer_id:
+        from .stripe_metering import report_overage_credits
+
+        idem_key = f"overage-{user_id}-{int(time.time() * 1000)}"
+        report_overage_credits(
+            stripe_customer_id=str(user.stripe_customer_id),
+            credits=overage_reported,
+            idempotency_key=idem_key,
+        )
+
 
 def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
-    """Allocate monthly credits based on tier. Sets up 30-day billing period."""
+    """Allocate monthly credits based on tier.
+
+    For users with ``stripe_subscription_id``, billing period boundaries and
+    ``credits_reset_at`` are owned by Stripe webhooks—this only refills the
+    monthly pool and resets usage. For everyone else, sets a 30-day window.
+    """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError(f"User {user_id} not found")
@@ -96,15 +194,19 @@ def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
     if tier in MONTHLY_CREDIT_ALLOCATIONS:
         credits = MONTHLY_CREDIT_ALLOCATIONS[tier]
 
-        # Set billing period (monthly for paid tiers)
-        now = datetime.now(UTC)
-        user.billing_period_start = now
-        user.billing_period_end = now + timedelta(days=30)
-        user.credits_reset_at = user.billing_period_end
+        if not user.stripe_subscription_id:
+            now = datetime.now(UTC)
+            user.billing_period_start = now
+            user.billing_period_end = now + timedelta(days=30)
+            user.credits_reset_at = user.billing_period_end
 
-        # Allocate credits and reset usage
+        # Allocate credits; reset usage, overage tracking, and overage
+        # preference for the new period so users opt-in fresh each cycle.
         user.monthly_credits_allocated = credits
         user.credits_used_this_period = 0
+        user.overage_credits_used_this_period = 0
+        user.overage_enabled = False
+        user.overage_spend_limit_cents = None
 
         # Create allocation transaction
         transaction = CreditTransaction(
@@ -226,7 +328,12 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
 
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
-    remaining = max(0, allocated - used)
+    pool_remaining = max(0, allocated - used)
+    # ``credits_remaining`` reflects the monthly pool only. Overage capacity is
+    # reported separately via ``overage_*`` fields so the UI never has to see
+    # the internal ``_overage_budget_remaining`` sentinel (999_999_999) used by
+    # admission/deduction logic when overage is uncapped.
+    remaining = pool_remaining
     total_used = user.total_credits_used or 0
 
     # Get reset time
@@ -246,6 +353,17 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
     else:
         period_type = "unknown"
 
+    overage_used = user.overage_credits_used_this_period or 0
+    overage_limit_credits = None
+    if user.overage_spend_limit_cents is not None:
+        overage_limit_credits = math.floor(
+            (user.overage_spend_limit_cents / 100) / OVERAGE_USD_PER_CREDIT
+        )
+
+    # When the effective IANA timezone is UTC (default or explicit), the UI should label reset
+    # times as UTC instead of implying an unknown local browser time.
+    credits_reset_shows_utc = _get_user_timezone(user) == "UTC"
+
     return {
         "credits_allocated": allocated,
         "credits_used_this_period": used,
@@ -256,6 +374,10 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
         "billing_period_end": billing_period_end.isoformat() if billing_period_end else None,
         "period_type": period_type,
         "subscription_tier": tier,
+        "overage_enabled": user.overage_enabled or False,
+        "overage_credits_used_this_period": overage_used,
+        "overage_limit_credits": overage_limit_credits,
+        "credits_reset_shows_utc": credits_reset_shows_utc,
     }
 
 
@@ -267,17 +389,24 @@ def ensure_credits_allocated(user_id: int, db: Session) -> None:
 
     tier = user.subscription_tier or "free"
 
-    # Check if credits need to be allocated
-    if user.monthly_credits_allocated is None or user.monthly_credits_allocated == 0:
-        if tier in MONTHLY_CREDIT_ALLOCATIONS:
+    # Paid monthly tiers: pool size must match tier (e.g. after Stripe upgrade, free user may still
+    # have daily limit 100 in monthly_credits_allocated until we realign).
+    if tier in MONTHLY_CREDIT_ALLOCATIONS:
+        correct_pool = MONTHLY_CREDIT_ALLOCATIONS[tier]
+        current = user.monthly_credits_allocated
+        if current is None or current != correct_pool:
             allocate_monthly_credits(user_id, tier, db)
-        elif tier in DAILY_CREDIT_LIMITS:
-            # Set daily credits and reset time based on user's timezone
-            credits = DAILY_CREDIT_LIMITS[tier]
+        return
+
+    # Daily / free tiers (including downgrade from paid: pool must match daily limit, not 720+)
+    if tier in DAILY_CREDIT_LIMITS:
+        daily = DAILY_CREDIT_LIMITS[tier]
+        current_alloc = user.monthly_credits_allocated
+        if current_alloc is None or current_alloc == 0 or current_alloc != daily:
             user_timezone = _get_user_timezone(user)
             next_midnight_utc = _get_next_local_midnight(user_timezone)
             user.credits_reset_at = next_midnight_utc
-            user.monthly_credits_allocated = credits
+            user.monthly_credits_allocated = daily
             user.credits_used_this_period = 0
             db.commit()
 
@@ -304,7 +433,8 @@ def check_and_reset_credits_if_needed(user_id: int, db: Session) -> None:
             if tier in DAILY_CREDIT_LIMITS:
                 reset_daily_credits(user_id, tier, db)
             elif tier in MONTHLY_CREDIT_ALLOCATIONS:
-                allocate_monthly_credits(user_id, tier, db)
+                if not user.stripe_subscription_id:
+                    allocate_monthly_credits(user_id, tier, db)
     else:
         # No reset time set - this could mean:
         # 1. New user who hasn't been allocated credits yet
@@ -322,7 +452,8 @@ def check_and_reset_credits_if_needed(user_id: int, db: Session) -> None:
             if tier in DAILY_CREDIT_LIMITS:
                 reset_daily_credits(user_id, tier, db)
             elif tier in MONTHLY_CREDIT_ALLOCATIONS:
-                allocate_monthly_credits(user_id, tier, db)
+                if not user.stripe_subscription_id:
+                    allocate_monthly_credits(user_id, tier, db)
         else:
             # Credits are allocated and not exhausted, but no reset time set
             # Set the reset time based on tier

@@ -164,41 +164,37 @@ class TestConfigHelpers:
 
         assert get_model_limit("unknown_tier") == 3
 
-    def test_get_daily_limit_with_tier_variations(self):
-        """Test get_daily_limit with pro+ and starter+ variations."""
-        from app.config.helpers import get_daily_limit
+    def test_get_history_entry_limit_with_tier_variations(self):
+        """Test get_history_entry_limit with pro+ and starter+ variations."""
+        from app.config.helpers import get_history_entry_limit
 
-        # Standard tier names
-        pro_plus_limit = get_daily_limit("pro_plus")
+        pro_plus_limit = get_history_entry_limit("pro_plus")
         assert pro_plus_limit > 0
+        assert get_history_entry_limit("pro+") == pro_plus_limit
+        assert get_history_entry_limit("pro +") == pro_plus_limit
+        assert get_history_entry_limit("pro-plus") == pro_plus_limit
+        assert get_history_entry_limit("starter+") == get_history_entry_limit("starter_plus")
+        assert get_history_entry_limit("starter +") == get_history_entry_limit("starter_plus")
 
-        # Tier name variations (pro+, pro +, pro-plus)
-        assert get_daily_limit("pro+") == pro_plus_limit
-        assert get_daily_limit("pro +") == pro_plus_limit
-        assert get_daily_limit("pro-plus") == pro_plus_limit
-        assert get_daily_limit("starter+") == get_daily_limit("starter_plus")
-        assert get_daily_limit("starter +") == get_daily_limit("starter_plus")
+    def test_get_history_entry_limit_none_or_empty(self):
+        """Test get_history_entry_limit with None or empty string."""
+        from app.config.helpers import get_history_entry_limit
 
-    def test_get_daily_limit_none_or_empty(self):
-        """Test get_daily_limit with None or empty string."""
-        from app.config.helpers import get_daily_limit
-
-        # Should return anonymous limit for None/empty
-        limit = get_daily_limit(None)
+        limit = get_history_entry_limit(None)
         assert limit > 0
-        assert get_daily_limit("") == limit
+        assert get_history_entry_limit("") == limit
 
-    def test_get_conversation_limit_known_tier(self):
-        """Test get_conversation_limit with known tier."""
-        from app.config.helpers import get_conversation_limit
+    def test_get_history_entry_limit_known_tier(self):
+        """Test get_history_entry_limit with known tier."""
+        from app.config.helpers import get_history_entry_limit
 
-        assert get_conversation_limit("pro") >= 0
+        assert get_history_entry_limit("pro") >= 0
 
-    def test_get_conversation_limit_unknown_defaults_to_2(self):
-        """Test get_conversation_limit with unknown tier defaults to 2."""
-        from app.config.helpers import get_conversation_limit
+    def test_get_history_entry_limit_unknown_defaults_to_unregistered(self):
+        """Unknown tier names fall back to unregistered history cap."""
+        from app.config.helpers import get_history_entry_limit
 
-        assert get_conversation_limit("unknown") == 2
+        assert get_history_entry_limit("unknown") == get_history_entry_limit("unregistered")
 
 
 class TestGetClientIp:

@@ -48,8 +48,8 @@ export const TrialExpiredBanner: React.FC<TrialExpiredBannerProps> = ({
           <strong>Your 7-day premium trial has ended.</strong>
           <span>
             {' '}
-            You now have access to free-tier models. Paid subscriptions are coming soon — stay tuned
-            to unlock all premium AI models!
+            You now have access to free-tier models. Subscribe from Account → Upgrade plan when
+            billing is enabled to regain the full premium catalog.
           </span>
         </div>
         <div className="trial-expired-actions">

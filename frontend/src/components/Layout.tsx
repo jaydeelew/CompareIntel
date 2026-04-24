@@ -12,6 +12,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { updatePageMeta } from '../utils/pageMeta'
 import { updatePageTitle } from '../utils/pageTitles'
 
+import { StripeCheckoutReturnSync } from './billing/StripeCheckoutReturnSync'
 import { Footer } from './Footer'
 import { InstallPrompt } from './layout'
 
@@ -120,6 +121,7 @@ export const Layout: React.FC = () => {
 
   return (
     <>
+      <StripeCheckoutReturnSync />
       {/* Hero provides H1 on homepage; other pages define their own */}
       <Outlet />
       <Footer />

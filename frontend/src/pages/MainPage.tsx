@@ -14,7 +14,11 @@ import {
 import { Navigation, MockModeBanner } from '../components/layout'
 import { ComparisonPageContent, ModalManager } from '../components/main-page'
 import { DoneSelectingCard } from '../components/shared'
-import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
+import {
+  getCreditAllocation,
+  getDailyCreditLimit,
+  OVERAGE_USD_PER_CREDIT,
+} from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
 import {
   useConversationHistory,
@@ -42,9 +46,9 @@ import {
   useSavedSelectionsComplete,
   useMainPageEffects,
 } from '../hooks'
-import { ApiError } from '../services/api/errors'
+import { ApiError, isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
-import { getCreditBalance } from '../services/creditService'
+import { getCreditBalance, getSpendableCreditsRemaining } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
 import { getAvailableModels } from '../services/modelsService'
 import {
@@ -55,6 +59,7 @@ import {
 } from '../types'
 import { generateBrowserFingerprint } from '../utils'
 import { removePlaceholderFromInput } from '../utils/attachmentInputUtils'
+import { BILLING_UPDATED_EVENT } from '../utils/billingSync'
 import { isErrorMessage } from '../utils/error'
 import {
   getAllKnownAspectRatios,
@@ -130,6 +135,24 @@ export function MainPage() {
   const imageConflictImpossibleDismissedKeyRef = useRef<string | null>(null)
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
+
+  /** Avoids re-running fingerprint + models init on every /auth/me object identity change. */
+  const authBillingInitKey = useMemo(() => {
+    if (!isAuthenticated || !user) return ''
+    return [
+      user.id,
+      user.subscription_tier,
+      user.monthly_credits_allocated ?? '',
+      user.billing_period_start ?? '',
+    ].join('|')
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- billing primitives only; omit `user` object to avoid refreshUser() identity churn
+  }, [
+    isAuthenticated,
+    user?.id,
+    user?.subscription_tier,
+    user?.monthly_credits_allocated,
+    user?.billing_period_start,
+  ])
 
   const { expandFiles, extractFileContentForStorage, getAttachedImagesForApi } = useFileHandling()
 
@@ -229,7 +252,7 @@ export function MainPage() {
             setError('No model data received from server')
           }
         } catch (err) {
-          if (err instanceof Error && err.name === 'CancellationError') return
+          if (isCancellationError(err)) return
           const msg = err instanceof Error ? err.message : String(err)
           logger.error('Failed to fetch models:', msg)
           setError(`Failed to fetch models: ${msg}`)
@@ -281,6 +304,8 @@ export function MainPage() {
     getCreditWarningMessage,
     isLowCreditWarningDismissed,
     dismissLowCreditWarning,
+    isOverageActiveDismissed,
+    dismissOverageActive,
   } = useCreditWarningManager()
 
   const { creditsRemaining } = useCreditsRemaining({
@@ -1055,6 +1080,7 @@ export function MainPage() {
             setAnonymousCreditsRemaining(creditBalance.credits_remaining)
             setCreditBalance(creditBalance)
           } catch (err) {
+            if (isCancellationError(err)) return
             logger.error('Failed to refresh credit balance after reset:', err)
             setAnonymousCreditsRemaining(50)
           }
@@ -1363,10 +1389,11 @@ export function MainPage() {
               setAnonymousCreditsRemaining(creditBalance.credits_remaining)
               setCreditBalance(creditBalance)
             } catch (error) {
+              if (isCancellationError(error)) return
               logger.error('Failed to fetch anonymous credit balance:', error)
             }
           } catch (error) {
-            if (error instanceof Error && error.name === 'CancellationError') {
+            if (isCancellationError(error)) {
               // Expected on unmount
             } else {
               logger.error('Failed to sync usage count from backend, using localStorage:', error)
@@ -1385,7 +1412,7 @@ export function MainPage() {
           }
         }
       } catch (error) {
-        if (error instanceof Error && error.name === 'CancellationError') {
+        if (isCancellationError(error)) {
           // Expected
         } else {
           logger.error('Failed to sync usage count with backend:', error)
@@ -1407,7 +1434,35 @@ export function MainPage() {
     initFingerprint()
 
     fetchModelsRef.current()
-  }, [isAuthenticated, user, setBrowserFingerprint, setError, setUsageCount])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by authBillingInitKey; omit `user` to avoid refreshUser() identity-only churn
+  }, [isAuthenticated, authBillingInitKey, setBrowserFingerprint, setError, setUsageCount])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    const refreshBalance = () => {
+      void (async () => {
+        try {
+          const balance = await getCreditBalance()
+          setCreditBalance(balance)
+          setUsageCount(balance.credits_used_this_period ?? 0)
+        } catch (error) {
+          if (isCancellationError(error)) return
+          logger.error('Failed to refresh credit balance:', error)
+        }
+      })()
+    }
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshBalance()
+    }
+    window.addEventListener(BILLING_UPDATED_EVENT, refreshBalance)
+    window.addEventListener('focus', refreshBalance)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      window.removeEventListener(BILLING_UPDATED_EVENT, refreshBalance)
+      window.removeEventListener('focus', refreshBalance)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [isAuthenticated, setUsageCount])
 
   // Load default selection
   useEffect(() => {
@@ -1537,6 +1592,7 @@ export function MainPage() {
             }
           })
           .catch(error => {
+            if (isCancellationError(error)) return
             logger.error('Failed to refetch anonymous credit balance:', error)
           })
       }
@@ -2004,6 +2060,7 @@ export function MainPage() {
         setCreditWarningMessage,
         setCreditWarningType,
         setCreditWarningDismissible,
+        dismissOverageActive,
       },
       helpers: {
         expandFiles,
@@ -2017,6 +2074,7 @@ export function MainPage() {
         getFirstUserMessage,
         getCreditWarningMessage,
         isLowCreditWarningDismissed,
+        isOverageActiveDismissed,
         scrollConversationsToBottom,
         refreshUser,
       },
@@ -2060,6 +2118,8 @@ export function MainPage() {
       getFirstUserMessage,
       getCreditWarningMessage,
       isLowCreditWarningDismissed,
+      isOverageActiveDismissed,
+      dismissOverageActive,
       scrollConversationsToBottom,
       refreshUser,
     ]
@@ -2104,7 +2164,7 @@ export function MainPage() {
     if (!isAuthenticated && anonymousCreditsRemaining !== null) {
       currentCreditsRemaining = anonymousCreditsRemaining
     } else if (creditBalance !== null) {
-      currentCreditsRemaining = creditBalance.credits_remaining
+      currentCreditsRemaining = getSpendableCreditsRemaining(creditBalance, userTier)
     } else if (isAuthenticated && user) {
       currentCreditsRemaining = Math.max(
         0,
@@ -2116,11 +2176,35 @@ export function MainPage() {
 
     if (currentCreditsRemaining <= 0) {
       const resetAt = creditBalance?.credits_reset_at
-      const message = getCreditWarningMessage('insufficient', userTier, 0, 0, resetAt)
+      const isPaid = !['unregistered', 'free'].includes(userTier)
+      const ovCtx = {
+        overage_enabled: creditBalance?.overage_enabled,
+        overage_credits_used_this_period: creditBalance?.overage_credits_used_this_period,
+        overage_limit_credits: creditBalance?.overage_limit_credits,
+      }
 
+      let warningType: 'overage_cap_hit' | 'none' = 'none'
+      if (
+        isPaid &&
+        ovCtx.overage_enabled &&
+        ovCtx.overage_limit_credits != null &&
+        (ovCtx.overage_credits_used_this_period ?? 0) >= ovCtx.overage_limit_credits
+      ) {
+        warningType = 'overage_cap_hit'
+      }
+
+      const message = getCreditWarningMessage(
+        warningType,
+        userTier,
+        0,
+        0,
+        resetAt,
+        ovCtx,
+        creditBalance?.credits_reset_shows_utc === true
+      )
       setError(message)
       setCreditWarningMessage(null)
-      setCreditWarningType('insufficient')
+      setCreditWarningType(warningType)
 
       return
     }
@@ -2131,6 +2215,33 @@ export function MainPage() {
   const renderUsagePreview = useCallback(() => {
     const regularToUse = selectedModels.length
 
+    const poolExhausted =
+      creditBalance !== null &&
+      (creditBalance.credits_used_this_period ?? 0) >= creditBalance.credits_allocated
+    const overageActive = poolExhausted && creditBalance?.overage_enabled === true
+    const overageUsed = creditBalance?.overage_credits_used_this_period ?? 0
+    const overageCost = (overageUsed * OVERAGE_USD_PER_CREDIT).toFixed(2)
+    const overageLimit = creditBalance?.overage_limit_credits
+
+    let creditsLabel: React.ReactNode
+    if (overageActive) {
+      const usagePart =
+        overageLimit != null
+          ? `${overageUsed.toLocaleString()} / ${overageLimit.toLocaleString()}`
+          : `${overageUsed.toLocaleString()}`
+      creditsLabel = (
+        <>
+          <strong>{usagePart}</strong> overage credits used (${overageCost})
+        </>
+      )
+    } else {
+      creditsLabel = (
+        <>
+          <strong>{Math.round(creditsRemaining)}</strong> credits remaining
+        </>
+      )
+    }
+
     return (
       <div
         style={{
@@ -2139,9 +2250,12 @@ export function MainPage() {
         }}
       >
         <span className="credits-remaining-wrapper">
-          <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected •{' '}
+          <span>
+            <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected
+            {' • '}
+          </span>
           <Link to="/faq#credits-system" className="credits-remaining-link">
-            <strong>{Math.round(creditsRemaining)}</strong> credits remaining
+            {creditsLabel}
           </Link>
           <button
             type="button"
@@ -2175,7 +2289,7 @@ export function MainPage() {
         </span>
       </div>
     )
-  }, [selectedModels, creditsRemaining, setShowCreditsInfoModal])
+  }, [selectedModels, creditsRemaining, creditBalance, setShowCreditsInfoModal])
 
   return (
     <div className="app">
@@ -2322,10 +2436,14 @@ export function MainPage() {
           creditWarningDismissible={creditWarningDismissible}
           creditBalance={creditBalance}
           onDismissCreditWarning={() => {
-            const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
-            const periodType =
-              userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
-            dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
+            if (creditWarningType === 'overage_active') {
+              dismissOverageActive(creditBalance?.credits_reset_at)
+            } else {
+              const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
+              const periodType =
+                userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
+              dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
+            }
           }}
           error={error}
           errorMessageRef={errorMessageRef}

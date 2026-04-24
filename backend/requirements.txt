@@ -182,6 +182,7 @@ regex==2025.11.3
 requests==2.33.0
     # via
     #   -r requirements.in
+    #   stripe
     #   tiktoken
 rich==14.3.3
     # via typer
@@ -211,6 +212,8 @@ starlette==0.52.1
     #   -r requirements.in
     #   fastapi
     #   fastapi-mail
+stripe==15.0.0
+    # via -r requirements.in
 tiktoken==0.12.0
     # via -r requirements.in
 tokenizers==0.22.2
@@ -243,6 +246,7 @@ typing-extensions==4.15.0
     #   pydantic-core
     #   sqlalchemy
     #   starlette
+    #   stripe
     #   typing-inspection
 typing-inspection==0.4.2
     # via

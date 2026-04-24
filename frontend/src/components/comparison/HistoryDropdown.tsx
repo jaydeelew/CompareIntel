@@ -1,4 +1,4 @@
-import { getConversationLimit } from '../../config/constants'
+import { getHistoryEntryLimit } from '../../config/constants'
 import { truncatePrompt, formatDate } from '../../utils'
 
 import type { HistoryProps } from './ComparisonFormTypes'
@@ -29,7 +29,7 @@ export function HistoryDropdown({
   if (!showHistoryDropdown) return null
 
   const userTier = isAuthenticated ? userSubscriptionTier : 'unregistered'
-  const tierLimit = getConversationLimit(userTier)
+  const tierLimit = getHistoryEntryLimit(userTier)
   const shouldShowNotification =
     (userTier === 'unregistered' || userTier === 'free') && conversationHistory.length >= tierLimit
   const maxVisibleEntries = userTier === 'unregistered' ? 2 : 3

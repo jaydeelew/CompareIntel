@@ -57,6 +57,10 @@ async def get_credit_balance(
             "billing_period_end": stats["billing_period_end"],
             "period_type": stats["period_type"],
             "subscription_tier": stats["subscription_tier"],
+            "overage_enabled": stats.get("overage_enabled", False),
+            "overage_credits_used_this_period": stats.get("overage_credits_used_this_period", 0),
+            "overage_limit_credits": stats.get("overage_limit_credits"),
+            "credits_reset_shows_utc": stats.get("credits_reset_shows_utc", False),
         }
 
     client_ip = get_client_ip(request)
@@ -173,6 +177,7 @@ async def get_credit_balance(
         "credits_remaining": credits_remaining,
         "period_type": "daily",
         "subscription_tier": "unregistered",
+        "credits_reset_shows_utc": user_timezone == "UTC",
     }
 
 

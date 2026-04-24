@@ -59,12 +59,13 @@ export const ImageGeneration: React.FC = () => {
               <tbody>
                 <tr>
                   <td>
-                    <strong>Token usage</strong> (API reports prompt + completion tokens)
+                    <strong>Usage billed as tokens</strong> (API returns cost or we estimate USD
+                    from list prices × tokens)
                   </td>
                   <td>
-                    Same rule as text: roughly <strong>1 credit per 1,000 effective tokens</strong>,
-                    where effective = input tokens + (output × 2.5). Output counts more because it
-                    is usually costlier.
+                    Same as text: <strong>fractional credits = USD × credits per dollar</strong>{' '}
+                    (100 per $1 by default), combined with other models in the run, then rounded up
+                    to whole credits.
                   </td>
                 </tr>
                 <tr>
@@ -112,10 +113,11 @@ export const ImageGeneration: React.FC = () => {
           </section>
 
           <section className="seo-section">
-            <h2>Paid Tiers Coming Soon</h2>
+            <h2>Paid plans</h2>
             <p>
-              Paid tiers will offer larger monthly credit pools using the same billing rules above.
-              Stay tuned for updates.
+              Paid tiers use your monthly credit pool (and metered overage when enabled) for image
+              generations, the same way as text comparisons, subject to the per-run model limits
+              above.
             </p>
           </section>
 

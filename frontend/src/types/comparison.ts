@@ -33,8 +33,14 @@ export interface ComparisonMetadata {
   total_input_tokens?: number
   /** Total output tokens used */
   total_output_tokens?: number
-  /** Total effective tokens used */
+  /** Legacy effective-token tally for analytics; billing is cost-based */
   total_effective_tokens?: number
+  /** Whether overages are enabled for the user at the time of the comparison */
+  overage_enabled?: boolean
+  /** Overage credits consumed this billing period (post-comparison) */
+  overage_credits_used_this_period?: number
+  /** Max overage credits allowed (null = unlimited) */
+  overage_limit_credits?: number | null
 }
 
 /**

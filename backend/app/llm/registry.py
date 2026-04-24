@@ -3,14 +3,18 @@ Model registry: JSON loading, tier filtering, OpenAI client.
 """
 
 import json
+import logging
 import re
 import sys
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 from openai import OpenAI
 
 from ..config import settings
+
+logger = logging.getLogger(__name__)
 
 _REGISTRY_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "models_registry.json"
 _OPENROUTER_MODELS_PATH = Path(__file__).resolve().parent.parent.parent / "openrouter_models.json"
@@ -31,6 +35,9 @@ _image_gen_support_cache: dict[str, bool] | None = None
 
 # Cache for pricing.image (model_id -> float, dollars per image)
 _image_price_cache: dict[str, float] | None = None
+
+# Cache for text pricing (model_id -> (prompt_usd_per_token, completion_usd_per_token))
+_text_token_price_cache: dict[str, tuple[Decimal, Decimal]] | None = None
 
 # Models that OpenRouter metadata incorrectly marks as vision-capable but the API rejects image input.
 # See: claude-3-5-haiku-20241022 description "It does not support image inputs."
@@ -353,6 +360,52 @@ def _load_image_price_map() -> dict[str, float]:
 def get_model_image_price_per_image(model_id: str) -> float | None:
     price = _load_image_price_map().get(model_id)
     return price if price and price > 0 else None
+
+
+def _load_text_token_price_map() -> dict[str, tuple[Decimal, Decimal]]:
+    global _text_token_price_cache
+    if _text_token_price_cache is not None:
+        return _text_token_price_cache
+    result: dict[str, tuple[Decimal, Decimal]] = {}
+    try:
+        if _OPENROUTER_MODELS_PATH.exists():
+            with _OPENROUTER_MODELS_PATH.open() as f:
+                data = json.load(f)
+            for model in data.get("data", []):
+                mid = model.get("id")
+                if not mid:
+                    continue
+                pricing = model.get("pricing") or {}
+                if not isinstance(pricing, dict):
+                    continue
+                try:
+                    p_raw = pricing.get("prompt")
+                    c_raw = pricing.get("completion")
+                    if p_raw is None and c_raw is None:
+                        continue
+                    p = Decimal(str(p_raw or 0))
+                    c = Decimal(str(c_raw or 0))
+                except Exception as exc:
+                    logger.debug("Skipping model %r pricing row: %s", mid, exc)
+                    continue
+                if p > 0 or c > 0:
+                    result[mid] = (p, c)
+    except Exception:
+        pass
+    _text_token_price_cache = result
+    return result
+
+
+def get_model_text_prices_per_token(model_id: str) -> tuple[Decimal, Decimal] | None:
+    """OpenRouter list prices as USD per input token and USD per output token."""
+    m = _load_text_token_price_map()
+    if model_id in m:
+        return m[model_id]
+    if ":" in model_id:
+        base = model_id.split(":")[0]
+        if base in m:
+            return m[base]
+    return None
 
 
 def get_model_returns_multiple_images(model_id: str) -> bool:

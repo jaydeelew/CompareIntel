@@ -158,7 +158,8 @@ export const TrialWelcomeModal: React.FC<TrialWelcomeModalProps> = ({
             <p>
               <strong>Note:</strong> You still have your daily limit of 100 credits per day during
               the trial. After {formatTrialEndDate(trialEndsAt)}, you'll return to free-tier model
-              access. Paid subscriptions are coming soon — stay tuned to keep using premium models!
+              access. After the trial, you can subscribe from Account → Upgrade plan when billing is
+              enabled to keep premium models.
             </p>
           </div>
         </div>

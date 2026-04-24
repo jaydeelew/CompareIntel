@@ -30,6 +30,40 @@ export interface CreditBalance {
   period_type: 'daily' | 'monthly'
   /** Subscription tier */
   subscription_tier: string
+  /** Whether overages are enabled for this user */
+  overage_enabled?: boolean
+  /** Overage credits consumed this billing period */
+  overage_credits_used_this_period?: number
+  /** Max overage credits allowed (null = unlimited) */
+  overage_limit_credits?: number | null
+  /**
+   * When true, credit reset times should be labeled as UTC (effective server timezone preference
+   * is UTC). When false, times use the browser's local zone for display.
+   */
+  credits_reset_shows_utc?: boolean
+}
+
+/**
+ * Credits the user can still spend for this billing period: monthly pool first,
+ * then metered overage when the pool is exhausted (paid tiers with overages on).
+ */
+export function getSpendableCreditsRemaining(
+  balance: CreditBalance,
+  subscriptionTier: string
+): number {
+  if (balance.credits_remaining > 0) {
+    return balance.credits_remaining
+  }
+  const isPaid = subscriptionTier !== 'unregistered' && subscriptionTier !== 'free'
+  if (!isPaid || !balance.overage_enabled) {
+    return 0
+  }
+  const used = balance.overage_credits_used_this_period ?? 0
+  const limit = balance.overage_limit_credits
+  if (limit == null) {
+    return 1
+  }
+  return Math.max(0, limit - used)
 }
 
 /**
@@ -54,7 +88,7 @@ export interface CreditUsageEntry {
   output_tokens: number | null
   /** Total tokens used */
   total_tokens: number | null
-  /** Effective tokens used */
+  /** Legacy normalized token tally (input + output×2.5) when logged; billing uses cost-based credits */
   effective_tokens: number | null
   /** Processing time in milliseconds */
   processing_time_ms: number | null
@@ -79,10 +113,14 @@ export interface CreditUsageHistory {
 /**
  * Get current credit balance
  *
+ * Caching is disabled: the balance changes after every comparison, refund, or
+ * admin adjustment. A stale cached response would make the UI show incorrect
+ * usage (e.g. overage counter frozen after the second comparison within the
+ * default 5-minute TTL window).
+ *
  * @param fingerprint - Optional browser fingerprint for unregistered users
  */
 export async function getCreditBalance(fingerprint?: string): Promise<CreditBalance> {
-  // Auto-detect timezone from browser
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const params = new URLSearchParams()
   if (fingerprint) {
@@ -91,7 +129,8 @@ export async function getCreditBalance(fingerprint?: string): Promise<CreditBala
   params.append('timezone', userTimezone)
   const queryString = params.toString()
   const response = await apiClient.get<CreditBalance>(
-    `/credits/balance${queryString ? `?${queryString}` : ''}`
+    `/credits/balance${queryString ? `?${queryString}` : ''}`,
+    { enableCache: false }
   )
   return response.data
 }

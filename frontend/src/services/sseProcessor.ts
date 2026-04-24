@@ -116,19 +116,28 @@ export interface SSEProcessorConfig {
   ) => Promise<{ credits_allocated: number; credits_remaining: number; credits_reset_at?: string }>
   refreshUser: () => Promise<void>
   getCreditWarningMessage: (
-    type: 'low' | 'insufficient' | 'none',
+    type: 'low' | 'insufficient' | 'none' | 'overage_active' | 'overage_cap_hit',
     tier: string,
     remaining: number,
     estimated?: number,
-    resetAt?: string
+    resetAt?: string,
+    overageCtx?: {
+      overage_enabled?: boolean
+      overage_credits_used_this_period?: number
+      overage_limit_credits?: number | null
+    },
+    resetShowsUtc?: boolean
   ) => string
   isLowCreditWarningDismissed: (
     tier: string,
     periodType: 'daily' | 'monthly',
     resetAt?: string
   ) => boolean
+  isOverageActiveDismissed: (resetAt?: string) => boolean
   setCreditWarningMessage: (message: string | null) => void
-  setCreditWarningType: (type: 'none' | 'low' | 'insufficient') => void
+  setCreditWarningType: (
+    type: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
+  ) => void
   setCreditWarningDismissible: (dismissible: boolean) => void
   setIsFollowUpMode: (mode: boolean) => void
   loadHistoryFromAPI: () => Promise<void>
@@ -198,6 +207,7 @@ export async function processComparisonStream(
     refreshUser,
     getCreditWarningMessage,
     isLowCreditWarningDismissed,
+    isOverageActiveDismissed,
     setCreditWarningMessage,
     setCreditWarningType,
     setCreditWarningDismissible,
@@ -569,6 +579,14 @@ export async function processComparisonStream(
                       credits_used_this_period:
                         (creditBalance.credits_allocated ?? 0) -
                         streamingMetadata.credits_remaining,
+                      overage_enabled:
+                        streamingMetadata.overage_enabled ?? creditBalance.overage_enabled,
+                      overage_credits_used_this_period:
+                        streamingMetadata.overage_credits_used_this_period ??
+                        creditBalance.overage_credits_used_this_period,
+                      overage_limit_credits:
+                        streamingMetadata.overage_limit_credits ??
+                        creditBalance.overage_limit_credits,
                     })
                   } else if (user) {
                     const allocated =
@@ -584,6 +602,10 @@ export async function processComparisonStream(
                       billing_period_start: user.billing_period_start,
                       billing_period_end: user.billing_period_end,
                       total_credits_used: user.total_credits_used,
+                      overage_enabled: streamingMetadata.overage_enabled,
+                      overage_credits_used_this_period:
+                        streamingMetadata.overage_credits_used_this_period,
+                      overage_limit_credits: streamingMetadata.overage_limit_credits,
                     })
                   }
                 }
@@ -600,8 +622,83 @@ export async function processComparisonStream(
                       userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
                     const lowCreditThreshold =
                       userTier === 'unregistered' || userTier === 'free' ? 20 : 10
+                    const isPaid = !['unregistered', 'free'].includes(userTier)
+                    const ovCtx = {
+                      overage_enabled: balance.overage_enabled,
+                      overage_credits_used_this_period: balance.overage_credits_used_this_period,
+                      overage_limit_credits: balance.overage_limit_credits,
+                    }
+                    const poolExhausted =
+                      balance.credits_remaining <= 0 ||
+                      (balance.credits_used_this_period ?? 0) >= balance.credits_allocated
 
-                    if (balance.credits_remaining <= 0) {
+                    if (isPaid && ovCtx.overage_enabled && poolExhausted) {
+                      const ovUsed = ovCtx.overage_credits_used_this_period ?? 0
+                      const ovLimit = ovCtx.overage_limit_credits
+                      if (ovLimit != null && ovUsed >= ovLimit) {
+                        setCreditWarningMessage(
+                          getCreditWarningMessage(
+                            'overage_cap_hit',
+                            userTier,
+                            0,
+                            undefined,
+                            balance.credits_reset_at,
+                            ovCtx,
+                            balance.credits_reset_shows_utc === true
+                          )
+                        )
+                        setCreditWarningType('overage_cap_hit')
+                        setCreditWarningDismissible(false)
+                        if (isFollowUpMode) setIsFollowUpMode(false)
+                      } else if (
+                        !isOverageActiveDismissed(balance.credits_reset_at) &&
+                        ovLimit != null &&
+                        ovUsed / ovLimit >= 0.8
+                      ) {
+                        setCreditWarningMessage(
+                          getCreditWarningMessage(
+                            'overage_active',
+                            userTier,
+                            0,
+                            undefined,
+                            balance.credits_reset_at,
+                            ovCtx,
+                            balance.credits_reset_shows_utc === true
+                          )
+                        )
+                        setCreditWarningType('overage_active')
+                        setCreditWarningDismissible(true)
+                      } else if (
+                        !isOverageActiveDismissed(balance.credits_reset_at) &&
+                        ovUsed > 0
+                      ) {
+                        setCreditWarningMessage(
+                          getCreditWarningMessage(
+                            'overage_active',
+                            userTier,
+                            0,
+                            undefined,
+                            balance.credits_reset_at,
+                            ovCtx,
+                            balance.credits_reset_shows_utc === true
+                          )
+                        )
+                        setCreditWarningType('overage_active')
+                        setCreditWarningDismissible(true)
+                      }
+                    } else if (balance.credits_remaining <= 0) {
+                      const msg = getCreditWarningMessage(
+                        'none',
+                        userTier,
+                        0,
+                        undefined,
+                        balance.credits_reset_at,
+                        ovCtx,
+                        balance.credits_reset_shows_utc === true
+                      )
+                      setCreditWarningMessage(msg)
+                      setCreditWarningType('none')
+                      setCreditWarningDismissible(false)
                       if (isFollowUpMode) setIsFollowUpMode(false)
                     } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
                       if (
@@ -613,7 +710,9 @@ export async function processComparisonStream(
                             userTier,
                             balance.credits_remaining,
                             undefined,
-                            balance.credits_reset_at
+                            balance.credits_reset_at,
+                            ovCtx,
+                            balance.credits_reset_shows_utc === true
                           )
                         )
                         setCreditWarningType('low')

@@ -73,6 +73,12 @@ class User(Base):
 
     # Payment integration
     stripe_customer_id = Column(String(255), index=True)
+    stripe_subscription_id = Column(String(255), index=True, nullable=True)
+
+    # Overage settings (user-controlled)
+    overage_enabled = Column(Boolean, default=False, nullable=False)
+    overage_spend_limit_cents = Column(Integer, nullable=True)
+    overage_credits_used_this_period = Column(Integer, default=0, nullable=False)
 
     # Usage tracking
     monthly_overage_count = Column(Integer, default=0)  # Track overage model responses for billing
@@ -115,10 +121,7 @@ class User(Base):
 
     @property
     def credits_remaining(self) -> int:
-        """
-        Calculate remaining credits for the current period.
-        Returns: credits_remaining = monthly_credits_allocated - credits_used_this_period
-        """
+        """Remaining subscription credits for the current billing period."""
         return max(0, (self.monthly_credits_allocated or 0) - (self.credits_used_this_period or 0))
 
     @property
@@ -301,8 +304,10 @@ class UsageLog(Base):
     input_tokens = Column(Integer)  # Input tokens used
     output_tokens = Column(Integer)  # Output tokens used
     total_tokens = Column(Integer)  # Total tokens (input + output)
-    effective_tokens = Column(Integer)  # Effective tokens = input + (output × 2.5)
-    credits_used = Column(DECIMAL(10, 4))  # Credits used (effective_tokens / 1000)
+    effective_tokens = Column(Integer)  # Legacy tally input + (output × 2.5); billing is cost-based
+    credits_used = Column(
+        DECIMAL(10, 4)
+    )  # Whole credits charged (fractional USD × CREDITS_PER_DOLLAR, rounded)
     actual_cost = Column(DECIMAL(10, 4))  # Actual cost in USD from OpenRouter
 
     # Timestamp
@@ -430,6 +435,16 @@ class CreditTransaction(Base):
     # Relationships
     user = relationship("User", back_populates="credit_transactions")
     usage_log = relationship("UsageLog", back_populates="credit_transactions")
+
+
+class ProcessedStripeWebhook(Base):
+    """One row per successfully handled Stripe webhook event (idempotency)."""
+
+    __tablename__ = "processed_stripe_webhooks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    stripe_event_id = Column(String(255), unique=True, nullable=False, index=True)
+    created_at = Column(DateTime, default=func.now())
 
 
 class UsageLogMonthlyAggregate(Base):

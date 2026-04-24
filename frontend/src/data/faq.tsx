@@ -1,6 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
+import { MONTHLY_CREDIT_ALLOCATIONS, OVERAGE_USD_PER_CREDIT } from '../config/constants'
+
 export interface FAQItemData {
   id: string
   question: string
@@ -192,9 +194,10 @@ export const faqData: FAQItemData[] = [
           tokens more heavily in pricing.
         </p>
         <p>
-          <strong>How this affects your credits:</strong> On CompareIntel, we convert token usage
-          into credits using a weighted formula. For the complete breakdown, see the{' '}
-          <a href="#credits-system">"How does the credits system work?"</a> FAQ below.
+          <strong>How this affects your credits:</strong> On CompareIntel, credits reflect what we
+          pay the provider for your request (see{' '}
+          <a href="#credits-system">"How does the credits system work?"</a>). Longer prompts and
+          outputs and more capable models generally cost more.
         </p>
       </>
     ),
@@ -376,10 +379,12 @@ export const faqData: FAQItemData[] = [
           card is required to sign up.
         </p>
         <p>
-          <strong>Paid subscription tiers are coming soon</strong> for users who need more credits
-          and access to premium AI models. Paid tiers will include Starter, Starter+, Pro, and Pro+,
-          each with increasing credit allocations, more models per comparison, and more conversation
-          history storage. Pricing will be announced when available.
+          <strong>Paid plans</strong> (Starter, Starter+, Pro, Pro+) add monthly credit pools (from{' '}
+          {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} up to{' '}
+          {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits), more models per
+          comparison, and optional pay-as-you-go usage beyond your pool when you turn it on (see{' '}
+          <Link to="/faq#pay-as-you-go-overages">pay-as-you-go overages</Link>). Subscribe from your
+          account menu (Upgrade plan) when billing is enabled on the deployment you use.
         </p>
       </>
     ),
@@ -412,8 +417,10 @@ export const faqData: FAQItemData[] = [
             comparison
           </li>
           <li>
-            <strong>Upgrade your plan:</strong> Paid plans have larger credit allocations that reset
-            monthly
+            <strong>Paid plans and overages:</strong> Larger monthly pools; if you are on a paid
+            plan you can enable optional pay-as-you-go overages in{' '}
+            <strong>Account → Settings → Billing &amp; Overages</strong> (not a prepaid credit
+            pack). See <Link to="/faq#pay-as-you-go-overages">how overages work</Link>.
           </li>
           <li>
             <strong>Shorter prompts:</strong> More concise prompts use fewer input tokens
@@ -929,10 +936,12 @@ export const faqData: FAQItemData[] = [
           Registration is quick and only requires an email address—no credit card needed.
         </p>
         <p>
-          <strong>Paid tiers (Starter, Starter+, Pro, Pro+) are coming soon.</strong> They will
-          unlock access to all premium AI models, higher credit allocations (monthly instead of
-          daily), more models per comparison (up to 12 for Pro+), and more conversation history
-          storage (up to 80 conversations for Pro+). Pricing will be announced when available.
+          <strong>Paid tiers</strong> (Starter, Starter+, Pro, Pro+) unlock premium models, monthly
+          credit allocations (
+          {`${MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()}–${MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()}`}{' '}
+          credits), up to 12 models per comparison on Pro+, and more saved conversations. Subscribe
+          from <strong>Account → Upgrade plan</strong> when Stripe checkout is configured for your
+          environment.
         </p>
       </>
     ),
@@ -943,42 +952,38 @@ export const faqData: FAQItemData[] = [
     answer: (
       <>
         <p>
-          CompareIntel uses a credit-based system that translates AI token usage into a simple,
-          predictable unit. This approach abstracts the complexity of different model pricing while
-          ensuring fair and transparent billing.
+          CompareIntel uses credits so usage stays simple on the surface while reflecting{' '}
+          <strong>real provider cost</strong>: pricier models use more credits than cheaper ones for
+          the same amount of text. Credits convert from reported API usage in USD (and published
+          list prices when needed).
         </p>
         <p>
-          <strong>The Token-to-Credit Formula:</strong>
+          <strong>How we calculate credits (text):</strong>
         </p>
         <ul>
           <li>
-            <strong>Effective Tokens</strong> = Input Tokens + (Output Tokens × 2.5)
+            We use <strong>reported cost in USD</strong> when the API provides it, scaled by a fixed
+            rate (credits per dollar).
           </li>
           <li>
-            <strong>Credits</strong> = Effective Tokens ÷ 1,000
+            If cost isn&rsquo;t present, we estimate USD from public{' '}
+            <strong>per-token list prices</strong> for that model, then apply the same
+            credits-per-dollar rate.
+          </li>
+          <li>
+            <strong>Fallback:</strong> rare models without pricing metadata still use the legacy
+            &quot;effective tokens&quot; estimate (input + output × 2.5, divided by 1,000) so usage
+            is never free by accident.
           </li>
         </ul>
         <p>
-          The 2.5× multiplier on output tokens reflects the higher computational cost of generating
-          text compared to processing input. This industry-standard weighting ensures our pricing
-          aligns with actual AI provider costs. One credit equals 1,000 effective tokens.
+          <strong>Multiple models:</strong> We add up fractional credits from every successful model
+          in one comparison, round up to whole credits, and charge at least{' '}
+          <strong>1 credit</strong> for any successful run (0 if everything failed).
         </p>
         <p>
-          <strong>Practical Example:</strong> Suppose you send a 500-word prompt (≈400 input tokens)
-          and receive a detailed 800-word response (≈600 output tokens):
-        </p>
-        <ul>
-          <li>Effective Tokens: 400 + (600 × 2.5) = 1,900</li>
-          <li>Credits (raw): 1,900 ÷ 1,000 = 1.9</li>
-          <li>
-            <strong>Credits charged: 2</strong> (rounded up to the nearest whole credit; minimum 1
-            credit per successful comparison)
-          </li>
-        </ul>
-        <p>
-          When comparing multiple models simultaneously, effective tokens are calculated separately
-          for each model's response and summed; the total is then converted to credits and rounded
-          up.
+          <strong>Images:</strong> priced from published per-image rates (or a small default) and
+          folded into the same per-request rounding when you compare image models.
         </p>
         <p>
           <strong>Credit Allocations:</strong>
@@ -990,15 +995,81 @@ export const faqData: FAQItemData[] = [
             not set).
           </li>
           <li>
-            <strong>Paid tiers:</strong> Monthly allocations from 1,250 credits (Starter) to 10,000
-            credits (Pro+). Credits reset monthly on your billing date. Additional credits can be
-            purchased if needed.
+            <strong>Paid tiers:</strong> Monthly allocations from{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} credits (Starter) to{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits (Pro+). Credits reset on
+            your Stripe billing period (or the app&apos;s billing window for your account). Optional
+            overage beyond the pool is <strong>off by default</strong> and must be turned on in
+            Settings; when enabled, extra usage is priced at{' '}
+            <strong>${OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit</strong>. See{' '}
+            <Link to="/faq#pay-as-you-go-overages">Pay-as-you-go overages</Link> for the full
+            policy. Use <strong>Account → Upgrade plan</strong> for checkout when enabled.
           </li>
         </ul>
         <p>
           <strong>Important:</strong> Credits are only deducted upon successful completion—if a
           request fails, no credits are charged. You can monitor your balance in real-time via the
           credit indicator in the interface.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'pay-as-you-go-overages',
+    question: 'How do pay-as-you-go overages work on paid plans?',
+    answer: (
+      <>
+        <p>
+          <strong>Overages</strong> let you keep comparing models after your{' '}
+          <strong>monthly credit pool</strong> is used up. They are only for{' '}
+          <strong>paid subscribers</strong> (Starter, Starter+, Pro, Pro+). Free and guest users do
+          not have overages—they use daily credits only.
+        </p>
+        <p>
+          <strong>How you turn them on:</strong> Open <strong>Account → Settings</strong>, scroll to{' '}
+          <strong>Billing &amp; Overages</strong>, and switch <strong>Enable overages</strong> on.
+          You choose one of two modes:
+        </p>
+        <ul>
+          <li>
+            <strong>No limit</strong> — After your monthly pool (and any small legacy balance on
+            your account) is used, extra usage continues at the overage rate until your current
+            billing period ends.
+          </li>
+          <li>
+            <strong>Set a spending cap</strong> — You enter a maximum dollar amount for the period.
+            The app shows roughly how many extra credits that buys. When you reach the cap,
+            comparisons stop until you raise the cap or your period resets. On the comparison page,
+            a quick action may offer to bump your cap by a small amount without opening Settings.
+          </li>
+        </ul>
+        <p>
+          <strong>What you pay:</strong> Overage is billed at{' '}
+          <strong>${OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit</strong> (same list rate for all
+          paid tiers). That rate is also shown in Settings next to the toggle.
+        </p>
+        <p>
+          <strong>Order we use your credits:</strong> Each comparison spends your{' '}
+          <strong>monthly pool first</strong>, then any <strong>legacy / account balance</strong>{' '}
+          credits if present, then <strong>overage credits</strong> if overages are on and you are
+          still under your cap.
+        </p>
+        <p>
+          <strong>New billing period:</strong> When your monthly pool refills, overages{' '}
+          <strong>turn off automatically</strong> and your overage cap is cleared. You choose again
+          if you want pay-as-you-go in the new period—so you are not silently opted into extra
+          charges after a reset.
+        </p>
+        <p>
+          <strong>Reminders in the app (no usage emails):</strong> We do not send email when you
+          cross usage thresholds. Instead you may see notices in the <strong>account menu</strong>{' '}
+          (credit and overage summary, optional burn-rate hint), on the{' '}
+          <strong>comparison page</strong> when credits are low or you are on overages, and in{' '}
+          <strong>Settings</strong>. That keeps costs visible where you are already working.
+        </p>
+        <p>
+          For how credits are calculated from model cost, see{' '}
+          <Link to="/faq#credits-system">How does the credits system work?</Link>
         </p>
       </>
     ),
@@ -1019,26 +1090,34 @@ export const faqData: FAQItemData[] = [
             3 saved model selections
           </li>
           <li>
-            <strong>Starter:</strong> 1,250 credits/month, 6 models per comparison, 10 saved
-            conversations, 5 saved model selections, access to all premium models
+            <strong>Starter:</strong> {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()}{' '}
+            credits/month, 6 models per comparison, 10 saved conversations, 5 saved model
+            selections, access to all premium models
           </li>
           <li>
-            <strong>Starter+:</strong> 2,500 credits/month, 6 models per comparison, 20 saved
-            conversations, 10 saved model selections, access to all premium models
+            <strong>Starter+:</strong> {MONTHLY_CREDIT_ALLOCATIONS.starter_plus.toLocaleString()}{' '}
+            credits/month, 6 models per comparison, 20 saved conversations, 10 saved model
+            selections, access to all premium models
           </li>
           <li>
-            <strong>Pro:</strong> 5,000 credits/month, 9 models per comparison, 40 saved
-            conversations, 15 saved model selections, access to all premium models
+            <strong>Pro:</strong> {MONTHLY_CREDIT_ALLOCATIONS.pro.toLocaleString()} credits/month, 9
+            models per comparison, 40 saved conversations, 15 saved model selections, access to all
+            premium models
           </li>
           <li>
-            <strong>Pro+:</strong> 10,000 credits/month, 12 models per comparison, 80 saved
-            conversations, 20 saved model selections, access to all premium models
+            <strong>Pro+:</strong> {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()}{' '}
+            credits/month, 12 models per comparison, 80 saved conversations, 20 saved model
+            selections, access to all premium models
           </li>
         </ul>
         <p>
-          All paid tiers include access to premium AI models that aren't available to free users.
-          Paid tiers also allow purchasing additional credits beyond your monthly allocation if
-          needed. Pricing will be announced when paid tiers launch.
+          All paid tiers include access to premium AI models that aren&apos;t available to free
+          users. Beyond the monthly pool, you can optionally enable{' '}
+          <strong>pay-as-you-go overages</strong> in{' '}
+          <strong>Account → Settings → Billing &amp; Overages</strong> (not a prepaid credit pack).
+          Overage is <strong>${OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit</strong> when enabled.
+          See <Link to="/faq#pay-as-you-go-overages">Pay-as-you-go overages</Link> for caps, resets,
+          and in-app alerts.
         </p>
       </>
     ),
@@ -1171,18 +1250,22 @@ export const faqData: FAQItemData[] = [
           <li>
             <strong>Starter and Starter+:</strong> Up to 6 models per comparison. These paid tiers
             unlock the ability to compare more models simultaneously, giving you access to all
-            premium AI models, monthly credit allocations (1,250 credits for Starter, 2,500 for
-            Starter+), and more saved conversations.
+            premium AI models, monthly credit allocations (
+            {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} credits for Starter,{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.starter_plus.toLocaleString()} for Starter+), and more saved
+            conversations.
           </li>
           <li>
-            <strong>Pro:</strong> Up to 9 models per comparison. The Pro tier provides 5,000 credits
-            per month and allows you to compare nearly double the number of models compared to free
-            tiers, making it ideal for power users who need comprehensive model comparisons.
+            <strong>Pro:</strong> Up to 9 models per comparison. The Pro tier provides{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.pro.toLocaleString()} credits per month and allows you to
+            compare nearly double the number of models compared to free tiers, making it ideal for
+            power users who need comprehensive model comparisons.
           </li>
           <li>
             <strong>Pro+:</strong> Up to 12 models per comparison. The highest tier allows you to
-            compare the maximum number of models simultaneously, with 10,000 credits per month and
-            the most generous limits for saved conversations and model selections.
+            compare the maximum number of models simultaneously, with{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits per month and the most
+            generous limits for saved conversations and model selections.
           </li>
         </ul>
         <p>

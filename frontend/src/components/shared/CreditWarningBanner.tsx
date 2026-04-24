@@ -22,11 +22,13 @@ export function CreditWarningBanner({
   return (
     <div className="error-message" ref={messageRef as React.RefObject<HTMLDivElement>}>
       <span>⚠️ {message}</span>
-      {isDismissible && creditBalance && (
-        <button className="dismiss-warning-button" onClick={onDismiss} title="Dismiss warning">
-          Dismiss
-        </button>
-      )}
+      <div className="credit-warning-actions">
+        {isDismissible && creditBalance && (
+          <button className="dismiss-warning-button" onClick={onDismiss} title="Dismiss warning">
+            Dismiss
+          </button>
+        )}
+      </div>
     </div>
   )
 }

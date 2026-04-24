@@ -363,7 +363,7 @@ export function useModelManagement({
           const upgradeMsg =
             tierName === 'Unregistered'
               ? ' Sign up for a free account to access more models, plus get a 7-day trial to all premium models!'
-              : ' Paid subscriptions are coming soon — stay tuned to access all premium models!'
+              : ' Use Account → Upgrade plan to subscribe when billing is enabled, or upgrade tier for more catalog access.'
           setError(
             `The model "${modelInfo.name}" is not available for your ${tierName} tier.${upgradeMsg}`
           )

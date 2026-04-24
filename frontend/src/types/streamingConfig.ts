@@ -59,7 +59,7 @@ export interface StreamingConversationState {
 export interface StreamingCreditState {
   creditBalance: CreditBalance | null
   anonymousCreditsRemaining: number | null
-  creditWarningType: 'none' | 'low' | 'insufficient'
+  creditWarningType: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
 }
 
 export interface StreamingRefs {
@@ -115,8 +115,11 @@ export interface StreamingCreditCallbacks {
   setAnonymousCreditsRemaining: (credits: number | null) => void
   setCreditBalance: (balance: CreditBalance | null) => void
   setCreditWarningMessage: (message: string | null) => void
-  setCreditWarningType: (type: 'none' | 'low' | 'insufficient') => void
+  setCreditWarningType: (
+    type: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
+  ) => void
   setCreditWarningDismissible: (dismissible: boolean) => void
+  dismissOverageActive: (creditsResetAt?: string) => void
 }
 
 export interface StreamingHelperCallbacks {
@@ -149,13 +152,16 @@ export interface StreamingHelperCallbacks {
     tier: string,
     remaining: number,
     estimated?: number,
-    resetAt?: string
+    resetAt?: string,
+    overageCtx?: unknown,
+    resetShowsUtc?: boolean
   ) => string
   isLowCreditWarningDismissed: (
     tier: string,
     periodType: 'daily' | 'monthly',
     resetAt?: string
   ) => boolean
+  isOverageActiveDismissed: (resetAt?: string) => boolean
   scrollConversationsToBottom: () => void
   refreshUser: () => Promise<void>
 }

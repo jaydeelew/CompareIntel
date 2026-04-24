@@ -150,6 +150,11 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
     // preventDefault defers the browser mini-infobar until we call prompt() from Install / banner.
     // In dev, skip handling so Chrome does not log "Banner not shown... must call prompt()" on every load.
     const handleBeforeInstallPrompt = (e: Event) => {
+      // In dev, deferring with preventDefault() makes Chrome log that prompt() was never shown.
+      // Production keeps the deferred custom banner; dev can use the browser's default UI or ignore.
+      if (import.meta.env.DEV) {
+        return
+      }
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
     }

@@ -6,9 +6,10 @@
  */
 
 import type { ApiErrorResponse } from '../../types/api'
+import { abortControllerWithReason } from '../../utils/abortSignal'
 import logger from '../../utils/logger'
 
-import { ApiError, NetworkError, TimeoutError } from './errors'
+import { ApiError, NetworkError, TimeoutError, isCancellationError } from './errors'
 import type {
   RequestInterceptor,
   ResponseInterceptor,
@@ -86,7 +87,9 @@ export const timeoutInterceptor: RequestInterceptor = async (url, config) => {
   const timeoutId =
     timeout > 0
       ? setTimeout(() => {
-          controller?.abort()
+          if (controller) {
+            abortControllerWithReason(controller, `Request timed out after ${timeout}ms`)
+          }
         }, timeout)
       : undefined
 
@@ -195,6 +198,9 @@ export const networkErrorInterceptor: ErrorInterceptor = async (error, config) =
  */
 export const loggingErrorInterceptor: ErrorInterceptor = async (error, config) => {
   if (import.meta.env.DEV) {
+    if (isCancellationError(error)) {
+      return error
+    }
     const status = error instanceof ApiError ? error.status : (error as { status?: number }).status
     const url = config._url || ''
 
