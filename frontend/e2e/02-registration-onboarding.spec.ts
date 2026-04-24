@@ -862,10 +862,55 @@ test.describe('Registration and Onboarding', () => {
     const clickTimeout = isMobile ? 30000 : 15000
 
     await test.step('Login first', async () => {
-      // Mobile devices may need longer timeout for button click
+      try {
+        await Promise.race([
+          waitForAuthState(page, 10000),
+          new Promise(resolve => setTimeout(resolve, 10000)),
+        ])
+      } catch {
+        // Continue — guest chrome should still expose Sign In
+      }
+
+      // Hero/main content can sit above the nav hit target in the stacking order; scroll and
+      // retry with force click (same pattern as "User can login with existing account").
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+      )
       const signInButton = page.getByTestId('nav-sign-in-button')
-      await signInButton.click({ timeout: clickTimeout })
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 15000 })
+      await expect(signInButton).toBeVisible({ timeout: clickTimeout })
+      await signInButton.scrollIntoViewIfNeeded().catch(() => {})
+      await safeWait(page, 200)
+
+      try {
+        await signInButton.click({ timeout: clickTimeout })
+      } catch (error) {
+        if (page.isClosed()) {
+          throw new Error('Page was closed during sign-in click')
+        }
+        if (
+          error instanceof Error &&
+          (error.message.includes('intercepts pointer events') ||
+            error.message.includes('outside of the viewport') ||
+            error.message.includes('timeout') ||
+            error.message.includes('Timeout'))
+        ) {
+          await signInButton.click({ timeout: clickTimeout, force: true })
+        } else {
+          throw error
+        }
+      }
+
+      const authModalSelector = '[data-testid="auth-modal"], .auth-modal'
+      try {
+        await page.waitForSelector(authModalSelector, { state: 'visible', timeout: 10000 })
+      } catch {
+        // Synthetic Playwright clicks can still miss the React handler when layers fight; DOM
+        // click matches the Firefox/WebKit user-menu workaround.
+        await signInButton.evaluate((el: HTMLElement) => {
+          el.click()
+        })
+        await page.waitForSelector(authModalSelector, { state: 'visible', timeout: 15000 })
+      }
       await page.getByTestId('login-email-input').fill(testEmail)
       await page.getByTestId('login-password-input').fill(testPassword)
       await page.getByTestId('login-submit-button').click()

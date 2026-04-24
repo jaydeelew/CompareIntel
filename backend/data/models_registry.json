@@ -100,17 +100,6 @@
         "is_thinking_model": true
       }
     ],
-    "ArceeAi": [
-      {
-        "id": "arcee-ai/trinity-large-preview:free",
-        "name": "Trinity Large Preview:Free",
-        "description": "Trinity-Large-Preview is a frontier-scale open-weight language model from Arcee, built as a 400B-parameter sparse Mixture-of-Experts with 13B active parameters per token using 4-of-256 expert routing.",
-        "category": "Language",
-        "provider": "ArceeAi",
-        "supports_web_search": true,
-        "knowledge_cutoff": null
-      }
-    ],
     "Black Forest Labs": [
       {
         "id": "black-forest-labs/flux.2-max",
@@ -1245,7 +1234,6 @@
   },
   "unregistered_tier_models": [
     "anthropic/claude-3.5-haiku",
-    "arcee-ai/trinity-large-preview:free",
     "cohere/command-r7b-12-2024",
     "deepseek/deepseek-chat-v3.1",
     "deepseek/deepseek-v3.2-exp",
