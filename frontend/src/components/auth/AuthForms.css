@@ -64,6 +64,11 @@
   color: var(--text-primary);
 }
 
+.form-group input::placeholder {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
 .form-group input:focus {
   outline: none;
   border-color: var(--primary-color);

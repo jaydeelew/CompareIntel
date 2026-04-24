@@ -14,6 +14,22 @@ import { chromium, firefox, webkit, FullConfig, Page, BrowserType } from '@playw
 /** No-op: guest welcome and guided tutorial were removed from production. */
 async function dismissTutorialOverlay(_page: Page) {}
 
+async function clickNavSignInButton(page: Page): Promise<boolean> {
+  const loginButton = page.getByTestId('nav-sign-in-button')
+  if (!(await loginButton.isVisible({ timeout: 2000 }).catch(() => false))) return false
+
+  try {
+    await loginButton.click({ timeout: 5000 })
+  } catch {
+    await loginButton.evaluate((el: HTMLElement) => {
+      ;(el as HTMLButtonElement).click()
+    })
+  }
+
+  await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+  return true
+}
+
 async function globalSetup(config: FullConfig) {
   const baseURL = config.projects[0].use.baseURL || 'http://localhost:5173'
   const backendURL = process.env.BACKEND_URL || 'http://localhost:8000'
@@ -283,11 +299,7 @@ async function globalSetup(config: FullConfig) {
     await dismissTutorialOverlay(page)
 
     // Check if admin exists by trying to login
-    const loginButton = page.getByTestId('nav-sign-in-button')
-    if (await loginButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await loginButton.click()
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
-
+    if (await clickNavSignInButton(page)) {
       // Fill login form
       await page.getByTestId('login-email-input').fill(ADMIN_EMAIL)
       await page.getByTestId('login-password-input').fill(ADMIN_PASSWORD)
@@ -578,11 +590,7 @@ async function globalSetup(config: FullConfig) {
     // Dismiss tutorial overlay again after navigation
     await dismissTutorialOverlay(page)
 
-    const testLoginButton = page.getByTestId('nav-sign-in-button')
-    if (await testLoginButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await testLoginButton.click()
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
-
+    if (await clickNavSignInButton(page)) {
       await page.getByTestId('login-email-input').fill(TEST_USER_EMAIL)
       await page.getByTestId('login-password-input').fill(TEST_USER_PASSWORD)
 

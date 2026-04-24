@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test'
 
 import { waitForAuthState, waitForReactHydration } from './fixtures'
+import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { test, expect } from './test-setup'
 
 /**
@@ -59,8 +60,47 @@ async function markUserVerifiedViaDevApi(email: string, password: string): Promi
   }
 }
 
-/** No-op: guest welcome and guided tutorial were removed from production. */
-async function dismissTutorialOverlay(_page: Page) {}
+/** Close any first-run overlays that can block form/model interactions. */
+async function dismissBlockingOnboardingOverlays(page: Page) {
+  const trialWelcomeOverlay = page.locator(
+    '.trial-welcome-overlay, [role="dialog"][aria-labelledby="trial-welcome-title"]'
+  )
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await trialWelcomeOverlay
+      .first()
+      .waitFor({ state: 'visible', timeout: 1000 })
+      .catch(() => {})
+    if (
+      !(await trialWelcomeOverlay
+        .first()
+        .isVisible()
+        .catch(() => false))
+    )
+      return
+
+    const closeTrialWelcome = page
+      .locator('.trial-welcome-button, .trial-welcome-close')
+      .filter({ visible: true })
+      .first()
+    await closeTrialWelcome
+      .evaluate((el: HTMLElement) => {
+        ;(el as HTMLButtonElement).click()
+      })
+      .catch(async () => {
+        await page.keyboard.press('Escape').catch(() => {})
+      })
+    await trialWelcomeOverlay
+      .first()
+      .waitFor({ state: 'hidden', timeout: 10000 })
+      .catch(() => {})
+    await safeWait(page, 250)
+  }
+}
+
+async function dismissTutorialOverlay(page: Page) {
+  await dismissBlockingOnboardingOverlays(page)
+}
 
 test.describe('Registration and Onboarding', () => {
   test.beforeEach(async ({ page, context, browserName }) => {
@@ -606,6 +646,7 @@ test.describe('Registration and Onboarding', () => {
         await dismissTutorialOverlay(page)
         await safeWait(page, 1500) // Wait for overlay to fully disappear (mobile Safari needs longer)
       }
+      await dismissBlockingOnboardingOverlays(page)
 
       // Expand provider dropdowns until we find enabled checkboxes (first provider may have only premium models)
       let providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
@@ -685,11 +726,24 @@ test.describe('Registration and Onboarding', () => {
           if (isEnabled) {
             if (isMobileProject || isWebKit) {
               await checkbox.scrollIntoViewIfNeeded().catch(() => {})
-              await safeWait(page, 200)
+              await dismissBlockingOnboardingOverlays(page)
             }
             // WebKit/Firefox: click() reliably fires onChange with checkbox onMouseDown preventDefault
             if (isWebKit || isFirefox) {
-              await checkbox.click({ timeout: 10000 })
+              try {
+                await checkbox.click({ timeout: 10000 })
+              } catch (error) {
+                if (
+                  error instanceof Error &&
+                  error.message.includes('trial-welcome-overlay') &&
+                  !page.isClosed()
+                ) {
+                  await dismissBlockingOnboardingOverlays(page)
+                  await checkbox.click({ timeout: 10000 })
+                } else {
+                  throw error
+                }
+              }
             } else {
               await checkbox.check({ timeout: 10000 })
             }
@@ -734,49 +788,9 @@ test.describe('Registration and Onboarding', () => {
         await safeWait(page, 300)
       }
 
-      // Submit comparison - WebKit / Firefox / mobile need longer timeout
-      const submitTimeout = isWebKit || isFirefox || isMobileProject ? 60000 : 15000
-
-      const submitButton = page.getByTestId('comparison-submit-button')
-
-      // Wait for button to be enabled (input + model selection must be valid)
-      await expect(submitButton).toBeEnabled({ timeout: submitTimeout })
-
-      // Try normal click first
-      try {
-        await submitButton.click({ timeout: submitTimeout })
-      } catch (error) {
-        if (page.isClosed()) {
-          throw new Error('Page was closed during submit')
-        }
-        // If click fails, try force click (especially for WebKit/mobile with tutorial overlay)
-        if (
-          error instanceof Error &&
-          (error.message.includes('intercepts') || error.message.includes('timeout'))
-        ) {
-          // Dismiss overlay again and try force click
-          await dismissTutorialOverlay(page)
-          await safeWait(page, 500)
-          await submitButton.click({ timeout: submitTimeout, force: true })
-        } else {
-          throw error
-        }
-      }
-
-      // Wait for results - use 'load' instead of 'networkidle' which is too strict
-      try {
-        await page.waitForLoadState('load', { timeout: 15000 })
-      } catch {
-        // If load times out, try domcontentloaded with shorter timeout
-        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {
-          // If that also fails, just continue - page is likely loaded enough
-        })
-      }
-
-      // Results should appear (longer window for WebKit / Firefox streaming + paint)
-      const results = page.locator('[data-testid^="result-card-"], .result-card, .model-response')
-      const resultsTimeout = isWebKit || isFirefox || isMobileProject ? 45000 : 30000
-      await expect(results.first()).toBeVisible({ timeout: resultsTimeout })
+      await submitAndAwaitCompareStream(page, {
+        timeoutMs: isWebKit || isFirefox || isMobileProject ? 110000 : 60000,
+      })
     })
   })
 

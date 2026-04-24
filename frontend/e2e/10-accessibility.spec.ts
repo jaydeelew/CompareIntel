@@ -18,6 +18,21 @@ import { test, expect } from '@playwright/test'
 /** No-op: guest welcome and guided tutorial were removed from production. */
 async function dismissTutorialIfVisible(_page: Page) {}
 
+async function clickLoginButton(page: Page): Promise<boolean> {
+  const loginButton = page.getByRole('button', { name: /log in|sign in/i })
+  if (!(await loginButton.isVisible())) return false
+
+  try {
+    await loginButton.click({ timeout: 5000 })
+  } catch {
+    await loginButton.evaluate((el: HTMLElement) => {
+      ;(el as HTMLButtonElement).click()
+    })
+  }
+
+  return true
+}
+
 // Accessibility test configuration
 const _A11Y_CONFIG = {
   // WCAG 2.1 Level AA compliance
@@ -170,9 +185,7 @@ test.describe('Accessibility Tests', () => {
       await dismissTutorialIfVisible(page)
 
       // Open login modal
-      const loginButton = page.getByRole('button', { name: /log in|sign in/i })
-      if (await loginButton.isVisible()) {
-        await loginButton.click()
+      if (await clickLoginButton(page)) {
         await page.waitForTimeout(500) // Wait for modal animation
 
         const results = await runAccessibilityAudit(page)

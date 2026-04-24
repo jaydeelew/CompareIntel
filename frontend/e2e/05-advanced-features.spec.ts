@@ -438,7 +438,10 @@ test.describe('Advanced Features', () => {
             'button.saved-selections-save-btn, button:has-text("Save"):not([title*="Save or load"])'
           )
           await expect(confirmButton.first()).toBeVisible({ timeout: 2000 })
-          await confirmButton.first().click()
+          await expect(confirmButton.first()).toBeEnabled({ timeout: 5000 })
+          // Firefox can see the portaled save button detach while waiting for pointer stability.
+          // Enter exercises the same save path from the focused input without racing layout.
+          await nameInput.press('Enter')
           // Wait for load state with fallback - use shorter timeout to avoid test timeout
           try {
             await authenticatedPage.waitForLoadState('load', { timeout: 5000 })
