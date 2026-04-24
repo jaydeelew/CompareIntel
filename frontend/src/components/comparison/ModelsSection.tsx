@@ -269,7 +269,7 @@ export interface ModelsSectionProps {
   }) => void
   /** When true, all models are disabled and show sign-up modal (unregistered + image mode) */
   imageModelsDisabledForUnregistered?: boolean
-  /** When true, disable info tooltips on model names (e.g. during tutorial) */
+  /** When true, disable info tooltips on model names */
   hideModelInfoTooltips?: boolean
 }
 
@@ -600,7 +600,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
 
                     const handleModelClick = () => {
                       if (isRestricted && requiresUpgrade) {
-                        // During tutorial, do not show the locked-model modal
                         if (hideModelInfoTooltips) {
                           return
                         }

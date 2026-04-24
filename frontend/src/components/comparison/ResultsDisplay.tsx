@@ -43,8 +43,6 @@ export interface ResultsDisplayProps {
   onHideOthers?: (modelId: string) => void
   onCopyMessage?: (modelId: string, messageId: string, content: string) => void
   className?: string
-  /** When true, disables card action buttons (not model tabs or formatted/raw tabs) */
-  isTutorialActive?: boolean
   streamingReasoningByModel?: Record<string, string>
   streamAnswerStartedByModel?: Record<string, boolean>
 }
@@ -68,7 +66,6 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   onHideOthers,
   onCopyMessage,
   className = '',
-  isTutorialActive = false,
   streamingReasoningByModel = {},
   streamAnswerStartedByModel = {},
 }) => {
@@ -196,7 +193,6 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               onHideOthers={onHideOthers}
               onCopyMessage={onCopyMessage}
               showBreakoutButton={visibleConversations.length > 1 && !isError}
-              isTutorialActive={isTutorialActive}
               streamingReasoning={getStreamingReasoningForModel(
                 activeConversation.modelId,
                 streamingReasoningByModel
@@ -259,7 +255,6 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               onHideOthers={onHideOthers}
               onCopyMessage={onCopyMessage}
               showBreakoutButton={visibleConversations.length > 1 && !isError}
-              isTutorialActive={isTutorialActive}
               streamingReasoning={getStreamingReasoningForModel(
                 conversation.modelId,
                 streamingReasoningByModel

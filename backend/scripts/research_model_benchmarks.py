@@ -390,7 +390,6 @@ LMSPEED_NAME_TO_MODEL_ID: dict[str, str] = {
     "claude-haiku-4-5-20251001": "anthropic/claude-haiku-4.5",
     "gpt-5-chat-latest": "openai/gpt-5-chat",
     "self-deepseek-v3.2": "deepseek/deepseek-v3.2-exp",
-    "Step-3.5-Flash": "stepfun/step-3.5-flash:free",
 }
 
 

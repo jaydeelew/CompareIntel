@@ -99,7 +99,7 @@ export interface MessageBubbleProps {
   modelName?: string
   /** Callback when copy button is clicked - receives message content */
   onCopyMessage?: (content: string) => void
-  /** When true, copy button is visible but disabled (e.g. during tutorial) */
+  /** When true, copy button is visible but disabled */
   copyButtonDisabled?: boolean
   /**
    * Image-generation models: show breathing logo while the stream has not yet produced an image URL.

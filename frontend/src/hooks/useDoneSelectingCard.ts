@@ -6,7 +6,6 @@ interface UseDoneSelectingCardProps {
   isModelsHidden: boolean
   isFollowUpMode: boolean
   modelsSectionRef: RefObject<HTMLDivElement>
-  tutorialIsActive: boolean
 }
 
 interface UseDoneSelectingCardCallbacks {
@@ -41,7 +40,6 @@ export function useDoneSelectingCard(
     isModelsHidden,
     isFollowUpMode,
     modelsSectionRef,
-    tutorialIsActive,
   } = props
 
   const { onCollapseAllDropdowns, onSetIsModelsHidden, onFocusTextarea } = callbacks
@@ -324,7 +322,7 @@ export function useDoneSelectingCard(
   }, [])
 
   return {
-    showDoneSelectingCard: showDoneSelectingCard && !tutorialIsActive,
+    showDoneSelectingCard,
     setShowDoneSelectingCard,
     handleDoneSelecting,
     handleDismissDoneSelecting,

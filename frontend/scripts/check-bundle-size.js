@@ -151,7 +151,6 @@ function checkBundleSize() {
     'vendor-files',  // pdfjs-dist, mammoth (loaded on file upload)
     'vendor-export', // html2canvas, jspdf (loaded on PDF export)
     'pages',         // Page components (loaded on route navigation)
-    'tutorial',      // Tutorial components (loaded when tutorial starts)
     'AdminPanel',    // Admin panel (loaded on /admin route)
     'latex-renderer', // LaTeX renderer (loaded when needed)
   ];

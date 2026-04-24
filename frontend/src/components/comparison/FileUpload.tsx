@@ -31,7 +31,7 @@ export interface FileUploadProps {
   disabled?: boolean
   /** When true, mobile-specific behavior (and no desktop hover tooltip path) */
   isMobileLayout?: boolean
-  /** When true, desktop hover tooltip on the attach button is hidden (e.g. during tutorial) */
+  /** When true, desktop hover tooltip on the attach button is hidden */
   hideTooltip?: boolean
   /** When true with tooltip visible, render tooltip in a portal (avoids composer overflow clipping) */
   tooltipUsePortal?: boolean

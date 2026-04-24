@@ -52,8 +52,6 @@ export interface ModelSearchProps {
     modelName?: string
     imageMode?: boolean
   }) => void
-  /** When true, restricted models do not open the upgrade modal on click */
-  isTutorialActive?: boolean
 }
 
 export function ModelSearch({
@@ -68,7 +66,6 @@ export function ModelSearch({
   maxModelsLimit,
   imageModelsDisabledForUnregistered = false,
   onShowDisabledModelModal,
-  isTutorialActive = false,
 }: ModelSearchProps) {
   const uid = useId()
   const listboxId = `${uid}-listbox`
@@ -122,7 +119,7 @@ export function ModelSearch({
       if (model.available === false) return
 
       if (imageModelsDisabledForUnregistered) {
-        if (!isTutorialActive && onShowDisabledModelModal) {
+        if (onShowDisabledModelModal) {
           onShowDisabledModelModal({
             userTier: 'unregistered',
             modelTierAccess: model.tier_access === 'paid' ? 'paid' : 'free',
@@ -136,7 +133,7 @@ export function ModelSearch({
       const restricted = isModelRestrictedForUser(model, userTier, isPaidTier)
       const requiresUpgrade = restricted && (userTier === 'unregistered' || userTier === 'free')
       if (requiresUpgrade) {
-        if (!isTutorialActive && onShowDisabledModelModal) {
+        if (onShowDisabledModelModal) {
           onShowDisabledModelModal({
             userTier: userTier as 'unregistered' | 'free',
             modelTierAccess: model.tier_access === 'paid' ? 'paid' : 'free',
@@ -164,7 +161,6 @@ export function ModelSearch({
       disabled,
       selectedModels,
       imageModelsDisabledForUnregistered,
-      isTutorialActive,
       onShowDisabledModelModal,
       userTier,
       isPaidTier,

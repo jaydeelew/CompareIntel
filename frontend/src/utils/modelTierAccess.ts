@@ -91,28 +91,3 @@ export function isModelIdSelectableForAccessContext(
   }
   return false
 }
-
-/** Provider display name as in `modelsByProvider` / tutorial targets. */
-const GOOGLE_PROVIDER_NAME = 'Google'
-
-/**
- * How many of the current selection are Google models the user may select (same rules as the model picker).
- * Used by the onboarding tutorial: advance after the user picks two such models.
- */
-export function countSelectableGoogleModelsInSelection(
-  selectedModels: string[],
-  modelsByProvider: ModelsByProvider,
-  isAuthenticated: boolean,
-  user: User | null
-): number {
-  const googleModels = modelsByProvider[GOOGLE_PROVIDER_NAME]
-  if (!googleModels?.length) return 0
-  const { userTier, isPaidTier } = getUserTierInfo(isAuthenticated, user)
-  const selectable = new Set(
-    googleModels
-      .filter(m => m.available !== false)
-      .filter(m => !isModelRestrictedForUser(m, userTier, isPaidTier))
-      .map(m => String(m.id))
-  )
-  return selectedModels.filter(id => selectable.has(String(id))).length
-}

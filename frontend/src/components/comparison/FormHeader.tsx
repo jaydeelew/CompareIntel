@@ -6,7 +6,6 @@ export interface FormHeaderProps {
   isFollowUpMode: boolean
   selectedModels: string[]
   isLoading: boolean
-  tutorialIsActive?: boolean
   onNewComparison: () => void
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
   /** When provided and no models selected, scrolls to models, expands section, opens Help me choose */
@@ -50,19 +49,10 @@ export function FormHeader({
   isFollowUpMode,
   selectedModels,
   isLoading,
-  tutorialIsActive,
   onNewComparison,
   modelsSectionRef,
   onOpenHelpMeChoose,
 }: FormHeaderProps) {
-  const onNewInquiryClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (tutorialIsActive) {
-      e.preventDefault()
-      return
-    }
-    onNewComparison()
-  }
-
   return (
     <div
       className="follow-up-header"
@@ -73,10 +63,11 @@ export function FormHeader({
           <h2 style={{ margin: 0 }}>Start over ➜</h2>
           <button
             type="button"
-            onClick={onNewInquiryClick}
+            onClick={onNewComparison}
             className="textarea-icon-button new-inquiry-button"
             disabled={isLoading}
             aria-label="Exit follow up mode"
+            data-testid="exit-follow-up-button"
           >
             {NEW_INQUIRY_ICON}
           </button>

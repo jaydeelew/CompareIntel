@@ -15,7 +15,6 @@ import { createPortal } from 'react-dom'
 import { BREAKPOINT_MOBILE } from '../../config/constants'
 import { HELP_ME_CHOOSE_CATEGORY_IMAGES_ID } from '../../data/helpMeChooseRecommendations'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
-import type { TutorialStep } from '../../hooks/useTutorial'
 import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { showNotification } from '../../utils/error'
@@ -66,8 +65,6 @@ interface ComparisonFormProps {
   fileProps: FileProps
   webSearchEnabled?: boolean
   onWebSearchEnabledChange?: (enabled: boolean) => void
-  tutorialStep?: TutorialStep | null
-  tutorialIsActive?: boolean
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
   composerFloating?: boolean
   /** Portals the “below hero” composer into this node (after results, before footer). Mobile: in-flow; desktop: fixed draggable + flow spacer. */
@@ -110,8 +107,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     fileProps,
     webSearchEnabled: webSearchEnabledProp,
     onWebSearchEnabledChange,
-    tutorialStep,
-    tutorialIsActive = false,
     modelsSectionRef,
     composerFloating = false,
     afterResultsComposerSlotTarget = null,
@@ -120,12 +115,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     imageGenerationNoSharedImageOptions = false,
     onImageGenerationSubmitBlockedTap,
   }) => {
-    const blockPromptStepForTutorial =
-      tutorialIsActive && (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
-
-    const allowHeroMirrorTutorialPointer =
-      tutorialIsActive && (tutorialStep === 'history-dropdown' || tutorialStep === 'save-selection')
-
     const { showHistoryDropdown, setShowHistoryDropdown } = historyProps
     const { attachedFiles, setAttachedFiles, onExpandFiles, onRemoveAttachedImages } = fileProps
 
@@ -150,8 +139,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       useResponsive()
     /** Touch-first toolbar (tap modals, no hover tooltips). False when viewport is wide or when user has a mouse on a narrow viewport. */
     const useTouchFirstComposerChrome = isMobileLayout && !prefersFinePointerHover
-    const showComposerStyledTooltips =
-      (!isMobileLayout || prefersFinePointerHover) && !tutorialIsActive
+    const showComposerStyledTooltips = !isMobileLayout || prefersFinePointerHover
 
     const [tokenUsageInfo, setTokenUsageInfo] = useState<TokenUsageInfo | null>(null)
     const [disabledButtonInfo, setDisabledButtonInfo] = useState<{
@@ -457,15 +445,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     ])
 
     useEffect(() => {
-      if (!isTouchDevice && !tutorialStep && textareaRef.current) {
+      if (!isTouchDevice && textareaRef.current) {
         const attemptFocus = () => {
           const textarea = textareaRef.current
           if (!textarea) return false
           const rect = textarea.getBoundingClientRect()
           if (rect.width > 0 && rect.height > 0 && !textarea.disabled) {
-            const hasBlockingModal = document.querySelector(
-              '.tutorial-welcome-backdrop, .tutorial-backdrop, [role="dialog"]'
-            )
+            const hasBlockingModal = document.querySelector('[role="dialog"]')
             if (!hasBlockingModal) {
               textarea.focus()
               return true
@@ -482,7 +468,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           return () => clearTimeout(t1)
         })
       }
-    }, [isTouchDevice, tutorialStep, textareaRef])
+    }, [isTouchDevice, textareaRef])
 
     useEffect(() => {
       let resizeTimeout: ReturnType<typeof setTimeout>
@@ -628,7 +614,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 : e => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault()
-                      if (blockPromptStepForTutorial) return
                       if (submitImageConfigBlocked && !hardSubmitDisabled) {
                         onImageGenerationSubmitBlockedTap?.()
                         return
@@ -756,7 +741,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 onExpandFiles={onExpandFiles}
                 onAccurateTokenCountChange={onAccurateTokenCountChange}
                 onTokenUsageInfoChange={setTokenUsageInfo}
-                tutorialIsActive={tutorialIsActive}
                 hideTooltip={!showComposerStyledTooltips}
                 tooltipUsePortal={showComposerStyledTooltips}
                 isMobileLayout={useTouchFirstComposerChrome}
@@ -1016,7 +1000,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             {useTouchFirstComposerChrome ? (
               <button
                 onClick={() => {
-                  if (blockPromptStepForTutorial) return
                   if (submitImageConfigBlocked && !hardSubmitDisabled) {
                     onImageGenerationSubmitBlockedTap?.()
                     return
@@ -1034,7 +1017,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     ? 'submit-blocked-image-config'
                     : ''
                 } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
-                data-testid="comparison-submit-button"
+                data-testid={mirror ? undefined : 'comparison-submit-button'}
                 aria-label={submitButtonAriaLabel}
                 aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
               >
@@ -1060,7 +1043,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 const submitButton = (
                   <button
                     onClick={() => {
-                      if (blockPromptStepForTutorial) return
                       if (submitImageConfigBlocked && !hardSubmitDisabled) {
                         onImageGenerationSubmitBlockedTap?.()
                         return
@@ -1077,7 +1059,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                         ? 'submit-blocked-image-config'
                         : ''
                     } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
-                    data-testid="comparison-submit-button"
+                    data-testid={mirror ? undefined : 'comparison-submit-button'}
                     aria-label={submitButtonAriaLabel}
                     aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
                   >
@@ -1149,7 +1131,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           isFollowUpMode={isFollowUpMode}
           selectedModels={selectedModels}
           isLoading={isLoading}
-          tutorialIsActive={tutorialIsActive}
           onNewComparison={onNewComparison}
           modelsSectionRef={modelsSectionRef}
           onOpenHelpMeChoose={onOpenHelpMeChoose}
@@ -1165,7 +1146,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           isFollowUpMode={isFollowUpMode}
           selectedModels={selectedModels}
           isLoading={isLoading}
-          tutorialIsActive={tutorialIsActive}
           onNewComparison={onNewComparison}
           modelsSectionRef={modelsSectionRef}
           onOpenHelpMeChoose={onOpenHelpMeChoose}
@@ -1179,15 +1159,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       <>
         {composerFloating ? (
           <>
-            <div
-              className={
-                allowHeroMirrorTutorialPointer
-                  ? 'composer-hero-mirror composer-hero-mirror--tutorial-pointer'
-                  : 'composer-hero-mirror'
-              }
-              inert={allowHeroMirrorTutorialPointer ? undefined : ''}
-              aria-hidden={!allowHeroMirrorTutorialPointer}
-            >
+            <div className="composer-hero-mirror" inert="" aria-hidden>
               {heroMirrorUnit}
             </div>
             {afterResultsPortalHost

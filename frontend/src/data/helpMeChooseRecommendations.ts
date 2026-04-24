@@ -117,7 +117,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'z-ai/glm-4.7', evidence: 'LMSpeed (lmspeed.net): 154 t/s.' },
       { modelId: 'qwen/qwen3-coder-next', evidence: 'LMSpeed (lmspeed.net): 147 t/s.' },
       { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'LMSpeed (lmspeed.net): 138 t/s.' },
-      { modelId: 'stepfun/step-3.5-flash:free', evidence: 'LMSpeed (lmspeed.net): 133 t/s.' },
+      { modelId: 'sourceful/riverflow-v2-fast', evidence: 'LMSpeed (lmspeed.net): 133 t/s.' },
       { modelId: 'x-ai/grok-4-fast', evidence: 'LMSpeed (lmspeed.net): 124 t/s.' },
       { modelId: 'qwen/qwen3-next-80b-a3b-instruct', evidence: 'LMSpeed (lmspeed.net): 116 t/s.' },
       { modelId: 'x-ai/grok-4', evidence: 'LMSpeed (lmspeed.net): 111 t/s.' },

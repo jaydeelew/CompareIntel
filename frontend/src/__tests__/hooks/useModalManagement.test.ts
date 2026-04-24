@@ -43,7 +43,6 @@ describe('useModalManagement', () => {
       expect(result.current.showVerificationSuccessModal).toBe(false)
       expect(result.current.showPasswordReset).toBe(false)
       expect(result.current.showTrialWelcomeModal).toBe(false)
-      expect(result.current.showWelcomeModal).toBe(false)
       expect(result.current.showPremiumModelsToggleModal).toBe(false)
       expect(result.current.disabledButtonInfo.button).toBe(null)
     })
@@ -212,22 +211,6 @@ describe('useModalManagement', () => {
         result.current.closeTrialWelcomeModal()
       })
       expect(result.current.showTrialWelcomeModal).toBe(false)
-    })
-  })
-
-  describe('Welcome Modal', () => {
-    it('should set welcome modal visibility', () => {
-      const { result } = renderHook(() => useModalManagement())
-
-      act(() => {
-        result.current.setShowWelcomeModal(true)
-      })
-      expect(result.current.showWelcomeModal).toBe(true)
-
-      act(() => {
-        result.current.setShowWelcomeModal(false)
-      })
-      expect(result.current.showWelcomeModal).toBe(false)
     })
   })
 

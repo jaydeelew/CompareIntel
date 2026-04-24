@@ -37,8 +37,6 @@ export interface ResultCardProps {
   /** Inline style for mobile tabbed display toggle */
   style?: React.CSSProperties
   className?: string
-  /** When true, disables card action buttons (screenshot, copy, close, breakout, hide others, copy message) - not formatted/raw tabs */
-  isTutorialActive?: boolean
   /** Ephemeral streamed reasoning for the latest turn (not persisted). */
   streamingReasoning?: string
   /** True once visible answer tokens have arrived for this model in the current stream. */
@@ -64,7 +62,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   breakoutClassName = '',
   style,
   className = '',
-  isTutorialActive = false,
   streamingReasoning = '',
   streamAnswerStarted = false,
 }) => {
@@ -109,7 +106,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               <StyledTooltip usePortal text="Copy formatted chat history">
                 <button
                   className="screenshot-card-btn"
-                  disabled={isTutorialActive}
                   onClick={e => {
                     onScreenshot(modelId)
                     e.currentTarget.blur()
@@ -137,7 +133,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               <StyledTooltip usePortal text="Copy raw chat history">
                 <button
                   className="copy-response-btn"
-                  disabled={isTutorialActive}
                   onClick={() => onCopyResponse(modelId)}
                   aria-label={`Copy raw chat history from ${model?.name || modelId}`}
                 >
@@ -161,7 +156,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               <StyledTooltip usePortal text="Hide all other results">
                 <button
                   className="hide-others-btn"
-                  disabled={isTutorialActive}
                   onClick={() => onHideOthers(modelId)}
                   aria-label={`Hide all other results except ${model?.name || modelId}`}
                 >
@@ -188,12 +182,11 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 <button
                   type="button"
                   className="close-card-btn"
-                  disabled={isTutorialActive}
                   onClick={() => onClose(modelId)}
                   onTouchEnd={e => {
                     // Safari iOS / WebKit mobile: same pattern as breakout — tap often misses click().
                     e.preventDefault()
-                    if (!isTutorialActive) onClose(modelId)
+                    onClose(modelId)
                   }}
                   aria-label={`Hide result for ${model?.name || modelId}`}
                 >
@@ -218,7 +211,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 <button
                   type="button"
                   className="breakout-card-btn"
-                  disabled={isTutorialActive}
                   data-testid="breakout-button"
                   onClick={e => {
                     onBreakout(modelId)
@@ -228,7 +220,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                     // Safari iOS: click often doesn't fire when finger moves slightly during tap.
                     // Handle touch directly; preventDefault stops synthesized click (avoids double-fire).
                     e.preventDefault()
-                    if (!isTutorialActive) onBreakout(modelId)
+                    onBreakout(modelId)
                   }}
                   aria-label={`Break out conversation with ${model?.name || modelId}`}
                 >
@@ -312,7 +304,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 onCopyMessage={
                   onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
                 }
-                copyButtonDisabled={isTutorialActive}
               />
             </React.Fragment>
           )
