@@ -586,45 +586,17 @@ test.describe('Authenticated User Comparison Flow', () => {
     })
 
     await test.step('Start new comparison', async () => {
-      // Wait for comparison to complete and follow-up mode to activate
-      await authenticatedPage.waitForTimeout(2000)
-
-      // Look for "New Comparison" button (appears in follow-up mode)
-      // Or the clear-all-button if models are selected
+      // Follow-up header + "Exit follow up" control mount after streaming settles; CI can exceed 3s.
       const newComparisonButton = authenticatedPage
         .locator(
           'button.new-inquiry-button, button[title*="Exit follow up"], button[aria-label*="Exit follow up"]'
         )
         .first()
 
-      const clearAllButton = authenticatedPage.locator('button.clear-all-button').first()
-
-      // Try new comparison button first (follow-up mode)
-      const hasNewComparisonButton = await newComparisonButton
-        .isVisible({ timeout: 3000 })
-        .catch(() => false)
-
-      if (hasNewComparisonButton) {
-        // Wait for button to be enabled (not loading)
-        await expect(newComparisonButton).toBeEnabled({ timeout: 10000 })
-        await newComparisonButton.click()
-        await authenticatedPage.waitForLoadState('networkidle')
-      } else {
-        // If not in follow-up mode, try clearing models and input manually
-        // Clear input field
-        const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
-        await inputField.clear()
-
-        // Clear model selections if clear button is enabled
-        const isClearButtonEnabled = await clearAllButton
-          .isEnabled({ timeout: 2000 })
-          .catch(() => false)
-
-        if (isClearButtonEnabled) {
-          await clearAllButton.click()
-          await authenticatedPage.waitForTimeout(500)
-        }
-      }
+      await expect(newComparisonButton).toBeVisible({ timeout: 30000 })
+      await expect(newComparisonButton).toBeEnabled({ timeout: 15000 })
+      await newComparisonButton.click()
+      await authenticatedPage.waitForLoadState('networkidle').catch(() => {})
 
       // Verify we can start a new comparison (input should be clear or ready)
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')

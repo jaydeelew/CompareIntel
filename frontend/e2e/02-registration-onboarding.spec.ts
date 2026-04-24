@@ -923,13 +923,17 @@ test.describe('Registration and Onboarding', () => {
         throw new Error('Page was closed before menu click')
       }
 
-      try {
-        // For mobile devices, use tap() which is more reliable than click()
+      const openUserMenu = async () => {
         if (isMobile) {
           await userMenuButton.tap({ timeout: menuClickTimeout })
         } else {
-          await userMenuButton.click({ timeout: menuClickTimeout })
+          await userMenuButton.focus()
+          await userMenuButton.press('Enter')
         }
+      }
+
+      try {
+        await openUserMenu()
       } catch (_error) {
         if (page.isClosed()) {
           throw new Error('Page was closed during menu interaction')
@@ -941,17 +945,37 @@ test.describe('Registration and Onboarding', () => {
         await userMenuButton.scrollIntoViewIfNeeded().catch(() => {})
         await userMenuButton.click({ timeout: menuClickTimeout, force: true })
       }
-      await safeWait(page, 1000) // Wait longer for menu to open (increased from 500ms)
+
+      const logoutButton = page.getByTestId('logout-button')
+      const logoutClickTimeout = isMobile ? 30000 : 15000
+
+      try {
+        await expect(logoutButton).toBeVisible({ timeout: logoutClickTimeout })
+      } catch {
+        await page.keyboard.press('Escape')
+        await safeWait(page, 200)
+        if (isMobile) {
+          await userMenuButton.tap({ timeout: menuClickTimeout })
+        } else {
+          await userMenuButton.focus()
+          await userMenuButton.press('Enter')
+        }
+        await expect(logoutButton).toBeVisible({ timeout: logoutClickTimeout })
+      }
+
+      await safeWait(page, 200)
 
       // Wait for logout API call before clicking (logout triggers navigation)
       const logoutResponsePromise = page
         .waitForResponse(response => response.url().includes('/auth/logout'), { timeout: 15000 })
         .catch(() => null)
 
-      // Click logout - mobile devices may need longer timeout
-      const logoutButton = page.getByTestId('logout-button')
-      const logoutClickTimeout = isMobile ? 30000 : 15000
-      await logoutButton.click({ timeout: logoutClickTimeout })
+      await logoutButton.scrollIntoViewIfNeeded().catch(() => {})
+      try {
+        await logoutButton.click({ timeout: logoutClickTimeout })
+      } catch (_error) {
+        await logoutButton.click({ timeout: logoutClickTimeout, force: true })
+      }
 
       // Wait for logout API response
       await logoutResponsePromise
