@@ -67,6 +67,7 @@ export function FormHeader({
             className="textarea-icon-button new-inquiry-button"
             disabled={isLoading}
             aria-label="Exit follow up mode"
+            data-testid="exit-follow-up-button"
           >
             {NEW_INQUIRY_ICON}
           </button>

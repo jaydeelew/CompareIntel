@@ -586,14 +586,18 @@ test.describe('Authenticated User Comparison Flow', () => {
     })
 
     await test.step('Start new comparison', async () => {
-      // Follow-up header + "Exit follow up" control mount after streaming settles; CI can exceed 3s.
+      // Follow-up UI mounts after streaming settles; WebKit CI sometimes needs extra time.
+      await expect(authenticatedPage.locator('.follow-up-header')).toBeVisible({ timeout: 45000 })
       const newComparisonButton = authenticatedPage
-        .locator(
-          'button.new-inquiry-button, button[title*="Exit follow up"], button[aria-label*="Exit follow up"]'
+        .getByTestId('exit-follow-up-button')
+        .or(
+          authenticatedPage.locator(
+            'button.new-inquiry-button, button[title*="Exit follow up"], button[aria-label*="Exit follow up"]'
+          )
         )
         .first()
 
-      await expect(newComparisonButton).toBeVisible({ timeout: 30000 })
+      await expect(newComparisonButton).toBeVisible({ timeout: 45000 })
       await expect(newComparisonButton).toBeEnabled({ timeout: 15000 })
       await newComparisonButton.click()
       await authenticatedPage.waitForLoadState('networkidle').catch(() => {})

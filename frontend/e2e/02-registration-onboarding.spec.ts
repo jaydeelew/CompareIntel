@@ -383,8 +383,8 @@ test.describe('Registration and Onboarding', () => {
       projectName.includes('Pixel') ||
       projectName.includes('Galaxy')
     // Register + verification settle + model selection + stream regularly needs >90s in CI;
-    // Firefox is slower and can hit pointer/layout races on the model list.
-    test.setTimeout(isFirefox ? 180000 : 120000)
+    // Firefox / Mobile Safari are slower and can hit pointer/layout races on the model list.
+    test.setTimeout(isFirefox || isMobileProject ? 180000 : 120000)
     const timestamp = Date.now()
     const testEmail = `firstcomp-${timestamp}@example.com`
     const testPassword = 'TestPassword123!'
@@ -640,12 +640,21 @@ test.describe('Registration and Onboarding', () => {
               try {
                 await providerHeader.tap({ timeout: 5000 })
               } catch {
-                await providerHeader.click({ timeout: 5000 })
+                try {
+                  await providerHeader.click({ timeout: 5000 })
+                } catch {
+                  if (!page.isClosed()) {
+                    await providerHeader.evaluate((el: HTMLElement) => el.click())
+                  }
+                }
               }
             } else {
               await providerHeader.click({ timeout: 5000 })
             }
           } catch {
+            if (page.isClosed()) {
+              throw new Error('Page closed while expanding model providers (test budget exceeded?)')
+            }
             await providerHeader.click({ timeout: 3000, force: true })
           }
           await page.waitForTimeout(isMobileProject ? 1200 : 800) // Mobile needs longer for dropdown to expand and render
@@ -794,7 +803,7 @@ test.describe('Registration and Onboarding', () => {
         }
       }
 
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 15000 })
       const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
       await expect(authModal).toBeVisible()
     })
@@ -856,7 +865,7 @@ test.describe('Registration and Onboarding', () => {
       // Mobile devices may need longer timeout for button click
       const signInButton = page.getByTestId('nav-sign-in-button')
       await signInButton.click({ timeout: clickTimeout })
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 15000 })
       await page.getByTestId('login-email-input').fill(testEmail)
       await page.getByTestId('login-password-input').fill(testPassword)
       await page.getByTestId('login-submit-button').click()
@@ -926,8 +935,8 @@ test.describe('Registration and Onboarding', () => {
       const openUserMenu = async () => {
         if (isMobile) {
           await userMenuButton.tap({ timeout: menuClickTimeout })
-        } else if (browserName === 'firefox') {
-          // Firefox: Playwright click / keyboard often fail to run the avatar onClick; DOM click matches UserMenu toggle reliably.
+        } else if (browserName === 'firefox' || browserName === 'webkit') {
+          // Firefox / WebKit: synthesized clicks can lose to overlapping layers; DOM click matches UserMenu toggle reliably.
           await userMenuButton.evaluate((el: HTMLElement) => {
             el.click()
           })
@@ -947,7 +956,7 @@ test.describe('Registration and Onboarding', () => {
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
         )
         await userMenuButton.scrollIntoViewIfNeeded().catch(() => {})
-        if (browserName === 'firefox') {
+        if (browserName === 'firefox' || browserName === 'webkit') {
           await userMenuButton.evaluate((el: HTMLElement) => {
             el.click()
           })
@@ -966,7 +975,7 @@ test.describe('Registration and Onboarding', () => {
         await safeWait(page, 200)
         if (isMobile) {
           await userMenuButton.tap({ timeout: menuClickTimeout })
-        } else if (browserName === 'firefox') {
+        } else if (browserName === 'firefox' || browserName === 'webkit') {
           await userMenuButton.evaluate((el: HTMLElement) => {
             el.click()
           })

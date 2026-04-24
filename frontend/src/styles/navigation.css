@@ -17,6 +17,15 @@
     opacity 0.28s ease;
 }
 
+/* base.css `.app > * { position: relative; z-index: 1 }` is (0,1,1) and overrides this block alone
+   (0,1,0), which breaks sticky and lets <main class="app-main"> paint over the navbar on WebKit.
+   Direct-child selector restores intended stacking and hit-testing. */
+.app > .app-header-shell {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
 .app-header-shell--folded {
   max-height: 0;
   opacity: 0;

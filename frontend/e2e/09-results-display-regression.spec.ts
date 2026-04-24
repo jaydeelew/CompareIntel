@@ -686,25 +686,37 @@ test.describe('Results Display Regression Tests', () => {
         await expect(breakoutBtn).toBeVisible({ timeout: 45000 })
 
         const isMobile = isMobileE2eProject(projectName)
-        // Breakout runs an authenticated API call; parallel wait + tap matches real mobile WebKit.
-        const breakoutMatcher = (res: { url: () => string; status: () => number }) =>
-          res.url().includes('/conversations/breakout') && res.status() >= 200 && res.status() < 300
+        // Match any completed breakout request — if we require 2xx here, 4xx/5xx never satisfy the predicate and CI waits full timeout.
+        const breakoutUrlMatch = (res: { url: () => string }) =>
+          res.url().includes('/conversations/breakout')
 
         await breakoutBtn.scrollIntoViewIfNeeded().catch(() => {})
-        // WebKit: synthesized click is unreliable; Firefox works with Playwright click (evaluate can skip proper event paths).
-        const triggerBreakout = isMobile
-          ? () => breakoutBtn.tap({ timeout: 15000 })
-          : browserName === 'webkit'
+        // Mobile Safari: tap often does not run the card's handler; WebKit desktop: synthesized click is flaky. Use DOM click.
+        // Chromium: synthetic click can be flaky when overlays/stacking change; match WebKit
+        // and use a DOM click so the breakout POST reliably runs before assertions.
+        const triggerBreakout =
+          isMobile && browserName === 'webkit'
             ? () =>
                 breakoutBtn.evaluate((el: HTMLElement) => {
                   ;(el as HTMLButtonElement).click()
                 })
-            : () => breakoutBtn.click({ timeout: 15000 })
+            : isMobile
+              ? () => breakoutBtn.tap({ timeout: 15000 })
+              : browserName === 'webkit' || browserName === 'chromium'
+                ? () =>
+                    breakoutBtn.evaluate((el: HTMLElement) => {
+                      ;(el as HTMLButtonElement).click()
+                    })
+                : () => breakoutBtn.click({ timeout: 15000 })
 
-        await Promise.all([
-          authenticatedPage.waitForResponse(breakoutMatcher, { timeout: 150000 }),
+        const [breakoutResponse] = await Promise.all([
+          authenticatedPage.waitForResponse(breakoutUrlMatch, { timeout: 150000 }),
           triggerBreakout(),
         ])
+        expect(
+          breakoutResponse.ok(),
+          `breakout API expected 2xx, got ${breakoutResponse.status()}`
+        ).toBeTruthy()
 
         // Follow-up mode proves the breakout handler finished (clears composer, single-thread UI).
         await expect(authenticatedPage.getByTestId('comparison-input-textarea')).toHaveAttribute(

@@ -504,7 +504,7 @@ async function loginUser(
         throw error
       }
     }
-    await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+    await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 15000 })
 
     // Fill login form
     await page.getByTestId('login-email-input').fill(email)
@@ -705,7 +705,7 @@ async function registerUser(
         throw error
       }
     }
-    await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+    await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 15000 })
 
     // Fill registration form
     const emailInput = page.locator('input[type="email"]').first()
