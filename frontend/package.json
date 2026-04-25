@@ -38,6 +38,7 @@
     "jspdf": "^4.2.1",
     "katex": "^0.16.22",
     "lucide-react": "^0.552.0",
+    "mailcheck": "^1.1.1",
     "mammoth": "^1.11.0",
     "pdfjs-dist": "^5.4.449",
     "react": "^18.2.0",
