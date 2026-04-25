@@ -1,6 +1,6 @@
 """Drop purchased_credits_balance from users
 
-Revision ID: 0010_drop_purchased_credits_balance
+Revision ID: 0010_drop_purch_cred_bal
 Revises: 0009_overage_settings
 Create Date: 2026-04-16 00:00:00.000000
 
@@ -17,7 +17,7 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0010_drop_purchased_credits_balance"
+revision: str = "0010_drop_purch_cred_bal"
 down_revision: str | None = "0009_overage_settings"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
