@@ -454,20 +454,7 @@ export function useComparisonStreaming(
       }
 
       // Adapter: sseProcessor passes partial balance objects; our setter expects CreditBalance | null
-      const adaptedSetCreditBalance = (
-        balance: {
-          credits_allocated?: number
-          credits_used_this_period?: number
-          credits_used_today?: number
-          credits_remaining?: number
-          period_type?: string
-          subscription_tier?: string
-          credits_reset_at?: string
-          billing_period_start?: string
-          billing_period_end?: string
-          total_credits_used?: number
-        } | null
-      ) => {
+      const adaptedSetCreditBalance = (balance: Partial<CreditBalance> | null) => {
         if (!balance || typeof balance !== 'object' || Object.keys(balance).length === 0) {
           return
         }

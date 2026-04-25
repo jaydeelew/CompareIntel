@@ -2,6 +2,7 @@ import { useMemo, useEffect } from 'react'
 
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { getSpendableCreditsRemaining } from '../services/creditService'
+import type { CreditBalance } from '../services/creditService'
 import type { User } from '../types'
 
 interface UseCreditsRemainingProps {

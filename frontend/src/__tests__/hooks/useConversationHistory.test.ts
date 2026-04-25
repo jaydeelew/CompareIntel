@@ -89,7 +89,7 @@ describe('useConversationHistory', () => {
         })
       )
 
-      expect(result.current.historyLimit).toBe(50)
+      expect(result.current.historyLimit).toBe(40)
     })
   })
 

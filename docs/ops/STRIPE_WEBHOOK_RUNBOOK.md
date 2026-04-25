@@ -119,7 +119,7 @@ Use **Developers → Test mode** in the Dashboard. Price amounts must match **`T
 
 ## In-app overage and Stripe metered billing
 
-- **Overage metering is implemented.** When `deduct_credits` consumes overage credits for a user with `stripe_customer_id`, `backend/app/stripe_metering.py` (`report_overage_credits`) fires a Stripe Billing Meter Event (`overage_credits`) with a per-call idempotency key. Failures are logged but never block the in-app deduction path.
+- **Overage metering is implemented.** When `deduct_credits` consumes overage credits for a user with `stripe_customer_id`, `backend/app/stripe_metering.py` (`report_overage_credits`) fires a Stripe Billing Meter Event (`compareintel_overage_credits`) with a per-call idempotency key. Failures are logged but never block the in-app deduction path.
 - **Auto-attach:** On `checkout.session.completed`, `_ensure_overage_subscription_item` in `billing.py` attaches the metered overage Price (`STRIPE_PRICE_OVERAGE`) to the new subscription if not already present.
 - **Env:** `STRIPE_OVERAGE_METER_ID`, `STRIPE_OVERAGE_PRODUCT_ID`, `STRIPE_PRICE_OVERAGE` must be set for overage metering to activate. If `STRIPE_OVERAGE_METER_ID` is unset, `report_overage_credits` is a no-op.
 - **Rate:** `OVERAGE_USD_PER_CREDIT = 0.013` (see `backend/app/config/constants.py`). The metered Price in Stripe must match this per-unit amount.

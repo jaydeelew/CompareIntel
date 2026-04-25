@@ -14,6 +14,8 @@ import type {
 } from '../types'
 import { isErrorMessage } from '../utils/error'
 
+import type { CreditBalance } from './creditService'
+
 const TIMEOUT_DURATION = 60000
 const ACTIVE_STREAMING_WINDOW = 5000
 const UPDATE_THROTTLE_MS = 50
@@ -69,11 +71,7 @@ export interface SSEProcessorConfig {
     credits_reset_at?: string
     total_credits_used?: number
   } | null
-  creditBalance: {
-    credits_allocated?: number
-    credits_remaining?: number
-    credits_reset_at?: string
-  } | null
+  creditBalance: CreditBalance | null
   browserFingerprint: string
   startTime: number
   userTimestamp: string
@@ -86,34 +84,12 @@ export interface SSEProcessorConfig {
   setConversations: React.Dispatch<React.SetStateAction<ModelConversation[]>>
   setResponse: (response: CompareResponse | null) => void
   setProcessingTime: (time: number | null) => void
-  setCreditBalance: (
-    balance:
-      | {
-          credits_allocated?: number
-          credits_used_this_period?: number
-          credits_remaining?: number
-          period_type?: string
-          subscription_tier?: string
-          credits_reset_at?: string
-          billing_period_start?: string
-          billing_period_end?: string
-          total_credits_used?: number
-        }
-      | {
-          credits_allocated?: number
-          credits_used_today?: number
-          credits_remaining?: number
-          period_type?: string
-          subscription_tier?: string
-        }
-  ) => void
+  setCreditBalance: (balance: Partial<CreditBalance>) => void
   setAnonymousCreditsRemaining: (credits: number | null) => void
   setupScrollListener: (modelId: string) => boolean
   getCreditAllocation: (tier: string) => number
   getDailyCreditLimit: (tier: string) => number
-  getCreditBalance: (
-    fingerprint?: string
-  ) => Promise<{ credits_allocated: number; credits_remaining: number; credits_reset_at?: string }>
+  getCreditBalance: (fingerprint?: string) => Promise<CreditBalance>
   refreshUser: () => Promise<void>
   getCreditWarningMessage: (
     type: 'low' | 'insufficient' | 'none' | 'overage_active' | 'overage_cap_hit',

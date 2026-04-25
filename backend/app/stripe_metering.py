@@ -18,7 +18,7 @@ from .config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-OVERAGE_METER_EVENT_NAME = "overage_credits"
+OVERAGE_METER_EVENT_NAME = "compareintel_overage_credits"
 
 
 def report_overage_credits(

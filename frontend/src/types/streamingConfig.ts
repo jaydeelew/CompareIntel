@@ -14,6 +14,19 @@ import type {
   TextComposerAdvancedSettings,
 } from './textComposerAdvanced'
 
+export type CreditWarningType =
+  | 'low'
+  | 'insufficient'
+  | 'none'
+  | 'overage_active'
+  | 'overage_cap_hit'
+
+export interface OverageContext {
+  overage_enabled?: boolean
+  overage_credits_used_this_period?: number
+  overage_limit_credits?: number | null
+}
+
 export interface StreamingAuthInfo {
   isAuthenticated: boolean
   user: {
@@ -59,7 +72,7 @@ export interface StreamingConversationState {
 export interface StreamingCreditState {
   creditBalance: CreditBalance | null
   anonymousCreditsRemaining: number | null
-  creditWarningType: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
+  creditWarningType: CreditWarningType
 }
 
 export interface StreamingRefs {
@@ -115,9 +128,7 @@ export interface StreamingCreditCallbacks {
   setAnonymousCreditsRemaining: (credits: number | null) => void
   setCreditBalance: (balance: CreditBalance | null) => void
   setCreditWarningMessage: (message: string | null) => void
-  setCreditWarningType: (
-    type: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
-  ) => void
+  setCreditWarningType: (type: CreditWarningType) => void
   setCreditWarningDismissible: (dismissible: boolean) => void
   dismissOverageActive: (creditsResetAt?: string) => void
 }
@@ -148,12 +159,12 @@ export interface StreamingHelperCallbacks {
   loadHistoryFromAPI: () => Promise<void>
   getFirstUserMessage: () => ConversationMessage | undefined
   getCreditWarningMessage: (
-    type: 'low' | 'insufficient' | 'none',
+    type: CreditWarningType,
     tier: string,
     remaining: number,
     estimated?: number,
     resetAt?: string,
-    overageCtx?: unknown,
+    overageCtx?: OverageContext,
     resetShowsUtc?: boolean
   ) => string
   isLowCreditWarningDismissed: (
