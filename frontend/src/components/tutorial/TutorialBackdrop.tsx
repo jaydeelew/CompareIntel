@@ -33,6 +33,10 @@ export interface TutorialBackdropProps {
   buttonCutout: ButtonCutout | null
 }
 
+const TUTORIAL_FRAME_SHADOW = 'inset 0 0 0 3px var(--accent-color)'
+const TUTORIAL_DIM_SHADOW = '0 0 0 9999px rgba(0, 0, 0, 0.6)'
+const TUTORIAL_FRAMED_DIM_SHADOW = `${TUTORIAL_FRAME_SHADOW}, ${TUTORIAL_DIM_SHADOW}`
+
 function handleBackdropClick(e: React.MouseEvent, className: string) {
   const target = e.target as HTMLElement
   if (target.classList.contains(className)) {
@@ -63,7 +67,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           width: `${loadingStreamingCutout.width}px`,
           height: `${loadingStreamingCutout.height}px`,
           borderRadius: `${loadingStreamingCutout.borderRadius ?? 16}px`,
-          boxShadow: 'inset 0 0 0 8px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.6)',
+          boxShadow: TUTORIAL_FRAMED_DIM_SHADOW,
           zIndex: 9998,
           pointerEvents: 'none',
         }}
@@ -83,7 +87,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           width: `${textareaCutoutToUse.width}px`,
           height: `${textareaCutoutToUse.height}px`,
           borderRadius: '32px',
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+          boxShadow: TUTORIAL_FRAMED_DIM_SHADOW,
           zIndex: 9998,
           pointerEvents: 'none',
         }}
@@ -143,9 +147,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           width: `${dropdownCutout.width}px`,
           height: `${dropdownCutout.height}px`,
           borderRadius: '32px',
-          boxShadow: isDropdownTutorialStep
-            ? 'inset 0 0 0 8px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.6)'
-            : '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+          boxShadow: isDropdownTutorialStep ? TUTORIAL_FRAMED_DIM_SHADOW : TUTORIAL_DIM_SHADOW,
           zIndex: 9998,
           pointerEvents: 'none',
         }}
@@ -242,7 +244,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
             width: `${results.width}px`,
             height: `${results.height}px`,
             borderRadius: `${brResults}px`,
-            boxShadow: 'inset 0 0 0 8px var(--accent-color)',
+            boxShadow: TUTORIAL_FRAME_SHADOW,
             zIndex: 9999,
             pointerEvents: 'none',
             background: 'transparent',
@@ -258,7 +260,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
             width: `${composer.width}px`,
             height: `${composer.height}px`,
             borderRadius: `${brComposer}px`,
-            boxShadow: 'inset 0 0 0 8px var(--accent-color)',
+            boxShadow: TUTORIAL_FRAME_SHADOW,
             zIndex: 9999,
             pointerEvents: 'none',
             background: 'transparent',
@@ -283,9 +285,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           height: `${targetCutout.height}px`,
           borderRadius: `${targetCutout.borderRadius}px`,
           /* Solid blue in the padded gap — matches provider steps (hero) on results-section steps. */
-          boxShadow: usesInsetBlueRing
-            ? 'inset 0 0 0 8px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.6)'
-            : '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+          boxShadow: usesInsetBlueRing ? TUTORIAL_FRAMED_DIM_SHADOW : TUTORIAL_DIM_SHADOW,
           zIndex: 9998,
           pointerEvents: 'none',
         }}

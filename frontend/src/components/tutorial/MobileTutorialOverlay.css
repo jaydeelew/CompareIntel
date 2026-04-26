@@ -465,6 +465,13 @@ body.mobile-tutorial-active {
   position: relative;
   z-index: 9999 !important;
   isolation: isolate;
+  border-top: none !important;
+}
+
+.history-inline-list.mobile-tutorial-dropdown-active.mobile-tutorial-highlight,
+.saved-selections-dropdown.mobile-tutorial-dropdown-active.mobile-tutorial-highlight {
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 /* Small viewport height - tighter tooltip */

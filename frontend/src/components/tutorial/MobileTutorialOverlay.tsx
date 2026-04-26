@@ -1122,6 +1122,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const cutoutPadding = 8
   const followUpBrResults = 24
   const followUpBrComposer = 32
+  const tutorialFrameShadow = 'inset 0 0 0 3px var(--accent-color)'
+  const tutorialDimShadow = '0 0 0 9999px rgba(0, 0, 0, 0.65)'
+  const tutorialFramedDimShadow = `${tutorialFrameShadow}, ${tutorialDimShadow}`
   const cutoutStyle =
     cutoutTarget && showBackdrop
       ? {
@@ -1151,8 +1154,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             step === 'view-follow-up-results' ||
             step === 'history-dropdown' ||
             step === 'save-selection'
-              ? 'inset 0 0 0 8px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.65)'
-              : '0 0 0 9999px rgba(0, 0, 0, 0.65)',
+              ? tutorialFramedDimShadow
+              : tutorialDimShadow,
           zIndex: 9998,
           pointerEvents: 'none' as const,
         }
@@ -1241,7 +1244,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                   width: `${followUpVResults.width}px`,
                   height: `${followUpVResults.height}px`,
                   borderRadius: `${followUpBrResults}px`,
-                  boxShadow: 'inset 0 0 0 8px var(--accent-color)',
+                  boxShadow: tutorialFrameShadow,
                   zIndex: 9999,
                   pointerEvents: 'none',
                   background: 'transparent',
@@ -1256,7 +1259,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                   width: `${followUpVComposer.width}px`,
                   height: `${followUpVComposer.height}px`,
                   borderRadius: `${followUpBrComposer}px`,
-                  boxShadow: 'inset 0 0 0 8px var(--accent-color)',
+                  boxShadow: tutorialFrameShadow,
                   zIndex: 9999,
                   pointerEvents: 'none',
                   background: 'transparent',

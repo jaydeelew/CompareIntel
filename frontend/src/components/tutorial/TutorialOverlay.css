@@ -105,13 +105,21 @@ body:has(.tutorial-backdrop) .hero-section {
   z-index: 9999 !important;
   /* Ensure it maintains its default colors and is not affected by backdrop */
   isolation: isolate;
+  border-top: none !important;
 }
 
-/* Steps 7–8: match card-style radius when dropdown lists use tutorial-highlight pulse */
+/* Steps 7–8: the backdrop cutout frames the combined composer + dropdown.
+   Suppress the dropdown's own tutorial ring so it does not draw an internal divider. */
 .history-inline-list.tutorial-highlight,
 .saved-selections-dropdown.tutorial-highlight {
   border-radius: var(--radius-lg) !important;
   overflow: visible !important;
+}
+
+.history-inline-list.tutorial-dropdown-active.tutorial-highlight,
+.saved-selections-dropdown.tutorial-dropdown-active.tutorial-highlight {
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 /* Ensure parent container is also above backdrop when dropdowns are active */
@@ -177,15 +185,11 @@ body:has(.tutorial-backdrop) .hero-section {
   filter: none !important;
   /* Create a solid stacking context to prevent backdrop interference */
   contain: layout style paint !important;
-  /* Ensure highlight box-shadow wraps fully - prevent overflow clipping */
-  overflow: visible !important;
-  /* Ensure the highlight box-shadow and pulse animation are consistent across all steps.
-     The .composer normally has transition: box-shadow which can dampen the pulse. */
+  /* Composer tutorial steps use the same blue frame as step 1: the backdrop cutout draws the ring. */
   box-shadow:
-    0 0 0 3px var(--accent-color),
-    0 0 0 7px rgba(14, 165, 233, 0.22),
-    0 0 24px rgba(14, 165, 233, 0.45) !important;
-  animation: tutorial-pulse 2s ease-in-out infinite !important;
+    0 0 20px rgba(6, 182, 212, 0.08),
+    0 0 40px rgba(6, 182, 212, 0.04) !important;
+  animation: none !important;
   transition: none !important;
 }
 
