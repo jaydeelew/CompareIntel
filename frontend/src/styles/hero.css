@@ -3195,6 +3195,22 @@ video.capability-tile-image-lightbox-img {
     transform: translateY(0.875rem);
   }
 
+  .hero-logo-flash {
+    top: 0.875rem;
+    bottom: -0.875rem;
+  }
+
+  .hero-logo-flash.active {
+    animation-name: logoFlashMobile;
+  }
+
+  .hero-flash-logo-img {
+    width: 130%;
+    height: 130%;
+    max-width: none;
+    max-height: none;
+  }
+
   .hero-input-section {
     margin-top: 0;
     gap: 0.5rem;
@@ -3207,6 +3223,33 @@ video.capability-tile-image-lightbox-img {
 
   .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
     top: clamp(11.25rem, 22svh, 11.75rem);
+  }
+}
+
+@keyframes logoFlashMobile {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  20% {
+    opacity: 0.7;
+    transform: scale(1.25);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(1.45);
+  }
+
+  80% {
+    opacity: 0.24;
+    transform: scale(1.2);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1);
   }
 }
 
