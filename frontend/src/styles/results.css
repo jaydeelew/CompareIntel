@@ -1422,10 +1422,23 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
 }
 
 /* Markdown table styling */
-.latex-content .markdown-table {
-  border-collapse: collapse;
-  margin: 1rem 0;
+.latex-content .markdown-table-scroll,
+.message-content .latex-content .markdown-table-scroll {
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 1rem 0;
+  border-radius: var(--radius-lg);
+  -webkit-overflow-scrolling: touch;
+}
+
+.latex-content .markdown-table,
+.message-content .latex-content .markdown-table {
+  border-collapse: collapse;
+  margin: 0;
+  width: 100%;
+  min-width: max-content;
   background: var(--bg-glass-light);
   border-radius: var(--radius-lg);
   overflow: hidden;
