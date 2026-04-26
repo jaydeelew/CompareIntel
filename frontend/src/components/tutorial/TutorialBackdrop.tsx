@@ -7,6 +7,7 @@ export interface RectCutout {
   left: number
   width: number
   height: number
+  borderRadius?: number
 }
 
 export interface RectCutoutWithRadius extends RectCutout {
@@ -61,7 +62,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           left: `${loadingStreamingCutout.left}px`,
           width: `${loadingStreamingCutout.width}px`,
           height: `${loadingStreamingCutout.height}px`,
-          borderRadius: '16px',
+          borderRadius: `${loadingStreamingCutout.borderRadius ?? 16}px`,
           boxShadow: 'inset 0 0 0 8px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.6)',
           zIndex: 9998,
           pointerEvents: 'none',
@@ -162,15 +163,25 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     !shouldExcludeDropdown &&
     !useRoundedCutout
   ) {
-    const vResults = {
-      top: targetCutout.top - window.scrollY,
-      left: targetCutout.left - window.scrollX,
+    const docWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.body.scrollWidth,
+      window.innerWidth
+    )
+    const docHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight,
+      window.innerHeight
+    )
+    const results = {
+      top: targetCutout.top,
+      left: targetCutout.left,
       width: targetCutout.width,
       height: targetCutout.height,
     }
-    const vComposer = {
-      top: textareaCutoutToUse.top - window.scrollY,
-      left: textareaCutoutToUse.left - window.scrollX,
+    const composer = {
+      top: textareaCutoutToUse.top,
+      left: textareaCutoutToUse.left,
       width: textareaCutoutToUse.width,
       height: textareaCutoutToUse.height,
     }
@@ -182,10 +193,11 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
         <svg
           className="tutorial-backdrop-follow-up-dim"
           style={{
-            position: 'fixed',
-            inset: 0,
-            width: '100%',
-            height: '100%',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: `${docWidth}px`,
+            height: `${docHeight}px`,
             zIndex: 9998,
             pointerEvents: 'none',
           }}
@@ -193,37 +205,42 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
         >
           <defs>
             <mask id={maskId}>
-              <rect width="100%" height="100%" fill="white" />
+              <rect width={docWidth} height={docHeight} fill="white" />
               <rect
-                x={vResults.left}
-                y={vResults.top}
-                width={vResults.width}
-                height={vResults.height}
+                x={results.left}
+                y={results.top}
+                width={results.width}
+                height={results.height}
                 rx={brResults}
                 ry={brResults}
                 fill="black"
               />
               <rect
-                x={vComposer.left}
-                y={vComposer.top}
-                width={vComposer.width}
-                height={vComposer.height}
+                x={composer.left}
+                y={composer.top}
+                width={composer.width}
+                height={composer.height}
                 rx={brComposer}
                 ry={brComposer}
                 fill="black"
               />
             </mask>
           </defs>
-          <rect width="100%" height="100%" fill="rgba(0, 0, 0, 0.6)" mask={`url(#${maskId})`} />
+          <rect
+            width={docWidth}
+            height={docHeight}
+            fill="rgba(0, 0, 0, 0.6)"
+            mask={`url(#${maskId})`}
+          />
         </svg>
         <div
           className="tutorial-backdrop-cutout tutorial-backdrop-follow-up-results-ring"
           style={{
-            position: 'fixed',
-            top: `${vResults.top}px`,
-            left: `${vResults.left}px`,
-            width: `${vResults.width}px`,
-            height: `${vResults.height}px`,
+            position: 'absolute',
+            top: `${results.top}px`,
+            left: `${results.left}px`,
+            width: `${results.width}px`,
+            height: `${results.height}px`,
             borderRadius: `${brResults}px`,
             boxShadow: 'inset 0 0 0 8px var(--accent-color)',
             zIndex: 9999,
@@ -235,11 +252,11 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
         <div
           className="tutorial-backdrop-cutout tutorial-backdrop-follow-up-composer-ring"
           style={{
-            position: 'fixed',
-            top: `${vComposer.top}px`,
-            left: `${vComposer.left}px`,
-            width: `${vComposer.width}px`,
-            height: `${vComposer.height}px`,
+            position: 'absolute',
+            top: `${composer.top}px`,
+            left: `${composer.left}px`,
+            width: `${composer.width}px`,
+            height: `${composer.height}px`,
             borderRadius: `${brComposer}px`,
             boxShadow: 'inset 0 0 0 8px var(--accent-color)',
             zIndex: 9999,

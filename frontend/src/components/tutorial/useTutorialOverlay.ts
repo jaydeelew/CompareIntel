@@ -106,6 +106,7 @@ function useTutorialOverlay(
     left: number
     width: number
     height: number
+    borderRadius?: number
   } | null>(null)
   // General-purpose cutout for target elements (used for steps without special cutout handling)
   const [targetCutout, setTargetCutout] = useState<{
@@ -1802,14 +1803,12 @@ function useTutorialOverlay(
           })
         }
 
-        const rect = resultsSection.getBoundingClientRect()
-        const padding = 12
-        setLoadingStreamingCutout({
-          top: rect.top + window.scrollY - padding,
-          left: rect.left + window.scrollX - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
-        })
+        const cutout = computeTargetCutout([resultsSection], 8, 24)
+        if (cutout) {
+          cutout.top += window.scrollY
+          cutout.left += window.scrollX
+        }
+        setLoadingStreamingCutout(cutout)
       } else if (loadingSection) {
         const rect = loadingSection.getBoundingClientRect()
         const padding = 12

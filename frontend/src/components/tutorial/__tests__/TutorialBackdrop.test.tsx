@@ -37,6 +37,26 @@ describe('TutorialBackdrop', () => {
     expect((cutout as HTMLElement).style.boxShadow).toContain('9999px')
   })
 
+  it('should use the loading cutout border radius when provided', () => {
+    render(
+      <TutorialBackdrop
+        step={null}
+        isLoadingStreamingPhase={true}
+        loadingStreamingCutout={{ top: 100, left: 50, width: 200, height: 80, borderRadius: 24 }}
+        useRoundedCutout={false}
+        textareaCutoutToUse={null}
+        shouldExcludeTextarea={false}
+        shouldExcludeDropdown={false}
+        dropdownCutout={null}
+        targetCutout={null}
+        buttonCutout={null}
+      />
+    )
+
+    const cutout = document.querySelector('.tutorial-backdrop-cutout')
+    expect(cutout).toHaveStyle({ borderRadius: '24px' })
+  })
+
   it('should render rounded cutout when useRoundedCutout and textareaCutoutToUse', () => {
     render(
       <TutorialBackdrop
