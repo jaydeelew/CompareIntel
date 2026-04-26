@@ -49,7 +49,7 @@ export const HelpMeChooseMethodology: React.FC = () => {
             </p>
           </section>
 
-          <section className="seo-section">
+          <section className="seo-section" id="how-each-category-is-measured">
             <h2>How Each Category Is Measured</h2>
             <p>Hover over any model in "Help me choose" to see its score and source.</p>
 
