@@ -44,6 +44,7 @@ export interface UseComparisonStreamingConfig {
   credit: StreamingCreditState
   refs: StreamingRefs
   modelErrors: { [key: string]: boolean }
+  suppressResultsAutoScroll?: boolean
 }
 
 export interface UseComparisonStreamingCallbacks {
@@ -61,7 +62,16 @@ export function useComparisonStreaming(
   config: UseComparisonStreamingConfig,
   callbacks: UseComparisonStreamingCallbacks
 ): UseComparisonStreamingReturn {
-  const { auth, models, input: inputState, conversation, credit, refs, modelErrors } = config
+  const {
+    auth,
+    models,
+    input: inputState,
+    conversation,
+    credit,
+    refs,
+    modelErrors,
+    suppressResultsAutoScroll = false,
+  } = config
   const { state: stateCb, credit: creditCb, helpers } = callbacks
 
   const { currentAbortControllerRef, cancelComparison } = useStreamConnection(
@@ -93,6 +103,7 @@ export function useComparisonStreaming(
       maxTokens: inputState.maxTokens,
       aspectRatio: inputState.aspectRatio ?? '1:1',
       imageSize: inputState.imageSize ?? '1K',
+      suppressResultsAutoScroll,
     },
     {
       setError: stateCb.setError,
@@ -514,6 +525,7 @@ export function useComparisonStreaming(
         setStreamingReasoningByModel: stateCb.setStreamingReasoningByModel,
         setStreamAnswerStartedByModel: stateCb.setStreamAnswerStartedByModel,
         clearStreamingReasoningUi: stateCb.clearStreamingReasoningUi,
+        suppressResultsAutoScroll,
       })
 
       await applyStreamCompletion(streamResult, startTime, userTimestamp)

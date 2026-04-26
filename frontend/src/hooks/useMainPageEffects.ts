@@ -230,6 +230,10 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
 
   // Scroll to loading section
   useEffect(() => {
+    if (tutorialState.isActive) {
+      return
+    }
+
     if (isLoading) {
       const t = setTimeout(() => {
         document.querySelector('.loading-section')?.scrollIntoView({
@@ -239,7 +243,7 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
       }, 100)
       return () => clearTimeout(t)
     }
-  }, [isLoading])
+  }, [isLoading, tutorialState.isActive])
 
   // Clear verification errors
   useEffect(() => {

@@ -143,6 +143,10 @@ function useTutorialOverlay(
       setPositionStabilized(false)
       suppressReviewTooltipRevealRef.current = true
     }
+    if (prev === 'submit-comparison' && step === 'follow-up') {
+      setIsVisible(false)
+      setPositionStabilized(false)
+    }
     prevStepForTooltipExitRef.current = step
   }, [step])
 
@@ -728,7 +732,12 @@ function useTutorialOverlay(
         // Mark that we're starting a programmatic scroll
         isScrollingRef.current = true
 
-        const duration = step === 'follow-up' ? 750 : isReviewStepFromFollowUp ? 600 : 900
+        const duration =
+          step === 'follow-up'
+            ? Math.min(1400, Math.max(900, Math.abs(distance) * 0.65))
+            : isReviewStepFromFollowUp
+              ? 600
+              : 900
         const startTime = performance.now()
 
         // Ease-in-out cubic function for smooth animation
@@ -844,6 +853,10 @@ function useTutorialOverlay(
         initialScrollCompleteRef.current = true
         setPositionStabilized(true)
         return
+      }
+
+      if (isCustomScrollStep) {
+        window.scrollTo(window.scrollX, window.scrollY)
       }
 
       scrollToElement()
@@ -1571,18 +1584,47 @@ function useTutorialOverlay(
         return
       }
 
-      // Highlight loading section if it exists (appears after submit, before results)
-      if (loadingSection && !loadingSection.classList.contains('tutorial-highlight')) {
-        loadingSection.classList.add('tutorial-highlight')
-        loadingSection.style.pointerEvents = 'auto'
-        loadingSection.style.position = 'relative'
-      }
+      if (step === 'submit-comparison') {
+        const shouldHighlightLoading = !streamAnswerStarted && loadingSection
+        const shouldHighlightResults = streamAnswerStarted && resultsSection
 
-      // Highlight results section if it exists (appears when results start coming in)
-      if (resultsSection && !resultsSection.classList.contains('tutorial-highlight')) {
-        resultsSection.classList.add('tutorial-highlight')
-        resultsSection.style.pointerEvents = 'auto'
-        resultsSection.style.position = 'relative'
+        if (loadingSection) {
+          if (shouldHighlightLoading) {
+            loadingSection.classList.add('tutorial-highlight')
+            loadingSection.style.pointerEvents = 'auto'
+            loadingSection.style.position = 'relative'
+          } else {
+            loadingSection.classList.remove('tutorial-highlight')
+            loadingSection.style.pointerEvents = ''
+            loadingSection.style.position = ''
+          }
+        }
+
+        if (resultsSection) {
+          if (shouldHighlightResults) {
+            resultsSection.classList.add('tutorial-highlight')
+            resultsSection.style.pointerEvents = 'auto'
+            resultsSection.style.position = 'relative'
+          } else {
+            resultsSection.classList.remove('tutorial-highlight')
+            resultsSection.style.pointerEvents = ''
+            resultsSection.style.position = ''
+          }
+        }
+      } else {
+        // Highlight loading section if it exists (appears after submit, before results)
+        if (loadingSection && !loadingSection.classList.contains('tutorial-highlight')) {
+          loadingSection.classList.add('tutorial-highlight')
+          loadingSection.style.pointerEvents = 'auto'
+          loadingSection.style.position = 'relative'
+        }
+
+        // Highlight results section if it exists (appears when results start coming in)
+        if (resultsSection && !resultsSection.classList.contains('tutorial-highlight')) {
+          resultsSection.classList.add('tutorial-highlight')
+          resultsSection.style.pointerEvents = 'auto'
+          resultsSection.style.position = 'relative'
+        }
       }
 
       // Maintain textarea cutout for submit steps (view-follow-up-results returns above)
@@ -1656,7 +1698,7 @@ function useTutorialOverlay(
         }
       }
     }
-  }, [step])
+  }, [step, streamAnswerStarted])
 
   // Ensure the textarea is not kept above the backdrop on view-follow-up-results
   // This step should only keep the results section visible
@@ -1688,11 +1730,14 @@ function useTutorialOverlay(
 
     const isFollowUpStyleLoading = step === 'submit-comparison-2' || isReviewAfterFollowUp
 
-    // Track if we've already scrolled to results section
+    // Track if we've already scrolled to loading/results sections for this loading phase.
+    let hasScrolledToLoading = false
     let hasScrolledToResults = false
     // For follow-up (step 7), results section already exists, so we need to wait
     // for loading section to appear first before allowing scroll
     let loadingSectionWasSeen = false
+    let scrollToResultsRaf: number | null = null
+    let scrollToResultsTimeout: ReturnType<typeof setTimeout> | null = null
 
     const updateLoadingStreamingCutout = () => {
       const resultsSection = document.querySelector('.results-section') as HTMLElement
@@ -1714,13 +1759,44 @@ function useTutorialOverlay(
         return
       }
 
+      if (step === 'submit-comparison' && !streamAnswerStarted && loadingSection) {
+        if (!hasScrolledToLoading) {
+          hasScrolledToLoading = true
+          scrollToResultsRaf = requestAnimationFrame(() => {
+            scrollToResultsRaf = null
+            scrollToResultsTimeout = setTimeout(() => {
+              scrollToResultsTimeout = null
+              loadingSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }, 100)
+          })
+        }
+
+        const rect = loadingSection.getBoundingClientRect()
+        const padding = 12
+        setLoadingStreamingCutout({
+          top: rect.top + window.scrollY - padding,
+          left: rect.left + window.scrollX - padding,
+          width: rect.width + padding * 2,
+          height: rect.height + padding * 2,
+        })
+        return
+      }
+
+      if (step === 'submit-comparison' && !streamAnswerStarted) {
+        setLoadingStreamingCutout(null)
+        return
+      }
+
       if (resultsSection) {
         const canScroll = isFollowUpStyleLoading ? loadingSectionWasSeen : true
+        const shouldScrollResultsIntoView = step !== 'submit-comparison' || streamAnswerStarted
 
-        if (!hasScrolledToResults && canScroll) {
+        if (!hasScrolledToResults && canScroll && shouldScrollResultsIntoView) {
           hasScrolledToResults = true
-          requestAnimationFrame(() => {
-            setTimeout(() => {
+          scrollToResultsRaf = requestAnimationFrame(() => {
+            scrollToResultsRaf = null
+            scrollToResultsTimeout = setTimeout(() => {
+              scrollToResultsTimeout = null
               resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }, 100)
           })
@@ -1756,6 +1832,8 @@ function useTutorialOverlay(
     return () => {
       detachScrollResize()
       clearInterval(interval)
+      if (scrollToResultsRaf !== null) cancelAnimationFrame(scrollToResultsRaf)
+      if (scrollToResultsTimeout !== null) clearTimeout(scrollToResultsTimeout)
       setLoadingStreamingCutout(null)
     }
   }, [step, isLoading, streamAnswerStarted])

@@ -2005,6 +2005,7 @@ export function MainPage() {
         lastSubmittedInputRef,
       },
       modelErrors,
+      suppressResultsAutoScroll: tutorialState.isActive,
     }),
     [
       isAuthenticated,
@@ -2038,6 +2039,7 @@ export function MainPage() {
       lastAlignedRoundRef,
       lastScrollTopRef,
       scrollListenersRef,
+      tutorialState.isActive,
       userCancelledRef,
       userInteractingRef,
     ]
