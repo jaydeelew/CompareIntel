@@ -33,6 +33,8 @@ interface TutorialControllerProps {
   // Loading state for submit-comparison steps
   isLoading?: boolean
   streamAnswerStarted?: boolean
+  /** Set once the user has submitted a follow-up on step 5. */
+  followUpSubmitStarted?: boolean
   // Callbacks for when user performs actions
   onProviderExpanded?: () => void
   onModelsSelected?: () => void
@@ -58,6 +60,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   hasSavedSelection,
   isLoading,
   streamAnswerStarted,
+  followUpSubmitStarted,
   onProviderExpanded,
   onModelsSelected,
   onPromptEntered,
@@ -275,6 +278,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
         isStepCompleted={isCurrentStepCompleted()}
         isLoading={isLoading}
         streamAnswerStarted={streamAnswerStarted}
+        followUpSubmitStarted={followUpSubmitStarted}
       />
     </Suspense>
   )

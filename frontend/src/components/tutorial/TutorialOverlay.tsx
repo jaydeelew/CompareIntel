@@ -16,6 +16,8 @@ interface TutorialOverlayProps {
   isLoading?: boolean
   /** When any model has started streaming an answer; used to switch loading cutout to results. */
   streamAnswerStarted?: boolean
+  /** Set once the user has submitted a follow-up on step 5. */
+  followUpSubmitStarted?: boolean
 }
 
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
@@ -25,6 +27,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   isStepCompleted = false,
   isLoading = false,
   streamAnswerStarted = false,
+  followUpSubmitStarted = false,
 }) => {
   const {
     overlayRef,
@@ -58,6 +61,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     return null
   }
 
+  const shouldHideTooltipDuringFollowUpStream =
+    step === 'follow-up' && followUpSubmitStarted && (isLoading || streamAnswerStarted)
+
   const overlayUi = (
     <>
       <TutorialBackdrop
@@ -73,23 +79,26 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         buttonCutout={buttonCutout}
       />
 
-      {!isLoadingStreamingPhase && isVisible && config && (
-        <TutorialTooltip
-          step={step}
-          config={config}
-          stepIndex={stepIndex}
-          totalSteps={totalSteps}
-          onComplete={onComplete}
-          onSkip={onSkip}
-          isStepCompleted={isStepCompleted}
-          saveSelectionDropdownOpened={saveSelectionDropdownOpened}
-          isHistoryDropdownOpened={dropdownWasOpenedRef.current}
-          overlayRef={overlayRef}
-          overlayPosition={overlayPosition}
-          effectivePosition={effectivePosition}
-          positionStabilized={positionStabilized}
-        />
-      )}
+      {!isLoadingStreamingPhase &&
+        !shouldHideTooltipDuringFollowUpStream &&
+        isVisible &&
+        config && (
+          <TutorialTooltip
+            step={step}
+            config={config}
+            stepIndex={stepIndex}
+            totalSteps={totalSteps}
+            onComplete={onComplete}
+            onSkip={onSkip}
+            isStepCompleted={isStepCompleted}
+            saveSelectionDropdownOpened={saveSelectionDropdownOpened}
+            isHistoryDropdownOpened={dropdownWasOpenedRef.current}
+            overlayRef={overlayRef}
+            overlayPosition={overlayPosition}
+            effectivePosition={effectivePosition}
+            positionStabilized={positionStabilized}
+          />
+        )}
     </>
   )
 

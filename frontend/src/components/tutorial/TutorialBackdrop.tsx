@@ -33,7 +33,8 @@ export interface TutorialBackdropProps {
   buttonCutout: ButtonCutout | null
 }
 
-const TUTORIAL_FRAME_SHADOW = 'inset 0 0 0 3px var(--accent-color)'
+const TUTORIAL_FRAME_SHADOW =
+  'inset 0 0 0 3px var(--accent-color), inset 0 0 0 7px rgba(14, 165, 233, 0.22), 0 0 24px rgba(14, 165, 233, 0.45)'
 const TUTORIAL_DIM_SHADOW = '0 0 0 9999px rgba(0, 0, 0, 0.6)'
 const TUTORIAL_FRAMED_DIM_SHADOW = `${TUTORIAL_FRAME_SHADOW}, ${TUTORIAL_DIM_SHADOW}`
 

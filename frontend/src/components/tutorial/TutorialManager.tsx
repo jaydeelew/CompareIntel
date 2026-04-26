@@ -116,6 +116,7 @@ export function TutorialManager({
           hasSavedSelection={tutorialHasSavedSelection}
           isLoading={isLoading}
           streamAnswerStarted={streamAnswerStarted}
+          followUpSubmitStarted={followUpSubmitStarted}
           onProviderExpanded={() => {}}
           onModelsSelected={() => {}}
           onPromptEntered={() => {}}

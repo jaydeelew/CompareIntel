@@ -150,14 +150,14 @@ body:has(.tutorial-backdrop) .hero-section {
   isolation: isolate !important;
 }
 
-/* Match native card corners so highlight + cutout align like provider steps.
-   Strip the native border entirely so it can't double up with the highlight
-   box-shadow rings.  Also kill the native card shadow — the highlight rings
-   replace it visually. */
+/* Results use the shared backdrop frame as their tutorial border.
+   Suppress the generic element ring so the card does not render a different double border. */
 .results-section.tutorial-highlight {
   border-radius: var(--radius-2xl) !important;
   overflow: visible !important;
   border: none !important;
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 /* The inner .results-section (rendered by ResultsDisplay inside ResultsArea)
@@ -166,6 +166,14 @@ body:has(.tutorial-backdrop) .hero-section {
 .results-section.tutorial-highlight .results-section {
   border: none !important;
   box-shadow: none !important;
+}
+
+/* Loading/processing cards use the same tutorial ring as provider/results steps.
+   Remove the native card border so the tutorial frame does not look thicker. */
+.loading-section.tutorial-highlight {
+  border-radius: var(--radius-xl) !important;
+  overflow: visible !important;
+  border: none !important;
 }
 
 /* Special styling for textarea container highlight - match its border-radius */

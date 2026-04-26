@@ -81,6 +81,14 @@
 .results-section.mobile-tutorial-highlight {
   border-radius: var(--radius-2xl) !important;
   overflow: visible !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.loading-section.mobile-tutorial-highlight {
+  border-radius: var(--radius-xl) !important;
+  overflow: visible !important;
+  border: none !important;
 }
 
 /* Pulsing effect for model results tab text on steps 5 (follow-up) and 6 (view-follow-up-results) - draws attention to tabs via size pulse */

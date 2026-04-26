@@ -1122,7 +1122,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const cutoutPadding = 8
   const followUpBrResults = 24
   const followUpBrComposer = 32
-  const tutorialFrameShadow = 'inset 0 0 0 3px var(--accent-color)'
+  const tutorialFrameShadow =
+    'inset 0 0 0 3px var(--accent-color), inset 0 0 0 7px rgba(14, 165, 233, 0.25), 0 0 18px rgba(14, 165, 233, 0.45)'
   const tutorialDimShadow = '0 0 0 9999px rgba(0, 0, 0, 0.65)'
   const tutorialFramedDimShadow = `${tutorialFrameShadow}, ${tutorialDimShadow}`
   const cutoutStyle =
