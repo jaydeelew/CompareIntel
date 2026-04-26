@@ -304,6 +304,12 @@
   }
 }
 
+@media (max-width: 480px) {
+  .hero-section.hero-section--composer-focused .provider-carousel-wrapper {
+    top: clamp(11.25rem, 22svh, 11.75rem);
+  }
+}
+
 /* Deterministic touch-mode overrides (set by JS coarse-pointer detection). */
 .provider-carousel-item--touch-mode .provider-carousel-item-inner {
   transition: none !important;
