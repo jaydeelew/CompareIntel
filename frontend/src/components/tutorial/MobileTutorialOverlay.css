@@ -77,6 +77,16 @@
   overflow: visible !important;
 }
 
+/* Steps 7–8: same as desktop TutorialOverlay — .mobile-tutorial-highlight uses
+   --radius-md; dropdown panels need 1.5rem bottom corners. The composer parent
+   clips them via overflow:hidden + rounded all-around (see the dropdown-active
+   rule below). */
+.history-inline-list.mobile-tutorial-highlight,
+.saved-selections-dropdown.mobile-tutorial-highlight {
+  border-radius: 0 0 1.5rem 1.5rem !important;
+  overflow: hidden !important;
+}
+
 /* Match native results card corners (same as desktop tutorial) */
 .results-section.mobile-tutorial-highlight {
   border-radius: var(--radius-2xl) !important;
@@ -459,20 +469,24 @@ body.mobile-tutorial-active {
 }
 
 /* Ensure dropdown containers stay above backdrop */
+/* Steps 7–8: must override .composer.mobile-tutorial-highlight's `transform: translateZ(0)`
+   and `isolation: isolate` so the composer doesn't form a GPU compositing layer whose
+   square bottom edge clips the dropdown's rounded bottom corners. */
 .composer.mobile-tutorial-dropdown-active {
   position: relative;
   z-index: 9999 !important;
-  isolation: isolate;
+  transform: none !important;
+  isolation: auto !important;
+  contain: none !important;
 }
 
 /* During steps 7–8, keep composer above backdrop but do not change its background */
 
-/* Dropdown active state */
+/* Dropdown active state — no isolation:isolate (breaks overflow clipping) */
 .history-inline-list.mobile-tutorial-dropdown-active,
 .saved-selections-dropdown.mobile-tutorial-dropdown-active {
   position: relative;
   z-index: 9999 !important;
-  isolation: isolate;
   border-top: none !important;
 }
 
@@ -480,6 +494,8 @@ body.mobile-tutorial-active {
 .saved-selections-dropdown.mobile-tutorial-dropdown-active.mobile-tutorial-highlight {
   box-shadow: none !important;
   animation: none !important;
+  border-radius: 0 0 1.5rem 1.5rem !important;
+  overflow: hidden !important;
 }
 
 /* Small viewport height - tighter tooltip */

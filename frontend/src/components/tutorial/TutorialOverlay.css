@@ -98,28 +98,14 @@ body:has(.tutorial-backdrop) .hero-section {
   height: auto !important;
 }
 
-/* Ensure dropdowns are above backdrop during tutorial steps */
+/* Ensure dropdowns are above backdrop during tutorial steps.
+   z-index alone creates the stacking context — do NOT add isolation:isolate here
+   because it breaks overflow:hidden + border-radius clipping of rounded corners. */
 .history-inline-list.tutorial-dropdown-active,
 .saved-selections-dropdown.tutorial-dropdown-active {
   position: relative;
   z-index: 9999 !important;
-  /* Ensure it maintains its default colors and is not affected by backdrop */
-  isolation: isolate;
   border-top: none !important;
-}
-
-/* Steps 7–8: the backdrop cutout frames the combined composer + dropdown.
-   Suppress the dropdown's own tutorial ring so it does not draw an internal divider. */
-.history-inline-list.tutorial-highlight,
-.saved-selections-dropdown.tutorial-highlight {
-  border-radius: var(--radius-lg) !important;
-  overflow: visible !important;
-}
-
-.history-inline-list.tutorial-dropdown-active.tutorial-highlight,
-.saved-selections-dropdown.tutorial-dropdown-active.tutorial-highlight {
-  box-shadow: none !important;
-  animation: none !important;
 }
 
 /* Ensure parent container is also above backdrop when dropdowns are active */
@@ -129,7 +115,25 @@ body:has(.tutorial-backdrop) .hero-section {
   isolation: isolate;
 }
 
-/* During steps 7–8, keep composer above backdrop but do not change its background */
+/* Steps 7–8: composer must clip its dropdown child to rounded bottom corners.
+
+   Strategy: match the non-tutorial behavior — keep the composer fully rounded
+   (1.5rem all corners) with `overflow: hidden` so the composer clips the dropdown
+   the same way the non-tutorial layout does. Earlier attempts used
+   `border-radius: 1.5rem 1.5rem 0 0` + `overflow: visible` (square composer bottom,
+   relying on the dropdown's own rounded bottom), but `.composer.tutorial-highlight`
+   already promotes the composer to a GPU compositing layer via `transform:
+   translateZ(0)` + `will-change: transform` + `isolation: isolate` + `contain: layout
+   style paint`. On that layer the composer's bottom edge clips its children to its
+   own rectangle, and the dropdown's rounded corners are clipped back to square.
+
+   The dropdown is a flex child, so the composer expands to contain it, and the
+   composer's rounded-all-around clip naturally rounds the bottom corners. */
+.composer.tutorial-dropdown-container-active.tutorial-highlight:has(.history-inline-list),
+.composer.tutorial-dropdown-container-active.tutorial-highlight:has(.saved-selections-dropdown) {
+  border-radius: 1.5rem !important;
+  overflow: hidden !important;
+}
 
 /* Highlight effect on target element */
 .tutorial-highlight {
@@ -148,6 +152,24 @@ body:has(.tutorial-backdrop) .hero-section {
   /* Ensure highlighted elements are clickable */
   /* Prevent backdrop dimming */
   isolation: isolate !important;
+}
+
+/* Steps 7–8: dropdown is clipped by the composer's rounded-all-around overflow:hidden
+   (see rule above). Override .tutorial-highlight's --radius-md so the dropdown's own
+   bottom radius matches results.css (1.5rem), and suppress the per-element ring/pulse
+   since the cutout overlay already draws the blue frame around the composer+dropdown. */
+.history-inline-list.tutorial-highlight,
+.saved-selections-dropdown.tutorial-highlight {
+  border-radius: 0 0 1.5rem 1.5rem !important;
+  overflow: hidden !important;
+}
+
+.history-inline-list.tutorial-dropdown-active.tutorial-highlight,
+.saved-selections-dropdown.tutorial-dropdown-active.tutorial-highlight {
+  box-shadow: none !important;
+  animation: none !important;
+  border-radius: 0 0 1.5rem 1.5rem !important;
+  overflow: hidden !important;
 }
 
 /* Results use the shared backdrop frame as their tutorial border.

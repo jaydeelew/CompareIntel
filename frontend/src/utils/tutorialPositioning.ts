@@ -120,12 +120,8 @@ export function computeTooltipPosition(
       step === 'save-selection') &&
     config.position === 'top'
 
-  // Step 6: tooltip above or below the results section — never over the center
+  // Step 6: tooltip below the results section initially — prefer bottom, fall back to top
   if (step === 'view-follow-up-results' && config.position === 'top') {
-    // After translate(-100%, …), `top` is the y of the tooltip box bottom. The down-arrow
-    // (TutorialOverlay.css: 8px triangle + bottom: -8px) ends ~8px below that. The tutorial
-    // pulse on .results-section is 3px + 7px outside the border box — tip should meet that
-    // outer edge (~10px above rect.top), not overlap the card: 10 + 8 = 18.
     const reviewGap = 18
     const left = rect.left + rect.width / 2
     const clampedLeft = Math.max(200, Math.min(left, window.innerWidth - 200))
@@ -133,6 +129,14 @@ export function computeTooltipPosition(
     const spaceBelow = viewportHeight - rect.bottom
     const minAbove = estimatedTooltipHeight + reviewGap + 40
     const minBelow = estimatedTooltipHeight + offset + MARGIN
+
+    if (spaceBelow >= minBelow) {
+      return {
+        top: rect.bottom + offset,
+        left: clampedLeft,
+        effectivePosition: 'bottom',
+      }
+    }
 
     if (spaceAbove >= minAbove) {
       let top = rect.top - reviewGap
@@ -143,22 +147,14 @@ export function computeTooltipPosition(
       return { top, left: clampedLeft, effectivePosition: 'top' }
     }
 
-    if (spaceBelow >= minBelow) {
-      return {
-        top: rect.bottom + offset,
-        left: clampedLeft,
-        effectivePosition: 'bottom',
-      }
-    }
-
     // Not enough room fully above or below — pick the side with more space,
     // but never let the tooltip sit over the vertical center of the section.
-    if (spaceAbove >= spaceBelow) {
-      const top = Math.max(MARGIN + estimatedTooltipHeight, rect.top - reviewGap)
-      return { top, left: clampedLeft, effectivePosition: 'top' }
+    if (spaceBelow >= spaceAbove) {
+      const top = Math.max(rect.bottom + offset, viewportHeight - estimatedTooltipHeight - MARGIN)
+      return { top, left: clampedLeft, effectivePosition: 'bottom' }
     }
-    const top = Math.max(rect.bottom + offset, viewportHeight - estimatedTooltipHeight - MARGIN)
-    return { top, left: clampedLeft, effectivePosition: 'bottom' }
+    const top = Math.max(MARGIN + estimatedTooltipHeight, rect.top - reviewGap)
+    return { top, left: clampedLeft, effectivePosition: 'top' }
   }
 
   // Step 5: tooltip above the composer — leave enough clearance so the down-arrow reads between
@@ -275,10 +271,14 @@ export function getScrollTargetForStep(step: TutorialStep, targetElement: HTMLEl
     const desiredElementTopInViewport = TOP_MARGIN + tooltipOffset + estimatedTooltipHeight
     return window.pageYOffset + rect.top - desiredElementTopInViewport
   }
-  if (step === 'follow-up' || step === 'view-follow-up-results') {
+  if (step === 'follow-up') {
     const desiredElementTopInViewport = TOP_MARGIN + tooltipOffset + estimatedTooltipHeight
-    // follow-up targets the composer below results so the arrow lands on the textarea chrome
     return window.pageYOffset + rect.top - desiredElementTopInViewport
+  }
+  if (step === 'view-follow-up-results') {
+    const desiredElementBottomInViewport =
+      window.innerHeight - BOTTOM_MARGIN - tooltipOffset - estimatedTooltipHeight
+    return window.pageYOffset + rect.bottom - desiredElementBottomInViewport
   }
   if (step === 'enter-prompt' || step === 'enter-prompt-2') {
     const desiredComposerBottomInViewport =
