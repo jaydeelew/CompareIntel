@@ -1750,12 +1750,13 @@ function useTutorialOverlay(
 
       if (isReviewAfterFollowUp && !streamAnswerStarted && loadingSection) {
         const rect = loadingSection.getBoundingClientRect()
-        const padding = 12
+        const padding = 8
         setLoadingStreamingCutout({
           top: rect.top + window.scrollY - padding,
           left: rect.left + window.scrollX - padding,
           width: rect.width + padding * 2,
           height: rect.height + padding * 2,
+          borderRadius: 20,
         })
         return
       }
@@ -1773,12 +1774,13 @@ function useTutorialOverlay(
         }
 
         const rect = loadingSection.getBoundingClientRect()
-        const padding = 12
+        const padding = 8
         setLoadingStreamingCutout({
           top: rect.top + window.scrollY - padding,
           left: rect.left + window.scrollX - padding,
           width: rect.width + padding * 2,
           height: rect.height + padding * 2,
+          borderRadius: 20,
         })
         return
       }
@@ -1811,12 +1813,13 @@ function useTutorialOverlay(
         setLoadingStreamingCutout(cutout)
       } else if (loadingSection) {
         const rect = loadingSection.getBoundingClientRect()
-        const padding = 12
+        const padding = 8
         setLoadingStreamingCutout({
           top: rect.top + window.scrollY - padding,
           left: rect.left + window.scrollX - padding,
           width: rect.width + padding * 2,
           height: rect.height + padding * 2,
+          borderRadius: 20,
         })
       }
     }
@@ -1837,10 +1840,14 @@ function useTutorialOverlay(
     }
   }, [step, isLoading, streamAnswerStarted])
 
-  // Step 6: pulse/highlight on the processing block before stream tokens (same class as submit loading)
+  // Pulse/highlight on the processing block before stream tokens for all submit/loading steps
   useEffect(() => {
+    const isLoadingHighlightStep =
+      step === 'submit-comparison' ||
+      step === 'submit-comparison-2' ||
+      step === 'view-follow-up-results'
     const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
-    if (step !== 'view-follow-up-results') {
+    if (!isLoadingHighlightStep) {
       if (loadingSection) {
         loadingSection.classList.remove('tutorial-highlight')
         loadingSection.style.pointerEvents = ''

@@ -295,6 +295,13 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     )
   }
 
+  // Follow-up step requires the dual-hole SVG backdrop (results + composer). While
+  // those cutouts are being computed (e.g. during the step 4→5 transition), render
+  // nothing rather than a full-screen dim to avoid a jarring flash.
+  if (step === 'follow-up') {
+    return null
+  }
+
   return (
     <div
       className="tutorial-backdrop"

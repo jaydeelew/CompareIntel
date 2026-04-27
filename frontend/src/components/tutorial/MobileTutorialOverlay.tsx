@@ -991,7 +991,16 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const highlightFollowUp =
       step === 'follow-up' && followUpSubmitStarted && isLoading && !streamAnswerStarted
     const highlightReview = step === 'view-follow-up-results' && isLoading && !streamAnswerStarted
-    if (step !== 'view-follow-up-results' && step !== 'follow-up') {
+    const highlightSubmit =
+      (step === 'submit-comparison' || step === 'submit-comparison-2') &&
+      isLoading &&
+      !streamAnswerStarted
+    const isLoadingHighlightStep =
+      step === 'submit-comparison' ||
+      step === 'submit-comparison-2' ||
+      step === 'view-follow-up-results' ||
+      step === 'follow-up'
+    if (!isLoadingHighlightStep) {
       if (loadingSection) {
         loadingSection.classList.remove('mobile-tutorial-highlight')
         loadingSection.style.pointerEvents = ''
@@ -999,7 +1008,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       return
     }
-    if (!(highlightFollowUp || highlightReview) || !loadingSection) {
+    if (!(highlightFollowUp || highlightReview || highlightSubmit) || !loadingSection) {
       if (loadingSection) {
         loadingSection.classList.remove('mobile-tutorial-highlight')
         loadingSection.style.pointerEvents = ''
@@ -1135,7 +1144,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           width: `${cutoutTarget.width + cutoutPadding * 2}px`,
           height: `${cutoutTarget.height + cutoutPadding * 2}px`,
           borderRadius: isLoadingStreamingPhase
-            ? '16px'
+            ? '20px'
             : step === 'enter-prompt' ||
                 step === 'enter-prompt-2' ||
                 step === 'submit-comparison' ||
@@ -1149,6 +1158,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                   ? '24px'
                   : '16px',
           boxShadow:
+            isLoadingStreamingPhase ||
             step === 'expand-provider' ||
             step === 'select-models' ||
             step === 'follow-up' ||
