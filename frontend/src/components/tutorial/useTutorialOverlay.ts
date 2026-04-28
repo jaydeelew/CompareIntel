@@ -11,6 +11,9 @@ import {
   computeTargetCutout,
   computeTooltipPosition,
   getScrollTargetForStep,
+  getGoogleProviderTutorialAnchor,
+  scrollGoogleProviderTutorialIntoCenter,
+  getTutorialScrollRoot,
 } from '../../utils/tutorialPositioning'
 
 import {
@@ -50,7 +53,7 @@ function attachScrollResizeRaf(update: () => void): () => void {
   }
 }
 
-function useTutorialOverlay(
+export function useTutorialOverlay(
   step: TutorialStep | null,
   isLoading: boolean,
   streamAnswerStarted = false
@@ -84,6 +87,9 @@ function useTutorialOverlay(
   // This prevents the tooltip from visibly animating through intermediate positions
   // during the scroll + post-scroll adjustment phase when changing steps.
   const [positionStabilized, setPositionStabilized] = useState(false)
+  /** Step 1 only: after Google row is centered, apply hero lock / highlight / cutout, then tooltip. */
+  const [expandProviderEffectsReady, setExpandProviderEffectsReady] = useState(false)
+  const prevStepForExpandProviderRef = useRef<TutorialStep | null>(null)
   const [textareaCutout, setTextareaCutout] = useState<{
     top: number
     left: number
@@ -250,12 +256,17 @@ function useTutorialOverlay(
     }
   }, [isVisible, step, overlayPosition.top, overlayPosition.left])
 
-  // Force visibility immediately for key tutorial steps (handles production findElement timing issues)
+  useLayoutEffect(() => {
+    if (step === 'expand-provider' && prevStepForExpandProviderRef.current !== 'expand-provider') {
+      setExpandProviderEffectsReady(false)
+    }
+    prevStepForExpandProviderRef.current = step
+  }, [step])
+
+  // Default overlay position for early frames; visibility for provider steps is set
+  // after the initial scroll finishes so the tooltip does not track a moving target.
   useEffect(() => {
     if (step === 'expand-provider' || step === 'select-models') {
-      // Force visibility immediately - tooltip should ALWAYS show for these steps
-      setIsVisible(true)
-      // Set a reasonable default position in case elements aren't found yet
       setOverlayPosition({ top: 320, left: window.innerWidth / 2 })
     } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
       // Do NOT force visibility for enter-prompt steps.
@@ -369,6 +380,8 @@ function useTutorialOverlay(
     return () => {
       cleanupHeroObservers()
     }
+    // Intentionally step-only: do not depend on expandProviderEffectsReady — toggling it used to
+    // re-run restoreHeroStyles() for expand-provider and unlock/relock the hero (visible bounce).
   }, [step])
 
   // Ensure hero can expand during steps where the composer (prompt + actions) or dropdowns must be visible.
@@ -410,6 +423,7 @@ function useTutorialOverlay(
       setTargetElement(null)
       setHighlightedElements([])
       setIsVisible(false)
+      setExpandProviderEffectsReady(false)
       hasAttemptedElementFindRef.current = false
       initialScrollCompleteRef.current = false
       setPositionStabilized(false)
@@ -544,10 +558,7 @@ function useTutorialOverlay(
           composerElement.style.pointerEvents = 'auto'
           composerElement.style.position = 'relative'
           const submitCutout = computeTextareaCutout(composerElement)
-          if (submitCutout) {
-            submitCutout.top += window.scrollY
-            submitCutout.left += window.scrollX
-          }
+          // submitCutout uses viewport-relative coords (portal is on body, outside .app scroll root)
           setTextareaCutout(submitCutout)
         }
         // Use default selector for the submit button as target element
@@ -598,6 +609,8 @@ function useTutorialOverlay(
             step !== 'enter-prompt' &&
             step !== 'enter-prompt-2' &&
             step !== 'follow-up' &&
+            step !== 'expand-provider' &&
+            step !== 'select-models' &&
             !(step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current)
           ) {
             setIsVisible(true)
@@ -649,7 +662,6 @@ function useTutorialOverlay(
                     : googleDropdown
                 if (headerElement) {
                   setTargetElement(headerElement)
-                  setIsVisible(true)
                   return
                 }
               }
@@ -704,20 +716,18 @@ function useTutorialOverlay(
       setOverlayPosition({ top, left })
     }
 
-    updatePosition()
+    // Provider steps: skip a pre-scroll updatePosition so we never commit tooltip coords from a
+    // pre-centered layout (avoids a flash of tooltip at the bottom while Google is off-center).
+    if (step !== 'expand-provider' && step !== 'select-models') {
+      updatePosition()
+    }
 
     const scrollToElement = () => {
       const el = layoutTarget()
       if (!el) return
-      const scrollTarget = getScrollTargetForStep(step, el)
 
-      // Scroll smoothly without affecting hero section layout
-      // For step 3, 5, and 6, use slower custom scrolling so the transition feels intentional
-      const scrollOptions: ScrollToOptions = {
-        top: Math.max(0, scrollTarget),
-        behavior: 'smooth',
-        left: window.pageXOffset, // Keep horizontal position
-      }
+      const root = getTutorialScrollRoot()
+      const scrollTarget = getScrollTargetForStep(step, el)
 
       if (
         step === 'enter-prompt' ||
@@ -725,12 +735,11 @@ function useTutorialOverlay(
         step === 'follow-up' ||
         isReviewStepFromFollowUp
       ) {
-        // Use a custom smooth scroll implementation for slower, smoother scrolling
-        const startScrollY = window.pageYOffset
-        const targetScrollY = Math.max(0, scrollTarget)
+        // Custom smooth scroll on the real scroll root (`.app` or window)
+        const startScrollY = root.getScrollTop()
+        const targetScrollY = scrollTarget
         const distance = targetScrollY - startScrollY
 
-        // Mark that we're starting a programmatic scroll
         isScrollingRef.current = true
 
         const duration =
@@ -741,7 +750,6 @@ function useTutorialOverlay(
               : 900
         const startTime = performance.now()
 
-        // Ease-in-out cubic function for smooth animation
         const easeInOutCubic = (t: number): number => {
           return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
         }
@@ -752,13 +760,12 @@ function useTutorialOverlay(
           const easeProgress = easeInOutCubic(progress)
 
           const currentScrollY = startScrollY + distance * easeProgress
-          window.scrollTo(0, currentScrollY)
+          root.scrollToTop(currentScrollY, 'auto')
 
           if (progress < 1) {
             scrollAnimFrame = requestAnimationFrame(animateScroll)
           } else {
             scrollAnimFrame = null
-            // Scroll animation complete - mark as done after a brief delay to allow layout to settle
             setTimeout(() => {
               isScrollingRef.current = false
               if (scrollCompletionResolver) {
@@ -770,9 +777,15 @@ function useTutorialOverlay(
         }
 
         scrollAnimFrame = requestAnimationFrame(animateScroll)
+      } else if (step === 'expand-provider' || step === 'select-models') {
+        // Center the full provider card (not the header row) so the cutout + Google label match scroll math.
+        if (getGoogleProviderTutorialAnchor()) {
+          scrollGoogleProviderTutorialIntoCenter()
+        } else {
+          root.scrollToTop(scrollTarget, 'auto')
+        }
       } else {
-        // Use default smooth scroll for other steps
-        window.scrollTo(scrollOptions)
+        root.scrollToTop(scrollTarget, 'smooth')
       }
     }
 
@@ -783,28 +796,33 @@ function useTutorialOverlay(
     const isFollowUpStep = step === 'follow-up'
     const isReviewStepFromFollowUp =
       step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current
+    const isProviderStep = step === 'expand-provider' || step === 'select-models'
     // Delay reveal for dropdown steps when target is offscreen, or for steps that smooth-scroll
     // to the composer before showing the tooltip, or for step 6 when transitioning from step 5.
+    // Provider steps: scroll to vertical center first, then show the tooltip above (no tracking).
     const shouldDelayReveal =
       (isDropdownStep && isTargetOffscreen) ||
       isEnterPromptStep ||
       isFollowUpStep ||
-      isReviewStepFromFollowUp
+      isReviewStepFromFollowUp ||
+      isProviderStep
 
     if (shouldDelayReveal) {
       setIsVisible(false)
     }
 
     const waitForScrollStop = (onStop: () => void) => {
-      let lastScrollY = window.scrollY
+      const scrollRoot = getTutorialScrollRoot()
+      const getCompositeScroll = () => scrollRoot.getScrollTop()
+      let lastScroll = getCompositeScroll()
       let stableFrames = 0
       const check = () => {
-        const currentScrollY = window.scrollY
-        if (Math.abs(currentScrollY - lastScrollY) < 1) {
+        const current = getCompositeScroll()
+        if (Math.abs(current - lastScroll) < 1) {
           stableFrames += 1
         } else {
           stableFrames = 0
-          lastScrollY = currentScrollY
+          lastScroll = current
         }
 
         if (stableFrames >= 6) {
@@ -823,10 +841,16 @@ function useTutorialOverlay(
         scrollCompletionResolver = resolve
       })
 
-    // Small delay to ensure hero is locked, then scroll
-    // For enter-prompt steps, keep a brief delay for layout expansion without feeling sluggish
+    // Step 1: scroll immediately so the first paint with the overlay never shows Google at the rim.
+    // Other steps: small delay so hero lock / layout can settle before scroll.
     const scrollDelay =
-      step === 'enter-prompt' || step === 'enter-prompt-2' ? 150 : step === 'follow-up' ? 220 : 100
+      step === 'expand-provider'
+        ? 0
+        : step === 'enter-prompt' || step === 'enter-prompt-2'
+          ? 150
+          : step === 'follow-up'
+            ? 220
+            : 100
     scrollDelayTimer = setTimeout(() => {
       scrollDelayTimer = null
       const shouldSkipScroll =
@@ -841,11 +865,22 @@ function useTutorialOverlay(
         step === 'enter-prompt-2' ||
         step === 'follow-up' ||
         isReviewStepFromFollowUp
+      const isProviderSnapScrollStep = step === 'expand-provider' || step === 'select-models'
       const waitForScroll =
         shouldDelayReveal && !shouldSkipScroll
           ? isCustomScrollStep
             ? waitForProgrammaticScrollCompletion()
-            : new Promise<void>(resolve => waitForScrollStop(resolve))
+            : isProviderSnapScrollStep
+              ? new Promise<void>(resolve => {
+                  requestAnimationFrame(() => {
+                    scrollGoogleProviderTutorialIntoCenter()
+                    requestAnimationFrame(() => {
+                      scrollGoogleProviderTutorialIntoCenter()
+                      resolve()
+                    })
+                  })
+                })
+              : new Promise<void>(resolve => waitForScrollStop(resolve))
           : null
 
       if (shouldSkipScroll) {
@@ -857,7 +892,8 @@ function useTutorialOverlay(
       }
 
       if (isCustomScrollStep) {
-        window.scrollTo(window.scrollX, window.scrollY)
+        const r = getTutorialScrollRoot()
+        r.scrollToTop(r.getScrollTop(), 'auto')
       }
 
       scrollToElement()
@@ -865,6 +901,35 @@ function useTutorialOverlay(
       if (shouldDelayReveal && waitForScroll) {
         waitForScroll.then(() => {
           if (stepRef.current !== step) return
+
+          if (step === 'expand-provider') {
+            setExpandProviderEffectsReady(true)
+            // Phase 1 – let highlight/cutout effects mount after expandProviderEffectsReady.
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                if (stepRef.current !== 'expand-provider') return
+                // Phase 2 – compute the final tooltip position (batched into next render).
+                updatePosition()
+                initialScrollCompleteRef.current = true
+                // Phase 3 – the position state commits on the next render.  Reveal the
+                // tooltip one frame later so it paints at the final coords, not the default.
+                requestAnimationFrame(() => {
+                  if (stepRef.current !== 'expand-provider') return
+                  setIsVisible(true)
+                  // Phase 4 – enable CSS transitions only after the clamp layoutEffect
+                  // has had a chance to adjust the just-revealed tooltip.  Without this
+                  // delay the clamp adjustment is *animated* and the user sees the tooltip
+                  // slide from its unclamped position.
+                  requestAnimationFrame(() => {
+                    if (stepRef.current !== 'expand-provider') return
+                    setPositionStabilized(true)
+                  })
+                })
+              })
+            })
+            return
+          }
+
           updatePosition()
           initialScrollCompleteRef.current = true
 
@@ -931,6 +996,12 @@ function useTutorialOverlay(
       ) {
         return
       }
+      if (
+        (step === 'expand-provider' || step === 'select-models') &&
+        !initialScrollCompleteRef.current
+      ) {
+        return
+      }
       updatePosition()
     }
     window.addEventListener('scroll', handleScroll, true)
@@ -970,12 +1041,16 @@ function useTutorialOverlay(
     // We re-query the element each time to ensure we always have the current reference
     let elementsToHighlight: HTMLElement[] = []
     if (step === 'expand-provider' || step === 'select-models') {
-      // Always re-query to get the current element reference (in case DOM updates)
-      const googleDropdown = document.querySelector(
-        '.provider-dropdown[data-provider-name="Google"]'
-      ) as HTMLElement
-      if (googleDropdown) {
-        elementsToHighlight = [googleDropdown]
+      if (step === 'expand-provider' && !expandProviderEffectsReady) {
+        elementsToHighlight = []
+      } else {
+        // Always re-query to get the current element reference (in case DOM updates)
+        const googleDropdown = document.querySelector(
+          '.provider-dropdown[data-provider-name="Google"]'
+        ) as HTMLElement
+        if (googleDropdown) {
+          elementsToHighlight = [googleDropdown]
+        }
       }
     } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
       // Highlight the textarea container for step 3 and step 6 (consistent highlight)
@@ -1043,10 +1118,6 @@ function useTutorialOverlay(
     if (shouldExcludeTextarea && step !== 'follow-up') {
       composerElement = getComposerElement()
       const cutout = composerElement ? computeTextareaCutout(composerElement) : null
-      if (cutout) {
-        cutout.top += window.scrollY
-        cutout.left += window.scrollX
-      }
       setTextareaCutout(cutout)
     } else if (!isDropdownStep && step !== 'follow-up') {
       // Only clear textarea cutout if we're not on a dropdown step
@@ -1068,10 +1139,6 @@ function useTutorialOverlay(
           historyDropdown.classList.add('tutorial-highlight')
         }
         const historyCutout = computeDropdownCutout(dropdownContainer, historyDropdown)
-        if (historyCutout) {
-          historyCutout.top += window.scrollY
-          historyCutout.left += window.scrollX
-        }
         setDropdownCutout(historyCutout)
       }
     } else if (step === 'save-selection') {
@@ -1087,10 +1154,6 @@ function useTutorialOverlay(
           savedSelectionsDropdown.classList.add('tutorial-highlight')
         }
         const saveCutout = computeDropdownCutout(dropdownContainer, savedForCutout)
-        if (saveCutout) {
-          saveCutout.top += window.scrollY
-          saveCutout.left += window.scrollX
-        }
         setDropdownCutout(saveCutout)
       }
     } else if (!isDropdownStep) {
@@ -1195,92 +1258,48 @@ function useTutorialOverlay(
       }
       // If we're still on expand-provider, select-models, enter-prompt, submit-comparison, or dropdown steps, don't clean up - keep the highlight
     }
-  }, [step, highlightedElements, targetElement])
+  }, [step, highlightedElements, targetElement, expandProviderEffectsReady])
 
-  // Separate effect to continuously maintain highlight for expand-provider step
-  // Uses simple interval instead of MutationObserver to avoid performance issues
-  // ALSO ensures visibility, targetElement, and position are set (fixes production timing issues)
+  // Re-apply Google highlight if the DOM dropped it (production timing). Tooltip/position come from
+  // the main scroll + computeTooltipPosition path — not here — so step 1 stays: center → effects → tooltip.
   useEffect(() => {
-    if (step !== 'expand-provider') return
+    if (step !== 'expand-provider' || !expandProviderEffectsReady) return
 
-    // FORCE visibility immediately on mount to ensure tooltip appears
-    setIsVisible(true)
-
-    const ensureHighlightVisibilityAndPosition = () => {
+    const ensureHighlight = () => {
       const googleDropdown = document.querySelector(
         '.provider-dropdown[data-provider-name="Google"]'
       ) as HTMLElement
-      if (googleDropdown) {
-        if (!googleDropdown.classList.contains('tutorial-highlight')) {
-          googleDropdown.classList.add('tutorial-highlight')
-          googleDropdown.style.pointerEvents = 'auto'
-          googleDropdown.style.position = 'relative'
-        }
-        // Ensure visibility, target, and position when interval finds element (main findElement may have failed)
-        const headerElement = googleDropdown.querySelector('.provider-header') as HTMLElement
-        if (headerElement) {
-          setTargetElement(headerElement)
-          setIsVisible(true)
-
-          // Calculate position with dynamic top/bottom switching based on available space
-          const rect = headerElement.getBoundingClientRect()
-          const offset = 16
-          const estimatedTooltipHeight = 210
-          const minSpaceNeeded = estimatedTooltipHeight + offset + 40
-
-          // Calculate available space
-          const spaceAbove = rect.top
-          const spaceBelow = window.innerHeight - rect.bottom
-
-          // Determine which position to use:
-          // - Default to 'top' (tooltip above provider)
-          // - Switch to 'bottom' (tooltip below provider) if not enough space above
-          const shouldUseBottom = spaceAbove < minSpaceNeeded && spaceBelow >= minSpaceNeeded
-
-          let top: number
-          if (shouldUseBottom) {
-            setEffectivePosition('bottom')
-            top = rect.bottom + offset
-          } else {
-            setEffectivePosition('top')
-            top = rect.top - offset
-          }
-          const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
-          setOverlayPosition({ top, left })
-        } else {
-          // Fallback: even if we don't find the header, still show tooltip at a reasonable position
-          setIsVisible(true)
-          setOverlayPosition({ top: 300, left: window.innerWidth / 2 })
-        }
-      } else {
-        // Fallback: even if we don't find Google dropdown, still show tooltip at center-top
-        setIsVisible(true)
-        setOverlayPosition({ top: 300, left: window.innerWidth / 2 })
+      if (!googleDropdown) return
+      if (!googleDropdown.classList.contains('tutorial-highlight')) {
+        googleDropdown.classList.add('tutorial-highlight')
+        googleDropdown.style.pointerEvents = 'auto'
+        googleDropdown.style.position = 'relative'
+      }
+      const headerElement = googleDropdown.querySelector('.provider-header') as HTMLElement
+      if (headerElement) {
+        setTargetElement(prev => (prev === headerElement ? prev : headerElement))
       }
     }
 
-    // Check immediately
-    ensureHighlightVisibilityAndPosition()
-
-    const detachScrollResize = attachScrollResizeRaf(ensureHighlightVisibilityAndPosition)
-
-    // Check periodically to maintain highlight, visibility, and position
-    const interval = setInterval(ensureHighlightVisibilityAndPosition, 100)
+    ensureHighlight()
+    const detachScrollResize = attachScrollResizeRaf(ensureHighlight)
+    const interval = setInterval(ensureHighlight, 250)
 
     return () => {
       detachScrollResize()
       clearInterval(interval)
-      // Clean up highlight when leaving this step
-      const googleDropdown = document.querySelector(
-        '.provider-dropdown[data-provider-name="Google"]'
-      ) as HTMLElement
-      if (googleDropdown) {
-        googleDropdown.classList.remove('tutorial-highlight')
-        googleDropdown.style.pointerEvents = ''
-        googleDropdown.style.position = ''
+      if (stepRef.current !== 'expand-provider') {
+        const googleDropdown = document.querySelector(
+          '.provider-dropdown[data-provider-name="Google"]'
+        ) as HTMLElement
+        if (googleDropdown) {
+          googleDropdown.classList.remove('tutorial-highlight')
+          googleDropdown.style.pointerEvents = ''
+          googleDropdown.style.position = ''
+        }
       }
     }
-  }, [step])
+  }, [step, expandProviderEffectsReady])
 
   // Separate effect to continuously maintain highlight for select-models step
   // Uses simple interval instead of MutationObserver to avoid performance issues
@@ -1374,10 +1393,6 @@ function useTutorialOverlay(
         composerElement.style.position = 'relative'
         composerElement.classList.add('tutorial-textarea-active')
         const cutout = computeTextareaCutout(composerElement)
-        if (cutout) {
-          cutout.top += window.scrollY
-          cutout.left += window.scrollX
-        }
         setTextareaCutout(cutout)
         // Set target element only when needed; avoid re-triggering scroll during the initial phase
         const currentTarget = targetElementRef.current
@@ -1443,10 +1458,6 @@ function useTutorialOverlay(
         composerElement.style.position = 'relative'
         composerElement.classList.add('tutorial-textarea-active')
         const cutout = computeTextareaCutout(composerElement)
-        if (cutout) {
-          cutout.top += window.scrollY
-          cutout.left += window.scrollX
-        }
         setTextareaCutout(cutout)
         // Set target element if not set
         setTargetElement(composerElement)
@@ -1638,10 +1649,6 @@ function useTutorialOverlay(
           composerElement.style.position = 'relative'
         }
         const cutout = computeTextareaCutout(composerElement)
-        if (cutout) {
-          cutout.top += window.scrollY
-          cutout.left += window.scrollX
-        }
         setTextareaCutout(cutout)
       }
 
@@ -1752,8 +1759,8 @@ function useTutorialOverlay(
         const rect = loadingSection.getBoundingClientRect()
         const padding = 8
         setLoadingStreamingCutout({
-          top: rect.top + window.scrollY - padding,
-          left: rect.left + window.scrollX - padding,
+          top: rect.top - padding,
+          left: rect.left - padding,
           width: rect.width + padding * 2,
           height: rect.height + padding * 2,
           borderRadius: 20,
@@ -1776,8 +1783,8 @@ function useTutorialOverlay(
         const rect = loadingSection.getBoundingClientRect()
         const padding = 8
         setLoadingStreamingCutout({
-          top: rect.top + window.scrollY - padding,
-          left: rect.left + window.scrollX - padding,
+          top: rect.top - padding,
+          left: rect.left - padding,
           width: rect.width + padding * 2,
           height: rect.height + padding * 2,
           borderRadius: 20,
@@ -1806,17 +1813,13 @@ function useTutorialOverlay(
         }
 
         const cutout = computeTargetCutout([resultsSection], 8, 24)
-        if (cutout) {
-          cutout.top += window.scrollY
-          cutout.left += window.scrollX
-        }
         setLoadingStreamingCutout(cutout)
       } else if (loadingSection) {
         const rect = loadingSection.getBoundingClientRect()
         const padding = 8
         setLoadingStreamingCutout({
-          top: rect.top + window.scrollY - padding,
-          left: rect.left + window.scrollX - padding,
+          top: rect.top - padding,
+          left: rect.left - padding,
           width: rect.width + padding * 2,
           height: rect.height + padding * 2,
           borderRadius: 20,
@@ -1913,10 +1916,6 @@ function useTutorialOverlay(
           composerElement.classList.add('tutorial-highlight')
         }
         const histCutout = computeDropdownCutout(composerElement, historyDropdown)
-        if (histCutout) {
-          histCutout.top += window.scrollY
-          histCutout.left += window.scrollX
-        }
         setDropdownCutout(histCutout)
       }
 
@@ -2003,10 +2002,6 @@ function useTutorialOverlay(
           composerElement.classList.add('tutorial-highlight')
         }
         const selCutout = computeDropdownCutout(composerElement, savedSelectionsForCutout)
-        if (selCutout) {
-          selCutout.top += window.scrollY
-          selCutout.left += window.scrollX
-        }
         setDropdownCutout(selCutout)
       }
 
@@ -2064,10 +2059,6 @@ function useTutorialOverlay(
     const updateTextareaCutout = () => {
       const composerElement = getComposerElement()
       const cutout = composerElement ? computeTextareaCutout(composerElement) : null
-      if (cutout) {
-        cutout.top += window.scrollY
-        cutout.left += window.scrollX
-      }
       setTextareaCutout(cutout)
     }
 
@@ -2098,10 +2089,6 @@ function useTutorialOverlay(
           ? getHistoryInlineListForTutorial()
           : getSavedSelectionsDropdownForTutorial()
       const cutout = computeDropdownCutout(composer, dropdown)
-      if (cutout) {
-        cutout.top += window.scrollY
-        cutout.left += window.scrollX
-      }
       setDropdownCutout(cutout)
     }
 
@@ -2129,17 +2116,9 @@ function useTutorialOverlay(
       const composerElement = getComposerElement()
 
       const targetCut = resultsSection != null ? computeTargetCutout([resultsSection], 8, 24) : null
-      if (targetCut) {
-        targetCut.top += window.scrollY
-        targetCut.left += window.scrollX
-      }
 
       const composerCutFull =
         composerElement != null ? computeTargetCutout([composerElement], 8, 32) : null
-      if (composerCutFull) {
-        composerCutFull.top += window.scrollY
-        composerCutFull.left += window.scrollX
-      }
       const composerCutRect = composerCutFull
         ? {
             top: composerCutFull.top,
@@ -2164,7 +2143,7 @@ function useTutorialOverlay(
   }, [step])
 
   // Calculate target cutout for steps that don't have special cutout handling.
-  // Uses document-relative (absolute) coordinates so it scrolls with the page.
+  // Uses viewport coordinates (getBoundingClientRect); TutorialBackdrop positions with fixed.
   useEffect(() => {
     const needsTargetCutout =
       step === 'expand-provider' || step === 'select-models' || step === 'view-follow-up-results'
@@ -2172,6 +2151,11 @@ function useTutorialOverlay(
     const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
 
     if (!needsTargetCutout && !isSubmitStep) {
+      setTargetCutout(null)
+      return
+    }
+
+    if (step === 'expand-provider' && !expandProviderEffectsReady) {
       setTargetCutout(null)
       return
     }
@@ -2201,10 +2185,6 @@ function useTutorialOverlay(
               ? 20 /* --radius-xl (12px) + 8 */
               : 12
       const cutout = computeTargetCutout(elementsToUse, padding, borderRadius)
-      if (cutout) {
-        cutout.top += window.scrollY
-        cutout.left += window.scrollX
-      }
       setTargetCutout(cutout)
     }
 
@@ -2217,7 +2197,7 @@ function useTutorialOverlay(
       detachScrollResize()
       clearInterval(interval)
     }
-  }, [step, highlightedElements, targetElement])
+  }, [step, highlightedElements, targetElement, expandProviderEffectsReady])
 
   const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
   const isLoadingStreamingPhase = Boolean(
@@ -2239,7 +2219,9 @@ function useTutorialOverlay(
     !isLoadingStreamingPhase
   const textareaCutoutToUse = textareaCutout || (isSubmitStep ? targetCutout : null)
   const shouldBlock =
-    !isLoadingStreamingPhase && hasAttemptedElementFindRef.current && !isVisible && !targetElement
+    !isLoadingStreamingPhase &&
+    hasAttemptedElementFindRef.current &&
+    ((!isVisible && !targetElement) || (step === 'expand-provider' && !expandProviderEffectsReady))
   return {
     overlayRef,
     stepRef,
@@ -2269,5 +2251,3 @@ function useTutorialOverlay(
     shouldBlock,
   }
 }
-
-export { useTutorialOverlay }

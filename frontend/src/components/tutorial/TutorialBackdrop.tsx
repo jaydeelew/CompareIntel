@@ -38,6 +38,9 @@ const TUTORIAL_FRAME_SHADOW =
 const TUTORIAL_DIM_SHADOW = '0 0 0 9999px rgba(0, 0, 0, 0.6)'
 const TUTORIAL_FRAMED_DIM_SHADOW = `${TUTORIAL_FRAME_SHADOW}, ${TUTORIAL_DIM_SHADOW}`
 
+/** Cutout geometry comes from getBoundingClientRect() (viewport space). Portal is on body, so use fixed — not absolute. */
+const CUTOUT_POSITION: React.CSSProperties['position'] = 'fixed'
+
 function handleBackdropClick(e: React.MouseEvent, className: string) {
   const target = e.target as HTMLElement
   if (target.classList.contains(className)) {
@@ -62,7 +65,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
       <div
         className="tutorial-backdrop-cutout"
         style={{
-          position: 'absolute',
+          position: CUTOUT_POSITION,
           top: `${loadingStreamingCutout.top}px`,
           left: `${loadingStreamingCutout.left}px`,
           width: `${loadingStreamingCutout.width}px`,
@@ -82,7 +85,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
       <div
         className="tutorial-backdrop-cutout"
         style={{
-          position: 'absolute',
+          position: CUTOUT_POSITION,
           top: `${textareaCutoutToUse.top}px`,
           left: `${textareaCutoutToUse.left}px`,
           width: `${textareaCutoutToUse.width}px`,
@@ -98,9 +101,8 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
   }
 
   if (shouldExcludeTextarea && textareaCutoutToUse) {
-    // Convert document-relative cutout back to viewport-relative for fixed-position split backdrop
-    const vTop = textareaCutoutToUse.top - window.scrollY
-    const vLeft = textareaCutoutToUse.left - window.scrollX
+    const vTop = textareaCutoutToUse.top
+    const vLeft = textareaCutoutToUse.left
     return (
       <>
         <div
@@ -142,7 +144,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
       <div
         className="tutorial-backdrop-cutout"
         style={{
-          position: 'absolute',
+          position: CUTOUT_POSITION,
           top: `${dropdownCutout.top}px`,
           left: `${dropdownCutout.left}px`,
           width: `${dropdownCutout.width}px`,
@@ -166,16 +168,8 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     !shouldExcludeDropdown &&
     !useRoundedCutout
   ) {
-    const docWidth = Math.max(
-      document.documentElement.scrollWidth,
-      document.body.scrollWidth,
-      window.innerWidth
-    )
-    const docHeight = Math.max(
-      document.documentElement.scrollHeight,
-      document.body.scrollHeight,
-      window.innerHeight
-    )
+    const vw = window.innerWidth
+    const vh = window.innerHeight
     const results = {
       top: targetCutout.top,
       left: targetCutout.left,
@@ -196,11 +190,11 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
         <svg
           className="tutorial-backdrop-follow-up-dim"
           style={{
-            position: 'absolute',
+            position: CUTOUT_POSITION,
             top: 0,
             left: 0,
-            width: `${docWidth}px`,
-            height: `${docHeight}px`,
+            width: `${vw}px`,
+            height: `${vh}px`,
             zIndex: 9998,
             pointerEvents: 'none',
           }}
@@ -208,7 +202,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
         >
           <defs>
             <mask id={maskId}>
-              <rect width={docWidth} height={docHeight} fill="white" />
+              <rect width={vw} height={vh} fill="white" />
               <rect
                 x={results.left}
                 y={results.top}
@@ -229,17 +223,12 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
               />
             </mask>
           </defs>
-          <rect
-            width={docWidth}
-            height={docHeight}
-            fill="rgba(0, 0, 0, 0.6)"
-            mask={`url(#${maskId})`}
-          />
+          <rect width={vw} height={vh} fill="rgba(0, 0, 0, 0.6)" mask={`url(#${maskId})`} />
         </svg>
         <div
           className="tutorial-backdrop-cutout tutorial-backdrop-follow-up-results-ring"
           style={{
-            position: 'absolute',
+            position: CUTOUT_POSITION,
             top: `${results.top}px`,
             left: `${results.left}px`,
             width: `${results.width}px`,
@@ -255,7 +244,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
         <div
           className="tutorial-backdrop-cutout tutorial-backdrop-follow-up-composer-ring"
           style={{
-            position: 'absolute',
+            position: CUTOUT_POSITION,
             top: `${composer.top}px`,
             left: `${composer.left}px`,
             width: `${composer.width}px`,
@@ -279,7 +268,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
       <div
         className="tutorial-backdrop-cutout"
         style={{
-          position: 'absolute',
+          position: CUTOUT_POSITION,
           top: `${targetCutout.top}px`,
           left: `${targetCutout.left}px`,
           width: `${targetCutout.width}px`,

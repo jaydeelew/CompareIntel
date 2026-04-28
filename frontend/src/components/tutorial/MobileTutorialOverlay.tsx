@@ -57,7 +57,7 @@ const MOBILE_STEP_OVERRIDES: Partial<
 > = {
   // On mobile, some steps might need different selectors or positions
   'expand-provider': {
-    position: 'bottom', // Show tooltip below the provider on mobile for better visibility
+    position: 'top', // Match desktop: tooltip above after provider is centered
   },
   'select-models': {
     position: 'top',
@@ -312,6 +312,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               setIsVisible(true)
             }
           })
+        } else if (step === 'expand-provider' || step === 'select-models') {
+          setIsVisible(false)
         } else {
           setIsVisible(true)
         }
@@ -628,6 +630,27 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const currentStep = step
 
     // Scroll target into view if needed (function so follow-up can run before the first position calc)
+    function waitForScrollStop(onStop: () => void) {
+      let lastScrollY = window.scrollY
+      let stableFrames = 0
+      const check = () => {
+        if (stepRef.current !== currentStep) return
+        const currentScrollY = window.scrollY
+        if (Math.abs(currentScrollY - lastScrollY) < 1) {
+          stableFrames += 1
+        } else {
+          stableFrames = 0
+          lastScrollY = currentScrollY
+        }
+        if (stableFrames >= 6) {
+          onStop()
+          return
+        }
+        requestAnimationFrame(check)
+      }
+      requestAnimationFrame(check)
+    }
+
     function scrollTargetIntoView() {
       const rect = targetEl.getBoundingClientRect()
       const viewportHeight = window.innerHeight
@@ -636,32 +659,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         // For enter-prompt steps, scroll to the top of the page initially
         // The tooltip appears above the textarea, and the user should see the top of the page
         window.scrollTo({ top: 0, behavior: 'smooth' })
-      } else if (currentStep === 'select-models') {
-        // For step 2, tooltip appears above the provider card
-        // Ensure there is enough space above for the tooltip on initial scroll
-        const arrowSize = 10
-        const measuredTooltipHeight =
-          overlayRef.current?.getBoundingClientRect().height ?? tooltipEstimatedHeight
-        const tooltipSpacing = arrowSize + 8
-        const totalTooltipHeight = measuredTooltipHeight + tooltipSpacing
-        const topMargin = Math.max(8, Math.round(viewportHeight * 0.02))
-        const maxTargetTop = Math.round(viewportHeight * 0.4)
-
-        const tooltipTop = rect.top - totalTooltipHeight
-        if (tooltipTop < topMargin) {
-          const idealTargetTop = topMargin + totalTooltipHeight
-          const scrollAdjustment = rect.top - idealTargetTop
-
-          if (scrollAdjustment < 0) {
-            const scrollTarget = window.pageYOffset + scrollAdjustment
-            window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
-          }
-        } else if (rect.top > maxTargetTop) {
-          // If we have room above, scroll down a bit so more models are visible
-          const scrollAdjustment = rect.top - maxTargetTop
-          const scrollTarget = window.pageYOffset + scrollAdjustment
-          window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
-        }
+      } else if (currentStep === 'expand-provider' || currentStep === 'select-models') {
+        const elementCenter = rect.top + window.pageYOffset + rect.height / 2
+        const scrollTarget = Math.max(0, elementCenter - viewportHeight / 2)
+        window.scrollTo({ top: scrollTarget, behavior: 'smooth' })
+        waitForScrollStop(() => {
+          if (stepRef.current !== currentStep) return
+          calculatePositions()
+          setIsVisible(true)
+        })
       } else if (currentStep === 'follow-up') {
         // Step 5 tooltip is fixed *below* the composer; scroll the page if needed so there is
         // room under the composer (in-flow or near-bottom layout). Instant scroll while hidden.

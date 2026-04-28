@@ -97,6 +97,63 @@ const MARGIN = 12
 const TOP_MARGIN = 80
 const BOTTOM_MARGIN = 40
 
+/**
+ * Main page content scrolls in `.app` (see base.css); `window` scroll is often 0.
+ * Tutorial scroll and document-Y cutout math must use this root.
+ */
+export function getTutorialScrollRoot(): {
+  getScrollTop: () => number
+  scrollToTop: (top: number, behavior?: ScrollBehavior) => void
+} {
+  const app = document.querySelector('.app') as HTMLElement | null
+  if (app && app.scrollHeight > app.clientHeight + 1) {
+    return {
+      getScrollTop: () => app.scrollTop,
+      scrollToTop: (top, behavior = 'auto') => {
+        app.scrollTo({ top, left: 0, behavior })
+      },
+    }
+  }
+  return {
+    getScrollTop: () => window.scrollY || document.documentElement.scrollTop,
+    scrollToTop: (top, behavior = 'auto') => {
+      window.scrollTo({ top, left: 0, behavior })
+    },
+  }
+}
+
+export function getTutorialScrollMax(): number {
+  const app = document.querySelector('.app') as HTMLElement | null
+  if (app && app.scrollHeight > app.clientHeight + 1) {
+    return Math.max(0, app.scrollHeight - app.clientHeight)
+  }
+  return Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+}
+
+export function getGoogleProviderTutorialAnchor(): HTMLElement | null {
+  return document.querySelector(
+    '.provider-dropdown[data-provider-name="Google"]'
+  ) as HTMLElement | null
+}
+
+/**
+ * Vertically centers the full Google provider card in the viewport.
+ * Step 1 must use this (not the thin `.provider-header`) or the cutout sits on the bottom edge.
+ */
+export function scrollGoogleProviderTutorialIntoCenter(): void {
+  const anchor = getGoogleProviderTutorialAnchor()
+  if (!anchor) return
+  const root = getTutorialScrollRoot()
+  const rect = anchor.getBoundingClientRect()
+  const y0 = root.getScrollTop()
+  const centeredTop = window.innerHeight / 2 - rect.height / 2
+  let nextTop = y0 + rect.top - centeredTop
+  nextTop = Math.max(0, nextTop)
+  const maxScroll = getTutorialScrollMax()
+  nextTop = Math.min(nextTop, maxScroll)
+  root.scrollToTop(nextTop, 'auto')
+}
+
 function getEstimatedTooltipHeight(): number {
   return window.innerHeight < 700 ? TOOLTIP_HEIGHT_SMALL : TOOLTIP_HEIGHT_LARGE
 }
@@ -205,9 +262,11 @@ export function computeTooltipPosition(
     const hasEnoughSpaceBelow = spaceBelow >= minSpaceNeeded
     const shouldUseBottom = hasEnoughSpaceAbove
       ? false
-      : hasEnoughSpaceBelow
-        ? true
-        : spaceBelow > spaceAbove
+      : step === 'expand-provider'
+        ? false
+        : hasEnoughSpaceBelow
+          ? true
+          : spaceBelow > spaceAbove
 
     let top: number
     const left = rect.left + rect.width / 2
@@ -263,31 +322,34 @@ export function computeTooltipPosition(
 
 export function getScrollTargetForStep(step: TutorialStep, targetElement: HTMLElement): number {
   const rect = targetElement.getBoundingClientRect()
-  const elementTop = rect.top + window.pageYOffset
+  const y0 = getTutorialScrollRoot().getScrollTop()
   const estimatedTooltipHeight = 210
   const tooltipOffset = 16
 
+  // Position the provider row below viewport center so the tooltip fits above.
+  // The tooltip is shown only after scroll settles (see useTutorialOverlay).
   if (step === 'expand-provider' || step === 'select-models') {
-    const desiredElementTopInViewport = TOP_MARGIN + tooltipOffset + estimatedTooltipHeight
-    return window.pageYOffset + rect.top - desiredElementTopInViewport
+    // Vertically center the target row in the viewport (tooltip sits above via computeTooltipPosition).
+    const centeredTop = window.innerHeight / 2 - rect.height / 2
+    return Math.max(0, y0 + rect.top - centeredTop)
   }
   if (step === 'follow-up') {
     const desiredElementTopInViewport = TOP_MARGIN + tooltipOffset + estimatedTooltipHeight
-    return window.pageYOffset + rect.top - desiredElementTopInViewport
+    return Math.max(0, y0 + rect.top - desiredElementTopInViewport)
   }
   if (step === 'view-follow-up-results') {
     const desiredElementBottomInViewport =
       window.innerHeight - BOTTOM_MARGIN - tooltipOffset - estimatedTooltipHeight
-    return window.pageYOffset + rect.bottom - desiredElementBottomInViewport
+    return Math.max(0, y0 + rect.bottom - desiredElementBottomInViewport)
   }
   if (step === 'enter-prompt' || step === 'enter-prompt-2') {
     const desiredComposerBottomInViewport =
       window.innerHeight - BOTTOM_MARGIN - tooltipOffset - estimatedTooltipHeight
-    return window.pageYOffset + rect.bottom - desiredComposerBottomInViewport
+    return Math.max(0, y0 + rect.bottom - desiredComposerBottomInViewport)
   }
-  const elementCenter = elementTop + rect.height / 2
+  const elementCenter = y0 + rect.top + rect.height / 2
   const viewportCenter = window.innerHeight / 2
-  return elementCenter - viewportCenter
+  return Math.max(0, elementCenter - viewportCenter)
 }
 
 export function findTargetForStep(
