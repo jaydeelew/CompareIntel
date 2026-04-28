@@ -291,6 +291,19 @@ async def global_exception_handler(request: Request, exc: Exception):
             error_detail["debug_info"] = "Check backend logs for full traceback"
 
         return JSONResponse(status_code=503, content=error_detail)
+    # OS/thread resource exhaustion — common under WSL or when many stray workers exist.
+    if error_type == "RuntimeError" and "can't start new thread" in error_message.lower():
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": (
+                    "Server cannot create OS threads right now (resource limit). "
+                    "Stop duplicate backend processes, restart the API, or reboot WSL if this persists."
+                ),
+                "error_type": error_type,
+                "error_message": error_message,
+            },
+        )
     # Return JSON error response for other errors
     return JSONResponse(
         status_code=500,
