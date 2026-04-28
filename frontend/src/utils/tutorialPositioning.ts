@@ -139,17 +139,28 @@ export function getGoogleProviderTutorialAnchor(): HTMLElement | null {
 }
 
 /**
- * Vertically centers the full Google provider card in the viewport.
- * Step 1 must use this (not the thin `.provider-header`) or the cutout sits on the bottom edge.
+ * Scrolls so the Google provider block is positioned for the tutorial tooltip.
+ * - Step 1 (`expand-provider`): vertically center the whole card (collapsed row).
+ * - Step 2 (`select-models`): align the card’s **top edge** to viewport vertical center so the
+ *   expanded section leaves plenty of room above for the tooltip (centering the full tall card
+ *   pushes the top up and crowds the tooltip).
  */
-export function scrollGoogleProviderTutorialIntoCenter(): void {
+export function scrollGoogleProviderTutorialIntoCenter(
+  providerStep: 'expand-provider' | 'select-models' = 'expand-provider'
+): void {
   const anchor = getGoogleProviderTutorialAnchor()
   if (!anchor) return
   const root = getTutorialScrollRoot()
   const rect = anchor.getBoundingClientRect()
   const y0 = root.getScrollTop()
-  const centeredTop = window.innerHeight / 2 - rect.height / 2
-  let nextTop = y0 + rect.top - centeredTop
+  let nextTop: number
+  if (providerStep === 'select-models') {
+    const desiredViewportTop = window.innerHeight / 2
+    nextTop = y0 + rect.top - desiredViewportTop
+  } else {
+    const centeredTop = window.innerHeight / 2 - rect.height / 2
+    nextTop = y0 + rect.top - centeredTop
+  }
   nextTop = Math.max(0, nextTop)
   const maxScroll = getTutorialScrollMax()
   nextTop = Math.min(nextTop, maxScroll)
@@ -271,13 +282,9 @@ export function computeTooltipPosition(
           : spaceBelow > spaceAbove
 
     let top: number
-    // Step 2: anchor the tooltip horizontally to the viewport center so it reads like a
-    // centered callout (matching the tour mock); step 1 stays tied to the provider column.
-    const viewportCenterX = window.innerWidth / 2
-    const left =
-      step === 'select-models'
-        ? Math.max(200, Math.min(viewportCenterX, window.innerWidth - 200))
-        : Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+    // Same horizontal anchor for step 1 and 2 (Google column center) so the tooltip does not
+    // jump or fight other effects when advancing expand-provider → select-models.
+    const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
     if (shouldUseBottom) {
       top = rect.bottom + offset
       top = Math.min(top, viewportHeight - estimatedTooltipHeight - MARGIN)
@@ -335,12 +342,15 @@ export function getScrollTargetForStep(step: TutorialStep, targetElement: HTMLEl
   const estimatedTooltipHeight = 210
   const tooltipOffset = 16
 
-  // Position the provider row below viewport center so the tooltip fits above.
-  // The tooltip is shown only after scroll settles (see useTutorialOverlay).
-  if (step === 'expand-provider' || step === 'select-models') {
-    // Vertically center the target row in the viewport (tooltip sits above via computeTooltipPosition).
+  // Provider steps: scroll before tooltip (see useTutorialOverlay).
+  if (step === 'expand-provider') {
     const centeredTop = window.innerHeight / 2 - rect.height / 2
     return Math.max(0, y0 + rect.top - centeredTop)
+  }
+  if (step === 'select-models') {
+    // Align expanded card top to viewport middle so tooltip has space above.
+    const desiredViewportTop = window.innerHeight / 2
+    return Math.max(0, y0 + rect.top - desiredViewportTop)
   }
   if (step === 'follow-up') {
     const desiredElementTopInViewport = TOP_MARGIN + tooltipOffset + estimatedTooltipHeight

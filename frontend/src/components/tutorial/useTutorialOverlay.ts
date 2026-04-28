@@ -778,9 +778,10 @@ export function useTutorialOverlay(
 
         scrollAnimFrame = requestAnimationFrame(animateScroll)
       } else if (step === 'expand-provider' || step === 'select-models') {
-        // Center the full provider card (not the header row) so the cutout + Google label match scroll math.
+        // Center the full provider card (step 1); step 2 aligns expanded card top to viewport middle
+        // so the tooltip above stays visible (tall expanded layout otherwise crowds it).
         if (getGoogleProviderTutorialAnchor()) {
-          scrollGoogleProviderTutorialIntoCenter()
+          scrollGoogleProviderTutorialIntoCenter(step)
         } else {
           root.scrollToTop(scrollTarget, 'auto')
         }
@@ -873,9 +874,9 @@ export function useTutorialOverlay(
             : isProviderSnapScrollStep
               ? new Promise<void>(resolve => {
                   requestAnimationFrame(() => {
-                    scrollGoogleProviderTutorialIntoCenter()
+                    scrollGoogleProviderTutorialIntoCenter(step)
                     requestAnimationFrame(() => {
-                      scrollGoogleProviderTutorialIntoCenter()
+                      scrollGoogleProviderTutorialIntoCenter(step)
                       resolve()
                     })
                   })
@@ -950,6 +951,20 @@ export function useTutorialOverlay(
             postScrollTimers = [t1, t2]
           } else {
             setIsVisible(true)
+            // Step 2: expanded Google block can change height after mount; re-scroll so top stays
+            // near viewport middle and the tooltip above remains uncrowded.
+            let selectModelsRecenterTimers: number[] = []
+            if (step === 'select-models') {
+              const recenterStep2 = () => {
+                if (stepRef.current !== 'select-models') return
+                scrollGoogleProviderTutorialIntoCenter('select-models')
+                updatePosition()
+              }
+              selectModelsRecenterTimers = [
+                window.setTimeout(recenterStep2, 200),
+                window.setTimeout(recenterStep2, 500),
+              ]
+            }
             // Layout can continue to shift (CSS transitions, expanding/collapsing sections)
             // after scroll stops, so re-run positioning a few times to stay aligned.
             const t1 = window.setTimeout(() => {
@@ -971,7 +986,7 @@ export function useTutorialOverlay(
               if (stepRef.current !== step) return
               setPositionStabilized(true)
             }, 800)
-            postScrollTimers = [t1, t2, t3, t4]
+            postScrollTimers = [...selectModelsRecenterTimers, t1, t2, t3, t4]
           }
         })
       } else if (!shouldDelayReveal) {
@@ -1324,30 +1339,15 @@ export function useTutorialOverlay(
         setTargetElement(googleDropdown)
         setIsVisible(true)
 
-        // Calculate position with dynamic top/bottom switching based on available space
         const rect = googleDropdown.getBoundingClientRect()
-        const offset = 16
-        const estimatedTooltipHeight = 210
-        const minSpaceNeeded = estimatedTooltipHeight + offset + 40
-
-        // Calculate available space
-        const spaceAbove = rect.top
-        const spaceBelow = window.innerHeight - rect.bottom
-
-        // Determine which position to use:
-        // - Default to 'top' (tooltip above provider)
-        // - Switch to 'bottom' (tooltip below provider) if not enough space above
-        const shouldUseBottom = spaceAbove < minSpaceNeeded && spaceBelow >= minSpaceNeeded
-
-        let top: number
-        if (shouldUseBottom) {
-          setEffectivePosition('bottom')
-          top = rect.bottom + offset
-        } else {
-          setEffectivePosition('top')
-          top = rect.top - offset
-        }
-        const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+        // Single source of truth with main overlay effect (avoids viewport vs column center fight).
+        const config = TUTORIAL_STEPS_CONFIG['select-models']
+        const {
+          top,
+          left,
+          effectivePosition: effPos,
+        } = computeTooltipPosition(rect, 'select-models', config)
+        setEffectivePosition(effPos)
         setOverlayPosition({ top, left })
       } else {
         // Fallback: even if we don't find Google dropdown, still show tooltip at center-top

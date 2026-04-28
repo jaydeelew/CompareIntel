@@ -60,7 +60,9 @@ export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
         top: `${overlayPosition.top}px`,
         left: `${overlayPosition.left}px`,
         zIndex: 10000,
-        transition: shouldAnimate ? 'top 0.3s ease-in-out, transform 0.3s ease-in-out' : 'none',
+        // Animate vertical placement only — animating `left` while layout/scroll nudges the target
+        // causes visible horizontal jiggle (notably step 2 after step 1).
+        transition: shouldAnimate ? 'top 0.3s ease-in-out' : 'none',
       }}
     >
       <div className="tutorial-tooltip-content">
