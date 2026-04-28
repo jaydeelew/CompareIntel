@@ -1,3 +1,5 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -102,6 +104,19 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 # Get logger for this module
 logger = logging.getLogger(__name__)
 
+# Bound blocking work: sync FastAPI dependencies (e.g. get_db) run via asyncio.to_thread / the
+# event loop's default executor. CPython's default pool allows up to min(32, cpu+4) workers,
+# which can hit "can't start new thread" on WSL or other tight per-process limits. A smaller
+# pool queues work instead of growing the OS thread count as aggressively.
+_blocking_executor: ThreadPoolExecutor | None = None
+
+
+def _blocking_pool_max_workers() -> int:
+    raw = os.getenv("COMPARE_INTEL_THREAD_POOL_MAX", "").strip()
+    if raw.isdigit():
+        return max(1, min(32, int(raw)))
+    return min(8, max(2, (os.cpu_count() or 1) + 2))
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -112,35 +127,50 @@ async def lifespan(app: FastAPI):
     - Startup: Validates configuration, logs configuration, creates database tables
     - Shutdown: Cleanup tasks (if needed)
     """
-    # Startup
+    global _blocking_executor
+
+    loop = asyncio.get_running_loop()
+    pool_workers = _blocking_pool_max_workers()
+    _blocking_executor = ThreadPoolExecutor(
+        max_workers=pool_workers,
+        thread_name_prefix="ci_blk",
+    )
+    loop.set_default_executor(_blocking_executor)
+    logger.info(
+        "Blocking thread pool max_workers=%s (set COMPARE_INTEL_THREAD_POOL_MAX to override)",
+        pool_workers,
+    )
+
     try:
-        validate_config()
-        log_configuration()
+        # Startup
+        try:
+            validate_config()
+            log_configuration()
 
-        environment = os.getenv("ENVIRONMENT", "development")
-        if environment != "production":
-            Base.metadata.create_all(bind=engine, checkfirst=True)
+            environment = os.getenv("ENVIRONMENT", "development")
+            if environment != "production":
+                Base.metadata.create_all(bind=engine, checkfirst=True)
 
-        preload_model_token_limits()
+            preload_model_token_limits()
 
-        from .search.rate_limiter import get_rate_limiter
+            from .search.rate_limiter import get_rate_limiter
 
-        get_rate_limiter()
+            get_rate_limiter()
 
-        logger.info("Application startup complete")
-    except ValueError as e:
-        # Configuration validation failed
-        logger.error(f"Startup failed: {e}")
-        raise
-    except Exception as e:
-        # Other startup errors
-        logger.error(f"Startup error: {e}", exc_info=True)
-        # Let the application continue, as tables may already exist
+            logger.info("Application startup complete")
+        except ValueError as e:
+            # Configuration validation failed
+            logger.error(f"Startup failed: {e}")
+            raise
+        except Exception as e:
+            # Other startup errors
+            logger.error(f"Startup error: {e}", exc_info=True)
+            # Let the application continue, as tables may already exist
 
-    yield
-
-    # Shutdown (if needed)
-    # Add any cleanup tasks here
+        yield
+    finally:
+        if _blocking_executor is not None:
+            _blocking_executor.shutdown(wait=True, cancel_futures=True)
 
 
 app = FastAPI(title="CompareIntel API", version="1.0.0", lifespan=lifespan)
@@ -298,7 +328,8 @@ async def global_exception_handler(request: Request, exc: Exception):
             content={
                 "detail": (
                     "Server cannot create OS threads right now (resource limit). "
-                    "Stop duplicate backend processes, restart the API, or reboot WSL if this persists."
+                    "Stop duplicate backend processes, restart the API, or reboot WSL if this persists. "
+                    "You can lower concurrency with env COMPARE_INTEL_THREAD_POOL_MAX (e.g. 4)."
                 ),
                 "error_type": error_type,
                 "error_message": error_message,

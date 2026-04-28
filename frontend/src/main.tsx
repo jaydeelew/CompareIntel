@@ -2,6 +2,21 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
+// React's development build logs a DevTools install hint; it is not an application error.
+if (import.meta.env.DEV) {
+  const isReactDevtoolsAd = (args: unknown[]) =>
+    typeof args[0] === 'string' && args[0].includes('Download the React DevTools')
+  const wrap = (original: (...a: unknown[]) => void) => {
+    return (...args: unknown[]) => {
+      if (isReactDevtoolsAd(args)) return
+      original(...args)
+    }
+  }
+  console.log = wrap(console.log.bind(console))
+  console.info = wrap(console.info.bind(console))
+  console.debug = wrap(console.debug.bind(console))
+}
+
 import './index.css'
 // KaTeX CSS loaded asynchronously to prevent render-blocking
 // It will be loaded when LatexRenderer component is first used

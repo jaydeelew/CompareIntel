@@ -845,8 +845,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (resultsSection) {
       resultsSection.classList.add('mobile-tutorial-highlight')
     }
-    if (step === 'view-follow-up-results') {
-      // Highlight only the full results block (targetElement); not inner .result-card rings.
+    if (step === 'follow-up' || step === 'view-follow-up-results') {
       const tabsHeader = document.querySelector('.results-tabs-header') as HTMLElement
       if (tabsHeader) {
         tabsHeader.classList.add('mobile-tutorial-tabs-pulse')
