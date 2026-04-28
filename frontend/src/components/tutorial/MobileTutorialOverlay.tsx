@@ -7,6 +7,7 @@ import {
   getTutorialVisibleStepProgress,
 } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
+import { getTutorialScrollMax, getTutorialScrollRoot } from '../../utils/tutorialPositioning'
 
 import {
   getComposerElement,
@@ -70,7 +71,7 @@ const MOBILE_STEP_OVERRIDES: Partial<
   },
   'follow-up': {
     position: 'bottom', // Tooltip below the composer so results stay visible (mobile step 5)
-    description: 'Review the comparison above and type a follow-up.',
+    description: 'Review the responses from both models above and type a follow-up.',
   },
   'view-follow-up-results': {
     position: 'top', // Step 6: mobile code places the card above or below the full results block
@@ -348,6 +349,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     const rect = targetElement.getBoundingClientRect()
+    const placementRect =
+      step === 'select-models'
+        ? (targetElement.querySelector('.provider-header')?.getBoundingClientRect() ?? rect)
+        : rect
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
     const padding = 12 // Padding from screen edges
@@ -553,30 +558,33 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       tooltipTop = Math.max(padding, minTopBelowComposer)
       arrowDirection = 'up'
     } else {
-      // Determine vertical position (above or below target)
-      const spaceAbove = rect.top
-      const spaceBelow = viewportHeight - rect.bottom
+      // Determine vertical position (above or below target).
+      // select-models: placementRect is .provider-header so the tooltip sits above the Google row,
+      // not the vertical midpoint of the expanded model list (avoids centered fallback).
+      const spaceAbove = placementRect.top
+      const spaceBelow = viewportHeight - placementRect.bottom
 
       if (preferredPosition === 'bottom' && spaceBelow >= tooltipHeight + padding + arrowSize) {
         // Position below target
-        tooltipTop = rect.bottom + arrowSize + 8
+        tooltipTop = placementRect.bottom + arrowSize + 8
         arrowDirection = 'up'
       } else if (preferredPosition === 'top' && spaceAbove >= tooltipHeight + padding + arrowSize) {
         // Position above target
-        tooltipTop = rect.top - tooltipHeight - arrowSize - 8
+        tooltipTop = placementRect.top - tooltipHeight - arrowSize - 8
         arrowDirection = 'down'
       } else if (spaceBelow >= spaceAbove && spaceBelow >= 100) {
         // More space below
-        tooltipTop = rect.bottom + arrowSize + 8
+        tooltipTop = placementRect.bottom + arrowSize + 8
         arrowDirection = 'up'
       } else if (spaceAbove >= 100) {
         // More space above
-        tooltipTop = rect.top - tooltipHeight - arrowSize - 8
+        tooltipTop = placementRect.top - tooltipHeight - arrowSize - 8
         arrowDirection = 'down'
       } else {
         // Very tight space - position at center of screen
         tooltipTop = (viewportHeight - tooltipHeight) / 2
-        arrowDirection = rect.top + rect.height / 2 > viewportHeight / 2 ? 'down' : 'up'
+        arrowDirection =
+          placementRect.top + placementRect.height / 2 > viewportHeight / 2 ? 'down' : 'up'
       }
 
       // Ensure tooltip stays within viewport vertically
@@ -631,11 +639,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     // Scroll target into view if needed (function so follow-up can run before the first position calc)
     function waitForScrollStop(onStop: () => void) {
-      let lastScrollY = window.scrollY
+      const root = getTutorialScrollRoot()
+      let lastScrollY = root.getScrollTop()
       let stableFrames = 0
       const check = () => {
         if (stepRef.current !== currentStep) return
-        const currentScrollY = window.scrollY
+        const currentScrollY = root.getScrollTop()
         if (Math.abs(currentScrollY - lastScrollY) < 1) {
           stableFrames += 1
         } else {
@@ -654,15 +663,30 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     function scrollTargetIntoView() {
       const rect = targetEl.getBoundingClientRect()
       const viewportHeight = window.innerHeight
+      const root = getTutorialScrollRoot()
+      const y0 = root.getScrollTop()
 
       if (TEXTAREA_STEPS.includes(currentStep)) {
         // For enter-prompt steps, scroll to the top of the page initially
         // The tooltip appears above the textarea, and the user should see the top of the page
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+        root.scrollToTop(0, 'smooth')
       } else if (currentStep === 'expand-provider' || currentStep === 'select-models') {
-        const elementCenter = rect.top + window.pageYOffset + rect.height / 2
-        const scrollTarget = Math.max(0, elementCenter - viewportHeight / 2)
-        window.scrollTo({ top: scrollTarget, behavior: 'smooth' })
+        let nextTop: number
+        if (currentStep === 'expand-provider') {
+          const centeredTop = viewportHeight / 2 - rect.height / 2
+          nextTop = y0 + rect.top - centeredTop
+        } else {
+          const headerEl = targetEl.querySelector('.provider-header') as HTMLElement | null
+          const headerRect = headerEl?.getBoundingClientRect() ?? rect
+          const topMargin = 80
+          const arrowSize = 10
+          const tooltipSpacing = arrowSize + 8
+          const totalTooltipHeight = tooltipEstimatedHeight + tooltipSpacing
+          const idealHeaderTop = topMargin + totalTooltipHeight
+          nextTop = y0 + headerRect.top - idealHeaderTop
+        }
+        nextTop = Math.max(0, Math.min(nextTop, getTutorialScrollMax()))
+        root.scrollToTop(nextTop, 'smooth')
         waitForScrollStop(() => {
           if (stepRef.current !== currentStep) return
           calculatePositions()
@@ -781,6 +805,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     window.addEventListener('scroll', handleUpdate, true)
     window.addEventListener('resize', handleUpdate)
+    const appScrollHost = document.querySelector('.app') as HTMLElement | null
+    appScrollHost?.addEventListener('scroll', handleUpdate)
 
     // Recalculate periodically to handle DOM changes
     // Skip interval for button-pulsate steps so tooltip stays stable while button scales
@@ -795,6 +821,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     return () => {
       window.removeEventListener('scroll', handleUpdate, true)
       window.removeEventListener('resize', handleUpdate)
+      appScrollHost?.removeEventListener('scroll', handleUpdate)
       if (interval) clearInterval(interval)
     }
   }, [targetElement, step, calculatePositions, tooltipEstimatedHeight])
