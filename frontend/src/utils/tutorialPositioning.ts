@@ -91,6 +91,8 @@ export function computeTargetCutout(
 }
 
 const TOOLTIP_OFFSET = 16
+/** Step 1: distance from highlighted row top to tooltip anchor — tight to cyan ring without covering the arrow. */
+const EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX = 22
 const TOOLTIP_HEIGHT_SMALL = 160
 const TOOLTIP_HEIGHT_LARGE = 210
 const MARGIN = 12
@@ -269,24 +271,31 @@ export function computeTooltipPosition(
           : spaceBelow > spaceAbove
 
     let top: number
-    const left = rect.left + rect.width / 2
+    // Step 2: anchor the tooltip horizontally to the viewport center so it reads like a
+    // centered callout (matching the tour mock); step 1 stays tied to the provider column.
+    const viewportCenterX = window.innerWidth / 2
+    const left =
+      step === 'select-models'
+        ? Math.max(200, Math.min(viewportCenterX, window.innerWidth - 200))
+        : Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
     if (shouldUseBottom) {
       top = rect.bottom + offset
       top = Math.min(top, viewportHeight - estimatedTooltipHeight - MARGIN)
       return {
         top,
-        left: Math.max(200, Math.min(left, window.innerWidth - 200)),
+        left,
         effectivePosition: 'bottom',
       }
     }
-    top = rect.top - offset
+    const topPlacementGap = step === 'expand-provider' ? EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX : offset
+    top = rect.top - topPlacementGap
     const tooltipTopEdge = top - estimatedTooltipHeight
     if (tooltipTopEdge < MARGIN) {
       top = MARGIN + estimatedTooltipHeight
     }
     return {
       top,
-      left: Math.max(200, Math.min(left, window.innerWidth - 200)),
+      left,
       effectivePosition: 'top',
     }
   }
