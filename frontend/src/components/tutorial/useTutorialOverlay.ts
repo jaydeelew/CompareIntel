@@ -1775,7 +1775,8 @@ export function useTutorialOverlay(
             scrollToResultsRaf = null
             scrollToResultsTimeout = setTimeout(() => {
               scrollToResultsTimeout = null
-              loadingSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              // Snap scroll — smooth scroll fights fixed cutout updates (rAF/interval) and looks janky.
+              loadingSection.scrollIntoView({ behavior: 'auto', block: 'center' })
             }, 100)
           })
         }
@@ -1807,7 +1808,7 @@ export function useTutorialOverlay(
             scrollToResultsRaf = null
             scrollToResultsTimeout = setTimeout(() => {
               scrollToResultsTimeout = null
-              resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              resultsSection.scrollIntoView({ behavior: 'auto', block: 'start' })
             }, 100)
           })
         }

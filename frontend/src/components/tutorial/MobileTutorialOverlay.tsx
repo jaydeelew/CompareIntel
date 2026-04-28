@@ -969,7 +969,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           hasScrolledToLoading = true
           requestAnimationFrame(() => {
             setTimeout(() => {
-              loadingSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              loadingSection.scrollIntoView({ behavior: 'auto', block: 'start' })
             }, 0)
           })
         }
@@ -983,7 +983,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           hasScrolledToResults = true
           requestAnimationFrame(() => {
             setTimeout(() => {
-              resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              resultsSection.scrollIntoView({ behavior: 'auto', block: 'start' })
             }, 100)
           })
         }

@@ -16,6 +16,7 @@ import { ComparisonPageContent, ModalManager } from '../components/main-page'
 import { DoneSelectingCard } from '../components/shared'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
+import { filterGoogleModelsForTutorial } from '../data/tutorialSteps'
 import {
   useConversationHistory,
   useBrowserFingerprint,
@@ -815,7 +816,18 @@ export function MainPage() {
     modelMode === 'image'
       ? filterModelsByProviderToImage(modelsByProvider)
       : filterModelsByProviderToText(modelsByProvider)
-  const allModels = Object.values(filteredModelsByProvider).flat()
+
+  const tutorialGoogleModelFilterActive =
+    tutorialState.isActive &&
+    (tutorialState.currentStep === 'expand-provider' ||
+      tutorialState.currentStep === 'select-models')
+
+  const displayModelsByProvider = useMemo(
+    () => filterGoogleModelsForTutorial(filteredModelsByProvider, tutorialGoogleModelFilterActive),
+    [filteredModelsByProvider, tutorialGoogleModelFilterActive]
+  )
+
+  const allModels = Object.values(displayModelsByProvider).flat()
 
   /** Text/image toggle only — marks default as session-overridden so empty selection does not re-apply default */
   const handleModelModeChange = useCallback(
@@ -2369,7 +2381,7 @@ export function MainPage() {
           onNewComparison={handleNewComparison}
           renderUsagePreview={renderUsagePreview}
           selectedModels={selectedModels}
-          modelsByProvider={filteredModelsByProvider}
+          modelsByProvider={displayModelsByProvider}
           onAccurateTokenCountChange={setAccurateInputTokens}
           creditsRemaining={creditsRemaining}
           selectionProps={{
@@ -2424,7 +2436,7 @@ export function MainPage() {
             onRemoveAttachedImages,
             modelMode,
             onModelModeChange: handleModelModeChange,
-            modelsByProvider: filteredModelsByProvider,
+            modelsByProvider: displayModelsByProvider,
             allModelsByProvider: modelsByProvider,
             imageModelsDisabledForUnregistered: modelMode === 'image' && !isAuthenticated,
             isTutorialActive: tutorialState.isActive,
@@ -2599,7 +2611,7 @@ export function MainPage() {
             isTouchDevice={isTouchDevice}
             currentView={currentView}
             isMobileLayout={isMobileLayout}
-            modelsByProvider={filteredModelsByProvider}
+            modelsByProvider={displayModelsByProvider}
             openDropdowns={openDropdowns}
             selectedModels={selectedModels}
             input={input}

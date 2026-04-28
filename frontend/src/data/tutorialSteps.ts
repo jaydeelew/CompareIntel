@@ -1,4 +1,30 @@
 import type { TutorialStep } from '../hooks/useTutorial'
+import type { ModelsByProvider } from '../types/models'
+
+/** Google text models shown while the tutorial is on provider steps (expand + select models; step 2 lists only these). */
+export const TUTORIAL_GOOGLE_MODEL_IDS: readonly string[] = [
+  'google/gemma-3-27b-it',
+  'google/gemini-3.1-flash-lite-preview',
+]
+
+/**
+ * During the onboarding tutorial, limit the Google provider row to {@link TUTORIAL_GOOGLE_MODEL_IDS}.
+ * No-op when `enabled` is false or the allowlist would drop every model (safety fallback).
+ */
+export function filterGoogleModelsForTutorial(
+  modelsByProvider: ModelsByProvider,
+  enabled: boolean
+): ModelsByProvider {
+  if (!enabled) return modelsByProvider
+  const google = modelsByProvider['Google']
+  if (!google?.length) return modelsByProvider
+  const allowed = new Set(TUTORIAL_GOOGLE_MODEL_IDS)
+  const filtered = google.filter(m => allowed.has(String(m.id)))
+  if (filtered.length === 0) return modelsByProvider
+  const order = new Map(TUTORIAL_GOOGLE_MODEL_IDS.map((id, i) => [id, i]))
+  filtered.sort((a, b) => (order.get(String(a.id)) ?? 99) - (order.get(String(b.id)) ?? 99))
+  return { ...modelsByProvider, Google: filtered }
+}
 
 export interface StepConfig {
   step: TutorialStep
@@ -21,7 +47,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'select-models',
     targetSelector: '.provider-dropdown[data-provider-name="Google"]',
     title: 'Select Models',
-    description: 'For example, select two Google models below.',
+    description: 'Select both models below: Gemma 3 27B and Gemini 3.1 Flash Lite Preview.',
     position: 'top',
   },
   'enter-prompt': {
