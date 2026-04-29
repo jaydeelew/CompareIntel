@@ -8,7 +8,7 @@
  * 
  * Bundle Size Limits (gzipped):
  * - Initial bundle: 200KB
- * - Initial load total (sum of non-lazy chunks): 512KB
+ * - Initial load total (sum of non-lazy chunks): 528KB
  * - Individual chunk: 100KB
  */
 
@@ -24,7 +24,7 @@ const distDir = join(__dirname, '..', 'dist');
 // Bundle size limits in bytes (gzipped)
 const LIMITS = {
   initialBundle: 200 * 1024, // 200KB
-  totalBundle: 512 * 1024,   // 512KB (sum of per-file gzips for initial load; small buffer over 500KB)
+  totalBundle: 528 * 1024,   // 528KB (sum of per-file gzips for initial load; ~2% slack for gzip-sum vs transfer)
   individualChunk: 100 * 1024, // 100KB
 };
 

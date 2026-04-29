@@ -159,7 +159,7 @@ MATH_SLUG_TO_MODEL_ID: dict[str, str] = {
     "gemini-2-0-pro": "google/gemini-2.5-pro",
     "gemini-2-0-flash": "google/gemini-2.5-flash",
     "deepseek-v3": "deepseek/deepseek-v3.2-exp",
-    "gemini-2-0-flash-lite": "google/gemini-2.0-flash-001",
+    "gemini-2-0-flash-lite": "google/gemini-2.5-flash",
     "gpt-4o": "openai/gpt-4o",
     "claude-3-5-sonnet": "anthropic/claude-sonnet-4.5",
     "claude-3-opus": "anthropic/claude-opus-4",
@@ -776,9 +776,9 @@ def fetch_creative_writing_scores() -> dict[str, tuple[float, str]]:
 
 
 MRCR_NAME_TO_MODEL_ID: dict[str, str] = {
-    "Gemini 2.0 Flash": "google/gemini-2.0-flash-001",
+    "Gemini 2.0 Flash": "google/gemini-2.5-flash",
     "Gemini 2.0 Pro": "google/gemini-2.5-pro",
-    "Gemini 2.0 Flash-Lite": "google/gemini-2.0-flash-001",
+    "Gemini 2.0 Flash-Lite": "google/gemini-2.5-flash",
 }
 
 # Awesome Agents long-context: model display name -> registry model_id

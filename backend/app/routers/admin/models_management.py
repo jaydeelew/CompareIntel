@@ -1034,6 +1034,141 @@ async def add_model_stream(
     return StreamingResponse(generate_progress_stream(), media_type="text/event-stream")
 
 
+def _validate_help_me_choose_allows_model_delete(model_id: str, project_root: Path) -> None:
+    """Refuse delete if Help Me Choose would drop below 2 models in any category."""
+    rec_path = project_root / "frontend" / "src" / "data" / "helpMeChooseRecommendations.ts"
+    if not rec_path.is_file():
+        return
+    from scripts.research_model_benchmarks import parse_recommendations_ts
+
+    categories = parse_recommendations_ts(rec_path.read_text(encoding="utf-8"))
+    for cat in categories:
+        models = cat.get("models") or []
+        removed = sum(1 for m in models if m.get("modelId") == model_id)
+        if removed == 0:
+            continue
+        if len(models) - removed < 2:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Cannot delete {model_id}: Help Me Choose category '{cat.get('id')}' would have "
+                    "fewer than 2 models. Edit frontend/src/data/helpMeChooseRecommendations.ts first."
+                ),
+            )
+
+
+def _strip_model_from_help_me_choose(model_id: str, project_root: Path) -> None:
+    rec_path = project_root / "frontend" / "src" / "data" / "helpMeChooseRecommendations.ts"
+    if not rec_path.is_file():
+        return
+    from scripts.research_model_benchmarks import (
+        parse_recommendations_ts,
+        update_recommendations_file,
+    )
+
+    categories = parse_recommendations_ts(rec_path.read_text(encoding="utf-8"))
+    changed = False
+    for cat in categories:
+        before = len(cat["models"])
+        cat["models"] = [m for m in cat["models"] if m.get("modelId") != model_id]
+        if len(cat["models"]) != before:
+            changed = True
+    if changed:
+        update_recommendations_file(categories)
+        logger.info("Removed %s from Help Me Choose recommendations", model_id)
+
+
+def _strip_model_from_vision_models_ts(model_id: str, project_root: Path) -> None:
+    vision_path = project_root / "frontend" / "src" / "utils" / "visionModels.ts"
+    if not vision_path.is_file():
+        return
+    original = vision_path.read_text(encoding="utf-8")
+    new_lines: list[str] = []
+    for line in original.splitlines():
+        stripped = line.strip()
+        if stripped in (f"'{model_id}',", f'"{model_id}",'):
+            continue
+        new_lines.append(line)
+    new_text = "\n".join(new_lines)
+    ending = "\n" if original.endswith("\n") else ""
+    if new_text + ending != original:
+        vision_path.write_text(new_text + ending, encoding="utf-8")
+        logger.info("Removed %s from visionModels.ts fallback list", model_id)
+
+
+def _all_registry_model_ids(registry: dict[str, Any]) -> set[str]:
+    ids: set[str] = set()
+    for models in registry.get("models_by_provider", {}).values():
+        if not isinstance(models, list):
+            continue
+        for m in models:
+            if isinstance(m, dict) and (mid := m.get("id")):
+                ids.add(str(mid))
+    return ids
+
+
+def _sync_openrouter_snapshot_to_registry(backend_dir: Path) -> None:
+    """Drop snapshot rows whose id is not in models_registry.json; reload caches if updated.
+
+    Keeps the bundled OpenRouter dump aligned with CompareIntel's registry only (no orphan ids).
+    """
+    reg_path = backend_dir / "data" / "models_registry.json"
+    orouter_path = backend_dir / "openrouter_models.json"
+    if not orouter_path.is_file():
+        return
+    if not reg_path.is_file():
+        logger.warning("models_registry.json not found; skipping openrouter snapshot sync")
+        return
+    try:
+        with reg_path.open(encoding="utf-8") as f:
+            registry = json.load(f)
+    except Exception as e:
+        logger.error("Could not read models_registry.json for openrouter sync: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not read models_registry.json for openrouter snapshot sync: {e}",
+        ) from e
+    registry_ids = _all_registry_model_ids(registry)
+    try:
+        with orouter_path.open(encoding="utf-8") as f:
+            root = json.load(f)
+    except Exception as e:
+        logger.error("Could not read openrouter_models.json for registry sync: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Model removed from registry, but could not read openrouter_models.json: {e}",
+        ) from e
+    listing = root.get("data")
+    if not isinstance(listing, list):
+        return
+
+    def row_kept(m: Any) -> bool:
+        return isinstance(m, dict) and isinstance(m.get("id"), str) and m["id"] in registry_ids
+
+    if all(row_kept(m) for m in listing):
+        return
+
+    root["data"] = [m for m in listing if row_kept(m)]
+    removed = len(listing) - len(root["data"])
+    try:
+        with orouter_path.open("w", encoding="utf-8") as f:
+            json.dump(root, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+    except Exception as e:
+        logger.error("Could not write openrouter_models.json after registry sync: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Model removed from registry, but could not write openrouter_models.json: {e}",
+        ) from e
+    logger.info(
+        "Synced openrouter_models.json to registry (%s snapshot row(s) removed)",
+        removed,
+    )
+    from ...llm.registry import invalidate_openrouter_models_json_caches
+
+    invalidate_openrouter_models_json_caches()
+
+
 @router.post("/models/delete")
 async def delete_model(
     request: Request,
@@ -1055,6 +1190,10 @@ async def delete_model(
 
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
+
+    backend_dir = Path(__file__).resolve().parent.parent.parent.parent
+    project_root = backend_dir.parent
+    _validate_help_me_choose_allows_model_delete(model_id, project_root)
 
     # Use load_registry() for lookup (same as add_model). The imported MODELS_BY_PROVIDER
     # binding can stay stale after reload_registry(); it is not updated on re-import.
@@ -1084,16 +1223,19 @@ async def delete_model(
         if not models_list:
             del mbp[provider_name]
 
-        unregistered = [m for m in registry["unregistered_tier_models"] if m != model_id]
-        free_additional = [m for m in registry["free_tier_additional_models"] if m != model_id]
-        registry["unregistered_tier_models"] = unregistered
-        registry["free_tier_additional_models"] = free_additional
+        for tier_key in (
+            "unregistered_tier_models",
+            "free_tier_additional_models",
+            "image_unregistered_tier_models",
+            "image_free_tier_additional_models",
+        ):
+            if tier_key in registry and isinstance(registry[tier_key], list):
+                registry[tier_key] = [x for x in registry[tier_key] if x != model_id]
 
         save_registry(registry)
         reload_registry()
 
-        backend_dir = Path(__file__).parent.parent.parent.parent
-        project_root = backend_dir.parent
+        _strip_model_from_help_me_choose(model_id, project_root)
         frontend_config_path = (
             project_root / "frontend" / "src" / "config" / "model_renderer_configs.json"
         )
@@ -1129,6 +1271,9 @@ async def delete_model(
                     status_code=500,
                     detail=f"Model removed from registry, but failed to remove renderer config: {str(e)}",
                 )
+
+        _strip_model_from_vision_models_ts(model_id, project_root)
+        _sync_openrouter_snapshot_to_registry(backend_dir)
 
         from ...cache import invalidate_models_cache
 

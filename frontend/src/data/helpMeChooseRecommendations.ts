@@ -65,7 +65,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Avg. $0.21/1M tokens.',
       },
       { modelId: 'openai/gpt-5-nano', evidence: 'Avg. $0.22/1M tokens.' },
-      { modelId: 'google/gemini-2.0-flash-001', evidence: 'Avg. $0.25/1M tokens.' },
       { modelId: 'google/gemma-4-26b-a4b-it', evidence: 'Avg. $0.27/1M tokens.' },
       { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'Avg. $0.34/1M tokens.' },
       { modelId: 'x-ai/grok-4-fast', evidence: 'Avg. $0.35/1M tokens.' },
@@ -350,7 +349,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'anthropic/claude-3.7-sonnet', evidence: 'MATH (llmdb.com): 3.7%.' },
       { modelId: 'google/gemini-2.5-pro', evidence: 'MATH (llmdb.com): 2.0%.' },
       { modelId: 'google/gemini-2.5-flash', evidence: 'MATH (llmdb.com): 2.0%.' },
-      { modelId: 'google/gemini-2.0-flash-001', evidence: 'MATH (llmdb.com): 2.0%.' },
     ],
   },
   {
@@ -393,7 +391,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       },
       { modelId: 'openai/gpt-4o', evidence: 'MRCR v2 4-needle 256K (awesomeagents.ai): 80%.' },
       { modelId: 'anthropic/claude-opus-4.6', evidence: 'MRCR 1M (llmdb.com): 76.0/100.' },
-      { modelId: 'google/gemini-2.0-flash-001', evidence: 'MRCR 1M (llmdb.com): 70.5/100.' },
       { modelId: 'google/gemini-2.5-flash', evidence: 'MRCR 1M (llmdb.com): 32.0/100.' },
     ],
   },

@@ -27,6 +27,13 @@ logger = logging.getLogger(__name__)
 _OPENROUTER_PATH = Path(__file__).resolve().parent.parent.parent / "openrouter_models.json"
 _SNAPSHOT_BY_ID: dict[str, dict[str, Any]] | None = None
 
+
+def invalidate_openrouter_snapshot_cache() -> None:
+    """Clear the in-memory index of openrouter_models.json (call after that file changes on disk)."""
+    global _SNAPSHOT_BY_ID
+    _SNAPSHOT_BY_ID = None
+
+
 # Encourage internal reasoning; separable traces depend on provider + OpenRouter.
 _REASONING_PROBE_USER = (
     "In at most 3 short sentences: is 221 prime? Give a brief justification. "

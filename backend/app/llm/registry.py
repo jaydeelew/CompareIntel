@@ -468,6 +468,31 @@ for provider, models in MODELS_BY_PROVIDER.items():
     OPENROUTER_MODELS.extend(models)
 
 
+def invalidate_openrouter_models_json_caches() -> None:
+    """Clear in-memory caches derived from backend/openrouter_models.json after it changes on disk."""
+    global \
+        _temperature_support_cache, \
+        _openrouter_known_ids_cache, \
+        _openrouter_thinking_model_ids_cache, \
+        _vision_support_cache, \
+        _image_gen_support_cache, \
+        _image_price_cache, \
+        _text_token_price_cache
+    _temperature_support_cache = None
+    _openrouter_known_ids_cache = None
+    _openrouter_thinking_model_ids_cache = None
+    _vision_support_cache = None
+    _image_gen_support_cache = None
+    _image_price_cache = None
+    _text_token_price_cache = None
+    try:
+        from .reasoning_probe import invalidate_openrouter_snapshot_cache
+
+        invalidate_openrouter_snapshot_cache()
+    except Exception:
+        pass
+
+
 def reload_registry() -> None:
     """Reload model data from JSON (used after admin modifies registry)."""
     global \
