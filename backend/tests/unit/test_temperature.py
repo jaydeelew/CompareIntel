@@ -61,11 +61,6 @@ class TestTemperatureSupport:
         result = get_model_supports_temperature("qwen/qwen3-next-80b-a3b-instruct")
         assert result is True
 
-    def test_model_without_temperature_support(self):
-        """Test that reasoning models (e.g. o1) correctly report no temperature support."""
-        result = get_model_supports_temperature("openai/o1")
-        assert result is False
-
     def test_model_without_temperature_o3(self):
         """Test that o3 reports no temperature support."""
         result = get_model_supports_temperature("openai/o3")

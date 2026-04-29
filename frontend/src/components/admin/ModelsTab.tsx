@@ -264,7 +264,16 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
         const errorData = await response.json()
         throw new Error(errorData.detail || 'Failed to delete model')
       }
-      setModelSuccess(`Model ${modelToDelete.id} deleted successfully!`)
+      const data = (await response.json()) as {
+        test_cleanup?: { warnings?: string[] }
+      }
+      let msg = `Model ${modelToDelete.id} deleted successfully!`
+      const warns = data.test_cleanup?.warnings
+      if (warns?.length) {
+        const preview = warns.slice(0, 3).join(' · ')
+        msg += ` Test cleanup: ${warns.length} warning(s) — ${preview}${warns.length > 3 ? ' …' : ''}`
+      }
+      setModelSuccess(msg)
       setShowDeleteConfirm(false)
       setModelToDelete(null)
       await waitForServerRestart(getAuthHeaders)

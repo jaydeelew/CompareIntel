@@ -37,6 +37,7 @@ from ...model_runner import (
     refresh_model_token_limits,
 )
 from ...models import User
+from .delete_model_test_cleanup import strip_deleted_model_from_tests
 from .helpers import log_admin_action
 
 logger = logging.getLogger(__name__)
@@ -1279,13 +1280,21 @@ async def delete_model(
 
         invalidate_models_cache()
 
+        test_cleanup = strip_deleted_model_from_tests(model_id, project_root)
+
         log_admin_action(
             db=db,
             admin_user=current_user,
             action_type="delete_model",
             action_description=f"Deleted model {model_id} from system",
             target_user_id=None,
-            details={"model_id": model_id, "provider": provider_name},
+            details={
+                "model_id": model_id,
+                "provider": provider_name,
+                "test_cleanup_modified_files": test_cleanup.modified_files,
+                "test_cleanup_warnings": test_cleanup.warnings,
+                "test_cleanup_removed_functions": test_cleanup.removed_test_functions,
+            },
             request=request,
         )
 
@@ -1293,6 +1302,11 @@ async def delete_model(
             "success": True,
             "model_id": model_id,
             "message": f"Model {model_id} deleted successfully",
+            "test_cleanup": {
+                "modified_files": test_cleanup.modified_files,
+                "warnings": test_cleanup.warnings,
+                "removed_test_functions": test_cleanup.removed_test_functions,
+            },
         }
 
     except HTTPException:

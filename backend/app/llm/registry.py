@@ -51,8 +51,6 @@ KNOWN_NON_VISION_MODEL_IDS: frozenset[str] = frozenset(
 # Models that do not support the temperature parameter (provider returns 400 if passed).
 KNOWN_NO_TEMPERATURE_MODEL_IDS: frozenset[str] = frozenset(
     {
-        # Reasoning models; OpenRouter snapshot may omit retired ids (default would wrongly be True).
-        "openai/o1",
         "openai/gpt-5-image",
         "openai/gpt-5-image-mini",
     }
