@@ -8,7 +8,7 @@
  * 
  * Bundle Size Limits (gzipped):
  * - Initial bundle: 200KB
- * - Initial load total (sum of non-lazy chunks): 512KB
+ * - Initial load total (sum of non-lazy chunks): 480KB
  * - Individual chunk: 100KB
  */
 
@@ -24,7 +24,7 @@ const distDir = join(__dirname, '..', 'dist');
 // Bundle size limits in bytes (gzipped)
 const LIMITS = {
   initialBundle: 200 * 1024, // 200KB
-  totalBundle: 512 * 1024,   // 512KB (gzip sum for chunks not matched as lazy/route-split)
+  totalBundle: 480 * 1024,   // 480KB (gzip sum for chunks not matched as lazy/route-split; ~53KB slack vs recent ~427KB)
   individualChunk: 100 * 1024, // 100KB
 };
 
