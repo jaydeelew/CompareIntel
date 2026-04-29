@@ -136,6 +136,8 @@ export interface ModelsAreaProps {
   onRemoveAttachedImages?: () => void
   /** When true, unregistered users cannot select image models (show sign-up modal) */
   imageModelsDisabledForUnregistered?: boolean
+  /** When true, disable info tooltips on model dropdowns (e.g. during tutorial) */
+  isTutorialActive?: boolean
 }
 
 export function ModelsArea({
@@ -217,6 +219,7 @@ export function ModelsArea({
   onHelpMeChooseScrollCategoryDone,
   onRemoveAttachedImages,
   imageModelsDisabledForUnregistered = false,
+  isTutorialActive = false,
 }: ModelsAreaProps) {
   const [imageSignupBannerDismissed, setImageSignupBannerDismissed] = useState(false)
 
@@ -395,6 +398,7 @@ export function ModelsArea({
                 maxModelsLimit={maxModelsLimit}
                 imageModelsDisabledForUnregistered={imageModelsDisabledForUnregistered}
                 onShowDisabledModelModal={onShowDisabledModelModal}
+                isTutorialActive={isTutorialActive}
               />
               <AdvancedSettings
                 temperature={temperature}
@@ -459,6 +463,7 @@ export function ModelsArea({
               isAuthenticated={isAuthenticated}
               user={user}
               selectedModelsGridRef={selectedModelsGridRef}
+              hideModelInfoTooltips={isTutorialActive}
               onToggleDropdown={onToggleDropdown}
               onToggleModel={onToggleModel}
               onToggleAllForProvider={onToggleAllForProvider}

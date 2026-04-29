@@ -121,6 +121,7 @@ export interface SSEProcessorConfig {
   setStreamingReasoningByModel: React.Dispatch<React.SetStateAction<Record<string, string>>>
   setStreamAnswerStartedByModel: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
   clearStreamingReasoningUi: () => void
+  suppressResultsAutoScroll?: boolean
 }
 
 export interface ProcessStreamResult {
@@ -193,7 +194,10 @@ export async function processComparisonStream(
     setStreamingReasoningByModel,
     setStreamAnswerStartedByModel,
     clearStreamingReasoningUi,
+    suppressResultsAutoScroll = false,
   } = config
+
+  const shouldAutoScrollToResults = !suppressResultsAutoScroll
 
   const resetStreamingTimeout = () => {
     if (timeoutId) {
@@ -402,7 +406,7 @@ export async function processComparisonStream(
               resetStreamingTimeout()
               shouldUpdate = true
 
-              if (!hasScrolledToResults) {
+              if (shouldAutoScrollToResults && !hasScrolledToResults) {
                 hasScrolledToResults = true
                 requestAnimationFrame(() => {
                   setTimeout(() => {
@@ -427,7 +431,7 @@ export async function processComparisonStream(
             resetStreamingTimeout()
             shouldUpdate = true
 
-            if (!hasScrolledToResults) {
+            if (shouldAutoScrollToResults && !hasScrolledToResults) {
               hasScrolledToResults = true
               requestAnimationFrame(() => {
                 setTimeout(() => {
@@ -449,7 +453,7 @@ export async function processComparisonStream(
             resetStreamingTimeout()
             shouldUpdate = true
 
-            if (!hasScrolledToResults) {
+            if (shouldAutoScrollToResults && !hasScrolledToResults) {
               hasScrolledToResults = true
               requestAnimationFrame(() => {
                 setTimeout(() => {

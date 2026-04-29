@@ -1,0 +1,412 @@
+/**
+ * Tests for useTutorialComplete hook
+ *
+ * Tests the combined tutorial hook that merges useTutorial and useTutorialEffects.
+ */
+
+import { renderHook, act } from '@testing-library/react'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+import { useTutorialComplete, type TutorialStep } from '../../hooks/useTutorialComplete'
+import type { ModelConversation } from '../../types/conversation'
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {}
+  return {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+  }
+})()
+
+Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+
+describe('useTutorialComplete', () => {
+  const defaultConfig = {
+    currentView: 'main' as const,
+    locationPathname: '/',
+    conversations: [],
+    isLoading: false,
+    isFollowUpMode: false,
+    isAuthenticated: false,
+    authLoading: false,
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorageMock.clear()
+  })
+
+  describe('initialization', () => {
+    it('should initialize with tutorial inactive', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      expect(result.current.tutorialState.isActive).toBe(false)
+      expect(result.current.tutorialState.currentStep).toBe(null)
+      expect(result.current.tutorialState.completedSteps.size).toBe(0)
+    })
+
+    it('should initialize tutorial tracking flags as false', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      expect(result.current.tutorialHasCompletedComparison).toBe(false)
+      expect(result.current.tutorialHasBreakout).toBe(false)
+      expect(result.current.tutorialHasSavedSelection).toBe(false)
+    })
+  })
+
+  describe('startTutorial', () => {
+    it('should activate tutorial and set first step', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.startTutorial()
+      })
+
+      expect(result.current.tutorialState.isActive).toBe(true)
+      expect(result.current.tutorialState.currentStep).toBe('expand-provider')
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('compareintel_tutorial_completed')
+    })
+  })
+
+  describe('completeStep', () => {
+    it('should advance to next step when completing current step', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.startTutorial()
+      })
+
+      expect(result.current.tutorialState.currentStep).toBe('expand-provider')
+
+      act(() => {
+        result.current.completeStep('expand-provider')
+      })
+
+      expect(result.current.tutorialState.currentStep).toBe('select-models')
+      expect(result.current.tutorialState.completedSteps.has('expand-provider')).toBe(true)
+    })
+
+    it('should not advance when completing wrong step', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.startTutorial()
+      })
+
+      act(() => {
+        result.current.completeStep('select-models') // Wrong step
+      })
+
+      expect(result.current.tutorialState.currentStep).toBe('expand-provider')
+    })
+
+    it('should complete tutorial when all steps done', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      // Old steps 6–7 (second prompt/submit) are skipped when completing step 5; step 6 is review results
+      const steps: TutorialStep[] = [
+        'expand-provider',
+        'select-models',
+        'enter-prompt',
+        'submit-comparison',
+        'follow-up',
+        'view-follow-up-results',
+        'history-dropdown',
+        'save-selection',
+      ]
+
+      act(() => {
+        result.current.startTutorial()
+      })
+
+      steps.forEach(step => {
+        act(() => {
+          result.current.completeStep(step)
+        })
+      })
+
+      expect(result.current.tutorialState.isActive).toBe(false)
+      expect(result.current.tutorialState.currentStep).toBe(null)
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'compareintel_tutorial_completed',
+        'true'
+      )
+    })
+
+    it('should skip enter-prompt-2 and submit-comparison-2 when completing follow-up, then show review step', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('follow-up')
+      })
+
+      act(() => {
+        result.current.completeStep('follow-up')
+      })
+
+      expect(result.current.tutorialState.currentStep).toBe('view-follow-up-results')
+      expect(result.current.tutorialState.completedSteps.has('enter-prompt-2')).toBe(true)
+      expect(result.current.tutorialState.completedSteps.has('submit-comparison-2')).toBe(true)
+      expect(result.current.tutorialState.completedSteps.has('view-follow-up-results')).toBe(false)
+    })
+  })
+
+  describe('skipTutorial', () => {
+    it('should deactivate tutorial and mark as completed', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.startTutorial()
+      })
+
+      act(() => {
+        result.current.skipTutorial()
+      })
+
+      expect(result.current.tutorialState.isActive).toBe(false)
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'compareintel_tutorial_completed',
+        'true'
+      )
+    })
+  })
+
+  describe('resetTutorial', () => {
+    it('should reset tutorial state and clear storage', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.completeStep('expand-provider')
+      })
+
+      act(() => {
+        result.current.resetTutorial()
+      })
+
+      expect(result.current.tutorialState.isActive).toBe(false)
+      expect(result.current.tutorialState.completedSteps.size).toBe(0)
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('compareintel_tutorial_completed')
+    })
+  })
+
+  describe('goToStep', () => {
+    it('should directly set the current step', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.startTutorial()
+      })
+
+      act(() => {
+        result.current.goToStep('enter-prompt')
+      })
+
+      expect(result.current.tutorialState.currentStep).toBe('enter-prompt')
+    })
+  })
+
+  describe('welcome modal', () => {
+    it('should show welcome modal for unauthenticated users on main view when not dismissed', () => {
+      // The welcome modal is shown via an effect based on localStorage
+      // When "don't show again" is not set and auth has loaded, the modal should appear
+      const { result } = renderHook(() =>
+        useTutorialComplete({
+          ...defaultConfig,
+          isAuthenticated: false,
+          authLoading: false,
+          currentView: 'main',
+        })
+      )
+
+      // The effect runs and sets showWelcomeModal based on localStorage
+      // Since localStorage doesn't have 'compareintel_welcome_dont_show_again' = 'true',
+      // the modal should be shown
+      expect(result.current.showWelcomeModal).toBe(true)
+    })
+
+    it('should not show welcome modal while auth is loading', () => {
+      // Prevents flash for logged-in users when auth resolves quickly in production
+      const { result } = renderHook(() =>
+        useTutorialComplete({
+          ...defaultConfig,
+          isAuthenticated: false,
+          authLoading: true,
+          currentView: 'main',
+        })
+      )
+
+      expect(result.current.showWelcomeModal).toBe(false)
+    })
+
+    it('should not show welcome modal when dismissed via localStorage', () => {
+      // Set the "don't show again" flag
+      localStorageMock.setItem('compareintel_welcome_dont_show_again', 'true')
+
+      const { result } = renderHook(() =>
+        useTutorialComplete({
+          ...defaultConfig,
+          isAuthenticated: false,
+          currentView: 'main',
+        })
+      )
+
+      // Modal should not be shown because user dismissed it
+      expect(result.current.showWelcomeModal).toBe(false)
+    })
+
+    it('should not show welcome modal for authenticated users', () => {
+      const { result } = renderHook(() =>
+        useTutorialComplete({
+          ...defaultConfig,
+          isAuthenticated: true,
+        })
+      )
+
+      expect(result.current.showWelcomeModal).toBe(false)
+    })
+
+    it('should allow setting welcome modal visibility', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.setShowWelcomeModal(true)
+      })
+
+      expect(result.current.showWelcomeModal).toBe(true)
+
+      act(() => {
+        result.current.setShowWelcomeModal(false)
+      })
+
+      expect(result.current.showWelcomeModal).toBe(false)
+    })
+  })
+
+  describe('tutorial tracking flags', () => {
+    it('should allow setting tutorialHasCompletedComparison', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.setTutorialHasCompletedComparison(true)
+      })
+
+      expect(result.current.tutorialHasCompletedComparison).toBe(true)
+    })
+
+    it('should allow setting tutorialHasBreakout', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.setTutorialHasBreakout(true)
+      })
+
+      expect(result.current.tutorialHasBreakout).toBe(true)
+    })
+
+    it('should allow setting tutorialHasSavedSelection', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.setTutorialHasSavedSelection(true)
+      })
+
+      expect(result.current.tutorialHasSavedSelection).toBe(true)
+    })
+  })
+
+  describe('comparison completion tracking effect', () => {
+    it('should set tutorialHasCompletedComparison when submit-comparison step completes', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: defaultConfig,
+      })
+
+      // Start tutorial and go to submit step
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('submit-comparison')
+      })
+
+      // Rerender with conversations (simulating comparison done)
+      rerender({
+        ...defaultConfig,
+        conversations: [{ modelId: 'test', messages: [] }] as ModelConversation[],
+        isLoading: false,
+      })
+
+      expect(result.current.tutorialHasCompletedComparison).toBe(true)
+    })
+
+    it('should set tutorialHasCompletedComparison on follow-up step after second assistant round', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: defaultConfig,
+      })
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('follow-up')
+      })
+
+      // A follow-up submit must have started (loading) before "second round" can count; otherwise
+      // the first comparison could already satisfy assistant length checks.
+      rerender({
+        ...defaultConfig,
+        isFollowUpMode: true,
+        isLoading: true,
+        conversations: [],
+      })
+
+      rerender({
+        ...defaultConfig,
+        isFollowUpMode: true,
+        isLoading: false,
+        conversations: [
+          {
+            modelId: 'm1',
+            messages: [
+              { type: 'user', role: 'user', content: 'hi' },
+              { type: 'assistant', role: 'assistant', content: 'first' },
+              { type: 'user', role: 'user', content: 'follow' },
+              { type: 'assistant', role: 'assistant', content: 'second' },
+            ],
+          },
+        ] as ModelConversation[],
+      })
+
+      expect(result.current.tutorialHasCompletedComparison).toBe(true)
+    })
+
+    it('should reset tutorialHasCompletedComparison when entering follow-up so step 5 can detect a new comparison', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: defaultConfig,
+      })
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('submit-comparison')
+      })
+
+      rerender({
+        ...defaultConfig,
+        conversations: [{ modelId: 'test', messages: [] }] as ModelConversation[],
+        isLoading: false,
+      })
+      expect(result.current.tutorialHasCompletedComparison).toBe(true)
+
+      act(() => {
+        result.current.goToStep('follow-up')
+      })
+      expect(result.current.tutorialHasCompletedComparison).toBe(false)
+    })
+  })
+})

@@ -24,8 +24,13 @@ const RETURN_THRESHOLD = 0.22
 /**
  * @param eligibleForBelowResultsComposer When true (e.g. follow-up with responses), the composer
  *   mounts in `[data-after-results-composer-slot]` below the results section. When false, it stays in the hero.
+ * @param tutorialIsActive When true, scroll-based float switching is disabled — except we still honor
+ *   `eligibleForBelowResultsComposer` so onboarding step 5 can target the real follow-up composer.
  */
-export function useComposerFloat(eligibleForBelowResultsComposer: boolean): boolean {
+export function useComposerFloat(
+  eligibleForBelowResultsComposer: boolean,
+  tutorialIsActive: boolean
+): boolean {
   const [composerFloating, setComposerFloating] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const floatingRef = useRef(composerFloating)
@@ -39,6 +44,15 @@ export function useComposerFloat(eligibleForBelowResultsComposer: boolean): bool
         clearTimeout(debounceRef.current)
         debounceRef.current = null
       }
+      return
+    }
+
+    if (tutorialIsActive) {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+        debounceRef.current = null
+      }
+      setComposerFloating(true)
       return
     }
 
@@ -93,7 +107,7 @@ export function useComposerFloat(eligibleForBelowResultsComposer: boolean): bool
         debounceRef.current = null
       }
     }
-  }, [eligibleForBelowResultsComposer])
+  }, [eligibleForBelowResultsComposer, tutorialIsActive])
 
   return composerFloating
 }

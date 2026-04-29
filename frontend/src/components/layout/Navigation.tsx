@@ -47,6 +47,12 @@ interface NavigationProps {
    * the main page shows it in the Hero instead. Omit on routes without Hero (e.g. admin).
    */
   hideNavThemeToggleOnMobile?: boolean
+  /** While the tutorial welcome modal is visible, the bar stays unfolded (no initial fold timer). */
+  tutorialWelcomeModalOpen?: boolean
+  /** Set true once the welcome modal was shown (unauthenticated flow). */
+  welcomeModalEverShown?: boolean
+  /** Increment only when the user clicks “Skip for Now” on the welcome modal (fold 5s after skip). */
+  welcomeSkipFoldNonce?: number
 }
 
 /**
@@ -60,6 +66,9 @@ export function Navigation({
   onSignInClick,
   onSignUpClick,
   hideNavThemeToggleOnMobile = false,
+  tutorialWelcomeModalOpen = false,
+  welcomeModalEverShown = false,
+  welcomeSkipFoldNonce = 0,
 }: NavigationProps) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -131,7 +140,11 @@ export function Navigation({
     scheduleInactivityHide()
   }, [scheduleInactivityHide])
 
-  /** Initial fold: 5s after load (desktop auto-hide only). */
+  /**
+   * Initial fold: 5s after load unless the welcome modal is open (stay unfolded until it closes).
+   * After “Skip for Now”, fold 5s after the skip. After “Start Tutorial” (or other dismiss without skip),
+   * fold immediately.
+   */
   useEffect(() => {
     clearInitialFoldTimer()
     setFolded(false)
@@ -143,13 +156,39 @@ export function Navigation({
       return () => clearInitialFoldTimer()
     }
 
+    if (tutorialWelcomeModalOpen) {
+      return () => clearInitialFoldTimer()
+    }
+
+    const skipNonce = welcomeSkipFoldNonce
+    if (welcomeModalEverShown && skipNonce === 0) {
+      setFolded(true)
+      initialPhaseRef.current = false
+      return () => clearInitialFoldTimer()
+    }
+
+    if (skipNonce > 0) {
+      initialFoldTimerRef.current = setTimeout(() => {
+        setFolded(true)
+        initialPhaseRef.current = false
+        initialFoldTimerRef.current = null
+      }, INITIAL_SHOW_MS)
+      return () => clearInitialFoldTimer()
+    }
+
     initialFoldTimerRef.current = setTimeout(() => {
       setFolded(true)
       initialPhaseRef.current = false
       initialFoldTimerRef.current = null
     }, INITIAL_SHOW_MS)
     return () => clearInitialFoldTimer()
-  }, [disableNavbarAutoHide, clearInitialFoldTimer])
+  }, [
+    disableNavbarAutoHide,
+    tutorialWelcomeModalOpen,
+    welcomeModalEverShown,
+    welcomeSkipFoldNonce,
+    clearInitialFoldTimer,
+  ])
 
   /** When the bar folds: if already at top, arm only after the same settle delay (no instant ready). */
   useEffect(() => {

@@ -295,15 +295,6 @@
     ],
     "Google": [
       {
-        "id": "google/gemini-2.0-flash-001",
-        "name": "Gemini 2.0 Flash",
-        "description": "A high-speed model with significantly faster time-to-first-token while maintaining Pro-level quality.",
-        "category": "Language",
-        "provider": "Google",
-        "supports_web_search": true,
-        "knowledge_cutoff": "August 2024"
-      },
-      {
         "id": "google/gemini-2.5-flash",
         "name": "Gemini 2.5 Flash",
         "description": "Google's fast, cost-efficient model with built-in thinking capabilities for reasoning, coding, and math tasks.",
@@ -1237,8 +1228,8 @@
     "cohere/command-r7b-12-2024",
     "deepseek/deepseek-chat-v3.1",
     "deepseek/deepseek-v3.2-exp",
-    "google/gemini-2.0-flash-001",
     "google/gemini-2.5-flash",
+    "google/gemini-3.1-flash-lite-preview",
     "google/gemma-3-27b-it",
     "google/gemma-4-26b-a4b-it",
     "microsoft/phi-4",
@@ -1276,7 +1267,6 @@
     "deepseek/deepseek-r1",
     "google/gemini-2.5-flash-image",
     "google/gemini-3.1-flash-image-preview",
-    "google/gemini-3.1-flash-lite-preview",
     "meta-llama/llama-4-maverick",
     "meta-llama/llama-4-scout",
     "microsoft/phi-4-reasoning-plus",

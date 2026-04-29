@@ -62,6 +62,7 @@ interface UseBreakoutConversationCallbacks {
   setError: (error: string | null) => void
   setIsModelsHidden: (hidden: boolean) => void
   setAlreadyBrokenOutModels: React.Dispatch<React.SetStateAction<Set<string>>>
+  setTutorialHasBreakout: (hasBreakout: boolean) => void
 }
 
 export function useBreakoutConversation(
@@ -85,6 +86,7 @@ export function useBreakoutConversation(
     setError,
     setIsModelsHidden,
     setAlreadyBrokenOutModels,
+    setTutorialHasBreakout,
   } = callbacks
 
   const [breakoutPhase, setBreakoutPhase] = useState<BreakoutPhase>('idle')
@@ -198,6 +200,8 @@ export function useBreakoutConversation(
         )
         notification.clearAutoRemove()
         setTimeout(() => notification(), 5000)
+
+        setTutorialHasBreakout(true)
       } catch (err) {
         logger.error('Failed to create breakout conversation:', err)
         setError('Failed to break out conversation. Please try again.')
@@ -224,6 +228,7 @@ export function useBreakoutConversation(
       setError,
       setIsModelsHidden,
       setAlreadyBrokenOutModels,
+      setTutorialHasBreakout,
     ]
   )
 

@@ -12,6 +12,8 @@ import type { ConversationSummary, ModelConversation } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
 import { getSafeId } from '../utils'
 
+import type { TutorialState } from './useTutorialComplete'
+
 export interface UseMainPageEffectsConfig {
   // Error
   error: string | null
@@ -27,6 +29,8 @@ export interface UseMainPageEffectsConfig {
   // Focus
   isTouchDevice: boolean
   currentView: string
+  showWelcomeModal: boolean
+  tutorialState: TutorialState
   attemptFocusTextarea: () => boolean
 
   // History
@@ -80,6 +84,8 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     setActiveTabIndex,
     isTouchDevice,
     currentView,
+    showWelcomeModal,
+    tutorialState,
     attemptFocusTextarea,
     showHistoryDropdown,
     setShowHistoryDropdown,
@@ -127,7 +133,7 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
 
   // Focus (RAF + staggered timeouts)
   useEffect(() => {
-    if (isTouchDevice || currentView !== 'main') {
+    if (isTouchDevice || currentView !== 'main' || showWelcomeModal || tutorialState.isActive) {
       return
     }
     let t1: ReturnType<typeof setTimeout> | null = null
@@ -150,7 +156,15 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
       if (t2) clearTimeout(t2)
       if (t3) clearTimeout(t3)
     }
-  }, [isTouchDevice, currentView, attemptFocusTextarea])
+  }, [isTouchDevice, currentView, showWelcomeModal, tutorialState.isActive, attemptFocusTextarea])
+
+  // Focus (delayed retry on modal/tutorial close)
+  useEffect(() => {
+    if (!isTouchDevice && currentView === 'main' && !showWelcomeModal && !tutorialState.isActive) {
+      const t = setTimeout(() => attemptFocusTextarea(), 200)
+      return () => clearTimeout(t)
+    }
+  }, [showWelcomeModal, isTouchDevice, currentView, tutorialState.isActive, attemptFocusTextarea])
 
   // History dropdown close on outside click
   useEffect(() => {
@@ -216,6 +230,10 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
 
   // Scroll to loading section
   useEffect(() => {
+    if (tutorialState.isActive) {
+      return
+    }
+
     if (isLoading) {
       const t = setTimeout(() => {
         document.querySelector('.loading-section')?.scrollIntoView({
@@ -225,7 +243,7 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
       }, 100)
       return () => clearTimeout(t)
     }
-  }, [isLoading])
+  }, [isLoading, tutorialState.isActive])
 
   // Clear verification errors
   useEffect(() => {

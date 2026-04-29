@@ -9,6 +9,7 @@ export * from './usePerformance'
 export * from './useSavedModelSelections'
 export * from './useSpeechRecognition'
 export * from './useTouchDevice'
+export * from './useTutorial'
 export * from './useBreakpoint'
 export * from './useFileHandling'
 export * from './useConversationManager'
@@ -22,6 +23,7 @@ export * from './useModelManagement'
 export * from './useScreenshotCopy'
 export * from './useDoneSelectingCard'
 export * from './useCreditsRemaining'
+export * from './useTutorialEffects'
 export * from './useTokenReload'
 export * from './useAuthStateEffects'
 export * from './usePersistedComposerAdvancedSettings'
@@ -41,6 +43,11 @@ export * from './useTokenNotification'
 
 // Combined hooks (reducing hook count while maintaining functionality)
 // Note: Using specific exports to avoid naming conflicts with original hooks
+export {
+  useTutorialComplete,
+  type UseTutorialCompleteConfig,
+  type UseTutorialCompleteReturn,
+} from './useTutorialComplete'
 export {
   useSavedSelectionsComplete,
   type UseSavedSelectionsCompleteConfig,

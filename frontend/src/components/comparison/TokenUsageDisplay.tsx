@@ -35,6 +35,7 @@ export interface TokenUsageDisplayProps {
   ) => Promise<string>
   onAccurateTokenCountChange?: (totalInputTokens: number | null) => void
   onTokenUsageInfoChange?: (info: TokenUsageInfo | null) => void
+  tutorialIsActive?: boolean
   /** When true, the tooltip is hidden (e.g. on mobile) */
   hideTooltip?: boolean
   /** When true with tooltip visible, render tooltip in a portal (avoids composer overflow clipping) */
@@ -90,6 +91,7 @@ export function TokenUsageDisplay({
   onExpandFiles,
   onAccurateTokenCountChange,
   onTokenUsageInfoChange,
+  tutorialIsActive = false,
   hideTooltip = false,
   tooltipUsePortal = false,
   isMobileLayout = false,
@@ -311,11 +313,11 @@ export function TokenUsageDisplay({
     <div
       className="token-usage-indicator"
       onClick={() => {
-        if (isMobileLayout) setShowUsageIndicatorInfo(true)
+        if (!tutorialIsActive && isMobileLayout) setShowUsageIndicatorInfo(true)
       }}
       style={{
         touchAction: 'manipulation',
-        cursor: 'pointer',
+        cursor: tutorialIsActive ? 'default' : 'pointer',
       }}
     >
       <svg

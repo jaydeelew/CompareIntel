@@ -121,10 +121,14 @@ function getDisabledTooltip(userTier: 'unregistered' | 'free'): string {
 function EvidenceInfoModal({
   modelName,
   evidence,
+  methodologyHref = '/help-me-choose-methodology',
+  methodologyLinkLabel = 'Help Me Choose Methodology',
   onClose,
 }: {
   modelName: string
   evidence: string
+  methodologyHref?: string
+  methodologyLinkLabel?: string
   onClose: () => void
 }) {
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -184,8 +188,8 @@ function EvidenceInfoModal({
         <div className="disabled-button-info-content">
           <p id="evidence-modal-message">{evidence}</p>
           <p className="best-at-top-methodology-link">
-            <Link to="/help-me-choose-methodology" onClick={onClose}>
-              Help Me Choose Methodology
+            <Link to={methodologyHref} onClick={onClose}>
+              {methodologyLinkLabel}
             </Link>
           </p>
         </div>
@@ -275,6 +279,8 @@ export function HelpMeChoose({
   const [evidenceModal, setEvidenceModal] = useState<{
     modelName: string
     evidence: string
+    methodologyHref?: string
+    methodologyLinkLabel?: string
   } | null>(null)
   /** Portal tooltip for category info (desktop only) - avoids overflow clipping from scroll container */
   const [categoryTooltip, setCategoryTooltip] = useState<{
@@ -928,15 +934,18 @@ export function HelpMeChoose({
                               <button
                                 type="button"
                                 className="help-me-choose-category-info-trigger"
-                                onClick={
-                                  isMobileLayout
-                                    ? () =>
-                                        setEvidenceModal({
-                                          modelName: cat.label,
-                                          evidence: cat.categoryInfoTooltip!,
-                                        })
-                                    : undefined
-                                }
+                                onClick={e => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  setCategoryTooltip(null)
+                                  setEvidenceModal({
+                                    modelName: cat.label,
+                                    evidence: cat.categoryInfoTooltip!,
+                                    methodologyHref:
+                                      '/help-me-choose-methodology#how-each-category-is-measured',
+                                    methodologyLinkLabel: 'How each category is measured',
+                                  })
+                                }}
                                 onMouseEnter={
                                   !isMobileLayout
                                     ? e => {
@@ -1234,6 +1243,8 @@ export function HelpMeChoose({
           <EvidenceInfoModal
             modelName={evidenceModal.modelName}
             evidence={evidenceModal.evidence}
+            methodologyHref={evidenceModal.methodologyHref}
+            methodologyLinkLabel={evidenceModal.methodologyLinkLabel}
             onClose={() => setEvidenceModal(null)}
           />,
           document.body

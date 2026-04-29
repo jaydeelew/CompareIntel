@@ -34,6 +34,8 @@ export interface ResultsAreaProps {
   isScrollLocked: boolean
   showExportMenu: boolean
   isMobileLayout: boolean
+  /** When true, disables all result action buttons (not model tabs or formatted/raw tabs) */
+  isTutorialActive?: boolean
 
   // Refs
   exportMenuRef: React.RefObject<HTMLDivElement>
@@ -70,6 +72,7 @@ export function ResultsArea({
   isScrollLocked,
   showExportMenu,
   isMobileLayout,
+  isTutorialActive = false,
 
   // Refs
   exportMenuRef,
@@ -103,6 +106,7 @@ export function ResultsArea({
           closedCardsCount={closedCards.size}
           onShowAllResults={onShowAllResults}
           isMobileLayout={isMobileLayout}
+          isTutorialActive={isTutorialActive}
         />
 
         <ResultsDisplay
@@ -120,6 +124,7 @@ export function ResultsArea({
           onBreakout={onBreakout}
           onHideOthers={onHideOthers}
           onCopyMessage={onCopyMessage}
+          isTutorialActive={isTutorialActive}
           streamingReasoningByModel={streamingReasoningByModel}
           streamAnswerStartedByModel={streamAnswerStartedByModel}
         />

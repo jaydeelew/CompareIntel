@@ -31,6 +31,7 @@ export interface UseStreamCompletionConfig {
   maxTokens: number | null
   aspectRatio: string
   imageSize: string
+  suppressResultsAutoScroll?: boolean
 }
 
 export interface UseStreamCompletionCallbacks {
@@ -82,6 +83,7 @@ export function useStreamCompletion(
     maxTokens,
     aspectRatio,
     imageSize,
+    suppressResultsAutoScroll = false,
   } = config
 
   const {
@@ -453,7 +455,12 @@ export function useStreamCompletion(
         })
       }
 
-      if (!isFollowUpMode && hadSuccessfulModel && !userCancelledRef.current) {
+      if (
+        !suppressResultsAutoScroll &&
+        !isFollowUpMode &&
+        hadSuccessfulModel &&
+        !userCancelledRef.current
+      ) {
         const scrollResultsIntoView = (behavior: ScrollBehavior) => {
           document.querySelector('.results-section')?.scrollIntoView({
             behavior,

@@ -37,6 +37,8 @@ interface ResultsSectionHeaderProps {
   onShowAllResults: () => void
   /** Whether in mobile layout */
   isMobileLayout: boolean
+  /** When true, disables all header buttons (tutorial mode) */
+  isTutorialActive?: boolean
 }
 
 export function ResultsSectionHeader({
@@ -50,8 +52,10 @@ export function ResultsSectionHeader({
   closedCardsCount,
   onShowAllResults,
   isMobileLayout,
+  isTutorialActive = false,
 }: ResultsSectionHeaderProps) {
-  const showDesktopStyledTooltips = true
+  const buttonsDisabled = isTutorialActive
+  const showDesktopStyledTooltips = !isTutorialActive
   const scrollTooltipText = isScrollLocked
     ? 'Unlock scrolling - Each card scrolls independently'
     : 'Lock scrolling - All results scroll together'
@@ -60,6 +64,7 @@ export function ResultsSectionHeader({
     <button
       type="button"
       onClick={onToggleScrollLock}
+      disabled={buttonsDisabled}
       aria-label={scrollTooltipText}
       style={{
         padding: '0.5rem 0.75rem',
@@ -160,6 +165,7 @@ export function ResultsSectionHeader({
               exportMenuRef={exportMenuRef}
               onExport={onExport}
               isMobileLayout={false}
+              disabled={buttonsDisabled}
               showStyledTooltip={showDesktopStyledTooltips}
             />
 
@@ -169,6 +175,7 @@ export function ResultsSectionHeader({
                 type="button"
                 data-testid="show-all-results-button"
                 onClick={onShowAllResults}
+                disabled={buttonsDisabled}
                 style={{
                   padding: '0.5rem 1rem',
                   fontSize: '0.875rem',
@@ -209,6 +216,7 @@ export function ResultsSectionHeader({
               exportMenuRef={exportMenuRef}
               onExport={onExport}
               isMobileLayout={true}
+              disabled={buttonsDisabled}
               showStyledTooltip={false}
             />
 
@@ -218,6 +226,7 @@ export function ResultsSectionHeader({
                 type="button"
                 data-testid="show-all-results-button"
                 onClick={onShowAllResults}
+                disabled={buttonsDisabled}
                 title={`Show all results (${closedCardsCount} hidden)`}
                 style={{
                   padding: '0.5rem',
@@ -276,7 +285,7 @@ interface ExportDropdownProps {
   onExport: (format: ExportFormat) => Promise<void>
   isMobileLayout: boolean
   disabled?: boolean
-  /** Desktop: use StyledTooltip instead of native title */
+  /** Desktop: use StyledTooltip instead of native title (hidden during tutorial) */
   showStyledTooltip?: boolean
 }
 
