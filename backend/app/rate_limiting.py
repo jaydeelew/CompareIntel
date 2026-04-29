@@ -1,8 +1,8 @@
 """
-Hybrid rate limiting for authenticated and unregistered users.
+Credit-based usage for authenticated and unregistered users.
 
-Authenticated users: credit-based monthly allocations (paid tiers) or daily limits (free tier).
-Unregistered users: credit-based daily limits. All rate limiting uses credits.
+Paid tiers: monthly credit pools. Free and unregistered: daily credit limits.
+Legacy daily model-response fields in API stats are unused (zeros); enforcement is credits-only.
 """
 
 from collections import defaultdict
@@ -15,15 +15,10 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 # Import configuration constants
-from .config import (
-    ANONYMOUS_DAILY_LIMIT,
-    MODEL_LIMITS,
-    SUBSCRIPTION_CONFIG,
-    SUBSCRIPTION_LIMITS,
-    get_daily_limit,
-)
+from .config import MODEL_LIMITS, SUBSCRIPTION_CONFIG
 from .config.constants import (
     DAILY_CREDIT_LIMITS,
+    MONTHLY_CREDIT_ALLOCATIONS,
 )
 
 # Import credit management functions
@@ -417,22 +412,17 @@ def get_user_usage_stats(user: User) -> FullUsageStatsDict:
     reset_at = user.credits_reset_at
     reset_date = reset_at.date() if reset_at else date.today()
 
-    # Legacy fields (for backward compatibility in API responses)
-    daily_limit = get_daily_limit(tier)
-    # Approximate conversion: credits_used / 5 (since average exchange is ~5 credits)
-    daily_usage = int(used / 5) if used > 0 else 0
-    daily_remaining = max(0, daily_limit - daily_usage)
-
+    # Legacy daily model-response fields: not used (credits-only); kept for API shape
     return {
         # Credits-based fields (primary)
         "credits_allocated": allocated,
         "credits_used_this_period": used,
         "credits_remaining": remaining,
         "credits_reset_date": reset_date.isoformat(),
-        # Legacy fields (for backward compatibility in API responses)
-        "daily_usage": daily_usage,
-        "daily_limit": daily_limit,
-        "remaining_usage": daily_remaining,
+        # Legacy fields (unused; always zero — usage is credit-limited only)
+        "daily_usage": 0,
+        "daily_limit": 0,
+        "remaining_usage": 0,
         "subscription_tier": tier,
         "usage_reset_date": reset_date.isoformat(),
     }
@@ -484,23 +474,15 @@ def get_anonymous_usage_stats(identifier: str, timezone_str: str = "UTC") -> Usa
 
     credits_remaining = max(0, credits_allocated - credits_used)
 
-    # Legacy fields (for backward compatibility in API responses)
-    # Calculate legacy daily_usage from credits (approximate: 1 credit ≈ 0.2 model responses)
-    # This is only for API compatibility, actual limiting uses credits
-    daily_limit = ANONYMOUS_DAILY_LIMIT
-    # Approximate conversion: credits_used / 5 (since average exchange is ~5 credits)
-    current_count = int(credits_used / 5) if credits_used > 0 else 0
-    remaining = max(0, daily_limit - current_count)
-
     return {
         # Credits-based fields (primary)
         "credits_allocated": credits_allocated,
         "credits_used_today": credits_used,
         "credits_remaining": credits_remaining,
-        # Legacy fields (for backward compatibility in API responses)
-        "daily_usage": current_count,
-        "daily_limit": daily_limit,
-        "remaining_usage": remaining,
+        # Legacy fields (unused; always zero — usage is credit-limited only)
+        "daily_usage": 0,
+        "daily_limit": 0,
+        "remaining_usage": 0,
         "subscription_tier": "unregistered",
         "usage_reset_date": today,  # Use timezone-aware date
     }
@@ -601,8 +583,7 @@ def get_rate_limit_info() -> dict[str, Any]:
         dict: Information about subscription tiers and anonymous limits
     """
     return {
-        "subscription_tiers": SUBSCRIPTION_LIMITS,
+        "monthly_credit_allocations": MONTHLY_CREDIT_ALLOCATIONS,
         "model_limits": MODEL_LIMITS,
-        "anonymous_limit": ANONYMOUS_DAILY_LIMIT,
         "anonymous_users_tracked": len(anonymous_rate_limit_storage),
     }

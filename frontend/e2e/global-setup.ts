@@ -11,150 +11,23 @@ import { chromium, firefox, webkit, FullConfig, Page, BrowserType } from '@playw
  * The backend should be started by Playwright's webServer config.
  */
 
-/**
- * Helper function to dismiss the tutorial overlay if it appears
- */
-async function dismissTutorialOverlay(page: Page) {
+/** No-op: guest welcome and guided tutorial were removed from production. */
+async function dismissTutorialOverlay(_page: Page) {}
+
+async function clickNavSignInButton(page: Page): Promise<boolean> {
+  const loginButton = page.getByTestId('nav-sign-in-button')
+  if (!(await loginButton.isVisible({ timeout: 2000 }).catch(() => false))) return false
+
   try {
-    // Check if page is still valid
-    if (page.isClosed()) {
-      return
-    }
-
-    // Wait a bit for any animations to complete
-    await page.waitForTimeout(500)
-
-    // First check if tutorial overlay is actually visible, regardless of viewport
-    // Sometimes it appears on mobile even though it shouldn't
-    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
-
-    // Check if we're on a mobile viewport (tutorial is disabled on mobile - width <= 768px)
-    const viewport = page.viewportSize()
-    const isMobileViewport = viewport && viewport.width <= 768
-
-    // If on mobile and overlay is not visible, skip dismissal (tutorial shouldn't appear)
-    if (isMobileViewport && !overlayVisible) {
-      // Tutorial is not available on mobile and not visible, so skip dismissal
-      return
-    }
-
-    // If overlay is visible (even on mobile), we need to dismiss it
-
-    // First, check for the welcome modal (appears first)
-    const welcomeModal = page.locator('.tutorial-welcome-backdrop')
-    const welcomeVisible = await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)
-
-    if (welcomeVisible && !page.isClosed()) {
-      // Click "Skip for Now" button
-      const skipButton = page.locator(
-        '.tutorial-welcome-button-secondary, button:has-text("Skip for Now")'
-      )
-      const skipVisible = await skipButton.isVisible({ timeout: 3000 }).catch(() => false)
-
-      if (skipVisible && !page.isClosed()) {
-        try {
-          // Wait for button to be stable before clicking
-          await skipButton.waitFor({ state: 'visible', timeout: 5000 })
-          await page.waitForTimeout(300) // Wait for any animations
-
-          if (!page.isClosed()) {
-            // Try normal click first
-            await skipButton.click({ timeout: 10000, force: false }).catch(async () => {
-              if (!page.isClosed()) {
-                // If normal click fails, try force click
-                await skipButton.click({ timeout: 5000, force: true })
-              }
-            })
-
-            // Wait for welcome modal to disappear
-            await welcomeModal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
-            await page.waitForTimeout(500)
-          }
-        } catch (_clickError) {
-          // Fallback: try pressing Escape
-          if (!page.isClosed()) {
-            await page.keyboard.press('Escape').catch(() => {})
-            await page.waitForTimeout(500)
-          }
-        }
-      } else if (!page.isClosed()) {
-        // Fallback: try pressing Escape
-        await page.keyboard.press('Escape').catch(() => {})
-        await page.waitForTimeout(500)
-      }
-    }
-
-    // Then check for the tutorial overlay (appears after welcome modal)
-    if (page.isClosed()) {
-      return
-    }
-
-    // Re-check overlay visibility (it may have changed)
-    const overlayStillVisible = await tutorialOverlay
-      .isVisible({ timeout: 2000 })
-      .catch(() => false)
-
-    if (overlayStillVisible && !page.isClosed()) {
-      // Try to click the skip/close button in the tutorial overlay
-      const closeButton = page.locator(
-        '.tutorial-close-button, button[aria-label*="Skip"], button[aria-label*="skip"]'
-      )
-      const closeVisible = await closeButton.isVisible({ timeout: 3000 }).catch(() => false)
-
-      if (closeVisible && !page.isClosed()) {
-        try {
-          // Wait for button to be stable before clicking
-          await closeButton.waitFor({ state: 'visible', timeout: 5000 })
-          await page.waitForTimeout(300) // Wait for any animations
-
-          if (!page.isClosed()) {
-            // Try normal click first
-            await closeButton.click({ timeout: 10000, force: false }).catch(async () => {
-              if (!page.isClosed()) {
-                // If normal click fails, try force click
-                await closeButton.click({ timeout: 5000, force: true })
-              }
-            })
-
-            // Wait for overlay to disappear
-            await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
-            await page.waitForTimeout(500)
-          }
-        } catch (_clickError) {
-          // Fallback: try pressing Escape
-          if (!page.isClosed()) {
-            await page.keyboard.press('Escape').catch(() => {})
-            await page.waitForTimeout(500)
-          }
-        }
-      } else if (!page.isClosed()) {
-        // Fallback: try pressing Escape
-        await page.keyboard.press('Escape').catch(() => {})
-        await page.waitForTimeout(500)
-      }
-    }
-
-    // Final check: ensure overlay is gone by waiting a bit more and checking again
-    if (!page.isClosed()) {
-      await page.waitForTimeout(500)
-      const stillVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
-      if (stillVisible && !page.isClosed()) {
-        // Last resort: try Escape again
-        await page.keyboard.press('Escape').catch(() => {})
-        await page.waitForTimeout(500)
-      }
-    }
-  } catch (error) {
-    // Ignore errors - tutorial might not be present or page might be closed
-    if (error instanceof Error && error.message.includes('closed')) {
-      return
-    }
-    console.log(
-      'Tutorial overlay dismissal attempted:',
-      error instanceof Error ? error.message : String(error)
-    )
+    await loginButton.click({ timeout: 5000 })
+  } catch {
+    await loginButton.evaluate((el: HTMLElement) => {
+      ;(el as HTMLButtonElement).click()
+    })
   }
+
+  await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+  return true
 }
 
 async function globalSetup(config: FullConfig) {
@@ -426,11 +299,7 @@ async function globalSetup(config: FullConfig) {
     await dismissTutorialOverlay(page)
 
     // Check if admin exists by trying to login
-    const loginButton = page.getByTestId('nav-sign-in-button')
-    if (await loginButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await loginButton.click()
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
-
+    if (await clickNavSignInButton(page)) {
       // Fill login form
       await page.getByTestId('login-email-input').fill(ADMIN_EMAIL)
       await page.getByTestId('login-password-input').fill(ADMIN_PASSWORD)
@@ -721,11 +590,7 @@ async function globalSetup(config: FullConfig) {
     // Dismiss tutorial overlay again after navigation
     await dismissTutorialOverlay(page)
 
-    const testLoginButton = page.getByTestId('nav-sign-in-button')
-    if (await testLoginButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await testLoginButton.click()
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
-
+    if (await clickNavSignInButton(page)) {
       await page.getByTestId('login-email-input').fill(TEST_USER_EMAIL)
       await page.getByTestId('login-password-input').fill(TEST_USER_PASSWORD)
 

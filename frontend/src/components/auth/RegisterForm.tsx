@@ -4,10 +4,11 @@
 
 import Eye from 'lucide-react/dist/esm/icons/eye'
 import EyeClosed from 'lucide-react/dist/esm/icons/eye-closed'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 
 import { useAuth } from '../../contexts/AuthContext'
 import logger from '../../utils/logger'
+import { getEmailTypoSuggestion, type EmailTypoSuggestion } from '../../utils/mailCheckSuggestion'
 import { validateEmail } from '../../utils/validation'
 import './AuthForms.css'
 
@@ -40,11 +41,30 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [emailTypoHint, setEmailTypoHint] = useState<EmailTypoSuggestion | null>(null)
+  /** If set, the user confirmed the current spelling despite a mailcheck hint for this exact address. */
+  const [dismissedTypoKey, setDismissedTypoKey] = useState<string | null>(null)
 
   // Update email when initialEmail prop changes (including when it's reset to empty)
   useEffect(() => {
     setEmail(initialEmail)
   }, [initialEmail])
+
+  const applyEmailTypoCheck = useCallback(
+    (value: string) => {
+      const trimmed = value.trim()
+      if (!trimmed || !trimmed.includes('@')) {
+        setEmailTypoHint(null)
+        return
+      }
+      if (dismissedTypoKey === trimmed.toLowerCase()) {
+        setEmailTypoHint(null)
+        return
+      }
+      setEmailTypoHint(getEmailTypoSuggestion(trimmed))
+    },
+    [dismissedTypoKey]
+  )
 
   // Load reCAPTCHA script with site key on component mount
   // Skip loading on localhost to avoid 401 errors (site key not configured for dev domain)
@@ -267,6 +287,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     e.preventDefault()
     setError('')
 
+    const emailNorm = email.trim().toLowerCase()
+    const typo = getEmailTypoSuggestion(email)
+    if (typo && dismissedTypoKey !== emailNorm) {
+      setEmailTypoHint(typo)
+      setError(
+        'That email may contain a typo. Use the suggested address or confirm yours is correct before continuing.'
+      )
+      return
+    }
+
     if (!validateForm()) {
       return
     }
@@ -358,13 +388,60 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             name="email"
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={e => {
+              const v = e.target.value
+              setEmail(v)
+              if (dismissedTypoKey && v.trim().toLowerCase() !== dismissedTypoKey) {
+                setDismissedTypoKey(null)
+              }
+              setEmailTypoHint(null)
+            }}
+            onBlur={e => applyEmailTypoCheck(e.currentTarget.value)}
             placeholder="your@email.com"
             required
             autoComplete="email"
             autoFocus
             disabled={isLoading}
+            aria-describedby={emailTypoHint ? 'register-email-typo-hint' : undefined}
           />
+          {emailTypoHint && (
+            <div
+              id="register-email-typo-hint"
+              className="auth-email-typo-hint"
+              role="status"
+              aria-live="polite"
+            >
+              <span>Did you mean </span>
+              <span className="auth-email-typo-suggested">{emailTypoHint.full}</span>
+              <div className="auth-email-typo-actions">
+                <button
+                  type="button"
+                  className="auth-submit-btn auth-email-typo-primary"
+                  disabled={isLoading}
+                  onClick={() => {
+                    setEmail(emailTypoHint.full)
+                    setDismissedTypoKey(null)
+                    setEmailTypoHint(null)
+                    setError('')
+                  }}
+                >
+                  Use this address
+                </button>
+                <button
+                  type="button"
+                  className="auth-email-typo-secondary"
+                  disabled={isLoading}
+                  onClick={() => {
+                    setDismissedTypoKey(email.trim().toLowerCase())
+                    setEmailTypoHint(null)
+                    setError('')
+                  }}
+                >
+                  This address is correct
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="form-group">

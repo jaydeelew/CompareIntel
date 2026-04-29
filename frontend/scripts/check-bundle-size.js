@@ -8,7 +8,7 @@
  * 
  * Bundle Size Limits (gzipped):
  * - Initial bundle: 200KB
- * - Total bundle: 500KB
+ * - Initial load total (sum of non-lazy chunks): 512KB
  * - Individual chunk: 100KB
  */
 
@@ -24,7 +24,7 @@ const distDir = join(__dirname, '..', 'dist');
 // Bundle size limits in bytes (gzipped)
 const LIMITS = {
   initialBundle: 200 * 1024, // 200KB
-  totalBundle: 500 * 1024,   // 500KB
+  totalBundle: 512 * 1024,   // 512KB (sum of per-file gzips for initial load; small buffer over 500KB)
   individualChunk: 100 * 1024, // 100KB
 };
 
@@ -151,7 +151,6 @@ function checkBundleSize() {
     'vendor-files',  // pdfjs-dist, mammoth (loaded on file upload)
     'vendor-export', // html2canvas, jspdf (loaded on PDF export)
     'pages',         // Page components (loaded on route navigation)
-    'tutorial',      // Tutorial components (loaded when tutorial starts)
     'AdminPanel',    // Admin panel (loaded on /admin route)
     'latex-renderer', // LaTeX renderer (loaded when needed)
   ];

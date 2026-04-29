@@ -54,6 +54,16 @@ export interface User {
   trial_ends_at?: string
   /** 7-DAY TRIAL: Whether the user's trial is currently active */
   is_trial_active?: boolean
+  /** Stripe customer id after checkout (Customer Portal / billing) */
+  stripe_customer_id?: string | null
+  /** Present while a Stripe subscription is linked (may remain if customer id was cleared) */
+  stripe_subscription_id?: string | null
+  /** Whether the user has enabled pay-as-you-go overages */
+  overage_enabled?: boolean
+  /** Spending cap in cents (null = unlimited when enabled) */
+  overage_spend_limit_cents?: number | null
+  /** Overage credits consumed in the current billing period */
+  overage_credits_used_this_period?: number
 }
 
 /**

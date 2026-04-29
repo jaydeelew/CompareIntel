@@ -34,7 +34,7 @@ CompareIntel is a full-stack web application that enables users to compare respo
 |---------|-------------|
 | Real-time Streaming | SSE-based streaming for simultaneous model responses |
 | Conversation History | Per-model context for follow-up questions |
-| Credit System | Tiered subscriptions with daily/monthly credit limits |
+| Credit System | Tiered subscriptions with daily/monthly pools; optional pay-as-you-go overages on paid plans (see [CREDIT_SYSTEM.md](features/CREDIT_SYSTEM.md)) |
 | Authentication | JWT-based auth with HTTP-only cookie storage |
 | Export | PDF, Markdown, JSON, and HTML export options |
 | Web Search | Optional web search integration for supported models |
@@ -161,21 +161,13 @@ App.tsx (Application shell - routing only)
 | `VerificationBanner` | Prompt to verify email |
 | `ResetPassword` | Password reset flow |
 
-#### Tutorial System (`components/tutorial/`)
-
-| Component | Purpose |
-|-----------|---------|
-| `TutorialManager` | Orchestrates tutorial flow for new users |
-| `TutorialOverlay` | Highlight overlays for tutorial steps |
-| `TutorialTooltip` | Instructional tooltips |
-
 #### Shared Components (`components/shared/`)
 
 | Component | Purpose |
 |-----------|---------|
 | `ErrorBoundary` | React error boundary for graceful error handling |
 | `LoadingSpinner` | Reusable loading indicator |
-| `CreditWarningBanner` | Warning when credits are low/exhausted |
+| `CreditWarningBanner` | Warnings for low pool, overage in use, overage cap hit |
 | `DoneSelectingCard` | Prompt to start comparison after model selection |
 
 ---
@@ -204,7 +196,6 @@ The hooks are organized into three categories based on their responsibility:
 | `useResponsive` | Responsive breakpoint detection |
 | `useBreakpoint` | Named breakpoint hooks (isMobile, isTablet, etc.) |
 | `useTouchDevice` | Detect touch-capable devices |
-| `useTutorial` | Tutorial state and step management |
 
 #### Feature Hooks
 
@@ -372,28 +363,34 @@ Handles model selection with business rules:
 │                       Credit System                               │
 └─────────────────────────────────────────────────────────────────┘
 
-Credit Calculation:
-  effective_tokens = input_tokens + (output_tokens × 2.5)
-  credits_used = effective_tokens / 1000
+Credit calculation (text, per model):
+  1) OpenRouter usage.cost (USD) x CREDITS_PER_DOLLAR (fractional credits), or
+  2) List pricing from openrouter_models.json x tokens, or
+  3) Legacy effective_tokens formula (fallback).
 
-User Types:
+Per request: sum fractional credits across successful models; charge max(1, ceil(total))
+whole credits. UsageLog.actual_cost stores attributed USD.
+
+User types (pools):
   ┌─────────────────┬───────────────┬─────────────────────────┐
   │ User Type       │ Credit Pool   │ Reset Schedule          │
   ├─────────────────┼───────────────┼─────────────────────────┤
   │ Anonymous       │ 50/day        │ Daily (midnight local)  │
   │ Free            │ 100/day       │ Daily (midnight local)  │
-  │ Starter         │ 1,250/month   │ Monthly (billing date)  │
-  │ Starter+        │ 2,500/month   │ Monthly (billing date)  │
-  │ Pro             │ 5,000/month   │ Monthly (billing date)  │
-  │ Pro+            │ 10,000/month  │ Monthly (billing date)  │
+  │ Starter         │ 720/month     │ Monthly (Stripe period)   │
+  │ Starter+        │ 1,600/month   │ Monthly (Stripe period)   │
+  │ Pro             │ 3,300/month   │ Monthly (Stripe period)   │
+  │ Pro+            │ 6,700/month   │ Monthly (Stripe period)   │
   └─────────────────┴───────────────┴─────────────────────────┘
 
-Credit Check Flow:
-  1. Frontend: useCreditsRemaining calculates remaining credits
-  2. Submit: useComparisonStreaming validates credit availability
-  3. Backend: /api/compare-stream checks and deducts credits
-  4. Response: COMPLETE event includes updated credit balance
-  5. Update: Frontend refreshes credit state from response
+Overage (paid tiers, opt-in): After the monthly pool is exhausted, `credit_manager` may consume overage credits if `overage_enabled` and within optional dollar cap; overage settings reset when monthly credits are re-allocated (see [CREDIT_SYSTEM.md](features/CREDIT_SYSTEM.md)).
+
+Billing (optional): POST /api/billing/create-checkout-session, POST /api/billing/webhooks/stripe; GET/PUT /api/billing/overage-settings for overage preferences.
+
+Credit check flow:
+  1. Backend /api/compare-stream estimates required credits (per model); 402 if insufficient (including overage budget when enabled)
+  2. Stream completes; comparison_stream sums USD/credits and deducts via credit_manager
+  3. COMPLETE / balance endpoints refresh UI; complete metadata may include overage fields
 ```
 
 ### 5.4 Conversation Persistence

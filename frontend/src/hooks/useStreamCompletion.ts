@@ -7,6 +7,7 @@ import { useCallback } from 'react'
 
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison'
 import { apiClient } from '../services/api/client'
+import { isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus } from '../services/compareService'
 import { createStreamingMessage, estimateTokensSimple } from '../services/sseProcessor'
 import type { ProcessStreamResult } from '../services/sseProcessor'
@@ -520,15 +521,13 @@ export function useStreamCompletion(
             })
           )
         } catch (error) {
-          if (error instanceof Error && error.name === 'CancellationError') {
-            // Silently handle
-          } else {
+          if (!isCancellationError(error)) {
             logger.error('Failed to sync usage count after comparison:', error)
           }
         }
       } else {
         setError(
-          'All models failed to respond. This comparison did not count towards your daily limit. Please try again in a moment.'
+          'All models failed to respond. This comparison did not use credits. Please try again in a moment.'
         )
         setTimeout(() => {
           setError(null)

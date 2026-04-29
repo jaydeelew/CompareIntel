@@ -21,6 +21,14 @@
   gap: var(--spacing-4);
   /* Prevent subtle scroll jumps caused by layout reflow above viewport. */
   overflow-anchor: none;
+
+  /* Stacking: <main> comes after the sticky header in the DOM; descendants (hero capability
+     tiles, composer z-index:1000+ controls) can otherwise paint on top of .app-header-shell
+     (--z-sticky) and block navbar / avatar interactions. A contained stacking context keeps
+     the whole main subtree below the header; portaled modals (body) are unaffected. */
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
 }
 
 /* Hero is the first flex item; keep it from shrinking when siblings (e.g. models section) gain height. */

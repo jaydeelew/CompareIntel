@@ -163,7 +163,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // Process table rows and convert to HTML
       processed = processed.replace(/(__TABLE_ROW__[\s\S]*__\/TABLE_ROW__)+/g, match => {
         const rows = match.split('__/TABLE_ROW__').filter(row => row.trim())
-        let tableHTML = '<table class="markdown-table">'
+        let tableHTML = '<div class="markdown-table-scroll"><table class="markdown-table">'
         let isHeader = true
 
         rows.forEach((row, index) => {
@@ -223,7 +223,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
           }
         })
 
-        tableHTML += '</table>'
+        tableHTML += '</table></div>'
         return tableHTML
       })
     }

@@ -35,6 +35,52 @@ function allResultCards(page: Page): Locator {
   )
 }
 
+async function triggerBreakoutAndWaitForResponse(
+  page: Page,
+  breakoutBtn: Locator,
+  projectName: string,
+  browserName: string
+) {
+  const isMobile = isMobileE2eProject(projectName)
+  const breakoutUrlMatch = (res: { url: () => string }) =>
+    res.url().includes('/conversations/breakout')
+
+  async function triggerBreakout() {
+    await breakoutBtn.scrollIntoViewIfNeeded().catch(() => {})
+
+    if (isMobile) {
+      await breakoutBtn.dispatchEvent('touchend', { bubbles: true, cancelable: true })
+      return
+    }
+
+    if (browserName === 'webkit' || browserName === 'chromium' || browserName === 'firefox') {
+      await breakoutBtn.evaluate((el: HTMLElement) => {
+        ;(el as HTMLButtonElement).click()
+      })
+      return
+    }
+
+    await breakoutBtn.click({ timeout: 15000 })
+  }
+
+  // The breakout button can render before history sync sets currentVisibleComparisonId.
+  // In that case the first handler call returns without a POST; retry after the state settles.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const responsePromise = page.waitForResponse(breakoutUrlMatch, { timeout: 30000 })
+    await triggerBreakout()
+    const response = await responsePromise.catch(() => null)
+    if (response) return response
+
+    const noActiveConversationError = page.locator(
+      '.error-message:has-text("No active conversation to break out from"), [role="alert"]:has-text("No active conversation to break out from")'
+    )
+    await noActiveConversationError.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+    await page.waitForTimeout(isMobile ? 1500 : 750)
+  }
+
+  throw new Error('Timed out waiting for breakout API response after retries')
+}
+
 async function clickHideResultCardButton(closeBtn: Locator, browserName: string): Promise<void> {
   if (browserName === 'firefox') {
     await closeBtn.evaluate((el: HTMLElement) => (el as HTMLButtonElement).click())
@@ -685,25 +731,16 @@ test.describe('Results Display Regression Tests', () => {
         // Avoid fixed sleeps: reasoning models / slow CI need longer for both cards to be non-error.
         await expect(breakoutBtn).toBeVisible({ timeout: 45000 })
 
-        const isMobile = isMobileE2eProject(projectName)
-        // Breakout runs an authenticated API call; parallel wait + tap matches real mobile WebKit.
-        const breakoutMatcher = (res: { url: () => string; status: () => number }) =>
-          res.url().includes('/conversations/breakout') && res.status() >= 200 && res.status() < 300
-
-        await breakoutBtn.scrollIntoViewIfNeeded().catch(() => {})
-        const triggerBreakout = isMobile
-          ? () => breakoutBtn.tap({ timeout: 15000 })
-          : browserName === 'webkit' || browserName === 'firefox'
-            ? () =>
-                breakoutBtn.evaluate((el: HTMLElement) => {
-                  ;(el as HTMLButtonElement).click()
-                })
-            : () => breakoutBtn.click({ timeout: 15000 })
-
-        await Promise.all([
-          authenticatedPage.waitForResponse(breakoutMatcher, { timeout: 150000 }),
-          triggerBreakout(),
-        ])
+        const breakoutResponse = await triggerBreakoutAndWaitForResponse(
+          authenticatedPage,
+          breakoutBtn,
+          projectName,
+          browserName
+        )
+        expect(
+          breakoutResponse.ok(),
+          `breakout API expected 2xx, got ${breakoutResponse.status()}`
+        ).toBeTruthy()
 
         // Follow-up mode proves the breakout handler finished (clears composer, single-thread UI).
         await expect(authenticatedPage.getByTestId('comparison-input-textarea')).toHaveAttribute(

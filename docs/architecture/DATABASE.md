@@ -23,6 +23,8 @@ User
 Conversation
 ├── ConversationMessage (1:N)
 └── Conversation (self-reference for breakouts)
+
+ProcessedStripeWebhook (standalone — Stripe webhook idempotency)
 ```
 
 ## Models
@@ -54,6 +56,11 @@ Core user account model with authentication, subscription, and credit tracking.
 | `admin_permissions` | Text | JSON permissions |
 | `mock_mode_enabled` | Boolean | Testing mode |
 | `stripe_customer_id` | String(255) | Stripe customer ID |
+| `stripe_subscription_id` | String(255) | Stripe subscription ID |
+| `overage_enabled` | Boolean | User opted into pay-as-you-go overage for the current period |
+| `overage_spend_limit_cents` | Integer | Optional overage dollar cap in cents (NULL = unlimited) |
+| `overage_credits_used_this_period` | Integer | Overage credits consumed this billing period |
+| `trial_ends_at` | DateTime | 7-day trial expiration (NULL = no trial) |
 | `monthly_credits_allocated` | Integer | Credits for billing period |
 | `credits_used_this_period` | Integer | Credits consumed |
 | `total_credits_used` | Integer | Lifetime credits |
@@ -66,7 +73,7 @@ Core user account model with authentication, subscription, and credit tracking.
 | `created_at` | DateTime | Creation timestamp |
 | `updated_at` | DateTime | Last update timestamp |
 
-**Computed Property:** `credits_remaining` = `monthly_credits_allocated` - `credits_used_this_period`
+**Computed Property:** `credits_remaining` = max(0, `monthly_credits_allocated` - `credits_used_this_period`)
 
 ---
 
@@ -153,7 +160,7 @@ Detailed usage tracking for analytics and billing.
 | `input_tokens` | Integer | Total input tokens |
 | `output_tokens` | Integer | Total output tokens |
 | `total_tokens` | Integer | Combined tokens |
-| `effective_tokens` | Integer | Billing tokens (input + output×2.5) |
+| `effective_tokens` | Integer | Legacy token tally (input + output×2.5); billing is cost-based |
 | `credits_used` | DECIMAL(10,4) | Credits deducted |
 | `actual_cost` | DECIMAL(10,4) | Actual API cost |
 | `estimated_cost` | DECIMAL(10,4) | Estimated cost |
@@ -198,7 +205,7 @@ Monthly aggregated usage statistics for data retention.
 | `total_models_failed` | Integer | Failed responses |
 | `total_input_tokens` | BigInteger | Total input tokens |
 | `total_output_tokens` | BigInteger | Total output tokens |
-| `total_effective_tokens` | BigInteger | Total billing tokens |
+| `total_effective_tokens` | BigInteger | Sum of legacy effective-token tallies |
 | `avg_input_tokens` | DECIMAL | Average input tokens |
 | `avg_output_tokens` | DECIMAL | Average output tokens |
 | `avg_output_ratio` | DECIMAL | Output/input ratio |
@@ -288,6 +295,22 @@ Global application settings (single row).
 | `web_search_enabled` | Boolean | Web search enabled |
 | `created_at` | DateTime | Creation timestamp |
 | `updated_at` | DateTime | Last update timestamp |
+
+---
+
+### ProcessedStripeWebhook
+
+Idempotency table for Stripe webhook events — prevents duplicate processing.
+
+**Table:** `processed_stripe_webhooks`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `stripe_event_id` | String(255) | Unique Stripe event ID |
+| `created_at` | DateTime | When the event was processed |
+
+**Constraints:** Unique on `stripe_event_id`
 
 ---
 

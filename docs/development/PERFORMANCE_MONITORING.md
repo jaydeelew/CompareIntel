@@ -110,7 +110,7 @@ Performance budgets are defined in `src/utils/performance.ts` and enforced at mu
 - **Initial Bundle Total**: < 500KB (gzipped) - Sum of all initial chunks (excluding lazy-loaded chunks)
 - **Individual Chunk**: < 100KB (gzipped) - Individual chunks must be under this limit (vendor chunks can be up to 200KB)
 
-**Note**: Lazy-loaded chunks (e.g., PDF viewer, admin panel, tutorial components) are excluded from initial bundle calculations as they load on-demand.
+**Note**: Lazy-loaded chunks (e.g., PDF viewer, admin panel) are excluded from initial bundle calculations as they load on-demand.
 
 ### Runtime Budgets
 

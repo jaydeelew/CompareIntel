@@ -45,10 +45,6 @@ export interface UseModalManagementReturn {
   openTrialWelcomeModal: () => void
   closeTrialWelcomeModal: () => void
 
-  // Welcome modal (tutorial)
-  showWelcomeModal: boolean
-  setShowWelcomeModal: (show: boolean) => void
-
   // Premium models toggle modal
   showPremiumModelsToggleModal: boolean
   openPremiumModelsToggleModal: () => void
@@ -93,9 +89,6 @@ export function useModalManagement(
 
   // Trial welcome modal
   const [showTrialWelcomeModal, setShowTrialWelcomeModal] = useState(false)
-
-  // Welcome modal (for tutorial)
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
 
   // Premium models toggle modal
   const [showPremiumModelsToggleModal, setShowPremiumModelsToggleModal] = useState(false)
@@ -216,10 +209,6 @@ export function useModalManagement(
     showTrialWelcomeModal,
     openTrialWelcomeModal,
     closeTrialWelcomeModal,
-
-    // Welcome modal
-    showWelcomeModal,
-    setShowWelcomeModal,
 
     // Premium models toggle modal
     showPremiumModelsToggleModal,

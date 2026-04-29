@@ -4,13 +4,14 @@ Token counting, tokenizer management, credit calculation.
 
 import logging
 import threading
-from decimal import Decimal
+from decimal import ROUND_CEILING, Decimal
 from typing import Any, NamedTuple
 
 import httpx  # type: ignore[import-untyped]
 import tiktoken  # type: ignore[import-untyped]
 
 from ..config import settings
+from ..config.constants import CREDITS_PER_DOLLAR
 from .registry import OPENROUTER_MODELS
 
 logger = logging.getLogger(__name__)
@@ -314,6 +315,59 @@ class TokenUsage(NamedTuple):
     total_tokens: int
     effective_tokens: int
     credits: Decimal
+    cost_usd: Decimal | None = None
+
+
+def extract_usage_cost_usd(usage: Any) -> Decimal | None:
+    """Read OpenRouter `usage.cost` (USD) from SDK usage object or dict."""
+    if usage is None:
+        return None
+    raw = getattr(usage, "cost", None)
+    if raw is None and hasattr(usage, "model_dump"):
+        try:
+            raw = usage.model_dump().get("cost")
+        except Exception:
+            raw = None
+    if raw is None and isinstance(usage, dict):
+        raw = usage.get("cost")
+    if raw is None:
+        return None
+    try:
+        val = Decimal(str(raw))
+        return val if val >= 0 else None
+    except Exception:
+        return None
+
+
+def token_usage_from_openrouter_usage(usage: Any) -> TokenUsage | None:
+    """Build TokenUsage from an OpenRouter/OpenAI completion usage payload."""
+    if not usage:
+        return None
+    pt = int(getattr(usage, "prompt_tokens", None) or 0)
+    ct = int(getattr(usage, "completion_tokens", None) or 0)
+    cost = extract_usage_cost_usd(usage)
+    if pt == 0 and ct == 0 and cost is None:
+        return None
+    return calculate_token_usage(pt, ct, cost_usd=cost)
+
+
+def usd_to_fractional_credits(usd: Decimal) -> Decimal:
+    return usd * Decimal(str(CREDITS_PER_DOLLAR))
+
+
+def fractional_credits_to_implied_usd(fractional: Decimal) -> Decimal:
+    """When list/API USD is unknown, treat legacy fractional credits as implied USD at CREDITS_PER_DOLLAR."""
+    if CREDITS_PER_DOLLAR <= 0:
+        return Decimal(0)
+    return fractional / Decimal(str(CREDITS_PER_DOLLAR))
+
+
+def finalize_billed_credits(total_fractional: Decimal) -> Decimal:
+    """Whole credits for a successful request: ceil total, minimum 1 if any positive usage."""
+    if total_fractional <= 0:
+        return Decimal(0)
+    ceiled = total_fractional.quantize(Decimal("1"), rounding=ROUND_CEILING)
+    return max(Decimal(1), ceiled)
 
 
 def calculate_credits(prompt_tokens: int, completion_tokens: int) -> Decimal:
@@ -322,7 +376,12 @@ def calculate_credits(prompt_tokens: int, completion_tokens: int) -> Decimal:
     return credits
 
 
-def calculate_token_usage(prompt_tokens: int, completion_tokens: int) -> TokenUsage:
+def calculate_token_usage(
+    prompt_tokens: int,
+    completion_tokens: int,
+    *,
+    cost_usd: Decimal | None = None,
+) -> TokenUsage:
     total_tokens = prompt_tokens + completion_tokens
     effective_tokens = prompt_tokens + int(completion_tokens * 2.5)
     credits = calculate_credits(prompt_tokens, completion_tokens)
@@ -332,7 +391,83 @@ def calculate_token_usage(prompt_tokens: int, completion_tokens: int) -> TokenUs
         total_tokens=total_tokens,
         effective_tokens=effective_tokens,
         credits=credits,
+        cost_usd=cost_usd,
     )
+
+
+def fractional_credits_for_text_usage(usage: TokenUsage, model_id: str) -> Decimal:
+    """Credits (fractional) for billing: API USD, else list pricing, else legacy token formula."""
+    if usage.cost_usd is not None:
+        return usd_to_fractional_credits(usage.cost_usd)
+    from .registry import get_model_text_prices_per_token
+
+    rates = get_model_text_prices_per_token(model_id)
+    if rates:
+        inp_d, out_d = rates
+        usd = Decimal(usage.prompt_tokens) * inp_d + Decimal(usage.completion_tokens) * out_d
+        return usd_to_fractional_credits(usd)
+    logger.warning(
+        "No OpenRouter cost or list pricing for model %s; using legacy effective-token credits",
+        model_id,
+    )
+    return usage.credits
+
+
+def usd_logged_for_text_usage(usage: TokenUsage, model_id: str) -> Decimal:
+    """USD to persist on UsageLog.actual_cost (sum per model equals row total)."""
+    if usage.cost_usd is not None:
+        return usage.cost_usd
+    from .registry import get_model_text_prices_per_token
+
+    rates = get_model_text_prices_per_token(model_id)
+    if rates:
+        inp_d, out_d = rates
+        return Decimal(usage.prompt_tokens) * inp_d + Decimal(usage.completion_tokens) * out_d
+    return fractional_credits_to_implied_usd(usage.credits)
+
+
+def fractional_credits_for_estimated_text(
+    model_id: str, prompt_tokens: int, output_tokens: int
+) -> Decimal:
+    from .registry import get_model_text_prices_per_token
+
+    rates = get_model_text_prices_per_token(model_id)
+    if rates:
+        inp_d, out_d = rates
+        usd = Decimal(prompt_tokens) * inp_d + Decimal(output_tokens) * out_d
+        return usd_to_fractional_credits(usd)
+    return calculate_credits(prompt_tokens, output_tokens)
+
+
+def estimate_reserved_credits_for_compare(
+    input_data: str,
+    model_ids: list[str],
+    conversation_history: list[Any] | None,
+    tokenizer_model_id: str | None,
+    is_image_generation_by_model: dict[str, bool],
+) -> Decimal:
+    """
+    Upper-bound credits to reserve before compare-stream (matches post-hoc billing rules).
+    """
+    from .image_credits import calculate_image_credits_fractional
+
+    total_frac = Decimal(0)
+    base_input = estimate_token_count(input_data, model_id=tokenizer_model_id)
+    hist_tok = (
+        count_conversation_tokens(conversation_history, model_id=tokenizer_model_id)
+        if conversation_history
+        else 0
+    )
+    for mid in model_ids:
+        if is_image_generation_by_model.get(mid):
+            total_frac += calculate_image_credits_fractional(mid, 1)
+            continue
+        input_tokens = base_input + hist_tok
+        estimated_output_tokens = max(100, min(4000, int(input_tokens * 1.5)))
+        total_frac += fractional_credits_for_estimated_text(
+            mid, input_tokens, estimated_output_tokens
+        )
+    return finalize_billed_credits(total_frac)
 
 
 def estimate_credits_before_request(
@@ -344,8 +479,13 @@ def estimate_credits_before_request(
     input_tokens = estimate_token_count(prompt, model_id=model_id)
     if conversation_history:
         input_tokens += count_conversation_tokens(conversation_history, model_id=model_id)
-    estimated_output_tokens = max(500, min(4000, int(input_tokens * 1.5)))
-    credits_per_model = calculate_credits(input_tokens, estimated_output_tokens)
+    estimated_output_tokens = max(100, min(4000, int(input_tokens * 1.5)))
+    if model_id:
+        credits_per_model = fractional_credits_for_estimated_text(
+            model_id, input_tokens, estimated_output_tokens
+        )
+    else:
+        credits_per_model = calculate_credits(input_tokens, estimated_output_tokens)
     return credits_per_model * num_models
 
 

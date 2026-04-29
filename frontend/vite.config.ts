@@ -411,10 +411,6 @@ export default defineConfig({
           if (id.includes('/src/components/pages/')) {
             return 'pages';
           }
-          // Split tutorial components
-          if (id.includes('/src/components/tutorial/')) {
-            return 'tutorial';
-          }
         },
       },
     },

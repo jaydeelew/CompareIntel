@@ -41,9 +41,9 @@ export interface ConversationMessage {
   images?: string[]
   /** ISO timestamp when the message was created */
   timestamp: string
-  /** Input tokens for user messages (from OpenRouter API) */
+  /** Input tokens for user messages (from API) */
   input_tokens?: number | null
-  /** Output tokens for assistant messages (from OpenRouter API) */
+  /** Output tokens for assistant messages (from API) */
   output_tokens?: number | null
 }
 
@@ -61,9 +61,9 @@ export interface StoredMessage {
   model_id?: ModelId
   /** Optional unique identifier */
   id?: MessageId | ConversationId
-  /** Input tokens for user messages (from OpenRouter API) */
+  /** Input tokens for user messages (from API) */
   input_tokens?: number | null
-  /** Output tokens for assistant messages (from OpenRouter API) */
+  /** Output tokens for assistant messages (from API) */
   output_tokens?: number | null
   /** Success flag (true if message was successful, false if failed) - only available from API */
   success?: boolean

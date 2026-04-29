@@ -197,7 +197,7 @@ Total:  ~90MB + 6KB/year
 | `total_models_failed` | Total failed model calls |
 | `total_input_tokens` | Sum of all input tokens |
 | `total_output_tokens` | Sum of all output tokens |
-| `total_effective_tokens` | Sum of all effective tokens |
+| `total_effective_tokens` | Sum of legacy effective-token tallies (analytics) |
 | `avg_input_tokens` | Average input tokens per comparison |
 | `avg_output_tokens` | Average output tokens per comparison |
 | `avg_output_ratio` | Average output/input ratio |

@@ -53,6 +53,9 @@ export {
   getCurrentISODate,
   getDateDiff,
   formatLocaleDate,
+  formatCreditsResetAtPhrase,
+  formatCreditsResetAtLabel,
+  type FormatCreditsResetOptions,
 } from './date'
 
 // Performance utilities

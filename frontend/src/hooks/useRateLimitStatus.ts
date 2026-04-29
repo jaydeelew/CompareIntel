@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 
+import { isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, type RateLimitStatus } from '../services/compareService'
 import logger from '../utils/logger'
 
@@ -58,9 +59,8 @@ export function useRateLimitStatus({
       }
       // For authenticated users, usage count comes from user object, not from rate limit status
     } catch (error) {
-      // Silently handle cancellation errors (expected when component unmounts)
-      if (error instanceof Error && error.name === 'CancellationError') {
-        return // Don't log or update state for cancelled requests
+      if (isCancellationError(error)) {
+        return
       }
       logger.error('Failed to fetch rate limit status:', error)
       setRateLimitStatus(null)

@@ -72,7 +72,7 @@ function getModalContent(
   // userTier === 'free'
   return {
     title: 'Premium Model',
-    message: `${modelLabel} requires a paid subscription. You can use the "Hide premium models" button below to hide premium models from the list, or upgrade to a paid tier once paid tiers become available to access all models.`,
+    message: `${modelLabel} requires a paid subscription. Use the "Hide premium models" button below to focus on free-tier models, or open your avatar menu → Upgrade plan to subscribe when billing is enabled on this site.`,
     showSignUp: false,
     showUpgrade: true,
     showHidePremium: true,
@@ -246,9 +246,9 @@ export const DisabledModelInfoModal: React.FC<
               className="disabled-model-info-button secondary"
               onClick={onClose}
               type="button"
-              title="Paid tiers are coming soon"
+              title="Open your avatar menu, then Upgrade plan"
             >
-              Upgrade (coming soon)
+              Upgrade plan (account menu)
             </button>
           )}
           <button className="disabled-model-info-button tertiary" onClick={onClose} type="button">

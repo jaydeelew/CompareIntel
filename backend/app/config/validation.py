@@ -10,7 +10,7 @@ import os
 
 from .constants import (
     ANONYMOUS_MODEL_LIMIT,
-    CONVERSATION_LIMITS,
+    HISTORY_ENTRY_LIMITS,
     MODEL_LIMITS,
     SUBSCRIPTION_CONFIG,
 )
@@ -113,17 +113,17 @@ def validate_config() -> None:
 
     # Validate all subscription tiers have required fields
     for tier, config in SUBSCRIPTION_CONFIG.items():
-        required_fields = ["daily_limit", "model_limit", "overage_allowed"]
+        required_fields = ["model_limit", "overage_allowed"]
         for field in required_fields:
             if field not in config:
                 errors.append(f"SUBSCRIPTION_CONFIG['{tier}'] missing required field: {field}")
 
-    # Validate conversation limits include all tiers
+    # Validate history entry limits include all tiers
     for tier in SUBSCRIPTION_CONFIG.keys():
-        if tier not in CONVERSATION_LIMITS:
-            warnings.append(f"CONVERSATION_LIMITS missing tier: {tier}")
-    if "unregistered" not in CONVERSATION_LIMITS:
-        warnings.append("CONVERSATION_LIMITS missing 'unregistered' tier")
+        if tier not in HISTORY_ENTRY_LIMITS:
+            warnings.append(f"HISTORY_ENTRY_LIMITS missing tier: {tier}")
+    if "unregistered" not in HISTORY_ENTRY_LIMITS:
+        warnings.append("HISTORY_ENTRY_LIMITS missing 'unregistered' tier")
 
     if settings.individual_model_timeout < 1:
         errors.append("individual_model_timeout must be at least 1 second")

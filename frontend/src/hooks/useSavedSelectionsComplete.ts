@@ -59,7 +59,7 @@ export interface UseSavedSelectionsCompleteConfig {
   response: CompareResponse | null
   /** Current conversations */
   conversations: ModelConversation[]
-  /** Callback when selection is saved (for tutorial tracking) */
+  /** Optional callback when selection is saved */
   onSelectionSaved?: () => void
   modelMode: 'text' | 'image'
   temperature: number

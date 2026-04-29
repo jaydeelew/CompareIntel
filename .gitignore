@@ -103,6 +103,7 @@ huggingface/
 *.db-shm
 
 # Docker, OS, IDE
+.cursor/
 docker-compose.override.yml
 .docker/
 docker-data/

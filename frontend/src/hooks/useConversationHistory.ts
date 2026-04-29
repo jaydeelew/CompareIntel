@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
 
+import { getHistoryEntryLimit } from '../config/constants'
 import { apiClient } from '../services/api/client'
 import { ApiError } from '../services/api/errors'
 import {
@@ -66,19 +67,9 @@ export function useConversationHistory({
   const [currentVisibleComparisonId, setCurrentVisibleComparisonId] = useState<string | null>(null)
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false)
 
-  // Get history limit based on tier - use useMemo to ensure it updates when user/auth changes
   const historyLimit = useMemo(() => {
-    if (!isAuthenticated || !user) return 2 // Anonymous
-    const tier = user.subscription_tier || 'free'
-    const limits: { [key: string]: number } = {
-      anonymous: 2,
-      free: 3,
-      starter: 10,
-      starter_plus: 20,
-      pro: 50,
-      pro_plus: 100,
-    }
-    return limits[tier] || 2
+    if (!isAuthenticated || !user) return getHistoryEntryLimit('unregistered')
+    return getHistoryEntryLimit(user.subscription_tier || 'free')
   }, [isAuthenticated, user])
 
   // Load conversation history from localStorage (unregistered users)

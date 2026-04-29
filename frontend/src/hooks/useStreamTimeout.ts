@@ -6,7 +6,7 @@
 import { useCallback } from 'react'
 
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison'
-import { ApiError, PaymentRequiredError } from '../services/api/errors'
+import { ApiError, isCancellationError, PaymentRequiredError } from '../services/api/errors'
 import { getCreditBalance } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
 import type { ProcessStreamResult } from '../services/sseProcessor'
@@ -20,7 +20,7 @@ export interface UseStreamTimeoutConfig {
   input: string
   isFollowUpMode: boolean
   isAuthenticated: boolean
-  creditWarningType: 'none' | 'low' | 'insufficient'
+  creditWarningType: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
   browserFingerprint: string
   userCancelledRef: React.MutableRefObject<boolean>
@@ -409,18 +409,20 @@ export function useStreamTimeout(
               .then(balance => {
                 setCreditBalance(balance as CreditBalance)
               })
-              .catch(error =>
+              .catch(error => {
+                if (isCancellationError(error)) return
                 logger.error('Failed to refresh credit balance after timeout:', error)
-              )
+              })
           } else {
             getCreditBalance(browserFingerprint)
               .then(balance => {
                 setAnonymousCreditsRemaining(balance.credits_remaining)
                 setCreditBalance(balance as CreditBalance)
               })
-              .catch(error =>
+              .catch(error => {
+                if (isCancellationError(error)) return
                 logger.error('Failed to refresh anonymous credit balance after timeout:', error)
-              )
+              })
           }
         }
 

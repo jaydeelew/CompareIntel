@@ -107,6 +107,36 @@ class Settings(BaseSettings):
     redis_url: str | None = None  # e.g., "redis://localhost:6379/0"
     redis_enabled: bool = False  # Set to True to enable Redis-based distributed rate limiting
 
+    # Stripe (optional until billing is live)
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_price_starter: str | None = None
+    stripe_price_starter_plus: str | None = None
+    stripe_price_pro: str | None = None
+    stripe_price_pro_plus: str | None = None
+    stripe_overage_meter_id: str | None = None
+    stripe_overage_product_id: str | None = None
+    stripe_price_overage: str | None = None
+
+    @field_validator(
+        "stripe_secret_key",
+        "stripe_webhook_secret",
+        "stripe_price_starter",
+        "stripe_price_starter_plus",
+        "stripe_price_pro",
+        "stripe_price_pro_plus",
+        "stripe_overage_meter_id",
+        "stripe_overage_product_id",
+        "stripe_price_overage",
+        mode="before",
+    )
+    @classmethod
+    def stripe_optional_empty_to_none(cls, v):
+        """Treat empty env strings as unset so STRIPE_*="" does not block dotenv values."""
+        if v == "" or v is None:
+            return None
+        return v
+
     # Circuit breaker configuration
     search_circuit_breaker_enabled: bool = True  # Enable circuit breaker for API failures
 

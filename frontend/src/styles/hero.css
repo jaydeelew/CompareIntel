@@ -145,6 +145,13 @@
    — Keep tiles + title/subtitle in layout; hide with opacity / visibility so the hero height and
      composer position match the normal layout when toggling. */
 
+/* Full-bleed hero background can sit at the same visual position as the sticky navbar
+   (100vw width + negative margins). Disable pointer events on the section itself so clicks
+   fall through to the header beneath.  Interactive children re-enable pointer events below. */
+.hero-section.hero-section--composer-focused {
+  pointer-events: none;
+}
+
 .hero-section.hero-section--composer-focused .hero-capabilities {
   opacity: 0;
   pointer-events: none;
@@ -505,7 +512,8 @@
 }
 
 .hero-section.hero-section--composer-focused .hero-theme-toggle-mobile,
-.hero-section.hero-section--composer-focused .hero-input-section {
+.hero-section.hero-section--composer-focused .hero-input-section,
+.hero-section.hero-section--composer-focused .provider-carousel-front {
   pointer-events: auto;
 }
 
@@ -870,9 +878,12 @@ video.capability-tile-back-video {
   -webkit-transform: translateZ(0);
 }
 
-/* Natural Language and Formatted Math: darken screenshots to match Code Generation tile */
-.capability-tile-back[data-tile='natural-language'] .capability-tile-back-image,
-.capability-tile-back[data-tile='formatted-math'] .capability-tile-back-image {
+/* Natural Language and Formatted Math: darken to match Code Generation tile.
+   Applied to the wrapper (not the <video> directly) because CSS filter on a
+   video element inside a preserve-3d context breaks GPU compositing and
+   prevents video frames from rendering in production builds. */
+.capability-tile-back[data-tile='natural-language'] .capability-tile-back-image-wrap,
+.capability-tile-back[data-tile='formatted-math'] .capability-tile-back-image-wrap {
   filter: brightness(0.88) contrast(1.12);
 }
 
@@ -913,8 +924,10 @@ video.capability-tile-back-video {
 
 [data-theme='light']
   .capability-tile-back[data-tile='natural-language']
-  .capability-tile-back-image,
-[data-theme='light'] .capability-tile-back[data-tile='formatted-math'] .capability-tile-back-image {
+  .capability-tile-back-image-wrap,
+[data-theme='light']
+  .capability-tile-back[data-tile='formatted-math']
+  .capability-tile-back-image-wrap {
   filter: brightness(1) contrast(1.02);
 }
 
@@ -1896,7 +1909,9 @@ video.capability-tile-image-lightbox-img {
 .credits-remaining-wrapper {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.15rem 0.25rem;
 }
 
 .credits-info-trigger {
@@ -3137,6 +3152,104 @@ video.capability-tile-image-lightbox-img {
     height: auto;
     min-height: 1.5rem;
     max-height: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    box-sizing: border-box;
+    min-height: calc(100vh - var(--navbar-height, 64px));
+    min-height: calc(100svh - var(--navbar-height, 64px));
+    padding-top: 2rem;
+    padding-bottom: 5rem;
+  }
+
+  .hero-section:has(.history-inline-list),
+  .hero-section:has(.saved-selections-dropdown) {
+    padding-bottom: 5.75rem;
+  }
+
+  .hero-title {
+    margin-top: clamp(0.75rem, 3vw, 1.25rem);
+    margin-bottom: 0.625rem;
+  }
+
+  .hero-subtitle {
+    margin-bottom: 1.25rem;
+  }
+
+  .hero-capabilities-wrap {
+    margin-top: -2.5rem;
+  }
+
+  .hero-capabilities {
+    min-height: clamp(9rem, 26vh, 11rem);
+    margin-bottom: 1rem;
+  }
+
+  .hero-capabilities:has(.capability-tile.flipped) {
+    min-height: clamp(9rem, 26vh, 11rem);
+  }
+
+  .hero-capabilities > .capability-tile-wrapper {
+    transform: translateY(0.875rem);
+  }
+
+  .hero-logo-flash {
+    top: 0.875rem;
+    bottom: -0.875rem;
+  }
+
+  .hero-logo-flash.active {
+    animation-name: logoFlashMobile;
+  }
+
+  .hero-flash-logo-img {
+    width: 130%;
+    height: 130%;
+    max-width: none;
+    max-height: none;
+  }
+
+  .hero-input-section {
+    margin-top: 0;
+    gap: 0.5rem;
+    padding: 1.25rem 0.25rem 0;
+  }
+
+  .hero-view-toggle-wrap {
+    top: -34px;
+  }
+
+  .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
+    top: clamp(11.25rem, 22svh, 11.75rem);
+  }
+}
+
+@keyframes logoFlashMobile {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  20% {
+    opacity: 0.7;
+    transform: scale(1.25);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(1.45);
+  }
+
+  80% {
+    opacity: 0.24;
+    transform: scale(1.2);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1);
   }
 }
 

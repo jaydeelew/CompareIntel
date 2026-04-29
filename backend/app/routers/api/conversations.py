@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ...config import get_conversation_limit
+from ...config import get_history_entry_limit
 from ...database import get_db
 from ...dependencies import get_current_user
 from ...models import Conversation, User
@@ -25,28 +25,27 @@ async def get_conversations(
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_current_user),
 ):
-    """Get list of user's conversations, limited by subscription tier."""
+    """Get list of user's conversations, limited by subscription tier history cap."""
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
 
     tier = current_user.subscription_tier or "free"
-    display_limit = get_conversation_limit(tier)
-    return_limit = display_limit
+    history_limit = get_history_entry_limit(tier)
 
     conversations = (
         db.query(Conversation)
         .filter(Conversation.user_id == current_user.id)
         .order_by(Conversation.created_at.desc())
-        .limit(return_limit + 1)
+        .limit(history_limit + 1)
         .all()
     )
 
-    if len(conversations) > display_limit:
-        conversations_to_delete = conversations[display_limit:]
+    if len(conversations) > history_limit:
+        conversations_to_delete = conversations[history_limit:]
         for conv_to_delete in conversations_to_delete:
             db.delete(conv_to_delete)
         db.commit()
-        conversations = conversations[:display_limit]
+        conversations = conversations[:history_limit]
 
     conversation_ids = [conv.id for conv in conversations]
     message_counts = {}

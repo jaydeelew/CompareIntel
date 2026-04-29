@@ -154,14 +154,8 @@ export const HelpMeChooseMethodology: React.FC = () => {
                 <tr>
                   <td>Best value</td>
                   <td>
-                    <a
-                      href="https://openrouter.ai/models"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      OpenRouter
-                    </a>{' '}
-                    — current pricing; only models under $1 per million tokens
+                    Published list prices (prompt + completion per million tokens) — current
+                    pricing; only models under $1 per million tokens
                   </td>
                 </tr>
                 <tr>
