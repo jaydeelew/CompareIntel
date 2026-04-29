@@ -1,11 +1,10 @@
-import React, { useLayoutEffect, useRef, useState } from 'react'
+import React, { Suspense, useLayoutEffect, useRef, useState } from 'react'
 
 import { RESULT_TAB, type ResultTab } from '../../types'
 import { formatTime, getSafeId } from '../../utils'
-// Direct import - lazy loading caused "Invalid hook call" because the lazy chunk
-// could resolve a different React instance. LatexRenderer must use the same React
-// as the main app for hooks to work correctly.
-import LatexRenderer from '../LatexRenderer'
+// Lazy-loaded: keeps KaTeX + markdown pipeline off the main chunk path. Requires a
+// single React resolution (see vite alias/dedupe) — same constraint as core app hooks.
+const LatexRendererLazy = React.lazy(() => import('../LatexRenderer'))
 import { StyledTooltip } from '../shared'
 
 const BRAND_LOGO_SRC = '/brand/logo.svg'
@@ -297,10 +296,21 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
         {safeContent &&
           (activeTab === RESULT_TAB.FORMATTED ? (
-            /* Full LaTeX rendering for formatted view */
-            <LatexRenderer className="result-output" modelId={modelId}>
-              {safeContent}
-            </LatexRenderer>
+            <Suspense
+              fallback={
+                <div
+                  className="result-output"
+                  aria-busy="true"
+                  aria-label="Loading formatted content"
+                >
+                  {/* Intentionally empty: yields layout stability without duplicating streamed text */}
+                </div>
+              }
+            >
+              <LatexRendererLazy className="result-output" modelId={modelId}>
+                {safeContent}
+              </LatexRendererLazy>
+            </Suspense>
           ) : (
             /* Raw text for immediate streaming display */
             <pre className="result-output raw-output">{safeContent}</pre>

@@ -8,7 +8,7 @@
  * 
  * Bundle Size Limits (gzipped):
  * - Initial bundle: 200KB
- * - Initial load total (sum of non-lazy chunks): 528KB
+ * - Initial load total (sum of non-lazy chunks): 512KB
  * - Individual chunk: 100KB
  */
 
@@ -24,7 +24,7 @@ const distDir = join(__dirname, '..', 'dist');
 // Bundle size limits in bytes (gzipped)
 const LIMITS = {
   initialBundle: 200 * 1024, // 200KB
-  totalBundle: 528 * 1024,   // 528KB (sum of per-file gzips for initial load; ~2% slack for gzip-sum vs transfer)
+  totalBundle: 512 * 1024,   // 512KB (gzip sum for chunks not matched as lazy/route-split)
   individualChunk: 100 * 1024, // 100KB
 };
 
@@ -148,11 +148,19 @@ function checkBundleSize() {
   
   // Define lazy-loaded chunk patterns (chunks that are loaded on demand)
   const lazyLoadedChunkPatterns = [
-    'vendor-files',  // pdfjs-dist, mammoth (loaded on file upload)
-    'vendor-export', // html2canvas, jspdf (loaded on PDF export)
-    'pages',         // Page components (loaded on route navigation)
-    'AdminPanel',    // Admin panel (loaded on /admin route)
-    'latex-renderer', // LaTeX renderer (loaded when needed)
+    'vendor-files',
+    'vendor-export',
+    'pages',
+    'AdminPanel',
+    'latex-renderer',
+    'LatexRenderer',
+    'vendor-katex',
+    'vendor-sentry',
+    'LoginForm',
+    'RegisterForm',
+    'ForgotPasswordForm',
+    'virtual_pwa-register',
+    'sentry.', // e.g. sentry.BRnHB_4e.js alongside vendor-sentry split
   ];
   
   const isLazyLoaded = (filename) => {

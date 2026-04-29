@@ -2,7 +2,7 @@
  * Tests for MessageBubble component
  */
 
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 
 import { createMockConversationMessage } from '../../../__tests__/utils/test-factories'
@@ -23,7 +23,7 @@ describe('MessageBubble', () => {
   })
 
   describe('Rendering', () => {
-    it('should render user message', () => {
+    it('should render user message', async () => {
       render(
         <MessageBubble
           id={String(mockUserMessage.id)}
@@ -32,10 +32,10 @@ describe('MessageBubble', () => {
           timestamp={mockUserMessage.timestamp}
         />
       )
-      expect(screen.getByText(/hello, how are you/i)).toBeInTheDocument()
+      expect(await screen.findByText(/hello, how are you/i)).toBeInTheDocument()
     })
 
-    it('should render assistant message', () => {
+    it('should render assistant message', async () => {
       render(
         <MessageBubble
           id={String(mockAssistantMessage.id)}
@@ -44,7 +44,7 @@ describe('MessageBubble', () => {
           timestamp={mockAssistantMessage.timestamp}
         />
       )
-      expect(screen.getByText(/i am doing well/i)).toBeInTheDocument()
+      expect(await screen.findByText(/i am doing well/i)).toBeInTheDocument()
     })
 
     it('should display "You" label for user messages', () => {
@@ -102,7 +102,7 @@ describe('MessageBubble', () => {
   })
 
   describe('Formatted vs Raw View', () => {
-    it('should render formatted view by default', () => {
+    it('should render formatted view by default', async () => {
       const { container } = render(
         <MessageBubble
           id={String(mockAssistantMessage.id)}
@@ -111,12 +111,13 @@ describe('MessageBubble', () => {
           timestamp={mockAssistantMessage.timestamp}
         />
       )
-      // Should use LatexRenderer for formatted view
-      const latexRenderer = container.querySelector('.result-output')
-      expect(latexRenderer).toBeInTheDocument()
+      await waitFor(() => {
+        const outputs = container.querySelectorAll('.result-output')
+        expect(outputs.length).toBeGreaterThan(0)
+      })
     })
 
-    it('should render formatted view when activeTab is FORMATTED', () => {
+    it('should render formatted view when activeTab is FORMATTED', async () => {
       const { container } = render(
         <MessageBubble
           id={String(mockAssistantMessage.id)}
@@ -126,8 +127,9 @@ describe('MessageBubble', () => {
           activeTab={RESULT_TAB.FORMATTED}
         />
       )
-      const latexRenderer = container.querySelector('.result-output')
-      expect(latexRenderer).toBeInTheDocument()
+      await waitFor(() => {
+        expect(container.querySelector('.result-output')).toBeInTheDocument()
+      })
     })
 
     it('should render raw view when activeTab is RAW', () => {

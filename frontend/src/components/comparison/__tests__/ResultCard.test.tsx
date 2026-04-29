@@ -69,10 +69,10 @@ describe('ResultCard', () => {
       expect(screen.getByText(/failed/i)).toBeInTheDocument()
     })
 
-    it('should render conversation messages', () => {
+    it('should render conversation messages', async () => {
       render(<ResultCard modelId={mockModel.id} model={mockModel} messages={mockMessages} />)
-      expect(screen.getByText(/hello/i)).toBeInTheDocument()
-      expect(screen.getByText(/hi there/i)).toBeInTheDocument()
+      expect(await screen.findByText(/hello/i)).toBeInTheDocument()
+      expect(await screen.findByText(/hi there/i)).toBeInTheDocument()
     })
   })
 

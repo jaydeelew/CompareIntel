@@ -7,14 +7,9 @@ import type {
   ComparisonMetadata,
   ConversationMessage,
 } from '../types'
-import type { ComparisonExportData } from '../utils'
-import {
-  showNotification,
-  exportToPDF,
-  downloadMarkdown,
-  downloadJSON,
-  downloadHTML,
-} from '../utils'
+import { showNotification } from '../utils/error'
+import type { ComparisonExportData } from '../utils/export'
+import { exportToPDF, downloadMarkdown, downloadJSON, downloadHTML } from '../utils/export'
 import logger from '../utils/logger'
 
 export type ExportFormat = 'pdf' | 'markdown' | 'json' | 'html'
@@ -93,7 +88,7 @@ export function useExport({
           downloadJSON(exportData)
           showNotification('JSON downloaded successfully!', 'success')
         } else if (format === 'html') {
-          downloadHTML(exportData)
+          await downloadHTML(exportData)
           showNotification('HTML downloaded successfully!', 'success')
         }
       } catch (err) {

@@ -498,6 +498,10 @@ input:-webkit-autofill:active {
   border-color: var(--border-strong);
 }
 
+.auth-modal-form-fallback {
+  min-height: 200px;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .auth-form-container {

@@ -374,15 +374,22 @@ export default defineConfig({
         manualChunks: (id) => {
           // Split node_modules into separate chunks
           if (id.includes('node_modules')) {
-            // Vendor chunks - split large dependencies
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-react';
+            // @sentry/* — must NOT use `includes('react')` routing (would misplace @sentry/react)
+            if (id.includes('node_modules/@sentry') || id.includes('node_modules\\@sentry')) {
+              return 'vendor-sentry'
             }
             if (id.includes('katex')) {
-              return 'vendor-katex';
+              return 'vendor-katex'
+            }
+            // React core / scheduler — tight paths so react-router-* and other /react-ish/ libs stay separate where needed
+            if (
+              /[\\/]node_modules[\\/](react|react-dom|scheduler)([\\/]|$)/.test(id) ||
+              /[\\/]node_modules[\\/](react-router|react-router-dom)([\\/]|$)/.test(id)
+            ) {
+              return 'vendor-react'
             }
             if (id.includes('lucide-react')) {
-              return 'vendor-icons';
+              return 'vendor-icons'
             }
             // Split heavy file processing libraries into separate chunk
             if (id.includes('pdfjs-dist') || id.includes('mammoth')) {

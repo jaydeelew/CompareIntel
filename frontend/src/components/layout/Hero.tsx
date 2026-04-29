@@ -242,6 +242,8 @@ function CapabilityTile({
                   src={backImage}
                   alt={`${title} example`}
                   className="capability-tile-back-image"
+                  loading="lazy"
+                  decoding="async"
                 />
               )
             )}

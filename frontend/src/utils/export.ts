@@ -8,11 +8,21 @@
  * - JSON (.json) - For developers and APIs
  */
 
-import katex from 'katex'
-
 import type { ComparisonMetadata } from '../types/comparison'
 import type { ModelConversation } from '../types/conversation'
 import type { Model } from '../types/models'
+
+/**
+ * KaTeX loads only when PDF/HTML export runs — keeps initial evaluation of this module cheap.
+ */
+let katexForExport: typeof import('katex').default | undefined
+
+async function ensureKatexForExport(): Promise<void> {
+  if (!katexForExport) {
+    const mod = await import('katex')
+    katexForExport = mod.default
+  }
+}
 
 /**
  * Data structure for exporting a comparison
@@ -433,6 +443,9 @@ function escapeHtml(text: string | null | undefined): string {
  * Safely render LaTeX with KaTeX
  */
 function safeRenderKatex(latex: string, displayMode: boolean): string {
+  if (!katexForExport) {
+    throw new Error('ensureKatexForExport() must run before formatting export content')
+  }
   try {
     const cleanLatex = latex
       .trim()
@@ -453,7 +466,7 @@ function safeRenderKatex(latex: string, displayMode: boolean): string {
       displayMode,
     }
 
-    return katex.renderToString(cleanLatex, options)
+    return katexForExport.renderToString(cleanLatex, options)
   } catch {
     // Return formatted fallback
     const style = displayMode
@@ -569,6 +582,8 @@ export async function exportToPDF(data: ComparisonExportData): Promise<void> {
   const jsPDF = jspdfModule.default
   const html2canvas = html2canvasModule.default
 
+  await ensureKatexForExport()
+
   // Create a temporary iframe to completely isolate PDF rendering from main page
   const iframe = document.createElement('iframe')
   iframe.style.position = 'fixed'
@@ -643,7 +658,8 @@ export async function exportToPDF(data: ComparisonExportData): Promise<void> {
  *
  * Creates a standalone styled HTML document
  */
-export function exportToHTML(data: ComparisonExportData): string {
+export async function exportToHTML(data: ComparisonExportData): Promise<string> {
+  await ensureKatexForExport()
   const { prompt, timestamp, conversations, models, metadata } = data
 
   const styles = `
@@ -907,8 +923,8 @@ export function downloadJSON(data: ComparisonExportData): void {
 /**
  * Export to HTML and trigger download
  */
-export function downloadHTML(data: ComparisonExportData): void {
-  const content = exportToHTML(data)
+export async function downloadHTML(data: ComparisonExportData): Promise<void> {
+  const content = await exportToHTML(data)
   const filename = generateFilename(data.prompt, 'html')
   downloadFile(content, filename, 'text/html;charset=utf-8')
 }
