@@ -77,7 +77,7 @@ const MOBILE_STEP_OVERRIDES: Partial<
   'view-follow-up-results': {
     position: 'top', // Step 6: mobile code places the card above or below the full results block
     description:
-      'Read the latest replies from each model side by side. Compare how they stay consistent with the conversation so far.',
+      'Read the latest replies from each model. Compare how they stay consistent with the conversation so far.',
   },
 }
 
