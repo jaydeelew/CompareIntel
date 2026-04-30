@@ -97,7 +97,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'history-dropdown',
     targetSelector: '.history-toggle-button',
     title: 'Access Your History',
-    description: 'Click this button to view and load previous conversations.',
+    description: 'Toggle this dropdown to view and load previous conversations.',
     position: 'top',
   },
   'save-selection': {

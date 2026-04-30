@@ -94,14 +94,6 @@
   animation: none !important;
 }
 
-.history-toggle-button.mobile-tutorial-highlight,
-.saved-selections-button.mobile-tutorial-highlight {
-  box-shadow:
-    0 0 20px rgba(6, 182, 212, 0.08),
-    0 0 40px rgba(6, 182, 212, 0.04) !important;
-  animation: none !important;
-}
-
 /* Match native results card corners (same as desktop tutorial) */
 .results-section.mobile-tutorial-highlight {
   border-radius: var(--radius-2xl) !important;

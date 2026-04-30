@@ -60,9 +60,6 @@ const MOBILE_STEP_OVERRIDES: Partial<
   'expand-provider': {
     position: 'top', // Match desktop: tooltip above after provider is centered
   },
-  'select-models': {
-    position: 'top',
-  },
   'enter-prompt': {
     position: 'top', // Show above textarea initially on mobile
   },
@@ -151,6 +148,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
     }
   }, [])
+
   // Estimated tooltip height - smaller for short viewports
   const getTooltipEstimatedHeight = () => {
     const vh = window.innerHeight
@@ -466,7 +464,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     if (DROPDOWN_STEPS.includes(step)) {
-      // Use same rects as step 3 (inputWrapper + toolbar) for consistent cutout size; add dropdown when open
+      // Match step 4 (submit): full composer (input + toolbar) framed cutout; union open panel when present.
       const composer = getHeroComposerForDropdownSteps()
       const dropdownElement =
         step === 'history-dropdown'
@@ -558,10 +556,16 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const minTopBelowComposer = rect.bottom + d + underComposerGap
       tooltipTop = Math.max(padding, minTopBelowComposer)
       arrowDirection = 'up'
-    } else if (step === 'expand-provider') {
-      // Match desktop: default above the Google row (arrow down); if row is in upper half of viewport, place below (arrow up).
-      const headerEl = targetElement.querySelector('.provider-header') as HTMLElement | null
-      const anchorRect = headerEl?.getBoundingClientRect() ?? placementRect
+    } else if (step === 'expand-provider' || step === 'select-models') {
+      // Step 1: anchor on .provider-header (collapsed row). Step 2: anchor on the full expanded card
+      // so "below" clears the entire highlighted dropdown — header-only anchoring left the tooltip
+      // sitting on the model list / body and obscuring it.
+      const anchorRect =
+        step === 'select-models'
+          ? rect
+          : ((
+              targetElement.querySelector('.provider-header') as HTMLElement | null
+            )?.getBoundingClientRect() ?? placementRect)
       const anchorMidY = anchorRect.top + anchorRect.height / 2
       const viewportMid = viewportHeight / 2
       const verticalGap = arrowSize + 8
@@ -587,8 +591,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
     } else {
       // Determine vertical position (above or below target).
-      // select-models: placementRect is .provider-header so the tooltip sits above the Google row,
-      // not the vertical midpoint of the expanded model list (avoids centered fallback).
+      // select-models uses the expand-provider branch above (provider-header anchor + room heuristics).
       const spaceAbove = placementRect.top
       const spaceBelow = viewportHeight - placementRect.bottom
 
@@ -659,6 +662,27 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
   }, [isStepTransitioning, targetElement, step, calculatePositions])
 
+  // Follow-up step: the portaled composer runs `composer-float-in` (~350ms). Early position reads run
+  // while `translateY(20px)` is still applied, so fixed cutouts sit too low; this step also skips the
+  // 200ms polling used on other steps. Recalculate when the float animation ends (and via fallback).
+  useEffect(() => {
+    if (step !== 'follow-up' || !targetElement) return
+
+    const onAnimationEnd = (e: AnimationEvent) => {
+      if (e.animationName !== 'composer-float-in' && e.animationName !== 'composer-float-in-moz')
+        return
+      calculatePositions()
+    }
+
+    targetElement.addEventListener('animationend', onAnimationEnd)
+    const fallback = window.setTimeout(() => calculatePositions(), 450)
+
+    return () => {
+      targetElement.removeEventListener('animationend', onAnimationEnd)
+      window.clearTimeout(fallback)
+    }
+  }, [step, targetElement, calculatePositions])
+
   // Update positions on mount, scroll, resize
   useEffect(() => {
     if (!targetElement || !step) return
@@ -719,6 +743,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           if (stepRef.current !== currentStep) return
           calculatePositions()
           setIsVisible(true)
+          requestAnimationFrame(() => {
+            if (stepRef.current !== currentStep) return
+            calculatePositions()
+          })
         })
       } else if (currentStep === 'follow-up') {
         // Step 5 tooltip is fixed *below* the composer; scroll the page if needed so there is
@@ -825,31 +853,46 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     calculatePositions()
     setTimeout(scrollTargetIntoView, currentStep === 'follow-up' ? 0 : 100)
 
-    const handleUpdate = () => {
-      if (!isStepTransitioningRef.current) {
-        calculatePositions()
-      }
+    // Coalesce scroll/resize into rAF so getBoundingClientRect runs after the browser applies
+    // scroll offset (main thread .app scroll + mobile visualViewport shifts). Without this,
+    // step 5 fixed cutouts can lag a frame and look "drifted" while scrolling.
+    let positionRaf = 0
+    const schedulePositionUpdate = () => {
+      if (isStepTransitioningRef.current) return
+      if (positionRaf) cancelAnimationFrame(positionRaf)
+      positionRaf = requestAnimationFrame(() => {
+        positionRaf = 0
+        if (!isStepTransitioningRef.current) {
+          calculatePositions()
+        }
+      })
     }
 
-    window.addEventListener('scroll', handleUpdate, true)
-    window.addEventListener('resize', handleUpdate)
+    window.addEventListener('scroll', schedulePositionUpdate, true)
+    window.addEventListener('resize', schedulePositionUpdate)
     const appScrollHost = document.querySelector('.app') as HTMLElement | null
-    appScrollHost?.addEventListener('scroll', handleUpdate)
+    appScrollHost?.addEventListener('scroll', schedulePositionUpdate)
+    const visualViewport = window.visualViewport
+    visualViewport?.addEventListener('scroll', schedulePositionUpdate)
+    visualViewport?.addEventListener('resize', schedulePositionUpdate)
 
     // Recalculate periodically to handle DOM changes
-    // Skip interval for button-pulsate steps so tooltip stays stable while button scales
+    // Skip interval for button-pulsate steps so tooltip stays stable while button scales.
+    // follow-up is excluded here: its cutout must track .app scroll and is not a pulsating button.
     const isButtonPulsateStep = [
       'submit-comparison',
-      'follow-up',
       'submit-comparison-2',
       'view-follow-up-results',
     ].includes(step)
-    const interval = isButtonPulsateStep ? null : setInterval(handleUpdate, 200)
+    const interval = isButtonPulsateStep ? null : setInterval(schedulePositionUpdate, 200)
 
     return () => {
-      window.removeEventListener('scroll', handleUpdate, true)
-      window.removeEventListener('resize', handleUpdate)
-      appScrollHost?.removeEventListener('scroll', handleUpdate)
+      if (positionRaf) cancelAnimationFrame(positionRaf)
+      window.removeEventListener('scroll', schedulePositionUpdate, true)
+      window.removeEventListener('resize', schedulePositionUpdate)
+      appScrollHost?.removeEventListener('scroll', schedulePositionUpdate)
+      visualViewport?.removeEventListener('scroll', schedulePositionUpdate)
+      visualViewport?.removeEventListener('resize', schedulePositionUpdate)
       if (interval) clearInterval(interval)
     }
   }, [targetElement, step, calculatePositions, tooltipEstimatedHeight])
@@ -861,8 +904,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Apply highlight
     targetElement.classList.add('mobile-tutorial-highlight')
 
-    // Add button pulsate when tooltip says "Tap the highlighted button"
-    if (step === 'submit-comparison' || step === 'submit-comparison-2') {
+    // Add button pulsate when tooltip says "Tap the highlighted button" (same ring + pulse as submit step).
+    if (
+      step === 'submit-comparison' ||
+      step === 'submit-comparison-2' ||
+      step === 'history-dropdown' ||
+      step === 'save-selection'
+    ) {
       targetElement.classList.add('mobile-tutorial-button-pulsate')
     }
 
@@ -893,8 +941,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    // For dropdown steps, highlight the composer (same blue & green as step 3)
-    // so it surrounds both composer and dropdowns when they are expanded
+    // Steps 7–8: same pattern as step 4 — composer faint glow + framed backdrop cutout; toggles use pulsate.
     if (step === 'history-dropdown' || step === 'save-selection') {
       const composer = getHeroComposerForDropdownSteps()
       if (composer) {
@@ -1256,6 +1303,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }
       : null
 
+  const docScrollX = typeof window !== 'undefined' ? window.scrollX : 0
+  const docScrollY = typeof window !== 'undefined' ? window.scrollY : 0
+
   const overlayUi = (
     <>
       {/* Backdrop: during loading/streaming, single box-shadow cutout; otherwise dual follow-up or normal */}
@@ -1272,9 +1322,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                 className="mobile-tutorial-backdrop-follow-up-dim"
                 style={{
                   position: 'fixed',
-                  inset: 0,
-                  width: '100%',
-                  height: '100%',
+                  top: 0,
+                  left: 0,
+                  width: `${typeof window !== 'undefined' ? window.innerWidth : 0}px`,
+                  height: `${typeof window !== 'undefined' ? window.innerHeight : 0}px`,
                   zIndex: 9998,
                   pointerEvents: 'none',
                 }}
@@ -1313,9 +1364,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               <div
                 className="mobile-tutorial-backdrop-cutout mobile-tutorial-backdrop-follow-up-results-ring"
                 style={{
-                  position: 'fixed',
-                  top: `${followUpVResults.top}px`,
-                  left: `${followUpVResults.left}px`,
+                  position: 'absolute',
+                  top: `${followUpVResults.top + docScrollY}px`,
+                  left: `${followUpVResults.left + docScrollX}px`,
                   width: `${followUpVResults.width}px`,
                   height: `${followUpVResults.height}px`,
                   borderRadius: `${followUpBrResults}px`,
@@ -1328,9 +1379,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               <div
                 className="mobile-tutorial-backdrop-cutout mobile-tutorial-backdrop-follow-up-composer-ring"
                 style={{
-                  position: 'fixed',
-                  top: `${followUpVComposer.top}px`,
-                  left: `${followUpVComposer.left}px`,
+                  position: 'absolute',
+                  top: `${followUpVComposer.top + docScrollY}px`,
+                  left: `${followUpVComposer.left + docScrollX}px`,
                   width: `${followUpVComposer.width}px`,
                   height: `${followUpVComposer.height}px`,
                   borderRadius: `${followUpBrComposer}px`,
