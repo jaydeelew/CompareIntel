@@ -359,6 +359,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const tooltipHeight = tooltipRect?.height ?? tooltipEstimatedHeight
     const tooltipWidth = tooltipRect?.width ?? Math.min(340, viewportWidth - 24)
     const arrowSize = 10
+    const isSubmitTooltipStep = step === 'submit-comparison' || step === 'submit-comparison-2'
+    // Step 4 (and mirrored submit step): leave more space under the composer than the default tail gap.
+    const verticalTailGap = isSubmitTooltipStep ? 14 : 8
 
     const newTargetRect: TargetRect = {
       top: rect.top,
@@ -597,19 +600,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
       if (preferredPosition === 'bottom' && spaceBelow >= tooltipHeight + padding + arrowSize) {
         // Position below target
-        tooltipTop = placementRect.bottom + arrowSize + 8
+        tooltipTop = placementRect.bottom + arrowSize + verticalTailGap
         arrowDirection = 'up'
       } else if (preferredPosition === 'top' && spaceAbove >= tooltipHeight + padding + arrowSize) {
         // Position above target
-        tooltipTop = placementRect.top - tooltipHeight - arrowSize - 8
+        tooltipTop = placementRect.top - tooltipHeight - arrowSize - verticalTailGap
         arrowDirection = 'down'
       } else if (spaceBelow >= spaceAbove && spaceBelow >= 100) {
         // More space below
-        tooltipTop = placementRect.bottom + arrowSize + 8
+        tooltipTop = placementRect.bottom + arrowSize + verticalTailGap
         arrowDirection = 'up'
       } else if (spaceAbove >= 100) {
         // More space above
-        tooltipTop = placementRect.top - tooltipHeight - arrowSize - 8
+        tooltipTop = placementRect.top - tooltipHeight - arrowSize - verticalTailGap
         arrowDirection = 'down'
       } else {
         // Very tight space - position at center of screen
@@ -643,7 +646,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Calculate arrow offset to point at target center
     // Arrow offset is percentage from left edge of tooltip
     const targetCenterInTooltip = newTargetRect.centerX - tooltipLeft
-    arrowOffset = Math.max(15, Math.min(85, (targetCenterInTooltip / tooltipWidth) * 100))
+    const rawArrowPct = (targetCenterInTooltip / Math.max(tooltipWidth, 1)) * 100
+    // Submit sits on the right; when the tooltip is clamped horizontally, the true % can exceed 85 —
+    // the old 15–85 clamp skewed the arrow left of the button. Allow a wider range on those steps only.
+    arrowOffset = isSubmitTooltipStep
+      ? Math.max(4, Math.min(96, rawArrowPct))
+      : Math.max(15, Math.min(85, rawArrowPct))
 
     setTooltipPosition({
       top: tooltipTop,
