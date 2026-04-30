@@ -50,31 +50,36 @@
   isolation: isolate !important;
 }
 
-/* Special styling for textarea container highlight on mobile */
+/* Special styling for textarea container highlight on mobile — match desktop: framed
+   cutout draws the cyan ring; composer only keeps a faint outer glow */
 .composer.mobile-tutorial-highlight {
   border-radius: 1.5rem !important;
   isolation: isolate !important;
   position: relative !important;
   z-index: 9999 !important;
-  /* Match desktop tutorial: outer glow must extend past .composer (base uses overflow:hidden). */
   overflow: visible !important;
   transform: translateZ(0) !important;
-  /* Ensure the highlight box-shadow and pulse animation are consistent across all steps.
-     The .composer normally has transition: box-shadow which can dampen the pulse. */
   box-shadow:
-    0 0 0 3px var(--accent-color),
-    0 0 0 7px rgba(14, 165, 233, 0.25),
-    0 0 18px rgba(14, 165, 233, 0.45) !important;
-  animation: mobile-tutorial-pulse 2s ease-in-out infinite !important;
+    0 0 20px rgba(6, 182, 212, 0.08),
+    0 0 40px rgba(6, 182, 212, 0.04) !important;
+  animation: none !important;
   transition: none !important;
 }
 
-/* Provider dropdown highlight on mobile — keep native radius so children
-   (provider-header) align with the highlight corners, and blend the native border. */
+/* Provider dropdown on mobile — same as desktop; cutout inset frame only */
 .provider-dropdown.mobile-tutorial-highlight {
   border-radius: var(--radius-xl) !important;
   border-color: var(--accent-color) !important;
   overflow: visible !important;
+  isolation: isolate !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  transform: translateZ(0) !important;
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.08),
+    0 0 40px rgba(6, 182, 212, 0.04) !important;
+  animation: none !important;
+  transition: none !important;
 }
 
 /* Steps 7–8: same as desktop TutorialOverlay — .mobile-tutorial-highlight uses
@@ -85,6 +90,16 @@
 .saved-selections-dropdown.mobile-tutorial-highlight {
   border-radius: 0 0 1.5rem 1.5rem !important;
   overflow: hidden !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.history-toggle-button.mobile-tutorial-highlight,
+.saved-selections-button.mobile-tutorial-highlight {
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.08),
+    0 0 40px rgba(6, 182, 212, 0.04) !important;
+  animation: none !important;
 }
 
 /* Match native results card corners (same as desktop tutorial) */
@@ -99,6 +114,8 @@
   border-radius: var(--radius-xl) !important;
   overflow: visible !important;
   border: none !important;
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 /* Pulsing effect for model results tab text on steps 5 (follow-up) and 6 (view-follow-up-results) - draws attention to tabs via size pulse */

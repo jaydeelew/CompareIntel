@@ -1221,6 +1221,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             isLoadingStreamingPhase ||
             step === 'expand-provider' ||
             step === 'select-models' ||
+            step === 'enter-prompt' ||
+            step === 'enter-prompt-2' ||
+            step === 'submit-comparison' ||
+            step === 'submit-comparison-2' ||
             step === 'follow-up' ||
             step === 'view-follow-up-results' ||
             step === 'history-dropdown' ||

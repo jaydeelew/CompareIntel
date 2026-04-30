@@ -258,14 +258,39 @@ export function computeTooltipPosition(
   }
 
   if (isEnterPromptStep) {
-    let top = rect.bottom + offset
-    const left = rect.left + rect.width / 2
-    top = Math.min(top, viewportHeight - estimatedTooltipHeight - MARGIN)
-    return {
-      top,
-      left: Math.max(200, Math.min(left, window.innerWidth - 200)),
-      effectivePosition: 'bottom',
+    const viewportMid = viewportHeight / 2
+    const composerMidY = rect.top + rect.height / 2
+    /** Composer center in upper half → prefer tooltip below (arrow up toward composer); lower half → above. */
+    const preferTooltipBelowComposer = composerMidY < viewportMid
+    const enterPromptGap = 18
+    const spaceAbove = rect.top
+    const spaceBelow = viewportHeight - rect.bottom
+    const needBelow = estimatedTooltipHeight + offset + MARGIN
+    const needAbove = estimatedTooltipHeight + enterPromptGap + MARGIN
+
+    let useBottom: boolean
+    if (preferTooltipBelowComposer) {
+      useBottom =
+        spaceBelow >= needBelow ? true : spaceAbove >= needAbove ? false : spaceBelow >= spaceAbove
+    } else {
+      useBottom =
+        spaceAbove >= needAbove ? false : spaceBelow >= needBelow ? true : spaceBelow >= spaceAbove
     }
+
+    const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+
+    if (useBottom) {
+      let top = rect.bottom + offset
+      top = Math.min(top, viewportHeight - estimatedTooltipHeight - MARGIN)
+      return { top, left, effectivePosition: 'bottom' }
+    }
+
+    let top = rect.top - enterPromptGap
+    const tooltipTopEdge = top - estimatedTooltipHeight
+    if (tooltipTopEdge < MARGIN) {
+      top = MARGIN + estimatedTooltipHeight
+    }
+    return { top, left, effectivePosition: 'top' }
   }
 
   if (isTopSteps) {

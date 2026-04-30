@@ -1404,13 +1404,14 @@ export function useTutorialOverlay(
 
         // Only update position AFTER initial scroll is complete to avoid jarring movement
         if (initialScrollCompleteRef.current) {
-          // Always position tooltip below the composer (consistent with scroll logic)
           const rect = composerElement.getBoundingClientRect()
-          const offset = 16
-
-          setEffectivePosition('bottom')
-          const top = rect.bottom + offset
-          const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+          const cfg = TUTORIAL_STEPS_CONFIG['enter-prompt']
+          const {
+            top,
+            left,
+            effectivePosition: effPos,
+          } = computeTooltipPosition(rect, 'enter-prompt', cfg)
+          setEffectivePosition(effPos)
           setOverlayPosition({ top, left })
         }
       }
@@ -1464,13 +1465,14 @@ export function useTutorialOverlay(
 
         // Only update position AFTER initial scroll is complete to avoid jarring movement
         if (initialScrollCompleteRef.current) {
-          // Always position tooltip below the composer (consistent with scroll logic)
           const rect = composerElement.getBoundingClientRect()
-          const offset = 16
-
-          setEffectivePosition('bottom')
-          const top = rect.bottom + offset
-          const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+          const cfg = TUTORIAL_STEPS_CONFIG['enter-prompt-2']
+          const {
+            top,
+            left,
+            effectivePosition: effPos,
+          } = computeTooltipPosition(rect, 'enter-prompt-2', cfg)
+          setEffectivePosition(effPos)
           setOverlayPosition({ top, left })
         }
       }

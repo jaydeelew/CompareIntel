@@ -162,6 +162,8 @@ body:has(.tutorial-backdrop) .hero-section {
 .saved-selections-dropdown.tutorial-highlight {
   border-radius: 0 0 1.5rem 1.5rem !important;
   overflow: hidden !important;
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 .history-inline-list.tutorial-dropdown-active.tutorial-highlight,
@@ -170,6 +172,15 @@ body:has(.tutorial-backdrop) .hero-section {
   animation: none !important;
   border-radius: 0 0 1.5rem 1.5rem !important;
   overflow: hidden !important;
+}
+
+/* Toolbar buttons on steps 7–8: framed composer cutout draws the ring — no second ring on the control. */
+.history-toggle-button.tutorial-highlight,
+.saved-selections-button.tutorial-highlight {
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.08),
+    0 0 40px rgba(6, 182, 212, 0.04) !important;
+  animation: none !important;
 }
 
 /* Results use the shared backdrop frame as their tutorial border.
@@ -196,6 +207,8 @@ body:has(.tutorial-backdrop) .hero-section {
   border-radius: var(--radius-xl) !important;
   overflow: visible !important;
   border: none !important;
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 /* Special styling for textarea container highlight - match its border-radius */
@@ -242,11 +255,26 @@ body:has(.tutorial-backdrop) .hero-section {
 }
 
 /* Provider dropdown highlight — keep native radius so children (provider-header)
-   align with the highlight corners, and blend the native border into the ring. */
+   align with the highlight corners. Same as composer/results: the framed backdrop
+   cutout draws the cyan ring; suppress the generic .tutorial-highlight pulse so
+   there is only one ring (on the dim hole). */
 .provider-dropdown.tutorial-highlight {
   border-radius: var(--radius-xl) !important;
   border-color: var(--accent-color) !important;
   overflow: visible !important;
+  isolation: isolate !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+  mix-blend-mode: normal !important;
+  opacity: 1 !important;
+  filter: none !important;
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.08),
+    0 0 40px rgba(6, 182, 212, 0.04) !important;
+  animation: none !important;
+  transition: none !important;
 }
 
 @keyframes tutorial-pulse {
