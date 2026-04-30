@@ -47,7 +47,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'select-models',
     targetSelector: '.provider-dropdown[data-provider-name="Google"]',
     title: 'Select Models',
-    description: 'Select both models below: Gemma 3 27B and Gemini 3.1 Flash Lite Preview.',
+    description: 'For this tutorial, select the 2 Google models.',
     position: 'top',
   },
   'enter-prompt': {
