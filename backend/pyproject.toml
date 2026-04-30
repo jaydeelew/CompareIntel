@@ -166,6 +166,7 @@ omit = [
     "app/routers/api/credits.py",
     "app/routers/api/conversations.py",
     "app/routers/api/dev.py",          # Dev-only endpoints
+    "app/routers/billing.py",          # Stripe checkout/webhooks; manual/E2E validation
     "app/search/distributed_rate_limiter.py",
     "app/search/rate_limiter.py",
 ]
