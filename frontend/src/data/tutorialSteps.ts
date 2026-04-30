@@ -54,7 +54,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'enter-prompt',
     targetSelector: '.composer',
     title: 'Enter Your Prompt',
-    description: 'Type your question or prompt in the text area below.',
+    description: 'Type your question or prompt in the text area.',
     position: 'bottom',
   },
   'submit-comparison': {
