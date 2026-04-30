@@ -68,8 +68,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'follow-up',
     targetSelector: '[data-after-results-composer-slot] .composer:not(.composer-placeholder)',
     title: 'Continue the Conversation',
-    description:
-      'Review the responses from both models above by selecting their tabs. Then, type a follow-up.',
+    description: 'Review the responses from both models above. Then, type a follow-up.',
     position: 'top',
   },
   'enter-prompt-2': {
