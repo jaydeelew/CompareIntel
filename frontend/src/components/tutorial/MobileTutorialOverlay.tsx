@@ -558,6 +558,33 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const minTopBelowComposer = rect.bottom + d + underComposerGap
       tooltipTop = Math.max(padding, minTopBelowComposer)
       arrowDirection = 'up'
+    } else if (step === 'expand-provider') {
+      // Match desktop: default above the Google row (arrow down); if row is in upper half of viewport, place below (arrow up).
+      const headerEl = targetElement.querySelector('.provider-header') as HTMLElement | null
+      const anchorRect = headerEl?.getBoundingClientRect() ?? placementRect
+      const anchorMidY = anchorRect.top + anchorRect.height / 2
+      const viewportMid = viewportHeight / 2
+      const verticalGap = arrowSize + 8
+      const needAbove = tooltipHeight + verticalGap + padding
+      const needBelow = tooltipHeight + verticalGap + padding
+      const roomAbove = anchorRect.top - padding
+      const roomBelow = viewportHeight - padding - anchorRect.bottom
+
+      let useBelow = anchorMidY < viewportMid
+      if (useBelow && roomBelow < needBelow && roomAbove >= needAbove) {
+        useBelow = false
+      } else if (!useBelow && roomAbove < needAbove && roomBelow >= needBelow) {
+        useBelow = true
+      }
+
+      if (useBelow) {
+        tooltipTop = anchorRect.bottom + verticalGap
+        arrowDirection = 'up'
+      } else {
+        tooltipTop = anchorRect.top - tooltipHeight - verticalGap
+        arrowDirection = 'down'
+      }
+      tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
     } else {
       // Determine vertical position (above or below target).
       // select-models: placementRect is .provider-header so the tooltip sits above the Google row,

@@ -273,13 +273,35 @@ export function computeTooltipPosition(
     const spaceBelow = viewportHeight - rect.bottom
     const hasEnoughSpaceAbove = spaceAbove >= minSpaceNeeded
     const hasEnoughSpaceBelow = spaceBelow >= minSpaceNeeded
-    const shouldUseBottom = hasEnoughSpaceAbove
-      ? false
-      : step === 'expand-provider'
+    /** Step 1: default tooltip above the header (arrow down); if anchor sits in upper half of viewport use below (arrow up). */
+    const viewportMid = viewportHeight / 2
+    const anchorMidY = rect.top + rect.height / 2
+
+    let shouldUseBottom: boolean
+    if (step === 'expand-provider') {
+      const preferBelowBecauseUpperHalf = anchorMidY < viewportMid
+      const gapAboveNeeded = EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX
+      const needAboveForTop = estimatedTooltipHeight + gapAboveNeeded + MARGIN
+      const needBelow = estimatedTooltipHeight + offset + MARGIN
+
+      if (preferBelowBecauseUpperHalf) {
+        shouldUseBottom =
+          spaceBelow >= needBelow ? true : spaceAbove >= needAboveForTop ? false : true
+      } else {
+        shouldUseBottom =
+          spaceAbove >= needAboveForTop
+            ? false
+            : spaceBelow >= needBelow
+              ? true
+              : spaceBelow >= spaceAbove
+      }
+    } else {
+      shouldUseBottom = hasEnoughSpaceAbove
         ? false
         : hasEnoughSpaceBelow
           ? true
           : spaceBelow > spaceAbove
+    }
 
     let top: number
     // Same horizontal anchor for step 1 and 2 (Google column center) so the tooltip does not
