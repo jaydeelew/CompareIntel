@@ -85,6 +85,15 @@ export function wrapBareLatexBlocks(text: string): string {
 function isBareLatexLine(line: string): boolean {
   if (!line) return false
 
+  // Skip lines that already use $...$ or $$...$$ — re-wrapping yields $$**$...$**$$, which
+  // breaks /\$\$([^$]+?)\$\$/ extraction and leaves visible dollar delimiters in the UI.
+  if (/(?<!\$)\$([^$\n]+?)\$(?!\$)/.test(line)) {
+    return false
+  }
+  if (/\$\$[\s\S]*?\$\$/.test(line)) {
+    return false
+  }
+
   if (
     /^\$\$/.test(line) ||
     /\$\$$/.test(line) ||
