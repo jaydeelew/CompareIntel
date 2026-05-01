@@ -1,0 +1,12 @@
+/* Matches .credits-info-trigger in hero.css; adds “tooltip below” for tight top-of-viewport panels. */
+.credits-fraction-info-trigger.credits-fraction-info-trigger--below .credits-info-tooltip {
+  bottom: auto;
+  top: calc(100% + 10px);
+}
+
+.credits-fraction-info-trigger.credits-fraction-info-trigger--below .credits-info-tooltip::after {
+  top: auto;
+  bottom: 100%;
+  border: 6px solid transparent;
+  border-bottom-color: var(--bg-elevated);
+}

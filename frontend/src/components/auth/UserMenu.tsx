@@ -40,6 +40,7 @@ import { BILLING_UPDATED_EVENT } from '../../utils/billingSync'
 import { formatCreditsResetAtLabel } from '../../utils/date'
 import logger from '../../utils/logger'
 import { dispatchSaveStateEvent } from '../../utils/sessionState'
+import { CreditsFractionInfoTrigger } from '../credits/CreditsFractionInfoTrigger'
 import './UserMenu.css'
 
 type ModalType = 'dashboard' | 'settings' | 'upgrade' | null
@@ -609,6 +610,10 @@ export const UserMenu: React.FC = () => {
                   </span>
                   <span className="usage-separator">/</span>
                   <span className="usage-limit">{trustedCreditBalance.credits_allocated}</span>
+                  <CreditsFractionInfoTrigger
+                    tooltipPlacement="below"
+                    className="usage-credits-fraction-info"
+                  />
                 </div>
                 {(trustedCreditBalance.credits_used_this_period ?? 0) > 0 && (
                   <div className="usage-progress-bar">
@@ -652,6 +657,10 @@ export const UserMenu: React.FC = () => {
                 <span className="usage-limit">
                   {user.monthly_credits_allocated || getCreditAllocation(user.subscription_tier)}
                 </span>
+                <CreditsFractionInfoTrigger
+                  tooltipPlacement="below"
+                  className="usage-credits-fraction-info"
+                />
               </div>
             )}
           </div>

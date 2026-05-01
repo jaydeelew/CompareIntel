@@ -9,6 +9,8 @@ import React from 'react'
 
 import type { CreditBalance as CreditBalanceType } from '../../services/creditService'
 import { formatCreditsResetAtLabel } from '../../utils/date'
+
+import { CreditsFractionInfoTrigger } from './CreditsFractionInfoTrigger'
 import './CreditBalance.css'
 
 export interface CreditBalanceProps {
@@ -115,6 +117,7 @@ export const CreditBalance: React.FC<CreditBalanceProps> = ({
           <span className="credit-balance-current">{Math.round(creditsRemaining)}</span>
           <span className="credit-balance-separator">/</span>
           <span className="credit-balance-allocated">{creditsAllocated}</span>
+          <CreditsFractionInfoTrigger className="credit-balance-fraction-info" />
         </div>
         {variant === 'full' && (
           <div className="credit-balance-used">{creditsUsed.toLocaleString()} used</div>
