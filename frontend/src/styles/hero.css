@@ -2302,6 +2302,7 @@ video.capability-tile-image-lightbox-img {
 /* Prompt text and/or model selection started — emerald outline; full emerald fill stays on .submit-ready */
 .submit-button.submit-progress-outline:not(.submit-ready) {
   border-color: #10b981;
+  animation: pulseGlowSubmitProgressOutline 1.6s ease-in-out infinite;
 }
 
 /* Ready to send — emerald like follow-up "Start over" (explicit greens so light theme isn’t theme-accent blue) */
@@ -2348,8 +2349,19 @@ video.capability-tile-image-lightbox-img {
   animation: pulseGlowSubmitEmerald 1.5s ease-in-out infinite;
 }
 
-.submit-button:not(.submit-ready).animate-pulse-glow {
+.submit-button:not(.submit-ready):not(.submit-progress-outline).animate-pulse-glow {
   animation: pulseGlowSubmitMuted 1.5s ease-in-out infinite;
+}
+
+.submit-button.submit-progress-outline:not(.submit-ready).animate-pulse-glow {
+  animation: pulseGlowSubmitProgressOutline 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submit-button.submit-progress-outline:not(.submit-ready),
+  .submit-button.submit-progress-outline:not(.submit-ready).animate-pulse-glow {
+    animation: none;
+  }
 }
 
 /* Kill inherited cyan ring from .textarea-icon-button:focus on submit */
@@ -2371,7 +2383,7 @@ video.capability-tile-image-lightbox-img {
   pointer-events: none;
 }
 
-.submit-button:not(.submit-ready):hover:not(:disabled) {
+.submit-button:not(.submit-ready):not(.submit-progress-outline):hover:not(:disabled) {
   background: var(--bg-card-hover);
   border-color: var(--primary-color);
   color: var(--primary-light);
@@ -2379,21 +2391,37 @@ video.capability-tile-image-lightbox-img {
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14) !important;
 }
 
-.submit-button:not(.submit-ready):hover:not(:disabled) svg {
+.submit-button:not(.submit-ready):not(.submit-progress-outline):hover:not(:disabled) svg {
   transform: translate(-50%, -50%);
   color: var(--primary-light);
 }
 
-.submit-button:not(.submit-ready):hover:not(:disabled) svg path {
+.submit-button:not(.submit-ready):not(.submit-progress-outline):hover:not(:disabled) svg path {
   stroke: var(--primary-light);
 }
 
-.submit-button:not(.submit-ready):hover:not(:disabled)::before {
+.submit-button:not(.submit-ready):not(.submit-progress-outline):hover:not(:disabled)::before {
   opacity: 0;
 }
 
 .submit-button.submit-progress-outline:not(.submit-ready):hover:not(:disabled) {
   border-color: #059669;
+  background: var(--bg-card-hover);
+  color: var(--primary-light);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.submit-button.submit-progress-outline:not(.submit-ready):hover:not(:disabled) svg {
+  transform: translate(-50%, -50%);
+  color: var(--primary-light);
+}
+
+.submit-button.submit-progress-outline:not(.submit-ready):hover:not(:disabled) svg path {
+  stroke: var(--primary-light);
+}
+
+.submit-button.submit-progress-outline:not(.submit-ready):hover:not(:disabled)::before {
+  opacity: 0;
 }
 
 .submit-button:focus,
