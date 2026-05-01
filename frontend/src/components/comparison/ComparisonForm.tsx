@@ -39,6 +39,12 @@ import { SavedSelectionsDropdown } from './SavedSelectionsDropdown'
 import { TokenUsageDisplay, type TokenUsageInfo } from './TokenUsageDisplay'
 import { getTooltipModalSuppressed } from './tooltipModalStorage'
 
+function submitIncompleteComposerTooltip(hasPrompt: boolean, hasModels: boolean): string {
+  if (!hasPrompt && !hasModels) return 'Enter your input, and select models below'
+  if (hasPrompt && !hasModels) return 'Before submitting, select models below'
+  return 'Before submitting, enter your input'
+}
+
 export type { AttachedFile, StoredAttachedFile }
 export type { HistoryProps, SelectionProps, FileProps } from './ComparisonFormTypes'
 
@@ -255,7 +261,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   : isLoading
                     ? 'Submit'
                     : !inputTrimmed || selectedModels.length === 0
-                      ? 'Enter prompt and select models'
+                      ? submitIncompleteComposerTooltip(
+                          inputTrimmed.length > 0,
+                          selectedModels.length > 0
+                        )
                       : imageGenerationSubmitBlocked
                         ? imageGenerationNoSharedImageOptions
                           ? 'These image models do not share any aspect ratio and resolution that works for all of them. Change your model selection—Advanced cannot fix this combination.'
@@ -549,6 +558,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           : ''
 
     const submitReady = !hardSubmitDisabled && !submitImageConfigBlocked
+    const submitHasText = input.trim().length > 0
 
     const voiceButtonAriaLabel = isSpeechListening ? 'Stop recording' : 'Start voice input'
     const webSearchButtonAriaLabel = !canEnableWebSearch
@@ -560,7 +570,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       creditsRemaining <= 0
         ? 'You have run out of credits'
         : !input.trim() || selectedModels.length === 0
-          ? 'Enter prompt and select models'
+          ? submitIncompleteComposerTooltip(input.trim().length > 0, selectedModels.length > 0)
           : submitImageBlockTooltip !== ''
             ? submitImageBlockTooltip
             : isFollowUpMode && tokenUsageExceeded
@@ -1029,7 +1039,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   }
                 }}
                 disabled={!isTouchDevice && hardSubmitDisabled}
-                className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitHasText ? 'submit-has-text' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
                   submitImageConfigBlocked && !hardSubmitDisabled
                     ? 'submit-blocked-image-config'
                     : ''
@@ -1072,7 +1082,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       }
                     }}
                     disabled={!isTouchDevice && hardSubmitDisabled}
-                    className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                    className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitHasText ? 'submit-has-text' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
                       submitImageConfigBlocked && !hardSubmitDisabled
                         ? 'submit-blocked-image-config'
                         : ''
@@ -1101,7 +1111,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       creditsRemaining <= 0
                         ? 'You have run out of credits'
                         : !input.trim() || selectedModels.length === 0
-                          ? 'Enter prompt and select models'
+                          ? submitIncompleteComposerTooltip(
+                              input.trim().length > 0,
+                              selectedModels.length > 0
+                            )
                           : submitImageBlockTooltip !== ''
                             ? submitImageBlockTooltip
                             : isFollowUpMode && tokenUsageInfo?.isExceeded

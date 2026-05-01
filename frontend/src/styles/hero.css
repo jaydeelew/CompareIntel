@@ -2299,6 +2299,11 @@ video.capability-tile-image-lightbox-img {
   box-shadow: none;
 }
 
+/* Prompt has text — emerald outline; full emerald fill stays on .submit-ready */
+.submit-button.submit-has-text:not(.submit-ready) {
+  border-color: #10b981;
+}
+
 /* Ready to send — emerald like follow-up "Start over" (explicit greens so light theme isn’t theme-accent blue) */
 .submit-button.submit-ready {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -2387,11 +2392,20 @@ video.capability-tile-image-lightbox-img {
   opacity: 0;
 }
 
+.submit-button.submit-has-text:not(.submit-ready):hover:not(:disabled) {
+  border-color: #059669;
+}
+
 .submit-button:focus,
 .submit-button:focus-visible {
   outline: none !important;
   border-color: var(--border-strong);
   box-shadow: none;
+}
+
+.submit-button.submit-has-text:not(.submit-ready):focus,
+.submit-button.submit-has-text:not(.submit-ready):focus-visible {
+  border-color: #10b981;
 }
 
 .submit-button:disabled,
@@ -2418,6 +2432,15 @@ video.capability-tile-image-lightbox-img {
   stroke: var(--text-subtle);
 }
 
+.submit-button.submit-has-text:not(.submit-ready):disabled,
+.submit-button.submit-has-text:not(.submit-ready).touch-disabled {
+  border-color: #10b981;
+}
+
+.submit-button.submit-has-text:not(.submit-ready).touch-disabled:hover {
+  border-color: #10b981;
+}
+
 /* Clickable but muted: image model / Advanced settings mismatch (opens explain modal) */
 .submit-button.submit-blocked-image-config {
   background: var(--bg-card);
@@ -2436,6 +2459,11 @@ video.capability-tile-image-lightbox-img {
 
 .submit-button.submit-blocked-image-config:hover svg path {
   stroke: var(--text-subtle);
+}
+
+.submit-button.submit-has-text:not(.submit-ready).submit-blocked-image-config,
+.submit-button.submit-has-text:not(.submit-ready).submit-blocked-image-config:hover {
+  border-color: #10b981;
 }
 
 .submit-button.not-ready {
