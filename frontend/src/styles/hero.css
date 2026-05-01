@@ -110,6 +110,21 @@
   isolation: isolate;
 }
 
+/* Desktop (non-mobile breakpoint): hero fills viewport below navbar so first paint at scroll-top
+   (e.g. F11 fullscreen) does not reveal the models section; extra height is gradient below content. */
+@media (min-width: 769px) {
+  .hero-section {
+    min-height: calc(100vh - var(--navbar-height, 64px));
+    min-height: calc(100svh - var(--navbar-height, 64px));
+  }
+
+  /* Folded navbar (max-height: 0) takes no flow space; subtracting navbar here left a ~64px gap. */
+  .app:has(.app-header-shell--folded) .hero-section {
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+}
+
 /* Light theme: resolve gradient on .hero-section so inline --hero-* custom
    properties (set by JS) are in scope — they aren't visible at the :root level
    where [data-theme='light'] defines --hero-background. */
