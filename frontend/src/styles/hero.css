@@ -2299,8 +2299,8 @@ video.capability-tile-image-lightbox-img {
   box-shadow: none;
 }
 
-/* Prompt has text — emerald outline; full emerald fill stays on .submit-ready */
-.submit-button.submit-has-text:not(.submit-ready) {
+/* Prompt text and/or model selection started — emerald outline; full emerald fill stays on .submit-ready */
+.submit-button.submit-progress-outline:not(.submit-ready) {
   border-color: #10b981;
 }
 
@@ -2392,7 +2392,7 @@ video.capability-tile-image-lightbox-img {
   opacity: 0;
 }
 
-.submit-button.submit-has-text:not(.submit-ready):hover:not(:disabled) {
+.submit-button.submit-progress-outline:not(.submit-ready):hover:not(:disabled) {
   border-color: #059669;
 }
 
@@ -2403,8 +2403,8 @@ video.capability-tile-image-lightbox-img {
   box-shadow: none;
 }
 
-.submit-button.submit-has-text:not(.submit-ready):focus,
-.submit-button.submit-has-text:not(.submit-ready):focus-visible {
+.submit-button.submit-progress-outline:not(.submit-ready):focus,
+.submit-button.submit-progress-outline:not(.submit-ready):focus-visible {
   border-color: #10b981;
 }
 
@@ -2432,12 +2432,12 @@ video.capability-tile-image-lightbox-img {
   stroke: var(--text-subtle);
 }
 
-.submit-button.submit-has-text:not(.submit-ready):disabled,
-.submit-button.submit-has-text:not(.submit-ready).touch-disabled {
+.submit-button.submit-progress-outline:not(.submit-ready):disabled,
+.submit-button.submit-progress-outline:not(.submit-ready).touch-disabled {
   border-color: #10b981;
 }
 
-.submit-button.submit-has-text:not(.submit-ready).touch-disabled:hover {
+.submit-button.submit-progress-outline:not(.submit-ready).touch-disabled:hover {
   border-color: #10b981;
 }
 
@@ -2461,8 +2461,8 @@ video.capability-tile-image-lightbox-img {
   stroke: var(--text-subtle);
 }
 
-.submit-button.submit-has-text:not(.submit-ready).submit-blocked-image-config,
-.submit-button.submit-has-text:not(.submit-ready).submit-blocked-image-config:hover {
+.submit-button.submit-progress-outline:not(.submit-ready).submit-blocked-image-config,
+.submit-button.submit-progress-outline:not(.submit-ready).submit-blocked-image-config:hover {
   border-color: #10b981;
 }
 

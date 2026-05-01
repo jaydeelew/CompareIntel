@@ -558,7 +558,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           : ''
 
     const submitReady = !hardSubmitDisabled && !submitImageConfigBlocked
-    const submitHasText = input.trim().length > 0
+    const submitProgressOutline = input.trim().length > 0 || selectedModels.length > 0
 
     const voiceButtonAriaLabel = isSpeechListening ? 'Stop recording' : 'Start voice input'
     const webSearchButtonAriaLabel = !canEnableWebSearch
@@ -1039,7 +1039,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   }
                 }}
                 disabled={!isTouchDevice && hardSubmitDisabled}
-                className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitHasText ? 'submit-has-text' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitProgressOutline ? 'submit-progress-outline' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
                   submitImageConfigBlocked && !hardSubmitDisabled
                     ? 'submit-blocked-image-config'
                     : ''
@@ -1082,7 +1082,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       }
                     }}
                     disabled={!isTouchDevice && hardSubmitDisabled}
-                    className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitHasText ? 'submit-has-text' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                    className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitProgressOutline ? 'submit-progress-outline' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
                       submitImageConfigBlocked && !hardSubmitDisabled
                         ? 'submit-blocked-image-config'
                         : ''
