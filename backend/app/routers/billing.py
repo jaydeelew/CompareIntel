@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 from ..config.constants import MONTHLY_CREDIT_ALLOCATIONS, OVERAGE_USD_PER_CREDIT
 from ..config.settings import settings
-from ..credit_manager import allocate_monthly_credits
+from ..credit_manager import allocate_monthly_credits, reset_daily_credits
 from ..database import get_db
 from ..dependencies import get_current_user_required
 from ..models import ProcessedStripeWebhook, User
@@ -721,10 +721,22 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dic
             if obj.get("id"):
                 user = db.query(User).filter(User.stripe_subscription_id == obj["id"]).first()
             if user:
-                user.subscription_status = "cancelled"
+                user.subscription_tier = "free"
+                user.subscription_status = "active"
                 user.stripe_subscription_id = None
+                user.billing_period_start = None
+                user.billing_period_end = None
+                user.overage_enabled = False
+                user.overage_spend_limit_cents = None
+                user.overage_credits_used_this_period = 0
                 db.add(user)
                 db.commit()
+                reset_daily_credits(user.id, "free", db, force=True)
+                logger.info(
+                    "subscription.deleted: user %s downgraded to free tier (Stripe sub %s)",
+                    user.id,
+                    obj.get("id"),
+                )
     except Exception as e:
         logger.exception("Stripe webhook handler error: %s", e)
         raise HTTPException(status_code=500, detail="Webhook processing failed") from e
