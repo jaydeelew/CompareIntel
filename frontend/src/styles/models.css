@@ -4207,35 +4207,94 @@ html:not([data-theme]) .help-me-choose-category.has-match {
 }
 
 .advanced-settings-toggle {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  /* Match .help-me-choose-toggle height / tap target on the same row */
+  overflow: hidden;
+  white-space: nowrap;
+  /* Match .help-me-choose-toggle on the same row (gradient, border, shadow) */
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--primary-color) 18%, var(--bg-tertiary)) 0%,
+    color-mix(in srgb, var(--secondary-color) 8%, var(--bg-tertiary)) 45%,
+    color-mix(in srgb, var(--primary-color) 6%, var(--bg-elevated)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--primary-color) 42%, var(--border-color));
+  color: var(--text-primary);
   font-size: 0.9375rem;
   font-weight: var(--font-medium);
+  letter-spacing: var(--tracking-tight);
   cursor: pointer;
   padding: 0.5rem 1.05rem;
   border-radius: var(--radius-xl);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 12%, transparent) inset,
+    0 1px 2px color-mix(in srgb, var(--primary-glow) 18%, transparent),
+    0 8px 24px -8px color-mix(in srgb, var(--primary-glow) 35%, transparent);
   transition:
-    color 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    font-weight 0.22s ease;
+}
+
+.advanced-settings-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    color-mix(in srgb, var(--primary-light) 22%, transparent) 38%,
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.advanced-settings-toggle:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .advanced-settings-toggle:hover:not(:disabled) {
   color: var(--text-primary);
-  background: var(--bg-hover);
-  border-color: color-mix(in srgb, var(--primary-color) 35%, var(--border-color));
-  box-shadow: 0 0 12px color-mix(in srgb, var(--primary-glow) 30%, transparent);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--primary-color) 14%, var(--bg-hover)) 0%,
+    color-mix(in srgb, var(--secondary-color) 10%, var(--bg-hover)) 50%,
+    var(--bg-hover) 100%
+  );
+  border-color: color-mix(in srgb, var(--primary-color) 55%, var(--border-color));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 18%, transparent) inset,
+    0 0 20px color-mix(in srgb, var(--primary-glow) 32%, transparent),
+    0 12px 28px -10px color-mix(in srgb, var(--primary-glow) 40%, transparent);
+  transform: translateY(-1px);
 }
 
 .advanced-settings-toggle:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+  transform: none;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 12%, transparent) inset,
+    0 1px 2px color-mix(in srgb, var(--primary-glow) 18%, transparent);
+}
+
+.advanced-settings-toggle:disabled::before {
+  display: none;
+}
+
+.advanced-settings-toggle:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 3px;
 }
 
 .advanced-settings-toggle-text {
@@ -4274,10 +4333,18 @@ html:not([data-theme]) .help-me-choose-category.has-match {
 /* Toggle button when Advanced is open - match Help me choose emphasis */
 .advanced-settings-expanded .advanced-settings-toggle {
   color: var(--text-primary);
-  background: var(--bg-hover);
-  border-color: color-mix(in srgb, var(--primary-color) 40%, var(--border-color));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--primary-color) 22%, var(--bg-hover)) 0%,
+    color-mix(in srgb, var(--secondary-color) 12%, var(--bg-hover)) 100%
+  );
+  border-color: color-mix(in srgb, var(--primary-color) 55%, var(--border-color));
   font-weight: var(--font-semibold);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--primary-glow) 25%, transparent);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--primary-glow) 30%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 22%, transparent) inset,
+    0 1px 0 0 color-mix(in srgb, var(--primary-light) 25%, transparent) inset;
+  transform: translateY(-1px);
 }
 
 .advanced-settings-expanded .advanced-settings-toggle .advanced-settings-chevron {
