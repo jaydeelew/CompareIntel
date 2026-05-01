@@ -610,20 +610,21 @@ export const UserMenu: React.FC = () => {
                   <span className="usage-separator">/</span>
                   <span className="usage-limit">{trustedCreditBalance.credits_allocated}</span>
                 </div>
-                <div className="usage-progress-bar">
-                  <div
-                    className="usage-progress-fill"
-                    style={{
-                      width: `${Math.min(100, ((trustedCreditBalance.credits_used_this_period ?? 0) / trustedCreditBalance.credits_allocated) * 100)}%`,
-                    }}
-                  ></div>
-                </div>
+                {(trustedCreditBalance.credits_used_this_period ?? 0) > 0 && (
+                  <div className="usage-progress-bar">
+                    <div
+                      className="usage-progress-fill"
+                      style={{
+                        width: `${Math.min(100, ((trustedCreditBalance.credits_used_this_period ?? 0) / trustedCreditBalance.credits_allocated) * 100)}%`,
+                      }}
+                    ></div>
+                  </div>
+                )}
                 {trustedCreditBalance.credits_reset_at && (
                   <div
                     className="usage-reset-info"
                     style={{
                       fontSize: '0.75rem',
-                      color: 'rgba(255, 255, 255, 0.6)',
                       marginTop: '0.25rem',
                     }}
                   >
@@ -753,9 +754,7 @@ export const UserMenu: React.FC = () => {
           })()}
       </div>
 
-      <div className="user-menu-divider"></div>
-
-      <nav className="user-menu-nav">
+      <nav className="user-menu-nav user-menu-nav--usage-follow">
         <button className="menu-item" onClick={() => handleMenuItemClick('dashboard')}>
           <span className="menu-icon">
             <svg
