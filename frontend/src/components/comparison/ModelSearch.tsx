@@ -6,6 +6,7 @@ import Search from 'lucide-react/dist/esm/icons/search'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import type { Model, ModelsByProvider, User } from '../../types'
+import { MODEL_SEARCH_NO_MATCH, modelSearchScore, normalizeSearchString } from '../../utils/modelSearchMatch'
 import { getUserTierInfo, isModelRestrictedForUser } from '../../utils/modelTierAccess'
 
 const MAX_SUGGESTIONS = 40
@@ -18,21 +19,6 @@ function flattenModels(modelsByProvider: ModelsByProvider): Model[] {
     }
   }
   return out
-}
-
-function normalize(s: string): string {
-  return s.trim().toLowerCase()
-}
-
-function scoreMatch(model: Model, q: string): number {
-  const name = normalize(model.name)
-  const id = normalize(String(model.id))
-  const prov = normalize(model.provider)
-  if (name === q || id === q) return 0
-  if (name.startsWith(q) || id.startsWith(q)) return 1
-  if (prov.startsWith(q)) return 2
-  if (name.includes(q) || id.includes(q) || prov.includes(q)) return 3
-  return 4
 }
 
 export interface ModelSearchProps {
@@ -84,12 +70,12 @@ export function ModelSearch({
 
   const allFlat = useMemo(() => flattenModels(modelsByProvider), [modelsByProvider])
 
-  const qNorm = normalize(query)
+  const qNorm = normalizeSearchString(query)
   const suggestions = useMemo(() => {
     if (!qNorm) return []
     const scored = allFlat
-      .map(m => ({ m, s: scoreMatch(m, qNorm) }))
-      .filter(x => x.s < 4)
+      .map(m => ({ m, s: modelSearchScore(m, qNorm) }))
+      .filter(x => x.s < MODEL_SEARCH_NO_MATCH)
       .sort((a, b) => {
         if (a.s !== b.s) return a.s - b.s
         return a.m.name.localeCompare(b.m.name)
@@ -229,8 +215,8 @@ export function ModelSearch({
             aria-autocomplete="list"
             autoComplete="off"
             spellCheck={false}
-            placeholder="Search by name or provider…"
-            aria-label="Search models by name or provider"
+            placeholder="Search by name or provider (typo-tolerant)"
+            aria-label="Search models by name or provider; fuzzy matching handles minor misspellings"
             className="model-search-input"
             disabled={disabled}
             value={query}
@@ -241,7 +227,7 @@ export function ModelSearch({
               setOpen(true)
             }}
             onFocus={() => {
-              if (normalize(query)) setOpen(true)
+              if (normalizeSearchString(query)) setOpen(true)
             }}
             onKeyDown={onKeyDown}
           />
@@ -298,7 +284,8 @@ export function ModelSearch({
 
         {showEmpty && (
           <div className="model-search-empty" role="status">
-            No models match that search. Try another spelling or check the provider list below.
+            No models match that search. Adjust spelling or check the provider list below — short
+            queries match word starts; longer ones allow minor typos.
           </div>
         )}
       </div>
