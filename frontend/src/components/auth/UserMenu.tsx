@@ -3,7 +3,7 @@
  * Displays user info and dropdown menu when authenticated
  */
 
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 
 import {
@@ -36,14 +36,52 @@ import {
   REQUEST_PERSIST_TEXT_COMPOSER_ADVANCED_EVENT,
 } from '../../services/userSettingsService'
 import type { UserPreferences, UserPreferencesUpdate } from '../../services/userSettingsService'
+import { SUBSCRIPTION_STATUS } from '../../types/config'
+import type { User } from '../../types/user'
 import { BILLING_UPDATED_EVENT } from '../../utils/billingSync'
-import { formatCreditsResetAtLabel } from '../../utils/date'
+import { formatCreditsResetAtLabel, formatLocaleDate } from '../../utils/date'
 import logger from '../../utils/logger'
 import { dispatchSaveStateEvent } from '../../utils/sessionState'
 import { CreditsFractionInfoTrigger } from '../credits/CreditsFractionInfoTrigger'
+import {
+  DASHBOARD_CREDITS_EXPLAINER,
+  DASHBOARD_OVERAGE_EXPLAINER,
+} from '../credits/creditsTooltipCopy'
 import './UserMenu.css'
 
 type ModalType = 'dashboard' | 'settings' | 'upgrade' | null
+
+function formatTrialRemainingLabel(trialEndsAt: string | undefined): string | null {
+  if (!trialEndsAt) return null
+  const end = new Date(trialEndsAt)
+  if (Number.isNaN(end.getTime())) return null
+  const diff = end.getTime() - Date.now()
+  if (diff <= 0) return 'Trial ends today'
+  const hours = diff / 3600000
+  if (hours < 24) {
+    const h = Math.max(1, Math.ceil(hours))
+    return h === 1 ? 'About 1 hour left in trial' : `${h} hours left in trial`
+  }
+  const days = Math.ceil(diff / 86_400_000)
+  return `${days} day${days === 1 ? '' : 's'} left in trial`
+}
+
+function subscriptionPeriodLabel(period: string | undefined): string {
+  if (period === 'yearly') return 'Yearly billing'
+  return 'Monthly billing'
+}
+
+function billingCycleEndIso(balance: CreditBalance | null, u: User | null): string | null {
+  if (!u) return null
+  return balance?.billing_period_end ?? u.billing_period_end ?? null
+}
+
+function formatOverageCapSummary(balance: CreditBalance): string {
+  if (!balance.overage_enabled) return 'Off'
+  if (balance.overage_limit_credits == null) return 'On · No cap'
+  const usd = balance.overage_limit_credits * OVERAGE_USD_PER_CREDIT
+  return `On · Cap ~${balance.overage_limit_credits.toLocaleString()} credits ($${usd.toFixed(2)})`
+}
 
 export const UserMenu: React.FC = () => {
   const { user, logout, refreshUser } = useAuth()
@@ -122,13 +160,23 @@ export const UserMenu: React.FC = () => {
     }
   }, [isOpen, user?.id])
 
+  useEffect(() => {
+    if (activeModal !== 'dashboard' || user?.id == null) return
+    getCreditBalance()
+      .then(bal => setCreditBalance(bal))
+      .catch(error => {
+        if (isCancellationError(error)) return
+        logger.error('Failed to fetch credits for dashboard:', error)
+      })
+  }, [activeModal, user?.id])
+
   const updateDropdownPlacement = useCallback(() => {
     if (!avatarRef.current) return
     const rect = avatarRef.current.getBoundingClientRect()
     setDropdownPlacement({
       top: rect.bottom + 8,
       right: window.innerWidth - rect.right,
-      width: Math.min(240, window.innerWidth - 16),
+      width: Math.min(300, window.innerWidth - 16),
     })
   }, [])
 
@@ -140,7 +188,7 @@ export const UserMenu: React.FC = () => {
         setDropdownPlacement({
           top: rect.bottom + 8,
           right: window.innerWidth - rect.right,
-          width: Math.min(240, window.innerWidth - 16),
+          width: Math.min(300, window.innerWidth - 16),
         })
       }
       return !prev
@@ -504,6 +552,44 @@ export const UserMenu: React.FC = () => {
     }
   }, [refreshUser])
 
+  const trustedCreditBalance =
+    user != null &&
+    creditBalance != null &&
+    creditBalance.subscription_tier === user.subscription_tier
+      ? creditBalance
+      : null
+
+  const trialRemainingLabel = useMemo(
+    () => (user?.trial_ends_at ? formatTrialRemainingLabel(user.trial_ends_at) : null),
+    [user?.trial_ends_at]
+  )
+
+  const billingCycleEnd = useMemo(
+    () => billingCycleEndIso(trustedCreditBalance, user ?? null),
+    [trustedCreditBalance, user]
+  )
+
+  const dashboardCreditMetrics = useMemo(() => {
+    if (user == null || trustedCreditBalance == null) return null
+    const allocated = trustedCreditBalance.credits_allocated
+    const used = Math.round(trustedCreditBalance.credits_used_this_period ?? 0)
+    const remaining = Math.round(trustedCreditBalance.credits_remaining)
+    const pctIncludedUsed =
+      allocated > 0 ? Math.min(100, Math.round((used / allocated) * 1000) / 10) : 0
+    const poolLow = remaining > 0 && allocated > 0 && remaining / allocated < 0.2
+    const poolExhausted = remaining <= 0 && allocated > 0
+    const periodWord = trustedCreditBalance.period_type === 'monthly' ? 'month' : 'day'
+    return {
+      allocated,
+      used,
+      remaining,
+      pctIncludedUsed,
+      poolLow,
+      poolExhausted,
+      periodWord,
+    }
+  }, [user, trustedCreditBalance])
+
   if (!user) return null
 
   const getTierBadgeClass = (tier: string) => {
@@ -546,17 +632,14 @@ export const UserMenu: React.FC = () => {
     setBillingError(null)
   }
 
-  const trustedCreditBalance =
-    creditBalance && creditBalance.subscription_tier === user.subscription_tier
-      ? creditBalance
-      : null
-
   const canOpenStripeBillingPortal = Boolean(user.stripe_customer_id || user.stripe_subscription_id)
 
   const usagePeriodLabel =
     trustedCreditBalance?.period_type === 'monthly' || user.billing_period_start
       ? 'Usage This Month'
       : 'Usage Today'
+
+  const showTrialBanner = user.is_trial_active === true && Boolean(user.trial_ends_at)
 
   const dropdownPanel = (
     <div
@@ -590,6 +673,27 @@ export const UserMenu: React.FC = () => {
         </div>
       </div>
 
+      {showTrialBanner && trialRemainingLabel ? (
+        <div className="trial-countdown-banner" role="status">
+          <span className="trial-countdown-icon" aria-hidden>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
+            </svg>
+          </span>
+          <span className="trial-countdown-text">{trialRemainingLabel}</span>
+        </div>
+      ) : null}
+
       <div className="user-menu-divider"></div>
 
       <div className="usage-section">
@@ -615,6 +719,9 @@ export const UserMenu: React.FC = () => {
                     className="usage-credits-fraction-info"
                   />
                 </div>
+                <div className="usage-credits-meta">
+                  {Math.round(trustedCreditBalance.credits_used_this_period ?? 0)} used this period
+                </div>
                 {(trustedCreditBalance.credits_used_this_period ?? 0) > 0 && (
                   <div className="usage-progress-bar">
                     <div
@@ -625,20 +732,25 @@ export const UserMenu: React.FC = () => {
                     ></div>
                   </div>
                 )}
-                {trustedCreditBalance.credits_reset_at && (
-                  <div
-                    className="usage-reset-info"
-                    style={{
-                      fontSize: '0.75rem',
-                      marginTop: '0.25rem',
-                    }}
-                  >
-                    Resets{' '}
-                    {formatCreditsResetAtLabel(trustedCreditBalance.credits_reset_at, {
-                      useUtc: trustedCreditBalance.credits_reset_shows_utc === true,
-                    })}
-                  </div>
-                )}
+                {trustedCreditBalance.credits_reset_at &&
+                  !(
+                    isPaidTier &&
+                    billingCycleEnd &&
+                    trustedCreditBalance.period_type === 'monthly'
+                  ) && (
+                    <div
+                      className="usage-reset-info"
+                      style={{
+                        fontSize: '0.75rem',
+                        marginTop: '0.25rem',
+                      }}
+                    >
+                      Resets{' '}
+                      {formatCreditsResetAtLabel(trustedCreditBalance.credits_reset_at, {
+                        useUtc: trustedCreditBalance.credits_reset_shows_utc === true,
+                      })}
+                    </div>
+                  )}
               </>
             ) : (
               <div className="usage-stat-value">
@@ -665,6 +777,94 @@ export const UserMenu: React.FC = () => {
             )}
           </div>
         </div>
+
+        <div className="account-snapshot" aria-label="Billing snapshot">
+          <div className="account-snapshot-row">
+            <span className="account-snapshot-label">
+              {isPaidTier && billingCycleEnd ? 'Billing period ends' : 'Credits reset'}
+            </span>
+            <span className="account-snapshot-value">
+              {isLoadingCredits
+                ? '…'
+                : isPaidTier && billingCycleEnd
+                  ? formatLocaleDate(billingCycleEnd, 'en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })
+                  : (trustedCreditBalance?.credits_reset_at ?? user.credits_reset_at)
+                    ? formatCreditsResetAtLabel(
+                        trustedCreditBalance?.credits_reset_at ?? user.credits_reset_at,
+                        {
+                          useUtc: trustedCreditBalance?.credits_reset_shows_utc === true,
+                        }
+                      )
+                    : '—'}
+            </span>
+          </div>
+          {isPaidTier ? (
+            trustedCreditBalance ? (
+              <>
+                <div className="account-snapshot-row">
+                  <span className="account-snapshot-label">Overage billing</span>
+                  <span className="account-snapshot-value account-snapshot-value--small">
+                    {formatOverageCapSummary(trustedCreditBalance)}
+                  </span>
+                </div>
+                <div className="account-snapshot-row account-snapshot-row--overage">
+                  <span className="account-snapshot-label">Overage used</span>
+                  <span className="account-snapshot-value">
+                    <span
+                      className={
+                        (trustedCreditBalance.overage_credits_used_this_period ?? 0) > 0
+                          ? 'overage-active-text snapshot-numeric'
+                          : 'snapshot-numeric'
+                      }
+                    >
+                      {(
+                        trustedCreditBalance.overage_credits_used_this_period ?? 0
+                      ).toLocaleString()}{' '}
+                      credits
+                    </span>
+                    {(trustedCreditBalance.overage_credits_used_this_period ?? 0) > 0 ? (
+                      <span className="overage-cost-badge">
+                        ~$
+                        {(
+                          (trustedCreditBalance.overage_credits_used_this_period ?? 0) *
+                          OVERAGE_USD_PER_CREDIT
+                        ).toFixed(2)}
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+                {trustedCreditBalance.overage_enabled === true &&
+                trustedCreditBalance.overage_limit_credits != null ? (
+                  <div className="usage-progress-bar account-snapshot-progress">
+                    <div
+                      className="usage-progress-fill overage-progress"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          ((trustedCreditBalance.overage_credits_used_this_period ?? 0) /
+                            trustedCreditBalance.overage_limit_credits) *
+                            100
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <div className="account-snapshot-row">
+                <span className="account-snapshot-label">Overage billing</span>
+                <span className="account-snapshot-value account-snapshot-muted">
+                  {isLoadingCredits ? '…' : '—'}
+                </span>
+              </div>
+            )
+          ) : null}
+        </div>
+
         {/* Legacy Model Response Display (Hidden by default, can be shown for transition period) */}
         {/* eslint-disable-next-line no-constant-binary-expression */}
         {false && user && (
@@ -679,45 +879,6 @@ export const UserMenu: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Overage status indicator (paid tiers with overage enabled) */}
-        {isPaidTier &&
-          trustedCreditBalance?.overage_enabled &&
-          (trustedCreditBalance.overage_credits_used_this_period ?? 0) > 0 && (
-            <div className="usage-stat" style={{ marginTop: '0.5rem' }}>
-              <div className="usage-stat-label">Overage</div>
-              <div className="usage-stat-value">
-                <span className="usage-current overage-active-text">
-                  {(trustedCreditBalance.overage_credits_used_this_period ?? 0).toLocaleString()}
-                </span>
-                {trustedCreditBalance.overage_limit_credits != null && (
-                  <>
-                    <span className="usage-separator">/</span>
-                    <span className="usage-limit">
-                      {trustedCreditBalance.overage_limit_credits.toLocaleString()}
-                    </span>
-                  </>
-                )}
-                <span className="overage-cost-badge">
-                  $
-                  {(
-                    (trustedCreditBalance.overage_credits_used_this_period ?? 0) *
-                    OVERAGE_USD_PER_CREDIT
-                  ).toFixed(2)}
-                </span>
-              </div>
-              {trustedCreditBalance.overage_limit_credits != null && (
-                <div className="usage-progress-bar">
-                  <div
-                    className="usage-progress-fill overage-progress"
-                    style={{
-                      width: `${Math.min(100, ((trustedCreditBalance.overage_credits_used_this_period ?? 0) / trustedCreditBalance.overage_limit_credits) * 100)}%`,
-                    }}
-                  ></div>
-                </div>
-              )}
-            </div>
-          )}
 
         {/* Burn-rate projection (paid monthly tiers) */}
         {isPaidTier &&
@@ -897,32 +1058,494 @@ export const UserMenu: React.FC = () => {
       {activeModal === 'dashboard' &&
         createPortal(
           <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-content coming-soon-modal" onClick={e => e.stopPropagation()}>
+            <div
+              className="modal-content settings-modal dashboard-modal"
+              onClick={e => e.stopPropagation()}
+            >
               <button className="modal-close" onClick={closeModal} aria-label="Close modal">
                 ×
               </button>
-              <div className="modal-icon">
-                <svg
-                  width="64"
-                  height="64"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
-                </svg>
+              <div className="settings-modal-header dashboard-modal-header">
+                <div className="modal-icon">
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+                  </svg>
+                </div>
+                <div className="dashboard-modal-header-text">
+                  <h2 className="modal-title">Account overview</h2>
+                  <p className="modal-subtitle dashboard-modal-email">{user.email}</p>
+                </div>
               </div>
-              <h2 className="modal-title">Dashboard</h2>
-              <p className="modal-description">
-                The Dashboard feature is coming soon! Track your usage analytics, view comparison
-                history, and gain insights into your AI model evaluations all in one place.
-              </p>
-              <button className="modal-button-primary" onClick={closeModal}>
-                Got it
-              </button>
+
+              <div className="settings-modal-body dashboard-modal-body">
+                <div className="settings-content dashboard-content">
+                  <p className="dashboard-lede">
+                    Your plan, included usage, and billing—explained without the jargon.
+                  </p>
+
+                  {user.subscription_status !== SUBSCRIPTION_STATUS.ACTIVE ? (
+                    <div className="settings-message dashboard-status-banner" role="status">
+                      <span>
+                        <strong>Heads up:</strong> your subscription is listed as{' '}
+                        <strong>
+                          {user.subscription_status === SUBSCRIPTION_STATUS.CANCELLED
+                            ? 'cancelled'
+                            : user.subscription_status === SUBSCRIPTION_STATUS.EXPIRED
+                              ? 'expired'
+                              : user.subscription_status}
+                        </strong>
+                        . Use <strong>Manage billing</strong> for invoices and payment methods, or{' '}
+                        <strong>Upgrade plan</strong> to pick a new tier.
+                      </span>
+                    </div>
+                  ) : null}
+
+                  <section className="dashboard-hero-card" aria-label="Usage summary">
+                    <div className="dashboard-hero-top">
+                      <div className="dashboard-hero-plan">
+                        <div className="dashboard-hero-plan-row">
+                          <div
+                            className={`tier-badge ${getTierBadgeClass(user.subscription_tier)}`}
+                          >
+                            {getTierDisplay(user.subscription_tier)}
+                          </div>
+                          {isPaidTier ? (
+                            <span className="dashboard-hero-billing-tag">
+                              {subscriptionPeriodLabel(user.subscription_period)}
+                            </span>
+                          ) : (
+                            <span className="dashboard-hero-billing-tag dashboard-hero-billing-tag--muted">
+                              Free plan
+                            </span>
+                          )}
+                        </div>
+                        <p className="dashboard-hero-plan-caption">
+                          {isPaidTier
+                            ? 'Paid plan with a monthly pool of included credits, then optional pay-as-you-go.'
+                            : 'Daily included credits for comparisons. Upgrade anytime for a larger monthly pool.'}
+                        </p>
+                      </div>
+                      {showTrialBanner && trialRemainingLabel ? (
+                        <div className="dashboard-hero-trial-chip" role="status">
+                          <span className="dashboard-hero-trial-chip-icon" aria-hidden>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M12 6v6l4 2" />
+                            </svg>
+                          </span>
+                          <span>{trialRemainingLabel}</span>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {trustedCreditBalance && dashboardCreditMetrics ? (
+                      <>
+                        <div className="dashboard-hero-meter">
+                          <div className="dashboard-hero-stat">
+                            <span className="dashboard-hero-stat-label">
+                              Included credits left
+                              <CreditsFractionInfoTrigger
+                                tooltipPlacement="below"
+                                className="dashboard-hero-info-trigger"
+                              />
+                            </span>
+                            <span className="dashboard-hero-stat-value">
+                              {dashboardCreditMetrics.remaining.toLocaleString()}
+                            </span>
+                            <span className="dashboard-hero-stat-sub">
+                              of {dashboardCreditMetrics.allocated.toLocaleString()} this{' '}
+                              {dashboardCreditMetrics.periodWord} ·{' '}
+                              {dashboardCreditMetrics.used.toLocaleString()} used
+                            </span>
+                          </div>
+                          <div className="dashboard-hero-progress-block">
+                            <div className="usage-progress-bar dashboard-hero-progress-bar">
+                              <div
+                                className={`usage-progress-fill${
+                                  dashboardCreditMetrics.poolLow
+                                    ? ' dashboard-progress-fill--warn'
+                                    : ''
+                                }${
+                                  dashboardCreditMetrics.poolExhausted
+                                    ? ' dashboard-progress-fill--drain'
+                                    : ''
+                                }`}
+                                style={{
+                                  width: `${dashboardCreditMetrics.pctIncludedUsed}%`,
+                                }}
+                              />
+                            </div>
+                            <div className="dashboard-hero-progress-foot">
+                              <span>
+                                {dashboardCreditMetrics.pctIncludedUsed}% of your included pool used
+                              </span>
+                              {dashboardCreditMetrics.poolExhausted &&
+                              isPaidTier &&
+                              trustedCreditBalance.overage_enabled ? (
+                                <span className="dashboard-hero-progress-foot-note">
+                                  Pool exhausted — extra usage is pay-as-you-go
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        {dashboardCreditMetrics.poolLow && !dashboardCreditMetrics.poolExhausted ? (
+                          <div className="dashboard-callout dashboard-callout--warn" role="status">
+                            <span className="dashboard-callout-icon" aria-hidden>
+                              !
+                            </span>
+                            <p>
+                              <strong>Running low.</strong> You have less than 20% of this period’s
+                              included credits left. Consider upgrading for a larger pool, or pace
+                              usage until your included credits refresh.
+                            </p>
+                          </div>
+                        ) : null}
+
+                        {dashboardCreditMetrics.poolExhausted && isPaidTier ? (
+                          trustedCreditBalance.overage_enabled ? (
+                            <div
+                              className="dashboard-callout dashboard-callout--info"
+                              role="status"
+                            >
+                              <span className="dashboard-callout-icon" aria-hidden>
+                                ✓
+                              </span>
+                              <p>
+                                <strong>Included pool used.</strong> Pay-as-you-go is on, so you can
+                                keep comparing. Extra credits are billed at{' '}
+                                <strong>${OVERAGE_USD_PER_CREDIT}</strong> each on your next
+                                invoice. Review your cap in Settings.
+                              </p>
+                            </div>
+                          ) : (
+                            <div
+                              className="dashboard-callout dashboard-callout--warn"
+                              role="status"
+                            >
+                              <span className="dashboard-callout-icon" aria-hidden>
+                                !
+                              </span>
+                              <p>
+                                <strong>Included pool used.</strong> Comparisons are blocked until
+                                your credits reset unless you turn on pay-as-you-go in{' '}
+                                <strong>Settings</strong>, or upgrade for a bigger monthly
+                                allowance.
+                              </p>
+                            </div>
+                          )
+                        ) : null}
+
+                        {dashboardCreditMetrics.poolExhausted && !isPaidTier ? (
+                          <div className="dashboard-callout dashboard-callout--info" role="status">
+                            <span className="dashboard-callout-icon" aria-hidden>
+                              i
+                            </span>
+                            <p>
+                              <strong>Daily limit reached.</strong> Your included credits refresh on
+                              the schedule below. For more room each day and premium features,
+                              consider upgrading.
+                            </p>
+                          </div>
+                        ) : null}
+                      </>
+                    ) : (
+                      <div className="dashboard-hero-loading">
+                        <div className="settings-spinner" aria-hidden />
+                        <span>Loading your usage…</span>
+                      </div>
+                    )}
+                  </section>
+
+                  {showTrialBanner && user.trial_ends_at ? (
+                    <p className="dashboard-trial-footnote">
+                      Trial access to premium models ends on{' '}
+                      <strong>
+                        {formatLocaleDate(user.trial_ends_at, 'en-US', {
+                          weekday: 'long',
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </strong>
+                      . After that, your account follows the Free plan unless you subscribe.
+                    </p>
+                  ) : null}
+
+                  <div className="dashboard-panels">
+                    <section
+                      className="dashboard-panel dashboard-panel--guide"
+                      aria-labelledby="dash-credits-guide"
+                    >
+                      <h3 className="dashboard-panel-title" id="dash-credits-guide">
+                        How credits work
+                      </h3>
+                      <p className="dashboard-panel-body">{DASHBOARD_CREDITS_EXPLAINER}</p>
+                      <p className="dashboard-panel-tip">
+                        <strong>Tip:</strong> More models in one comparison use more credits than a
+                        single-model run. Check your selections before you send.
+                      </p>
+                    </section>
+
+                    <section className="dashboard-panel" aria-labelledby="dash-period">
+                      <h3 className="dashboard-panel-title" id="dash-period">
+                        This period
+                      </h3>
+                      {trustedCreditBalance && dashboardCreditMetrics ? (
+                        <ul className="dashboard-checklist">
+                          <li>
+                            <span className="dashboard-checklist-label">Resets</span>
+                            <span className="dashboard-checklist-value">
+                              {isPaidTier && billingCycleEnd ? (
+                                <>
+                                  {formatLocaleDate(billingCycleEnd, 'en-US', {
+                                    weekday: 'short',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                  })}{' '}
+                                  <span className="dashboard-checklist-hint">(period end)</span>
+                                </>
+                              ) : trustedCreditBalance.credits_reset_at ? (
+                                formatCreditsResetAtLabel(trustedCreditBalance.credits_reset_at, {
+                                  useUtc: trustedCreditBalance.credits_reset_shows_utc === true,
+                                })
+                              ) : (
+                                '—'
+                              )}
+                            </span>
+                          </li>
+                          <li>
+                            <span className="dashboard-checklist-label">Included used</span>
+                            <span className="dashboard-checklist-value">
+                              {dashboardCreditMetrics.used.toLocaleString()} /{' '}
+                              {dashboardCreditMetrics.allocated.toLocaleString()}
+                            </span>
+                          </li>
+                          <li>
+                            <span className="dashboard-checklist-label">Remaining</span>
+                            <span className="dashboard-checklist-value dashboard-checklist-value--accent">
+                              {dashboardCreditMetrics.remaining.toLocaleString()}
+                            </span>
+                          </li>
+                          {user.total_credits_used != null ? (
+                            <li>
+                              <span className="dashboard-checklist-label">Lifetime total</span>
+                              <span className="dashboard-checklist-value">
+                                {user.total_credits_used.toLocaleString()} credits
+                              </span>
+                            </li>
+                          ) : null}
+                        </ul>
+                      ) : (
+                        <p className="dashboard-panel-body">Loading…</p>
+                      )}
+                    </section>
+                  </div>
+
+                  {isPaidTier ? (
+                    <section
+                      className="dashboard-panel dashboard-panel--overage"
+                      aria-labelledby="dash-overage"
+                    >
+                      <h3 className="dashboard-panel-title" id="dash-overage">
+                        After your included credits
+                      </h3>
+                      {trustedCreditBalance ? (
+                        <>
+                          <p className="dashboard-panel-body">{DASHBOARD_OVERAGE_EXPLAINER}</p>
+                          <div className="dashboard-overage-grid">
+                            <div className="dashboard-overage-item">
+                              <span className="dashboard-overage-item-label">Pay-as-you-go</span>
+                              <span className="dashboard-overage-item-value">
+                                {trustedCreditBalance.overage_enabled ? (
+                                  <span className="dashboard-status-pill dashboard-status-pill--on">
+                                    On
+                                  </span>
+                                ) : (
+                                  <span className="dashboard-status-pill dashboard-status-pill--off">
+                                    Off
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                            <div className="dashboard-overage-item">
+                              <span className="dashboard-overage-item-label">Spending cap</span>
+                              <span className="dashboard-overage-item-value">
+                                {trustedCreditBalance.overage_enabled ? (
+                                  trustedCreditBalance.overage_limit_credits == null ? (
+                                    'No cap (monitor usage in Settings)'
+                                  ) : (
+                                    <>
+                                      ~{trustedCreditBalance.overage_limit_credits.toLocaleString()}{' '}
+                                      credits (~$
+                                      {(
+                                        trustedCreditBalance.overage_limit_credits *
+                                        OVERAGE_USD_PER_CREDIT
+                                      ).toFixed(2)}
+                                      )
+                                    </>
+                                  )
+                                ) : (
+                                  '—'
+                                )}
+                              </span>
+                            </div>
+                            <div className="dashboard-overage-item">
+                              <span className="dashboard-overage-item-label">Overage used</span>
+                              <span
+                                className={`dashboard-overage-item-value${
+                                  (trustedCreditBalance.overage_credits_used_this_period ?? 0) > 0
+                                    ? ' dashboard-overage-item-value--highlight'
+                                    : ''
+                                }`}
+                              >
+                                {(
+                                  trustedCreditBalance.overage_credits_used_this_period ?? 0
+                                ).toLocaleString()}{' '}
+                                credits (~$
+                                {(
+                                  (trustedCreditBalance.overage_credits_used_this_period ?? 0) *
+                                  OVERAGE_USD_PER_CREDIT
+                                ).toFixed(2)}
+                                )
+                              </span>
+                            </div>
+                            <div className="dashboard-overage-item">
+                              <span className="dashboard-overage-item-label">Rate</span>
+                              <span className="dashboard-overage-item-value">
+                                ${OVERAGE_USD_PER_CREDIT} per credit
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="dashboard-panel-body">Loading overage details…</p>
+                      )}
+                    </section>
+                  ) : (
+                    <section
+                      className="dashboard-panel dashboard-panel--upgrade-nudge"
+                      aria-labelledby="dash-paid-nudge"
+                    >
+                      <h3 className="dashboard-panel-title" id="dash-paid-nudge">
+                        Need more room or pay-as-you-go?
+                      </h3>
+                      <p className="dashboard-panel-body">
+                        Paid plans include a larger <strong>monthly</strong> pool of included
+                        credits and optional pay-as-you-go after that, with a cap you control.
+                        Upgrade to choose a tier that fits how often you compare models.
+                      </p>
+                    </section>
+                  )}
+
+                  <footer className="dashboard-rail" aria-label="Quick actions">
+                    <span className="dashboard-rail-label">Jump to</span>
+                    <div className="dashboard-rail-links">
+                      <button
+                        type="button"
+                        className="dashboard-rail-link"
+                        onClick={() => {
+                          setActiveModal('settings')
+                        }}
+                      >
+                        Account &amp; overage settings
+                      </button>
+                      <span className="dashboard-rail-sep" aria-hidden>
+                        ·
+                      </span>
+                      <button
+                        type="button"
+                        className="dashboard-rail-link"
+                        onClick={() => setActiveModal('upgrade')}
+                      >
+                        Compare plans &amp; upgrade
+                      </button>
+                      {canOpenStripeBillingPortal ? (
+                        <>
+                          <span className="dashboard-rail-sep" aria-hidden>
+                            ·
+                          </span>
+                          <button
+                            type="button"
+                            className="dashboard-rail-link"
+                            disabled={billingBusy !== null}
+                            onClick={() => void openBillingPortal()}
+                          >
+                            Invoices &amp; payment methods
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                  </footer>
+                </div>
+              </div>
+
+              <div className="settings-modal-footer dashboard-modal-footer">
+                {billingError ? (
+                  <div className="settings-message settings-error dashboard-footer-error">
+                    {billingError}
+                  </div>
+                ) : null}
+                <div className="dashboard-footer-actions">
+                  <div className="dashboard-footer-actions-start">
+                    <button
+                      type="button"
+                      className="dashboard-footer-btn dashboard-footer-btn--secondary"
+                      onClick={closeModal}
+                    >
+                      Done
+                    </button>
+                    <button
+                      type="button"
+                      className="dashboard-footer-btn dashboard-footer-btn--secondary"
+                      onClick={() => setActiveModal('settings')}
+                    >
+                      Settings
+                    </button>
+                  </div>
+                  <div className="dashboard-footer-actions-end">
+                    {canOpenStripeBillingPortal ? (
+                      <button
+                        type="button"
+                        className="dashboard-footer-btn dashboard-footer-btn--primary"
+                        disabled={billingBusy !== null}
+                        onClick={() => void openBillingPortal()}
+                      >
+                        {billingBusy === 'portal' ? 'Opening…' : 'Manage billing'}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className={
+                        canOpenStripeBillingPortal
+                          ? 'dashboard-footer-btn dashboard-footer-btn--secondary'
+                          : 'dashboard-footer-btn dashboard-footer-btn--primary'
+                      }
+                      onClick={() => setActiveModal('upgrade')}
+                    >
+                      {isPaidTier ? 'Change plan' : 'View plans & upgrade'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>,
           document.body
