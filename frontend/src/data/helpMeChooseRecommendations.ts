@@ -418,6 +418,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     models: [
       { modelId: 'google/gemini-3.1-pro-preview', evidence: 'LegalBench (vals.ai): 87.04%.' },
       { modelId: 'google/gemini-3-flash-preview', evidence: 'LegalBench (vals.ai): 86.86%.' },
+      { modelId: 'openai/gpt-5.5', evidence: 'LegalBench (vals.ai): 86.52%.' },
       { modelId: 'openai/gpt-5', evidence: 'LegalBench (vals.ai): 86.02%.' },
       { modelId: 'openai/gpt-5.1', evidence: 'LegalBench (vals.ai): 85.68%.' },
     ],

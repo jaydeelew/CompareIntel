@@ -848,6 +848,17 @@
         "provider": "OpenAI",
         "supports_web_search": true,
         "knowledge_cutoff": "August 2025"
+      },
+      {
+        "id": "openai/gpt-5.5",
+        "name": "Gpt 5.5",
+        "description": "GPT-5.5 is OpenAI’s frontier model designed for complex professional workloads, building on GPT-5.4 with stronger reasoning, higher reliability, and improved token efficiency on hard tasks.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
       }
     ],
     "Qwen": [
