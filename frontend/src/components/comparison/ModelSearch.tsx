@@ -6,7 +6,11 @@ import Search from 'lucide-react/dist/esm/icons/search'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import type { Model, ModelsByProvider, User } from '../../types'
-import { MODEL_SEARCH_NO_MATCH, modelSearchScore, normalizeSearchString } from '../../utils/modelSearchMatch'
+import {
+  MODEL_SEARCH_NO_MATCH,
+  modelSearchScore,
+  normalizeSearchString,
+} from '../../utils/modelSearchMatch'
 import { getUserTierInfo, isModelRestrictedForUser } from '../../utils/modelTierAccess'
 
 const MAX_SUGGESTIONS = 40

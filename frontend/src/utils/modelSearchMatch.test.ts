@@ -2,11 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { Model } from '../types'
 
-import {
-  levenshteinWithin,
-  MODEL_SEARCH_NO_MATCH,
-  modelSearchScore,
-} from './modelSearchMatch'
+import { levenshteinWithin, MODEL_SEARCH_NO_MATCH, modelSearchScore } from './modelSearchMatch'
 
 function m(partial: Partial<Model> & Pick<Model, 'id' | 'name' | 'provider'>): Model {
   return {
