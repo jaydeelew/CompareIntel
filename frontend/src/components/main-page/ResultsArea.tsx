@@ -54,6 +54,9 @@ export interface ResultsAreaProps {
   onCopyMessage: (modelId: string, messageId: string, content: string) => void
   streamingReasoningByModel?: Record<string, string>
   streamAnswerStartedByModel?: Record<string, boolean>
+  /** Mobile capability demo: draw attention to model switcher tabs */
+  highlightMobileCapabilityDemoModelTabs?: boolean
+  onDismissMobileCapabilityDemoModelTabsHighlight?: () => void
 }
 
 export function ResultsArea({
@@ -91,6 +94,8 @@ export function ResultsArea({
   onCopyMessage,
   streamingReasoningByModel = {},
   streamAnswerStartedByModel = {},
+  highlightMobileCapabilityDemoModelTabs = false,
+  onDismissMobileCapabilityDemoModelTabsHighlight,
 }: ResultsAreaProps) {
   return (
     <ErrorBoundary>
@@ -127,6 +132,10 @@ export function ResultsArea({
           isTutorialActive={isTutorialActive}
           streamingReasoningByModel={streamingReasoningByModel}
           streamAnswerStartedByModel={streamAnswerStartedByModel}
+          highlightMobileCapabilityDemoModelTabs={highlightMobileCapabilityDemoModelTabs}
+          onDismissMobileCapabilityDemoModelTabsHighlight={
+            onDismissMobileCapabilityDemoModelTabsHighlight
+          }
         />
       </section>
     </ErrorBoundary>

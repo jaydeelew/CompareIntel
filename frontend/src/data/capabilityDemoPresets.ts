@@ -9,6 +9,9 @@
 import type { ModelsByProvider, User } from '../types'
 import { getUserTierInfo, isModelRestrictedForUser } from '../utils/modelTierAccess'
 
+/** Delay before auto-submit on mobile so the user can read the prefilled prompt. */
+export const CAPABILITY_DEMO_SUBMIT_DELAY_MS = 6000
+
 export interface CapabilityDemoPreset {
   prompt: string
   /** Preferred model ids — used as hints; may not be available for the user's tier. */

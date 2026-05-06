@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest'
 
 import type { ModelsByProvider, User } from '../../types'
-import { CAPABILITY_DEMO_PRESETS, pickTwoDemoModels } from '../capabilityDemoPresets'
+import {
+  CAPABILITY_DEMO_PRESETS,
+  CAPABILITY_DEMO_SUBMIT_DELAY_MS,
+  pickTwoDemoModels,
+} from '../capabilityDemoPresets'
 
 /** Minimal model factory. */
 function m(
@@ -55,6 +59,11 @@ describe('CAPABILITY_DEMO_PRESETS', () => {
       expect(preset.prompt.length).toBeGreaterThan(10)
       expect(preset.buttonLabel.length).toBeGreaterThan(0)
     }
+  })
+
+  it('uses a sensible delay before auto-submit after prefilling the composer', () => {
+    expect(CAPABILITY_DEMO_SUBMIT_DELAY_MS).toBeGreaterThanOrEqual(1000)
+    expect(CAPABILITY_DEMO_SUBMIT_DELAY_MS).toBeLessThanOrEqual(8000)
   })
 })
 

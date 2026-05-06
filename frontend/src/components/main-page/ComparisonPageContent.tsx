@@ -94,6 +94,8 @@ export interface ComparisonPageContentProps {
   capabilityDemoLabels?: Record<string, string>
   /** Mobile-only: called when user taps the demo CTA on a flipped capability tile. */
   onCapabilityDemo?: (tileId: string) => void
+  /** Mobile demo pause: pulse composer while prefilled prompt is shown before auto-submit. */
+  composerDemoPauseHighlight?: boolean
 
   // Loading
   onCancel: () => void
@@ -149,6 +151,7 @@ export function ComparisonPageContent({
   onCarouselProviderClick,
   capabilityDemoLabels,
   onCapabilityDemo,
+  composerDemoPauseHighlight = false,
   onCancel,
   showResults,
   showFloatingComposer = false,
@@ -234,6 +237,7 @@ export function ComparisonPageContent({
             imageGenerationSubmitBlocked={imageGenerationSubmitBlocked}
             imageGenerationNoSharedImageOptions={imageGenerationNoSharedImageOptions}
             onImageGenerationSubmitBlockedTap={onImageGenerationSubmitBlockedTap}
+            composerDemoPauseHighlight={composerDemoPauseHighlight}
           />
         </ErrorBoundary>
       </Hero>

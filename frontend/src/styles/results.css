@@ -236,6 +236,38 @@
   line-height: 1;
 }
 
+/* Mobile capability demo: match tutorial mobile tab attention — scale pulse on model names */
+@keyframes capability-demo-tabs-size-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.results-tabs-header.results-tabs-header--capability-demo-attention {
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-sm, 8px);
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 100%);
+  outline: 1px solid rgba(6, 182, 212, 0.35);
+  outline-offset: 2px;
+}
+
+.results-tabs-header.results-tabs-header--capability-demo-attention .results-tab-name {
+  animation: capability-demo-tabs-size-pulse 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .results-tabs-header.results-tabs-header--capability-demo-attention .results-tab-name {
+    animation: none;
+  }
+}
+
 .results-tab-content {
   width: 100%;
 }
