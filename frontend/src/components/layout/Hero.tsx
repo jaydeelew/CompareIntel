@@ -23,6 +23,8 @@ import { ProviderCarousel } from './ProviderCarousel'
  * user has toggled into carousel mode so they can adjust displayed text.
  */
 const AnonCarouselContext = createContext(false)
+// Hook shared with FormHeader; Fast Refresh prefers component-only files for exports.
+// eslint-disable-next-line react-refresh/only-export-components -- hook co-located with provider in Hero
 export function useAnonCarousel(): boolean {
   return useContext(AnonCarouselContext)
 }
@@ -52,6 +54,8 @@ interface CapabilityTileProps {
   isFlipped: boolean
   onTileClick: (id: string) => void
   onImageEnlarge?: (src: string) => void
+  /** Mobile-only demo CTA rendered on the flipped back face. */
+  demoButton?: { label: string; onClick: (e: React.MouseEvent) => void } | null
 }
 
 function CapabilityTile({
@@ -67,6 +71,7 @@ function CapabilityTile({
   isFlipped,
   onTileClick,
   onImageEnlarge,
+  demoButton,
 }: CapabilityTileProps) {
   const tileRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -249,6 +254,18 @@ function CapabilityTile({
             )}
           </div>
           <p className="capability-tile-back-text">{backText}</p>
+          {isFlipped && demoButton && (
+            <button
+              type="button"
+              className="capability-tile-demo-btn"
+              onClick={e => {
+                e.stopPropagation()
+                demoButton.onClick(e)
+              }}
+            >
+              {demoButton.label}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -261,12 +278,22 @@ interface HeroProps {
   carouselProviders?: string[]
   /** Called when a carousel provider icon is clicked */
   onCarouselProviderClick?: (provider: string) => void
+  /** Mobile-only: demo button labels per tile id. When set, flipped tiles show a CTA that fires onCapabilityDemo. */
+  capabilityDemoLabels?: Record<string, string>
+  /** Called when a mobile user taps the demo CTA on a flipped tile. */
+  onCapabilityDemo?: (tileId: string) => void
 }
 
 /**
  * Hero - Main hero section with title, capabilities, and comparison form
  */
-export function Hero({ children, carouselProviders, onCarouselProviderClick }: HeroProps) {
+export function Hero({
+  children,
+  carouselProviders,
+  onCarouselProviderClick,
+  capabilityDemoLabels,
+  onCapabilityDemo,
+}: HeroProps) {
   const [showFlash, setShowFlash] = useState(false)
   const [flippedTile, setFlippedTile] = useState<string | null>(null)
   const [enlargedImageSrc, setEnlargedImageSrc] = useState<string | null>(null)
@@ -363,6 +390,17 @@ export function Hero({ children, carouselProviders, onCarouselProviderClick }: H
   const toggleAnonCarousel = useCallback(() => {
     setAnonCarouselMode(prev => !prev)
   }, [])
+
+  const makeDemoButton = useCallback(
+    (tileId: string) => {
+      if (!onCapabilityDemo || !capabilityDemoLabels?.[tileId]) return null
+      return {
+        label: capabilityDemoLabels[tileId],
+        onClick: () => onCapabilityDemo(tileId),
+      }
+    },
+    [onCapabilityDemo, capabilityDemoLabels]
+  )
 
   return (
     <AnonCarouselContext.Provider value={anonCarouselMode}>
@@ -485,10 +523,11 @@ export function Hero({ children, carouselProviders, onCarouselProviderClick }: H
                 description="Compare conversational responses"
                 backVideo={`/videos/natural_language.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/natural_language_poster.jpg"
-                backText="Ask any question and instantly compare how each model responds — notice the differences in tone, detail, and perspective."
+                backText="Ask a question and compare how different models respond in tone, detail, and perspective."
                 isFlipped={flippedTile === 'natural-language'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}
+                demoButton={makeDemoButton('natural-language')}
               />
 
               <CapabilityTile
@@ -513,10 +552,11 @@ export function Hero({ children, carouselProviders, onCarouselProviderClick }: H
                 description="Evaluate programming capabilities"
                 backVideo={`/videos/code-generation.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/code-generation_poster.jpg"
-                backText="Submit a coding prompt and compare the generated implementations — evaluate syntax, style, and correctness side by side."
+                backText="Submit a coding prompt and compare implementations — evaluate syntax, style, and correctness."
                 isFlipped={flippedTile === 'code-generation'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}
+                demoButton={makeDemoButton('code-generation')}
               />
 
               <CapabilityTile
@@ -540,10 +580,11 @@ export function Hero({ children, carouselProviders, onCarouselProviderClick }: H
                 description="Render math equations beautifully"
                 backVideo={`/videos/formatted-math.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/formatted-math_poster.jpg"
-                backText="Request a derivation or formula and see how each model renders mathematical notation — compare clarity and step-by-step accuracy."
+                backText="Request a derivation and compare how each model renders mathematical notation step by step."
                 isFlipped={flippedTile === 'formatted-math'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}
+                demoButton={makeDemoButton('formatted-math')}
               />
 
               <CapabilityTile
@@ -569,10 +610,11 @@ export function Hero({ children, carouselProviders, onCarouselProviderClick }: H
                 description="Compare AI-generated images"
                 backVideo={`/videos/image-generation.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/image-generation_poster.jpg"
-                backText="Enter a prompt and compare images generated by multiple AI models side by side — see how each interprets your vision."
+                backText="Enter a prompt and compare AI-generated images side by side."
                 isFlipped={flippedTile === 'image-creation'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}
+                demoButton={makeDemoButton('image-creation')}
               />
             </div>
           </div>

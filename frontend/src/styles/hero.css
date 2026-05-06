@@ -827,6 +827,11 @@
   height: 1em;
 }
 
+/* Demo CTA hidden by default; shown only inside @media (max-width: 768px) */
+.capability-tile-demo-btn {
+  display: none;
+}
+
 /* Counter-scale tooltip so it doesn't inherit the flipped tile's scale(3) */
 .capability-tile.flipped .tooltip .tooltip-content {
   transform-origin: 50% 100%;
@@ -3085,6 +3090,74 @@ video.capability-tile-image-lightbox-img {
     overflow-wrap: break-word;
     word-wrap: break-word;
     text-align: center;
+  }
+
+  /* Demo CTA on flipped capability tiles (mobile only).
+     Mirrors the site's .compare-button / --gradient-button design language. */
+  .capability-tile-demo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    margin-top: 0.35rem;
+    padding: 0.5rem 1.35rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: var(--gradient-button);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+    box-shadow:
+      0 3px 14px rgba(6, 182, 212, 0.25),
+      0 0 20px rgba(6, 182, 212, 0.08);
+  }
+
+  /* Shimmer overlay on hover/focus — matches .compare-button::before */
+  .capability-tile-demo-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+
+  .capability-tile-demo-btn:active {
+    transform: scale(0.96);
+    box-shadow:
+      0 1px 6px rgba(6, 182, 212, 0.3),
+      0 0 12px rgba(6, 182, 212, 0.1);
+  }
+
+  .capability-tile-demo-btn:active::before {
+    opacity: 1;
+  }
+
+  /* Light theme: uses the blue --gradient-button; adjust glow to match */
+  [data-theme='light'] .capability-tile-demo-btn {
+    color: #fff;
+    box-shadow:
+      0 3px 14px rgba(37, 99, 235, 0.2),
+      0 0 20px rgba(37, 99, 235, 0.06);
+  }
+
+  [data-theme='light'] .capability-tile-demo-btn:active {
+    box-shadow:
+      0 1px 6px rgba(37, 99, 235, 0.25),
+      0 0 12px rgba(37, 99, 235, 0.08);
   }
 
   /* Light theme: mobile flipped tile — glass shell on .capability-tile.flipped above */

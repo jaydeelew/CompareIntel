@@ -377,10 +377,17 @@ async def compare_stream(
 
     has_image_model = any(_model_supports_image_gen(mid) for mid in req.models)
     if has_image_model and current_user is None:
-        raise HTTPException(
-            status_code=402,
-            detail="Sign up for a free account to use image generation. Registered users use daily credits; you can run as many image comparisons as your balance allows (up to 3 image models per comparison on the free tier).",
+        # Allow image models that are in the unregistered tier; block
+        # only when the request includes image models outside that tier.
+        has_restricted_image = any(
+            _model_supports_image_gen(mid) and not is_model_available_for_tier(mid, "unregistered")
+            for mid in req.models
         )
+        if has_restricted_image:
+            raise HTTPException(
+                status_code=402,
+                detail="Sign up for a free account to use image generation with these models. Registered users use daily credits; you can run as many image comparisons as your balance allows (up to 3 image models per comparison on the free tier).",
+            )
 
     if req.temperature is not None and (req.temperature < 0.0 or req.temperature > 2.0):
         raise HTTPException(status_code=400, detail="Temperature must be between 0.0 and 2.0")

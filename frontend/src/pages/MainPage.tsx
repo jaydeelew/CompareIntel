@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { flushSync } from 'react-dom'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 
 import '../styles/hero.css'
@@ -20,6 +21,7 @@ import {
   OVERAGE_USD_PER_CREDIT,
 } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
+import { CAPABILITY_DEMO_PRESETS, pickTwoDemoModels } from '../data/capabilityDemoPresets'
 import { filterGoogleModelsForTutorial } from '../data/tutorialSteps'
 import {
   useConversationHistory,
@@ -2295,6 +2297,69 @@ export function MainPage() {
     submitComparison()
   }
 
+  const handleSubmitClickRef = useRef(handleSubmitClick)
+  handleSubmitClickRef.current = handleSubmitClick
+
+  // --- Mobile capability-card demo handler ---
+  const capabilityDemoLabels = useMemo(() => {
+    if (!isMobileLayout) return undefined
+    const labels: Record<string, string> = {}
+    for (const [id, preset] of Object.entries(CAPABILITY_DEMO_PRESETS)) {
+      labels[id] = preset.buttonLabel
+    }
+    return labels
+  }, [isMobileLayout])
+
+  const handleCapabilityDemo = useCallback(
+    (tileId: string) => {
+      if (isLoading || tutorialState.isActive) return
+      const preset = CAPABILITY_DEMO_PRESETS[tileId]
+      if (!preset) return
+
+      let pair = pickTwoDemoModels(tileId, modelsByProvider, isAuthenticated, user)
+      let effectiveMode: 'text' | 'image' = preset.mode ?? 'text'
+
+      // Fall back to text models when the user's tier has no image models available
+      if (!pair && preset.mode === 'image') {
+        pair = pickTwoDemoModels(tileId, modelsByProvider, isAuthenticated, user, 'text')
+        effectiveMode = 'text'
+      }
+      if (!pair) return
+
+      flushSync(() => {
+        setInput(preset.prompt)
+        setSelectedModels(pair!)
+        setIsFollowUpMode(false)
+        setAttachedFiles([])
+        setDefaultSelectionOverridden(true)
+        setModelMode(effectiveMode)
+        if (effectiveMode === 'image') {
+          setAspectRatio('1:1')
+          setImageSize('1K')
+        }
+        setError(null)
+      })
+
+      handleSubmitClickRef.current()
+    },
+    [
+      isLoading,
+      tutorialState.isActive,
+      modelsByProvider,
+      isAuthenticated,
+      user,
+      setInput,
+      setSelectedModels,
+      setIsFollowUpMode,
+      setAttachedFiles,
+      setDefaultSelectionOverridden,
+      setModelMode,
+      setAspectRatio,
+      setImageSize,
+      setError,
+    ]
+  )
+
   const renderUsagePreview = useCallback(() => {
     const regularToUse = selectedModels.length
 
@@ -2543,6 +2608,8 @@ export function MainPage() {
           onImageGenerationSubmitBlockedTap={revealImageConfigConflict}
           carouselProviders={carouselProviders}
           onCarouselProviderClick={handleCarouselProviderClick}
+          capabilityDemoLabels={capabilityDemoLabels}
+          onCapabilityDemo={isMobileLayout ? handleCapabilityDemo : undefined}
           modelsAreaProps={{
             hasAttachedImages,
             nonVisionModelsWarning,
