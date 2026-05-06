@@ -523,7 +523,7 @@ export function Hero({
                 description="Compare conversational responses"
                 backVideo={`/videos/natural_language.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/natural_language_poster.jpg"
-                backText="Two models answer one conversational prompt. Tap Try a comparison to read an example prompt first; both replies appear side by side."
+                backText="Compare natural language responses. Tap 'Try a comparison' and when the results come in, click the tab for each model to see their responses."
                 isFlipped={flippedTile === 'natural-language'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}
@@ -552,7 +552,7 @@ export function Hero({
                 description="Evaluate programming capabilities"
                 backVideo={`/videos/code-generation.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/code-generation_poster.jpg"
-                backText="Two models tackle one coding task. Tap Try a comparison to read a sample coding prompt first, then compare their solutions."
+                backText="Compare code solutions. Tap 'Try a comparison' and when the results come in, click the tab for each model to see their code."
                 isFlipped={flippedTile === 'code-generation'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}
@@ -580,7 +580,7 @@ export function Hero({
                 description="Render math equations beautifully"
                 backVideo={`/videos/formatted-math.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/formatted-math_poster.jpg"
-                backText="Two models walk through the same proof with formatted notation. Tap Try a comparison to read a sample setup first, then compare the steps."
+                backText="Compare proofs with formatted notation. Tap 'Try a comparison' and when the results come in, click the tab for each model to see their work."
                 isFlipped={flippedTile === 'formatted-math'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}
@@ -610,7 +610,7 @@ export function Hero({
                 description="Compare AI-generated images"
                 backVideo={`/videos/image-generation.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/image-generation_poster.jpg"
-                backText="Two image models illustrate one detailed scene. Tap Try a comparison to read a sample scene description first, then compare both images."
+                backText="Compare generated images. Tap 'Try a comparison' and when the results come in, click the tab for each model to see their images."
                 isFlipped={flippedTile === 'image-creation'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}
