@@ -1992,9 +1992,7 @@ export function MainPage() {
 
   const handleNewComparison = () => {
     setIsFollowUpMode(false)
-    if (!input.trim()) {
-      setInput('')
-    }
+    setInput('')
     setDefaultSelectionOverridden(false)
     setSelectedModels([])
     collapseAllDropdowns()
