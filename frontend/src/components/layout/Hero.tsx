@@ -660,8 +660,8 @@ export function Hero({
                       </svg>
                     ) : (
                       <svg
-                        width="22"
-                        height="22"
+                        width="36"
+                        height="36"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -670,9 +670,11 @@ export function Hero({
                         strokeLinejoin="round"
                         aria-hidden
                       >
-                        <rect x="7" y="3" width="10" height="18" rx="2" />
-                        <rect x="1" y="5.5" width="4.5" height="13" rx="1.5" opacity="0.4" />
-                        <rect x="18.5" y="5.5" width="4.5" height="13" rx="1.5" opacity="0.4" />
+                        <circle cx="12" cy="12" r="5" />
+                        <circle cx="3.5" cy="12" r="2" opacity="0.35" />
+                        <circle cx="20.5" cy="12" r="2" opacity="0.35" />
+                        <circle cx="7" cy="11.5" r="3.25" opacity="0.6" />
+                        <circle cx="17" cy="11.5" r="3.25" opacity="0.6" />
                       </svg>
                     )}
                   </button>
