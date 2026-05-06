@@ -467,7 +467,8 @@
 }
 
 .hero-flash-logo-img {
-  width: min(400px, 82vw);
+  /* Wider than 480px: tablet / compact hero; mobile overrides in @media (max-width: 480px). */
+  width: min(560px, 90vw);
   height: auto;
   object-fit: contain;
   flex-shrink: 0;
@@ -491,7 +492,7 @@
   }
 
   .hero-flash-logo-img {
-    width: min(480px, 85vw);
+    width: min(680px, 92vw);
     opacity: 0.24;
   }
 
