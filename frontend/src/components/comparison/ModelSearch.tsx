@@ -6,7 +6,11 @@ import Search from 'lucide-react/dist/esm/icons/search'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import type { Model, ModelsByProvider, User } from '../../types'
-import { MODEL_SEARCH_NO_MATCH, modelSearchScore, normalizeSearchString } from '../../utils/modelSearchMatch'
+import {
+  MODEL_SEARCH_NO_MATCH,
+  modelSearchScore,
+  normalizeSearchString,
+} from '../../utils/modelSearchMatch'
 import { getUserTierInfo, isModelRestrictedForUser } from '../../utils/modelTierAccess'
 
 const MAX_SUGGESTIONS = 40
@@ -215,7 +219,7 @@ export function ModelSearch({
             aria-autocomplete="list"
             autoComplete="off"
             spellCheck={false}
-            placeholder="Search by name or provider (typo-tolerant)"
+            placeholder="Search by name or provider"
             aria-label="Search models by name or provider; fuzzy matching handles minor misspellings"
             className="model-search-input"
             disabled={disabled}
