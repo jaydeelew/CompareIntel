@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 
+import { minViewportWidthForResultsSingleRow } from '../../config/constants'
 import { useResponsive } from '../../hooks'
 import { RESULT_TAB, createModelId } from '../../types'
 import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
@@ -51,7 +52,7 @@ export interface ResultsDisplayProps {
   onDismissMobileCapabilityDemoModelTabsHighlight?: () => void
 }
 
-// Renders comparison results as a grid (desktop) or tabs (mobile)
+// Renders comparison results as a grid when all cards fit one row, otherwise model-name tabs
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   conversations,
   closedCards,
@@ -80,10 +81,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)
   )
 
-  // Responsive state from centralized hook
-  const { isMobileLayout } = useResponsive()
+  const { viewportWidth } = useResponsive()
+  const useTabbedMultiModelResults =
+    visibleConversations.length > 1 &&
+    viewportWidth < minViewportWidthForResultsSingleRow(visibleConversations.length)
 
-  // State for active tab in mobile view (index of the visible card)
+  // State for active tab when multiple models don't fit side-by-side (index of the visible card)
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
   const mobileTabsAttentionScrollRef = useRef<HTMLDivElement>(null)
 
@@ -95,12 +98,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   }, [activeTabIndex, visibleConversations.length])
 
   useLayoutEffect(() => {
-    if (!highlightMobileCapabilityDemoModelTabs || !isMobileLayout) return
+    if (!highlightMobileCapabilityDemoModelTabs || !useTabbedMultiModelResults) return
     mobileTabsAttentionScrollRef.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'nearest',
     })
-  }, [highlightMobileCapabilityDemoModelTabs, isMobileLayout])
+  }, [highlightMobileCapabilityDemoModelTabs, useTabbedMultiModelResults])
 
   if (visibleConversations.length === 0) return null
 
@@ -130,8 +133,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     }
   }
 
-  // Render tabs UI for mobile layout
-  if (isMobileLayout && visibleConversations.length > 1) {
+  if (useTabbedMultiModelResults) {
     const activeConversation = visibleConversations[activeTabIndex]
     const activeModel = allModels.find(m => m.id === activeConversation.modelId)
     const latestMessage = activeConversation.messages[activeConversation.messages.length - 1]

@@ -195,3 +195,22 @@ export const BREAKPOINTS = {
   wide: BREAKPOINT_WIDE,
   tablet: BREAKPOINT_TABLET,
 } as const
+
+/**
+ * Matches `.results-grid` in results.css:
+ * `grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem`
+ * Slack covers nested horizontal padding (`--page-gutter`, section padding), scrollbar, and rounding.
+ */
+export const RESULT_GRID_MIN_TRACK_PX = 350
+export const RESULT_GRID_GAP_PX = 24
+export const RESULT_GRID_LAYOUT_SLACK_PX = 160
+
+/** Minimum viewport width so all comparison cards can sit in one grid row (no wrapping). */
+export function minViewportWidthForResultsSingleRow(modelCount: number): number {
+  if (modelCount <= 1) return 0
+  return (
+    modelCount * RESULT_GRID_MIN_TRACK_PX +
+    (modelCount - 1) * RESULT_GRID_GAP_PX +
+    RESULT_GRID_LAYOUT_SLACK_PX
+  )
+}

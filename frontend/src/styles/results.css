@@ -148,7 +148,7 @@
   max-width: 100%;
 }
 
-/* Tabbed layout for mobile screens - hidden on desktop */
+/* Tabbed layout when ResultsDisplay adds .results-section-tabbed (not enough width for one grid row) */
 .results-tabs-container {
   display: none;
 }
