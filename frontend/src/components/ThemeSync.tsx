@@ -7,15 +7,15 @@
  *
  * Unregistered users: theme stays localStorage-only.
  *
- * Note: Initial fetch only runs when isAuthenticated/user changes (login), not when
- * setTheme identity changes. Otherwise, a toggle would trigger a re-fetch that could
- * overwrite the user's choice with stale backend data (race condition).
+ * Note: Initial fetch runs when auth or `user` changes; `lastUserIdRef` limits the
+ * actual backend fetch to login / account switch. Ignoring `setTheme` identity avoids
+ * a toggle re-fetch that could overwrite the user's choice with stale backend data.
  */
 
 import { useEffect, useRef } from 'react'
 
 import { useAuth } from '../contexts/AuthContext'
-import { useTheme } from '../contexts/ThemeContext'
+import { useTheme } from '../contexts/useTheme'
 import { getUserPreferences, updateUserPreferences } from '../services/userSettingsService'
 
 export function ThemeSync() {
@@ -52,7 +52,7 @@ export function ThemeSync() {
       .catch(() => {
         hasFetchedInitialRef.current = true
       })
-  }, [isAuthenticated, user?.id])
+  }, [isAuthenticated, user])
 
   // Sync to backend when theme changes (and we've completed initial fetch)
   useEffect(() => {

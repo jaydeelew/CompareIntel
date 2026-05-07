@@ -563,6 +563,7 @@ export function useStreamCompletion(
       getFirstUserMessage,
       scrollConversationsToBottom,
       refreshUser,
+      suppressResultsAutoScroll,
     ]
   )
 

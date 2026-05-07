@@ -11,7 +11,7 @@
 
 import { useEffect, useRef } from 'react'
 
-import { usePWAInstall } from '../../contexts/PWAInstallContext'
+import { usePWAInstall } from '../../contexts/usePWAInstall'
 
 export function InstallPrompt() {
   const {

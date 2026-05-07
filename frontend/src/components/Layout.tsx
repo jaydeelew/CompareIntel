@@ -6,7 +6,7 @@
  * Includes scroll-to-top behavior on route changes (skipped when URL has a hash).
  */
 
-import React, { useEffect, useLayoutEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 
 import { updatePageMeta } from '../utils/pageMeta'
@@ -50,10 +50,10 @@ export const Layout: React.FC = () => {
   }, [])
 
   // Reset scroll position to top on route change. Skip when URL has a hash.
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     if (hash) return
     scrollAllToTop()
-  }
+  }, [hash])
 
   // Update page title, meta tags, and scroll to top on route change.
   // Apply body scroll lock to prevent compositor-level inertial scroll momentum
@@ -117,7 +117,7 @@ export const Layout: React.FC = () => {
         document.documentElement.style.overflow = ''
       }
     }
-  }, [pathname, hash])
+  }, [pathname, hash, scrollToTop])
 
   return (
     <>

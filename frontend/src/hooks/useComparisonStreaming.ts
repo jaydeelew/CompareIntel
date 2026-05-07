@@ -129,7 +129,6 @@ export function useComparisonStreaming(
       input: inputState.input,
       isFollowUpMode: conversation.isFollowUpMode,
       isAuthenticated: auth.isAuthenticated,
-      creditWarningType: credit.creditWarningType,
       attachedFiles: inputState.attachedFiles,
       browserFingerprint: auth.browserFingerprint,
       userCancelledRef: refs.userCancelledRef,

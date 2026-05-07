@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-import { usePWAInstall } from '../../contexts/PWAInstallContext'
-import { useTheme } from '../../contexts/ThemeContext'
+import { usePWAInstall } from '../../contexts/usePWAInstall'
+import { useTheme } from '../../contexts/useTheme'
 import { useResponsive } from '../../hooks/useResponsive'
 import { UserMenu } from '../auth'
 

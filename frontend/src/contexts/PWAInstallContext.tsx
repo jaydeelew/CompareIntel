@@ -8,51 +8,20 @@
  * - Install option available via banner
  */
 
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
 import logger from '../utils/logger'
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
-}
-
-interface NavigatorStandalone extends Navigator {
-  standalone?: boolean
-}
-
-interface WindowMSStream extends Window {
-  MSStream?: unknown
-}
-
-interface WindowGtag extends Window {
-  gtag?: (...args: unknown[]) => void
-}
-
-const DISMISSED_KEY = 'pwa-install-dismissed'
-const DISMISSAL_DAYS = 7
-
-interface PWAInstallContextValue {
-  /** Whether the app can be installed (not already standalone) */
-  canInstall: boolean
-  /** Whether to show the auto-appearing banner (engagement + criteria met) */
-  showInstallBanner: boolean
-  /** Whether to show iOS manual instructions modal */
-  showIOSInstructions: boolean
-  /** Trigger the install flow (native prompt or iOS instructions) */
-  triggerInstall: () => Promise<void>
-  /** Dismiss the banner and remember preference */
-  dismissBanner: () => void
-  /** Close iOS instructions modal */
-  closeIOSInstructions: () => void
-  /** Is iOS (needs manual Add to Home Screen) */
-  isIOS: boolean
-  /** Is running as installed PWA */
-  isStandalone: boolean
-  prefersReducedMotion: boolean
-}
-
-const PWAInstallContext = createContext<PWAInstallContextValue | undefined>(undefined)
+import {
+  DISMISSED_KEY,
+  DISMISSAL_DAYS,
+  type BeforeInstallPromptEvent,
+  type NavigatorStandalone,
+  type WindowGtag,
+  type WindowMSStream,
+  PWAInstallContext,
+  type PWAInstallContextValue,
+} from './pwaInstallContext'
 
 export function PWAInstallProvider({ children }: { children: React.ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
@@ -221,25 +190,30 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
     setShowIOSInstructions(false)
   }, [])
 
-  const value: PWAInstallContextValue = {
-    canInstall,
-    showInstallBanner,
-    showIOSInstructions,
-    triggerInstall,
-    dismissBanner,
-    closeIOSInstructions,
-    isIOS,
-    isStandalone,
-    prefersReducedMotion,
-  }
+  const value = useMemo<PWAInstallContextValue>(
+    () => ({
+      canInstall,
+      showInstallBanner,
+      showIOSInstructions,
+      triggerInstall,
+      dismissBanner,
+      closeIOSInstructions,
+      isIOS,
+      isStandalone,
+      prefersReducedMotion,
+    }),
+    [
+      canInstall,
+      showInstallBanner,
+      showIOSInstructions,
+      triggerInstall,
+      dismissBanner,
+      closeIOSInstructions,
+      isIOS,
+      isStandalone,
+      prefersReducedMotion,
+    ]
+  )
 
   return <PWAInstallContext.Provider value={value}>{children}</PWAInstallContext.Provider>
-}
-
-export function usePWAInstall(): PWAInstallContextValue {
-  const context = useContext(PWAInstallContext)
-  if (context === undefined) {
-    throw new Error('usePWAInstall must be used within PWAInstallProvider')
-  }
-  return context
 }

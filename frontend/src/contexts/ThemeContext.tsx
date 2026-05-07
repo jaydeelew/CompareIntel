@@ -3,19 +3,9 @@
  * Manages light/dark theme state with localStorage persistence
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
-export const THEME_STORAGE_KEY = 'compareintel-theme'
-
-export type Theme = 'light' | 'dark'
-
-interface ThemeContextType {
-  theme: Theme
-  setTheme: (theme: Theme) => void
-  toggleTheme: () => void
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+import { THEME_STORAGE_KEY, ThemeContext, type Theme } from './themeContext'
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
@@ -54,17 +44,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme])
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+  const contextValue = useMemo(
+    () => ({ theme, setTheme, toggleTheme }),
+    [theme, setTheme, toggleTheme]
   )
-}
 
-export function useTheme() {
-  const context = useContext(ThemeContext)
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider')
-  }
-  return context
+  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>
 }

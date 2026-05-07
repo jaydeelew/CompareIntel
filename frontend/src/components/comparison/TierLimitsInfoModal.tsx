@@ -8,22 +8,9 @@ import { Link } from 'react-router-dom'
 
 import { MODEL_LIMITS } from '../../config/constants'
 
+import { TIER_LABELS } from './tierLimitsListContent'
+
 import './DisabledButtonInfoModal.css'
-
-const TIER_LABELS: Record<keyof typeof MODEL_LIMITS, string> = {
-  unregistered: 'Unregistered',
-  free: 'Free',
-  starter: 'Starter',
-  starter_plus: 'Starter+',
-  pro: 'Pro',
-  pro_plus: 'Pro+',
-}
-
-function getTierListContent(): string {
-  return Object.entries(MODEL_LIMITS)
-    .map(([tier, limit]) => `${TIER_LABELS[tier as keyof typeof TIER_LABELS]}: ${limit} models`)
-    .join('\n')
-}
 
 interface TierLimitsInfoModalProps {
   isOpen: boolean
@@ -126,5 +113,3 @@ export function TierLimitsInfoModal({ isOpen, onClose }: TierLimitsInfoModalProp
     </div>
   )
 }
-
-export { getTierListContent }

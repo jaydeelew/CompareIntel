@@ -3,7 +3,8 @@ import { useState } from 'react'
 import type { User, ModelConversation } from '../../types'
 import { StyledTooltip } from '../shared'
 
-import { TierLimitsInfoModal, getTierListContent } from './TierLimitsInfoModal'
+import { TierLimitsInfoModal } from './TierLimitsInfoModal'
+import { getTierListContent } from './tierLimitsListContent'
 
 export interface ModelsSectionHeaderProps {
   /** Currently selected model IDs */

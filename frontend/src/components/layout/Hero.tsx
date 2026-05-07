@@ -12,7 +12,7 @@ import {
 import { createPortal } from 'react-dom'
 
 import { useAuth } from '../../contexts/AuthContext'
-import { useTheme } from '../../contexts/ThemeContext'
+import { useTheme } from '../../contexts/useTheme'
 import { useHideHeroUtilityTiles } from '../../hooks/useHideHeroUtilityTiles'
 import { StyledTooltip } from '../shared'
 
@@ -265,9 +265,13 @@ function CapabilityTile({
             )}
           </div>
           <div className="capability-tile-back-text-stack">
-            <p className="capability-tile-back-text capability-tile-back-text--lead">{backTextLead}</p>
+            <p className="capability-tile-back-text capability-tile-back-text--lead">
+              {backTextLead}
+            </p>
             {backTextRest ? (
-              <p className="capability-tile-back-text capability-tile-back-text--rest">{backTextRest}</p>
+              <p className="capability-tile-back-text capability-tile-back-text--rest">
+                {backTextRest}
+              </p>
             ) : null}
           </div>
           {isFlipped && demoButton && (
