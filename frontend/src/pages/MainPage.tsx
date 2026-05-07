@@ -287,7 +287,7 @@ export function MainPage() {
   fetchModelsRef.current = refetchModels
   const [, setUserMessageTimestamp] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { isTouchDevice, isWideLayout, isMobileLayout } = useResponsive()
+  const { isTouchDevice, isWideLayout, isMobileLayout, isCapabilityIconRowLayout } = useResponsive()
   const modelsSectionRef = useRef<HTMLDivElement>(null)
   const [isAnimatingButton, setIsAnimatingButton] = useState(false)
   const [isAnimatingTextarea, setIsAnimatingTextarea] = useState(false)
@@ -454,7 +454,7 @@ export function MainPage() {
       isFollowUpMode,
       modelsSectionRef,
       tutorialIsActive: tutorialState.isActive,
-      suppressDoneSelectingCard: isMobileLayout && capabilityDemoComposerPause,
+      suppressDoneSelectingCard: isCapabilityIconRowLayout && capabilityDemoComposerPause,
     },
     {
       onCollapseAllDropdowns: collapseAllDropdowns,
@@ -2325,13 +2325,13 @@ export function MainPage() {
 
   // --- Mobile capability-card demo handler ---
   const capabilityDemoLabels = useMemo(() => {
-    if (!isMobileLayout) return undefined
+    if (!isCapabilityIconRowLayout) return undefined
     const labels: Record<string, string> = {}
     for (const [id, preset] of Object.entries(CAPABILITY_DEMO_PRESETS)) {
       labels[id] = preset.buttonLabel
     }
     return labels
-  }, [isMobileLayout])
+  }, [isCapabilityIconRowLayout])
 
   const handleCapabilityDemo = useCallback(
     (tileId: string) => {
@@ -2376,7 +2376,7 @@ export function MainPage() {
         capabilityDemoSubmitTimeoutRef.current = null
         capabilityDemoScheduledPromptRef.current = null
         setCapabilityDemoComposerPause(false)
-        if (isMobileLayout) {
+        if (isCapabilityIconRowLayout) {
           capabilityDemoWantTabsAttentionAfterThisRunRef.current = true
           capabilityDemoComparisonLoadingSeenRef.current = false
           setHighlightMobileCapabilityDemoModelTabs(false)
@@ -2401,7 +2401,7 @@ export function MainPage() {
       setAspectRatio,
       setImageSize,
       setError,
-      isMobileLayout,
+      isCapabilityIconRowLayout,
     ]
   )
 
@@ -2428,7 +2428,7 @@ export function MainPage() {
   }, [input, capabilityDemoComposerPause, clearCapabilityDemoPendingSubmit])
 
   useEffect(() => {
-    if (!isMobileLayout) {
+    if (!isCapabilityIconRowLayout) {
       capabilityDemoWantTabsAttentionAfterThisRunRef.current = false
       capabilityDemoComparisonLoadingSeenRef.current = false
       prevIsLoadingForCapabilityDemoTabsRef.current = isLoading
@@ -2461,10 +2461,10 @@ export function MainPage() {
         setHighlightMobileCapabilityDemoModelTabs(true)
       }
     }
-  }, [isMobileLayout, isLoading, response, conversations, closedCards])
+  }, [isCapabilityIconRowLayout, isLoading, response, conversations, closedCards])
 
   useEffect(() => {
-    if (!isMobileLayout || capabilityDemoTabsAttentionEpoch === 0) return
+    if (!isCapabilityIconRowLayout || capabilityDemoTabsAttentionEpoch === 0) return
     const t = window.setTimeout(() => {
       if (
         capabilityDemoWantTabsAttentionAfterThisRunRef.current &&
@@ -2474,7 +2474,7 @@ export function MainPage() {
       }
     }, 6000)
     return () => window.clearTimeout(t)
-  }, [capabilityDemoTabsAttentionEpoch, isMobileLayout])
+  }, [capabilityDemoTabsAttentionEpoch, isCapabilityIconRowLayout])
 
   const renderUsagePreview = useCallback(() => {
     const regularToUse = selectedModels.length
@@ -2725,7 +2725,7 @@ export function MainPage() {
           carouselProviders={carouselProviders}
           onCarouselProviderClick={handleCarouselProviderClick}
           capabilityDemoLabels={capabilityDemoLabels}
-          onCapabilityDemo={isMobileLayout ? handleCapabilityDemo : undefined}
+          onCapabilityDemo={isCapabilityIconRowLayout ? handleCapabilityDemo : undefined}
           composerDemoPauseHighlight={capabilityDemoComposerPause}
           modelsAreaProps={{
             hasAttachedImages,
@@ -2897,7 +2897,7 @@ export function MainPage() {
             streamingReasoningByModel: effectiveStreamingReasoningByModel,
             streamAnswerStartedByModel,
             highlightMobileCapabilityDemoModelTabs:
-              isMobileLayout && highlightMobileCapabilityDemoModelTabs,
+              isCapabilityIconRowLayout && highlightMobileCapabilityDemoModelTabs,
             onDismissMobileCapabilityDemoModelTabsHighlight:
               dismissMobileCapabilityDemoModelTabsHighlight,
           }}

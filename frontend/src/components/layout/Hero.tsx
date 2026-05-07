@@ -54,7 +54,7 @@ interface CapabilityTileProps {
   isFlipped: boolean
   onTileClick: (id: string) => void
   onImageEnlarge?: (src: string) => void
-  /** Mobile-only demo CTA rendered on the flipped back face. */
+  /** Demo CTA on the flipped back when `capabilityDemoLabels` / `onCapabilityDemo` are set (compact icon-row layout). */
   demoButton?: { label: string; onClick: (e: React.MouseEvent) => void } | null
 }
 
@@ -278,9 +278,9 @@ interface HeroProps {
   carouselProviders?: string[]
   /** Called when a carousel provider icon is clicked */
   onCarouselProviderClick?: (provider: string) => void
-  /** Mobile-only: demo button labels per tile id. When set, flipped tiles show a CTA that fires onCapabilityDemo. */
+  /** Icon-row layout: demo CTA labels per tile id. When set, flipped tiles show a CTA that fires onCapabilityDemo. */
   capabilityDemoLabels?: Record<string, string>
-  /** Called when a mobile user taps the demo CTA on a flipped tile. */
+  /** Called when the user taps the demo CTA on a flipped tile (compact icon-row layout). */
   onCapabilityDemo?: (tileId: string) => void
 }
 

@@ -13,6 +13,7 @@ import { useResponsive } from '../../hooks/useResponsive'
 vi.mock('../../config/constants', () => ({
   BREAKPOINT_SMALL: 640,
   BREAKPOINT_MOBILE: 768,
+  BREAKPOINT_CAPABILITY_ICON_ROW: 900,
   BREAKPOINT_WIDE: 1000,
 }))
 
@@ -65,6 +66,7 @@ describe('useResponsive', () => {
 
     expect(result.current.isSmallLayout).toBe(false)
     expect(result.current.isMobileLayout).toBe(false)
+    expect(result.current.isCapabilityIconRowLayout).toBe(false)
     expect(result.current.isWideLayout).toBe(true)
     expect(result.current.viewportWidth).toBe(1200)
     expect(result.current.isTouchDevice).toBe(false)
@@ -78,6 +80,7 @@ describe('useResponsive', () => {
 
     expect(result.current.isSmallLayout).toBe(true)
     expect(result.current.isMobileLayout).toBe(true)
+    expect(result.current.isCapabilityIconRowLayout).toBe(true)
     expect(result.current.isWideLayout).toBe(false)
     expect(result.current.viewportWidth).toBe(600)
   })
@@ -89,6 +92,7 @@ describe('useResponsive', () => {
 
     expect(result.current.isSmallLayout).toBe(false)
     expect(result.current.isMobileLayout).toBe(true)
+    expect(result.current.isCapabilityIconRowLayout).toBe(true)
     expect(result.current.isWideLayout).toBe(false)
   })
 
@@ -99,6 +103,7 @@ describe('useResponsive', () => {
 
     expect(result.current.isSmallLayout).toBe(false)
     expect(result.current.isMobileLayout).toBe(false)
+    expect(result.current.isCapabilityIconRowLayout).toBe(true)
     expect(result.current.isWideLayout).toBe(false)
   })
 
@@ -125,8 +130,7 @@ describe('useResponsive', () => {
 
     expect(result.current.viewportWidth).toBe(1200)
     expect(result.current.isMobileLayout).toBe(false)
-
-    // Simulate resize to mobile
+    expect(result.current.isCapabilityIconRowLayout).toBe(false)
     act(() => {
       Object.defineProperty(window, 'innerWidth', { value: 500, configurable: true })
       window.dispatchEvent(new Event('resize'))
@@ -143,6 +147,7 @@ describe('useResponsive', () => {
     const { result } = renderHook(() => useResponsive())
 
     expect(result.current.isMobileLayout).toBe(false)
+    expect(result.current.isCapabilityIconRowLayout).toBe(true)
 
     // Simulate orientation change to portrait
     act(() => {
@@ -164,6 +169,16 @@ describe('useResponsive', () => {
     const { result: result768 } = renderHook(() => useResponsive())
     expect(result768.current.isMobileLayout).toBe(true)
     expect(result768.current.isSmallLayout).toBe(false)
+
+    // Test exactly at 900px (compact capability icon row)
+    Object.defineProperty(window, 'innerWidth', { value: 900, configurable: true })
+    const { result: result900 } = renderHook(() => useResponsive())
+    expect(result900.current.isCapabilityIconRowLayout).toBe(true)
+
+    // Test at 901px (not icon row)
+    Object.defineProperty(window, 'innerWidth', { value: 901, configurable: true })
+    const { result: result901 } = renderHook(() => useResponsive())
+    expect(result901.current.isCapabilityIconRowLayout).toBe(false)
 
     // Test exactly at 1000px (should NOT be wide)
     Object.defineProperty(window, 'innerWidth', { value: 1000, configurable: true })

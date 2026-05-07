@@ -1,6 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 
-import { BREAKPOINT_SMALL, BREAKPOINT_MOBILE, BREAKPOINT_WIDE } from '../config/constants'
+import {
+  BREAKPOINT_CAPABILITY_ICON_ROW,
+  BREAKPOINT_SMALL,
+  BREAKPOINT_MOBILE,
+  BREAKPOINT_WIDE,
+} from '../config/constants'
 
 /** Primary pointing device is mouse-like (hover + precise cursor). Used for desktop-style hover tooltips on narrow viewports. */
 const FINE_POINTER_HOVER_MQ = '(hover: hover) and (pointer: fine)'
@@ -9,6 +14,8 @@ export interface ResponsiveState {
   // Breakpoints
   isSmallLayout: boolean // <= 640px
   isMobileLayout: boolean // <= 768px
+  /** Compact hero capability row (icon-only tiles + flipped text demo). Matches hero.css max-width 900px. */
+  isCapabilityIconRowLayout: boolean
   isWideLayout: boolean // > 1000px
   viewportWidth: number
   // Touch detection
@@ -65,6 +72,7 @@ export function useResponsive(): ResponsiveState {
     () => ({
       isSmallLayout: viewportWidth <= BREAKPOINT_SMALL,
       isMobileLayout: viewportWidth <= BREAKPOINT_MOBILE,
+      isCapabilityIconRowLayout: viewportWidth <= BREAKPOINT_CAPABILITY_ICON_ROW,
       isWideLayout: viewportWidth > BREAKPOINT_WIDE,
       viewportWidth,
       isTouchDevice,

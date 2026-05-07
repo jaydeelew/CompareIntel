@@ -168,6 +168,12 @@ export const BREAKPOINT_SMALL = 640
 export const BREAKPOINT_MOBILE = 768
 
 /**
+ * Hero capability tiles use compact icon-only row at this width and below.
+ * CSS: @media (max-width: 900px) in hero.css
+ */
+export const BREAKPOINT_CAPABILITY_ICON_ROW = 900
+
+/**
  * Breakpoint for wide layouts (e.g., header controls alignment)
  * CSS: @media (min-width: 1001px) / @media (max-width: 1000px)
  */
@@ -185,6 +191,7 @@ export const BREAKPOINT_TABLET = 1024
 export const BREAKPOINTS = {
   small: BREAKPOINT_SMALL,
   mobile: BREAKPOINT_MOBILE,
+  capabilityIconRow: BREAKPOINT_CAPABILITY_ICON_ROW,
   wide: BREAKPOINT_WIDE,
   tablet: BREAKPOINT_TABLET,
 } as const
