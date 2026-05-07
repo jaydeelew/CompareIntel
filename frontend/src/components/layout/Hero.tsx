@@ -38,6 +38,16 @@ const CAPABILITY_VIDEO_CACHE_BUST = 'v=2'
 /** Matches .capability-tile transform transition in hero.css (0.7s) — keep stacking elevated until it finishes. */
 const CAPABILITY_FLIP_STACK_MS = 750
 
+/** First sentence of flipped-tile copy is styled as a header; remainder stays body text. */
+function splitCapabilityBackText(text: string): { lead: string; rest: string } {
+  const trimmed = text.trim()
+  const match = trimmed.match(/^(.+?[.!?])(?:\s+([\s\S]+))?$/)
+  if (match) {
+    return { lead: match[1].trim(), rest: (match[2] ?? '').trim() }
+  }
+  return { lead: trimmed, rest: '' }
+}
+
 interface CapabilityTileProps {
   id: string
   icon: ReactNode
@@ -73,6 +83,7 @@ function CapabilityTile({
   onImageEnlarge,
   demoButton,
 }: CapabilityTileProps) {
+  const { lead: backTextLead, rest: backTextRest } = splitCapabilityBackText(backText)
   const tileRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const prevFlipped = useRef(isFlipped)
@@ -253,7 +264,12 @@ function CapabilityTile({
               )
             )}
           </div>
-          <p className="capability-tile-back-text">{backText}</p>
+          <div className="capability-tile-back-text-stack">
+            <p className="capability-tile-back-text capability-tile-back-text--lead">{backTextLead}</p>
+            {backTextRest ? (
+              <p className="capability-tile-back-text capability-tile-back-text--rest">{backTextRest}</p>
+            ) : null}
+          </div>
           {isFlipped && demoButton && (
             <button
               type="button"
@@ -580,7 +596,7 @@ export function Hero({
                 description="Render math equations beautifully"
                 backVideo={`/videos/formatted-math.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/formatted-math_poster.jpg"
-                backText="Compare proofs with formatted notation. Tap 'Try a comparison' and when the results come in, click the tab for each model to see their work."
+                backText="Compare math with formatted notation side by side. Tap 'Try a comparison' and when the results come in, click the tab for each model to see their work."
                 isFlipped={flippedTile === 'formatted-math'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}

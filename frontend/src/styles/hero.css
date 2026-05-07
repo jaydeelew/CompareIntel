@@ -914,6 +914,15 @@ video.capability-tile-back-video {
   filter: brightness(0.88) contrast(1.12);
 }
 
+.capability-tile-back-text-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  flex-shrink: 0;
+  width: 100%;
+}
+
 .capability-tile-back-text {
   font-size: 0.35rem;
   line-height: 1.3;
@@ -921,6 +930,12 @@ video.capability-tile-back-video {
   margin: 0;
   text-align: center;
   flex-shrink: 0;
+}
+
+.capability-tile-back-text--lead {
+  font-size: 0.42rem;
+  font-weight: var(--font-semibold);
+  line-height: 1.25;
 }
 
 /* Light theme: flipped tile back face */
@@ -935,6 +950,10 @@ video.capability-tile-back-video {
 
 [data-theme='light'] .capability-tile-back-text {
   color: var(--text-secondary);
+}
+
+[data-theme='light'] .capability-tile-back-text--lead {
+  color: var(--text-primary);
 }
 
 [data-theme='light'] .capability-tile-back-image-wrap {
@@ -2914,7 +2933,12 @@ video.capability-tile-image-lightbox-img {
     display: none;
   }
 
-  .hero-section .capability-tile.flipped .capability-tile-back-text {
+  .hero-section .capability-tile.flipped .capability-tile-back-text--lead {
+    font-size: 1.02rem;
+    line-height: 1.35;
+  }
+
+  .hero-section .capability-tile.flipped .capability-tile-back-text--rest {
     font-size: 0.9rem;
     line-height: 1.5;
   }
@@ -3194,7 +3218,17 @@ video.capability-tile-image-lightbox-img {
     justify-content: flex-start;
   }
 
-  .capability-tile.flipped .capability-tile-back-text {
+  .capability-tile.flipped .capability-tile-back-text--lead {
+    font-size: 1.02rem;
+    line-height: 1.35;
+    min-width: 0;
+    overflow: visible;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    text-align: center;
+  }
+
+  .capability-tile.flipped .capability-tile-back-text--rest {
     font-size: 0.9rem;
     line-height: 1.5;
     min-width: 0;
