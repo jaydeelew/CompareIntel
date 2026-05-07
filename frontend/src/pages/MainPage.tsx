@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { flushSync } from 'react-dom'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 
 import '../styles/hero.css'
@@ -20,6 +21,11 @@ import {
   OVERAGE_USD_PER_CREDIT,
 } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
+import {
+  CAPABILITY_DEMO_PRESETS,
+  CAPABILITY_DEMO_SUBMIT_DELAY_MS,
+  pickTwoDemoModels,
+} from '../data/capabilityDemoPresets'
 import { filterGoogleModelsForTutorial } from '../data/tutorialSteps'
 import {
   useConversationHistory,
@@ -285,9 +291,18 @@ export function MainPage() {
   const modelsSectionRef = useRef<HTMLDivElement>(null)
   const [isAnimatingButton, setIsAnimatingButton] = useState(false)
   const [isAnimatingTextarea, setIsAnimatingTextarea] = useState(false)
+  const [capabilityDemoComposerPause, setCapabilityDemoComposerPause] = useState(false)
+  const capabilityDemoSubmitTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
+  const capabilityDemoScheduledPromptRef = useRef<string | null>(null)
+  const capabilityDemoWantTabsAttentionAfterThisRunRef = useRef(false)
+  const capabilityDemoComparisonLoadingSeenRef = useRef(false)
+  const prevIsLoadingForCapabilityDemoTabsRef = useRef(isLoading)
   const animationTimeoutRef = useRef<number | null>(null)
   const [isModelsHidden, setIsModelsHidden] = useState(false)
   const [hidePremiumModels, setHidePremiumModels] = useState(false)
+  const [highlightMobileCapabilityDemoModelTabs, setHighlightMobileCapabilityDemoModelTabs] =
+    useState(false)
+  const [capabilityDemoTabsAttentionEpoch, setCapabilityDemoTabsAttentionEpoch] = useState(0)
   const [showPremiumModelsToggleModal, setShowPremiumModelsToggleModal] = useState(false)
   const [showCreditsInfoModal, setShowCreditsInfoModal] = useState(false)
   const [disabledButtonInfo, setDisabledButtonInfo] = useState<{
@@ -439,6 +454,7 @@ export function MainPage() {
       isFollowUpMode,
       modelsSectionRef,
       tutorialIsActive: tutorialState.isActive,
+      suppressDoneSelectingCard: isMobileLayout && capabilityDemoComposerPause,
     },
     {
       onCollapseAllDropdowns: collapseAllDropdowns,
@@ -1976,9 +1992,7 @@ export function MainPage() {
 
   const handleNewComparison = () => {
     setIsFollowUpMode(false)
-    if (!input.trim()) {
-      setInput('')
-    }
+    setInput('')
     setDefaultSelectionOverridden(false)
     setSelectedModels([])
     collapseAllDropdowns()
@@ -2210,7 +2224,18 @@ export function MainPage() {
 
   const { submitComparison } = useComparisonStreaming(streamingConfig, streamingCallbacks)
 
+  const clearCapabilityDemoPendingSubmit = useCallback(() => {
+    if (capabilityDemoSubmitTimeoutRef.current !== null) {
+      window.clearTimeout(capabilityDemoSubmitTimeoutRef.current)
+      capabilityDemoSubmitTimeoutRef.current = null
+    }
+    capabilityDemoScheduledPromptRef.current = null
+    setCapabilityDemoComposerPause(false)
+  }, [])
+
   const handleSubmitClick = () => {
+    clearCapabilityDemoPendingSubmit()
+
     if (error && error.includes('Your input is too long for one or more of the selected models')) {
       setError(null)
     }
@@ -2294,6 +2319,162 @@ export function MainPage() {
 
     submitComparison()
   }
+
+  const handleSubmitClickRef = useRef(handleSubmitClick)
+  handleSubmitClickRef.current = handleSubmitClick
+
+  // --- Mobile capability-card demo handler ---
+  const capabilityDemoLabels = useMemo(() => {
+    if (!isMobileLayout) return undefined
+    const labels: Record<string, string> = {}
+    for (const [id, preset] of Object.entries(CAPABILITY_DEMO_PRESETS)) {
+      labels[id] = preset.buttonLabel
+    }
+    return labels
+  }, [isMobileLayout])
+
+  const handleCapabilityDemo = useCallback(
+    (tileId: string) => {
+      if (isLoading || tutorialState.isActive) return
+      const preset = CAPABILITY_DEMO_PRESETS[tileId]
+      if (!preset) return
+
+      let pair = pickTwoDemoModels(tileId, modelsByProvider, isAuthenticated, user)
+      let effectiveMode: 'text' | 'image' = preset.mode ?? 'text'
+
+      // Fall back to text models when the user's tier has no image models available
+      if (!pair && preset.mode === 'image') {
+        pair = pickTwoDemoModels(tileId, modelsByProvider, isAuthenticated, user, 'text')
+        effectiveMode = 'text'
+      }
+      if (!pair) return
+
+      clearCapabilityDemoPendingSubmit()
+
+      flushSync(() => {
+        setInput(preset.prompt)
+        setSelectedModels(pair!)
+        setIsFollowUpMode(false)
+        setAttachedFiles([])
+        setDefaultSelectionOverridden(true)
+        setModelMode(effectiveMode)
+        if (effectiveMode === 'image') {
+          setAspectRatio('1:1')
+          setImageSize('1K')
+        }
+        setError(null)
+      })
+
+      capabilityDemoScheduledPromptRef.current = preset.prompt
+      setCapabilityDemoComposerPause(true)
+
+      requestAnimationFrame(() => {
+        textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+
+      capabilityDemoSubmitTimeoutRef.current = window.setTimeout(() => {
+        capabilityDemoSubmitTimeoutRef.current = null
+        capabilityDemoScheduledPromptRef.current = null
+        setCapabilityDemoComposerPause(false)
+        if (isMobileLayout) {
+          capabilityDemoWantTabsAttentionAfterThisRunRef.current = true
+          capabilityDemoComparisonLoadingSeenRef.current = false
+          setHighlightMobileCapabilityDemoModelTabs(false)
+          setCapabilityDemoTabsAttentionEpoch(e => e + 1)
+        }
+        handleSubmitClickRef.current()
+      }, CAPABILITY_DEMO_SUBMIT_DELAY_MS)
+    },
+    [
+      isLoading,
+      tutorialState.isActive,
+      modelsByProvider,
+      isAuthenticated,
+      user,
+      clearCapabilityDemoPendingSubmit,
+      setInput,
+      setSelectedModels,
+      setIsFollowUpMode,
+      setAttachedFiles,
+      setDefaultSelectionOverridden,
+      setModelMode,
+      setAspectRatio,
+      setImageSize,
+      setError,
+      isMobileLayout,
+    ]
+  )
+
+  const dismissMobileCapabilityDemoModelTabsHighlight = useCallback(() => {
+    setHighlightMobileCapabilityDemoModelTabs(false)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (capabilityDemoSubmitTimeoutRef.current !== null) {
+        window.clearTimeout(capabilityDemoSubmitTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!capabilityDemoComposerPause) return
+    const scheduled = capabilityDemoScheduledPromptRef.current
+    if (scheduled !== null && input !== scheduled) {
+      clearCapabilityDemoPendingSubmit()
+      capabilityDemoWantTabsAttentionAfterThisRunRef.current = false
+      capabilityDemoComparisonLoadingSeenRef.current = false
+    }
+  }, [input, capabilityDemoComposerPause, clearCapabilityDemoPendingSubmit])
+
+  useEffect(() => {
+    if (!isMobileLayout) {
+      capabilityDemoWantTabsAttentionAfterThisRunRef.current = false
+      capabilityDemoComparisonLoadingSeenRef.current = false
+      prevIsLoadingForCapabilityDemoTabsRef.current = isLoading
+      setHighlightMobileCapabilityDemoModelTabs(false)
+      return
+    }
+
+    const prev = prevIsLoadingForCapabilityDemoTabsRef.current
+    prevIsLoadingForCapabilityDemoTabsRef.current = isLoading
+
+    if (capabilityDemoWantTabsAttentionAfterThisRunRef.current && !prev && isLoading) {
+      capabilityDemoComparisonLoadingSeenRef.current = true
+    }
+
+    if (
+      capabilityDemoWantTabsAttentionAfterThisRunRef.current &&
+      capabilityDemoComparisonLoadingSeenRef.current &&
+      prev &&
+      !isLoading
+    ) {
+      capabilityDemoWantTabsAttentionAfterThisRunRef.current = false
+      capabilityDemoComparisonLoadingSeenRef.current = false
+
+      const showResults = !!(response || conversations.length > 0)
+      const visibleCount = conversations.filter(
+        c => Boolean(c?.modelId) && !closedCards.has(c.modelId)
+      ).length
+
+      if (showResults && visibleCount >= 2) {
+        setHighlightMobileCapabilityDemoModelTabs(true)
+      }
+    }
+  }, [isMobileLayout, isLoading, response, conversations, closedCards])
+
+  useEffect(() => {
+    if (!isMobileLayout || capabilityDemoTabsAttentionEpoch === 0) return
+    const t = window.setTimeout(() => {
+      if (
+        capabilityDemoWantTabsAttentionAfterThisRunRef.current &&
+        !capabilityDemoComparisonLoadingSeenRef.current
+      ) {
+        capabilityDemoWantTabsAttentionAfterThisRunRef.current = false
+      }
+    }, 6000)
+    return () => window.clearTimeout(t)
+  }, [capabilityDemoTabsAttentionEpoch, isMobileLayout])
 
   const renderUsagePreview = useCallback(() => {
     const regularToUse = selectedModels.length
@@ -2543,6 +2724,9 @@ export function MainPage() {
           onImageGenerationSubmitBlockedTap={revealImageConfigConflict}
           carouselProviders={carouselProviders}
           onCarouselProviderClick={handleCarouselProviderClick}
+          capabilityDemoLabels={capabilityDemoLabels}
+          onCapabilityDemo={isMobileLayout ? handleCapabilityDemo : undefined}
+          composerDemoPauseHighlight={capabilityDemoComposerPause}
           modelsAreaProps={{
             hasAttachedImages,
             nonVisionModelsWarning,
@@ -2712,6 +2896,10 @@ export function MainPage() {
             onCopyMessage: handleCopyMessage,
             streamingReasoningByModel: effectiveStreamingReasoningByModel,
             streamAnswerStartedByModel,
+            highlightMobileCapabilityDemoModelTabs:
+              isMobileLayout && highlightMobileCapabilityDemoModelTabs,
+            onDismissMobileCapabilityDemoModelTabsHighlight:
+              dismissMobileCapabilityDemoModelTabsHighlight,
           }}
         />
 

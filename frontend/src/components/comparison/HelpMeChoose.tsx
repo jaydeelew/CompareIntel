@@ -74,6 +74,25 @@ function ModelsListScrollTopIcon() {
   )
 }
 
+/** Decorative hint at the bottom when the model list has more rows below the fold */
+function ModelsListScrollDownIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  )
+}
+
 /** Decorative accent for the toggle — unique gradient id per mount */
 function HelpMeChooseToggleIcon() {
   const uid = useId().replace(/:/g, '')
@@ -207,6 +226,7 @@ function EvidenceInfoModal({
 export const HELP_ME_CHOOSE_PRESET_COUNT = 3
 
 const HMC_LIST_SCROLL_TOP_PX = 2
+const HMC_LIST_SCROLL_END_PX = 4
 
 export interface HelpMeChooseProps {
   /** Toggle model selection (same as main model selection - applies immediately) */
@@ -397,6 +417,14 @@ export function HelpMeChoose({
   const [isCategoriesDragging, setIsCategoriesDragging] = useState(false)
   /** When true for a category id, the model list is scrolled down — show “back to top” affordance */
   const [hmcListNotAtTop, setHmcListNotAtTop] = useState<Record<string, boolean>>({})
+  /**
+   * Down-chevron hint: fixed at bottom of the list viewport (sibling of scroll area).
+   * Shown only when the list is at its default (top) position and has vertical overflow;
+   * hidden as soon as the user scrolls down, and shown again only after scrolling back to top.
+   */
+  const [hmcListShowDownScrollHint, setHmcListShowDownScrollHint] = useState<
+    Record<string, boolean>
+  >({})
 
   const syncHmcListScrollFromDom = useCallback(() => {
     if (!isExpanded) return
@@ -417,15 +445,40 @@ export function HelpMeChoose({
       }
       return next
     })
+    setHmcListShowDownScrollHint(prev => {
+      const next: Record<string, boolean> = {}
+      wraps.forEach(el => {
+        const id = el.getAttribute('data-hmc-models-scroll')
+        if (!id) return
+        const { scrollTop, scrollHeight, clientHeight } = el
+        const atTop = scrollTop <= HMC_LIST_SCROLL_TOP_PX
+        const hasOverflow = scrollHeight > clientHeight + HMC_LIST_SCROLL_END_PX
+        next[id] = atTop && hasOverflow
+      })
+      if (
+        Object.keys(next).length === Object.keys(prev).length &&
+        Object.keys(next).every(k => next[k] === prev[k])
+      ) {
+        return prev
+      }
+      return next
+    })
   }, [isExpanded])
 
   const handleHmcModelsListScroll = useCallback(
     (categoryId: string) => (e: React.UIEvent<HTMLDivElement>) => {
       const t = e.currentTarget
       const notAtTop = t.scrollTop > HMC_LIST_SCROLL_TOP_PX
+      const atTop = t.scrollTop <= HMC_LIST_SCROLL_TOP_PX
+      const hasOverflow = t.scrollHeight > t.clientHeight + HMC_LIST_SCROLL_END_PX
+      const showDownHint = atTop && hasOverflow
       setHmcListNotAtTop(prev => {
         if (prev[categoryId] === notAtTop) return prev
         return { ...prev, [categoryId]: notAtTop }
+      })
+      setHmcListShowDownScrollHint(prev => {
+        if (prev[categoryId] === showDownHint) return prev
+        return { ...prev, [categoryId]: showDownHint }
       })
     },
     []
@@ -473,6 +526,7 @@ export function HelpMeChoose({
   useLayoutEffect(() => {
     if (!isExpanded) {
       setHmcListNotAtTop({})
+      setHmcListShowDownScrollHint({})
       return
     }
     let raf2 = 0
@@ -495,6 +549,18 @@ export function HelpMeChoose({
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [isExpanded, syncHmcListScrollFromDom])
+
+  useEffect(() => {
+    if (!isExpanded) return
+    const root = contentRef.current
+    if (!root) return
+    const wraps = root.querySelectorAll<HTMLElement>('[data-hmc-models-scroll]')
+    const ro = new ResizeObserver(() => {
+      syncHmcListScrollFromDom()
+    })
+    wraps.forEach(el => ro.observe(el))
+    return () => ro.disconnect()
+  }, [isExpanded, displayedCategories, syncHmcListScrollFromDom])
 
   useEffect(() => {
     const el = categoriesRef.current
@@ -1003,138 +1069,95 @@ export function HelpMeChoose({
                         </div>
                         <p className="help-me-choose-category-desc">{cat.description}</p>
                         <div
-                          className="help-me-choose-models-scroll-wrap"
-                          data-hmc-models-scroll={cat.id}
-                          onScroll={handleHmcModelsListScroll(cat.id)}
+                          className={`help-me-choose-models-scroll-outer${hmcListShowDownScrollHint[cat.id] ? ' help-me-choose-models-scroll-outer--down-hint' : ''}`}
                         >
-                          {hmcListNotAtTop[cat.id] && (
-                            <div className="help-me-choose-models-top-hint">
-                              <button
-                                type="button"
-                                className="help-me-choose-models-top-hint-btn"
-                                onClick={e => {
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                  const wrap = (e.currentTarget as HTMLButtonElement).closest(
-                                    '.help-me-choose-models-scroll-wrap'
-                                  ) as HTMLElement | null
-                                  wrap?.scrollTo({ top: 0, behavior: 'smooth' })
-                                }}
-                                aria-label="Scroll to top of the model list in this category"
-                              >
-                                <ModelsListScrollTopIcon />
-                              </button>
-                            </div>
-                          )}
-                          <ul className="help-me-choose-models-list" role="none">
-                            {cat.models.map((entry, idx) => {
-                              const modelRestricted =
-                                modelRestrictedByModelId.get(entry.modelId) ?? false
-                              const isSelected = selectedModels.includes(entry.modelId)
-                              const displayName = getModelDisplayName(entry.modelId)
-                              const model = findModelById(lookupModels, entry.modelId)
-                              const supportsWebSearch = model?.supports_web_search ?? false
-                              const isFirstSelectedInDom = isSelected && !foundFirstSelected
-                              if (isSelected) foundFirstSelected = true
-                              return (
-                                <li
-                                  key={`${cat.id}-${entry.modelId}-${idx}`}
-                                  role="none"
-                                  ref={isFirstSelectedInDom ? firstSelectedRef : undefined}
+                          <div
+                            className="help-me-choose-models-scroll-wrap"
+                            data-hmc-models-scroll={cat.id}
+                            onScroll={handleHmcModelsListScroll(cat.id)}
+                          >
+                            {hmcListNotAtTop[cat.id] && (
+                              <div className="help-me-choose-models-top-hint">
+                                <button
+                                  type="button"
+                                  className="help-me-choose-models-top-hint-btn"
+                                  onClick={e => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    const wrap = (e.currentTarget as HTMLButtonElement).closest(
+                                      '.help-me-choose-models-scroll-wrap'
+                                    ) as HTMLElement | null
+                                    wrap?.scrollTo({ top: 0, behavior: 'smooth' })
+                                  }}
+                                  aria-label="Scroll to top of the model list in this category"
                                 >
-                                  <label
-                                    className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
-                                    onMouseDown={e => e.preventDefault()}
+                                  <ModelsListScrollTopIcon />
+                                </button>
+                              </div>
+                            )}
+                            <ul className="help-me-choose-models-list" role="none">
+                              {cat.models.map((entry, idx) => {
+                                const modelRestricted =
+                                  modelRestrictedByModelId.get(entry.modelId) ?? false
+                                const isSelected = selectedModels.includes(entry.modelId)
+                                const displayName = getModelDisplayName(entry.modelId)
+                                const model = findModelById(lookupModels, entry.modelId)
+                                const supportsWebSearch = model?.supports_web_search ?? false
+                                const isFirstSelectedInDom = isSelected && !foundFirstSelected
+                                if (isSelected) foundFirstSelected = true
+                                return (
+                                  <li
+                                    key={`${cat.id}-${entry.modelId}-${idx}`}
+                                    role="none"
+                                    ref={isFirstSelectedInDom ? firstSelectedRef : undefined}
                                   >
-                                    <input
-                                      type="checkbox"
-                                      className="help-me-choose-checkbox"
-                                      disabled={modelRestricted}
-                                      checked={isSelected}
-                                      onChange={() => handleModelToggle(entry.modelId)}
+                                    <label
+                                      className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
                                       onMouseDown={e => e.preventDefault()}
-                                      aria-label={`Select ${displayName}`}
-                                      aria-disabled={modelRestricted}
-                                    />
-                                    <span className="help-me-choose-model-name">{displayName}</span>
-                                    <span className="help-me-choose-model-meta-icons">
-                                      {modelRestricted && (
-                                        <span className="help-me-choose-model-lock" aria-hidden>
-                                          <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                          >
-                                            <rect
-                                              x="5"
-                                              y="11"
-                                              width="14"
-                                              height="10"
-                                              rx="2"
-                                              ry="2"
-                                            />
-                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                          </svg>
-                                        </span>
-                                      )}
-                                      {supportsWebSearch &&
-                                        (isMobileLayout ? (
-                                          <button
-                                            type="button"
-                                            className="web-search-indicator indicator-tappable"
-                                            style={{
-                                              display: 'inline-flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              width: '14px',
-                                              height: '14px',
-                                              opacity: isSelected ? 1 : 0.6,
-                                              flexShrink: 0,
-                                              background: 'none',
-                                              border: 'none',
-                                              padding: 0,
-                                              cursor: 'pointer',
-                                            }}
-                                            onClick={e => {
-                                              e.preventDefault()
-                                              e.stopPropagation()
-                                              setShowWebSearchInfoModal(true)
-                                            }}
-                                            aria-label="Internet access"
-                                          >
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        className="help-me-choose-checkbox"
+                                        disabled={modelRestricted}
+                                        checked={isSelected}
+                                        onChange={() => handleModelToggle(entry.modelId)}
+                                        onMouseDown={e => e.preventDefault()}
+                                        aria-label={`Select ${displayName}`}
+                                        aria-disabled={modelRestricted}
+                                      />
+                                      <span className="help-me-choose-model-name">
+                                        {displayName}
+                                      </span>
+                                      <span className="help-me-choose-model-meta-icons">
+                                        {modelRestricted && (
+                                          <span className="help-me-choose-model-lock" aria-hidden>
                                             <svg
-                                              width="14"
-                                              height="14"
+                                              width="12"
+                                              height="12"
                                               viewBox="0 0 24 24"
                                               fill="none"
                                               stroke="currentColor"
                                               strokeWidth="2"
                                               strokeLinecap="round"
                                               strokeLinejoin="round"
-                                              style={{
-                                                color: isSelected
-                                                  ? 'var(--primary-color, #007bff)'
-                                                  : 'var(--text-secondary, #666)',
-                                                display: 'block',
-                                              }}
-                                              aria-hidden
                                             >
-                                              <circle cx="12" cy="12" r="10" />
-                                              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                              <rect
+                                                x="5"
+                                                y="11"
+                                                width="14"
+                                                height="10"
+                                                rx="2"
+                                                ry="2"
+                                              />
+                                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                             </svg>
-                                          </button>
-                                        ) : (
-                                          <StyledTooltip
-                                            usePortal
-                                            text="This model can access the Internet"
-                                          >
-                                            <span
-                                              className="web-search-indicator"
+                                          </span>
+                                        )}
+                                        {supportsWebSearch &&
+                                          (isMobileLayout ? (
+                                            <button
+                                              type="button"
+                                              className="web-search-indicator indicator-tappable"
                                               style={{
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
@@ -1143,8 +1166,17 @@ export function HelpMeChoose({
                                                 height: '14px',
                                                 opacity: isSelected ? 1 : 0.6,
                                                 flexShrink: 0,
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: 0,
+                                                cursor: 'pointer',
                                               }}
-                                              aria-hidden
+                                              onClick={e => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                setShowWebSearchInfoModal(true)
+                                              }}
+                                              aria-label="Internet access"
                                             >
                                               <svg
                                                 width="14"
@@ -1161,71 +1193,116 @@ export function HelpMeChoose({
                                                     : 'var(--text-secondary, #666)',
                                                   display: 'block',
                                                 }}
+                                                aria-hidden
                                               >
                                                 <circle cx="12" cy="12" r="10" />
                                                 <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                                               </svg>
+                                            </button>
+                                          ) : (
+                                            <StyledTooltip
+                                              usePortal
+                                              text="This model can access the Internet"
+                                            >
+                                              <span
+                                                className="web-search-indicator"
+                                                style={{
+                                                  display: 'inline-flex',
+                                                  alignItems: 'center',
+                                                  justifyContent: 'center',
+                                                  width: '14px',
+                                                  height: '14px',
+                                                  opacity: isSelected ? 1 : 0.6,
+                                                  flexShrink: 0,
+                                                }}
+                                                aria-hidden
+                                              >
+                                                <svg
+                                                  width="14"
+                                                  height="14"
+                                                  viewBox="0 0 24 24"
+                                                  fill="none"
+                                                  stroke="currentColor"
+                                                  strokeWidth="2"
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  style={{
+                                                    color: isSelected
+                                                      ? 'var(--primary-color, #007bff)'
+                                                      : 'var(--text-secondary, #666)',
+                                                    display: 'block',
+                                                  }}
+                                                >
+                                                  <circle cx="12" cy="12" r="10" />
+                                                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                                </svg>
+                                              </span>
+                                            </StyledTooltip>
+                                          ))}
+                                        <button
+                                          type="button"
+                                          className="help-me-choose-model-evidence-btn help-me-choose-model-evidence-trigger"
+                                          onClick={e => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            setEvidenceModal({
+                                              modelName: displayName,
+                                              evidence: modelRestricted
+                                                ? disabledTooltip
+                                                : entry.evidence,
+                                            })
+                                          }}
+                                          onMouseEnter={
+                                            !isMobileLayout
+                                              ? e => {
+                                                  const rect = (
+                                                    e.currentTarget as HTMLButtonElement
+                                                  ).getBoundingClientRect()
+                                                  setModelEvidenceTooltip({
+                                                    content: modelRestricted
+                                                      ? disabledTooltip
+                                                      : entry.evidence,
+                                                    centerX: rect.left + rect.width / 2,
+                                                    bottomY: window.innerHeight - rect.top + 10,
+                                                  })
+                                                }
+                                              : undefined
+                                          }
+                                          onMouseLeave={
+                                            !isMobileLayout
+                                              ? () => setModelEvidenceTooltip(null)
+                                              : undefined
+                                          }
+                                          aria-label={`Benchmark evidence for ${displayName}`}
+                                          aria-describedby={
+                                            isMobileLayout
+                                              ? undefined
+                                              : `hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`
+                                          }
+                                        >
+                                          {!isMobileLayout && (
+                                            <span
+                                              id={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
+                                              className="sr-only"
+                                              role="tooltip"
+                                            >
+                                              {modelRestricted ? disabledTooltip : entry.evidence}
                                             </span>
-                                          </StyledTooltip>
-                                        ))}
-                                      <button
-                                        type="button"
-                                        className="help-me-choose-model-evidence-btn help-me-choose-model-evidence-trigger"
-                                        onClick={e => {
-                                          e.preventDefault()
-                                          e.stopPropagation()
-                                          setEvidenceModal({
-                                            modelName: displayName,
-                                            evidence: modelRestricted
-                                              ? disabledTooltip
-                                              : entry.evidence,
-                                          })
-                                        }}
-                                        onMouseEnter={
-                                          !isMobileLayout
-                                            ? e => {
-                                                const rect = (
-                                                  e.currentTarget as HTMLButtonElement
-                                                ).getBoundingClientRect()
-                                                setModelEvidenceTooltip({
-                                                  content: modelRestricted
-                                                    ? disabledTooltip
-                                                    : entry.evidence,
-                                                  centerX: rect.left + rect.width / 2,
-                                                  bottomY: window.innerHeight - rect.top + 10,
-                                                })
-                                              }
-                                            : undefined
-                                        }
-                                        onMouseLeave={
-                                          !isMobileLayout
-                                            ? () => setModelEvidenceTooltip(null)
-                                            : undefined
-                                        }
-                                        aria-label={`Benchmark evidence for ${displayName}`}
-                                        aria-describedby={
-                                          isMobileLayout
-                                            ? undefined
-                                            : `hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`
-                                        }
-                                      >
-                                        {!isMobileLayout && (
-                                          <span
-                                            id={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
-                                            className="sr-only"
-                                            role="tooltip"
-                                          >
-                                            {modelRestricted ? disabledTooltip : entry.evidence}
-                                          </span>
-                                        )}
-                                        <InfoIcon />
-                                      </button>
-                                    </span>
-                                  </label>
-                                </li>
-                              )
-                            })}
-                          </ul>
+                                          )}
+                                          <InfoIcon />
+                                        </button>
+                                      </span>
+                                    </label>
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                          </div>
+                          {hmcListShowDownScrollHint[cat.id] && (
+                            <div className="help-me-choose-models-bottom-hint" aria-hidden>
+                              <ModelsListScrollDownIcon />
+                            </div>
+                          )}
                         </div>
                       </div>
                     )

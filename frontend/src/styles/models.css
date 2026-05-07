@@ -1199,9 +1199,12 @@
   padding: 1.25rem;
   overflow-x: hidden;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   word-wrap: break-word;
   overflow-wrap: break-word;
   max-height: 600px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -3355,22 +3358,57 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   overflow: visible;
 }
 
+/* Outer shell: down-hint overlays the viewport; inner div is the only scrolling layer */
+.help-me-choose-models-scroll-outer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(17rem, 45vh);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow: hidden;
+}
+
+.help-me-choose-models-scroll-outer--down-hint .help-me-choose-models-list {
+  padding-bottom: 0.9rem;
+}
+
 /* Per-category list scroll; no visible scrollbar (chevron at top when scrolled down) */
 .help-me-choose-models-scroll-wrap {
   position: relative;
   width: 100%;
+  flex: 1 1 auto;
   min-height: 0;
-  max-height: min(17rem, 45vh);
   overflow-x: hidden;
   overflow-y: auto;
-  flex: 1 1 auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 .help-me-choose-models-scroll-wrap::-webkit-scrollbar {
   display: none;
+}
+
+/* Bottom fade + down chevron: sibling of scroll area, pinned to outer (does not scroll with list) */
+.help-me-choose-models-bottom-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 0.15rem;
+  pointer-events: none;
+  color: color-mix(in srgb, var(--primary-color) 55%, var(--text-secondary));
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--bg-elevated) 92%, var(--primary-color) 5%) 28%,
+    transparent 100%
+  );
 }
 
 /* Sticky: only the round button (no full-width background bar) */

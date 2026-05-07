@@ -89,6 +89,8 @@ interface ComparisonFormProps {
   imageGenerationNoSharedImageOptions?: boolean
   /** Fired when user clicks submit while only blocked by image config (opens conflict UI) */
   onImageGenerationSubmitBlockedTap?: () => void
+  /** Mobile capability demo: pulse composer while prefilled prompt is visible before auto-submit */
+  composerDemoPauseHighlight?: boolean
 }
 
 export const ComparisonForm = memo<ComparisonFormProps>(
@@ -125,6 +127,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     imageGenerationSubmitBlocked = false,
     imageGenerationNoSharedImageOptions = false,
     onImageGenerationSubmitBlockedTap,
+    composerDemoPauseHighlight = false,
   }) => {
     const blockPromptStepForTutorial =
       tutorialIsActive && (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
@@ -581,7 +584,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const buildComposerContent = (mirror: boolean) => (
       <div
-        className={`composer ${isAnimatingTextarea && !mirror ? 'animate-pulse-border' : ''} ${composerFloating && !mirror ? 'composer-floating' : ''}`}
+        className={`composer ${isAnimatingTextarea && !mirror ? 'animate-pulse-border' : ''} ${composerDemoPauseHighlight && !mirror ? 'composer-demo-pause-highlight' : ''} ${composerFloating && !mirror ? 'composer-floating' : ''}`}
       >
         {hasAttachedImages && !hasVisionModel && (
           <div className="image-attachment-banner" role="alert" aria-live="polite">

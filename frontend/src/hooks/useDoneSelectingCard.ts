@@ -7,6 +7,8 @@ interface UseDoneSelectingCardProps {
   isFollowUpMode: boolean
   modelsSectionRef: RefObject<HTMLDivElement>
   tutorialIsActive: boolean
+  /** When true (e.g. mobile capability demo read pause), hide card and block auto-show. */
+  suppressDoneSelectingCard?: boolean
 }
 
 interface UseDoneSelectingCardCallbacks {
@@ -42,6 +44,7 @@ export function useDoneSelectingCard(
     isFollowUpMode,
     modelsSectionRef,
     tutorialIsActive,
+    suppressDoneSelectingCard = false,
   } = props
 
   const { onCollapseAllDropdowns, onSetIsModelsHidden, onFocusTextarea } = callbacks
@@ -69,7 +72,11 @@ export function useDoneSelectingCard(
 
       // Base conditions for showing card
       const baseConditionsMet =
-        selectedModelsCount > 0 && !isModelsHidden && !isFollowUpMode && !isDismissed
+        selectedModelsCount > 0 &&
+        !isModelsHidden &&
+        !isFollowUpMode &&
+        !isDismissed &&
+        !suppressDoneSelectingCard
 
       // Check if any result cards have their top visible in the viewport
       const resultCards = document.querySelectorAll('.result-card.conversation-card')
@@ -269,7 +276,20 @@ export function useDoneSelectingCard(
         window.clearTimeout(keepVisibleTimeout)
       }
     }
-  }, [selectedModelsCount, isModelsHidden, isFollowUpMode, modelsSectionRef, isDismissed])
+  }, [
+    selectedModelsCount,
+    isModelsHidden,
+    isFollowUpMode,
+    modelsSectionRef,
+    isDismissed,
+    suppressDoneSelectingCard,
+  ])
+
+  useEffect(() => {
+    if (suppressDoneSelectingCard) {
+      setShowDoneSelectingCard(false)
+    }
+  }, [suppressDoneSelectingCard])
 
   // Re-enable card visibility when model selection changes after dismissal
   useEffect(() => {
@@ -324,7 +344,7 @@ export function useDoneSelectingCard(
   }, [])
 
   return {
-    showDoneSelectingCard: showDoneSelectingCard && !tutorialIsActive,
+    showDoneSelectingCard: showDoneSelectingCard && !tutorialIsActive && !suppressDoneSelectingCard,
     setShowDoneSelectingCard,
     handleDoneSelecting,
     handleDismissDoneSelecting,

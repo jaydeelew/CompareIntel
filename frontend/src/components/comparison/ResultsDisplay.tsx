@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 
 import { useResponsive } from '../../hooks'
 import { RESULT_TAB, createModelId } from '../../types'
@@ -47,6 +47,8 @@ export interface ResultsDisplayProps {
   isTutorialActive?: boolean
   streamingReasoningByModel?: Record<string, string>
   streamAnswerStartedByModel?: Record<string, boolean>
+  highlightMobileCapabilityDemoModelTabs?: boolean
+  onDismissMobileCapabilityDemoModelTabsHighlight?: () => void
 }
 
 // Renders comparison results as a grid (desktop) or tabs (mobile)
@@ -71,6 +73,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   isTutorialActive = false,
   streamingReasoningByModel = {},
   streamAnswerStartedByModel = {},
+  highlightMobileCapabilityDemoModelTabs = false,
+  onDismissMobileCapabilityDemoModelTabsHighlight,
 }) => {
   const visibleConversations = conversations.filter(
     conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)
@@ -81,6 +85,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
   // State for active tab in mobile view (index of the visible card)
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
+  const mobileTabsAttentionScrollRef = useRef<HTMLDivElement>(null)
 
   // Reset active tab index if it's out of bounds
   useEffect(() => {
@@ -88,6 +93,14 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       setActiveTabIndex(0)
     }
   }, [activeTabIndex, visibleConversations.length])
+
+  useLayoutEffect(() => {
+    if (!highlightMobileCapabilityDemoModelTabs || !isMobileLayout) return
+    mobileTabsAttentionScrollRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    })
+  }, [highlightMobileCapabilityDemoModelTabs, isMobileLayout])
 
   if (visibleConversations.length === 0) return null
 
@@ -149,8 +162,14 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           </div>
         )}
 
-        <div className="results-tabs-container">
-          <div className="results-tabs-header">
+        <div className="results-tabs-container" ref={mobileTabsAttentionScrollRef}>
+          <div
+            className={`results-tabs-header ${
+              highlightMobileCapabilityDemoModelTabs
+                ? 'results-tabs-header--capability-demo-attention'
+                : ''
+            }`.trim()}
+          >
             {visibleConversations.map((conversation, index) => {
               const model = allModels.find(m => m.id === conversation.modelId)
               const isActive = index === activeTabIndex
@@ -162,7 +181,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 <button
                   key={conversation.modelId}
                   className={`results-tab-button ${isActive ? 'active' : ''}`}
-                  onClick={() => setActiveTabIndex(index)}
+                  onClick={() => {
+                    setActiveTabIndex(index)
+                    onDismissMobileCapabilityDemoModelTabsHighlight?.()
+                  }}
                   aria-label={`View results for ${model?.name || conversation.modelId}`}
                   aria-selected={isActive}
                   role="tab"

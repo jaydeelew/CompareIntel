@@ -409,7 +409,7 @@ export function ModelsSectionHeader({
           </StyledTooltip>
         </div>
         <div className="models-header-right">
-          <StyledTooltip text="Total selections">
+          <StyledTooltip text="Total selections for your tier">
             <div
               className={`models-count-indicator ${selectedModels.length > 0 ? 'has-selected' : 'empty'}`}
               onClick={e => e.stopPropagation()}

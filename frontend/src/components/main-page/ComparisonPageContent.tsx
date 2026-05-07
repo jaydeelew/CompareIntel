@@ -90,6 +90,13 @@ export interface ComparisonPageContentProps {
   /** Called when a carousel provider icon is clicked */
   onCarouselProviderClick?: (provider: string) => void
 
+  /** Mobile-only: demo button labels per tile id (from capability presets). */
+  capabilityDemoLabels?: Record<string, string>
+  /** Mobile-only: called when user taps the demo CTA on a flipped capability tile. */
+  onCapabilityDemo?: (tileId: string) => void
+  /** Mobile demo pause: pulse composer while prefilled prompt is shown before auto-submit. */
+  composerDemoPauseHighlight?: boolean
+
   // Loading
   onCancel: () => void
 
@@ -142,6 +149,9 @@ export function ComparisonPageContent({
   onImageGenerationSubmitBlockedTap,
   carouselProviders,
   onCarouselProviderClick,
+  capabilityDemoLabels,
+  onCapabilityDemo,
+  composerDemoPauseHighlight = false,
   onCancel,
   showResults,
   showFloatingComposer = false,
@@ -187,7 +197,12 @@ export function ComparisonPageContent({
 
   return (
     <ComparisonView>
-      <Hero carouselProviders={carouselProviders} onCarouselProviderClick={onCarouselProviderClick}>
+      <Hero
+        carouselProviders={carouselProviders}
+        onCarouselProviderClick={onCarouselProviderClick}
+        capabilityDemoLabels={capabilityDemoLabels}
+        onCapabilityDemo={onCapabilityDemo}
+      >
         <ErrorBoundary>
           <ComparisonForm
             input={input}
@@ -222,6 +237,7 @@ export function ComparisonPageContent({
             imageGenerationSubmitBlocked={imageGenerationSubmitBlocked}
             imageGenerationNoSharedImageOptions={imageGenerationNoSharedImageOptions}
             onImageGenerationSubmitBlockedTap={onImageGenerationSubmitBlockedTap}
+            composerDemoPauseHighlight={composerDemoPauseHighlight}
           />
         </ErrorBoundary>
       </Hero>
