@@ -235,6 +235,27 @@ describe('useTutorialComplete', () => {
       expect(result.current.showWelcomeModal).toBe(true)
     })
 
+    it('should not show welcome modal when Playwright automation flags are set', () => {
+      const prevPw = window.__PLAYWRIGHT__
+      const prevTest = window.__TEST_ENV__
+      window.__PLAYWRIGHT__ = true
+      window.__TEST_ENV__ = true
+      try {
+        const { result } = renderHook(() =>
+          useTutorialComplete({
+            ...defaultConfig,
+            isAuthenticated: false,
+            authLoading: false,
+            currentView: 'main',
+          })
+        )
+        expect(result.current.showWelcomeModal).toBe(false)
+      } finally {
+        window.__PLAYWRIGHT__ = prevPw
+        window.__TEST_ENV__ = prevTest
+      }
+    })
+
     it('should not show welcome modal while auth is loading', () => {
       // Prevents flash for logged-in users when auth resolves quickly in production
       const { result } = renderHook(() =>

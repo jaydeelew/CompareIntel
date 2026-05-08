@@ -1,6 +1,12 @@
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { waitForAuthState, waitForReactHydration, dismissTutorialOverlay } from './fixtures'
+import {
+  test,
+  expect,
+  waitForAuthState,
+  waitForReactHydration,
+  dismissTutorialOverlay,
+} from './fixtures'
 
 /**
  * E2E Tests: Unregistered User Journey

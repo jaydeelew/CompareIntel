@@ -13,7 +13,8 @@
 
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
-import { test, expect } from '@playwright/test'
+
+import { test, expect } from './fixtures'
 
 /** No-op: guest welcome and guided tutorial were removed from production. */
 async function dismissTutorialIfVisible(_page: Page) {}

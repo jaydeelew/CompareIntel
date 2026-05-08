@@ -1,6 +1,6 @@
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { dismissTutorialOverlay } from './fixtures'
+import { test, expect, dismissTutorialOverlay } from './fixtures'
 
 /**
  * E2E Tests: Navigation and Content Pages
