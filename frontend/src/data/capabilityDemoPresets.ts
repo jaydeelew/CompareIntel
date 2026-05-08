@@ -42,7 +42,7 @@ export const CAPABILITY_DEMO_PRESETS: Record<string, CapabilityDemoPreset> = {
   },
   'image-creation': {
     prompt:
-      'Two humanoid robots arm-wrestling at an official arm-wrestling table, competing to prove which is the more advanced AI. Include a referee robot, a large promotion banner reading "AI SUPREMACY", dramatic arena lighting, and a roaring crowd of robot spectators.',
+      'Two humanoid robots arm-wrestling at an official arm-wrestling table, competing to prove which is the more advanced AI. Include a referee robot, a large promotion banner reading "AI SUPREMACY", dramatic arena lighting, and a roaring crowd of human spectators.',
     preferredModelIds: ['google/gemini-2.5-flash-image', 'openai/gpt-5-image-mini'],
     buttonLabel: 'Try a comparison',
     mode: 'image',
