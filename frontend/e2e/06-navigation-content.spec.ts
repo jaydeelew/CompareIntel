@@ -1,5 +1,7 @@
 import { test, expect, Page } from '@playwright/test'
 
+import { dismissTutorialOverlay } from './fixtures'
+
 /**
  * E2E Tests: Navigation and Content Pages
  *
@@ -22,9 +24,6 @@ async function safeWait(page: Page, ms: number) {
     throw error
   }
 }
-
-/** No-op: guest welcome and guided tutorial were removed from production. */
-async function dismissTutorialOverlay(_page: Page) {}
 
 test.describe('Navigation and Content Pages', () => {
   test.beforeEach(async ({ page, browserName }) => {

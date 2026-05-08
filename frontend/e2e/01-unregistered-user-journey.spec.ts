@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 
-import { waitForAuthState, waitForReactHydration } from './fixtures'
+import { waitForAuthState, waitForReactHydration, dismissTutorialOverlay } from './fixtures'
 
 /**
  * E2E Tests: Unregistered User Journey
@@ -31,9 +31,6 @@ async function safeWait(page: Page, ms: number) {
     throw error
   }
 }
-
-/** No-op: guest welcome and guided tutorial were removed from production. */
-async function dismissTutorialOverlay(_page: Page) {}
 
 test.describe('Unregistered User Journey', () => {
   test.beforeEach(async ({ page, context, browserName }) => {

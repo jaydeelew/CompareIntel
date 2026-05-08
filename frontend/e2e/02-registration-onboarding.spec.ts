@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 
-import { waitForAuthState, waitForReactHydration } from './fixtures'
+import { waitForAuthState, waitForReactHydration, dismissTutorialOverlay } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { test, expect } from './test-setup'
 
@@ -62,48 +62,6 @@ async function markUserVerifiedViaDevApi(email: string, password: string): Promi
   } catch {
     return false
   }
-}
-
-/** Close any first-run overlays that can block form/model interactions. */
-async function dismissBlockingOnboardingOverlays(page: Page) {
-  const trialWelcomeOverlay = page.locator(
-    '.trial-welcome-overlay, [role="dialog"][aria-labelledby="trial-welcome-title"]'
-  )
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-    await trialWelcomeOverlay
-      .first()
-      .waitFor({ state: 'visible', timeout: 1000 })
-      .catch(() => {})
-    if (
-      !(await trialWelcomeOverlay
-        .first()
-        .isVisible()
-        .catch(() => false))
-    )
-      return
-
-    const closeTrialWelcome = page
-      .locator('.trial-welcome-button, .trial-welcome-close')
-      .filter({ visible: true })
-      .first()
-    await closeTrialWelcome
-      .evaluate((el: HTMLElement) => {
-        ;(el as HTMLButtonElement).click()
-      })
-      .catch(async () => {
-        await page.keyboard.press('Escape').catch(() => {})
-      })
-    await trialWelcomeOverlay
-      .first()
-      .waitFor({ state: 'hidden', timeout: 10000 })
-      .catch(() => {})
-    await safeWait(page, 250)
-  }
-}
-
-async function dismissTutorialOverlay(page: Page) {
-  await dismissBlockingOnboardingOverlays(page)
 }
 
 test.describe('Registration and Onboarding', () => {

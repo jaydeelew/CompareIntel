@@ -234,8 +234,83 @@ async function retryElementDetection<T>(
   throw lastError || new Error('Element detection failed after retries')
 }
 
-/** No-op: guest welcome and guided tutorial were removed from production. */
-async function dismissTutorialOverlay(_page: Page) {}
+/**
+ * Close first-run overlays that block pointer events (welcome modal, trial welcome, spotlight tutorial).
+ * The welcome modal only shows for unauthenticated users; guided steps may still appear after "Start Tutorial".
+ */
+async function dismissTutorialOverlay(page: Page): Promise<void> {
+  if (page.isClosed()) {
+    return
+  }
+
+  const trialWelcomeOverlay = page.locator(
+    '.trial-welcome-overlay, [role="dialog"][aria-labelledby="trial-welcome-title"]'
+  )
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await trialWelcomeOverlay
+      .first()
+      .waitFor({ state: 'visible', timeout: 1000 })
+      .catch(() => {})
+    if (!(await trialWelcomeOverlay.first().isVisible().catch(() => false))) {
+      break
+    }
+
+    const closeTrialWelcome = page
+      .locator('.trial-welcome-button, .trial-welcome-close')
+      .filter({ visible: true })
+      .first()
+    await closeTrialWelcome
+      .evaluate((el: HTMLElement) => {
+        ;(el as HTMLButtonElement).click()
+      })
+      .catch(async () => {
+        await page.keyboard.press('Escape').catch(() => {})
+      })
+    await trialWelcomeOverlay.first().waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+    await safeWait(page, 250)
+  }
+
+  if (page.isClosed()) {
+    return
+  }
+
+  const welcomeBackdrop = page.locator('.tutorial-welcome-backdrop')
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const visible = await welcomeBackdrop.isVisible({ timeout: 2000 }).catch(() => false)
+    if (!visible) {
+      break
+    }
+
+    const skip = welcomeBackdrop.getByRole('button', { name: /skip for now/i })
+    await skip
+      .click({ timeout: 10000 })
+      .catch(async () => {
+        await welcomeBackdrop
+          .locator('button.tutorial-welcome-button-secondary')
+          .first()
+          .click({ timeout: 5000, force: true })
+          .catch(() => {})
+      })
+
+    await welcomeBackdrop.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {})
+    await safeWait(page, 250)
+  }
+
+  if (page.isClosed()) {
+    return
+  }
+
+  const spotlightBackdrop = page.locator('.tutorial-backdrop, .mobile-tutorial-backdrop').first()
+  for (let i = 0; i < 25; i++) {
+    const stillVisible = await spotlightBackdrop.isVisible({ timeout: 400 }).catch(() => false)
+    if (!stillVisible) {
+      break
+    }
+    await page.keyboard.press('Escape').catch(() => {})
+    await safeWait(page, 200)
+  }
+}
 
 // ============================================================================
 // Configuration & Constants

@@ -1,15 +1,12 @@
 import type { Locator, Page } from '@playwright/test'
 
-import { test, expect } from './fixtures'
+import { test, expect, dismissTutorialOverlay } from './fixtures'
 
 // Helper to wait safely (handles page closure during async ops)
 async function safeWait(page: Page, ms: number) {
   if (page.isClosed()) return
   await page.waitForTimeout(ms).catch(() => {})
 }
-
-/** No-op: guest welcome and guided tutorial were removed from production. */
-async function dismissTutorialOverlay(_page: Page) {}
 
 // Tap for mobile, click for desktop. WebKit needs extra time and force clicks sometimes
 async function tapOrClick(locator: Locator, page?: Page, browserName?: string): Promise<void> {

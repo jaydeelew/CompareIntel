@@ -1,5 +1,7 @@
 import { chromium, firefox, webkit, FullConfig, Page, BrowserType } from '@playwright/test'
 
+import { dismissTutorialOverlay } from './fixtures'
+
 /**
  * Global Setup for E2E Tests
  *
@@ -10,9 +12,6 @@ import { chromium, firefox, webkit, FullConfig, Page, BrowserType } from '@playw
  * Note: This assumes the backend is running and accessible.
  * The backend should be started by Playwright's webServer config.
  */
-
-/** No-op: guest welcome and guided tutorial were removed from production. */
-async function dismissTutorialOverlay(_page: Page) {}
 
 async function clickNavSignInButton(page: Page): Promise<boolean> {
   const loginButton = page.getByTestId('nav-sign-in-button')
