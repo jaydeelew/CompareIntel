@@ -600,7 +600,7 @@ export function Hero({
                 description="Render math equations beautifully"
                 backVideo={`/videos/formatted-math.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
                 backVideoPoster="/videos/formatted-math_poster.jpg"
-                backText="Compare formatted math results.. Tap 'Try a comparison' and when the results come in, click the tab for each model to see their work."
+                backText="Compare formatted math results. Tap 'Try a comparison' and when the results come in, click the tab for each model to see their work."
                 isFlipped={flippedTile === 'formatted-math'}
                 onTileClick={handleTileClick}
                 onImageEnlarge={setEnlargedImageSrc}
