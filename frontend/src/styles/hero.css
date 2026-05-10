@@ -1257,8 +1257,8 @@ video.capability-tile-image-lightbox-img {
   padding: 0;
   border: none;
   background: none;
-  /* Former hover look as baseline */
-  color: #ffffff;
+  /* Slightly below pure white so strokes don’t blow out on hero blue */
+  color: rgba(255, 255, 255, 0.88);
   transform: translateY(-3px) scale(1.25);
   filter: brightness(1);
   cursor: pointer;
@@ -1269,8 +1269,9 @@ video.capability-tile-image-lightbox-img {
 }
 
 .hero-view-toggle:hover {
+  color: #ffffff;
   transform: translateY(-5px) scale(1.38);
-  filter: brightness(1.15) drop-shadow(0 2px 10px rgba(200, 230, 255, 0.4));
+  filter: brightness(1.1) drop-shadow(0 2px 8px rgba(200, 230, 255, 0.32));
 }
 
 .hero-view-toggle:active {
@@ -1294,13 +1295,13 @@ video.capability-tile-image-lightbox-img {
 @media (hover: none), (pointer: coarse) {
   .hero-view-toggle {
     transition: none;
-    color: #ffffff;
+    color: rgba(255, 255, 255, 0.88);
     transform: translateY(-3px) scale(1.25);
     filter: brightness(1);
   }
 
   .hero-view-toggle:hover {
-    color: #ffffff;
+    color: rgba(255, 255, 255, 0.88);
     transform: translateY(-3px) scale(1.25);
     filter: brightness(1);
   }
