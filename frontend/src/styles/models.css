@@ -1202,7 +1202,6 @@
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
   word-wrap: break-word;
   overflow-wrap: break-word;
   max-height: 600px;
