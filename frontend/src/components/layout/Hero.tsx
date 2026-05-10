@@ -685,18 +685,17 @@ export function Hero({
                         viewBox="0 0 96 96"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="6"
-                        strokeLinecap="round"
+                        strokeWidth="3.5"
                         strokeLinejoin="round"
                         shapeRendering="geometricPrecision"
                         aria-hidden
                       >
-                        {/* Same layout as original 24-unit design, scaled ×4 into 96-unit space for sharper strokes */}
-                        <circle cx="48" cy="48" r="20" />
-                        <circle cx="14" cy="48" r="8" opacity={0.35} />
-                        <circle cx="82" cy="48" r="8" opacity={0.35} />
-                        <circle cx="28" cy="46" r="13" opacity={0.6} />
-                        <circle cx="68" cy="46" r="13" opacity={0.6} />
+                        {/* Five rings with ~4u gaps between path extents so strokes stay legible (not one blurry blob). */}
+                        <circle cx="10" cy="48" r="5" opacity={0.4} />
+                        <circle cx="27" cy="48" r="8" opacity={0.62} />
+                        <circle cx="48" cy="48" r="9" />
+                        <circle cx="69" cy="48" r="8" opacity={0.62} />
+                        <circle cx="86" cy="48" r="5" opacity={0.4} />
                       </svg>
                     )}
                   </button>

@@ -1257,20 +1257,25 @@ video.capability-tile-image-lightbox-img {
   padding: 0;
   border: none;
   background: none;
-  color: rgba(165, 200, 255, 0.6);
+  /* Former hover look as baseline */
+  color: #ffffff;
+  transform: translateY(-3px) scale(1.25);
+  filter: brightness(1);
   cursor: pointer;
   transition:
     color 0.3s ease,
-    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.3s ease;
 }
 
 .hero-view-toggle:hover {
-  color: #ffffff;
-  transform: translateY(-3px) scale(1.25);
+  transform: translateY(-5px) scale(1.38);
+  filter: brightness(1.15) drop-shadow(0 2px 10px rgba(200, 230, 255, 0.4));
 }
 
 .hero-view-toggle:active {
-  transform: translateY(-1px) scale(1.1);
+  transform: translateY(-2px) scale(1.18);
+  filter: brightness(1.05);
   transition-duration: 0.1s;
 }
 
@@ -1289,15 +1294,20 @@ video.capability-tile-image-lightbox-img {
 @media (hover: none), (pointer: coarse) {
   .hero-view-toggle {
     transition: none;
+    color: #ffffff;
+    transform: translateY(-3px) scale(1.25);
+    filter: brightness(1);
   }
 
   .hero-view-toggle:hover {
-    color: rgba(165, 200, 255, 0.6);
-    transform: none;
+    color: #ffffff;
+    transform: translateY(-3px) scale(1.25);
+    filter: brightness(1);
   }
 
   .hero-view-toggle:active {
-    transform: none;
+    transform: translateY(-1px) scale(1.15);
+    filter: brightness(1.05);
     transition: none;
   }
 }
