@@ -210,8 +210,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     const btn = modelTabButtonRefs.current[activeTabIndex]
     if (!strip || !btn) return
     const reducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const id = window.requestAnimationFrame(() => {
       scrollActiveModelTabIntoStrip(strip, btn, reducedMotion ? 'instant' : 'smooth')
     })
@@ -258,8 +257,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       const reasoningNow = modelHasStreamingReasoning(mid, streamingReasoningByModel)
       const answerPrev = prevStreamAnswerStartedRef.current[mid] ?? false
       const reasoningPrev = prevStreamingReasoningNonemptyRef.current[mid] ?? false
-      const becameActive =
-        (answerNow && !answerPrev) || (reasoningNow && !reasoningPrev)
+      const becameActive = (answerNow && !answerPrev) || (reasoningNow && !reasoningPrev)
       if (becameActive) {
         firstMobileStreamerPinnedRef.current = mid
         setSlideEnter('none')
@@ -317,8 +315,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     const goToModelTab = (nextIndex: number) => {
       const n = visibleConversations.length
       if (n < 2 || nextIndex < 0 || nextIndex >= n || nextIndex === activeTabIndex) return
-      const direction: 'forward' | 'backward' =
-        nextIndex > activeTabIndex ? 'forward' : 'backward'
+      const direction: 'forward' | 'backward' = nextIndex > activeTabIndex ? 'forward' : 'backward'
       setSlideEnter(direction === 'forward' ? 'from-right' : 'from-left')
       setActiveTabIndex(nextIndex)
       onDismissMobileCapabilityDemoModelTabsHighlight?.()

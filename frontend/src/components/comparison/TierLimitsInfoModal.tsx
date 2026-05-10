@@ -127,9 +127,10 @@ export function TierLimitsInfoModal({
         <div id={contentId} className="disabled-button-info-content">
           {fromSelectionCount && maxModelsLimit > 0 ? (
             <p style={{ margin: '0 0 1rem 0' }}>
-              Your account tier caps how many models you can include in one comparison. You are using{' '}
-              <strong>{selectedCount}</strong> of <strong>{maxModelsLimit}</strong> allowed for your
-              current plan. Upgrading unlocks higher limits so you can compare more models in a single run.
+              Your account tier caps how many models you can include in one comparison. You are
+              using <strong>{selectedCount}</strong> of <strong>{maxModelsLimit}</strong> allowed
+              for your current plan. Upgrading unlocks higher limits so you can compare more models
+              in a single run.
             </p>
           ) : null}
           <ul style={{ margin: '0 0 1rem 0', paddingLeft: '1.25rem' }}>

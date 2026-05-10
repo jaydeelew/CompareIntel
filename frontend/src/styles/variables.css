@@ -142,12 +142,10 @@
   --bg-glass-light: color-mix(in srgb, var(--bg-elevated) 94%, var(--primary-color) 6%);
   --border-glass: var(--bg-glass-border);
   --shadow-glass:
-    0 1px 0 rgba(255, 255, 255, 0.05) inset,
-    0 2px 6px -2px rgba(0, 0, 0, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 2px 6px -2px rgba(0, 0, 0, 0.45),
     0 10px 24px -12px rgba(0, 0, 0, 0.55);
   --shadow-glass-hover:
-    0 1px 0 rgba(255, 255, 255, 0.07) inset,
-    0 4px 10px -4px rgba(0, 0, 0, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 4px 10px -4px rgba(0, 0, 0, 0.45),
     0 16px 32px -14px rgba(0, 0, 0, 0.55),
     0 0 0 1px color-mix(in srgb, var(--primary-color) 22%, transparent);
 
@@ -424,12 +422,10 @@
   --bg-glass-light: color-mix(in srgb, var(--bg-elevated) 97%, var(--primary-color) 3%);
   --border-glass: var(--bg-glass-border);
   --shadow-glass:
-    0 1px 2px rgb(0 0 0 / 0.04),
-    0 4px 14px -4px rgb(0 0 0 / 0.08),
+    0 1px 2px rgb(0 0 0 / 0.04), 0 4px 14px -4px rgb(0 0 0 / 0.08),
     0 0 0 1px color-mix(in srgb, var(--border-color) 85%, var(--primary-color) 15%);
   --shadow-glass-hover:
-    0 2px 4px rgb(0 0 0 / 0.05),
-    0 10px 22px -8px rgb(0 0 0 / 0.1),
+    0 2px 4px rgb(0 0 0 / 0.05), 0 10px 22px -8px rgb(0 0 0 / 0.1),
     0 0 0 1px color-mix(in srgb, var(--primary-color) 28%, var(--border-color) 72%);
 
   --shadow-glow-sm: 0 0 10px var(--primary-glow);
