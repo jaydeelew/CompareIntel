@@ -1950,11 +1950,24 @@
   font-family: var(--font-sans);
   letter-spacing: 0.01em;
   transition: all 0.2s ease;
-  cursor: default;
+  cursor: pointer;
   height: var(--models-header-control-height);
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
+}
+
+.models-count-indicator.has-selected:hover {
+  filter: brightness(1.06);
+}
+
+.models-count-indicator.empty:hover {
+  background: var(--bg-hover);
+}
+
+.models-count-indicator:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
 }
 
 .models-count-indicator.has-selected {

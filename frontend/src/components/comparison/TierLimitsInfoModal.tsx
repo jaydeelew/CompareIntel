@@ -1,9 +1,11 @@
 /**
- * Modal shown when clicking the tier limits info icon in the models section header.
- * Lists all subscription tiers and their model comparison limits, with a link to the FAQ.
+ * Modal shown when clicking the tier limits info icon in the models section header,
+ * or the "X of Y selected" count. Lists tier model comparison limits, with a link to the FAQ.
+ * When opened from the selection count, offers "Do not show again" (localStorage) for that entry point only.
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 
 import { MODEL_LIMITS } from '../../config/constants'
@@ -12,13 +14,34 @@ import { TIER_LABELS } from './tierLimitsListContent'
 
 import './DisabledButtonInfoModal.css'
 
+/** Suppress opening this modal from the models header "X of Y selected" control only; the (i) icon still opens. */
+export const MODELS_COUNT_TIER_LIMITS_MODAL_STORAGE_KEY =
+  'compareintel_models_count_tier_limits_dismissed'
+
 interface TierLimitsInfoModalProps {
   isOpen: boolean
   onClose: () => void
+  /** Opened from the selection counter — show explainer + optional "do not show again" for that click target */
+  fromSelectionCount?: boolean
+  selectedCount?: number
+  maxModelsLimit?: number
 }
 
-export function TierLimitsInfoModal({ isOpen, onClose }: TierLimitsInfoModalProps) {
+export function TierLimitsInfoModal({
+  isOpen,
+  onClose,
+  fromSelectionCount = false,
+  selectedCount = 0,
+  maxModelsLimit = 0,
+}: TierLimitsInfoModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const [dontShowAgain, setDontShowAgain] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setDontShowAgain(false)
+    }
+  }, [isOpen, fromSelectionCount])
 
   useEffect(() => {
     if (!isOpen) return
@@ -47,16 +70,26 @@ export function TierLimitsInfoModal({ isOpen, onClose }: TierLimitsInfoModalProp
     }
   }, [isOpen])
 
+  const handleGotIt = () => {
+    if (fromSelectionCount && dontShowAgain) {
+      localStorage.setItem(MODELS_COUNT_TIER_LIMITS_MODAL_STORAGE_KEY, 'true')
+    }
+    onClose()
+  }
+
   if (!isOpen) return null
 
-  return (
+  const titleId = 'tier-limits-info-title'
+  const contentId = 'tier-limits-info-content'
+
+  return createPortal(
     <div
       className="disabled-button-info-overlay"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="tier-limits-info-title"
-      aria-describedby="tier-limits-info-content"
+      aria-labelledby={titleId}
+      aria-describedby={contentId}
     >
       <div
         className="disabled-button-info-modal"
@@ -66,7 +99,9 @@ export function TierLimitsInfoModal({ isOpen, onClose }: TierLimitsInfoModalProp
         }}
       >
         <div className="disabled-button-info-header">
-          <h3 id="tier-limits-info-title">Models per Comparison by Tier</h3>
+          <h3 id={titleId}>
+            {fromSelectionCount ? 'Your plan limits comparisons' : 'Models per Comparison by Tier'}
+          </h3>
           <button
             ref={closeButtonRef}
             className="disabled-button-info-close"
@@ -89,7 +124,14 @@ export function TierLimitsInfoModal({ isOpen, onClose }: TierLimitsInfoModalProp
             </svg>
           </button>
         </div>
-        <div id="tier-limits-info-content" className="disabled-button-info-content">
+        <div id={contentId} className="disabled-button-info-content">
+          {fromSelectionCount && maxModelsLimit > 0 ? (
+            <p style={{ margin: '0 0 1rem 0' }}>
+              Your account tier caps how many models you can include in one comparison. You are using{' '}
+              <strong>{selectedCount}</strong> of <strong>{maxModelsLimit}</strong> allowed for your
+              current plan. Upgrading unlocks higher limits so you can compare more models in a single run.
+            </p>
+          ) : null}
           <ul style={{ margin: '0 0 1rem 0', paddingLeft: '1.25rem' }}>
             {Object.entries(MODEL_LIMITS).map(([tier, limit]) => (
               <li key={tier} style={{ marginBottom: '0.25rem' }}>
@@ -103,13 +145,29 @@ export function TierLimitsInfoModal({ isOpen, onClose }: TierLimitsInfoModalProp
               Learn more about tier benefits
             </Link>
           </p>
+          {fromSelectionCount ? (
+            <label className="action-tooltip-dont-show-again">
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
+                onChange={e => setDontShowAgain(e.target.checked)}
+              />
+              <span>Do not show again</span>
+            </label>
+          ) : null}
         </div>
         <div className="disabled-button-info-footer">
-          <button className="disabled-button-info-button" onClick={onClose} type="button" autoFocus>
+          <button
+            className="disabled-button-info-button"
+            onClick={handleGotIt}
+            type="button"
+            autoFocus
+          >
             Got it
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

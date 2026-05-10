@@ -3,7 +3,10 @@ import { useState } from 'react'
 import type { User, ModelConversation } from '../../types'
 import { StyledTooltip } from '../shared'
 
-import { TierLimitsInfoModal } from './TierLimitsInfoModal'
+import {
+  MODELS_COUNT_TIER_LIMITS_MODAL_STORAGE_KEY,
+  TierLimitsInfoModal,
+} from './TierLimitsInfoModal'
 import { getTierListContent } from './tierLimitsListContent'
 
 export interface ModelsSectionHeaderProps {
@@ -94,6 +97,7 @@ export function ModelsSectionHeader({
   const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
   const showHidePremiumToggle = userTier === 'unregistered' || userTier === 'free'
   const [tierLimitsModalOpen, setTierLimitsModalOpen] = useState(false)
+  const [tierLimitsModalFromSelectionCount, setTierLimitsModalFromSelectionCount] = useState(false)
 
   // Format tier name for display
   const formatTierName = () => {
@@ -171,6 +175,26 @@ export function ModelsSectionHeader({
     onExpandModelsSection()
   }
 
+  const openTierLimitsFromInfo = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setTierLimitsModalFromSelectionCount(false)
+    setTierLimitsModalOpen(true)
+  }
+
+  const closeTierLimitsModal = () => {
+    setTierLimitsModalOpen(false)
+    setTierLimitsModalFromSelectionCount(false)
+  }
+
+  const handleSelectionCountClick = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation()
+    if (typeof localStorage !== 'undefined') {
+      if (localStorage.getItem(MODELS_COUNT_TIER_LIMITS_MODAL_STORAGE_KEY)) return
+    }
+    setTierLimitsModalFromSelectionCount(true)
+    setTierLimitsModalOpen(true)
+  }
+
   return (
     <div
       className="models-section-header"
@@ -214,10 +238,7 @@ export function ModelsSectionHeader({
                     <button
                       type="button"
                       className="advanced-settings-info-btn"
-                      onClick={e => {
-                        e.stopPropagation()
-                        setTierLimitsModalOpen(true)
-                      }}
+                      onClick={openTierLimitsFromInfo}
                       aria-label="Learn about tier limits"
                     >
                       <svg
@@ -240,10 +261,7 @@ export function ModelsSectionHeader({
                     <button
                       type="button"
                       className="advanced-settings-info-trigger"
-                      onClick={e => {
-                        e.stopPropagation()
-                        setTierLimitsModalOpen(true)
-                      }}
+                      onClick={openTierLimitsFromInfo}
                       aria-label="Learn about tier limits"
                     >
                       <svg
@@ -410,10 +428,19 @@ export function ModelsSectionHeader({
           </StyledTooltip>
         </div>
         <div className="models-header-right">
-          <StyledTooltip text="Total selections for your tier">
+          <StyledTooltip text="Selections for your tier — click to learn about limits">
             <div
+              role="button"
+              tabIndex={0}
               className={`models-count-indicator ${selectedModels.length > 0 ? 'has-selected' : 'empty'}`}
-              onClick={e => e.stopPropagation()}
+              onClick={handleSelectionCountClick}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleSelectionCountClick(e)
+                }
+              }}
+              aria-label={`${selectedModels.length} of ${maxModelsLimit} models selected. Learn about tier limits.`}
             >
               {selectedModels.length} of {maxModelsLimit} selected
             </div>
@@ -451,7 +478,10 @@ export function ModelsSectionHeader({
 
       <TierLimitsInfoModal
         isOpen={tierLimitsModalOpen}
-        onClose={() => setTierLimitsModalOpen(false)}
+        onClose={closeTierLimitsModal}
+        fromSelectionCount={tierLimitsModalFromSelectionCount}
+        selectedCount={selectedModels.length}
+        maxModelsLimit={maxModelsLimit}
       />
     </div>
   )
