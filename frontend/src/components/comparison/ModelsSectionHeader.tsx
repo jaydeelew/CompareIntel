@@ -428,7 +428,7 @@ export function ModelsSectionHeader({
           </StyledTooltip>
         </div>
         <div className="models-header-right">
-          <StyledTooltip text="Selections for your tier — click to learn about limits">
+          <StyledTooltip text="Selections for your tier - click to learn more">
             <div
               role="button"
               tabIndex={0}
