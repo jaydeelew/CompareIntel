@@ -464,7 +464,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   activeConversation.modelId,
                   streamingReasoningByModel
                 )}
-                streamAnswerStarted={streamAnswerStartedByModel[activeConversation.modelId] ?? false}
+                streamAnswerStarted={streamAnswerStartedForModel(
+                  activeConversation.modelId,
+                  streamAnswerStartedByModel
+                )}
               />
             </div>
           </div>
@@ -528,7 +531,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 conversation.modelId,
                 streamingReasoningByModel
               )}
-              streamAnswerStarted={streamAnswerStartedByModel[conversation.modelId] ?? false}
+              streamAnswerStarted={streamAnswerStartedForModel(
+                conversation.modelId,
+                streamAnswerStartedByModel
+              )}
             />
           )
         })}

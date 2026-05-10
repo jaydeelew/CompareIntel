@@ -13,9 +13,11 @@ function isBodyScrolledToBottom(el: HTMLElement): boolean {
 }
 
 /**
- * Ephemeral streaming "reasoning / thinking" panel. Open while reasoning streams;
- * collapses when answer content starts; stays available (collapsed by default) after
- * streaming ends until cleared by a new comparison, refresh, or login. Not persisted.
+ * Ephemeral streaming "reasoning / thinking" panel. Open only while reasoning is
+ * actively streaming and the visible answer has not started; collapses when answer
+ * tokens arrive or when this model finishes (including remounts, e.g. mobile model tabs).
+ * Stays available (collapsed by default) after streaming until cleared by a new comparison,
+ * refresh, or login. Not persisted.
  *
  * The body auto-scrolls to follow streaming text unless the user scrolls away (same
  * idea as the main conversation auto-scroll).
@@ -25,17 +27,18 @@ export const ReasoningCollapsible: React.FC<ReasoningCollapsibleProps> = ({
   isProcessing,
   answerStarted,
 }) => {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(() => {
+    const t = text.trim()
+    if (!t) return true
+    return isProcessing && !answerStarted
+  })
   const bodyRef = useRef<HTMLPreElement>(null)
   const autoScrollPausedRef = useRef(false)
   const lastBodyScrollTopRef = useRef(0)
 
   useEffect(() => {
-    if (answerStarted) {
-      setOpen(false)
-    } else if (isProcessing && text.trim().length > 0) {
-      setOpen(true)
-    }
+    if (!text.trim()) return
+    setOpen(isProcessing && !answerStarted)
   }, [answerStarted, isProcessing, text])
 
   useLayoutEffect(() => {
