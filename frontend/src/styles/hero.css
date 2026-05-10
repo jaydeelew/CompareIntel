@@ -1248,9 +1248,12 @@ video.capability-tile-image-lightbox-img {
 }
 
 .hero-view-toggle {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 42px;
+  height: 42px;
   padding: 0;
   border: none;
   background: none;
