@@ -34,12 +34,46 @@ function modelHasStreamingReasoning(modelId: string, byModel: Record<string, str
   return getStreamingReasoningForModel(modelId, byModel).length > 0
 }
 
-/** Duration aligned with `.results-tab-content-slide` CSS animation (fallback reset if `animationend` does not fire). */
-const MODEL_TAB_SLIDE_ANIM_MS = 280
+/** Duration aligned with `.results-tab-content-slide--*` CSS in results.css (fallback if `animationend` does not fire). */
+const MODEL_TAB_SLIDE_ANIM_MS = 480
 
 /** Min horizontal swipe (px); scales slightly with viewport. */
 function mobileModelTabSwipeThreshold(width: number): number {
-  return Math.max(52, Math.min(88, Math.round(width * 0.12)))
+  return Math.max(64, Math.min(104, Math.round(width * 0.14)))
+}
+
+/** Skip changing model tabs when the gesture began on code or a horizontally scrollable block. */
+function shouldSuppressMobileModelTabSwipe(target: EventTarget | null): boolean {
+  const el = target instanceof Element ? target : null
+  if (!el) return false
+
+  if (
+    el.closest(
+      [
+        '.code-block',
+        '.code-block-direct',
+        '.message-content .latex-content pre',
+        '.latex-content pre',
+        'pre.raw-output',
+        '.result-output.raw-output',
+      ].join(', ')
+    )
+  ) {
+    return true
+  }
+
+  let node: Element | null = el
+  while (node && !node.classList.contains('results-tabs-container')) {
+    const { overflowX } = window.getComputedStyle(node)
+    if (
+      (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'overlay') &&
+      node.scrollWidth > node.clientWidth + 2
+    ) {
+      return true
+    }
+    node = node.parentElement
+  }
+  return false
 }
 
 export interface ResultsDisplayProps {
@@ -114,7 +148,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   /** Slide-in direction for tab changes; `'none'` = initial / no animation. */
   const [slideEnter, setSlideEnter] = useState<'none' | 'from-right' | 'from-left'>('none')
   const mobileTabsAttentionScrollRef = useRef<HTMLDivElement>(null)
-  const swipeTouchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const swipeTouchStartRef = useRef<{
+    x: number
+    y: number
+    target: EventTarget | null
+  } | null>(null)
   /** Mobile tabbed UI: first model to emit answer/reasoning tokens this round (pin resets when answer-started map clears). */
   const firstMobileStreamerPinnedRef = useRef<string | null>(null)
   const prevStreamAnswerStartedRef = useRef<Record<string, boolean>>({})
@@ -249,6 +287,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       swipeTouchStartRef.current = {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
+        target: e.target,
       }
     }
 
@@ -256,13 +295,15 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       const start = swipeTouchStartRef.current
       swipeTouchStartRef.current = null
       if (!start || e.changedTouches.length !== 1) return
+      if (shouldSuppressMobileModelTabSwipe(start.target)) return
       const dx = e.changedTouches[0].clientX - start.x
       const dy = e.changedTouches[0].clientY - start.y
       const absDx = Math.abs(dx)
       const absDy = Math.abs(dy)
       const threshold = mobileModelTabSwipeThreshold(viewportWidth)
       if (absDx < threshold) return
-      if (absDx < absDy * 1.15) return
+      /* Require a clearer horizontal intent than a shallow diagonal (avoids conflict with vertical reading). */
+      if (absDx < absDy * 1.35) return
 
       if (dx < 0) {
         goToModelTab(activeTabIndex + 1)
@@ -333,6 +374,17 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               )
             })}
           </div>
+
+          {visibleConversations.length > 1 && (
+            <div className="results-tab-pager" aria-hidden="true">
+              {visibleConversations.map((conv, index) => (
+                <span
+                  key={conv.modelId}
+                  className={`results-tab-pager-dot${index === activeTabIndex ? ' results-tab-pager-dot--active' : ''}`}
+                />
+              ))}
+            </div>
+          )}
 
           <div
             className="results-tab-content results-tab-content--swipe-zone"
