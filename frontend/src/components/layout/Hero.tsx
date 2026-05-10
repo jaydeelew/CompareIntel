@@ -680,21 +680,23 @@ export function Hero({
                       </svg>
                     ) : (
                       <svg
-                        width="36"
-                        height="36"
-                        viewBox="0 0 24 24"
+                        width="42"
+                        height="42"
+                        viewBox="0 0 96 96"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="1.5"
+                        strokeWidth="6"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        shapeRendering="geometricPrecision"
                         aria-hidden
                       >
-                        <circle cx="12" cy="12" r="5" />
-                        <circle cx="3.5" cy="12" r="2" opacity="0.35" />
-                        <circle cx="20.5" cy="12" r="2" opacity="0.35" />
-                        <circle cx="7" cy="11.5" r="3.25" opacity="0.6" />
-                        <circle cx="17" cy="11.5" r="3.25" opacity="0.6" />
+                        {/* Same layout as original 24-unit design, scaled ×4 into 96-unit space for sharper strokes */}
+                        <circle cx="48" cy="48" r="20" />
+                        <circle cx="14" cy="48" r="8" opacity={0.35} />
+                        <circle cx="82" cy="48" r="8" opacity={0.35} />
+                        <circle cx="28" cy="46" r="13" opacity={0.6} />
+                        <circle cx="68" cy="46" r="13" opacity={0.6} />
                       </svg>
                     )}
                   </button>
