@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { minViewportWidthForResultsSingleRow } from '../../config/constants'
 import { useResponsive } from '../../hooks'
@@ -18,6 +18,20 @@ function getStreamingReasoningForModel(modelId: string, byModel: Record<string, 
     if (createModelId(k) === target) return v
   }
   return ''
+}
+
+function streamAnswerStartedForModel(modelId: string, byModel: Record<string, boolean>): boolean {
+  if (byModel[modelId]) return true
+  const target = createModelId(modelId)
+  for (const [k, v] of Object.entries(byModel)) {
+    if (!v) continue
+    if (createModelId(k) === target) return true
+  }
+  return false
+}
+
+function modelHasStreamingReasoning(modelId: string, byModel: Record<string, string>): boolean {
+  return getStreamingReasoningForModel(modelId, byModel).length > 0
 }
 
 /** Duration aligned with `.results-tab-content-slide` CSS animation (fallback reset if `animationend` does not fire). */
@@ -85,8 +99,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   highlightMobileCapabilityDemoModelTabs = false,
   onDismissMobileCapabilityDemoModelTabsHighlight,
 }) => {
-  const visibleConversations = conversations.filter(
-    conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)
+  const visibleConversations = useMemo(
+    () => conversations.filter(conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)),
+    [conversations, closedCards]
   )
 
   const { viewportWidth } = useResponsive()
@@ -100,6 +115,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const [slideEnter, setSlideEnter] = useState<'none' | 'from-right' | 'from-left'>('none')
   const mobileTabsAttentionScrollRef = useRef<HTMLDivElement>(null)
   const swipeTouchStartRef = useRef<{ x: number; y: number } | null>(null)
+  /** Mobile tabbed UI: first model to emit answer/reasoning tokens this round (pin resets when answer-started map clears). */
+  const firstMobileStreamerPinnedRef = useRef<string | null>(null)
+  const prevStreamAnswerStartedRef = useRef<Record<string, boolean>>({})
+  const prevStreamingReasoningNonemptyRef = useRef<Record<string, boolean>>({})
 
   // Reset active tab index if it's out of bounds
   useEffect(() => {
@@ -121,6 +140,60 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     const id = window.setTimeout(() => setSlideEnter('none'), MODEL_TAB_SLIDE_ANIM_MS + 40)
     return () => window.clearTimeout(id)
   }, [slideEnter])
+
+  useEffect(() => {
+    if (!useTabbedMultiModelResults || visibleConversations.length < 2) return
+
+    if (Object.keys(streamAnswerStartedByModel).length === 0) {
+      firstMobileStreamerPinnedRef.current = null
+      prevStreamAnswerStartedRef.current = {}
+      prevStreamingReasoningNonemptyRef.current = {}
+    }
+
+    const syncPrevRefs = () => {
+      for (const conv of visibleConversations) {
+        const mid = conv.modelId
+        prevStreamAnswerStartedRef.current[mid] = streamAnswerStartedForModel(
+          mid,
+          streamAnswerStartedByModel
+        )
+        prevStreamingReasoningNonemptyRef.current[mid] = modelHasStreamingReasoning(
+          mid,
+          streamingReasoningByModel
+        )
+      }
+    }
+
+    if (firstMobileStreamerPinnedRef.current !== null) {
+      syncPrevRefs()
+      return
+    }
+
+    for (let i = 0; i < visibleConversations.length; i++) {
+      const mid = visibleConversations[i].modelId
+      const answerNow = streamAnswerStartedForModel(mid, streamAnswerStartedByModel)
+      const reasoningNow = modelHasStreamingReasoning(mid, streamingReasoningByModel)
+      const answerPrev = prevStreamAnswerStartedRef.current[mid] ?? false
+      const reasoningPrev = prevStreamingReasoningNonemptyRef.current[mid] ?? false
+      const becameActive =
+        (answerNow && !answerPrev) || (reasoningNow && !reasoningPrev)
+      if (becameActive) {
+        firstMobileStreamerPinnedRef.current = mid
+        setSlideEnter('none')
+        setActiveTabIndex(i)
+        onDismissMobileCapabilityDemoModelTabsHighlight?.()
+        break
+      }
+    }
+
+    syncPrevRefs()
+  }, [
+    useTabbedMultiModelResults,
+    visibleConversations,
+    streamAnswerStartedByModel,
+    streamingReasoningByModel,
+    onDismissMobileCapabilityDemoModelTabsHighlight,
+  ])
 
   if (visibleConversations.length === 0) return null
 
