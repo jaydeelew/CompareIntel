@@ -20,6 +20,14 @@ function getStreamingReasoningForModel(modelId: string, byModel: Record<string, 
   return ''
 }
 
+/** Duration aligned with `.results-tab-content-slide` CSS animation (fallback reset if `animationend` does not fire). */
+const MODEL_TAB_SLIDE_ANIM_MS = 280
+
+/** Min horizontal swipe (px); scales slightly with viewport. */
+function mobileModelTabSwipeThreshold(width: number): number {
+  return Math.max(52, Math.min(88, Math.round(width * 0.12)))
+}
+
 export interface ResultsDisplayProps {
   conversations: ModelConversation[]
   closedCards: Set<string>
@@ -88,7 +96,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
   // State for active tab when multiple models don't fit side-by-side (index of the visible card)
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
+  /** Slide-in direction for tab changes; `'none'` = initial / no animation. */
+  const [slideEnter, setSlideEnter] = useState<'none' | 'from-right' | 'from-left'>('none')
   const mobileTabsAttentionScrollRef = useRef<HTMLDivElement>(null)
+  const swipeTouchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   // Reset active tab index if it's out of bounds
   useEffect(() => {
@@ -104,6 +115,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       block: 'nearest',
     })
   }, [highlightMobileCapabilityDemoModelTabs, useTabbedMultiModelResults])
+
+  useEffect(() => {
+    if (slideEnter === 'none') return
+    const id = window.setTimeout(() => setSlideEnter('none'), MODEL_TAB_SLIDE_ANIM_MS + 40)
+    return () => window.clearTimeout(id)
+  }, [slideEnter])
 
   if (visibleConversations.length === 0) return null
 
@@ -140,6 +157,51 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     const hasErrorContent = isErrorMessage(latestMessage?.content)
     const isError = modelErrorStates[activeConversation.modelId] || hasErrorContent
     const activeTab = activeResultTabs[activeConversation.modelId] || RESULT_TAB.FORMATTED
+
+    const goToModelTab = (nextIndex: number) => {
+      const n = visibleConversations.length
+      if (n < 2 || nextIndex < 0 || nextIndex >= n || nextIndex === activeTabIndex) return
+      const direction: 'forward' | 'backward' =
+        nextIndex > activeTabIndex ? 'forward' : 'backward'
+      setSlideEnter(direction === 'forward' ? 'from-right' : 'from-left')
+      setActiveTabIndex(nextIndex)
+      onDismissMobileCapabilityDemoModelTabsHighlight?.()
+    }
+
+    const handleSwipeTouchStart = (e: React.TouchEvent) => {
+      if (e.touches.length !== 1) {
+        swipeTouchStartRef.current = null
+        return
+      }
+      swipeTouchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      }
+    }
+
+    const handleSwipeTouchEnd = (e: React.TouchEvent) => {
+      const start = swipeTouchStartRef.current
+      swipeTouchStartRef.current = null
+      if (!start || e.changedTouches.length !== 1) return
+      const dx = e.changedTouches[0].clientX - start.x
+      const dy = e.changedTouches[0].clientY - start.y
+      const absDx = Math.abs(dx)
+      const absDy = Math.abs(dy)
+      const threshold = mobileModelTabSwipeThreshold(viewportWidth)
+      if (absDx < threshold) return
+      if (absDx < absDy * 1.15) return
+
+      if (dx < 0) {
+        goToModelTab(activeTabIndex + 1)
+      } else {
+        goToModelTab(activeTabIndex - 1)
+      }
+    }
+
+    const slidePanelClass =
+      slideEnter !== 'none'
+        ? `results-tab-content-slide results-tab-content-slide--${slideEnter}`
+        : 'results-tab-content-slide'
 
     return (
       <section className={`results-section results-section-tabbed ${className}`.trim()}>
@@ -183,10 +245,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 <button
                   key={conversation.modelId}
                   className={`results-tab-button ${isActive ? 'active' : ''}`}
-                  onClick={() => {
-                    setActiveTabIndex(index)
-                    onDismissMobileCapabilityDemoModelTabsHighlight?.()
-                  }}
+                  onClick={() => goToModelTab(index)}
                   aria-label={`View results for ${model?.name || conversation.modelId}`}
                   aria-selected={isActive}
                   role="tab"
@@ -202,31 +261,36 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             })}
           </div>
 
-          <div className="results-tab-content">
-            <ResultCard
-              key={activeConversation.modelId}
-              modelId={activeConversation.modelId}
-              model={activeModel}
-              messages={activeConversation.messages}
-              activeTab={activeTab}
-              isError={isError}
-              isProcessing={modelProcessingStates[activeConversation.modelId] || false}
-              breakoutClassName={getBreakoutClass()}
-              onScreenshot={onScreenshot}
-              onCopyResponse={onCopyResponse}
-              onClose={onCloseCard}
-              onSwitchTab={onSwitchTab}
-              onBreakout={onBreakout}
-              onHideOthers={onHideOthers}
-              onCopyMessage={onCopyMessage}
-              showBreakoutButton={visibleConversations.length > 1 && !isError}
-              isTutorialActive={isTutorialActive}
-              streamingReasoning={getStreamingReasoningForModel(
-                activeConversation.modelId,
-                streamingReasoningByModel
-              )}
-              streamAnswerStarted={streamAnswerStartedByModel[activeConversation.modelId] ?? false}
-            />
+          <div
+            className="results-tab-content results-tab-content--swipe-zone"
+            onTouchStart={handleSwipeTouchStart}
+            onTouchEnd={handleSwipeTouchEnd}
+          >
+            <div key={activeConversation.modelId} className={slidePanelClass}>
+              <ResultCard
+                modelId={activeConversation.modelId}
+                model={activeModel}
+                messages={activeConversation.messages}
+                activeTab={activeTab}
+                isError={isError}
+                isProcessing={modelProcessingStates[activeConversation.modelId] || false}
+                breakoutClassName={getBreakoutClass()}
+                onScreenshot={onScreenshot}
+                onCopyResponse={onCopyResponse}
+                onClose={onCloseCard}
+                onSwitchTab={onSwitchTab}
+                onBreakout={onBreakout}
+                onHideOthers={onHideOthers}
+                onCopyMessage={onCopyMessage}
+                showBreakoutButton={visibleConversations.length > 1 && !isError}
+                isTutorialActive={isTutorialActive}
+                streamingReasoning={getStreamingReasoningForModel(
+                  activeConversation.modelId,
+                  streamingReasoningByModel
+                )}
+                streamAnswerStarted={streamAnswerStartedByModel[activeConversation.modelId] ?? false}
+              />
+            </div>
           </div>
         </div>
       </section>
