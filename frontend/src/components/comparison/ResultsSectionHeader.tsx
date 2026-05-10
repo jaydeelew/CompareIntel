@@ -57,7 +57,7 @@ export function ResultsSectionHeader({
   const buttonsDisabled = isTutorialActive
   const showDesktopStyledTooltips = !isTutorialActive
   const scrollTooltipText = isScrollLocked
-    ? 'Unlock scrolling - Each card scrolls independently'
+    ? 'Unlock scrolling - results scrolls independently'
     : 'Lock scrolling - All results scroll together'
 
   const scrollLockButton = (
