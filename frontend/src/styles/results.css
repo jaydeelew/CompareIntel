@@ -488,10 +488,27 @@
   box-shadow: var(--shadow-glass);
 }
 
-.result-card:hover {
-  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
-  border-color: var(--primary-color);
-  transform: translateY(-2px);
+/* Real pointers only: avoids sticky hover; uses theme tokens (no indigo/purple blob). */
+@media (hover: hover) and (pointer: fine) {
+  .result-card:hover {
+    box-shadow: var(--shadow-glass-hover);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+  }
+}
+
+/* Between mobile and desktop, nested cards + section elevation read as one muddy glow —
+   ease the outer results shell so inner --shadow-glass stays the focus. */
+@media (max-width: 1199px) and (min-width: 769px) {
+  .results-section {
+    box-shadow: var(--shadow-md);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .results-section:hover {
+      box-shadow: var(--shadow-lg);
+    }
+  }
 }
 
 .result-header {
@@ -504,6 +521,14 @@
   flex-direction: column;
   height: auto;
   min-height: 85px;
+}
+
+[data-theme='light'] .result-header {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-color) 14%, transparent) 0%,
+    color-mix(in srgb, var(--primary-color) 7%, transparent) 100%
+  );
 }
 
 .result-header-top {

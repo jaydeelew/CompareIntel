@@ -1189,10 +1189,12 @@
   flex-direction: column;
 }
 
-.conversation-card:hover {
-  box-shadow:
-    var(--shadow-xl),
-    0 0 30px rgba(6, 182, 212, 0.05);
+@media (hover: hover) and (pointer: fine) {
+  .conversation-card:hover {
+    box-shadow:
+      var(--shadow-xl),
+      0 0 24px color-mix(in srgb, var(--primary-color) 5%, transparent);
+  }
 }
 
 .conversation-content {

@@ -87,14 +87,16 @@
   overflow-anchor: none;
 }
 
-/* Section Hover Effects */
-.input-section:hover,
-.models-section:hover,
-.results-section:hover {
-  box-shadow:
-    var(--shadow-xl),
-    0 0 40px rgba(6, 182, 212, 0.05);
-  border-color: var(--border-strong);
+/* Section hover: fine pointers only (touch tablets avoid heavy stacked shadows after tap). */
+@media (hover: hover) and (pointer: fine) {
+  .input-section:hover,
+  .models-section:hover,
+  .results-section:hover {
+    box-shadow:
+      var(--shadow-xl),
+      0 0 32px color-mix(in srgb, var(--primary-color) 6%, transparent);
+    border-color: var(--border-strong);
+  }
 }
 
 /* Section Headings */
