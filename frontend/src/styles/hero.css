@@ -1271,6 +1271,12 @@ video.capability-tile-image-lightbox-img {
   transition-duration: 0.1s;
 }
 
+/* Icon-only control: global button:focus-visible uses a cyan box that reads as chrome, not accessibility */
+.hero-view-toggle:focus,
+.hero-view-toggle:focus-visible {
+  outline: none !important;
+}
+
 .hero-view-toggle svg {
   flex-shrink: 0;
 }
