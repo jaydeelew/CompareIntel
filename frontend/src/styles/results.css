@@ -157,7 +157,10 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
   gap: 0;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .results-tabs-header {
@@ -226,6 +229,123 @@
   background: var(--bg-hover);
 }
 
+/* ── Segmented control: narrow/tabbed multi-model results (reads as real tabs) ── */
+/* Segmented strip: scroll active tab into view centers label; padding avoids edge clip */
+.results-section-tabbed .results-tabs-header {
+  gap: 0.3rem;
+  padding: 0.35rem;
+  margin-bottom: 0.75rem;
+  border-bottom: none;
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--bg-secondary) 88%, var(--border-color));
+  border: 1px solid var(--border-color);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  scroll-padding-inline: 0.35rem;
+  overscroll-behavior-x: contain;
+}
+
+[data-theme='dark'] .results-section-tabbed .results-tabs-header {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.results-section-tabbed .results-tab-button {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  min-width: max-content;
+  overflow: visible;
+  justify-content: center;
+  text-align: center;
+  border-bottom: none;
+  border-radius: var(--radius-lg);
+  padding: 0.55rem 0.85rem;
+  font-size: 0.8125rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .results-section-tabbed .results-tab-button:hover {
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  }
+
+  .results-section-tabbed .results-tab-button.active:hover {
+    background: var(--bg-primary);
+    color: var(--primary-color);
+  }
+}
+
+.results-section-tabbed .results-tab-button.active {
+  background: var(--bg-primary);
+  border-bottom: none;
+  color: var(--primary-color);
+  font-weight: 600;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 40%, transparent);
+}
+
+[data-theme='dark'] .results-section-tabbed .results-tab-button.active {
+  background: color-mix(in srgb, var(--bg-primary) 78%, var(--primary-color) 22%);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(6, 182, 212, 0.35);
+}
+
+.results-section-tabbed .results-tab-name {
+  overflow: visible;
+  white-space: nowrap;
+  max-width: none;
+  flex-shrink: 0;
+}
+
+.results-section-tabbed .result-card {
+  overflow-x: visible;
+}
+
+.results-section-tabbed .result-header {
+  height: auto;
+  min-height: 85px;
+}
+
+.results-section-tabbed .result-header-top {
+  align-items: center;
+  min-height: 2.5rem;
+  height: auto;
+}
+
+/* One row with action icons: ellipsis when name is long (full name appears in tab strip above). */
+.results-section-tabbed .result-header h3 {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  margin-right: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  line-height: 1.35;
+}
+
+.results-section-tabbed .header-buttons-container {
+  flex-shrink: 0;
+  align-self: center;
+  margin-top: 0;
+}
+
+.results-section-tabbed .results-tabs-header.results-tabs-header--capability-demo-attention {
+  padding: 0.4rem;
+  margin-bottom: 0.85rem;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, rgba(6, 182, 212, 0.14) 50%, var(--bg-secondary)) 0%,
+    color-mix(in srgb, rgba(6, 182, 212, 0.05) 50%, var(--bg-secondary)) 100%
+  );
+  outline: 1px solid rgba(6, 182, 212, 0.45);
+  outline-offset: 2px;
+}
+
 .results-tab-name {
   display: inline-block;
 }
@@ -246,16 +366,6 @@
   50% {
     transform: scale(1.08);
   }
-}
-
-.results-tabs-header.results-tabs-header--capability-demo-attention {
-  padding-top: 0.35rem;
-  padding-bottom: 0.35rem;
-  margin-bottom: 1rem;
-  border-radius: var(--radius-sm, 8px);
-  background: linear-gradient(180deg, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 100%);
-  outline: 1px solid rgba(6, 182, 212, 0.35);
-  outline-offset: 2px;
 }
 
 .results-tabs-header.results-tabs-header--capability-demo-attention .results-tab-name {
@@ -1317,6 +1427,16 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   .result-card {
     width: 100%;
     max-width: 100%;
+  }
+
+  .results-section-tabbed .result-header {
+    height: auto;
+    min-height: 85px;
+  }
+
+  .results-section-tabbed .result-header-top {
+    height: auto;
+    min-height: 2.75rem;
   }
 
   .result-header {

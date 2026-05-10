@@ -76,6 +76,30 @@ function shouldSuppressMobileModelTabSwipe(target: EventTarget | null): boolean 
   return false
 }
 
+/**
+ * Center the active tab inside the horizontal tab strip only.
+ * Do not use `Element.scrollIntoView` on tab buttons: it scrolls ancestor chains and can shift the whole page horizontally.
+ */
+function scrollActiveModelTabIntoStrip(
+  strip: HTMLDivElement | null,
+  button: HTMLButtonElement | null,
+  behavior: 'smooth' | 'instant'
+) {
+  if (!strip || !button) return
+  const stripRect = strip.getBoundingClientRect()
+  const btnRect = button.getBoundingClientRect()
+  const buttonMidX = btnRect.left + btnRect.width / 2
+  const stripMidX = stripRect.left + stripRect.width / 2
+  const delta = buttonMidX - stripMidX
+  const maxScroll = Math.max(0, strip.scrollWidth - strip.clientWidth)
+  const targetLeft = Math.max(0, Math.min(strip.scrollLeft + delta, maxScroll))
+  if (behavior === 'instant') {
+    strip.scrollLeft = targetLeft
+  } else {
+    strip.scrollTo({ left: targetLeft, behavior: 'smooth' })
+  }
+}
+
 export interface ResultsDisplayProps {
   conversations: ModelConversation[]
   closedCards: Set<string>
@@ -148,6 +172,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   /** Slide-in direction for tab changes; `'none'` = initial / no animation. */
   const [slideEnter, setSlideEnter] = useState<'none' | 'from-right' | 'from-left'>('none')
   const mobileTabsAttentionScrollRef = useRef<HTMLDivElement>(null)
+  const modelTabsHeaderRef = useRef<HTMLDivElement>(null)
+  const modelTabButtonRefs = useRef<(HTMLButtonElement | null)[]>([])
   const swipeTouchStartRef = useRef<{
     x: number
     y: number
@@ -172,6 +198,25 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       block: 'nearest',
     })
   }, [highlightMobileCapabilityDemoModelTabs, useTabbedMultiModelResults])
+
+  const modelTabStripKey = useMemo(
+    () => visibleConversations.map(c => c.modelId).join('\0'),
+    [visibleConversations]
+  )
+
+  useLayoutEffect(() => {
+    if (!useTabbedMultiModelResults || visibleConversations.length < 2) return
+    const strip = modelTabsHeaderRef.current
+    const btn = modelTabButtonRefs.current[activeTabIndex]
+    if (!strip || !btn) return
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const id = window.requestAnimationFrame(() => {
+      scrollActiveModelTabIntoStrip(strip, btn, reducedMotion ? 'instant' : 'smooth')
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [useTabbedMultiModelResults, activeTabIndex, modelTabStripKey, visibleConversations.length])
 
   useEffect(() => {
     if (slideEnter === 'none') return
@@ -342,11 +387,14 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
         <div className="results-tabs-container" ref={mobileTabsAttentionScrollRef}>
           <div
+            ref={modelTabsHeaderRef}
             className={`results-tabs-header ${
               highlightMobileCapabilityDemoModelTabs
                 ? 'results-tabs-header--capability-demo-attention'
                 : ''
             }`.trim()}
+            role="tablist"
+            aria-label="Compared models"
           >
             {visibleConversations.map((conversation, index) => {
               const model = allModels.find(m => m.id === conversation.modelId)
@@ -358,6 +406,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               return (
                 <button
                   key={conversation.modelId}
+                  ref={el => {
+                    modelTabButtonRefs.current[index] = el
+                  }}
                   className={`results-tab-button ${isActive ? 'active' : ''}`}
                   onClick={() => goToModelTab(index)}
                   aria-label={`View results for ${model?.name || conversation.modelId}`}
@@ -375,7 +426,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             })}
           </div>
 
-          {visibleConversations.length > 1 && (
+          {visibleConversations.length > 2 && (
             <div className="results-tab-pager" aria-hidden="true">
               {visibleConversations.map((conv, index) => (
                 <span

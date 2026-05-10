@@ -103,7 +103,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
     <div className={combinedClassName} style={style}>
       <div className="result-header">
         <div className="result-header-top">
-          <h3>{model?.name || modelId}</h3>
+          <h3 title={model?.name || modelId}>{model?.name || modelId}</h3>
           <div className="header-buttons-container">
             {onScreenshot && (
               <StyledTooltip usePortal text="Copy formatted chat history">
