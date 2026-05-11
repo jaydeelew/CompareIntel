@@ -1,6 +1,11 @@
 import type { Page } from '@playwright/test'
 
-import { waitForAuthState, waitForReactHydration, dismissTutorialOverlay } from './fixtures'
+import {
+  waitForAuthState,
+  waitForReactHydration,
+  dismissTutorialOverlay,
+  dismissBlockingOnboardingOverlays,
+} from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { test, expect } from './test-setup'
 
@@ -789,9 +794,11 @@ test.describe('Registration and Onboarding', () => {
         }
       }
 
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 15000 })
       const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
-      await expect(authModal).toBeVisible()
+      if (!(await authModal.isVisible({ timeout: 2000 }).catch(() => false))) {
+        await signInButton.evaluate((el: HTMLElement) => el.click())
+      }
+      await expect(authModal).toBeVisible({ timeout: 15000 })
     })
 
     await test.step('Fill login form', async () => {

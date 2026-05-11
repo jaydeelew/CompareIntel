@@ -312,6 +312,14 @@ async function dismissTutorialOverlay(page: Page): Promise<void> {
   }
 }
 
+/**
+ * Extra pass for tutorial / trial welcome / spotlight overlays before fragile actions
+ * (e.g. model checkbox clicks). Named for onboarding specs; delegates to dismissTutorialOverlay.
+ */
+async function dismissBlockingOnboardingOverlays(page: Page): Promise<void> {
+  await dismissTutorialOverlay(page)
+}
+
 // ============================================================================
 // Configuration & Constants
 // ============================================================================
@@ -578,6 +586,11 @@ async function loginUser(
       } else {
         throw error
       }
+    }
+    // Folded sticky nav uses pointer-events: none — hit-tested clicks may not run the handler.
+    const authModalQuick = page.locator('[data-testid="auth-modal"], .auth-modal')
+    if (!(await authModalQuick.isVisible({ timeout: 1500 }).catch(() => false))) {
+      await loginButton.evaluate((el: HTMLElement) => el.click())
     }
     await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 15000 })
 
@@ -1559,4 +1572,5 @@ export {
   retryElementDetection,
   safeWait,
   dismissTutorialOverlay,
+  dismissBlockingOnboardingOverlays,
 }
