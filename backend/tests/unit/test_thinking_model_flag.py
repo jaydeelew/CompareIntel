@@ -54,16 +54,8 @@ def test_openrouter_reasoning_body_moonshot_uses_enabled() -> None:
     assert openrouter_reasoning_request_body("moonshotai/kimi-k2.5") == {"enabled": True}
 
 
-def test_should_request_reasoning_for_claude_37() -> None:
-    assert should_request_openrouter_reasoning_traces("anthropic/claude-3.7-sonnet") is True
-
-
 def test_should_not_request_reasoning_for_grok_4() -> None:
     assert should_request_openrouter_reasoning_traces("x-ai/grok-4") is False
-
-
-def test_openrouter_reasoning_body_anthropic_uses_max_tokens() -> None:
-    assert openrouter_reasoning_request_body("anthropic/claude-3.7-sonnet") == {"max_tokens": 31999}
 
 
 def test_openrouter_reasoning_body_openai_o_series_uses_effort() -> None:

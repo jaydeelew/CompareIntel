@@ -338,7 +338,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'openai/o3', evidence: 'MATH (llmdb.com): 94.8%.' },
       { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'MATH (llmdb.com): 90.2%.' },
       { modelId: 'openai/gpt-4o', evidence: 'MATH (llmdb.com): 76.6%.' },
-      { modelId: 'anthropic/claude-3.7-sonnet', evidence: 'MATH (llmdb.com): 3.7%.' },
       { modelId: 'google/gemini-2.5-pro', evidence: 'MATH (llmdb.com): 2.0%.' },
       { modelId: 'google/gemini-2.5-flash', evidence: 'MATH (llmdb.com): 2.0%.' },
     ],

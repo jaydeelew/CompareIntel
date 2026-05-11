@@ -28,7 +28,7 @@ describe('isThinkingModel', () => {
     expect(
       isThinkingModel({
         ...base,
-        id: 'anthropic/claude-3.7-sonnet',
+        id: 'fixture/legacy-reasoning-lookalike',
         name: 'Claude Sonnet 3.7',
         category: 'Language/Reasoning',
         description: 'Would have matched old heuristics.',
