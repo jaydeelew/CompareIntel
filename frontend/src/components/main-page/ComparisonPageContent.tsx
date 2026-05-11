@@ -69,6 +69,7 @@ export interface ComparisonPageContentProps {
   // Error
   error: string | null
   errorMessageRef: RefObject<HTMLDivElement | null>
+  onDismissError: () => void
 
   // Vision notice (dismissible error banner for image/model conflicts)
   visionNoticeMessage: string | null
@@ -140,6 +141,7 @@ export function ComparisonPageContent({
   onDismissCreditWarning,
   error,
   errorMessageRef,
+  onDismissError,
   visionNoticeMessage,
   onDismissVisionNotice,
   modelsAreaProps,
@@ -257,8 +259,20 @@ export function ComparisonPageContent({
       )}
 
       {error && !(visionNoticeMessage && error === 'Please select at least one model') && (
-        <div className="error-message" ref={errorMessageRef as React.RefObject<HTMLDivElement>}>
+        <div
+          className="error-message"
+          ref={errorMessageRef as React.RefObject<HTMLDivElement>}
+          role="alert"
+        >
           <span>⚠️ {error}</span>
+          <button
+            type="button"
+            onClick={onDismissError}
+            title="Dismiss"
+            aria-label="Dismiss error message"
+          >
+            X
+          </button>
         </div>
       )}
 

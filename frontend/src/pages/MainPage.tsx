@@ -2716,6 +2716,7 @@ export function MainPage() {
           }}
           error={error}
           errorMessageRef={errorMessageRef}
+          onDismissError={() => setError(null)}
           visionNoticeMessage={visionNoticeMessage}
           onDismissVisionNotice={() => setVisionNoticeMessage(null)}
           onOpenHelpMeChoose={openHelpMeChoose}
