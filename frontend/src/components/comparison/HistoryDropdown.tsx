@@ -110,17 +110,19 @@ export function HistoryDropdown({
               conversationHistory.length >= tierLimit && (
                 <div className="history-signup-prompt">
                   <div className="history-signup-message">
-                    <span className="history-signup-line">
-                      {userTier === 'unregistered'
-                        ? 'You can only save the last 2 comparisons.'
-                        : 'You only have 3 saves for your tier.'}
-                    </span>
-                    <span className="history-signup-line">
-                      {' '}
-                      {userTier === 'unregistered'
-                        ? 'Sign up for a free account to save more!'
-                        : 'Upgrade to save more comparisons!'}
-                    </span>
+                    {userTier === 'unregistered' ? (
+                      <span className="history-signup-line">Sign up to save more history.</span>
+                    ) : (
+                      <>
+                        <span className="history-signup-line">
+                          You only have 3 saves for your tier.
+                        </span>
+                        <span className="history-signup-line">
+                          {' '}
+                          Upgrade to save more comparisons!
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
