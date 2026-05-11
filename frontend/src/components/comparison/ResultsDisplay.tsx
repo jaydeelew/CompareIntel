@@ -34,6 +34,27 @@ function modelHasStreamingReasoning(modelId: string, byModel: Record<string, str
   return getStreamingReasoningForModel(modelId, byModel).length > 0
 }
 
+/** Tab strip: show spinner after this model has emitted streamed output (or reasoning), until its round completes. */
+function modelTabIsStillStreaming(
+  conversation: ModelConversation,
+  modelProcessingStates: Record<string, boolean>,
+  streamingReasoningByModel: Record<string, string>,
+  streamAnswerStartedByModel: Record<string, boolean>
+): boolean {
+  const mid = conversation.modelId
+  if (!modelProcessingStates[mid]) return false
+
+  if (streamAnswerStartedForModel(mid, streamAnswerStartedByModel)) return true
+  if (modelHasStreamingReasoning(mid, streamingReasoningByModel)) return true
+
+  const latestMsg = conversation.messages[conversation.messages.length - 1]
+  if (latestMsg?.type === 'assistant') {
+    if ((latestMsg.content || '').trim().length > 0) return true
+    if ((latestMsg.images?.length ?? 0) > 0) return true
+  }
+  return false
+}
+
 /** Duration aligned with `.results-tab-content-slide--*` CSS in results.css (fallback if `animationend` does not fire). */
 const MODEL_TAB_SLIDE_ANIM_MS = 480
 
@@ -399,6 +420,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               const latestMsg = conversation.messages[conversation.messages.length - 1]
               const hasError =
                 modelErrorStates[conversation.modelId] || isErrorMessage(latestMsg?.content)
+              const showStreamingIndicator = modelTabIsStillStreaming(
+                conversation,
+                modelProcessingStates,
+                streamingReasoningByModel,
+                streamAnswerStartedByModel
+              )
 
               return (
                 <button
@@ -410,9 +437,19 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   onClick={() => goToModelTab(index)}
                   aria-label={`View results for ${model?.name || conversation.modelId}`}
                   aria-selected={isActive}
+                  aria-busy={showStreamingIndicator}
                   role="tab"
                 >
                   <span className="results-tab-name">{model?.name || conversation.modelId}</span>
+                  {showStreamingIndicator && (
+                    <span
+                      className="results-tab-streaming-spinner"
+                      aria-hidden="true"
+                      title="Still generating"
+                    >
+                      <span className="modern-spinner results-tab-streaming-spinner-icon" />
+                    </span>
+                  )}
                   {hasError && (
                     <span className="results-tab-error-indicator" aria-label="Error">
                       ⚠

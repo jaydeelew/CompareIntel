@@ -356,6 +356,31 @@
   line-height: 1;
 }
 
+/* Spinner to the right of the model name while that model is still streaming */
+.results-tab-streaming-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-inline-start: 0.125rem;
+}
+
+.results-tab-streaming-spinner-icon {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  vertical-align: middle;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .results-tab-streaming-spinner .modern-spinner {
+    animation: none;
+    opacity: 0.9;
+    border-color: var(--bg-tertiary);
+    border-top-color: var(--primary-color);
+  }
+}
+
 /* Mobile capability demo: match tutorial mobile tab attention — scale pulse on model names */
 @keyframes capability-demo-tabs-size-pulse {
   0%,
