@@ -451,6 +451,27 @@
   width: 100%;
 }
 
+.results-tab-awaiting-first-response {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 8rem;
+  padding: 1.25rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--bg-secondary) 94%, var(--primary-color));
+  border: 1px solid color-mix(in srgb, var(--border-color) 88%, var(--primary-color));
+}
+
+.results-tab-awaiting-first-response-message {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
 /* Full panel-width travel reads as “next/prev model card” sliding in (mobile tabbed results). */
 @keyframes results-tab-slide-in-from-right {
   from {

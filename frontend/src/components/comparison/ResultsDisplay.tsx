@@ -34,25 +34,25 @@ function modelHasStreamingReasoning(modelId: string, byModel: Record<string, str
   return getStreamingReasoningForModel(modelId, byModel).length > 0
 }
 
-/** Tab strip: show spinner after this model has emitted streamed output (or reasoning), until its round completes. */
-function modelTabIsStillStreaming(
-  conversation: ModelConversation,
-  modelProcessingStates: Record<string, boolean>,
-  streamingReasoningByModel: Record<string, string>,
-  streamAnswerStartedByModel: Record<string, boolean>
+function modelIsProcessing(
+  modelId: string,
+  modelProcessingStates: Record<string, boolean>
 ): boolean {
-  const mid = conversation.modelId
-  if (!modelProcessingStates[mid]) return false
-
-  if (streamAnswerStartedForModel(mid, streamAnswerStartedByModel)) return true
-  if (modelHasStreamingReasoning(mid, streamingReasoningByModel)) return true
-
-  const latestMsg = conversation.messages[conversation.messages.length - 1]
-  if (latestMsg?.type === 'assistant') {
-    if ((latestMsg.content || '').trim().length > 0) return true
-    if ((latestMsg.images?.length ?? 0) > 0) return true
+  if (modelProcessingStates[modelId]) return true
+  const target = createModelId(modelId)
+  for (const [k, v] of Object.entries(modelProcessingStates)) {
+    if (!v) continue
+    if (createModelId(k) === target) return true
   }
   return false
+}
+
+/** Tab strip: show spinner while this model is still processing (including before the first token). */
+function modelTabIsStillStreaming(
+  conversation: ModelConversation,
+  modelProcessingStates: Record<string, boolean>
+): boolean {
+  return modelIsProcessing(conversation.modelId, modelProcessingStates)
 }
 
 /** Duration aligned with `.results-tab-content-slide--*` CSS in results.css (fallback if `animationend` does not fire). */
@@ -151,6 +151,8 @@ export interface ResultsDisplayProps {
   streamAnswerStartedByModel?: Record<string, boolean>
   highlightMobileCapabilityDemoModelTabs?: boolean
   onDismissMobileCapabilityDemoModelTabsHighlight?: () => void
+  /** True while a comparison is in flight (drives model-tab auto-focus). */
+  isComparisonLoading?: boolean
 }
 
 // Renders comparison results as a grid when all cards fit one row, otherwise model-name tabs
@@ -177,6 +179,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   streamAnswerStartedByModel = {},
   highlightMobileCapabilityDemoModelTabs = false,
   onDismissMobileCapabilityDemoModelTabsHighlight,
+  isComparisonLoading = false,
 }) => {
   const visibleConversations = useMemo(
     () => conversations.filter(conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)),
@@ -188,7 +191,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     visibleConversations.length > 1 &&
     viewportWidth < minViewportWidthForResultsSingleRow(visibleConversations.length)
 
-  // State for active tab when multiple models don't fit side-by-side (index of the visible card)
+  /**
+   * Active model tab index in tabbed layout. `-1` = no card selected yet (awaiting first stream
+   * or immediate completion) after a new comparison starts.
+   */
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
   /** Slide-in direction for tab changes; `'none'` = initial / no animation. */
   const [slideEnter, setSlideEnter] = useState<'none' | 'from-right' | 'from-left'>('none')
@@ -204,11 +210,41 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const firstMobileStreamerPinnedRef = useRef<string | null>(null)
   const prevStreamAnswerStartedRef = useRef<Record<string, boolean>>({})
   const prevStreamingReasoningNonemptyRef = useRef<Record<string, boolean>>({})
+  const prevIsComparisonLoadingRef = useRef(false)
+  /** After the first model finishes processing this run, auto-focus runs at most once. */
+  const firstCompleterFocusedRef = useRef(false)
+  const prevProcessingByModelRef = useRef<Record<string, boolean>>({})
+
+  useEffect(() => {
+    const wasLoading = prevIsComparisonLoadingRef.current
+    prevIsComparisonLoadingRef.current = isComparisonLoading
+
+    if (!useTabbedMultiModelResults || visibleConversations.length < 2) return
+
+    if (isComparisonLoading && !wasLoading) {
+      setActiveTabIndex(-1)
+      setSlideEnter('none')
+      firstCompleterFocusedRef.current = false
+      firstMobileStreamerPinnedRef.current = null
+      prevStreamAnswerStartedRef.current = {}
+      prevStreamingReasoningNonemptyRef.current = {}
+      prevProcessingByModelRef.current = {}
+    }
+  }, [isComparisonLoading, useTabbedMultiModelResults, visibleConversations.length])
+
+  // If automation left no selection after loading ends, fall back to the first tab.
+  useEffect(() => {
+    if (!useTabbedMultiModelResults || visibleConversations.length < 2) return
+    if (!isComparisonLoading && activeTabIndex < 0) {
+      setActiveTabIndex(0)
+    }
+  }, [useTabbedMultiModelResults, visibleConversations.length, isComparisonLoading, activeTabIndex])
 
   // Reset active tab index if it's out of bounds
   useEffect(() => {
-    if (activeTabIndex >= visibleConversations.length && visibleConversations.length > 0) {
-      setActiveTabIndex(0)
+    if (visibleConversations.length === 0) return
+    if (activeTabIndex >= visibleConversations.length) {
+      setActiveTabIndex(Math.max(0, visibleConversations.length - 1))
     }
   }, [activeTabIndex, visibleConversations.length])
 
@@ -297,6 +333,45 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     onDismissMobileCapabilityDemoModelTabsHighlight,
   ])
 
+  /** Auto-focus the first model tab that finishes processing (once per comparison run). */
+  useEffect(() => {
+    if (!useTabbedMultiModelResults || visibleConversations.length < 2) return
+
+    const completionAutomationAllowed = !firstCompleterFocusedRef.current
+
+    if (completionAutomationAllowed) {
+      for (let i = 0; i < visibleConversations.length; i++) {
+        const mid = visibleConversations[i].modelId
+        const now = modelIsProcessing(mid, modelProcessingStates)
+        const prev = prevProcessingByModelRef.current[mid]
+        if (prev === true && now === false) {
+          firstCompleterFocusedRef.current = true
+          if (activeTabIndex >= 0 && i !== activeTabIndex) {
+            setSlideEnter(i > activeTabIndex ? 'from-right' : 'from-left')
+          } else {
+            setSlideEnter('none')
+          }
+          setActiveTabIndex(i)
+          onDismissMobileCapabilityDemoModelTabsHighlight?.()
+          break
+        }
+      }
+    }
+
+    for (const conv of visibleConversations) {
+      prevProcessingByModelRef.current[conv.modelId] = modelIsProcessing(
+        conv.modelId,
+        modelProcessingStates
+      )
+    }
+  }, [
+    useTabbedMultiModelResults,
+    visibleConversations,
+    modelProcessingStates,
+    activeTabIndex,
+    onDismissMobileCapabilityDemoModelTabsHighlight,
+  ])
+
   if (visibleConversations.length === 0) return null
 
   // Compute breakout animation class from phase
@@ -326,17 +401,31 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   }
 
   if (useTabbedMultiModelResults) {
-    const activeConversation = visibleConversations[activeTabIndex]
-    const activeModel = allModels.find(m => m.id === activeConversation.modelId)
-    const latestMessage = activeConversation.messages[activeConversation.messages.length - 1]
-    const hasErrorContent = isErrorMessage(latestMessage?.content)
-    const isError = modelErrorStates[activeConversation.modelId] || hasErrorContent
-    const activeTab = activeResultTabs[activeConversation.modelId] || RESULT_TAB.FORMATTED
+    const activeConversation =
+      activeTabIndex >= 0 && activeTabIndex < visibleConversations.length
+        ? visibleConversations[activeTabIndex]
+        : undefined
+    const showAwaitingFirstPanel = activeTabIndex < 0
+
+    const activeModel = activeConversation
+      ? allModels.find(m => m.id === activeConversation.modelId)
+      : undefined
+    const latestMessage = activeConversation
+      ? activeConversation.messages[activeConversation.messages.length - 1]
+      : undefined
+    const hasErrorContent = latestMessage ? isErrorMessage(latestMessage.content) : false
+    const isError = activeConversation
+      ? modelErrorStates[activeConversation.modelId] || hasErrorContent
+      : false
+    const activeTab = activeConversation
+      ? activeResultTabs[activeConversation.modelId] || RESULT_TAB.FORMATTED
+      : RESULT_TAB.FORMATTED
 
     const goToModelTab = (nextIndex: number) => {
       const n = visibleConversations.length
       if (n < 2 || nextIndex < 0 || nextIndex >= n || nextIndex === activeTabIndex) return
-      const direction: 'forward' | 'backward' = nextIndex > activeTabIndex ? 'forward' : 'backward'
+      const direction: 'forward' | 'backward' =
+        activeTabIndex < 0 || nextIndex > activeTabIndex ? 'forward' : 'backward'
       setSlideEnter(direction === 'forward' ? 'from-right' : 'from-left')
       setActiveTabIndex(nextIndex)
       onDismissMobileCapabilityDemoModelTabsHighlight?.()
@@ -369,7 +458,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       if (absDx < absDy * 1.35) return
 
       if (dx < 0) {
-        goToModelTab(activeTabIndex + 1)
+        const next = activeTabIndex < 0 ? 0 : activeTabIndex + 1
+        goToModelTab(next)
       } else {
         goToModelTab(activeTabIndex - 1)
       }
@@ -422,9 +512,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 modelErrorStates[conversation.modelId] || isErrorMessage(latestMsg?.content)
               const showStreamingIndicator = modelTabIsStillStreaming(
                 conversation,
-                modelProcessingStates,
-                streamingReasoningByModel,
-                streamAnswerStartedByModel
+                modelProcessingStates
               )
 
               return (
@@ -476,34 +564,48 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             onTouchStart={handleSwipeTouchStart}
             onTouchEnd={handleSwipeTouchEnd}
           >
-            <div key={activeConversation.modelId} className={slidePanelClass}>
-              <ResultCard
-                modelId={activeConversation.modelId}
-                model={activeModel}
-                messages={activeConversation.messages}
-                activeTab={activeTab}
-                isError={isError}
-                isProcessing={modelProcessingStates[activeConversation.modelId] || false}
-                breakoutClassName={getBreakoutClass()}
-                onScreenshot={onScreenshot}
-                onCopyResponse={onCopyResponse}
-                onClose={onCloseCard}
-                onSwitchTab={onSwitchTab}
-                onBreakout={onBreakout}
-                onHideOthers={onHideOthers}
-                onCopyMessage={onCopyMessage}
-                showBreakoutButton={visibleConversations.length > 1 && !isError}
-                isTutorialActive={isTutorialActive}
-                streamingReasoning={getStreamingReasoningForModel(
-                  activeConversation.modelId,
-                  streamingReasoningByModel
-                )}
-                streamAnswerStarted={streamAnswerStartedForModel(
-                  activeConversation.modelId,
-                  streamAnswerStartedByModel
-                )}
-              />
-            </div>
+            {showAwaitingFirstPanel ? (
+              <div key="results-awaiting-first-stream" className={slidePanelClass}>
+                <div
+                  className="results-tab-awaiting-first-response"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p className="results-tab-awaiting-first-response-message">
+                    Waiting for the first response…
+                  </p>
+                </div>
+              </div>
+            ) : activeConversation ? (
+              <div key={activeConversation.modelId} className={slidePanelClass}>
+                <ResultCard
+                  modelId={activeConversation.modelId}
+                  model={activeModel}
+                  messages={activeConversation.messages}
+                  activeTab={activeTab}
+                  isError={isError}
+                  isProcessing={modelProcessingStates[activeConversation.modelId] || false}
+                  breakoutClassName={getBreakoutClass()}
+                  onScreenshot={onScreenshot}
+                  onCopyResponse={onCopyResponse}
+                  onClose={onCloseCard}
+                  onSwitchTab={onSwitchTab}
+                  onBreakout={onBreakout}
+                  onHideOthers={onHideOthers}
+                  onCopyMessage={onCopyMessage}
+                  showBreakoutButton={visibleConversations.length > 1 && !isError}
+                  isTutorialActive={isTutorialActive}
+                  streamingReasoning={getStreamingReasoningForModel(
+                    activeConversation.modelId,
+                    streamingReasoningByModel
+                  )}
+                  streamAnswerStarted={streamAnswerStartedForModel(
+                    activeConversation.modelId,
+                    streamAnswerStartedByModel
+                  )}
+                />
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

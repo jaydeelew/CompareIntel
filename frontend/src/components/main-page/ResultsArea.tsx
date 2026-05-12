@@ -29,6 +29,8 @@ export interface ResultsAreaProps {
   modelProcessingStates: Record<string, boolean>
   modelErrorStates: Record<string, boolean>
   breakoutPhase: BreakoutPhase
+  /** True while a comparison request is in flight (model-tab focus automation). */
+  isComparisonLoading?: boolean
 
   // UI state
   isScrollLocked: boolean
@@ -70,6 +72,7 @@ export function ResultsArea({
   modelProcessingStates,
   modelErrorStates,
   breakoutPhase,
+  isComparisonLoading = false,
 
   // UI state
   isScrollLocked,
@@ -122,6 +125,7 @@ export function ResultsArea({
           modelProcessingStates={modelProcessingStates}
           modelErrorStates={modelErrorStates}
           breakoutPhase={breakoutPhase}
+          isComparisonLoading={isComparisonLoading}
           onScreenshot={onScreenshot}
           onCopyResponse={onCopyResponse}
           onCloseCard={onCloseCard}

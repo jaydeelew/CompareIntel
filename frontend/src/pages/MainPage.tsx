@@ -2879,6 +2879,7 @@ export function MainPage() {
             modelProcessingStates,
             modelErrorStates,
             breakoutPhase,
+            isComparisonLoading: isLoading,
             isScrollLocked,
             showExportMenu,
             isMobileLayout,
