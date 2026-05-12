@@ -59,6 +59,10 @@ export interface ResultsAreaProps {
   /** Mobile capability demo: draw attention to model switcher tabs */
   highlightMobileCapabilityDemoModelTabs?: boolean
   onDismissMobileCapabilityDemoModelTabsHighlight?: () => void
+  /** Bumps each time guided tutorial begins (resets mobile swipe hint between sessions). */
+  tutorialSwipeHintNonce?: number
+  /** Bumps when a capability-demo comparison finishes with tabbed multi-model results (Try a comparison). */
+  capabilitySwipeHintNonce?: number
 }
 
 export function ResultsArea({
@@ -99,6 +103,8 @@ export function ResultsArea({
   streamAnswerStartedByModel = {},
   highlightMobileCapabilityDemoModelTabs = false,
   onDismissMobileCapabilityDemoModelTabsHighlight,
+  tutorialSwipeHintNonce = 0,
+  capabilitySwipeHintNonce = 0,
 }: ResultsAreaProps) {
   return (
     <ErrorBoundary>
@@ -140,6 +146,8 @@ export function ResultsArea({
           onDismissMobileCapabilityDemoModelTabsHighlight={
             onDismissMobileCapabilityDemoModelTabsHighlight
           }
+          tutorialSwipeHintNonce={tutorialSwipeHintNonce}
+          capabilitySwipeHintNonce={capabilitySwipeHintNonce}
         />
       </section>
     </ErrorBoundary>

@@ -410,6 +410,73 @@
 .results-tab-content--swipe-zone {
   touch-action: pan-y;
   overflow-x: clip;
+  position: relative;
+}
+
+/* Guided hint: translucent scrim over the swipeable result card until the first sideways swipe gesture. */
+.results-tab-swipe-hint-overlay {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: max(12px, 2vmin);
+  background: radial-gradient(
+    ellipse 85% 70% at 50% 50%,
+    color-mix(in srgb, var(--bg-primary) 18%, transparent) 25%,
+    color-mix(in srgb, var(--primary-color) 10%, transparent) 100%
+  );
+  backdrop-filter: blur(0.75px);
+  -webkit-backdrop-filter: blur(0.75px);
+  border-radius: var(--radius-lg);
+}
+
+.results-tab-swipe-hint-contents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.42rem;
+  color: color-mix(in srgb, var(--text-secondary) 80%, var(--primary-color));
+  text-align: center;
+  max-width: 14rem;
+  filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--bg-primary) 70%, transparent));
+}
+
+.results-tab-swipe-hint-hand-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  animation: results-tab-swipe-hint-motion 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes results-tab-swipe-hint-motion {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: translateX(-18px);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(18px);
+  }
+}
+
+.results-tab-swipe-hint-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  text-wrap: balance;
+  line-height: 1.3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .results-tab-swipe-hint-hand-icon {
+    animation: none;
+    transform: translateX(0);
+  }
 }
 
 /* Prefer horizontal pans for scrolling code; pairs with ResultsDisplay touch gating on model-tab swipe. */

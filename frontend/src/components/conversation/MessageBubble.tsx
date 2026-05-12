@@ -1,10 +1,8 @@
-import React, { Suspense, useLayoutEffect, useRef, useState } from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 
 import { RESULT_TAB, type ResultTab } from '../../types'
 import { formatTime, getSafeId } from '../../utils'
-// Lazy-loaded: keeps KaTeX + markdown pipeline off the main chunk path. Requires a
-// single React resolution (see vite alias/dedupe) — same constraint as core app hooks.
-const LatexRendererLazy = React.lazy(() => import('../LatexRenderer'))
+import LatexRenderer from '../LatexRenderer'
 import { StyledTooltip } from '../shared'
 
 const BRAND_LOGO_SRC = '/brand/logo.svg'
@@ -296,21 +294,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
         {safeContent &&
           (activeTab === RESULT_TAB.FORMATTED ? (
-            <Suspense
-              fallback={
-                <div
-                  className="result-output"
-                  aria-busy="true"
-                  aria-label="Loading formatted content"
-                >
-                  {/* Intentionally empty: yields layout stability without duplicating streamed text */}
-                </div>
-              }
-            >
-              <LatexRendererLazy className="result-output" modelId={modelId}>
-                {safeContent}
-              </LatexRendererLazy>
-            </Suspense>
+            <LatexRenderer className="result-output" modelId={modelId}>
+              {safeContent}
+            </LatexRenderer>
           ) : (
             /* Raw text for immediate streaming display */
             <pre className="result-output raw-output">{safeContent}</pre>

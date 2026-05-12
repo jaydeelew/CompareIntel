@@ -69,7 +69,7 @@ const MOBILE_STEP_OVERRIDES: Partial<
   'follow-up': {
     position: 'bottom', // Tooltip below the composer so results stay visible (mobile step 5)
     description:
-      'Review the responses from both models above by selecting their tabs. Then, type a follow-up.',
+      'Review the responses from both models above by selecting their tabs or swiping to the next model. Then, type a follow-up.',
   },
   'view-follow-up-results': {
     position: 'top', // Step 6: mobile code places the card above or below the full results block

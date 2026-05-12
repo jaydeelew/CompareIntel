@@ -71,7 +71,7 @@ describe('ResultCard', () => {
 
     it('should render conversation messages', async () => {
       render(<ResultCard modelId={mockModel.id} model={mockModel} messages={mockMessages} />)
-      // Formatted tab uses lazy LatexRenderer inside Suspense; allow chunk load under parallel CI.
+      // Formatted tab uses LatexRenderer (heavy); allow render under parallel CI.
       const lazyWait = { timeout: 15_000 }
       expect(await screen.findByText(/hello/i, {}, lazyWait)).toBeInTheDocument()
       expect(await screen.findByText(/hi there/i, {}, lazyWait)).toBeInTheDocument()

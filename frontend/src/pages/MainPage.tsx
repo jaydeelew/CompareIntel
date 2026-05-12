@@ -303,6 +303,7 @@ export function MainPage() {
   const [highlightMobileCapabilityDemoModelTabs, setHighlightMobileCapabilityDemoModelTabs] =
     useState(false)
   const [capabilityDemoTabsAttentionEpoch, setCapabilityDemoTabsAttentionEpoch] = useState(0)
+  const [capabilitySwipeHintNonce, setCapabilitySwipeHintNonce] = useState(0)
   const [showPremiumModelsToggleModal, setShowPremiumModelsToggleModal] = useState(false)
   const [showCreditsInfoModal, setShowCreditsInfoModal] = useState(false)
   const [disabledButtonInfo, setDisabledButtonInfo] = useState<{
@@ -419,6 +420,16 @@ export function MainPage() {
     isAuthenticated,
     authLoading,
   })
+
+  const prevTutorialActiveForSwipeHintRef = useRef(false)
+  const [tutorialSwipeHintNonce, setTutorialSwipeHintNonce] = useState(0)
+
+  useEffect(() => {
+    if (tutorialState.isActive && !prevTutorialActiveForSwipeHintRef.current) {
+      setTutorialSwipeHintNonce(n => n + 1)
+    }
+    prevTutorialActiveForSwipeHintRef.current = tutorialState.isActive
+  }, [tutorialState.isActive])
 
   /** Once the welcome modal was shown, Navigation can tell “Start” dismiss from “never shown”. */
   const welcomeModalEverShownRef = useRef(false)
@@ -2459,6 +2470,7 @@ export function MainPage() {
 
       if (showResults && visibleCount >= 2) {
         setHighlightMobileCapabilityDemoModelTabs(true)
+        setCapabilitySwipeHintNonce(n => n + 1)
       }
     }
   }, [isCapabilityIconRowLayout, isLoading, response, conversations, closedCards])
@@ -2902,6 +2914,8 @@ export function MainPage() {
               isCapabilityIconRowLayout && highlightMobileCapabilityDemoModelTabs,
             onDismissMobileCapabilityDemoModelTabsHighlight:
               dismissMobileCapabilityDemoModelTabsHighlight,
+            tutorialSwipeHintNonce,
+            capabilitySwipeHintNonce,
           }}
         />
 

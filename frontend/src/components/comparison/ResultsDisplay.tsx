@@ -1,3 +1,4 @@
+import Hand from 'lucide-react/dist/esm/icons/hand'
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { minViewportWidthForResultsSingleRow } from '../../config/constants'
@@ -151,9 +152,15 @@ export interface ResultsDisplayProps {
   streamAnswerStartedByModel?: Record<string, boolean>
   highlightMobileCapabilityDemoModelTabs?: boolean
   onDismissMobileCapabilityDemoModelTabsHighlight?: () => void
+  /** Bumps whenever guided tutorial starts (finger-swipe hint resets until first swipe). */
+  tutorialSwipeHintNonce?: number
+  /** Bumps when a capability “Try a comparison” run finishes with tabbed multi-model results. */
+  capabilitySwipeHintNonce?: number
   /** True while a comparison is in flight (drives model-tab auto-focus). */
   isComparisonLoading?: boolean
 }
+
+type TabChangeSource = 'swipe-touch' | 'tab-click' | 'programmatic'
 
 // Renders comparison results as a grid when all cards fit one row, otherwise model-name tabs
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
@@ -179,6 +186,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   streamAnswerStartedByModel = {},
   highlightMobileCapabilityDemoModelTabs = false,
   onDismissMobileCapabilityDemoModelTabsHighlight,
+  tutorialSwipeHintNonce = 0,
+  capabilitySwipeHintNonce = 0,
   isComparisonLoading = false,
 }) => {
   const visibleConversations = useMemo(
@@ -198,6 +207,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
   /** Slide-in direction for tab changes; `'none'` = initial / no animation. */
   const [slideEnter, setSlideEnter] = useState<'none' | 'from-right' | 'from-left'>('none')
+  const [tutorialFingerSwipeDismissed, setTutorialFingerSwipeDismissed] = useState(false)
+  const [capabilityFingerSwipeDismissed, setCapabilityFingerSwipeDismissed] = useState(false)
   const mobileTabsAttentionScrollRef = useRef<HTMLDivElement>(null)
   const modelTabsHeaderRef = useRef<HTMLDivElement>(null)
   const modelTabButtonRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -214,6 +225,14 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   /** After the first model finishes processing this run, auto-focus runs at most once. */
   const firstCompleterFocusedRef = useRef(false)
   const prevProcessingByModelRef = useRef<Record<string, boolean>>({})
+
+  useEffect(() => {
+    setTutorialFingerSwipeDismissed(false)
+  }, [tutorialSwipeHintNonce])
+
+  useEffect(() => {
+    setCapabilityFingerSwipeDismissed(false)
+  }, [capabilitySwipeHintNonce])
 
   useEffect(() => {
     const wasLoading = prevIsComparisonLoadingRef.current
@@ -421,14 +440,24 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       ? activeResultTabs[activeConversation.modelId] || RESULT_TAB.FORMATTED
       : RESULT_TAB.FORMATTED
 
-    const goToModelTab = (nextIndex: number) => {
+    const goToModelTab = (nextIndex: number, source: TabChangeSource = 'programmatic') => {
       const n = visibleConversations.length
       if (n < 2 || nextIndex < 0 || nextIndex >= n || nextIndex === activeTabIndex) return
+
       const direction: 'forward' | 'backward' =
         activeTabIndex < 0 || nextIndex > activeTabIndex ? 'forward' : 'backward'
+
       setSlideEnter(direction === 'forward' ? 'from-right' : 'from-left')
       setActiveTabIndex(nextIndex)
       onDismissMobileCapabilityDemoModelTabsHighlight?.()
+
+      if (source === 'swipe-touch') {
+        if (isTutorialActive) {
+          setTutorialFingerSwipeDismissed(true)
+        } else if (capabilitySwipeHintNonce > 0) {
+          setCapabilityFingerSwipeDismissed(true)
+        }
+      }
     }
 
     const handleSwipeTouchStart = (e: React.TouchEvent) => {
@@ -459,9 +488,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
       if (dx < 0) {
         const next = activeTabIndex < 0 ? 0 : activeTabIndex + 1
-        goToModelTab(next)
+        goToModelTab(next, 'swipe-touch')
       } else {
-        goToModelTab(activeTabIndex - 1)
+        goToModelTab(activeTabIndex - 1, 'swipe-touch')
       }
     }
 
@@ -469,6 +498,23 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       slideEnter !== 'none'
         ? `results-tab-content-slide results-tab-content-slide--${slideEnter}`
         : 'results-tab-content-slide'
+
+    const showFingerSwipeTutorialOverlay =
+      activeTabIndex >= 0 &&
+      !showAwaitingFirstPanel &&
+      isTutorialActive &&
+      !tutorialFingerSwipeDismissed
+
+    const showFingerSwipeCapabilityDemoOverlay =
+      activeTabIndex >= 0 &&
+      !showAwaitingFirstPanel &&
+      !isTutorialActive &&
+      capabilitySwipeHintNonce > 0 &&
+      !capabilityFingerSwipeDismissed
+
+    const showFingerSwipeOverlay =
+      visibleConversations.length >= 2 &&
+      (showFingerSwipeTutorialOverlay || showFingerSwipeCapabilityDemoOverlay)
 
     return (
       <section className={`results-section results-section-tabbed ${className}`.trim()}>
@@ -522,7 +568,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                     modelTabButtonRefs.current[index] = el
                   }}
                   className={`results-tab-button ${isActive ? 'active' : ''}`}
-                  onClick={() => goToModelTab(index)}
+                  onClick={() => goToModelTab(index, 'tab-click')}
                   aria-label={`View results for ${model?.name || conversation.modelId}`}
                   aria-selected={isActive}
                   aria-busy={showStreamingIndicator}
@@ -564,6 +610,21 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             onTouchStart={handleSwipeTouchStart}
             onTouchEnd={handleSwipeTouchEnd}
           >
+            {showFingerSwipeOverlay ? (
+              <div className="results-tab-swipe-hint-overlay">
+                <span className="sr-only">
+                  Swipe sideways on this panel to compare another model&apos;s results.
+                </span>
+                <div className="results-tab-swipe-hint-contents" aria-hidden>
+                  <Hand
+                    strokeWidth={1.75}
+                    className="results-tab-swipe-hint-hand-icon"
+                    aria-hidden
+                  />
+                  <span className="results-tab-swipe-hint-label">Swipe to another model</span>
+                </div>
+              </div>
+            ) : null}
             {showAwaitingFirstPanel ? (
               <div key="results-awaiting-first-stream" className={slidePanelClass}>
                 <div
