@@ -1114,6 +1114,30 @@ export function HelpMeChoose({
                                     <label
                                       className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
                                       onMouseDown={e => e.preventDefault()}
+                                      onClick={
+                                        modelRestricted
+                                          ? e => {
+                                              const target = e.target as HTMLElement
+                                              if (
+                                                target.closest('.help-me-choose-model-evidence-btn')
+                                              ) {
+                                                return
+                                              }
+                                              if (
+                                                target.closest('.indicator-tappable') ||
+                                                target.closest('.web-search-indicator')
+                                              ) {
+                                                return
+                                              }
+                                              e.preventDefault()
+                                              e.stopPropagation()
+                                              setEvidenceModal({
+                                                modelName: displayName,
+                                                evidence: disabledTooltip,
+                                              })
+                                            }
+                                          : undefined
+                                      }
                                     >
                                       <input
                                         type="checkbox"
