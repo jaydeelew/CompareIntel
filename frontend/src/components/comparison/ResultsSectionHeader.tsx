@@ -131,20 +131,28 @@ export function ResultsSectionHeader({
     <div
       style={{
         display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        flexDirection: isMobileLayout ? 'column' : 'row',
+        alignItems: isMobileLayout ? 'center' : 'center',
+        justifyContent: isMobileLayout ? 'flex-start' : 'space-between',
         marginBottom: '1.5rem',
-        gap: '0.75rem',
+        gap: isMobileLayout ? '1rem' : '0.75rem',
       }}
     >
-      <h2 style={{ margin: 0 }}>Comparison Results</h2>
+      <h2
+        style={{
+          margin: 0,
+          ...(isMobileLayout ? { textAlign: 'center', width: '100%' } : {}),
+        }}
+      >
+        Comparison Results
+      </h2>
       <div
         style={{
           display: 'flex',
           gap: isMobileLayout ? '0.5rem' : '0.75rem',
           alignItems: 'center',
           flexWrap: 'nowrap',
+          ...(isMobileLayout ? { justifyContent: 'center', width: '100%' } : {}),
         }}
       >
         {/* Desktop: Scroll Lock, Export */}
