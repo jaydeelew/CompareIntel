@@ -2523,7 +2523,7 @@
   grid-row: 1;
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 0.125rem;
   /* min-content + nowrap toggle keeps “Help me choose” on one line; avoid min-width:0 shrink-wrap */
   min-width: min-content;
 }
@@ -2794,11 +2794,9 @@
   flex-shrink: 0;
 }
 
-/* Tuck the scope (i) control next to the Help me choose toggle */
+/* Scope (i) sits beside the toggle with gap from .help-me-choose-toggle-wrap */
 .models-section-buttons-row .help-me-choose-toggle-info {
-  margin-left: -0.1875rem;
-  padding-left: 0;
-  padding-right: 0.25rem;
+  margin-left: 0;
 }
 
 .help-me-choose-toggle-info:hover,
@@ -3795,10 +3793,6 @@ html:not([data-theme]) .help-me-choose-category.has-match {
 
 /* Responsive: stack categories on narrow screens + enhanced mobile presentation */
 @media (max-width: 768px) {
-  .models-section-buttons-row .help-me-choose-toggle-wrap {
-    gap: 0;
-  }
-
   .help-me-choose-content {
     max-height: 70vh;
     overflow-y: auto;
@@ -3935,8 +3929,8 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   }
 
   .models-section-buttons-row .help-me-choose-toggle-info {
-    margin-left: -0.1875rem;
-    padding: 0.375rem 0.375rem 0.375rem 0;
+    margin-left: 0;
+    padding: 0.375rem;
   }
 
   /* Info icon: adequate touch target for modal trigger; pull closer to label text */
@@ -4242,6 +4236,17 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     grid-row: 1;
     min-width: 0;
     max-width: 100%;
+    /* Pull scope (i) next to Help me choose; coarse-pointer tap target still reads wide toward Adv without extra breathing room */
+    gap: 0;
+  }
+
+  .models-section-buttons-row .help-me-choose-toggle-info {
+    /* Space between tap target and Advanced when search stacks below (two-column row) */
+    margin-inline-end: 0.5rem;
+    /* Coarse-pointer rule adds symmetric padding — strip left inset so the glyph sits nearer Help */
+    margin-left: -0.375rem;
+    padding-left: 0;
+    padding-right: 0.375rem;
   }
 
   .models-section-buttons-row .advanced-settings-toggle {

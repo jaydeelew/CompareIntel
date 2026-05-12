@@ -195,6 +195,37 @@ export function ModelsSectionHeader({
     setTierLimitsModalOpen(true)
   }
 
+  const modelSelectionCollapseToggleBtn = (
+    <button
+      className="models-toggle-arrow"
+      type="button"
+      onClick={e => {
+        e.stopPropagation()
+        onToggleModelsHidden()
+      }}
+      aria-label={isModelsHidden ? 'Show model selection' : 'Hide model selection'}
+      style={{
+        padding: '0.5rem',
+        fontSize: '1.25rem',
+        border: 'none',
+        outline: 'none',
+        boxShadow: 'none',
+        background: 'var(--bg-primary)',
+        color: 'var(--primary-color)',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '36px',
+        height: '36px',
+        fontWeight: 'bold',
+      }}
+    >
+      {isModelsHidden ? '▼' : '▲'}
+    </button>
+  )
+
   return (
     <div
       className="models-section-header"
@@ -445,34 +476,13 @@ export function ModelsSectionHeader({
               {selectedModels.length} of {maxModelsLimit} selected
             </div>
           </StyledTooltip>
-          <StyledTooltip text={isModelsHidden ? 'Show model selection' : 'Hide model selection'}>
-            <button
-              className="models-toggle-arrow"
-              onClick={e => {
-                e.stopPropagation()
-                onToggleModelsHidden()
-              }}
-              style={{
-                padding: '0.5rem',
-                fontSize: '1.25rem',
-                border: 'none',
-                outline: 'none',
-                boxShadow: 'none',
-                background: 'var(--bg-primary)',
-                color: 'var(--primary-color)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '36px',
-                height: '36px',
-                fontWeight: 'bold',
-              }}
-            >
-              {isModelsHidden ? '▼' : '▲'}
-            </button>
-          </StyledTooltip>
+          {isMobileLayout ? (
+            modelSelectionCollapseToggleBtn
+          ) : (
+            <StyledTooltip text={isModelsHidden ? 'Show model selection' : 'Hide model selection'}>
+              {modelSelectionCollapseToggleBtn}
+            </StyledTooltip>
+          )}
         </div>
       </div>
 
