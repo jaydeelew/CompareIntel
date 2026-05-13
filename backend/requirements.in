@@ -38,6 +38,8 @@ anthropic>=0.18.0
 transformers>=4.35.0
 sentencepiece>=0.1.99
 requests>=2.33.0
+# CVE-2026-44431, CVE-2026-44432 (pip-audit); transitive via requests, sentry-sdk
+urllib3>=2.7.0
 stripe>=11.0.0
 
 # Auth & security

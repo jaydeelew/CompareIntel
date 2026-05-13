@@ -113,7 +113,9 @@ jiter==0.13.0
     #   anthropic
     #   openai
 mako==1.3.12
-    # via alembic
+    # via
+    #   -r requirements.in
+    #   alembic
 markdown-it-py==4.0.0
     # via rich
 markupsafe==3.0.3
@@ -253,8 +255,9 @@ typing-inspection==0.4.2
     #   fastapi
     #   pydantic
     #   pydantic-settings
-urllib3==2.6.3
+urllib3==2.7.0
     # via
+    #   -r requirements.in
     #   requests
     #   sentry-sdk
 uvicorn==0.41.0
