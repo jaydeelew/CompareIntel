@@ -133,10 +133,33 @@
   color: var(--error-color);
 }
 
+.results-display-host {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Up to RESULT_GRID_MAX_COLUMNS (3) columns; min track 350px; wraps to extra rows when needed. */
 .results-grid {
+  --results-grid-gap: 1.5rem;
+  --results-grid-max-cols: 3;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 1.5rem;
+  gap: var(--results-grid-gap);
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(
+      min(
+        100%,
+        max(
+          350px,
+          calc(
+            (100% - (var(--results-grid-max-cols) - 1) * var(--results-grid-gap)) /
+              var(--results-grid-max-cols)
+          )
+        )
+      ),
+      1fr
+    )
+  );
   align-items: start;
   width: 100%;
 }
@@ -148,7 +171,8 @@
   max-width: 100%;
 }
 
-/* Tabbed layout when ResultsDisplay adds .results-section-tabbed (not enough width for one grid row) */
+/* Tabbed layout when ResultsDisplay adds .results-section-tabbed
+   — inner padded width < two min tracks, or mobile breakpoint matches grid forced to 1 col (768px CSS). */
 .results-tabs-container {
   display: none;
 }

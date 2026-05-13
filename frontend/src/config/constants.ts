@@ -197,13 +197,21 @@ export const BREAKPOINTS = {
 } as const
 
 /**
- * Matches `.results-grid` in results.css:
- * `grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem`
- * Slack covers nested horizontal padding (`--page-gutter`, section padding), scrollbar, and rounding.
+ * Matches `.results-grid` in results.css (min track, gap, max column cap).
+ * `RESULT_GRID_LAYOUT_SLACK_PX` — fallback only when host width is not measured yet
+ * (`viewportWidth - slack` proxies content width vs `window.innerWidth`).
  */
 export const RESULT_GRID_MIN_TRACK_PX = 350
 export const RESULT_GRID_GAP_PX = 24
+/** Max columns in multi-model grid layout (tabs below two-column threshold). */
+export const RESULT_GRID_MAX_COLUMNS = 3
 export const RESULT_GRID_LAYOUT_SLACK_PX = 160
+
+/** Minimum width (px) of the results host so `columnCount` grid tracks fit at min track width. */
+export function minResultsHostWidthForGridColumns(columnCount: number): number {
+  if (columnCount <= 0) return 0
+  return columnCount * RESULT_GRID_MIN_TRACK_PX + (columnCount - 1) * RESULT_GRID_GAP_PX
+}
 
 /** Minimum viewport width so all comparison cards can sit in one grid row (no wrapping). */
 export function minViewportWidthForResultsSingleRow(modelCount: number): number {

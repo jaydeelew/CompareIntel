@@ -1,7 +1,10 @@
 import Hand from 'lucide-react/dist/esm/icons/hand'
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
-import { minViewportWidthForResultsSingleRow } from '../../config/constants'
+import {
+  RESULT_GRID_LAYOUT_SLACK_PX,
+  minResultsHostWidthForGridColumns,
+} from '../../config/constants'
 import { useResponsive } from '../../hooks'
 import { RESULT_TAB, createModelId } from '../../types'
 import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
@@ -162,7 +165,7 @@ export interface ResultsDisplayProps {
 
 type TabChangeSource = 'swipe-touch' | 'tab-click' | 'programmatic'
 
-// Renders comparison results as a grid when all cards fit one row, otherwise model-name tabs
+// Grid when the results host fits ≥2 columns at min track width (else model-name tabs); grid caps at 3 columns in CSS.
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   conversations,
   closedCards,
@@ -195,10 +198,39 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     [conversations, closedCards]
   )
 
-  const { viewportWidth } = useResponsive()
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const [layoutContentWidth, setLayoutContentWidth] = useState(0)
+  const { viewportWidth, isMobileLayout } = useResponsive()
+
+  const minWidthForTwoGridColumns = minResultsHostWidthForGridColumns(2)
+  const layoutHostWidth =
+    layoutContentWidth > 0
+      ? layoutContentWidth
+      : Math.max(0, viewportWidth - RESULT_GRID_LAYOUT_SLACK_PX)
   const useTabbedMultiModelResults =
     visibleConversations.length > 1 &&
-    viewportWidth < minViewportWidthForResultsSingleRow(visibleConversations.length)
+    (isMobileLayout || layoutHostWidth < minWidthForTwoGridColumns)
+
+  useLayoutEffect(() => {
+    if (visibleConversations.length === 0) {
+      setLayoutContentWidth(0)
+      return
+    }
+
+    const el = sectionRef.current
+    if (!el) return
+
+    const measure = () => {
+      const cs = getComputedStyle(el)
+      const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
+      setLayoutContentWidth(Math.max(0, el.clientWidth - padX))
+    }
+
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [visibleConversations.length, viewportWidth])
 
   /**
    * Active model tab index in tabbed layout. `-1` = no card selected yet (awaiting first stream
@@ -419,126 +451,131 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     }
   }
 
-  if (useTabbedMultiModelResults) {
-    const activeConversation =
-      activeTabIndex >= 0 && activeTabIndex < visibleConversations.length
-        ? visibleConversations[activeTabIndex]
-        : undefined
-    const showAwaitingFirstPanel = activeTabIndex < 0
-
-    const activeModel = activeConversation
-      ? allModels.find(m => m.id === activeConversation.modelId)
+  const activeConversation =
+    activeTabIndex >= 0 && activeTabIndex < visibleConversations.length
+      ? visibleConversations[activeTabIndex]
       : undefined
-    const latestMessage = activeConversation
-      ? activeConversation.messages[activeConversation.messages.length - 1]
-      : undefined
-    const hasErrorContent = latestMessage ? isErrorMessage(latestMessage.content) : false
-    const isError = activeConversation
-      ? modelErrorStates[activeConversation.modelId] || hasErrorContent
-      : false
-    const activeTab = activeConversation
-      ? activeResultTabs[activeConversation.modelId] || RESULT_TAB.FORMATTED
-      : RESULT_TAB.FORMATTED
+  const showAwaitingFirstPanel = activeTabIndex < 0
 
-    const goToModelTab = (nextIndex: number, source: TabChangeSource = 'programmatic') => {
-      const n = visibleConversations.length
-      if (n < 2 || nextIndex < 0 || nextIndex >= n || nextIndex === activeTabIndex) return
+  const activeModel = activeConversation
+    ? allModels.find(m => m.id === activeConversation.modelId)
+    : undefined
+  const latestMessage = activeConversation
+    ? activeConversation.messages[activeConversation.messages.length - 1]
+    : undefined
+  const hasErrorContent = latestMessage ? isErrorMessage(latestMessage.content) : false
+  const isError = activeConversation
+    ? modelErrorStates[activeConversation.modelId] || hasErrorContent
+    : false
+  const activeTab = activeConversation
+    ? activeResultTabs[activeConversation.modelId] || RESULT_TAB.FORMATTED
+    : RESULT_TAB.FORMATTED
 
-      const direction: 'forward' | 'backward' =
-        activeTabIndex < 0 || nextIndex > activeTabIndex ? 'forward' : 'backward'
+  const goToModelTab = (nextIndex: number, source: TabChangeSource = 'programmatic') => {
+    const n = visibleConversations.length
+    if (n < 2 || nextIndex < 0 || nextIndex >= n || nextIndex === activeTabIndex) return
 
-      setSlideEnter(direction === 'forward' ? 'from-right' : 'from-left')
-      setActiveTabIndex(nextIndex)
-      onDismissMobileCapabilityDemoModelTabsHighlight?.()
+    const direction: 'forward' | 'backward' =
+      activeTabIndex < 0 || nextIndex > activeTabIndex ? 'forward' : 'backward'
 
-      if (source === 'swipe-touch') {
-        if (isTutorialActive) {
-          setTutorialFingerSwipeDismissed(true)
-        } else if (capabilitySwipeHintNonce > 0) {
-          setCapabilityFingerSwipeDismissed(true)
-        }
+    setSlideEnter(direction === 'forward' ? 'from-right' : 'from-left')
+    setActiveTabIndex(nextIndex)
+    onDismissMobileCapabilityDemoModelTabsHighlight?.()
+
+    if (source === 'swipe-touch') {
+      if (isTutorialActive) {
+        setTutorialFingerSwipeDismissed(true)
+      } else if (capabilitySwipeHintNonce > 0) {
+        setCapabilityFingerSwipeDismissed(true)
       }
     }
+  }
 
-    const handleSwipeTouchStart = (e: React.TouchEvent) => {
-      if (e.touches.length !== 1) {
-        swipeTouchStartRef.current = null
-        return
-      }
-      swipeTouchStartRef.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-        target: e.target,
-      }
-    }
-
-    const handleSwipeTouchEnd = (e: React.TouchEvent) => {
-      const start = swipeTouchStartRef.current
+  const handleSwipeTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) {
       swipeTouchStartRef.current = null
-      if (!start || e.changedTouches.length !== 1) return
-      if (shouldSuppressMobileModelTabSwipe(start.target)) return
-      const dx = e.changedTouches[0].clientX - start.x
-      const dy = e.changedTouches[0].clientY - start.y
-      const absDx = Math.abs(dx)
-      const absDy = Math.abs(dy)
-      const threshold = mobileModelTabSwipeThreshold(viewportWidth)
-      if (absDx < threshold) return
-      /* Require a clearer horizontal intent than a shallow diagonal (avoids conflict with vertical reading). */
-      if (absDx < absDy * 1.35) return
-
-      if (dx < 0) {
-        const next = activeTabIndex < 0 ? 0 : activeTabIndex + 1
-        goToModelTab(next, 'swipe-touch')
-      } else {
-        goToModelTab(activeTabIndex - 1, 'swipe-touch')
-      }
+      return
     }
+    swipeTouchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+      target: e.target,
+    }
+  }
 
-    const slidePanelClass =
-      slideEnter !== 'none'
-        ? `results-tab-content-slide results-tab-content-slide--${slideEnter}`
-        : 'results-tab-content-slide'
+  const handleSwipeTouchEnd = (e: React.TouchEvent) => {
+    const start = swipeTouchStartRef.current
+    swipeTouchStartRef.current = null
+    if (!start || e.changedTouches.length !== 1) return
+    if (shouldSuppressMobileModelTabSwipe(start.target)) return
+    const dx = e.changedTouches[0].clientX - start.x
+    const dy = e.changedTouches[0].clientY - start.y
+    const absDx = Math.abs(dx)
+    const absDy = Math.abs(dy)
+    const threshold = mobileModelTabSwipeThreshold(viewportWidth)
+    if (absDx < threshold) return
+    /* Require a clearer horizontal intent than a shallow diagonal (avoids conflict with vertical reading). */
+    if (absDx < absDy * 1.35) return
 
-    const showFingerSwipeTutorialOverlay =
-      activeTabIndex >= 0 &&
-      !showAwaitingFirstPanel &&
-      isTutorialActive &&
-      !tutorialFingerSwipeDismissed
+    if (dx < 0) {
+      const next = activeTabIndex < 0 ? 0 : activeTabIndex + 1
+      goToModelTab(next, 'swipe-touch')
+    } else {
+      goToModelTab(activeTabIndex - 1, 'swipe-touch')
+    }
+  }
 
-    const showFingerSwipeCapabilityDemoOverlay =
-      activeTabIndex >= 0 &&
-      !showAwaitingFirstPanel &&
-      !isTutorialActive &&
-      capabilitySwipeHintNonce > 0 &&
-      !capabilityFingerSwipeDismissed
+  const slidePanelClass =
+    slideEnter !== 'none'
+      ? `results-tab-content-slide results-tab-content-slide--${slideEnter}`
+      : 'results-tab-content-slide'
 
-    const showFingerSwipeOverlay =
-      visibleConversations.length >= 2 &&
-      (showFingerSwipeTutorialOverlay || showFingerSwipeCapabilityDemoOverlay)
+  const showFingerSwipeTutorialOverlay =
+    activeTabIndex >= 0 &&
+    !showAwaitingFirstPanel &&
+    isTutorialActive &&
+    !tutorialFingerSwipeDismissed
 
-    return (
-      <section className={`results-section results-section-tabbed ${className}`.trim()}>
-        {metadata && (
-          <div className="response-metadata">
-            <div className="metadata-item">
-              <span className="metadata-label">Models Completed:</span>
-              <span className="metadata-value success">{metadata.models_completed}</span>
-            </div>
-            {metadata.models_failed > 0 && (
-              <div className="metadata-item">
-                <span className="metadata-label">Models Failed:</span>
-                <span className="metadata-value failed">{metadata.models_failed}</span>
-              </div>
-            )}
-            {processingTime && (
-              <div className="metadata-item">
-                <span className="metadata-label">Processing Time:</span>
-                <span className="metadata-value">{formatProcessingTime(processingTime)}</span>
-              </div>
-            )}
-          </div>
-        )}
+  const showFingerSwipeCapabilityDemoOverlay =
+    activeTabIndex >= 0 &&
+    !showAwaitingFirstPanel &&
+    !isTutorialActive &&
+    capabilitySwipeHintNonce > 0 &&
+    !capabilityFingerSwipeDismissed
 
+  const showFingerSwipeOverlay =
+    visibleConversations.length >= 2 &&
+    (showFingerSwipeTutorialOverlay || showFingerSwipeCapabilityDemoOverlay)
+
+  const metadataSection = metadata && (
+    <div className="response-metadata">
+      <div className="metadata-item">
+        <span className="metadata-label">Models Completed:</span>
+        <span className="metadata-value success">{metadata.models_completed}</span>
+      </div>
+      {metadata.models_failed > 0 && (
+        <div className="metadata-item">
+          <span className="metadata-label">Models Failed:</span>
+          <span className="metadata-value failed">{metadata.models_failed}</span>
+        </div>
+      )}
+      {processingTime && (
+        <div className="metadata-item">
+          <span className="metadata-label">Processing Time:</span>
+          <span className="metadata-value">{formatProcessingTime(processingTime)}</span>
+        </div>
+      )}
+    </div>
+  )
+
+  const sectionSurfaceClass =
+    `results-section${useTabbedMultiModelResults ? ' results-section-tabbed' : ''} ${className}`.trim()
+
+  return (
+    <section ref={sectionRef} className={sectionSurfaceClass}>
+      {metadataSection}
+
+      {useTabbedMultiModelResults ? (
         <div className="results-tabs-container" ref={mobileTabsAttentionScrollRef}>
           <div
             ref={modelTabsHeaderRef}
@@ -669,73 +706,47 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             ) : null}
           </div>
         </div>
-      </section>
-    )
-  }
+      ) : (
+        <div className="results-grid">
+          {visibleConversations.map(conversation => {
+            const model = allModels.find(m => m.id === conversation.modelId)
+            const latestMessage = conversation.messages[conversation.messages.length - 1]
+            const hasErrorContent = isErrorMessage(latestMessage?.content)
+            const isError = modelErrorStates[conversation.modelId] || hasErrorContent
+            const activeTab = activeResultTabs[conversation.modelId] || RESULT_TAB.FORMATTED
 
-  // Render grid layout for desktop or single card
-  return (
-    <section className={`results-section ${className}`.trim()}>
-      {metadata && (
-        <div className="response-metadata">
-          <div className="metadata-item">
-            <span className="metadata-label">Models Completed:</span>
-            <span className="metadata-value success">{metadata.models_completed}</span>
-          </div>
-          {metadata.models_failed > 0 && (
-            <div className="metadata-item">
-              <span className="metadata-label">Models Failed:</span>
-              <span className="metadata-value failed">{metadata.models_failed}</span>
-            </div>
-          )}
-          {processingTime && (
-            <div className="metadata-item">
-              <span className="metadata-label">Processing Time:</span>
-              <span className="metadata-value">{formatProcessingTime(processingTime)}</span>
-            </div>
-          )}
+            return (
+              <ResultCard
+                key={conversation.modelId}
+                modelId={conversation.modelId}
+                model={model}
+                messages={conversation.messages}
+                activeTab={activeTab}
+                isError={isError}
+                isProcessing={modelProcessingStates[conversation.modelId] || false}
+                breakoutClassName={getBreakoutClass()}
+                onScreenshot={onScreenshot}
+                onCopyResponse={onCopyResponse}
+                onClose={onCloseCard}
+                onSwitchTab={onSwitchTab}
+                onBreakout={onBreakout}
+                onHideOthers={onHideOthers}
+                onCopyMessage={onCopyMessage}
+                showBreakoutButton={visibleConversations.length > 1 && !isError}
+                isTutorialActive={isTutorialActive}
+                streamingReasoning={getStreamingReasoningForModel(
+                  conversation.modelId,
+                  streamingReasoningByModel
+                )}
+                streamAnswerStarted={streamAnswerStartedForModel(
+                  conversation.modelId,
+                  streamAnswerStartedByModel
+                )}
+              />
+            )
+          })}
         </div>
       )}
-
-      <div className="results-grid">
-        {visibleConversations.map(conversation => {
-          const model = allModels.find(m => m.id === conversation.modelId)
-          const latestMessage = conversation.messages[conversation.messages.length - 1]
-          const hasErrorContent = isErrorMessage(latestMessage?.content)
-          const isError = modelErrorStates[conversation.modelId] || hasErrorContent
-          const activeTab = activeResultTabs[conversation.modelId] || RESULT_TAB.FORMATTED
-
-          return (
-            <ResultCard
-              key={conversation.modelId}
-              modelId={conversation.modelId}
-              model={model}
-              messages={conversation.messages}
-              activeTab={activeTab}
-              isError={isError}
-              isProcessing={modelProcessingStates[conversation.modelId] || false}
-              breakoutClassName={getBreakoutClass()}
-              onScreenshot={onScreenshot}
-              onCopyResponse={onCopyResponse}
-              onClose={onCloseCard}
-              onSwitchTab={onSwitchTab}
-              onBreakout={onBreakout}
-              onHideOthers={onHideOthers}
-              onCopyMessage={onCopyMessage}
-              showBreakoutButton={visibleConversations.length > 1 && !isError}
-              isTutorialActive={isTutorialActive}
-              streamingReasoning={getStreamingReasoningForModel(
-                conversation.modelId,
-                streamingReasoningByModel
-              )}
-              streamAnswerStarted={streamAnswerStartedForModel(
-                conversation.modelId,
-                streamAnswerStartedByModel
-              )}
-            />
-          )
-        })}
-      </div>
     </section>
   )
 }

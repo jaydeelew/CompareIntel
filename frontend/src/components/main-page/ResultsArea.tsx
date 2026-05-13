@@ -29,7 +29,7 @@ export interface ResultsAreaProps {
   modelProcessingStates: Record<string, boolean>
   modelErrorStates: Record<string, boolean>
   breakoutPhase: BreakoutPhase
-  /** True while a comparison request is in flight (model-tab focus automation). */
+  /** True while a comparison request is in flight (model-tab auto-focus). */
   isComparisonLoading?: boolean
 
   // UI state
@@ -123,32 +123,34 @@ export function ResultsArea({
           isTutorialActive={isTutorialActive}
         />
 
-        <ResultsDisplay
-          conversations={conversations}
-          closedCards={closedCards}
-          allModels={allModels}
-          activeResultTabs={activeResultTabs}
-          modelProcessingStates={modelProcessingStates}
-          modelErrorStates={modelErrorStates}
-          breakoutPhase={breakoutPhase}
-          isComparisonLoading={isComparisonLoading}
-          onScreenshot={onScreenshot}
-          onCopyResponse={onCopyResponse}
-          onCloseCard={onCloseCard}
-          onSwitchTab={onSwitchTab}
-          onBreakout={onBreakout}
-          onHideOthers={onHideOthers}
-          onCopyMessage={onCopyMessage}
-          isTutorialActive={isTutorialActive}
-          streamingReasoningByModel={streamingReasoningByModel}
-          streamAnswerStartedByModel={streamAnswerStartedByModel}
-          highlightMobileCapabilityDemoModelTabs={highlightMobileCapabilityDemoModelTabs}
-          onDismissMobileCapabilityDemoModelTabsHighlight={
-            onDismissMobileCapabilityDemoModelTabsHighlight
-          }
-          tutorialSwipeHintNonce={tutorialSwipeHintNonce}
-          capabilitySwipeHintNonce={capabilitySwipeHintNonce}
-        />
+        <div className="results-display-host">
+          <ResultsDisplay
+            conversations={conversations}
+            closedCards={closedCards}
+            allModels={allModels}
+            activeResultTabs={activeResultTabs}
+            modelProcessingStates={modelProcessingStates}
+            modelErrorStates={modelErrorStates}
+            breakoutPhase={breakoutPhase}
+            isComparisonLoading={isComparisonLoading}
+            onScreenshot={onScreenshot}
+            onCopyResponse={onCopyResponse}
+            onCloseCard={onCloseCard}
+            onSwitchTab={onSwitchTab}
+            onBreakout={onBreakout}
+            onHideOthers={onHideOthers}
+            onCopyMessage={onCopyMessage}
+            isTutorialActive={isTutorialActive}
+            streamingReasoningByModel={streamingReasoningByModel}
+            streamAnswerStartedByModel={streamAnswerStartedByModel}
+            highlightMobileCapabilityDemoModelTabs={highlightMobileCapabilityDemoModelTabs}
+            onDismissMobileCapabilityDemoModelTabsHighlight={
+              onDismissMobileCapabilityDemoModelTabsHighlight
+            }
+            tutorialSwipeHintNonce={tutorialSwipeHintNonce}
+            capabilitySwipeHintNonce={capabilitySwipeHintNonce}
+          />
+        </div>
       </section>
     </ErrorBoundary>
   )
