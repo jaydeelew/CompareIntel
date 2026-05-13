@@ -140,6 +140,16 @@ def _normalize_name_for_match(name: str) -> str:
     return s
 
 
+def _expand_hyphenated_minor_versions(slug_base: str) -> str:
+    """Map Scale-style hyphen minors (e.g. claude-opus-4-6) to dotted form (claude-opus-4.6).
+
+    Registry display names use dotted versions ("Claude Opus 4.6"); the SWE-Bench Pro
+    leaderboard uses single-digit segments separated by hyphens. Only single-digit pairs
+    are rewritten so ids like qwen3-coder-480b-a35b stay intact.
+    """
+    return re.sub(r"-(\d)-(\d)(?=-|$|\s|\()", r"-\1.\2", slug_base)
+
+
 def get_model_id_to_name_map() -> dict[str, str]:
     """Build model_id -> registry name from models registry."""
     registry = load_registry()
@@ -458,6 +468,9 @@ def fetch_lmspeed_scores() -> dict[str, tuple[float, str]]:
 
 # Scale Labs leaderboard slug -> OpenRouter registry model_id (public SWE-Bench Pro split).
 SWE_BENCH_PRO_SLUG_TO_MODEL_ID: dict[str, str] = {
+    # Explicit rows where leaderboard label does not normalize to registry display name
+    "claude-opus-4-6 (thinking)*": "anthropic/claude-opus-4.6",
+    "gemini-3.1-pro (thinking)*": "google/gemini-3.1-pro-preview",
     "claude-opus-4-5-20251101": "anthropic/claude-opus-4.5",
     "claude-4-5-Sonnet": "anthropic/claude-sonnet-4.5",
     "gemini-3-pro-preview": "google/gemini-3.1-pro-preview",
@@ -497,7 +510,8 @@ def _merge_swe_bench_pro_row(
     """Map leaderboard slug to registry model_id and keep best score per model."""
     mid = SWE_BENCH_PRO_SLUG_TO_MODEL_ID.get(slug)
     if not mid:
-        base = slug.split("(")[0].strip()
+        base = slug.split("(")[0].strip().rstrip("*").strip()
+        base = _expand_hyphenated_minor_versions(base)
         norm = _normalize_name_for_match(base)
         name_to_model_id = {_normalize_name_for_match(n): m for m, n in model_id_to_name.items()}
         mid = name_to_model_id.get(norm)

@@ -24,10 +24,13 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(BACKEND_DIR))
 
 from scripts.research_model_benchmarks import (
+    _expand_hyphenated_minor_versions,
+    _merge_swe_bench_pro_row,
     add_model_to_category,
     calculate_avg_cost,
     determine_categories,
     extract_primary_score,
+    get_model_id_to_name_map,
     model_exists_in_category,
     parse_recommendations_ts,
     rebuild_categories_ts,
@@ -202,6 +205,29 @@ class TestDetermineCategories:
             )
             cost_eff = [e for e in entries if e["category_id"] == "cost-effective"]
             assert len(cost_eff) == 0, f"Expected exclusion for cost={cost}"
+
+
+class TestSweBenchProSlugResolution:
+    """Scale SWE-Bench Pro slugs vs registry display names (hyphen minors, thinking rows)."""
+
+    def test_expand_hyphen_minor_opus_46(self):
+        assert _expand_hyphenated_minor_versions("claude-opus-4-6") == "claude-opus-4.6"
+        assert _expand_hyphenated_minor_versions("claude-opus-4.6") == "claude-opus-4.6"
+
+    def test_merge_row_maps_opus_46_thinking_slug(self):
+        model_id_to_name = get_model_id_to_name_map()
+        result: dict = {}
+        _merge_swe_bench_pro_row(result, "claude-opus-4-6 (thinking)*", 51.9, model_id_to_name)
+        assert result["anthropic/claude-opus-4.6"] == (
+            51.9,
+            "SWE-Bench Pro public (Scale Labs): 51.90%.",
+        )
+
+    def test_merge_row_maps_gemini_31_pro_thinking_slug(self):
+        model_id_to_name = get_model_id_to_name_map()
+        result: dict = {}
+        _merge_swe_bench_pro_row(result, "gemini-3.1-pro (thinking)*", 46.1, model_id_to_name)
+        assert result["google/gemini-3.1-pro-preview"][0] == 46.1
 
 
 # --- Tests for TS parsing ---

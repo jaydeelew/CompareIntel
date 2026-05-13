@@ -131,16 +131,20 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     models: [
       { modelId: 'openai/gpt-5.4', evidence: 'SWE-Bench Pro public (Scale Labs): 59.10%.' },
       {
+        modelId: 'anthropic/claude-opus-4.6',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 51.90%.',
+      },
+      {
+        modelId: 'google/gemini-3.1-pro-preview',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 46.10%.',
+      },
+      {
         modelId: 'anthropic/claude-opus-4.5',
         evidence: 'SWE-Bench Pro public (Scale Labs): 45.89%.',
       },
       {
         modelId: 'anthropic/claude-sonnet-4.5',
         evidence: 'SWE-Bench Pro public (Scale Labs): 43.60%.',
-      },
-      {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'SWE-Bench Pro public (Scale Labs): 43.30%.',
       },
       {
         modelId: 'anthropic/claude-sonnet-4',
