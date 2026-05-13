@@ -45,6 +45,11 @@ function submitIncompleteComposerTooltip(hasPrompt: boolean, hasModels: boolean)
   return 'Before submitting, enter your input'
 }
 
+function dataTransferHasFiles(dt: DataTransfer | null): boolean {
+  if (!dt?.types) return false
+  return Array.from(dt.types as unknown as string[]).includes('Files')
+}
+
 export type { AttachedFile, StoredAttachedFile }
 export type { HistoryProps, SelectionProps, FileProps } from './ComparisonFormTypes'
 
@@ -173,6 +178,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     )
 
     const [isDraggingOver, setIsDraggingOver] = useState(false)
+    const [showPageFileDropOverlay, setShowPageFileDropOverlay] = useState(false)
+    const fileDragDepthRef = useRef(0)
     const fileUploadRef = useRef<FileUploadHandle>(null)
     const mirrorTextareaRef = useRef<HTMLTextAreaElement>(null)
     const savedSelectionsDropdownSlotRef = useRef<HTMLDivElement>(null)
@@ -370,40 +377,110 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       ]
     )
 
+    const resetPageFileDrag = useCallback(() => {
+      fileDragDepthRef.current = 0
+      setShowPageFileDropOverlay(false)
+      setIsDraggingOver(false)
+    }, [])
+
+    const blockGlobalFileDropOverlay = useCallback(() => {
+      if (isLoading) return true
+      if (tutorialIsActive) return true
+      if (document.querySelector('.tutorial-welcome-backdrop')) return true
+      return false
+    }, [isLoading, tutorialIsActive])
+
+    useEffect(() => {
+      if (blockGlobalFileDropOverlay()) resetPageFileDrag()
+    }, [blockGlobalFileDropOverlay, resetPageFileDrag])
+
+    useEffect(() => {
+      const onDragEnter = (e: DragEvent) => {
+        if (!dataTransferHasFiles(e.dataTransfer)) return
+        if (blockGlobalFileDropOverlay()) return
+        e.preventDefault()
+        fileDragDepthRef.current += 1
+        if (fileDragDepthRef.current === 1) {
+          setShowPageFileDropOverlay(true)
+          setIsDraggingOver(true)
+        }
+      }
+
+      const onDragLeave = (e: DragEvent) => {
+        if (fileDragDepthRef.current === 0) return
+        e.preventDefault()
+        fileDragDepthRef.current -= 1
+        if (fileDragDepthRef.current <= 0) {
+          fileDragDepthRef.current = 0
+          setShowPageFileDropOverlay(false)
+          setIsDraggingOver(false)
+        }
+      }
+
+      const onDragOver = (e: DragEvent) => {
+        if (!dataTransferHasFiles(e.dataTransfer)) return
+        if (blockGlobalFileDropOverlay()) return
+        e.preventDefault()
+      }
+
+      const onDragEnd = () => {
+        resetPageFileDrag()
+      }
+
+      window.addEventListener('dragenter', onDragEnter, true)
+      window.addEventListener('dragleave', onDragLeave, true)
+      window.addEventListener('dragover', onDragOver, true)
+      window.addEventListener('dragend', onDragEnd, false)
+
+      return () => {
+        window.removeEventListener('dragenter', onDragEnter, true)
+        window.removeEventListener('dragleave', onDragLeave, true)
+        window.removeEventListener('dragover', onDragOver, true)
+        window.removeEventListener('dragend', onDragEnd, false)
+      }
+    }, [blockGlobalFileDropOverlay, resetPageFileDrag])
+
     const handleDragEnter = useCallback((e: React.DragEvent<HTMLElement>) => {
       e.preventDefault()
       e.stopPropagation()
-      if (e.dataTransfer.types.includes('Files')) setIsDraggingOver(true)
+      if (dataTransferHasFiles(e.dataTransfer)) setIsDraggingOver(true)
     }, [])
 
     const handleDragOver = useCallback((e: React.DragEvent<HTMLElement>) => {
       e.preventDefault()
       e.stopPropagation()
-      if (e.dataTransfer.types.includes('Files')) setIsDraggingOver(true)
+      if (dataTransferHasFiles(e.dataTransfer)) setIsDraggingOver(true)
     }, [])
 
-    const handleDragLeave = useCallback((e: React.DragEvent<HTMLElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
-      const relatedTarget = e.relatedTarget as Node | null
-      const currentTarget = e.currentTarget
-      if (!relatedTarget) {
-        setIsDraggingOver(false)
-        return
-      }
-      const composer = currentTarget.closest('.composer')
-      if (composer && !composer.contains(relatedTarget)) setIsDraggingOver(false)
-    }, [])
+    const handleDragLeave = useCallback(
+      (e: React.DragEvent<HTMLElement>) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (showPageFileDropOverlay) return
+        const relatedTarget = e.relatedTarget as Node | null
+        const currentTarget = e.currentTarget
+        if (!relatedTarget) {
+          setIsDraggingOver(false)
+          return
+        }
+        const composer = currentTarget.closest('.composer')
+        if (composer && !composer.contains(relatedTarget)) setIsDraggingOver(false)
+      },
+      [showPageFileDropOverlay]
+    )
 
-    const handleDrop = useCallback(async (e: React.DragEvent<HTMLElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setIsDraggingOver(false)
-      if (!e.dataTransfer.types.includes('Files')) return
-      const file = e.dataTransfer.files?.[0]
-      if (!file) return
-      await fileUploadRef.current?.processFile(file)
-    }, [])
+    const handleDrop = useCallback(
+      async (e: React.DragEvent<HTMLElement>) => {
+        e.preventDefault()
+        e.stopPropagation()
+        resetPageFileDrag()
+        if (!dataTransferHasFiles(e.dataTransfer)) return
+        const file = e.dataTransfer.files?.[0]
+        if (!file) return
+        await fileUploadRef.current?.processFile(file)
+      },
+      [resetPageFileDrag]
+    )
 
     const adjustTextareaHeight = useCallback(() => {
       if (!textareaRef.current) return
@@ -1193,6 +1270,36 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     return (
       <>
+        {showPageFileDropOverlay && typeof document !== 'undefined'
+          ? createPortal(
+              <div
+                className="page-file-drop-overlay"
+                data-testid="page-file-drop-overlay"
+                role="presentation"
+                onDragEnter={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+                onDragOver={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+                onDrop={handleDrop}
+              >
+                <span className="sr-only" role="status" aria-live="polite">
+                  Drop zone active. Release the mouse button to attach your file.
+                </span>
+                <div className="page-file-drop-overlay-panel">
+                  <p className="page-file-drop-overlay-title">Drop file to attach</p>
+                  <p className="page-file-drop-overlay-hint">
+                    Release the mouse button to add it to your prompt
+                  </p>
+                </div>
+              </div>,
+              document.body
+            )
+          : null}
+
         {composerFloating ? (
           <>
             <div

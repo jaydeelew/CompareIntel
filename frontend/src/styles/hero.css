@@ -1963,6 +1963,56 @@ video.capability-tile-image-lightbox-img {
     0 0 60px rgba(6, 182, 212, 0.1);
 }
 
+/* Full-page file drag / drop overlay (comparison page) */
+.page-file-drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  box-sizing: border-box;
+  background: rgba(0, 20, 40, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.page-file-drop-overlay-panel {
+  max-width: 28rem;
+  width: min(28rem, 100%);
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--primary-color);
+  background: var(--bg-card);
+  box-shadow:
+    0 0 0 4px var(--primary-glow),
+    0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+.page-file-drop-overlay-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.page-file-drop-overlay-hint {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-file-drop-overlay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
 /* Drag and drop */
 .hero-input-textarea.drag-over,
 .composer-toolbar.drag-over {
