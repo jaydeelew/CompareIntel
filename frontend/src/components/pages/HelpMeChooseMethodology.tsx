@@ -34,7 +34,7 @@ export const HelpMeChooseMethodology: React.FC = () => {
               run by third parties use the same tasks for every model, so you can compare apples to
               apples. We link to each source so you can verify the numbers yourself.
             </p>
-            <p className="last-updated">Last updated: April 2026</p>
+            <p className="last-updated">Last updated: May 2026</p>
           </header>
 
           <section className="seo-section">
