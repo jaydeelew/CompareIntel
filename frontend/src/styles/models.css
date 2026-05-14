@@ -543,6 +543,21 @@
   justify-content: flex-start;
 }
 
+/* Rendered via portal so the bubble stacks above .models-section-buttons-row (z-index: 100) */
+.model-info-tooltip.model-info-tooltip--portaled {
+  position: fixed;
+  bottom: auto;
+  margin: 0;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  z-index: var(--z-tooltip, 10000);
+}
+
+.model-info-tooltip.model-info-tooltip--portaled.model-info-tooltip--selected-rail {
+  max-width: min(18rem, calc(100vw - 2rem));
+}
+
 .model-info-tooltip::after {
   content: '';
   position: absolute;

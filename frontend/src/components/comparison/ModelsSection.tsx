@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
@@ -97,6 +98,7 @@ function ModelNameWithInfoTooltip({
   modelsByProvider,
   hideTooltip = false,
   isMobileLayout = false,
+  inSelectedModelsRail = false,
   onOpenThinkingModelInfoModal,
   onOpenModelDetailsModal,
 }: {
@@ -104,20 +106,51 @@ function ModelNameWithInfoTooltip({
   modelsByProvider: ModelsByProvider
   hideTooltip?: boolean
   isMobileLayout?: boolean
+  /** Narrow max-width for tooltips opened from the 340px selected-models column */
+  inSelectedModelsRail?: boolean
   onOpenThinkingModelInfoModal?: () => void
   onOpenModelDetailsModal?: () => void
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null)
-  const tipRef = useRef<HTMLSpanElement>(null)
+  const portaledTipRef = useRef<HTMLSpanElement>(null)
+  const hideInfoTooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [infoTooltipOpen, setInfoTooltipOpen] = useState(false)
   const isImageGen = !!model.supports_image_generation
 
   const isThinking = isThinkingModel(model)
 
-  const placeTooltipArrow = useCallback(() => {
+  const clearHideInfoTooltip = useCallback(() => {
+    const t = hideInfoTooltipTimeoutRef.current
+    if (t != null) {
+      clearTimeout(t)
+      hideInfoTooltipTimeoutRef.current = null
+    }
+  }, [])
+
+  const scheduleHideInfoTooltip = useCallback(() => {
+    clearHideInfoTooltip()
+    hideInfoTooltipTimeoutRef.current = window.setTimeout(() => {
+      setInfoTooltipOpen(false)
+      hideInfoTooltipTimeoutRef.current = null
+    }, 120)
+  }, [clearHideInfoTooltip])
+
+  const openInfoTooltip = useCallback(() => {
+    if (hideTooltip) return
+    clearHideInfoTooltip()
+    setInfoTooltipOpen(true)
+  }, [clearHideInfoTooltip, hideTooltip])
+
+  const syncPortaledTooltipPosition = useCallback(() => {
     const wrap = wrapRef.current
-    const tip = tipRef.current
+    const tip = portaledTipRef.current
     if (!wrap || !tip) return
     const wrapR = wrap.getBoundingClientRect()
+    const tipH = tip.offsetHeight
+    const top = wrapR.top - tipH - 8
+    const left = wrapR.left
+    tip.style.top = `${Math.max(8, top)}px`
+    tip.style.left = `${left}px`
     const tipR = tip.getBoundingClientRect()
     // Point at the (i) icon: last icon before thinking indicator when present
     const iconsAfterInfo = isThinking ? MODEL_INFO_ICON_CSS_PX + 4 : MODEL_INFO_ICON_CSS_PX / 2
@@ -127,16 +160,28 @@ function ModelNameWithInfoTooltip({
   }, [isThinking])
 
   useLayoutEffect(() => {
-    if (isMobileLayout) return
-    placeTooltipArrow()
-  }, [
-    placeTooltipArrow,
-    isMobileLayout,
-    model.id,
-    model.name,
-    model.supports_image_generation,
-    isThinking,
-  ])
+    if (!infoTooltipOpen || isMobileLayout) return
+    syncPortaledTooltipPosition()
+    const id = requestAnimationFrame(() => syncPortaledTooltipPosition())
+    return () => cancelAnimationFrame(id)
+  }, [infoTooltipOpen, isMobileLayout, syncPortaledTooltipPosition, model, isThinking, isImageGen])
+
+  useEffect(() => {
+    if (!infoTooltipOpen || isMobileLayout) return
+    const onViewportChange = () => syncPortaledTooltipPosition()
+    window.addEventListener('scroll', onViewportChange, true)
+    window.addEventListener('resize', onViewportChange)
+    return () => {
+      window.removeEventListener('scroll', onViewportChange, true)
+      window.removeEventListener('resize', onViewportChange)
+    }
+  }, [infoTooltipOpen, isMobileLayout, syncPortaledTooltipPosition])
+
+  useEffect(() => {
+    if (hideTooltip) setInfoTooltipOpen(false)
+  }, [hideTooltip])
+
+  useEffect(() => () => clearHideInfoTooltip(), [clearHideInfoTooltip])
 
   const knowledgeIconSvg = (
     <svg
@@ -195,28 +240,43 @@ function ModelNameWithInfoTooltip({
   }
 
   return (
-    <span
-      ref={wrapRef}
-      className={`model-name-tooltip-wrapper ${hideTooltip ? 'model-info-tooltip-disabled' : ''}`}
-    >
-      <span className="model-info-tooltip-trigger" onMouseEnter={placeTooltipArrow}>
-        <span className="model-name-text">{model.name}</span>
-        {knowledgeIconSvg}
-      </span>
-      {isThinking && (
-        <StyledTooltip usePortal text="Thinking model">
-          <span className="thinking-model-icon-wrap" aria-hidden>
-            <ThinkingModelIcon className="thinking-model-icon" />
-          </span>
-        </StyledTooltip>
-      )}
+    <>
       <span
-        ref={tipRef}
-        className={`model-info-tooltip ${isImageGen ? 'model-info-tooltip--image' : ''}`}
+        ref={wrapRef}
+        className={`model-name-tooltip-wrapper ${hideTooltip ? 'model-info-tooltip-disabled' : ''}`}
       >
-        <ModelInfoPanelContent model={model} modelsByProvider={modelsByProvider} />
+        <span
+          className="model-info-tooltip-trigger"
+          onMouseEnter={openInfoTooltip}
+          onMouseLeave={scheduleHideInfoTooltip}
+        >
+          <span className="model-name-text">{model.name}</span>
+          {knowledgeIconSvg}
+        </span>
+        {isThinking && (
+          <StyledTooltip usePortal text="Thinking model">
+            <span className="thinking-model-icon-wrap" aria-hidden>
+              <ThinkingModelIcon className="thinking-model-icon" />
+            </span>
+          </StyledTooltip>
+        )}
       </span>
-    </span>
+      {infoTooltipOpen &&
+        !hideTooltip &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <span
+            ref={portaledTipRef}
+            className={`model-info-tooltip model-info-tooltip--portaled ${isImageGen ? 'model-info-tooltip--image' : ''} ${inSelectedModelsRail ? 'model-info-tooltip--selected-rail' : ''}`}
+            role="tooltip"
+            onMouseEnter={clearHideInfoTooltip}
+            onMouseLeave={scheduleHideInfoTooltip}
+          >
+            <ModelInfoPanelContent model={model} modelsByProvider={modelsByProvider} />
+          </span>,
+          document.body
+        )}
+    </>
   )
 }
 
@@ -810,6 +870,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                         modelsByProvider={modelsByProvider}
                         hideTooltip={hideModelInfoTooltips}
                         isMobileLayout={isMobileLayout}
+                        inSelectedModelsRail
                         onOpenThinkingModelInfoModal={openThinkingModelInfoModal}
                         onOpenModelDetailsModal={() => setModelDetailsModalModel(model)}
                       />
