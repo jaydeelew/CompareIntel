@@ -707,6 +707,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             />
           )}
           <textarea
+            id={mirror ? 'comparison-input-mirror' : 'comparison-input'}
+            name={mirror ? undefined : 'comparisonPrompt'}
             ref={mirror ? mirrorTextareaRef : (textareaRef as React.RefObject<HTMLTextAreaElement>)}
             value={input}
             onChange={mirror ? undefined : e => setInput(e.target.value)}
