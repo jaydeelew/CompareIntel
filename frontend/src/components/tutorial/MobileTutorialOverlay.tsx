@@ -1329,11 +1329,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               <svg
                 className="mobile-tutorial-backdrop-follow-up-dim"
                 style={{
-                  position: 'fixed',
+                  position: 'absolute',
                   top: 0,
                   left: 0,
-                  width: `${typeof window !== 'undefined' ? window.innerWidth : 0}px`,
-                  height: `${typeof window !== 'undefined' ? window.innerHeight : 0}px`,
+                  width: `${typeof document !== 'undefined' ? Math.max(document.documentElement.scrollWidth, window.innerWidth) : 0}px`,
+                  height: `${typeof document !== 'undefined' ? Math.max(document.documentElement.scrollHeight, window.innerHeight) : 0}px`,
                   zIndex: 9998,
                   pointerEvents: 'none',
                 }}
@@ -1343,8 +1343,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                   <mask id={followUpDimMaskId}>
                     <rect width="100%" height="100%" fill="white" />
                     <rect
-                      x={followUpVResults.left}
-                      y={followUpVResults.top}
+                      x={followUpVResults.left + docScrollX}
+                      y={followUpVResults.top + docScrollY}
                       width={followUpVResults.width}
                       height={followUpVResults.height}
                       rx={followUpBrResults}
@@ -1352,8 +1352,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                       fill="black"
                     />
                     <rect
-                      x={followUpVComposer.left}
-                      y={followUpVComposer.top}
+                      x={followUpVComposer.left + docScrollX}
+                      y={followUpVComposer.top + docScrollY}
                       width={followUpVComposer.width}
                       height={followUpVComposer.height}
                       rx={followUpBrComposer}

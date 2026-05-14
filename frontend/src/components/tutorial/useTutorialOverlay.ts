@@ -46,10 +46,14 @@ function attachScrollResizeRaf(update: () => void): () => void {
   }
   document.addEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
   window.addEventListener('resize', schedule)
+  /** Main scroll is usually `.app` (see tutorialPositioning getTutorialScrollRoot); document listeners miss it. */
+  const scrollRootEl = typeof document !== 'undefined' ? document.querySelector('.app') : null
+  scrollRootEl?.addEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
   return () => {
     if (raf != null) cancelAnimationFrame(raf)
     document.removeEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
     window.removeEventListener('resize', schedule)
+    scrollRootEl?.removeEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
   }
 }
 
@@ -2154,7 +2158,10 @@ export function useTutorialOverlay(
     const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
 
     if (!needsTargetCutout && !isSubmitStep) {
-      setTargetCutout(null)
+      // follow-up manages targetCutout (+ composer hole) via syncFollowUpBackdropCutouts — skip clear + updater.
+      if (step !== 'follow-up') {
+        setTargetCutout(null)
+      }
       return
     }
 
