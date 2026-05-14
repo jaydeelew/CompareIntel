@@ -348,6 +348,13 @@ interface LayoutParams {
 
 const LAYOUT_DESKTOP: LayoutParams = { radius: 280, tiltY: 50, scaleFront: 2.0, scaleBack: 0.2 }
 const LAYOUT_TABLET: LayoutParams = { radius: 200, tiltY: 38, scaleFront: 1.6, scaleBack: 0.2 }
+/** 769–1024px: larger orbit + icons than narrow-desktop tablet band */
+const LAYOUT_TABLET_LARGE: LayoutParams = {
+  radius: 268,
+  tiltY: 48,
+  scaleFront: 2.0,
+  scaleBack: 0.2,
+}
 const LAYOUT_MOBILE: LayoutParams = { radius: 180, tiltY: 30, scaleFront: 2.0, scaleBack: 0.1 }
 
 function useResponsiveLayout(): LayoutParams {
@@ -355,19 +362,23 @@ function useResponsiveLayout(): LayoutParams {
 
   useEffect(() => {
     const mobile = window.matchMedia('(max-width: 768px)')
+    const tabletSquarish = window.matchMedia('(min-width: 769px) and (max-width: 1024px)')
     const tablet = window.matchMedia('(max-width: 1100px)')
 
     const update = () => {
       if (mobile.matches) setParams(LAYOUT_MOBILE)
+      else if (tabletSquarish.matches) setParams(LAYOUT_TABLET_LARGE)
       else if (tablet.matches) setParams(LAYOUT_TABLET)
       else setParams(LAYOUT_DESKTOP)
     }
 
     update()
     mobile.addEventListener('change', update)
+    tabletSquarish.addEventListener('change', update)
     tablet.addEventListener('change', update)
     return () => {
       mobile.removeEventListener('change', update)
+      tabletSquarish.removeEventListener('change', update)
       tablet.removeEventListener('change', update)
     }
   }, [])

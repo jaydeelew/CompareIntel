@@ -296,6 +296,13 @@
   .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
     top: calc(30% + var(--hero-tablet-content-nudge));
     transform: translate(-50%, -50%);
+    width: min(580px, 92vw);
+    max-width: 92vw;
+  }
+
+  .hero-section.hero-section--composer-focused .hero-centered-logo {
+    width: min(500px, 88vw);
+    max-width: 88vw;
   }
 }
 
