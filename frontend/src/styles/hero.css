@@ -285,11 +285,25 @@
   }
 }
 
+/* Tablet (769–1024): shift entire hero cluster down — extra padding-top for flow content plus the same
+   offset for composer-focused watermark + carousel (absolute % + length matches perceived drop). */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hero-section {
+    --hero-tablet-content-nudge: clamp(3.5rem, 9vmin, 7rem);
+    padding-top: calc(3rem + var(--hero-tablet-content-nudge));
+  }
+
+  .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
+    top: calc(30% + var(--hero-tablet-content-nudge));
+    transform: translate(-50%, -50%);
+  }
+}
+
 /* Tall portrait tablets (Surface Pro class ~912×1368): carousel + watermark sit high; nudge orbit up
    and drop the composer stack so it clears the watermark and breathes vs. the icon ring. */
 @media (min-width: 769px) and (max-width: 1024px) and (max-aspect-ratio: 1/1) {
   .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
-    top: 24%;
+    top: calc(24% + var(--hero-tablet-content-nudge));
     transform: translate(-50%, -50%);
   }
 

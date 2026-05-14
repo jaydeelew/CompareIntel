@@ -284,9 +284,15 @@
   }
 }
 
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hero-section.hero-section--composer-focused .provider-carousel-wrapper {
+    top: calc(30% + var(--hero-tablet-content-nudge, 0px));
+  }
+}
+
 @media (min-width: 769px) and (max-width: 1024px) and (max-aspect-ratio: 1/1) {
   .hero-section.hero-section--composer-focused .provider-carousel-wrapper {
-    top: 24%;
+    top: calc(24% + var(--hero-tablet-content-nudge, 0px));
   }
 }
 
