@@ -285,6 +285,31 @@
   }
 }
 
+/* Tall portrait tablets (Surface Pro class ~912×1368): carousel + watermark sit high; nudge orbit up
+   and drop the composer stack so it clears the watermark and breathes vs. the icon ring. */
+@media (min-width: 769px) and (max-width: 1024px) and (max-aspect-ratio: 1/1) {
+  .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
+    top: 24%;
+    transform: translate(-50%, -50%);
+  }
+
+  .hero-section.hero-section--composer-focused .hero-input-section {
+    margin-top: clamp(7.5rem, 18vmin, 12.5rem);
+    gap: 1rem;
+  }
+
+  /* Cards mode: title wraps to 2 lines while composer-focused forces nowrap (1 line).
+     Subtract one title line-height so the composer stack lands at the same Y in both modes. */
+  .hero-section:not(.hero-section--composer-focused) .hero-input-section {
+    margin-top: calc(clamp(7.5rem, 18vmin, 12.5rem) - clamp(2.5rem, 6vw, 4rem));
+    gap: 1rem;
+  }
+
+  .hero-section.hero-section--composer-focused .usage-preview-container {
+    margin-top: 0.375rem;
+  }
+}
+
 /* Watermark logo keeps the 1100px-level top value down to mobile; see @media (max-width: 480px) in navigation.css. */
 
 /* Decorative arrows: live in .hero-input-section; tips align to composer vertical center (anchor). */

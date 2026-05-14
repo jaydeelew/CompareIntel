@@ -284,6 +284,12 @@
   }
 }
 
+@media (min-width: 769px) and (max-width: 1024px) and (max-aspect-ratio: 1/1) {
+  .hero-section.hero-section--composer-focused .provider-carousel-wrapper {
+    top: 24%;
+  }
+}
+
 @media (max-width: 768px) {
   .provider-carousel-wrapper {
     top: 3.5rem;
