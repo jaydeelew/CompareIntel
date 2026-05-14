@@ -252,7 +252,12 @@ async function dismissTutorialOverlay(page: Page): Promise<void> {
       .first()
       .waitFor({ state: 'visible', timeout: 1000 })
       .catch(() => {})
-    if (!(await trialWelcomeOverlay.first().isVisible().catch(() => false))) {
+    if (
+      !(await trialWelcomeOverlay
+        .first()
+        .isVisible()
+        .catch(() => false))
+    ) {
       break
     }
 
@@ -267,7 +272,10 @@ async function dismissTutorialOverlay(page: Page): Promise<void> {
       .catch(async () => {
         await page.keyboard.press('Escape').catch(() => {})
       })
-    await trialWelcomeOverlay.first().waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+    await trialWelcomeOverlay
+      .first()
+      .waitFor({ state: 'hidden', timeout: 10000 })
+      .catch(() => {})
     await safeWait(page, 250)
   }
 
@@ -283,15 +291,13 @@ async function dismissTutorialOverlay(page: Page): Promise<void> {
     }
 
     const skip = welcomeBackdrop.getByRole('button', { name: /skip for now/i })
-    await skip
-      .click({ timeout: 10000 })
-      .catch(async () => {
-        await welcomeBackdrop
-          .locator('button.tutorial-welcome-button-secondary')
-          .first()
-          .click({ timeout: 5000, force: true })
-          .catch(() => {})
-      })
+    await skip.click({ timeout: 10000 }).catch(async () => {
+      await welcomeBackdrop
+        .locator('button.tutorial-welcome-button-secondary')
+        .first()
+        .click({ timeout: 5000, force: true })
+        .catch(() => {})
+    })
 
     await welcomeBackdrop.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {})
     await safeWait(page, 250)
@@ -309,6 +315,54 @@ async function dismissTutorialOverlay(page: Page): Promise<void> {
     }
     await page.keyboard.press('Escape').catch(() => {})
     await safeWait(page, 200)
+  }
+}
+
+/**
+ * Desktop navbar auto-hides after ~5s (Navigation.tsx). When folded, `.app-header-shell--folded`
+ * uses max-height:0 and pointer-events:none, so nav buttons sit outside the viewport and
+ * Playwright clicks fail (Firefox is strict). Scroll to top and send upward wheel deltas to
+ * match the in-app reveal gesture. Mobile / PWA disables auto-hide — no-op when not folded.
+ */
+async function ensureUnfoldedNavbar(page: Page): Promise<void> {
+  if (page.isClosed()) return
+
+  // Main layout scrolls inside `.app` (see base.css); window + app can diverge on WebKit and
+  // break scrollIntoView / sticky nav hit-testing unless both are aligned to top before nav clicks.
+  await page
+    .evaluate(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+      const app = document.querySelector('.app')
+      if (app instanceof HTMLElement) app.scrollTop = 0
+    })
+    .catch(() => {})
+
+  const shell = page.locator('.app-header-shell').first()
+  if ((await shell.count()) === 0) return
+
+  let folded = await shell
+    .evaluate((el: HTMLElement) => el.classList.contains('app-header-shell--folded'))
+    .catch(() => false)
+  if (!folded) return
+
+  // Navigation arms wheel-reveal after ~280ms once folded at top (AT_TOP_SETTLE_MS).
+  await safeWait(page, 400)
+
+  const viewport = page.viewportSize()
+  if (viewport) {
+    await page.mouse
+      .move(Math.floor(viewport.width / 2), Math.min(120, Math.floor(viewport.height / 3)))
+      .catch(() => {})
+  }
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    folded = await shell
+      .evaluate((el: HTMLElement) => el.classList.contains('app-header-shell--folded'))
+      .catch(() => false)
+    if (!folded) return
+
+    await page.mouse.wheel(0, -200).catch(() => {})
+    await safeWait(page, 220)
   }
 }
 
@@ -724,6 +778,7 @@ async function registerUser(
 
     // Dismiss tutorial overlay if present (blocks interactions)
     await dismissTutorialOverlay(page)
+    await ensureUnfoldedNavbar(page)
 
     // Wait for any existing auth modal overlay to close before clicking sign-up
     // The overlay can block clicks on the sign-up button
@@ -1573,4 +1628,5 @@ export {
   safeWait,
   dismissTutorialOverlay,
   dismissBlockingOnboardingOverlays,
+  ensureUnfoldedNavbar,
 }

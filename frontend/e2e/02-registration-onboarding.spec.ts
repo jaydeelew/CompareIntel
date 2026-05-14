@@ -5,6 +5,7 @@ import {
   waitForReactHydration,
   dismissTutorialOverlay,
   dismissBlockingOnboardingOverlays,
+  ensureUnfoldedNavbar,
 } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { test, expect } from './test-setup'
@@ -221,6 +222,7 @@ test.describe('Registration and Onboarding', () => {
         // Continue anyway
       }
 
+      await ensureUnfoldedNavbar(page)
       const signUpButton = page.getByTestId('nav-sign-up-button')
       await expect(signUpButton).toBeVisible({ timeout: 20000 })
       await signUpButton.click()
@@ -341,6 +343,7 @@ test.describe('Registration and Onboarding', () => {
     const testPassword = 'TestPassword123!'
 
     await test.step('Register new user', async () => {
+      await ensureUnfoldedNavbar(page)
       await page.getByTestId('nav-sign-up-button').click()
       await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
 
@@ -399,6 +402,7 @@ test.describe('Registration and Onboarding', () => {
     // Tutorial can appear after beforeEach or sit above the nav; clear it before any clicks.
     await dismissTutorialOverlay(page)
     await safeWait(page, 300)
+    await ensureUnfoldedNavbar(page)
 
     await test.step('Register and login', async () => {
       await page.evaluate(() =>
@@ -768,6 +772,8 @@ test.describe('Registration and Onboarding', () => {
     await test.step('Open login modal', async () => {
       // Dismiss tutorial overlay before clicking sign-in button
       await dismissTutorialOverlay(page)
+      // Desktop nav may be folded (pointer-events:none) or misaligned with `.app` scroll on WebKit
+      await ensureUnfoldedNavbar(page)
 
       const signInButton = page.getByTestId('nav-sign-in-button')
       await expect(signInButton).toBeVisible()
@@ -778,19 +784,41 @@ test.describe('Registration and Onboarding', () => {
       if (overlayVisible) {
         await dismissTutorialOverlay(page)
         await safeWait(page, 500)
+        await ensureUnfoldedNavbar(page)
       }
+
+      await signInButton.scrollIntoViewIfNeeded().catch(() => {})
 
       // Try clicking with retry logic for overlay blocking
       try {
         await signInButton.click({ timeout: 10000 })
       } catch (error) {
-        if (error instanceof Error && error.message.includes('intercepts pointer events')) {
-          // Overlay is blocking, dismiss it and retry
-          await dismissTutorialOverlay(page)
-          await safeWait(page, 500)
-          await signInButton.click({ timeout: 10000, force: true })
-        } else {
-          throw error
+        const msg = error instanceof Error ? error.message : ''
+        const recoverable =
+          msg.includes('intercepts pointer events') ||
+          msg.includes('outside of the viewport') ||
+          msg.includes('outside viewport')
+        if (!recoverable) throw error
+
+        await dismissTutorialOverlay(page)
+        await ensureUnfoldedNavbar(page)
+        await safeWait(page, 500)
+        await signInButton.scrollIntoViewIfNeeded().catch(() => {})
+
+        try {
+          await signInButton.click({ timeout: 10000 })
+        } catch (innerError) {
+          if (page.isClosed()) throw innerError
+          const innerMsg = innerError instanceof Error ? innerError.message : ''
+          if (
+            innerMsg.includes('intercepts pointer events') ||
+            innerMsg.includes('outside of the viewport') ||
+            innerMsg.includes('outside viewport')
+          ) {
+            await signInButton.evaluate((el: HTMLElement) => el.click())
+          } else {
+            throw innerError
+          }
         }
       }
 

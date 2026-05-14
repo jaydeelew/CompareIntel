@@ -1,6 +1,6 @@
 import { chromium, firefox, webkit, FullConfig, Page, BrowserType } from '@playwright/test'
 
-import { dismissTutorialOverlay } from './fixtures'
+import { dismissTutorialOverlay, ensureUnfoldedNavbar } from './fixtures'
 
 /**
  * Global Setup for E2E Tests
@@ -14,6 +14,7 @@ import { dismissTutorialOverlay } from './fixtures'
  */
 
 async function clickNavSignInButton(page: Page): Promise<boolean> {
+  await ensureUnfoldedNavbar(page)
   const loginButton = page.getByTestId('nav-sign-in-button')
   if (!(await loginButton.isVisible({ timeout: 2000 }).catch(() => false))) return false
 
@@ -27,6 +28,37 @@ async function clickNavSignInButton(page: Page): Promise<boolean> {
 
   await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
   return true
+}
+
+/**
+ * Welcome/tutorial layers can remain or reappear above the auth modal and block the submit control
+ * (pointer-events / stability). Dismiss overlays, then click with force + DOM fallback on failure.
+ */
+async function clickLoginSubmitWithOverlayGuard(page: Page): Promise<void> {
+  const submit = page.getByTestId('login-submit-button')
+
+  const attempt = async (opts?: { force?: boolean }) => {
+    await dismissTutorialOverlay(page)
+    if (page.isClosed()) {
+      throw new Error('Page closed before login submit')
+    }
+    await submit.scrollIntoViewIfNeeded().catch(() => {})
+    await submit.click({ timeout: 30000, ...opts })
+  }
+
+  try {
+    await attempt()
+  } catch (e1) {
+    if (page.isClosed()) throw e1
+    try {
+      await attempt({ force: true })
+    } catch (e2) {
+      if (page.isClosed()) throw e2
+      await dismissTutorialOverlay(page)
+      if (page.isClosed()) throw e2
+      await submit.evaluate((el: HTMLElement) => el.click())
+    }
+  }
 }
 
 async function globalSetup(config: FullConfig) {
@@ -309,7 +341,7 @@ async function globalSetup(config: FullConfig) {
         .waitForResponse(response => response.url().includes('/auth/login'), { timeout: 10000 })
         .catch(() => null)
 
-      await page.getByTestId('login-submit-button').click()
+      await clickLoginSubmitWithOverlayGuard(page)
       const loginResponse = await loginResponsePromise
 
       // Wait for user data fetch request (auth/me) to complete
@@ -400,6 +432,7 @@ async function globalSetup(config: FullConfig) {
 
           // Dismiss tutorial overlay if it appears (blocks interactions)
           await dismissTutorialOverlay(page)
+          await ensureUnfoldedNavbar(page)
 
           const signUpButton = page.getByTestId('nav-sign-up-button')
           if (await signUpButton.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -598,7 +631,7 @@ async function globalSetup(config: FullConfig) {
         .waitForResponse(response => response.url().includes('/auth/login'), { timeout: 10000 })
         .catch(() => null)
 
-      await page.getByTestId('login-submit-button').click()
+      await clickLoginSubmitWithOverlayGuard(page)
       const _loginResponse = await loginResponsePromise
 
       // Wait a bit for UI to update (error message or modal close)
@@ -619,6 +652,7 @@ async function globalSetup(config: FullConfig) {
           if (!modalVisible) {
             // Modal closed after failed login, reopen in registration mode
             console.log('Auth modal closed, reopening in registration mode...')
+            await ensureUnfoldedNavbar(page)
             const signUpButton = page.getByTestId('nav-sign-up-button')
             if (await signUpButton.isVisible({ timeout: 2000 }).catch(() => false)) {
               await signUpButton.click({ timeout: 5000 })
