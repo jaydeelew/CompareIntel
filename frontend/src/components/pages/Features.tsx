@@ -3,8 +3,8 @@
  * SEO-optimized page detailing CompareIntel's capabilities
  */
 
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 
 import {
   MONTHLY_CREDIT_ALLOCATIONS,
@@ -15,6 +15,17 @@ import { BackToMainCTA } from '../shared'
 import './Pages.css'
 
 export const Features: React.FC = () => {
+  const location = useLocation()
+
+  useEffect(() => {
+    const hash = location.hash.slice(1)
+    if (!hash) return
+    const id = setTimeout(() => {
+      const el = document.getElementById(hash)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
+    return () => clearTimeout(id)
+  }, [location.hash])
   return (
     <div className="seo-page">
       <div className="seo-page-container">
@@ -188,7 +199,7 @@ export const Features: React.FC = () => {
           </section>
 
           <section className="seo-section">
-            <h2>Saved Model Selections</h2>
+            <h2 id="saved-model-selections">Saved Model Selections</h2>
             <p>
               Save time by storing your favorite model combinations for quick access. CompareIntel's
               saved selections feature lets you create named groups of models that you use
@@ -221,7 +232,7 @@ export const Features: React.FC = () => {
                 their account, while unregistered users' selections are preserved using a persistent
                 unregistered ID.
               </li>
-              <li>
+              <li id="set-default-model-selection">
                 <strong>Set a Default Selection:</strong> Mark any saved selection as default to
                 auto-load your preferred models when you return.
               </li>

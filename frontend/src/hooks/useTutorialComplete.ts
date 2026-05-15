@@ -121,7 +121,9 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   const [tutorialHasBreakout, setTutorialHasBreakout] = useState(false)
   const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
 
-  const hasShownWelcomeModalRef = useRef(false)
+  const hasShownWelcomeModalRef = useRef(
+    sessionStorage.getItem('compareintel_welcome_shown_session') === 'true'
+  )
   /** True once the user has started a follow-up request (loading) on tutorial step 5. Prevents
    *  treating the first comparison's 2+ assistant messages as "round 2" before they submit. */
   const followUpSubmitInitiatedRef = useRef(false)
@@ -241,6 +243,7 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     if (dontShowAgain !== 'true') {
       setShowWelcomeModal(true)
       hasShownWelcomeModalRef.current = true
+      sessionStorage.setItem('compareintel_welcome_shown_session', 'true')
     }
   }, [authLoading, isAuthenticated, tutorialState.isActive, currentView])
 

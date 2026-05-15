@@ -1,12 +1,37 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+import { useResponsive } from '../../hooks'
 import type { SavedModelSelection } from '../../hooks/useSavedModelSelections'
 import type { ModelsByProvider } from '../../types/models'
 import { showNotification } from '../../utils/error'
 import { StyledTooltip } from '../shared'
 
 import type { SelectionProps } from './ComparisonFormTypes'
+import { SavedModelSelectionsInfoModal } from './SavedModelSelectionsInfoModal'
+
+const SAVED_SELECTIONS_INFO_TOOLTIP =
+  'When you have one or more saved selections, you can set any of them as the default. The default selection auto-loads your preferred models each time you return.'
+
+function SavedSelectionsHeaderInfoIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  )
+}
 
 function getModelNamesFromIds(modelIds: string[], modelsByProvider: ModelsByProvider): string {
   const idToName = new Map<string, string>()
@@ -155,7 +180,9 @@ export function SavedSelectionsDropdown({
   const [saveSelectionName, setSaveSelectionName] = useState('')
   const [saveSelectionError, setSaveSelectionError] = useState<string | null>(null)
   const [isInSaveMode, setIsInSaveMode] = useState(false)
+  const [showSavedSelectionsInfoModal, setShowSavedSelectionsInfoModal] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { isMobileLayout } = useResponsive()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -235,7 +262,34 @@ export function SavedSelectionsDropdown({
             <div className="saved-selections-dropdown">
               <div className="saved-selections-content">
                 <div className="saved-selections-header">
-                  <h4>Saved Model Selections</h4>
+                  <div className="saved-selections-header-title-cluster">
+                    <h4>Saved Model Selections</h4>
+                    {isMobileLayout ? (
+                      <button
+                        type="button"
+                        className="saved-selections-header-info"
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setShowSavedSelectionsInfoModal(true)
+                        }}
+                        aria-label="Learn about setting a default saved model selection"
+                      >
+                        <SavedSelectionsHeaderInfoIcon />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="saved-selections-header-info saved-selections-header-info-has-tooltip"
+                        aria-label="Learn about setting a default saved model selection"
+                      >
+                        <SavedSelectionsHeaderInfoIcon />
+                        <span className="saved-selections-header-info-tooltip" role="tooltip">
+                          {SAVED_SELECTIONS_INFO_TOOLTIP}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                   <span className="saved-selections-count">
                     {savedModelSelections.length} / {maxSavedSelections}
                   </span>
@@ -388,6 +442,14 @@ export function SavedSelectionsDropdown({
           }
           return dropdownPanel
         })()}
+      {showSavedSelectionsInfoModal &&
+        createPortal(
+          <SavedModelSelectionsInfoModal
+            isOpen={showSavedSelectionsInfoModal}
+            onClose={() => setShowSavedSelectionsInfoModal(false)}
+          />,
+          document.body
+        )}
     </div>
   )
 }

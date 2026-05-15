@@ -3660,6 +3660,90 @@ button.nav-button-primary {
   color: var(--text-primary);
 }
 
+.saved-selections-header-title-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.saved-selections-header-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0.125rem;
+  margin: 0;
+  color: var(--text-muted);
+  cursor: help;
+  transition: color 0.2s;
+}
+
+.saved-selections-header-info:hover,
+.saved-selections-header-info:active {
+  color: var(--primary-color);
+}
+
+.saved-selections-header-info:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+/* Desktop: position: relative so the tooltip positions from the button */
+.saved-selections-header-info-has-tooltip {
+  position: relative;
+}
+
+.saved-selections-header-info-has-tooltip:focus,
+.saved-selections-header-info-has-tooltip:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.saved-selections-header-info-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  padding: 0.625rem 0.875rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  white-space: normal;
+  width: max-content;
+  max-width: 280px;
+  text-align: left;
+  z-index: 1100;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+}
+
+.saved-selections-header-info-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: var(--bg-elevated);
+}
+
+.saved-selections-header-info-has-tooltip:hover .saved-selections-header-info-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
 .saved-selections-count {
   font-size: 0.75rem;
   color: var(--text-secondary);
