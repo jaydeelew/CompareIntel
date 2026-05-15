@@ -181,6 +181,10 @@ export function SavedSelectionsDropdown({
   const [saveSelectionError, setSaveSelectionError] = useState<string | null>(null)
   const [isInSaveMode, setIsInSaveMode] = useState(false)
   const [showSavedSelectionsInfoModal, setShowSavedSelectionsInfoModal] = useState(false)
+  const [headerInfoTooltip, setHeaderInfoTooltip] = useState<{
+    centerX: number
+    bottomY: number
+  } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isMobileLayout } = useResponsive()
 
@@ -280,13 +284,20 @@ export function SavedSelectionsDropdown({
                     ) : (
                       <button
                         type="button"
-                        className="saved-selections-header-info saved-selections-header-info-has-tooltip"
+                        className="saved-selections-header-info"
                         aria-label="Learn about setting a default saved model selection"
+                        onMouseEnter={e => {
+                          const rect = (
+                            e.currentTarget as HTMLButtonElement
+                          ).getBoundingClientRect()
+                          setHeaderInfoTooltip({
+                            centerX: rect.left + rect.width / 2,
+                            bottomY: window.innerHeight - rect.top + 10,
+                          })
+                        }}
+                        onMouseLeave={() => setHeaderInfoTooltip(null)}
                       >
                         <SavedSelectionsHeaderInfoIcon />
-                        <span className="saved-selections-header-info-tooltip" role="tooltip">
-                          {SAVED_SELECTIONS_INFO_TOOLTIP}
-                        </span>
                       </button>
                     )}
                   </div>
@@ -448,6 +459,22 @@ export function SavedSelectionsDropdown({
             isOpen={showSavedSelectionsInfoModal}
             onClose={() => setShowSavedSelectionsInfoModal(false)}
           />,
+          document.body
+        )}
+      {!isMobileLayout &&
+        headerInfoTooltip &&
+        createPortal(
+          <div
+            className="saved-selections-header-info-tooltip"
+            role="tooltip"
+            style={{
+              left: headerInfoTooltip.centerX,
+              bottom: headerInfoTooltip.bottomY,
+              transform: 'translateX(-50%)',
+            }}
+          >
+            {SAVED_SELECTIONS_INFO_TOOLTIP}
+          </div>,
           document.body
         )}
     </div>

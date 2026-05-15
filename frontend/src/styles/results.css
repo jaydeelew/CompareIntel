@@ -3692,22 +3692,9 @@ button.nav-button-primary {
   border-radius: 50%;
 }
 
-/* Desktop: position: relative so the tooltip positions from the button */
-.saved-selections-header-info-has-tooltip {
-  position: relative;
-}
-
-.saved-selections-header-info-has-tooltip:focus,
-.saved-selections-header-info-has-tooltip:active {
-  outline: none;
-  box-shadow: none;
-}
-
+/* Portal-rendered tooltip (desktop) — escapes overflow:hidden on dropdown */
 .saved-selections-header-info-tooltip {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
   background: var(--bg-elevated);
   color: var(--text-secondary);
   font-size: 0.8125rem;
@@ -3720,28 +3707,18 @@ button.nav-button-primary {
   width: max-content;
   max-width: 280px;
   text-align: left;
-  z-index: 1100;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 0.15s,
-    visibility 0.15s;
+  z-index: var(--z-tooltip, 10000);
   pointer-events: none;
 }
 
 .saved-selections-header-info-tooltip::after {
   content: '';
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-bottom-color: var(--bg-elevated);
-}
-
-.saved-selections-header-info-has-tooltip:hover .saved-selections-header-info-tooltip {
-  opacity: 1;
-  visibility: visible;
+  border-top-color: var(--bg-elevated);
 }
 
 .saved-selections-count {
