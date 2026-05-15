@@ -210,9 +210,9 @@
   outline-offset: 2px;
 }
 
-/* Mobile optimizations — bottom sheet: flush to viewport bottom (no gap under square corners).
-   Max width matches BREAKPOINT_MOBILE (768) so sheet layout aligns with useResponsive isMobileLayout. */
-@media (max-width: 768px) {
+/* Phone-only bottom sheet (matches Premium/DisabledModel info modals). Tablet portrait (641px+) stays
+   centered like desktop — see BREAKPOINT_SMALL / models section patterns. */
+@media (max-width: 640px) {
   .disabled-button-info-overlay {
     padding: 0.5rem 0.5rem 0;
     padding-left: max(0.5rem, env(safe-area-inset-left, 0px));

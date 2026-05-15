@@ -576,6 +576,48 @@
   pointer-events: auto;
 }
 
+/* Tablet: suppress all hover tooltips — shown as modals via JS instead */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .model-info-tooltip-trigger:hover ~ .model-info-tooltip,
+  .model-name-tooltip-wrapper .model-info-tooltip:hover {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .model-info-tooltip.model-info-tooltip--portaled {
+    display: none !important;
+  }
+
+  .help-me-choose-toggle-info-trigger:hover .help-me-choose-toggle-info-tooltip {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .help-me-choose-ordering-info:hover .help-me-choose-ordering-tooltip {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .help-me-choose-model-evidence-trigger:hover .help-me-choose-model-evidence-tooltip {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .help-me-choose-category-info-trigger:hover .help-me-choose-category-info-tooltip {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .help-me-choose-category-info-tooltip-portal {
+    display: none !important;
+  }
+
+  .models-header-controls .tooltip-content {
+    display: none !important;
+  }
+}
+
 /* Keep selected-column tooltips within the 340px rail so :hover overflow:visible does not spawn a horizontal scrollbar */
 .selected-model-card .model-info-tooltip {
   max-width: min(18rem, calc(100vw - 2rem));

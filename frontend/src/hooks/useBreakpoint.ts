@@ -1,10 +1,16 @@
 import { useState, useEffect, useMemo } from 'react'
 
-import { BREAKPOINT_SMALL, BREAKPOINT_MOBILE, BREAKPOINT_WIDE } from '../config/constants'
+import {
+  BREAKPOINT_SMALL,
+  BREAKPOINT_MOBILE,
+  BREAKPOINT_WIDE,
+  BREAKPOINT_TABLET,
+} from '../config/constants'
 
 export interface BreakpointState {
   isSmallLayout: boolean // <= 640px
   isMobileLayout: boolean // <= 768px
+  isTabletLayout: boolean // 769px–1024px
   isWideLayout: boolean // > 1000px
   viewportWidth: number
 }
@@ -28,6 +34,7 @@ export function useBreakpoint(): BreakpointState {
     () => ({
       isSmallLayout: viewportWidth <= BREAKPOINT_SMALL,
       isMobileLayout: viewportWidth <= BREAKPOINT_MOBILE,
+      isTabletLayout: viewportWidth > BREAKPOINT_MOBILE && viewportWidth <= BREAKPOINT_TABLET,
       isWideLayout: viewportWidth > BREAKPOINT_WIDE,
       viewportWidth,
     }),

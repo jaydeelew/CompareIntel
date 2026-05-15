@@ -16,8 +16,11 @@ vi.mock('../../../hooks', () => ({
   useResponsive: () => ({
     isSmallLayout: false,
     isMobileLayout: false,
+    isTabletLayout: false,
+    isCapabilityIconRowLayout: false,
     isWideLayout: true,
     viewportWidth: 1200,
+    useModalForTooltips: false,
     isTouchDevice: false,
     prefersFinePointerHover: true,
   }),

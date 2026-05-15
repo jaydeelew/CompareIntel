@@ -186,7 +186,7 @@ export function SavedSelectionsDropdown({
     bottomY: number
   } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const { isMobileLayout } = useResponsive()
+  const { useModalForTooltips } = useResponsive()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -268,7 +268,7 @@ export function SavedSelectionsDropdown({
                 <div className="saved-selections-header">
                   <div className="saved-selections-header-title-cluster">
                     <h4>Saved Model Selections</h4>
-                    {isMobileLayout ? (
+                    {useModalForTooltips ? (
                       <button
                         type="button"
                         className="saved-selections-header-info"
@@ -467,7 +467,7 @@ export function SavedSelectionsDropdown({
           />,
           document.body
         )}
-      {!isMobileLayout &&
+      {!useModalForTooltips &&
         headerInfoTooltip &&
         createPortal(
           <div

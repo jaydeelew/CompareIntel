@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { useResponsive } from '../../hooks'
 import type { User, ModelConversation } from '../../types'
 import { StyledTooltip } from '../shared'
 
@@ -77,7 +78,7 @@ export function ModelsSectionHeader({
   isAuthenticated,
   user,
   isWideLayout,
-  isMobileLayout,
+  isMobileLayout: _isMobileLayout,
   hidePremiumModels,
   openDropdowns,
   response,
@@ -94,6 +95,7 @@ export function ModelsSectionHeader({
   onExpandModelsSection,
 }: ModelsSectionHeaderProps) {
   // Get user tier for display and premium toggle visibility
+  const { useModalForTooltips } = useResponsive()
   const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
   const showHidePremiumToggle = userTier === 'unregistered' || userTier === 'free'
   const [tierLimitsModalOpen, setTierLimitsModalOpen] = useState(false)
@@ -114,8 +116,7 @@ export function ModelsSectionHeader({
   // Handle premium models toggle click
   const handlePremiumToggleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    // On mobile layout, show info modal first (if not dismissed)
-    if (isMobileLayout) {
+    if (useModalForTooltips) {
       const dontShowAgain = localStorage.getItem('premium-models-toggle-info-dismissed')
       if (!dontShowAgain) {
         onShowPremiumModelsModal()
@@ -128,8 +129,7 @@ export function ModelsSectionHeader({
   // Handle collapse all button click
   const handleCollapseAllClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    // On mobile layout, show info modal if button is disabled
-    if (isMobileLayout && openDropdowns.size === 0) {
+    if (useModalForTooltips && openDropdowns.size === 0) {
       onShowDisabledButtonInfo({
         button: 'collapse-all',
         message:
@@ -145,8 +145,7 @@ export function ModelsSectionHeader({
   // Handle clear all button click
   const handleClearAllClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    // On mobile layout, show info modal if button is disabled
-    if (isMobileLayout && (selectedModels.length === 0 || isFollowUpMode)) {
+    if (useModalForTooltips && (selectedModels.length === 0 || isFollowUpMode)) {
       let message = ''
       if (isFollowUpMode) {
         message =
@@ -265,7 +264,7 @@ export function ModelsSectionHeader({
               {showHidePremiumToggle && (
                 <>
                   {' '}
-                  {isMobileLayout ? (
+                  {useModalForTooltips ? (
                     <button
                       type="button"
                       className="advanced-settings-info-btn"
@@ -398,9 +397,9 @@ export function ModelsSectionHeader({
           )}
           <StyledTooltip text="Collapse all model providers">
             <button
-              className={`collapse-all-button ${isMobileLayout && openDropdowns.size === 0 ? 'touch-disabled' : ''}`}
+              className={`collapse-all-button ${useModalForTooltips && openDropdowns.size === 0 ? 'touch-disabled' : ''}`}
               onClick={handleCollapseAllClick}
-              disabled={!isMobileLayout && openDropdowns.size === 0}
+              disabled={!useModalForTooltips && openDropdowns.size === 0}
               aria-label="Collapse all model providers"
             >
               {/* Double chevrons up icon (collapse all) */}
@@ -424,9 +423,9 @@ export function ModelsSectionHeader({
             text={isFollowUpMode ? 'Cannot clear models during follow-up' : 'Clear all selections'}
           >
             <button
-              className={`clear-all-button ${isMobileLayout && (selectedModels.length === 0 || isFollowUpMode) ? 'touch-disabled' : ''}`}
+              className={`clear-all-button ${useModalForTooltips && (selectedModels.length === 0 || isFollowUpMode) ? 'touch-disabled' : ''}`}
               onClick={handleClearAllClick}
-              disabled={!isMobileLayout && (selectedModels.length === 0 || isFollowUpMode)}
+              disabled={!useModalForTooltips && (selectedModels.length === 0 || isFollowUpMode)}
               aria-label={
                 isFollowUpMode ? 'Cannot clear models during follow-up' : 'Clear all selections'
               }
@@ -476,7 +475,7 @@ export function ModelsSectionHeader({
               {selectedModels.length} of {maxModelsLimit} selected
             </div>
           </StyledTooltip>
-          {isMobileLayout ? (
+          {useModalForTooltips ? (
             modelSelectionCollapseToggleBtn
           ) : (
             <StyledTooltip text={isModelsHidden ? 'Show model selection' : 'Hide model selection'}>

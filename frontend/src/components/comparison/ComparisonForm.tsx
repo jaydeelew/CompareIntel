@@ -160,12 +160,19 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     }, [selectedModels, modelsByProvider])
     const canEnableWebSearch = selectedModelsWithWebSearch.length > 0
 
-    const { isTouchDevice, isSmallLayout, isMobileLayout, prefersFinePointerHover } =
-      useResponsive()
+    const {
+      isTouchDevice,
+      isSmallLayout,
+      isMobileLayout,
+      isTabletLayout,
+      prefersFinePointerHover,
+      useModalForTooltips,
+    } = useResponsive()
+    const isMobileOrTablet = isMobileLayout || isTabletLayout
     /** Touch-first toolbar (tap modals, no hover tooltips). False when viewport is wide or when user has a mouse on a narrow viewport. */
-    const useTouchFirstComposerChrome = isMobileLayout && !prefersFinePointerHover
-    const showComposerStyledTooltips =
-      (!isMobileLayout || prefersFinePointerHover) && !tutorialIsActive
+    const useTouchFirstComposerChrome = isMobileOrTablet && !prefersFinePointerHover
+    /** Match models/help tooltips: no hover bubbles on tablet or wide touch slates — use ActionButton tooltip modals instead. */
+    const showComposerStyledTooltips = !useModalForTooltips && !tutorialIsActive
 
     const [tokenUsageInfo, setTokenUsageInfo] = useState<TokenUsageInfo | null>(null)
     const [disabledButtonInfo, setDisabledButtonInfo] = useState<{

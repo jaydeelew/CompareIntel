@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+import { useResponsive } from '../../hooks'
 import '../../styles/providerCarousel.css'
 
 /* ──────────────────────────────── types ──────────────────────────────── */
@@ -420,6 +421,7 @@ function itemLayout(
 
 export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouselProps) {
   const layoutParams = useResponsiveLayout()
+  const { useModalForTooltips } = useResponsive()
   const [rotation, setRotation] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [isCoarsePointer, setIsCoarsePointer] = useState(false)
@@ -571,11 +573,14 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
     [onProviderClick]
   )
 
-  const onItemEnter = useCallback((provider: string, e: React.PointerEvent) => {
-    if (e.pointerType === 'touch') return
-    hoveredRef.current = true
-    setTooltipProvider(provider)
-  }, [])
+  const onItemEnter = useCallback(
+    (provider: string, e: React.PointerEvent) => {
+      if (e.pointerType === 'touch' || useModalForTooltips) return
+      hoveredRef.current = true
+      setTooltipProvider(provider)
+    },
+    [useModalForTooltips]
+  )
 
   const onItemPointerMove = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === 'touch') return

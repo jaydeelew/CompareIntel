@@ -9,6 +9,10 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 
+import { useResponsive } from '../../hooks'
+
+import '../comparison/DisabledButtonInfoModal.css'
+
 const VIEWPORT_MARGIN_PX = 8
 
 /** Keep tooltip bubble fully inside the viewport; when impossible, center horizontally. */
@@ -37,15 +41,75 @@ interface StyledTooltipProps {
   usePortal?: boolean
 }
 
+/** Modal fallback for tablet / touch-slate viewports — reuses DisabledButtonInfoModal styling. */
+function TooltipModal({ text, onClose }: { text: string; onClose: () => void }) {
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    closeRef.current?.focus()
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return createPortal(
+    <div className="disabled-button-info-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="disabled-button-info-modal" onClick={e => e.stopPropagation()}>
+        <div className="disabled-button-info-header">
+          <h3>Info</h3>
+          <button
+            ref={closeRef}
+            className="disabled-button-info-close"
+            onClick={onClose}
+            aria-label="Close"
+            type="button"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div className="disabled-button-info-content">
+          <p>{text}</p>
+        </div>
+        <div className="disabled-button-info-footer">
+          <button className="disabled-button-info-button" onClick={onClose} type="button">
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 export function StyledTooltip({
   text,
   children,
   className = '',
   usePortal = false,
 }: StyledTooltipProps) {
+  const { useModalForTooltips } = useResponsive()
   const anchorRef = useRef<HTMLSpanElement>(null)
   const tooltipRef = useRef<HTMLSpanElement>(null)
   const [open, setOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
   const [pos, setPos] = useState<{ x: number; y: number; arrowLeftPx?: number }>({ x: 0, y: 0 })
 
   const syncPosition = useCallback(() => {
@@ -117,6 +181,24 @@ export function StyledTooltip({
       root.removeEventListener('focusout', onFocusOut)
     }
   }, [usePortal])
+
+  if (useModalForTooltips) {
+    return (
+      <>
+        <span
+          className={`tooltip ${className}`.trim()}
+          onClick={e => {
+            e.stopPropagation()
+            setModalOpen(true)
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          {children}
+        </span>
+        {modalOpen && <TooltipModal text={text} onClose={() => setModalOpen(false)} />}
+      </>
+    )
+  }
 
   if (!usePortal) {
     return (

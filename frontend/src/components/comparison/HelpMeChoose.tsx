@@ -27,6 +27,7 @@ import {
   HELP_ME_CHOOSE_CATEGORY_IMAGE_GENERATION_ID,
   type HelpMeChooseCategory,
 } from '../../data/helpMeChooseRecommendations'
+import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
 import { getUserTierInfo, isModelRestrictedForUser } from '../../utils/modelTierAccess'
 import { modelSupportsVision } from '../../utils/visionModels'
@@ -286,13 +287,14 @@ export function HelpMeChoose({
   isExpanded: controlledExpanded,
   onExpandChange,
   modelsSectionRef,
-  isMobileLayout = false,
+  isMobileLayout: _isMobileLayout = false,
   hasAttachedImages = false,
   hidePremiumModels = false,
   modelMode = 'text',
   scrollCategoryIdIntoView = null,
   onScrollCategoryIntoViewDone,
 }: HelpMeChooseProps) {
+  const { useModalForTooltips } = useResponsive()
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showScopeInfoModal, setShowScopeInfoModal] = useState(false)
   const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
@@ -933,9 +935,9 @@ export function HelpMeChoose({
             setShowScopeInfoModal(true)
           }}
           aria-label="Learn about which models appear in Help me choose"
-          aria-describedby={isMobileLayout ? undefined : 'hmc-toggle-scope-tooltip'}
+          aria-describedby={useModalForTooltips ? undefined : 'hmc-toggle-scope-tooltip'}
         >
-          {!isMobileLayout && (
+          {!useModalForTooltips && (
             <span
               id="hmc-toggle-scope-tooltip"
               className="help-me-choose-toggle-info-tooltip"
@@ -1013,7 +1015,7 @@ export function HelpMeChoose({
                                   })
                                 }}
                                 onMouseEnter={
-                                  !isMobileLayout
+                                  !useModalForTooltips
                                     ? e => {
                                         const rect = (
                                           e.currentTarget as HTMLButtonElement
@@ -1027,14 +1029,14 @@ export function HelpMeChoose({
                                     : undefined
                                 }
                                 onMouseLeave={
-                                  !isMobileLayout ? () => setCategoryTooltip(null) : undefined
+                                  !useModalForTooltips ? () => setCategoryTooltip(null) : undefined
                                 }
                                 aria-label={`${cat.label} — how this category is ranked`}
                                 aria-describedby={
-                                  isMobileLayout ? undefined : `hmc-category-info-${cat.id}`
+                                  useModalForTooltips ? undefined : `hmc-category-info-${cat.id}`
                                 }
                               >
-                                {!isMobileLayout && (
+                                {!useModalForTooltips && (
                                   <span
                                     id={`hmc-category-info-${cat.id}`}
                                     className="sr-only"
@@ -1178,7 +1180,7 @@ export function HelpMeChoose({
                                           </span>
                                         )}
                                         {supportsWebSearch &&
-                                          (isMobileLayout ? (
+                                          (useModalForTooltips ? (
                                             <button
                                               type="button"
                                               className="web-search-indicator indicator-tappable"
@@ -1277,7 +1279,7 @@ export function HelpMeChoose({
                                             })
                                           }}
                                           onMouseEnter={
-                                            !isMobileLayout
+                                            !useModalForTooltips
                                               ? e => {
                                                   const rect = (
                                                     e.currentTarget as HTMLButtonElement
@@ -1293,18 +1295,18 @@ export function HelpMeChoose({
                                               : undefined
                                           }
                                           onMouseLeave={
-                                            !isMobileLayout
+                                            !useModalForTooltips
                                               ? () => setModelEvidenceTooltip(null)
                                               : undefined
                                           }
                                           aria-label={`Benchmark evidence for ${displayName}`}
                                           aria-describedby={
-                                            isMobileLayout
+                                            useModalForTooltips
                                               ? undefined
                                               : `hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`
                                           }
                                         >
-                                          {!isMobileLayout && (
+                                          {!useModalForTooltips && (
                                             <span
                                               id={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
                                               className="sr-only"
@@ -1351,7 +1353,7 @@ export function HelpMeChoose({
           document.body
         )}
 
-      {!isMobileLayout &&
+      {!useModalForTooltips &&
         categoryTooltip &&
         createPortal(
           <div
@@ -1368,7 +1370,7 @@ export function HelpMeChoose({
           document.body
         )}
 
-      {!isMobileLayout &&
+      {!useModalForTooltips &&
         modelEvidenceTooltip &&
         createPortal(
           <div

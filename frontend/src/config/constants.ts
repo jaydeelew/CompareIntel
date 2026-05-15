@@ -186,6 +186,12 @@ export const BREAKPOINT_WIDE = 1000
 export const BREAKPOINT_TABLET = 1024
 
 /**
+ * Touch devices (e.g. iPad “desktop” / wide slate mode) above {@link BREAKPOINT_TABLET} still use
+ * tap-to-open info modals instead of hover tooltips up to this width.
+ */
+export const BREAKPOINT_LARGE_TOUCH_TOOLTIP_MODAL_MAX = 1366
+
+/**
  * All breakpoints as an object for convenient access
  */
 export const BREAKPOINTS = {

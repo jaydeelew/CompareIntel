@@ -15,6 +15,8 @@ vi.mock('../../config/constants', () => ({
   BREAKPOINT_MOBILE: 768,
   BREAKPOINT_CAPABILITY_ICON_ROW: 900,
   BREAKPOINT_WIDE: 1000,
+  BREAKPOINT_TABLET: 1024,
+  BREAKPOINT_LARGE_TOUCH_TOOLTIP_MODAL_MAX: 1366,
 }))
 
 describe('useResponsive', () => {
@@ -71,6 +73,7 @@ describe('useResponsive', () => {
     expect(result.current.viewportWidth).toBe(1200)
     expect(result.current.isTouchDevice).toBe(false)
     expect(typeof result.current.prefersFinePointerHover).toBe('boolean')
+    expect(result.current.useModalForTooltips).toBe(false)
   })
 
   it('should detect small layout (<= 640px)', () => {
@@ -83,6 +86,7 @@ describe('useResponsive', () => {
     expect(result.current.isCapabilityIconRowLayout).toBe(true)
     expect(result.current.isWideLayout).toBe(false)
     expect(result.current.viewportWidth).toBe(600)
+    expect(result.current.useModalForTooltips).toBe(true)
   })
 
   it('should detect mobile layout (<= 768px)', () => {
@@ -94,6 +98,7 @@ describe('useResponsive', () => {
     expect(result.current.isMobileLayout).toBe(true)
     expect(result.current.isCapabilityIconRowLayout).toBe(true)
     expect(result.current.isWideLayout).toBe(false)
+    expect(result.current.useModalForTooltips).toBe(true)
   })
 
   it('should detect narrow desktop (> 768px but <= 1000px)', () => {
@@ -105,6 +110,8 @@ describe('useResponsive', () => {
     expect(result.current.isMobileLayout).toBe(false)
     expect(result.current.isCapabilityIconRowLayout).toBe(true)
     expect(result.current.isWideLayout).toBe(false)
+    expect(result.current.isTabletLayout).toBe(true)
+    expect(result.current.useModalForTooltips).toBe(true)
   })
 
   it('should detect touch device via ontouchstart', () => {
@@ -189,6 +196,33 @@ describe('useResponsive', () => {
     Object.defineProperty(window, 'innerWidth', { value: 1001, configurable: true })
     const { result: result1001 } = renderHook(() => useResponsive())
     expect(result1001.current.isWideLayout).toBe(true)
+  })
+
+  it('should use modal tooltips for wide touch slates (e.g. iPad desktop width)', () => {
+    Object.defineProperty(window, 'innerWidth', { value: 1200, configurable: true })
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 5, configurable: true })
+
+    const { result } = renderHook(() => useResponsive())
+
+    expect(result.current.isTabletLayout).toBe(false)
+    expect(result.current.useModalForTooltips).toBe(true)
+  })
+
+  it('should not use modal tooltips for wide desktop without touch', () => {
+    Object.defineProperty(window, 'innerWidth', { value: 1200, configurable: true })
+
+    const { result } = renderHook(() => useResponsive())
+
+    expect(result.current.useModalForTooltips).toBe(false)
+  })
+
+  it('should not use modal tooltips for touch devices wider than slate max', () => {
+    Object.defineProperty(window, 'innerWidth', { value: 1400, configurable: true })
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 5, configurable: true })
+
+    const { result } = renderHook(() => useResponsive())
+
+    expect(result.current.useModalForTooltips).toBe(false)
   })
 
   it('should cleanup event listeners on unmount', () => {

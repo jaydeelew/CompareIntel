@@ -5,6 +5,8 @@ import {
   BREAKPOINT_SMALL,
   BREAKPOINT_MOBILE,
   BREAKPOINT_WIDE,
+  BREAKPOINT_TABLET,
+  BREAKPOINT_LARGE_TOUCH_TOOLTIP_MODAL_MAX,
 } from '../config/constants'
 
 /** Primary pointing device is mouse-like (hover + precise cursor). Used for desktop-style hover tooltips on narrow viewports. */
@@ -14,10 +16,15 @@ export interface ResponsiveState {
   // Breakpoints
   isSmallLayout: boolean // <= 640px
   isMobileLayout: boolean // <= 768px
+  isTabletLayout: boolean // 769px–1024px
   /** Compact hero capability row (icon-only tiles + flipped text demo). Matches hero.css max-width 900px. */
   isCapabilityIconRowLayout: boolean
   isWideLayout: boolean // > 1000px
   viewportWidth: number
+  /**
+   * Use tap-to-open info modals instead of hover tooltips (phones, tablet band, wide touch slates).
+   */
+  useModalForTooltips: boolean
   // Touch detection
   isTouchDevice: boolean
   /** True when the environment supports hover with a fine pointer (e.g. mouse). */
@@ -72,9 +79,15 @@ export function useResponsive(): ResponsiveState {
     () => ({
       isSmallLayout: viewportWidth <= BREAKPOINT_SMALL,
       isMobileLayout: viewportWidth <= BREAKPOINT_MOBILE,
+      isTabletLayout: viewportWidth > BREAKPOINT_MOBILE && viewportWidth <= BREAKPOINT_TABLET,
       isCapabilityIconRowLayout: viewportWidth <= BREAKPOINT_CAPABILITY_ICON_ROW,
       isWideLayout: viewportWidth > BREAKPOINT_WIDE,
       viewportWidth,
+      useModalForTooltips:
+        viewportWidth <= BREAKPOINT_TABLET ||
+        (isTouchDevice &&
+          viewportWidth > BREAKPOINT_TABLET &&
+          viewportWidth <= BREAKPOINT_LARGE_TOUCH_TOOLTIP_MODAL_MAX),
       isTouchDevice,
       prefersFinePointerHover,
     }),

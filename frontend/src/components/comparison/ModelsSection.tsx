@@ -364,18 +364,18 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   onShowDisabledModelModal,
   imageModelsDisabledForUnregistered = false,
 }) => {
-  const { isMobileLayout } = useResponsive()
+  const { isMobileLayout, useModalForTooltips } = useResponsive()
   const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
   const [showThinkingModelInfoModal, setShowThinkingModelInfoModal] = useState(false)
   const [modelDetailsModalModel, setModelDetailsModalModel] = useState<Model | null>(null)
   const [selectAllModalProvider, setSelectAllModalProvider] = useState<string | null>(null)
 
   const openThinkingModelInfoModal = useCallback(() => {
-    if (isMobileLayout && getTooltipModalSuppressed('thinking-model')) {
+    if (useModalForTooltips && getTooltipModalSuppressed('thinking-model')) {
       return
     }
     setShowThinkingModelInfoModal(true)
-  }, [isMobileLayout])
+  }, [useModalForTooltips])
 
   /** Scroll snapshot from pointerdown on a provider model row (before focus + layout). */
   const providerToggleScrollSnapRef = useRef<{ app: number; win: number } | null>(null)
@@ -592,7 +592,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                         onMouseDown={e => e.preventDefault()}
                         onClick={e => {
                           e.stopPropagation()
-                          if (isMobileLayout) {
+                          if (useModalForTooltips) {
                             if (getTooltipModalSuppressed('select-all')) {
                               if (!isDisabled) onToggleAllForProvider(provider)
                             } else {
@@ -607,7 +607,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                       </div>
                     )
 
-                    return isMobileLayout ? (
+                    return useModalForTooltips ? (
                       selectAllButton
                     ) : (
                       <StyledTooltip text={tooltipText}>{selectAllButton}</StyledTooltip>
@@ -706,7 +706,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                               model={model}
                               modelsByProvider={modelsByProvider}
                               hideTooltip={hideModelInfoTooltips}
-                              isMobileLayout={isMobileLayout}
+                              isMobileLayout={useModalForTooltips}
                               onOpenThinkingModelInfoModal={openThinkingModelInfoModal}
                               onOpenModelDetailsModal={() => setModelDetailsModalModel(model)}
                             />
@@ -804,7 +804,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 margin: 0,
                                 flexShrink: 0,
                               }
-                              return isMobileLayout ? (
+                              return useModalForTooltips ? (
                                 <button
                                   type="button"
                                   className="web-search-indicator indicator-tappable"
@@ -869,7 +869,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                         model={model}
                         modelsByProvider={modelsByProvider}
                         hideTooltip={hideModelInfoTooltips}
-                        isMobileLayout={isMobileLayout}
+                        isMobileLayout={useModalForTooltips}
                         inSelectedModelsRail
                         onOpenThinkingModelInfoModal={openThinkingModelInfoModal}
                         onOpenModelDetailsModal={() => setModelDetailsModalModel(model)}
@@ -877,7 +877,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                     </h4>
                     <div className="selected-model-actions">
                       {model.supports_web_search &&
-                        (isMobileLayout ? (
+                        (useModalForTooltips ? (
                           <button
                             type="button"
                             className="web-search-indicator indicator-tappable"

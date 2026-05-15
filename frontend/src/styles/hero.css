@@ -2176,6 +2176,24 @@ video.capability-tile-image-lightbox-img {
   visibility: visible;
 }
 
+/* Tablet: suppress all hero hover tooltips — shown as modals via JS instead */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .credits-info-trigger:hover .credits-info-tooltip {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .capability-tag:hover .tooltip-text {
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  .capability-tile.flipped .tooltip:hover .tooltip-content {
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+}
+
 /* Credits remaining link – very light blue for contrast on hero gradient */
 .hero-section .credits-remaining-link,
 .after-results-composer-slot .credits-remaining-link,

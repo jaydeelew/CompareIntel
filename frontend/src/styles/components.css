@@ -544,6 +544,19 @@
   transform: translateX(-50%);
 }
 
+/* Tablet: suppress all hover tooltips — shown as modals via JS instead */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tooltip:hover .tooltip-content {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .tooltip-content--portaled {
+    display: none !important;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════
    BADGES
    ═══════════════════════════════════════════════════════════ */
