@@ -3692,6 +3692,14 @@ button.nav-button-primary {
   border-radius: 50%;
 }
 
+/* Desktop info icon: no focus ring or active highlight on click */
+.saved-selections-header-info--desktop:focus,
+.saved-selections-header-info--desktop:active {
+  outline: none;
+  box-shadow: none;
+  color: var(--text-muted);
+}
+
 /* Portal-rendered tooltip (desktop) — escapes overflow:hidden on dropdown */
 .saved-selections-header-info-tooltip {
   position: fixed;

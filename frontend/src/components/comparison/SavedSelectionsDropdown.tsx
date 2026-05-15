@@ -284,8 +284,14 @@ export function SavedSelectionsDropdown({
                     ) : (
                       <button
                         type="button"
-                        className="saved-selections-header-info"
+                        className="saved-selections-header-info saved-selections-header-info--desktop"
                         aria-label="Learn about setting a default saved model selection"
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setHeaderInfoTooltip(null)
+                          setShowSavedSelectionsInfoModal(true)
+                        }}
                         onMouseEnter={e => {
                           const rect = (
                             e.currentTarget as HTMLButtonElement
