@@ -43,6 +43,8 @@ describe('useTutorialComplete', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorageMock.clear()
+    // Hook marks welcome as shown in sessionStorage; earlier tests share the same jsdom session.
+    sessionStorage.removeItem('compareintel_welcome_shown_session')
   })
 
   describe('initialization', () => {
