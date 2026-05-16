@@ -891,13 +891,22 @@ test.describe('Registration and Onboarding', () => {
         // Continue — guest chrome should still expose Sign In
       }
 
-      // Hero/main content can sit above the nav hit target in the stacking order; scroll and
-      // retry with force click (same pattern as "User can login with existing account").
-      await page.evaluate(() =>
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
-      )
+      // Match "User can login with existing account": folded nav + `.app` scroll divergence
+      // breaks WebKit hit-testing; overlays must be dismissed first.
+      await dismissTutorialOverlay(page)
+      await ensureUnfoldedNavbar(page)
+
       const signInButton = page.getByTestId('nav-sign-in-button')
       await expect(signInButton).toBeVisible({ timeout: clickTimeout })
+
+      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+      if (overlayVisible) {
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 500)
+        await ensureUnfoldedNavbar(page)
+      }
+
       await signInButton.scrollIntoViewIfNeeded().catch(() => {})
       await safeWait(page, 200)
 
@@ -907,16 +916,36 @@ test.describe('Registration and Onboarding', () => {
         if (page.isClosed()) {
           throw new Error('Page was closed during sign-in click')
         }
-        if (
-          error instanceof Error &&
-          (error.message.includes('intercepts pointer events') ||
-            error.message.includes('outside of the viewport') ||
-            error.message.includes('timeout') ||
-            error.message.includes('Timeout'))
-        ) {
-          await signInButton.click({ timeout: clickTimeout, force: true })
-        } else {
-          throw error
+        const msg = error instanceof Error ? error.message : ''
+        const recoverable =
+          msg.includes('intercepts pointer events') ||
+          msg.includes('outside of the viewport') ||
+          msg.includes('outside viewport') ||
+          msg.includes('timeout') ||
+          msg.includes('Timeout')
+        if (!recoverable) throw error
+
+        await dismissTutorialOverlay(page)
+        await ensureUnfoldedNavbar(page)
+        await safeWait(page, 500)
+        await signInButton.scrollIntoViewIfNeeded().catch(() => {})
+
+        try {
+          await signInButton.click({ timeout: clickTimeout })
+        } catch (innerError) {
+          if (page.isClosed()) throw innerError
+          const innerMsg = innerError instanceof Error ? innerError.message : ''
+          if (
+            innerMsg.includes('intercepts pointer events') ||
+            innerMsg.includes('outside of the viewport') ||
+            innerMsg.includes('outside viewport') ||
+            innerMsg.includes('timeout') ||
+            innerMsg.includes('Timeout')
+          ) {
+            await signInButton.evaluate((el: HTMLElement) => el.click())
+          } else {
+            throw innerError
+          }
         }
       }
 
