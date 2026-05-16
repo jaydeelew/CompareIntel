@@ -36,7 +36,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -90,7 +94,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -149,7 +157,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -203,7 +215,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -267,7 +283,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -326,7 +346,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -390,7 +414,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -454,7 +482,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -518,7 +550,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -582,7 +618,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -636,7 +676,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -690,7 +734,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -754,7 +802,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -818,7 +870,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -882,7 +938,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -946,7 +1006,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1010,7 +1074,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1064,7 +1132,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1128,7 +1200,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1192,7 +1268,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1256,7 +1336,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1320,7 +1404,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1384,7 +1472,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1438,7 +1530,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1502,7 +1598,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1566,7 +1666,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1625,7 +1729,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1689,7 +1797,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1753,7 +1865,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1817,7 +1933,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1881,7 +2001,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1945,7 +2069,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2009,7 +2137,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2063,7 +2195,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2117,7 +2253,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2171,7 +2311,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2230,7 +2374,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2284,7 +2432,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2338,7 +2490,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2402,7 +2558,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2461,7 +2621,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2520,7 +2684,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2574,7 +2742,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2588,198 +2760,6 @@
     },
     "metadata": {
       "createdAt": "2025-11-13T02:02:42.464441Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "x-ai/grok-4",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464674Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "x-ai/grok-4-fast",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": true,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": true,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464701Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "x-ai/grok-code-fast-1",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": false,
-      "removeHtmlFromMath": true,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-12-01T19:31:32.659252Z",
       "needsManualReview": true
     }
   },
@@ -2820,7 +2800,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2874,7 +2858,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2928,7 +2916,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2987,7 +2979,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3051,7 +3047,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3120,7 +3120,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3134,70 +3138,6 @@
     },
     "metadata": {
       "createdAt": "2025-12-10T13:53:21.074420Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "x-ai/grok-3-mini",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": true,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-12-10T17:43:39.499850Z",
       "needsManualReview": true
     }
   },
@@ -3243,7 +3183,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3297,7 +3241,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3361,7 +3309,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3425,7 +3377,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3489,7 +3445,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3553,7 +3513,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3617,7 +3581,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3631,70 +3599,6 @@
     },
     "metadata": {
       "createdAt": "2025-12-23T20:13:59.227662Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "x-ai/grok-4.1-fast",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": true,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2026-01-13T19:23:17.693701+00:00Z",
       "needsManualReview": true
     }
   },
@@ -3735,7 +3639,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3799,7 +3707,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3863,7 +3775,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3917,7 +3833,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3976,7 +3896,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4030,7 +3954,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4084,7 +4012,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4138,7 +4070,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4192,7 +4128,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4256,7 +4196,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4310,7 +4254,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4364,7 +4312,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4428,7 +4380,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4492,7 +4448,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4556,7 +4516,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4620,7 +4584,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4674,7 +4642,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4733,7 +4705,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4797,7 +4773,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4861,7 +4841,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4925,7 +4909,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -4984,7 +4972,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -5038,7 +5030,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -5102,7 +5098,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -5166,7 +5166,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -5230,7 +5234,11 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -5244,6 +5252,74 @@
     },
     "metadata": {
       "createdAt": "2026-05-04T18:30:44.508180+00:00Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "x-ai/grok-4.3",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2026-05-16T18:43:09.199423+00:00Z",
       "needsManualReview": true
     }
   }

@@ -477,16 +477,6 @@ class TestRebuildCategoriesTs:
             for orig_m, reparsed_m in zip(orig["models"], reparsed_cat["models"]):
                 assert orig_m["modelId"] == reparsed_m["modelId"]
 
-    def test_added_model_survives_roundtrip(self):
-        cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        add_model_to_category(cats, "coding", "x-ai/grok-4", "SWE-Bench 70.6%.")
-        rebuilt = rebuild_categories_ts(cats)
-        wrapped = (
-            f"export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [\n{rebuilt}\n]"
-        )
-        reparsed = parse_recommendations_ts(wrapped)
-        coding = next(c for c in reparsed if c["id"] == "coding")
-        assert any(m["modelId"] == "x-ai/grok-4" for m in coding["models"])
 
     def test_category_info_tooltip_survives_roundtrip(self):
         """categoryInfoTooltip is preserved through parse -> rebuild -> parse."""

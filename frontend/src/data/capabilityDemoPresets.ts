@@ -31,7 +31,7 @@ export const CAPABILITY_DEMO_PRESETS: Record<string, CapabilityDemoPreset> = {
   'code-generation': {
     prompt:
       'Write a JavaScript function called `deepEqual(a, b)` that returns true if two values are deeply equal (handles objects, arrays, null, and primitives). Include brief inline comments and two example test cases.',
-    preferredModelIds: ['x-ai/grok-4-fast', 'google/gemini-2.5-flash'],
+    preferredModelIds: ['anthropic/claude-haiku-4.5', 'google/gemini-2.5-flash'],
     buttonLabel: 'Try a comparison',
   },
   'formatted-math': {

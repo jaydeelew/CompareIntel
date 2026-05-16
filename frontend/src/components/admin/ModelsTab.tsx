@@ -389,7 +389,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter model ID (e.g., x-ai/grok-4.1-fast)"
+                    placeholder="Enter model ID (e.g., x-ai/grok-4.20)"
                     value={newModelId}
                     onChange={e => {
                       setNewModelId(e.target.value)

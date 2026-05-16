@@ -161,11 +161,7 @@ _REASONING_NOT_EXPOSED_DESCRIPTION_MARKERS: tuple[str, ...] = (
     "thinking trace is not exposed",
 )
 
-STREAMING_REASONING_MODEL_IDS_BLOCKED: frozenset[str] = frozenset(
-    {
-        "x-ai/grok-4",
-    }
-)
+STREAMING_REASONING_MODEL_IDS_BLOCKED: frozenset[str] = frozenset()
 
 # Bundled ``openrouter_models.json`` can lag; these CompareIntel registry ids stream separable
 # reasoning via OpenRouter but are missing from the snapshot — keep in sync when refreshing data.

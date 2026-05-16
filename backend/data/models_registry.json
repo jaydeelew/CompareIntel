@@ -1112,55 +1112,25 @@
     ],
     "xAI": [
       {
-        "id": "x-ai/grok-code-fast-1",
-        "name": "Grok Code Fast 1",
-        "description": "A speedy, economical reasoning model optimized for agentic coding and development tasks.",
-        "category": "Language",
-        "provider": "xAI",
-        "knowledge_cutoff": "July 2025",
-        "is_thinking_model": true
-      },
-      {
-        "id": "x-ai/grok-4-fast",
-        "name": "Grok 4 Fast",
-        "description": "A cost-efficient multimodal model with 2M token context for fast, large-scale processing.",
-        "category": "Language",
-        "provider": "xAI",
-        "knowledge_cutoff": "June 2025"
-      },
-      {
-        "id": "x-ai/grok-3-mini",
-        "name": "Grok 3 Mini",
-        "description": "A lightweight reasoning model with chain-of-thought capabilities for efficient problem-solving.",
-        "category": "Language",
-        "provider": "xAI",
-        "knowledge_cutoff": "March 2025",
-        "is_thinking_model": true
-      },
-      {
-        "id": "x-ai/grok-4",
-        "name": "Grok 4",
-        "description": "xAI's flagship reasoning model with 256k context for complex analysis and generation tasks.",
-        "category": "Language",
-        "provider": "xAI",
-        "knowledge_cutoff": "June 2025"
-      },
-      {
-        "id": "x-ai/grok-4.1-fast",
-        "name": "Grok 4.1 Fast",
-        "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
-        "category": "Language",
-        "provider": "xAI",
-        "knowledge_cutoff": "August 2025"
-      },
-      {
-        "id": "x-ai/grok-4.20",
-        "name": "Grok 4.20",
-        "description": "Grok 4.20 is xAI's newest flagship model with industry-leading speed and agentic tool calling capabilities.",
+        "id": "x-ai/grok-4.3",
+        "name": "Grok 4.3",
+        "description": "xAI's newest flagship reasoning model, positioned for leading non-hallucination rate, agentic tool calling, and instruction following, with a 1M-token context and adjustable reasoning effort.",
         "category": "Language",
         "provider": "xAI",
         "supports_web_search": true,
         "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "x-ai/grok-4.20",
+        "name": "Grok 4.20",
+        "description": "xAI reasoning model with a 2M-token context, emphasizing industry-leading speed and agentic tool calling with low hallucination.",
+        "category": "Language",
+        "provider": "xAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
         "knowledge_cutoff": null
       },
       {
@@ -1249,8 +1219,6 @@
     "mistralai/devstral-2512",
     "openai/gpt-oss-120b",
     "qwen/qwen3-coder-next",
-    "x-ai/grok-4-fast",
-    "x-ai/grok-code-fast-1",
     "xiaomi/mimo-v2-flash",
     "google/gemini-2.5-flash-image",
     "openai/gpt-5-image-mini"
@@ -1305,7 +1273,7 @@
     "qwen/qwen3.5-397b-a17b",
     "qwen/qwen3.5-plus-02-15",
     "sourceful/riverflow-v2-standard-preview",
-    "x-ai/grok-3-mini",
+    "x-ai/grok-4.3",
     "xiaomi/mimo-v2-omni",
     "xiaomi/mimo-v2-pro",
     "z-ai/glm-5",

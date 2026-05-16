@@ -197,56 +197,6 @@
       ]
     },
     {
-      "id": "x-ai/grok-code-fast-1",
-      "canonical_slug": "x-ai/grok-code-fast-1",
-      "hugging_face_id": "",
-      "name": "xAI: Grok Code Fast 1",
-      "created": 1756238927,
-      "description": "Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding. With reasoning traces visible in the response, developers can steer Grok Code for high-quality work flows.",
-      "context_length": 256000,
-      "architecture": {
-        "modality": "text->text",
-        "input_modalities": [
-          "text"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "Grok",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.0000002",
-        "completion": "0.0000015",
-        "request": "0",
-        "image": "0",
-        "web_search": "0",
-        "internal_reasoning": "0",
-        "input_cache_read": "0.00000002"
-      },
-      "top_provider": {
-        "context_length": 256000,
-        "max_completion_tokens": 10000,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "include_reasoning",
-        "logprobs",
-        "max_tokens",
-        "reasoning",
-        "response_format",
-        "seed",
-        "stop",
-        "structured_outputs",
-        "temperature",
-        "tool_choice",
-        "tools",
-        "top_logprobs",
-        "top_p"
-      ]
-    },
-    {
       "id": "deepseek/deepseek-chat-v3.1",
       "canonical_slug": "deepseek/deepseek-chat-v3.1",
       "hugging_face_id": "deepseek-ai/DeepSeek-V3.1",
@@ -885,56 +835,6 @@
       ]
     },
     {
-      "id": "x-ai/grok-4",
-      "canonical_slug": "x-ai/grok-4-07-09",
-      "hugging_face_id": "",
-      "name": "xAI: Grok 4",
-      "created": 1752087689,
-      "description": "Grok 4 is xAI's latest reasoning model with a 256k context window. It supports parallel tool calling, structured outputs, and both image and text inputs. Note that reasoning is not exposed, reasoning cannot be disabled, and the reasoning effort cannot be specified. Pricing increases once the total tokens in a given request is greater than 128k tokens. See more details on the [xAI docs](https://docs.x.ai/docs/models/grok-4-0709)",
-      "context_length": 256000,
-      "architecture": {
-        "modality": "text+image->text",
-        "input_modalities": [
-          "image",
-          "text"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "Grok",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.000003",
-        "completion": "0.000015",
-        "request": "0",
-        "image": "0",
-        "web_search": "0",
-        "internal_reasoning": "0",
-        "input_cache_read": "0.00000075"
-      },
-      "top_provider": {
-        "context_length": 256000,
-        "max_completion_tokens": null,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "include_reasoning",
-        "logprobs",
-        "max_tokens",
-        "reasoning",
-        "response_format",
-        "seed",
-        "structured_outputs",
-        "temperature",
-        "tool_choice",
-        "tools",
-        "top_logprobs",
-        "top_p"
-      ]
-    },
-    {
       "id": "mistralai/mistral-small-3.2-24b-instruct",
       "canonical_slug": "mistralai/mistral-small-3.2-24b-instruct-2506",
       "hugging_face_id": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
@@ -1089,56 +989,6 @@
         "temperature",
         "tool_choice",
         "tools",
-        "top_p"
-      ]
-    },
-    {
-      "id": "x-ai/grok-3-mini",
-      "canonical_slug": "x-ai/grok-3-mini",
-      "hugging_face_id": "",
-      "name": "xAI: Grok 3 Mini",
-      "created": 1749583245,
-      "description": "A lightweight model that thinks before responding. Fast, smart, and great for logic-based tasks that do not require deep domain knowledge. The raw thinking traces are accessible.",
-      "context_length": 131072,
-      "architecture": {
-        "modality": "text->text",
-        "input_modalities": [
-          "text"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "Grok",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.0000003",
-        "completion": "0.0000005",
-        "request": "0",
-        "image": "0",
-        "web_search": "0",
-        "internal_reasoning": "0",
-        "input_cache_read": "0.000000075"
-      },
-      "top_provider": {
-        "context_length": 131072,
-        "max_completion_tokens": null,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "include_reasoning",
-        "logprobs",
-        "max_tokens",
-        "reasoning",
-        "response_format",
-        "seed",
-        "stop",
-        "structured_outputs",
-        "temperature",
-        "tool_choice",
-        "tools",
-        "top_logprobs",
         "top_p"
       ]
     },

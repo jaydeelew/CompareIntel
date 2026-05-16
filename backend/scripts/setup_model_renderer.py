@@ -535,7 +535,7 @@ class ModelRendererSetup:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Setup renderer config for a single model")
-    parser.add_argument("model_id", type=str, help="Model ID (e.g., x-ai/grok-4.1-fast)")
+    parser.add_argument("model_id", type=str, help="Model ID (e.g., x-ai/grok-4.20)")
     parser.add_argument(
         "--delay",
         type=float,

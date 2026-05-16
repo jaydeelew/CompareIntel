@@ -37,7 +37,7 @@ const FIXTURE: ModelsByProvider = {
     m('google/gemma-3-27b-it', 'Google'),
     m('google/gemini-2.5-flash-image', 'Google', 'free', { supports_image_generation: true }),
   ],
-  xAI: [m('x-ai/grok-4-fast', 'xAI')],
+  xAI: [m('x-ai/grok-4.20', 'xAI')],
   DeepSeek: [m('deepseek/deepseek-chat-v3.1', 'DeepSeek')],
   OpenAI: [m('openai/gpt-oss-120b', 'OpenAI')],
 }
@@ -125,7 +125,7 @@ describe('pickTwoDemoModels', () => {
   it('returns null for image-mode tile when no image models available', () => {
     const textOnly: ModelsByProvider = {
       Google: [m('google/gemini-2.5-flash', 'Google')],
-      xAI: [m('x-ai/grok-4-fast', 'xAI')],
+      xAI: [m('x-ai/grok-4.20', 'xAI')],
     }
     const freeUser = { subscription_tier: 'free' } as User
     expect(pickTwoDemoModels('image-creation', textOnly, true, freeUser)).toBeNull()
@@ -147,7 +147,7 @@ describe('pickTwoDemoModels', () => {
         m('google/gemini-2.5-flash', 'Google'),
         m('google/gemini-2.5-flash-image', 'Google', 'free', { supports_image_generation: true }),
       ],
-      xAI: [m('x-ai/grok-4-fast', 'xAI')],
+      xAI: [m('x-ai/grok-4.20', 'xAI')],
     }
     // Without override: unregistered user gets null (no image models)
     expect(pickTwoDemoModels('image-creation', mixed, false, null)).toBeNull()
@@ -161,7 +161,7 @@ describe('pickTwoDemoModels', () => {
   it('excludes unavailable models', () => {
     const withUnavailable: ModelsByProvider = {
       Google: [m('google/gemini-2.5-flash', 'Google', 'unregistered', { available: false })],
-      xAI: [m('x-ai/grok-4-fast', 'xAI')],
+      xAI: [m('x-ai/grok-4.20', 'xAI')],
       DeepSeek: [m('deepseek/deepseek-chat-v3.1', 'DeepSeek')],
     }
     const result = pickTwoDemoModels('natural-language', withUnavailable, false, null)
@@ -173,7 +173,7 @@ describe('pickTwoDemoModels', () => {
     const withPaid: ModelsByProvider = {
       Anthropic: [m('anthropic/claude-sonnet-4', 'Anthropic', 'paid')],
       Google: [m('google/gemini-2.5-flash', 'Google')],
-      xAI: [m('x-ai/grok-4-fast', 'xAI')],
+      xAI: [m('x-ai/grok-4.20', 'xAI')],
     }
     const result = pickTwoDemoModels('natural-language', withPaid, false, null)
     expect(result).not.toBeNull()
