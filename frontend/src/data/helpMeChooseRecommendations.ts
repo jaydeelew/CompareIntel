@@ -157,6 +157,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'anthropic/claude-opus-4.1', evidence: 'Creative Writing Arena (kearai.com): 1445 Elo.' },
       { modelId: 'openai/gpt-4o', evidence: 'Creative Writing Arena (kearai.com): 1438 Elo.' },
       { modelId: 'openai/gpt-5.1', evidence: 'Creative Writing Arena (kearai.com): 1434 Elo.' },
+      { modelId: 'x-ai/grok-4.20', evidence: 'Creative Writing Arena (kearai.com): 1434 Elo.' },
       { modelId: 'anthropic/claude-opus-4', evidence: 'Creative Writing Arena (kearai.com): 1428 Elo.' },
       { modelId: 'moonshotai/kimi-k2.5', evidence: 'Creative Writing Arena (kearai.com): 1418 Elo.' },
       { modelId: 'deepseek/deepseek-chat-v3.1', evidence: 'Creative Writing Arena (kearai.com): 1411 Elo.' },
