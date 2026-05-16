@@ -1114,7 +1114,7 @@
       {
         "id": "x-ai/grok-4.3",
         "name": "Grok 4.3",
-        "description": "xAI's newest flagship reasoning model, positioned for leading non-hallucination rate, agentic tool calling, and instruction following, with a 1M-token context and adjustable reasoning effort.",
+        "description": "xAI flagship reasoning (1M context): tools, instruction following, adjustable reasoning.",
         "category": "Language",
         "provider": "xAI",
         "supports_web_search": true,
@@ -1125,7 +1125,7 @@
       {
         "id": "x-ai/grok-4.20",
         "name": "Grok 4.20",
-        "description": "xAI reasoning model with a 2M-token context, emphasizing industry-leading speed and agentic tool calling with low hallucination.",
+        "description": "xAI reasoning tuned for speed with a 2M context (long inputs, agents).",
         "category": "Language",
         "provider": "xAI",
         "supports_web_search": true,
