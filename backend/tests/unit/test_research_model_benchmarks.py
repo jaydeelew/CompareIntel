@@ -477,7 +477,6 @@ class TestRebuildCategoriesTs:
             for orig_m, reparsed_m in zip(orig["models"], reparsed_cat["models"]):
                 assert orig_m["modelId"] == reparsed_m["modelId"]
 
-
     def test_category_info_tooltip_survives_roundtrip(self):
         """categoryInfoTooltip is preserved through parse -> rebuild -> parse."""
         ts = textwrap.dedent("""\

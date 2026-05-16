@@ -33,8 +33,6 @@ def test_qwen_instruct_not_thinking_in_snapshot() -> None:
     assert get_openrouter_thinking_model_flag("qwen/qwen3-next-80b-a3b-instruct") is False
 
 
-
-
 def test_registry_file_value_includes_snapshot_overrides() -> None:
     assert is_thinking_model_registry_file_value("anthropic/claude-opus-4.5") is True
     assert is_thinking_model_registry_file_value("anthropic/claude-3.5-haiku") is False
@@ -50,8 +48,6 @@ def test_kimi_k25_flagged_when_missing_from_bundled_snapshot() -> None:
 
 def test_openrouter_reasoning_body_moonshot_uses_enabled() -> None:
     assert openrouter_reasoning_request_body("moonshotai/kimi-k2.5") == {"enabled": True}
-
-
 
 
 def test_openrouter_reasoning_body_openai_o_series_uses_effort() -> None:
@@ -80,5 +76,3 @@ def test_streams_separable_false_when_description_denies_exposure() -> None:
         "description": "Great model. Note that reasoning is not exposed to the client.",
     }
     assert streams_separable_reasoning_from_openrouter_entry(entry) is False
-
-
