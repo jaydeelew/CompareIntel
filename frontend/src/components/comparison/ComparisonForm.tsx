@@ -18,6 +18,7 @@ import { useSpeechRecognition, useResponsive } from '../../hooks'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
+import { getImageFileFromClipboard } from '../../utils/clipboardImage'
 import { showNotification } from '../../utils/error'
 import { hasVisionModelSelected } from '../../utils/visionModels'
 import { StyledTooltip } from '../shared'
@@ -489,6 +490,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [resetPageFileDrag]
     )
 
+    const handlePaste = useCallback(async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const imageFile = getImageFileFromClipboard(e.clipboardData)
+      if (!imageFile) return
+      e.preventDefault()
+      await fileUploadRef.current?.processFile(imageFile)
+    }, [])
+
     const adjustTextareaHeight = useCallback(() => {
       if (!textareaRef.current) return
       const textarea = textareaRef.current
@@ -711,6 +719,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               setAttachedFiles={setAttachedFiles}
               setInput={setInput}
               disabled={isLoading}
+              imageTooltipUsePortal={showComposerStyledTooltips}
             />
           )}
           <textarea
@@ -742,6 +751,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             onDragOver={mirror ? undefined : handleDragOver}
             onDragLeave={mirror ? undefined : handleDragLeave}
             onDrop={mirror ? undefined : handleDrop}
+            onPaste={mirror ? undefined : handlePaste}
             placeholder={
               isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
             }

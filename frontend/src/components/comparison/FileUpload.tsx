@@ -458,12 +458,15 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
         onChange={handleFileUpload}
       />
       {!isMobileLayout && attachedFiles.length === 0 && !hideTooltip ? (
-        <StyledTooltip usePortal={tooltipUsePortal} text="Select or drag text and image files here">
+        <StyledTooltip
+          usePortal={tooltipUsePortal}
+          text="Select, paste, or drag text and image files here"
+        >
           <button
             type="button"
             onClick={handleUploadButtonClick}
             className="textarea-icon-button file-upload-button"
-            aria-label="Select or drag text and image files here"
+            aria-label="Select, paste, or drag text and image files here"
             disabled={disabled}
           >
             <svg
@@ -487,7 +490,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
           type="button"
           onClick={handleUploadButtonClick}
           className="textarea-icon-button file-upload-button"
-          aria-label="Select or drag text and image files here"
+          aria-label="Select, paste, or drag text and image files here"
           disabled={disabled}
         >
           <svg

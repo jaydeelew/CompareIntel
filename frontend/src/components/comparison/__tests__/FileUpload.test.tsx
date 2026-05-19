@@ -155,6 +155,23 @@ describe('FileUpload', () => {
     })
   })
 
+  it('accepts clipboard-style images with empty filename via mime type', async () => {
+    mockFileReader('clipdata')
+    const ref = renderFileUpload('')
+
+    const clipboardImage = new File([new Uint8Array([1, 2, 3])], '', { type: 'image/png' })
+    const result = await ref.current!.processFile(clipboardImage)
+
+    expect(result).toBe(true)
+    expect(setAttachedFiles).toHaveBeenCalledTimes(1)
+    const [files] = setAttachedFiles.mock.calls[0]
+    expect(files[0]).toMatchObject({
+      placeholder: '[image: ]',
+      base64Data: 'clipdata',
+      mimeType: 'image/png',
+    })
+  })
+
   it('rejects unsupported file types', async () => {
     const ref = renderFileUpload('')
     const file = new File(['x'], 'bad.exe', { type: 'application/x-msdownload' })

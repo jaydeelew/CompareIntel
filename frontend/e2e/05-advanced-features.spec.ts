@@ -200,6 +200,27 @@ test.describe('Advanced Features', () => {
     // This test verifies the UI is ready for file uploads
   })
 
+  test('User can paste an image into the composer', async ({ authenticatedPage }) => {
+    const textarea = authenticatedPage.getByTestId('comparison-input-textarea')
+    await expect(textarea).toBeVisible()
+
+    await textarea.focus()
+    await textarea.evaluate(el => {
+      const dt = new DataTransfer()
+      const pngBytes = new Uint8Array([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+      ])
+      dt.items.add(new File([pngBytes], '', { type: 'image/png' }))
+      el.dispatchEvent(
+        new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })
+      )
+    })
+
+    const attachmentThumbnail = authenticatedPage.getByTestId('composer-attachment-thumbnail')
+    await expect(attachmentThumbnail).toBeVisible({ timeout: 5000 })
+    await expect(attachmentThumbnail.locator('img')).toHaveAttribute('alt', /pasted-image\.png/i)
+  })
+
   test('User can save model selections', async ({ authenticatedPage }) => {
     await test.step('Select models', async () => {
       // Wait for models to load first
