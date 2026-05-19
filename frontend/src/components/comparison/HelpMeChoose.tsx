@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom'
 import {
   HELP_ME_CHOOSE_CATEGORIES,
   HELP_ME_CHOOSE_CATEGORY_IMAGE_GENERATION_ID,
+  HELP_ME_CHOOSE_CATEGORY_IMAGES_ID,
   type HelpMeChooseCategory,
 } from '../../data/helpMeChooseRecommendations'
 import { useResponsive } from '../../hooks'
@@ -343,6 +344,7 @@ export function HelpMeChoose({
     )
     if (hasAttachedImages && modelMode === 'text') {
       cats = cats
+        .filter(cat => cat.id === HELP_ME_CHOOSE_CATEGORY_IMAGES_ID)
         .map(cat => ({
           ...cat,
           models: cat.models.filter(entry => modelSupportsVision(entry.modelId, lookupModels)),
