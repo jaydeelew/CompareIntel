@@ -221,6 +221,7 @@ def _build_user_message_content(
         # Build multimodal content: interleave text and images in prompt order
         content_parts: list[dict[str, Any]] = []
         remaining = prompt
+        placed_placeholders: set[str] = set()
         while any(ph in remaining for ph in placeholders):
             # Find earliest placeholder occurrence to preserve order
             earliest_pos = len(remaining)
@@ -240,9 +241,18 @@ def _build_user_message_content(
             b64 = img.get("base64_data") or ""
             url = f"data:{mime};base64,{b64}"
             content_parts.append({"type": "image_url", "image_url": {"url": url}})
+            placed_placeholders.add(earliest_ph)
             remaining = remaining[earliest_pos + len(earliest_ph) :]
         if remaining.strip():
             content_parts.append({"type": "text", "text": remaining})
+        # Chip/paste attachments do not insert [image: …] into the prompt; still send images.
+        for ph, img in placeholder_to_image.items():
+            if ph in placed_placeholders:
+                continue
+            mime = img.get("mime_type") or "image/png"
+            b64 = img.get("base64_data") or ""
+            url = f"data:{mime};base64,{b64}"
+            content_parts.append({"type": "image_url", "image_url": {"url": url}})
         if not content_parts:
             return prompt
         # When the user sends only images with no text, add a default instruction.

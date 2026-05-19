@@ -200,7 +200,7 @@ test.describe('Advanced Features', () => {
     // This test verifies the UI is ready for file uploads
   })
 
-  test('User can paste an image into the composer', async ({ authenticatedPage }) => {
+  test('User can paste supported files into the composer', async ({ authenticatedPage }) => {
     const textarea = authenticatedPage.getByTestId('comparison-input-textarea')
     await expect(textarea).toBeVisible()
 
@@ -219,6 +219,19 @@ test.describe('Advanced Features', () => {
     const attachmentThumbnail = authenticatedPage.getByTestId('composer-attachment-thumbnail')
     await expect(attachmentThumbnail).toBeVisible({ timeout: 5000 })
     await expect(attachmentThumbnail.locator('img')).toHaveAttribute('alt', /pasted-image\.png/i)
+
+    await textarea.evaluate(el => {
+      const dt = new DataTransfer()
+      dt.items.add(new File(['hello world'], 'pasted-notes.txt', { type: 'text/plain' }))
+      el.dispatchEvent(
+        new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })
+      )
+    })
+
+    const documentChip = authenticatedPage.locator('.composer-attachment-chip-name', {
+      hasText: 'pasted-notes.txt',
+    })
+    await expect(documentChip).toBeVisible({ timeout: 5000 })
   })
 
   test('User can save model selections', async ({ authenticatedPage }) => {

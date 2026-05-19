@@ -18,7 +18,7 @@ import { useSpeechRecognition, useResponsive } from '../../hooks'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
-import { getImageFileFromClipboard } from '../../utils/clipboardImage'
+import { getFirstFileFromClipboard } from '../../utils/clipboardFiles'
 import { showNotification } from '../../utils/error'
 import { hasVisionModelSelected } from '../../utils/visionModels'
 import { StyledTooltip } from '../shared'
@@ -491,10 +491,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     )
 
     const handlePaste = useCallback(async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-      const imageFile = getImageFileFromClipboard(e.clipboardData)
-      if (!imageFile) return
+      const file = getFirstFileFromClipboard(e.clipboardData)
+      if (!file) return
       e.preventDefault()
-      await fileUploadRef.current?.processFile(imageFile)
+      await fileUploadRef.current?.processFile(file)
     }, [])
 
     const adjustTextareaHeight = useCallback(() => {
