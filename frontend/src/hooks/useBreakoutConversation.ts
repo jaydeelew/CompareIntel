@@ -34,7 +34,7 @@ interface UseBreakoutConversationCallbacks {
     input_data: string
     models_used: string[]
     messages: StoredMessage[]
-    file_contents?: Array<{ name: string; content: string; placeholder: string }>
+    file_contents?: import('../utils/attachmentStorage').StoredFileContentRecord[]
     textComposerAdvanced?: TextComposerAdvancedSettings
     imageComposerAdvanced?: ImageComposerAdvancedSettings
   } | null
@@ -44,7 +44,7 @@ interface UseBreakoutConversationCallbacks {
     models: string[],
     conversations: ModelConversation[],
     isUpdate?: boolean,
-    fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+    fileContents?: import('../utils/attachmentStorage').StoredFileContentRecord[],
     conversationType?: 'comparison' | 'breakout',
     parentConversationId?: string | null,
     breakoutModelId?: string | null,

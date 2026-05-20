@@ -19,7 +19,11 @@ export interface StoredAttachedFile {
   id: string
   name: string
   placeholder: string
-  content: string
+  /** Extracted text for documents loaded from history */
+  content?: string
+  /** Base64 payload for images restored from history or session storage */
+  base64Data?: string
+  mimeType?: string
 }
 
 export interface FileUploadProps {

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from ...attachment_storage import parse_file_contents
 from ...config import get_history_entry_limit
 from ...database import get_db
 from ...dependencies import get_current_user
@@ -15,6 +16,7 @@ from ...schemas import (
     BreakoutConversationCreate,
     ConversationDetail,
     ConversationSummary,
+    StoredFileContent,
 )
 
 router = APIRouter(tags=["API - Conversations"])
@@ -159,6 +161,17 @@ async def get_conversation(
         for msg in messages
     ]
 
+    file_contents = [
+        StoredFileContent(
+            name=item.get("name") or "attachment",
+            placeholder=item.get("placeholder") or "",
+            content=item.get("content"),
+            mime_type=item.get("mime_type"),
+            base64_data=item.get("base64_data"),
+        )
+        for item in parse_file_contents(conversation.file_contents)
+    ]
+
     return ConversationDetail(
         id=conversation.id,
         title=conversation.title,
@@ -170,6 +183,7 @@ async def get_conversation(
         already_broken_out_models=already_broken_out_models,
         created_at=conversation.created_at,
         messages=message_schemas,
+        file_contents=file_contents,
         composer_temperature=conversation.composer_temperature,
         composer_top_p=conversation.composer_top_p,
         composer_max_tokens=conversation.composer_max_tokens,
@@ -279,6 +293,7 @@ async def create_breakout_conversation(
         composer_max_tokens=parent_conversation.composer_max_tokens,
         composer_aspect_ratio=parent_conversation.composer_aspect_ratio,
         composer_image_size=parent_conversation.composer_image_size,
+        file_contents=parent_conversation.file_contents,
     )
     db.add(breakout_conversation)
     db.flush()
@@ -329,6 +344,17 @@ async def create_breakout_conversation(
         for msg in new_messages
     ]
 
+    breakout_file_contents = [
+        StoredFileContent(
+            name=item.get("name") or "attachment",
+            placeholder=item.get("placeholder") or "",
+            content=item.get("content"),
+            mime_type=item.get("mime_type"),
+            base64_data=item.get("base64_data"),
+        )
+        for item in parse_file_contents(breakout_conversation.file_contents)
+    ]
+
     return ConversationDetail(
         id=breakout_conversation.id,
         title=breakout_conversation.title,
@@ -339,6 +365,7 @@ async def create_breakout_conversation(
         breakout_model_id=breakout_conversation.breakout_model_id,
         created_at=breakout_conversation.created_at,
         messages=message_schemas,
+        file_contents=breakout_file_contents,
         composer_temperature=breakout_conversation.composer_temperature,
         composer_top_p=breakout_conversation.composer_top_p,
         composer_max_tokens=breakout_conversation.composer_max_tokens,

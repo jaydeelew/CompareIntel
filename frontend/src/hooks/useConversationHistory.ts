@@ -19,6 +19,7 @@ import type {
   TextComposerAdvancedSettings,
   ImageComposerAdvancedSettings,
 } from '../types'
+import type { StoredFileContentRecord } from '../utils/attachmentStorage'
 import logger from '../utils/logger'
 
 export interface UseConversationHistoryOptions {
@@ -44,7 +45,7 @@ export interface UseConversationHistoryReturn {
     modelsUsed: string[],
     conversationsToSave: ModelConversation[],
     isUpdate?: boolean,
-    fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+    fileContents?: StoredFileContentRecord[],
     conversationType?: 'comparison' | 'breakout',
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
@@ -96,7 +97,7 @@ export function useConversationHistory({
       modelsUsed: string[],
       conversationsToSave: ModelConversation[],
       isUpdate: boolean = false,
-      fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+      fileContents?: StoredFileContentRecord[],
       conversationType: 'comparison' | 'breakout' = 'comparison',
       parentConversationId?: string | null,
       breakoutModelId?: string | null,

@@ -21,6 +21,7 @@ from ..config import get_history_entry_limit
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
+from ..attachment_storage import serialize_attached_images
 from ..config.constants import OVERAGE_USD_PER_CREDIT
 from ..config.settings import settings
 from ..credit_manager import get_user_credits
@@ -872,10 +873,14 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         conversation = existing_conversation
                         conversation.updated_at = datetime.now()
                     else:
+                        file_contents_json = serialize_attached_images(
+                            getattr(req, "attached_images", None)
+                        )
                         conversation = Conversation(
                             user_id=ctx.user_id,
                             input_data=req.input_data,
                             models_used=json.dumps(req.models),
+                            file_contents=file_contents_json,
                         )
                         conv_db.add(conversation)
                         conv_db.flush()

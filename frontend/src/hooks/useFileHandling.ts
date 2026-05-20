@@ -1,6 +1,8 @@
 import { useCallback } from 'react'
 
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison/FileUpload'
+import type { StoredFileContentRecord } from '../utils/attachmentStorage'
+import { getImageAttachmentsForApi } from '../utils/attachmentStorage'
 import logger from '../utils/logger'
 
 /**
@@ -183,29 +185,24 @@ export function useFileHandling() {
 
   /** Get attached images for API payload (vision-capable models) */
   const getAttachedImagesForApi = useCallback(
-    (files: (AttachedFile | StoredAttachedFile)[]) =>
-      files
-        .filter((f): f is AttachedFile => 'base64Data' in f && !!f.base64Data && 'mimeType' in f)
-        .map(f => ({
-          mime_type: f.mimeType || 'image/png',
-          base64_data: f.base64Data || '',
-          filename: f.name,
-          placeholder: f.placeholder,
-        })),
+    (files: (AttachedFile | StoredAttachedFile)[]) => getImageAttachmentsForApi(files),
     []
   )
 
   // Helper function to extract file content from AttachedFile[] for storage
   const extractFileContentForStorage = useCallback(
-    async (
-      files: AttachedFile[]
-    ): Promise<Array<{ name: string; content: string; placeholder: string }>> => {
-      const extractedFiles: Array<{ name: string; content: string; placeholder: string }> = []
+    async (files: AttachedFile[]): Promise<StoredFileContentRecord[]> => {
+      const extractedFiles: StoredFileContentRecord[] = []
 
       for (const attachedFile of files) {
         try {
-          // Skip image files - not stored as text content
           if ('base64Data' in attachedFile && attachedFile.base64Data) {
+            extractedFiles.push({
+              name: attachedFile.name,
+              placeholder: attachedFile.placeholder,
+              mime_type: attachedFile.mimeType || 'image/png',
+              base64_data: attachedFile.base64Data,
+            })
             continue
           }
           const fileName = attachedFile.file.name.toLowerCase()
@@ -247,7 +244,7 @@ export function useFileHandling() {
               name: attachedFile.name,
               content: content.trim(),
               placeholder: attachedFile.placeholder,
-            })
+            } satisfies StoredFileContentRecord)
           }
         } catch (error) {
           logger.error(`Error extracting content from ${attachedFile.name} for storage:`, error)

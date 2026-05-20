@@ -53,9 +53,21 @@ export DATABASE_URL=postgresql://user:pass@host:5432/compareintel
 alembic upgrade head
 ```
 
-For development:
+For local development (plain `uvicorn`, not Docker dev):
+
+After pulling changes that add migrations, run once from `backend/`:
+
 ```bash
-# Uses SQLite by default if DATABASE_URL is not set
+source venv/bin/activate   # if needed
+alembic upgrade head
+```
+
+`create_all()` on app startup does not add new columns to existing SQLite tables; pending Alembic revisions must be applied manually.
+
+If `alembic upgrade head` fails with `Can't locate revision identified by '0010_drop_purchased_credits_balance'`, fix the version row then retry:
+
+```bash
+sqlite3 data/compareintel.db "UPDATE alembic_version SET version_num = '0010_drop_purch_cred_bal';"
 alembic upgrade head
 ```
 

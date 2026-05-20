@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 
+import type { AttachedFile, StoredAttachedFile } from '../components/comparison/FileUpload'
 import type { CreditBalance } from '../services/creditService'
 import type { ActiveResultTabs, CompareResponse, ModelConversation } from '../types'
 import { loadSessionState, clearSessionState } from '../utils/sessionState'
@@ -35,6 +36,7 @@ interface UseAuthStateEffectsCallbacks {
   setTemperature: (temp: number) => void
   setTopP: (v: number) => void
   setMaxTokens: (v: number | null) => void
+  setAttachedFiles: (files: (AttachedFile | StoredAttachedFile)[]) => void
   hasScrolledToResultsRef: React.MutableRefObject<boolean>
   shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
   clearStreamingReasoningUi: () => void
@@ -70,6 +72,7 @@ export function useAuthStateEffects(
     setTemperature,
     setTopP,
     setMaxTokens,
+    setAttachedFiles,
     hasScrolledToResultsRef,
     shouldScrollToTopAfterFormattingRef,
     clearStreamingReasoningUi,
@@ -163,6 +166,7 @@ export function useAuthStateEffects(
       }
 
       // Always reset these regardless of saved state
+      setAttachedFiles([])
       clearStreamingReasoningUi()
       setError(null)
       setIsLoading(false)
@@ -193,6 +197,7 @@ export function useAuthStateEffects(
     if (wasAuthenticated && isNowUnregistered) {
       setDefaultSelectionOverridden(false)
       setInput('')
+      setAttachedFiles([])
       setResponse(null)
       setError(null)
       setIsLoading(false)

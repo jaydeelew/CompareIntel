@@ -1162,6 +1162,7 @@ export function MainPage() {
       setMaxTokens,
       setAspectRatio,
       setImageSize,
+      setAttachedFiles,
     })
 
   // Anonymous credits reset listener
@@ -1785,6 +1786,7 @@ export function MainPage() {
       setTemperature,
       setTopP,
       setMaxTokens,
+      setAttachedFiles,
       hasScrolledToResultsRef,
       shouldScrollToTopAfterFormattingRef,
       clearStreamingReasoningUi,

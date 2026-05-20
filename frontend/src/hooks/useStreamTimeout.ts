@@ -12,6 +12,7 @@ import type { CreditBalance } from '../services/creditService'
 import type { ProcessStreamResult } from '../services/sseProcessor'
 import type { ActiveResultTabs, ModelConversation } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
+import { collectFileContentsForStorage } from '../utils/attachmentStorage'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
 
@@ -234,27 +235,10 @@ export function useStreamTimeout(
                 if (firstUserMessage) {
                   const inputData = firstUserMessage.content
                   ;(async () => {
-                    let fileContentsForSave: Array<{
-                      name: string
-                      content: string
-                      placeholder: string
-                    }> = []
-                    const attachedFilesToExtract = attachedFiles.filter(
-                      (f): f is AttachedFile => 'file' in f && f.file instanceof File
+                    const fileContentsForSave = await collectFileContentsForStorage(
+                      attachedFiles,
+                      extractFileContentForStorage
                     )
-                    if (attachedFilesToExtract.length > 0) {
-                      fileContentsForSave =
-                        await extractFileContentForStorage(attachedFilesToExtract)
-                    } else {
-                      const storedFiles = attachedFiles.filter(
-                        (f): f is StoredAttachedFile => 'content' in f && !('file' in f)
-                      )
-                      fileContentsForSave = storedFiles.map(f => ({
-                        name: f.name,
-                        content: f.content,
-                        placeholder: f.placeholder,
-                      }))
-                    }
                     const savedId = saveConversationToLocalStorage(
                       inputData,
                       selectedModels,

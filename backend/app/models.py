@@ -224,6 +224,9 @@ class Conversation(Base):
     composer_aspect_ratio = Column(String(32), nullable=True)
     composer_image_size = Column(String(32), nullable=True)
 
+    # JSON array: text extracts and/or vision images (base64) for follow-ups from history
+    file_contents = Column(Text, nullable=True)
+
     # Timestamps
     created_at = Column(DateTime, default=func.now(), index=True)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

@@ -9,6 +9,7 @@
  */
 
 import type { ConversationSummary, ConversationId, ConversationType } from '../types'
+import type { StoredFileContentRecord } from '../utils/attachmentStorage'
 
 import { apiClient } from './api/client'
 
@@ -31,6 +32,7 @@ export interface ConversationDetail {
   composer_max_tokens?: number | null
   composer_aspect_ratio?: string | null
   composer_image_size?: string | null
+  file_contents?: StoredFileContentRecord[]
 }
 
 /**

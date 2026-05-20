@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react'
 
+import type { AttachedFile, StoredAttachedFile } from '../components/comparison/FileUpload'
 import { apiClient } from '../services/api/client'
 import { getConversation } from '../services/conversationService'
 import type {
@@ -13,6 +14,8 @@ import type {
 } from '../types'
 import { createConversationId, createMessageId, createModelId } from '../types'
 import type { ModelConversation, StoredMessage } from '../types/conversation'
+import type { StoredFileContentRecord } from '../utils/attachmentStorage'
+import { storedRecordsToAttachedFiles } from '../utils/attachmentStorage'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
 import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
@@ -84,6 +87,7 @@ interface UseConversationManagerOptions {
   setMaxTokens: (v: number | null) => void
   setAspectRatio: (v: string) => void
   setImageSize: (v: string) => void
+  setAttachedFiles: React.Dispatch<React.SetStateAction<(AttachedFile | StoredAttachedFile)[]>>
 }
 
 export function useConversationManager(options: UseConversationManagerOptions) {
@@ -118,6 +122,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
     setMaxTokens,
     setAspectRatio,
     setImageSize,
+    setAttachedFiles,
   } = options
 
   const loadConversationFromLocalStorage = useCallback(
@@ -127,7 +132,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       input_data: string
       models_used: string[]
       messages: StoredMessage[]
-      file_contents?: Array<{ name: string; content: string; placeholder: string }>
+      file_contents?: StoredFileContentRecord[]
       conversation_type?: 'comparison' | 'breakout'
       parent_conversation_id?: string | null
       breakout_model_id?: string | null
@@ -182,6 +187,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       input_data: string
       models_used: string[]
       messages: StoredMessage[]
+      file_contents?: StoredFileContentRecord[]
       composer_temperature?: number | null
       composer_top_p?: number | null
       composer_max_tokens?: number | null
@@ -198,6 +204,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         return {
           input_data: data.input_data,
           models_used: data.models_used,
+          file_contents: data.file_contents,
           composer_temperature: data.composer_temperature,
           composer_top_p: data.composer_top_p,
           composer_max_tokens: data.composer_max_tokens,
@@ -252,7 +259,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           input_data: string
           models_used: string[]
           messages: StoredMessage[]
-          file_contents?: Array<{ name: string; content: string; placeholder: string }>
+          file_contents?: StoredFileContentRecord[]
           already_broken_out_models?: string[]
           textComposerAdvanced?: TextComposerAdvancedSettings
           composer_temperature?: number | null
@@ -432,6 +439,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           setImageSize(imageAdvanced.imageSize)
         }
         setInput('')
+        setAttachedFiles(storedRecordsToAttachedFiles(conversationData.file_contents))
         setIsFollowUpMode(loadedConversations.some(conv => conv.messages.length > 0))
         setClosedCards(new Set())
         setResponse(null)
@@ -482,6 +490,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       setResponse,
       setSelectedModels,
       setShowHistoryDropdown,
+      setAttachedFiles,
     ]
   )
 

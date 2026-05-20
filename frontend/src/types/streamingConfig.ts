@@ -148,7 +148,7 @@ export interface StreamingHelperCallbacks {
     models: string[],
     conversations: ModelConversation[],
     isUpdate: boolean,
-    fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+    fileContents?: import('../utils/attachmentStorage').StoredFileContentRecord[],
     conversationType?: 'comparison' | 'breakout',
     parentConversationId?: string | null,
     breakoutModelId?: string | null,

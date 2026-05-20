@@ -393,6 +393,16 @@ class ConversationSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class StoredFileContent(BaseModel):
+    """Persisted attachment for conversation follow-ups (text and/or vision images)."""
+
+    name: str
+    placeholder: str
+    content: str | None = None
+    mime_type: str | None = None
+    base64_data: str | None = None
+
+
 class ConversationDetail(BaseModel):
     """Schema for detailed conversation with messages."""
 
@@ -400,6 +410,10 @@ class ConversationDetail(BaseModel):
     title: str | None
     input_data: str
     models_used: list[str]
+    file_contents: list[StoredFileContent] = Field(
+        default_factory=list,
+        description="Original attachments (text extracts and vision images) for follow-ups",
+    )
     conversation_type: str = Field(
         default="comparison", description="Type of conversation: 'comparison' or 'breakout'"
     )
