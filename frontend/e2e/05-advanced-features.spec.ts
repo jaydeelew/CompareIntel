@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test'
 
 import { test, expect } from './fixtures'
+import { dispatchComposerFilePaste } from './helpers/composerPaste'
 import { toggleModelCheckbox } from './helpers/modelCheckbox'
 
 /**
@@ -205,27 +206,20 @@ test.describe('Advanced Features', () => {
     await expect(textarea).toBeVisible()
 
     await textarea.focus()
-    await textarea.evaluate(el => {
-      const dt = new DataTransfer()
-      const pngBytes = new Uint8Array([
-        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
-      ])
-      dt.items.add(new File([pngBytes], '', { type: 'image/png' }))
-      el.dispatchEvent(
-        new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })
-      )
+    await dispatchComposerFilePaste(textarea, {
+      content: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d],
+      name: '',
+      type: 'image/png',
     })
 
     const attachmentThumbnail = authenticatedPage.getByTestId('composer-attachment-thumbnail')
     await expect(attachmentThumbnail).toBeVisible({ timeout: 5000 })
     await expect(attachmentThumbnail.locator('img')).toHaveAttribute('alt', /pasted-image\.png/i)
 
-    await textarea.evaluate(el => {
-      const dt = new DataTransfer()
-      dt.items.add(new File(['hello world'], 'pasted-notes.txt', { type: 'text/plain' }))
-      el.dispatchEvent(
-        new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })
-      )
+    await dispatchComposerFilePaste(textarea, {
+      content: 'hello world',
+      name: 'pasted-notes.txt',
+      type: 'text/plain',
     })
 
     const documentChip = authenticatedPage.locator('.composer-attachment-chip-name', {
