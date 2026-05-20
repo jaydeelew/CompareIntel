@@ -18,13 +18,17 @@ export async function dispatchComposerFilePaste(
   textarea: Locator,
   payload: ComposerPasteFilePayload
 ): Promise<void> {
+  await textarea.scrollIntoViewIfNeeded().catch(() => {})
+  await textarea.focus()
   await textarea.evaluate((el, p) => {
     const body = typeof p.content === 'string' ? p.content : new Uint8Array(p.content)
     const file = new File([body], p.name, { type: p.type })
     const dt = new DataTransfer()
     dt.items.add(file)
+    el.focus()
+    // Plain Event + original DataTransfer: Firefox drops files on synthetic ClipboardEvent.
     const event = new Event('paste', { bubbles: true, cancelable: true })
-    Object.defineProperty(event, 'clipboardData', { value: dt })
+    Object.defineProperty(event, 'clipboardData', { value: dt, configurable: true })
     el.dispatchEvent(event)
   }, payload)
 }

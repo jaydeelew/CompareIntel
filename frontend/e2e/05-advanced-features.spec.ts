@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test'
 
-import { test, expect } from './fixtures'
+import { test, expect, dismissTutorialOverlay } from './fixtures'
 import { dispatchComposerFilePaste } from './helpers/composerPaste'
 import { toggleModelCheckbox } from './helpers/modelCheckbox'
 
@@ -201,19 +201,32 @@ test.describe('Advanced Features', () => {
     // This test verifies the UI is ready for file uploads
   })
 
-  test('User can paste supported files into the composer', async ({ authenticatedPage }) => {
+  test('User can paste supported files into the composer', async ({
+    authenticatedPage,
+    browserName,
+  }) => {
+    await dismissTutorialOverlay(authenticatedPage)
+
     const textarea = authenticatedPage.getByTestId('comparison-input-textarea')
     await expect(textarea).toBeVisible()
+    // Mirror composer duplicates attachment UI but hides it; scope to the interactive composer.
+    const composer = authenticatedPage.locator('.composer', { has: textarea })
+    const visibilityTimeout = browserName === 'firefox' ? 15000 : 5000
 
-    await textarea.focus()
+    await expect(
+      authenticatedPage.getByRole('button', { name: /select, paste, or drag/i })
+    ).toBeVisible({ timeout: 10000 })
+
     await dispatchComposerFilePaste(textarea, {
       content: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d],
       name: '',
       type: 'image/png',
     })
 
-    const attachmentThumbnail = authenticatedPage.getByTestId('composer-attachment-thumbnail')
-    await expect(attachmentThumbnail).toBeVisible({ timeout: 5000 })
+    const attachmentThumbnail = composer.getByTestId('composer-attachment-thumbnail')
+    await expect(attachmentThumbnail).toBeAttached({ timeout: visibilityTimeout })
+    await attachmentThumbnail.scrollIntoViewIfNeeded().catch(() => {})
+    await expect(attachmentThumbnail).toBeVisible({ timeout: visibilityTimeout })
     await expect(attachmentThumbnail.locator('img')).toHaveAttribute('alt', /pasted-image\.png/i)
 
     await dispatchComposerFilePaste(textarea, {
@@ -222,10 +235,10 @@ test.describe('Advanced Features', () => {
       type: 'text/plain',
     })
 
-    const documentChip = authenticatedPage.locator('.composer-attachment-chip-name', {
+    const documentChip = composer.locator('.composer-attachment-chip-name', {
       hasText: 'pasted-notes.txt',
     })
-    await expect(documentChip).toBeVisible({ timeout: 5000 })
+    await expect(documentChip).toBeVisible({ timeout: visibilityTimeout })
   })
 
   test('User can save model selections', async ({ authenticatedPage }) => {
@@ -443,12 +456,28 @@ test.describe('Advanced Features', () => {
           await safeWait(authenticatedPage, 500)
 
           // Enter save mode via the add button inside the portaled dropdown (avoids global "Save" matches).
-          const addSelectionBtn = authenticatedPage.locator(
-            '.saved-selections-dropdown .saved-selections-add-btn'
-          )
+          const dropdown = authenticatedPage.locator('.saved-selections-dropdown')
+          await expect(dropdown).toBeVisible({ timeout: 10000 })
+          await safeWait(authenticatedPage, 400)
+
+          const addSelectionBtn = dropdown.locator('.saved-selections-add-btn')
           await expect(addSelectionBtn).toBeVisible({ timeout: 10000 })
           await addSelectionBtn.scrollIntoViewIfNeeded().catch(() => {})
-          await addSelectionBtn.click({ timeout: 10000 })
+          if (browserName === 'firefox') {
+            await addSelectionBtn.evaluate((el: HTMLElement) => {
+              el.click()
+            })
+          } else {
+            try {
+              await addSelectionBtn.click({ timeout: 10000 })
+            } catch (error) {
+              const msg = error instanceof Error ? error.message : ''
+              if (!msg.includes('detached') && !msg.includes('not stable')) throw error
+              await addSelectionBtn.evaluate((el: HTMLElement) => {
+                el.click()
+              })
+            }
+          }
 
           await safeWait(authenticatedPage, 500)
 

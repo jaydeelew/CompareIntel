@@ -8,6 +8,7 @@ import {
   ensureUnfoldedNavbar,
 } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
+import { clickNavSignUpButton } from './helpers/navAuth'
 import { test, expect } from './test-setup'
 
 type Env = Record<string, string | undefined>
@@ -405,31 +406,7 @@ test.describe('Registration and Onboarding', () => {
     await ensureUnfoldedNavbar(page)
 
     await test.step('Register and login', async () => {
-      await page.evaluate(() =>
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
-      )
-      await safeWait(page, 200)
-      const signUpBtn = page.getByTestId('nav-sign-up-button')
-      await signUpBtn.scrollIntoViewIfNeeded().catch(() => {})
-      try {
-        await signUpBtn.click({ timeout: 10000 })
-      } catch {
-        await dismissTutorialOverlay(page)
-        await safeWait(page, 400)
-        await signUpBtn.click({ timeout: 10000, force: true })
-      }
-
-      const authModal = page.getByTestId('auth-modal')
-      try {
-        await expect(authModal).toBeVisible({ timeout: 15000 })
-      } catch {
-        // Synthesized clicks can miss the React handler when hero layers overlap;
-        // DOM click reliably dispatches to the React event system.
-        await signUpBtn.evaluate((el: HTMLElement) => {
-          el.click()
-        })
-        await expect(authModal).toBeVisible({ timeout: 15000 })
-      }
+      await clickNavSignUpButton(page)
 
       await page.locator('input[type="email"]').first().fill(testEmail)
       await page.locator('input[type="password"]').first().fill(testPassword)
