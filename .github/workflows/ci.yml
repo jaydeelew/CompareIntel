@@ -716,7 +716,10 @@ jobs:
         run: |
           cd backend
           # CVE-2026-4539 (pygments ReDoS): no fixed release on PyPI yet; remove ignore when pygments >2.19.2 ships.
-          pip-audit -r requirements.txt --ignore-vuln CVE-2026-4539
+          # PYSEC-2025-183 (pyjwt weak encryption): disputed by upstream; 2.12.1 is latest on PyPI.
+          pip-audit -r requirements.txt \
+            --ignore-vuln CVE-2026-4539 \
+            --ignore-vuln PYSEC-2025-183
       
       - name: Install frontend dependencies
         run: |
