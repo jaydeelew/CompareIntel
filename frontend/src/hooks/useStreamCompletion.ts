@@ -13,7 +13,10 @@ import { createStreamingMessage, estimateTokensSimple } from '../services/ssePro
 import type { ProcessStreamResult } from '../services/sseProcessor'
 import type { ActiveResultTabs, ModelConversation } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
-import { collectFileContentsForStorage } from '../utils/attachmentStorage'
+import {
+  collectFileContentsForStorage,
+  type StoredFileContentRecord,
+} from '../utils/attachmentStorage'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
 
@@ -44,15 +47,13 @@ export interface UseStreamCompletionCallbacks {
   setInput: (input: string) => void
   setCurrentVisibleComparisonId: React.Dispatch<React.SetStateAction<string | null>>
   setUsageCount: React.Dispatch<React.SetStateAction<number>>
-  extractFileContentForStorage: (
-    files: AttachedFile[]
-  ) => Promise<Array<{ name: string; content: string; placeholder: string }>>
+  extractFileContentForStorage: (files: AttachedFile[]) => Promise<StoredFileContentRecord[]>
   saveConversationToLocalStorage: (
     inputData: string,
     models: string[],
     conversations: ModelConversation[],
     isUpdate: boolean,
-    fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+    fileContents?: StoredFileContentRecord[],
     conversationType?: 'comparison' | 'breakout',
     parentConversationId?: string | null,
     breakoutModelId?: string | null,

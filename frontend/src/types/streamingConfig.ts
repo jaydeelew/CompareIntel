@@ -5,6 +5,7 @@
 
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison'
 import type { CreditBalance } from '../services/creditService'
+import type { StoredFileContentRecord } from '../utils/attachmentStorage'
 
 import type { CompareResponse, ActiveResultTabs } from './comparison'
 import type { ConversationMessage, ModelConversation } from './conversation'
@@ -138,9 +139,7 @@ export interface StreamingHelperCallbacks {
   getAttachedImagesForApi: (
     files: (AttachedFile | StoredAttachedFile)[]
   ) => Array<{ mime_type: string; base64_data: string; filename: string; placeholder: string }>
-  extractFileContentForStorage: (
-    files: AttachedFile[]
-  ) => Promise<Array<{ name: string; content: string; placeholder: string }>>
+  extractFileContentForStorage: (files: AttachedFile[]) => Promise<StoredFileContentRecord[]>
   setupScrollListener: (modelId: string) => boolean
   cleanupScrollListener: (modelId: string) => void
   saveConversationToLocalStorage: (
@@ -148,7 +147,7 @@ export interface StreamingHelperCallbacks {
     models: string[],
     conversations: ModelConversation[],
     isUpdate: boolean,
-    fileContents?: import('../utils/attachmentStorage').StoredFileContentRecord[],
+    fileContents?: StoredFileContentRecord[],
     conversationType?: 'comparison' | 'breakout',
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
