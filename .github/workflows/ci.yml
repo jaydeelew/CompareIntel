@@ -799,37 +799,58 @@ jobs:
     timeout-minutes: 5
     
     steps:
+      - name: Write CI results summary
+        run: |
+          {
+            echo "## CI Results"
+            echo ""
+            echo "| Job | Status |"
+            echo "|-----|--------|"
+            echo "| Detect Changes | ${{ needs.detect-changes.result }} |"
+            echo "| Frontend Lint | ${{ needs.frontend-lint.result }} |"
+            echo "| Frontend Tests | ${{ needs.frontend-test.result }} |"
+            echo "| Frontend Build | ${{ needs.frontend-build.result }} |"
+            echo "| Lighthouse | ${{ needs.frontend-lighthouse.result }} |"
+            echo "| Backend Lint | ${{ needs.backend-lint.result }} |"
+            echo "| Backend Tests | ${{ needs.backend-test.result }} |"
+            echo "| E2E Tests (Critical) | ${{ needs.e2e-test-critical.result }} |"
+            echo "| E2E Tests (Accessibility) | ${{ needs.e2e-test-accessibility.result }} |"
+            echo "| Security Scan | ${{ needs.security-scan.result }} |"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Check all jobs passed
         run: |
-          echo "## CI Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend Lint | ${{ needs.frontend-lint.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend Tests | ${{ needs.frontend-test.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend Build | ${{ needs.frontend-build.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Lighthouse | ${{ needs.frontend-lighthouse.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend Lint | ${{ needs.backend-lint.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend Tests | ${{ needs.backend-test.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| E2E Tests (Critical) | ${{ needs.e2e-test-critical.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| E2E Tests (Accessibility) | ${{ needs.e2e-test-accessibility.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          FAILED=0
-          # Only check jobs that actually ran (not skipped)
-          if [[ "${{ needs.frontend-lint.result }}" == "failure" ]]; then FAILED=1; fi
-          if [[ "${{ needs.frontend-test.result }}" == "failure" ]]; then FAILED=1; fi
-          if [[ "${{ needs.frontend-build.result }}" == "failure" ]]; then FAILED=1; fi
-          if [[ "${{ needs.frontend-lighthouse.result }}" == "failure" ]]; then FAILED=1; fi
-          if [[ "${{ needs.backend-lint.result }}" == "failure" ]]; then FAILED=1; fi
-          if [[ "${{ needs.backend-test.result }}" == "failure" ]]; then FAILED=1; fi
-          if [[ "${{ needs.e2e-test-critical.result }}" == "failure" ]]; then FAILED=1; fi
-          if [[ "${{ needs.e2e-test-accessibility.result }}" == "failure" ]]; then FAILED=1; fi
-          if [[ "${{ needs.security-scan.result }}" == "failure" ]]; then FAILED=1; fi
-          
-          if [[ $FAILED -eq 1 ]]; then
-            echo "❌ One or more required jobs failed" >> $GITHUB_STEP_SUMMARY
+          declare -a FAILED_JOBS=()
+
+          check_job() {
+            local name="$1"
+            local result="$2"
+            if [[ "$result" == "failure" ]]; then
+              FAILED_JOBS+=("$name")
+              echo "::error title=CI job failed::$name ($result)"
+            fi
+          }
+
+          check_job "Detect Changed Paths" "${{ needs.detect-changes.result }}"
+          check_job "Frontend Lint" "${{ needs.frontend-lint.result }}"
+          check_job "Frontend Tests" "${{ needs.frontend-test.result }}"
+          check_job "Frontend Build" "${{ needs.frontend-build.result }}"
+          check_job "Lighthouse Performance" "${{ needs.frontend-lighthouse.result }}"
+          check_job "Backend Lint" "${{ needs.backend-lint.result }}"
+          check_job "Backend Tests" "${{ needs.backend-test.result }}"
+          check_job "E2E Tests (Critical)" "${{ needs.e2e-test-critical.result }}"
+          check_job "E2E Tests (Accessibility)" "${{ needs.e2e-test-accessibility.result }}"
+          check_job "Security Scan" "${{ needs.security-scan.result }}"
+
+          if [[ ${#FAILED_JOBS[@]} -gt 0 ]]; then
+            {
+              echo "❌ One or more required jobs failed:"
+              printf '%s\n' "${FAILED_JOBS[@]}" | sed 's/^/- /'
+              echo ""
+              echo "Open the failed job logs above for details (this step only aggregates results)."
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          echo "✅ All CI checks passed!" >> $GITHUB_STEP_SUMMARY
+
+          echo "✅ All CI checks passed!" >> "$GITHUB_STEP_SUMMARY"
