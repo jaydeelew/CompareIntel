@@ -97,6 +97,17 @@
         "knowledge_cutoff": "May 2025",
         "is_thinking_model": true,
         "supports_vision_probed": true
+      },
+      {
+        "id": "anthropic/claude-opus-4.7",
+        "name": "Claude Opus 4.7",
+        "description": "Opus 4.7 is the next generation of Anthropic's Opus family, built for long-running, asynchronous agents.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "supports_vision_probed": true,
+        "knowledge_cutoff": null
       }
     ],
     "Black Forest Labs": [

@@ -250,6 +250,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     categoryInfoTooltip:
       'Ranked by Vision Arena (lmarena.ai), human preference votes on image+text prompts. Higher Arena Score = better at interpreting photos, diagrams, and screenshots. Required when you attach images to your prompt.',
     models: [
+      { modelId: 'anthropic/claude-opus-4.7', evidence: 'Vision Arena (lmarena.ai): 1317.' },
       { modelId: 'anthropic/claude-opus-4.6', evidence: 'Vision Arena (lmarena.ai): 1316.' },
       { modelId: 'google/gemini-3.1-pro-preview', evidence: 'Vision Arena (lmarena.ai): 1305.' },
       { modelId: 'openai/gpt-5.5', evidence: 'Vision Arena (lmarena.ai): 1295.' },
