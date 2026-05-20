@@ -5,7 +5,7 @@
 
 import type { ModelsByProvider } from '../types'
 
-/** Known vision-capable model IDs from Best for vision and common vision models */
+/** Fallback vision-capable model IDs when registry metadata is missing (mirrors Best for vision). */
 export const KNOWN_VISION_MODEL_IDS = new Set([
   'openai/gpt-4o',
   'openai/gpt-4o-mini',

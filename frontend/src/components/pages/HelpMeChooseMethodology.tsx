@@ -198,6 +198,19 @@ export const HelpMeChooseMethodology: React.FC = () => {
                   </td>
                 </tr>
                 <tr>
+                  <td>Best for vision</td>
+                  <td>
+                    <a
+                      href="https://lmarena.ai/leaderboard/vision"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Vision Arena (LMArena)
+                    </a>{' '}
+                    — human preference votes on image+text prompts; Arena Score (higher = better)
+                  </td>
+                </tr>
+                <tr>
                   <td>Best for image generation</td>
                   <td>
                     <a
@@ -271,6 +284,11 @@ export const HelpMeChooseMethodology: React.FC = () => {
               <li>
                 <strong>LegalBench (legal)</strong> — 161 legal reasoning tasks: contract analysis,
                 statutory interpretation, and more. Geared toward legal professionals.
+              </li>
+              <li>
+                <strong>Vision Arena (Best for vision)</strong> — Human raters compare multimodal
+                models head-to-head on image+text prompts. Higher Arena Score = better at
+                interpreting photos, diagrams, screenshots, and charts.
               </li>
               <li>
                 <strong>HealthBench (medical)</strong> — Physician-evaluated medical conversations.

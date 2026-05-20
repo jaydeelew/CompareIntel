@@ -17,9 +17,9 @@ Single-model mode:
 Refresh-all mode (--refresh-all):
   Re-evaluates ALL registry models against ALL data-driven categories
   (cost-effective, fast, coding, math, reasoning, writing, long-context, legal,
-  multilingual). Coding uses SWE-Bench Pro public (Scale Labs); models without a
-  Pro leaderboard row are dropped from Best for coding. Run periodically to keep
-  categories current as leaderboards update.
+  multilingual, images/vision). Coding uses SWE-Bench Pro public (Scale Labs); models
+  without a Pro leaderboard row are dropped from Best for coding. Vision uses LMArena
+  Vision Arena scores. Run periodically to keep categories current as leaderboards update.
 
 Only models with verifiable, publicly available benchmark data are added.
 """
@@ -52,11 +52,16 @@ CATEGORY_IDS = [
     "multilingual",
     "legal",
     "medical",
+    "images",
     "image-generation",
 ]
 
 # Categories where lower score is better (e.g. cost-effective: cheaper first)
 SORT_ASCENDING_CATEGORIES = {"cost-effective"}
+
+# Vision (image understanding): LMArena Vision Arena via official Hugging Face dataset
+VISION_ARENA_LEADERBOARD_URL = "https://lmarena.ai/leaderboard/vision"
+VISION_ARENA_DATASET_ROWS_URL = "https://datasets-server.huggingface.co/rows"
 
 # Image generation: KEAR AI Text-to-Image Arena (Arena Rating, higher = better)
 TEXT_TO_IMAGE_ARENA_URL = "https://kearai.com/leaderboard/text-to-image"
@@ -124,6 +129,11 @@ def extract_primary_score(category_id: str, evidence: str) -> float | None:
     # Image generation: Text-to-Image Arena Rating (e.g. "Text-to-Image Arena (kearai.com): 1154.")
     if category_id == "image-generation":
         arena = re.search(r"(?:Text-to-Image Arena|Arena Rating)[^:]*:\s*(\d+)", evidence, re.I)
+        if arena:
+            return float(arena.group(1))
+    # Vision: LMArena Vision Arena score (e.g. "Vision Arena (lmarena.ai): 1244.")
+    if category_id == "images":
+        arena = re.search(r"Vision Arena[^:]*:\s*(\d+)", evidence, re.I)
         if arena:
             return float(arena.group(1))
     return None
@@ -656,6 +666,123 @@ WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
 }
 
 WRITING_MIN_ELO = 1390
+# Vision Arena scores use Bradley-Terry ratings (~880–1320 on lmarena.ai).
+VISION_MIN_ARENA = 1060.0
+
+# LMArena Vision Arena: leaderboard slug -> registry model_id
+VISION_ARENA_SLUG_TO_MODEL_ID: dict[str, str] = {
+    "chatgpt-4o-latest-20250326": "openai/gpt-4o",
+    "gpt-4o": "openai/gpt-4o",
+    "gpt-4o-2024-05-13": "openai/gpt-4o",
+    "gpt-4o-mini": "openai/gpt-4o-mini",
+    "gpt-4o-mini-2024-07-18": "openai/gpt-4o-mini",
+    "gpt-5-chat-latest": "openai/gpt-5-chat",
+    "gpt-5.1-high": "openai/gpt-5.1",
+    "gpt-5.2-chat-latest-20260210": "openai/gpt-5.2",
+    "gpt-5.2-high": "openai/gpt-5.2",
+    "gpt-5.5-high": "openai/gpt-5.5",
+    "gpt-5.5-instant": "openai/gpt-5.5",
+    "claude-opus-4-6": "anthropic/claude-opus-4.6",
+    "claude-opus-4-6-thinking": "anthropic/claude-opus-4.6",
+    "claude-opus-4-1-20250805": "anthropic/claude-opus-4.1",
+    "claude-opus-4-1-20250805-thinking-16k": "anthropic/claude-opus-4.1",
+    "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
+    "claude-sonnet-4-5-20250929": "anthropic/claude-sonnet-4.5",
+    "claude-3-5-sonnet-20241022": "anthropic/claude-sonnet-4.5",
+    "gemini-3-pro": "google/gemini-3.1-pro-preview",
+    "gemini-3.1-pro-preview": "google/gemini-3.1-pro-preview",
+    "gemini-3-flash": "google/gemini-3-flash-preview",
+    "gemini-3-flash (thinking-minimal)": "google/gemini-3-flash-preview",
+    "gemini-2.5-pro": "google/gemini-2.5-pro",
+    "gemini-2.5-flash": "google/gemini-2.5-flash",
+    "gemini-2.5-flash-preview-09-2025": "google/gemini-2.5-flash",
+    "kimi-k2.5-thinking": "moonshotai/kimi-k2.5",
+    "kimi-k2.5-instant": "moonshotai/kimi-k2.5",
+    "kimi-k2-instruct": "moonshotai/kimi-k2.5",
+    "grok-4.20-beta-0309-reasoning": "x-ai/grok-4.20",
+    "grok-4.20-multi-agent-beta-0309": "x-ai/grok-4.20",
+    "grok-4.1-thinking": "x-ai/grok-4.20",
+    "mistral-medium-2505": "mistralai/mistral-medium-3.1",
+    "mistral-medium-3.1": "mistralai/mistral-medium-3.1",
+    "pixtral-large-2411": "mistralai/mistral-medium-3.1",
+    "qwen3.5-397b-a17b": "qwen/qwen3.5-397b-a17b",
+    "qwen3-vl-235b-a22b-thinking": "qwen/qwen3-vl-235b-a22b-thinking",
+    "qwen3-vl-235b-a22b-instruct": "qwen/qwen3-vl-235b-a22b-instruct",
+}
+
+
+def _vision_arena_evidence(score: float) -> str:
+    return f"Vision Arena (lmarena.ai): {int(round(score))}."
+
+
+def fetch_vision_arena_scores() -> dict[str, tuple[float, str]]:
+    """Fetch Vision Arena scores from lmarena-ai/leaderboard-dataset (Hugging Face).
+
+    Uses the official LMArena vision subset (latest split, overall category).
+    Keeps the best score per registry model when multiple arena variants exist.
+    """
+    registry_ids = set(get_model_id_to_name_map().keys())
+    model_id_to_name = get_model_id_to_name_map()
+    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
+    slug_to_model_id: dict[str, str] = {}
+    for mid in model_id_to_name:
+        parts = mid.split("/")
+        if len(parts) == 2:
+            slug_to_model_id[parts[1].replace(".", "-")] = mid
+    for slug, mid in VISION_ARENA_SLUG_TO_MODEL_ID.items():
+        slug_to_model_id[slug] = mid
+
+    result: dict[str, tuple[float, str]] = {}
+    try:
+        offset = 0
+        page_size = 100
+        while True:
+            resp = httpx.get(
+                VISION_ARENA_DATASET_ROWS_URL,
+                params={
+                    "dataset": "lmarena-ai/leaderboard-dataset",
+                    "config": "vision",
+                    "split": "latest",
+                    "offset": offset,
+                    "length": page_size,
+                },
+                timeout=20.0,
+            )
+            if resp.status_code != 200:
+                break
+            data = resp.json()
+            rows = data.get("rows") or []
+            for item in rows:
+                row = item.get("row") or {}
+                if row.get("category") != "overall":
+                    continue
+                slug = row.get("model_name", "")
+                try:
+                    rating = float(row.get("rating", 0))
+                except (ValueError, TypeError):
+                    continue
+                if rating < VISION_MIN_ARENA:
+                    continue
+                mid = VISION_ARENA_SLUG_TO_MODEL_ID.get(slug)
+                if not mid:
+                    base = slug.split("(")[0].strip().rstrip("*").strip()
+                    base = _expand_hyphenated_minor_versions(base)
+                    mid = slug_to_model_id.get(base)
+                if not mid:
+                    norm = _normalize_name_for_match(base.replace("-", " "))
+                    mid = name_to_model_id.get(norm)
+                if mid and mid in registry_ids:
+                    evidence = _vision_arena_evidence(rating)
+                    if mid not in result or rating > result[mid][0]:
+                        result[mid] = (rating, evidence)
+            total = data.get("num_rows_total", 0)
+            offset += len(rows)
+            if offset >= total or not rows:
+                break
+    except Exception as e:
+        print(f"Warning: Could not fetch Vision Arena scores: {e}", file=sys.stderr)
+    return result
+
 
 # KEAR AI Text-to-Image Arena: leaderboard model name/slug -> registry model_id
 TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
@@ -1037,6 +1164,7 @@ def determine_categories(
     mrcr_scores: dict[str, tuple[float, str]] | None = None,
     text_to_image_scores: dict[str, tuple[float, str]] | None = None,
     math_scores: dict[str, tuple[float, str]] | None = None,
+    vision_arena_scores: dict[str, tuple[float, str]] | None = None,
 ) -> list[dict]:
     """Determine which Help Me Choose categories this model qualifies for.
 
@@ -1084,6 +1212,10 @@ def determine_categories(
     if math_scores and model_id in math_scores:
         score, evidence = math_scores[model_id]
         entries.append({"category_id": "math", "evidence": evidence, "score": score})
+    if vision_arena_scores and model_id in vision_arena_scores:
+        score, evidence = vision_arena_scores[model_id]
+        if score >= VISION_MIN_ARENA:
+            entries.append({"category_id": "images", "evidence": evidence, "score": score})
     return entries
 
 
@@ -1312,6 +1444,9 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
     math_scores = fetch_math_scores()
     if math_scores:
         print(f"  Fetched MATH/GSM8K scores for {len(math_scores)} models.")
+    vision_arena_scores = fetch_vision_arena_scores()
+    if vision_arena_scores:
+        print(f"  Fetched Vision Arena scores for {len(vision_arena_scores)} models.")
 
     print(
         f"PROGRESS:{json.dumps({'stage': 'researching', 'message': 'Determining category placements...', 'progress': 40})}"
@@ -1330,6 +1465,7 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         long_context_scores,
         text_to_image_scores,
         math_scores,
+        vision_arena_scores,
     )
 
     if not category_entries:
@@ -1402,6 +1538,8 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
             evidence = text_to_image_scores[model_id][1]
         if cat_id == "math" and math_scores and model_id in math_scores:
             evidence = math_scores[model_id][1]
+        if cat_id == "images" and vision_arena_scores and model_id in vision_arena_scores:
+            evidence = vision_arena_scores[model_id][1]
         if add_model_to_category(categories, cat_id, model_id, evidence):
             added.append(cat_id)
             print(f"  Added to '{cat_id}': {evidence}")
@@ -1428,6 +1566,8 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         fetched_by_cat["image-generation"] = text_to_image_scores
     if math_scores:
         fetched_by_cat["math"] = math_scores
+    if vision_arena_scores:
+        fetched_by_cat["images"] = vision_arena_scores
     for cat in categories:
         if cat["id"] in added:
             fetched = fetched_by_cat.get(cat["id"])
@@ -1474,6 +1614,7 @@ def _sync_evidence_and_prune(
         "reasoning": ("min", REASONING_MIN_MMLU_PRO),
         "writing": ("min", WRITING_MIN_ELO),
         "long-context": ("min", LONG_CONTEXT_MIN_MRCR),
+        "images": ("min", VISION_MIN_ARENA),
     }
 
     updated: dict[str, list[str]] = {}
@@ -1494,6 +1635,11 @@ def _sync_evidence_and_prune(
                 to_remove.append(i)
                 removed.setdefault(cat_id, []).append(mid)
                 continue  # no SWE-Bench Pro public row for this registry model
+            # Best for vision tracks Vision Arena only; drop entries without an arena score.
+            if cat_id == "images" and mid not in fetched:
+                to_remove.append(i)
+                removed.setdefault(cat_id, []).append(mid)
+                continue
             if mid not in fetched:
                 continue
             score, new_evidence = fetched[mid]
@@ -1564,6 +1710,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     print(f"  Long-context (merged): {len(long_context_scores)} models")
     math_scores = fetch_math_scores()
     print(f"  MATH/GSM8K: {len(math_scores)} models")
+    vision_arena_scores = fetch_vision_arena_scores()
+    print(f"  Vision Arena: {len(vision_arena_scores)} models")
 
     if not RECOMMENDATIONS_PATH.exists():
         print(f"Error: {RECOMMENDATIONS_PATH} not found", file=sys.stderr)
@@ -1594,6 +1742,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
         fetched_by_cat["image-generation"] = text_to_image_scores
     if math_scores:
         fetched_by_cat["math"] = math_scores
+    if vision_arena_scores:
+        fetched_by_cat["images"] = vision_arena_scores
     awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
     long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
     if long_context_scores:
@@ -1628,6 +1778,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
             long_context_scores,
             text_to_image_scores,
             math_scores,
+            vision_arena_scores,
         )
         for entry in entries:
             cat_id = entry["category_id"]

@@ -206,6 +206,29 @@ class TestDetermineCategories:
             cost_eff = [e for e in entries if e["category_id"] == "cost-effective"]
             assert len(cost_eff) == 0, f"Expected exclusion for cost={cost}"
 
+    def test_model_in_vision_arena_gets_images(self):
+        model = make_registry_model("openai/gpt-4o")
+        vision = {"openai/gpt-4o": (1244.0, "Vision Arena (lmarena.ai): 1244.")}
+        entries = determine_categories("openai/gpt-4o", model, None, {}, vision_arena_scores=vision)
+        images = [e for e in entries if e["category_id"] == "images"]
+        assert len(images) == 1
+        assert images[0]["evidence"] == "Vision Arena (lmarena.ai): 1244."
+
+    def test_model_below_vision_threshold_excluded(self):
+        from scripts.research_model_benchmarks import VISION_MIN_ARENA
+
+        model = make_registry_model("openai/gpt-4o-mini")
+        vision = {
+            "openai/gpt-4o-mini": (
+                VISION_MIN_ARENA - 1,
+                f"Vision Arena (lmarena.ai): {int(VISION_MIN_ARENA - 1)}.",
+            )
+        }
+        entries = determine_categories(
+            "openai/gpt-4o-mini", model, None, {}, vision_arena_scores=vision
+        )
+        assert not any(e["category_id"] == "images" for e in entries)
+
 
 class TestSweBenchProSlugResolution:
     """Scale SWE-Bench Pro slugs vs registry display names (hyphen minors, thinking rows)."""
@@ -391,6 +414,9 @@ class TestExtractPrimaryScore:
     def test_extracts_multilingual_global_mmlu_percentage(self):
         assert extract_primary_score("multilingual", "Global-MMLU (llmdb.com): 88.6%.") == 88.6
         assert extract_primary_score("multilingual", "Global-MMLU: 75.4%.") == 75.4
+
+    def test_extracts_vision_arena_score(self):
+        assert extract_primary_score("images", "Vision Arena (lmarena.ai): 1244.") == 1244.0
 
     def test_returns_none_for_no_score(self):
         assert extract_primary_score("coding", "Provider docs: Code-specialized.") is None
@@ -704,6 +730,7 @@ class TestActualRecommendationsFile:
             "multilingual",
             "legal",
             "medical",
+            "images",
         ]
         for cat_id in expected:
             assert cat_id in cat_ids, f"Missing category: {cat_id}"
@@ -752,17 +779,11 @@ class TestActualRecommendationsFile:
                 )
 
     def test_each_model_has_benchmark_score(self, real_ts_content):
-        """Each model must have numeric benchmark evidence (extract_primary_score returns non-null).
-        Excludes 'images' — that category lists vision-capable models by capability, not benchmark rank."""
+        """Each model must have numeric benchmark evidence (extract_primary_score returns non-null)."""
         from scripts.research_model_benchmarks import extract_primary_score
-
-        # Capability-based categories: models listed by feature support, no numeric benchmark
-        EXEMPT_CATEGORIES = {"images"}
 
         cats = parse_recommendations_ts(real_ts_content)
         for cat in cats:
-            if cat["id"] in EXEMPT_CATEGORIES:
-                continue
             for m in cat["models"]:
                 score = extract_primary_score(cat["id"], m["evidence"])
                 assert score is not None, (

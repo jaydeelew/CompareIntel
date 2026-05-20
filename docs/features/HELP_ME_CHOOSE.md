@@ -6,7 +6,7 @@ The "Help me choose" feature provides decision support for model selection. User
 
 A "Help me choose" button sits next to the Advanced button in the model selection area. Clicking it opens a dropdown with six categories displayed horizontally (stacking vertically on mobile). Each category lists models ranked by benchmark score (highest first). All models shown are strong in their category. Users can check individual models or use "Select top 3" per category; selections apply immediately and respect tier restrictions and `maxModelsLimit`.
 
-**Categories:** Best for coding, Best for writing, Best for math, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for image generation, Best for medical.
+**Categories:** Best for coding, Best for writing, Best for math, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for vision, Best for image generation, Best for medical.
 
 **Inclusion rule:** Only models with numeric benchmark scores from well-respected, publicly available sources are included. Models without benchmark scores are not added. Each category has at least two models. Model IDs must exist in `models_registry.json`.
 
@@ -35,6 +35,7 @@ A public page at `/help-me-choose-methodology` (linked in the footer) explains i
 | **Fastest responses** | LMSpeed | https://lmspeed.net/leaderboard/best-throughput-models-weekly | Tokens/second | Yes |
 | **Multilingual** | Global-MMLU (llmdb) | https://llmdb.com/benchmarks/global-mmlu | 42-language score | Yes (sparse) |
 | **Legal** | LegalBench (VALS.ai) | https://www.vals.ai/benchmarks/legal_bench | % across 161 tasks | Yes |
+| **Best for vision** | Vision Arena (LMArena) | https://lmarena.ai/leaderboard/vision | Arena Score | Yes |
 | **Image generation** | Text-to-Image Arena (KEAR AI) | https://kearai.com/leaderboard/text-to-image | Arena Rating | Yes |
 | **Medical** | HealthBench (OpenAI) | https://openai.com/index/healthbench | Physician-rated % | **Manual only** |
 
@@ -63,7 +64,7 @@ python scripts/research_model_benchmarks.py --refresh-all [--dry-run]
 
 This command re-evaluates ALL registry models against ALL data-driven categories:
 
-1. **Fetches** current data from 10 external sources (SWE-Bench Pro public, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MATH/GSM8K, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU)
+1. **Fetches** current data from 11 external sources (SWE-Bench Pro public, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MATH/GSM8K, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU, Vision Arena)
 2. **Syncs evidence** — updates stale evidence strings on existing models (e.g. price changes, new throughput data)
 3. **Prunes** models that no longer meet category thresholds
 4. **Adds** missing models that now qualify
@@ -94,6 +95,7 @@ Data-driven categories apply qualification thresholds to maintain quality:
 | Reasoning | ≥ 80% MMLU-Pro | `REASONING_MIN_MMLU_PRO` |
 | Writing | ≥ 1390 Elo | `WRITING_MIN_ELO` |
 | Long context | ≥ 30/100 MRCR | `LONG_CONTEXT_MIN_MRCR` |
+| Best for vision | ≥ 1060 Vision Arena score | `VISION_MIN_ARENA` |
 | Legal | No threshold (all scored models included) | — |
 | Multilingual | No threshold (all scored models included) | — |
 | Medical | Manual only — no scraper | — |
@@ -104,7 +106,8 @@ Data-driven categories apply qualification thresholds to maintain quality:
 - **LegalBench** URL changed from `/legal_bench-01-30-2025` to `/legal_bench` (no date suffix). The scraper follows redirects.
 - **Global-MMLU** and **MRCR 1M** leaderboards on llmdb.com have sparse coverage (few models listed).
 - **Creative Writing Arena** lists many model variants (thinking, non-thinking, dated snapshots). The scraper takes the best score per registry model.
-- **Name mapping dicts** (`SWE_BENCH_PRO_SLUG_TO_MODEL_ID`, `LMSPEED_NAME_TO_MODEL_ID`, `WRITING_NAME_TO_MODEL_ID`, `MMLU_PRO_NAME_TO_MODEL_ID`, `AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID`, etc.) resolve leaderboard display names that don't match registry names. Update these when adding new models or when leaderboard names change.
+- **Vision Arena** scores are fetched from the official `lmarena-ai/leaderboard-dataset` on Hugging Face (vision subset, latest split). Model slugs on the arena often differ from OpenRouter IDs; update `VISION_ARENA_SLUG_TO_MODEL_ID` when adding models.
+- **Name mapping dicts** (`SWE_BENCH_PRO_SLUG_TO_MODEL_ID`, `LMSPEED_NAME_TO_MODEL_ID`, `WRITING_NAME_TO_MODEL_ID`, `MMLU_PRO_NAME_TO_MODEL_ID`, `VISION_ARENA_SLUG_TO_MODEL_ID`, `AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID`, etc.) resolve leaderboard display names that don't match registry names. Update these when adding new models or when leaderboard names change.
 - **SWE-Bench Pro** leaderboard data is parsed from the Scale Labs Next.js page (RSC-embedded JSON); a static HTML fallback uses [scaleapi.github.io/SWE-bench_Pro-os](https://scaleapi.github.io/SWE-bench_Pro-os/) (subset of models).
 - **Long context** merges MRCR 1M (llmdb) with Awesome Agents (MRCR v2, LongBench v2). MRCR 1M is primary; Awesome Agents adds models not on the llmdb leaderboard. Threshold ≥ 30 applies to both sources.
 

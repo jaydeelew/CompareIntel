@@ -6,7 +6,7 @@
  * categories; users select individual models.
  *
  * Inclusion rule: Only models with numeric benchmark scores from well-respected,
- * publicly available sources (SWE-Bench Pro public, MMLU-Pro, Mazur Writing Score, etc.)
+ * publicly available sources (SWE-Bench Pro public, MMLU-Pro, Vision Arena, etc.)
  * are included. Models without benchmark scores are not added.
  *
  * Evidence format: Each entry includes the source (benchmark/reference) and
@@ -247,37 +247,33 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     label: 'Best for vision',
     description: 'Image understanding — photos, diagrams, screenshots, charts',
     categoryInfoTooltip:
-      'These models support image input and can interpret visual content. Required when you attach images to your prompt.',
+      'Ranked by Vision Arena (lmarena.ai), human preference votes on image+text prompts. Higher Arena Score = better at interpreting photos, diagrams, and screenshots. Required when you attach images to your prompt.',
     models: [
+      { modelId: 'anthropic/claude-opus-4.6', evidence: 'Vision Arena (lmarena.ai): 1316.' },
+      { modelId: 'google/gemini-3.1-pro-preview', evidence: 'Vision Arena (lmarena.ai): 1305.' },
+      { modelId: 'openai/gpt-5.5', evidence: 'Vision Arena (lmarena.ai): 1295.' },
+      { modelId: 'google/gemini-3-flash-preview', evidence: 'Vision Arena (lmarena.ai): 1282.' },
+      { modelId: 'anthropic/claude-sonnet-4.6', evidence: 'Vision Arena (lmarena.ai): 1280.' },
+      { modelId: 'openai/gpt-5.2', evidence: 'Vision Arena (lmarena.ai): 1266.' },
+      { modelId: 'moonshotai/kimi-k2.5', evidence: 'Vision Arena (lmarena.ai): 1266.' },
+      { modelId: 'google/gemini-2.5-pro', evidence: 'Vision Arena (lmarena.ai): 1262.' },
+      { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'Vision Arena (lmarena.ai): 1257.' },
+      { modelId: 'x-ai/grok-4.20', evidence: 'Vision Arena (lmarena.ai): 1256.' },
+      { modelId: 'google/gemini-2.5-flash', evidence: 'Vision Arena (lmarena.ai): 1249.' },
+      { modelId: 'openai/gpt-5.1', evidence: 'Vision Arena (lmarena.ai): 1249.' },
+      { modelId: 'openai/gpt-4o', evidence: 'Vision Arena (lmarena.ai): 1244.' },
       {
-        modelId: 'openai/gpt-4o',
-        evidence: 'Supports image input. Can analyze photos, diagrams, and screenshots.',
+        modelId: 'google/gemini-3.1-flash-lite-preview',
+        evidence: 'Vision Arena (lmarena.ai): 1243.',
       },
-      {
-        modelId: 'openai/gpt-4o-mini',
-        evidence: 'Supports image input. Cost-effective vision model.',
-      },
-      {
-        modelId: 'google/gemini-2.5-pro',
-        evidence: 'Supports image input. Strong multimodal reasoning.',
-      },
-      { modelId: 'google/gemini-2.5-flash', evidence: 'Supports image input. Fast vision model.' },
-      {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'Supports image input. Latest Gemini flash.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.1',
-        evidence: 'Supports image input. Frontier vision model.',
-      },
-      {
-        modelId: 'anthropic/claude-sonnet-4.6',
-        evidence: 'Supports image input. Strong vision from Anthropic.',
-      },
-      {
-        modelId: 'mistralai/mistral-medium-3.1',
-        evidence: 'Supports image input. Multimodal enterprise model.',
-      },
+      { modelId: 'x-ai/grok-4.3', evidence: 'Vision Arena (lmarena.ai): 1241.' },
+      { modelId: 'openai/gpt-5-chat', evidence: 'Vision Arena (lmarena.ai): 1232.' },
+      { modelId: 'xiaomi/mimo-v2-omni', evidence: 'Vision Arena (lmarena.ai): 1220.' },
+      { modelId: 'qwen/qwen3-vl-235b-a22b-thinking', evidence: 'Vision Arena (lmarena.ai): 1208.' },
+      { modelId: 'google/gemma-3-27b-it', evidence: 'Vision Arena (lmarena.ai): 1166.' },
+      { modelId: 'mistralai/mistral-medium-3.1', evidence: 'Vision Arena (lmarena.ai): 1158.' },
+      { modelId: 'anthropic/claude-sonnet-4.5', evidence: 'Vision Arena (lmarena.ai): 1126.' },
+      { modelId: 'openai/gpt-4o-mini', evidence: 'Vision Arena (lmarena.ai): 1066.' },
     ],
   },
   {
