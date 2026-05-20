@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import sys
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -29,6 +30,9 @@ _openrouter_thinking_model_ids_cache: frozenset[str] | None = None
 
 # Cache for model vision support (model_id -> bool)
 _vision_support_cache: dict[str, bool] | None = None
+
+# Cache for probed vision support from models_registry.json (model_id -> bool)
+_vision_probed_cache: dict[str, bool] | None = None
 
 # Cache for image generation support (model_id -> bool)
 _image_gen_support_cache: dict[str, bool] | None = None
@@ -57,13 +61,28 @@ KNOWN_NO_TEMPERATURE_MODEL_IDS: frozenset[str] = frozenset(
 )
 
 
-def _load_vision_support_map() -> dict[str, bool]:
-    """Load model_id -> supports_vision from openrouter_models.json.
+def openrouter_entry_supports_vision_input(entry: dict[str, Any]) -> bool:
+    """Return True when OpenRouter metadata indicates the model accepts image input."""
+    modality = entry.get("modality") or ""
+    arch = entry.get("architecture") or {}
+    arch_modality = (arch.get("modality") or "") if isinstance(arch, dict) else ""
+    arch_vision = (arch.get("vision") or "") if isinstance(arch, dict) else ""
+    input_mods = arch.get("input_modalities") if isinstance(arch, dict) else []
+    input_mods_str = (
+        " ".join(str(m) for m in input_mods).lower()
+        if isinstance(input_mods, (list, tuple))
+        else ""
+    )
+    return (
+        "image" in modality.lower()
+        or "image" in arch_modality.lower()
+        or "image" in str(arch_vision).lower()
+        or "image" in input_mods_str
+    )
 
-    Vision support is indicated by modality containing 'image' (e.g., text+image->text)
-    or input_modalities containing 'image'. Checks top-level modality, architecture.modality,
-    architecture.vision, and architecture.input_modalities.
-    """
+
+def _load_vision_support_map() -> dict[str, bool]:
+    """Load model_id -> supports_vision from openrouter_models.json metadata."""
     global _vision_support_cache
     if _vision_support_cache is not None:
         return _vision_support_cache
@@ -76,23 +95,7 @@ def _load_vision_support_map() -> dict[str, bool]:
             for model in data.get("data", []):
                 model_id = model.get("id")
                 if model_id:
-                    modality = model.get("modality") or ""
-                    arch = model.get("architecture") or {}
-                    arch_modality = (arch.get("modality") or "") if isinstance(arch, dict) else ""
-                    arch_vision = (arch.get("vision") or "") if isinstance(arch, dict) else ""
-                    input_mods = arch.get("input_modalities") if isinstance(arch, dict) else []
-                    input_mods_str = (
-                        " ".join(str(m) for m in input_mods).lower()
-                        if isinstance(input_mods, (list, tuple))
-                        else ""
-                    )
-                    vision_input = (
-                        "image" in modality.lower()
-                        or "image" in arch_modality.lower()
-                        or "image" in str(arch_vision).lower()
-                        or "image" in input_mods_str
-                    )
-                    result[model_id] = vision_input
+                    result[model_id] = openrouter_entry_supports_vision_input(model)
     except Exception:
         pass
 
@@ -100,8 +103,36 @@ def _load_vision_support_map() -> dict[str, bool]:
     return result
 
 
+def _load_vision_probed_map() -> dict[str, bool]:
+    """Load model_id -> probed vision result from models_registry.json."""
+    global _vision_probed_cache
+    if _vision_probed_cache is not None:
+        return _vision_probed_cache
+
+    result: dict[str, bool] = {}
+    for models in MODELS_BY_PROVIDER.values():
+        for model in models:
+            mid = model.get("id")
+            if mid and "supports_vision_probed" in model:
+                result[mid] = bool(model["supports_vision_probed"])
+    _vision_probed_cache = result
+    return result
+
+
+def invalidate_vision_probed_cache() -> None:
+    """Clear the in-memory cache of probed vision results (after registry changes)."""
+    global _vision_probed_cache
+    _vision_probed_cache = None
+
+
 def get_model_supports_vision(model_id: str) -> bool:
-    """Return True if the model supports image/vision inputs."""
+    """Return True if the model supports image/vision inputs.
+
+    Resolution order: probed registry result, known non-vision overrides, OpenRouter metadata.
+    """
+    probed = _load_vision_probed_map().get(model_id)
+    if probed is not None:
+        return probed
     if model_id in KNOWN_NON_VISION_MODEL_IDS:
         return False
     return _load_vision_support_map().get(model_id, False)
@@ -430,6 +461,139 @@ def save_registry(data: dict[str, Any]) -> None:
         f.write("\n")
 
 
+def get_openrouter_models_json_path() -> Path:
+    return _OPENROUTER_MODELS_PATH
+
+
+def get_registry_model_ids(registry: dict[str, Any] | None = None) -> set[str]:
+    """Return all model ids listed in models_registry.json."""
+    data = registry if registry is not None else load_registry()
+    ids: set[str] = set()
+    for models in data.get("models_by_provider", {}).values():
+        if not isinstance(models, list):
+            continue
+        for m in models:
+            if isinstance(m, dict) and (mid := m.get("id")):
+                ids.add(str(mid))
+    return ids
+
+
+def _load_openrouter_snapshot_file() -> dict[str, Any]:
+    if not _OPENROUTER_MODELS_PATH.is_file():
+        return {"data": []}
+    with _OPENROUTER_MODELS_PATH.open(encoding="utf-8") as f:
+        root = json.load(f)
+    if not isinstance(root, dict):
+        return {"data": []}
+    listing = root.get("data")
+    if not isinstance(listing, list):
+        root["data"] = []
+    return root
+
+
+def _write_openrouter_snapshot_file(root: dict[str, Any]) -> None:
+    with _OPENROUTER_MODELS_PATH.open("w", encoding="utf-8") as f:
+        json.dump(root, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+
+
+@dataclass(frozen=True)
+class OpenRouterSnapshotRefreshResult:
+    """Outcome of refreshing or upserting backend/openrouter_models.json."""
+
+    written: int
+    added: int
+    removed: int
+    missing_from_api: tuple[str, ...]
+    dry_run: bool
+
+
+def upsert_openrouter_snapshot_entries(entries: list[dict[str, Any]]) -> int:
+    """Merge OpenRouter model objects into the bundled snapshot by ``id``.
+
+    Returns the number of entries upserted. Invalid rows (no ``id``) are skipped.
+    """
+    valid = [e for e in entries if isinstance(e, dict) and e.get("id")]
+    if not valid:
+        return 0
+
+    root = _load_openrouter_snapshot_file()
+    listing = root.get("data", [])
+    by_id: dict[str, dict[str, Any]] = {}
+    for row in listing:
+        if isinstance(row, dict) and (mid := row.get("id")):
+            by_id[str(mid)] = row
+
+    for entry in valid:
+        by_id[str(entry["id"])] = entry
+
+    root["data"] = sorted(by_id.values(), key=lambda m: str(m.get("id", "")))
+    _write_openrouter_snapshot_file(root)
+    invalidate_openrouter_models_json_caches()
+    return len(valid)
+
+
+def refresh_openrouter_snapshot_from_live_api(
+    *,
+    dry_run: bool = False,
+    only_model_ids: set[str] | None = None,
+) -> OpenRouterSnapshotRefreshResult:
+    """Replace bundled snapshot rows with live OpenRouter metadata for registry models.
+
+    Fetches ``GET /api/v1/models`` and writes one row per registry id found in the response.
+    Rows for registry ids absent from the API are omitted; ids missing from the API are
+    reported in :attr:`OpenRouterSnapshotRefreshResult.missing_from_api`.
+    """
+    from .tokens import fetch_all_models_from_openrouter
+
+    registry_ids = get_registry_model_ids()
+    if only_model_ids is not None:
+        registry_ids = registry_ids.intersection({str(m) for m in only_model_ids})
+
+    live = fetch_all_models_from_openrouter()
+    if live is None:
+        raise RuntimeError("Failed to fetch models from OpenRouter API")
+
+    previous = _load_openrouter_snapshot_file()
+    previous_ids = {
+        str(m["id"]) for m in previous.get("data", []) if isinstance(m, dict) and m.get("id")
+    }
+
+    filtered = [live[mid] for mid in sorted(registry_ids) if mid in live]
+    new_ids = {str(m["id"]) for m in filtered if isinstance(m, dict) and m.get("id")}
+    missing = tuple(sorted(registry_ids - live.keys()))
+
+    if only_model_ids is not None:
+        added = len(new_ids - previous_ids)
+        removed = 0
+        if dry_run:
+            written = len(filtered)
+        else:
+            written = upsert_openrouter_snapshot_entries(filtered)
+        return OpenRouterSnapshotRefreshResult(
+            written=written,
+            added=added,
+            removed=removed,
+            missing_from_api=missing,
+            dry_run=dry_run,
+        )
+
+    added = len(new_ids - previous_ids)
+    removed = len(previous_ids - new_ids)
+
+    if not dry_run:
+        _write_openrouter_snapshot_file({"data": filtered})
+        invalidate_openrouter_models_json_caches()
+
+    return OpenRouterSnapshotRefreshResult(
+        written=len(filtered),
+        added=added,
+        removed=removed,
+        missing_from_api=missing,
+        dry_run=dry_run,
+    )
+
+
 def _deduplicate_models_by_provider(
     mbp: dict[str, list[dict[str, Any]]],
 ) -> dict[str, list[dict[str, Any]]]:
@@ -471,6 +635,7 @@ def invalidate_openrouter_models_json_caches() -> None:
         _openrouter_known_ids_cache, \
         _openrouter_thinking_model_ids_cache, \
         _vision_support_cache, \
+        _vision_probed_cache, \
         _image_gen_support_cache, \
         _image_price_cache, \
         _text_token_price_cache
@@ -478,6 +643,7 @@ def invalidate_openrouter_models_json_caches() -> None:
     _openrouter_known_ids_cache = None
     _openrouter_thinking_model_ids_cache = None
     _vision_support_cache = None
+    _vision_probed_cache = None
     _image_gen_support_cache = None
     _image_price_cache = None
     _text_token_price_cache = None
@@ -504,6 +670,8 @@ def reload_registry() -> None:
     OPENROUTER_MODELS = []
     for provider, models in MODELS_BY_PROVIDER.items():
         OPENROUTER_MODELS.extend(models)
+
+    invalidate_vision_probed_cache()
 
     llm_mod = sys.modules.get("app.llm")
     if llm_mod:

@@ -175,6 +175,26 @@ bash scripts/setup_weekly_model_discovery.sh
 - Stdout: missing leaderboard model ids only; stderr: errors
 - Log output to `logs/model_discovery.log` when run via cron
 
+### `refresh_openrouter_models_json.py`
+
+Refreshes `backend/openrouter_models.json` from the live OpenRouter `/api/v1/models` catalog for all ids in `models_registry.json`. Admin add-model upserts a single row automatically; use this script for a full realign or after bulk registry edits.
+
+**Usage:**
+```bash
+cd backend
+
+# Refresh every registry model
+python scripts/refresh_openrouter_models_json.py
+
+# Preview without writing
+python scripts/refresh_openrouter_models_json.py --dry-run
+
+# One registry model
+python scripts/refresh_openrouter_models_json.py --model-id openai/gpt-4o
+```
+
+**When to run manually:** after many registry changes outside admin add-model, before batch capability probes, or periodically for pricing/metadata accuracy.
+
 ### `list_model_token_limits.py`
 
 Lists all models and their input token capacities from OpenRouter API.

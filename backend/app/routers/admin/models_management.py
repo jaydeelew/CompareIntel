@@ -32,6 +32,7 @@ from ...llm.registry import (
     sort_models_by_tier_and_version,
     streams_separable_reasoning_from_openrouter_entry,
 )
+from ...llm.vision_probe import VisionProbeResult, probe_supports_vision_input
 from ...model_runner import (
     client,
     refresh_model_token_limits,
@@ -193,6 +194,20 @@ def _apply_reasoning_probe_result(
         if sr is True or model_id in STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT:
             new_model["is_thinking_model"] = True
         return
+
+
+def _apply_vision_probe_result(new_model: dict[str, Any], res: VisionProbeResult) -> None:
+    """Set ``supports_vision_probed`` from a live red-circle probe."""
+    if res.observed:
+        new_model["supports_vision_probed"] = True
+        return
+    if res.rejected:
+        new_model["supports_vision_probed"] = False
+        return
+    if res.skip_reason or res.error:
+        return
+    if not res.observed:
+        new_model["supports_vision_probed"] = False
 
 
 @router.get("/models")
@@ -380,6 +395,12 @@ async def add_model(
         if not is_image_model:
             probe_res = probe_streams_separable_reasoning(model_id, openrouter_entry=model_data)
             _apply_reasoning_probe_result(model_id, model_data, new_model, probe_res)
+            vision_res = probe_supports_vision_input(
+                model_id,
+                openrouter_entry=model_data,
+                skip_if_no_vision_metadata=False,
+            )
+            _apply_vision_probe_result(new_model, vision_res)
         if hasattr(req, "available") and not req.available:
             new_model["available"] = False
         if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
@@ -465,6 +486,7 @@ async def add_model(
 
         save_registry(registry)
         reload_registry()
+        _upsert_openrouter_snapshot_for_added_model(model_data)
 
         refresh_model_token_limits(model_id)
 
@@ -697,6 +719,17 @@ async def add_model_stream(
                     openrouter_entry=model_data,
                 )
                 _apply_reasoning_probe_result(model_id, model_data, new_model, probe_res)
+                try:
+                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'vision_probe', 'message': 'Checking whether the model can read images...', 'progress': 32})}\n\n"
+                except disconnect_exceptions:
+                    raise
+                vision_res = await asyncio.to_thread(
+                    probe_supports_vision_input,
+                    model_id,
+                    openrouter_entry=model_data,
+                    skip_if_no_vision_metadata=False,
+                )
+                _apply_vision_probe_result(new_model, vision_res)
             if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
                 new_model["knowledge_cutoff"] = req.knowledge_cutoff
             elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
@@ -778,6 +811,7 @@ async def add_model_stream(
 
             save_registry(registry)
             reload_registry()
+            _upsert_openrouter_snapshot_for_added_model(model_data)
 
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': f'Model classified as {tier_classification} tier', 'progress': 27})}\n\n"
@@ -1106,6 +1140,22 @@ def _all_registry_model_ids(registry: dict[str, Any]) -> set[str]:
             if isinstance(m, dict) and (mid := m.get("id")):
                 ids.add(str(mid))
     return ids
+
+
+def _upsert_openrouter_snapshot_for_added_model(model_data: dict[str, Any] | None) -> None:
+    """Add or update one model row in bundled openrouter_models.json after admin add-model."""
+    if not model_data or not model_data.get("id"):
+        return
+    try:
+        from ...llm.registry import upsert_openrouter_snapshot_entries
+
+        upsert_openrouter_snapshot_entries([model_data])
+    except Exception as e:
+        logger.warning(
+            "Could not upsert openrouter_models.json for %s: %s",
+            model_data.get("id"),
+            e,
+        )
 
 
 def _sync_openrouter_snapshot_to_registry(backend_dir: Path) -> None:
