@@ -28,7 +28,10 @@ export async function dispatchComposerFilePaste(
     el.focus()
     // Plain Event + original DataTransfer: Firefox drops files on synthetic ClipboardEvent.
     const event = new Event('paste', { bubbles: true, cancelable: true })
-    Object.defineProperty(event, 'clipboardData', { value: dt, configurable: true })
+    Object.defineProperty(event, 'clipboardData', {
+      value: dt,
+      configurable: true,
+    })
     el.dispatchEvent(event)
   }, payload)
 }

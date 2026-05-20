@@ -487,12 +487,26 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [resetPageFileDrag]
     )
 
-    const handlePaste = useCallback(async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-      const file = getFirstFileFromClipboard(e.clipboardData)
+    const processClipboardPaste = useCallback(async (event: Event) => {
+      const clipboardData =
+        'clipboardData' in event ? (event as ClipboardEvent).clipboardData : null
+      const file = getFirstFileFromClipboard(clipboardData)
       if (!file) return
-      e.preventDefault()
+      event.preventDefault()
       await fileUploadRef.current?.processFile(file)
     }, [])
+
+    // Native listener: programmatic paste in Firefox uses a plain Event with clipboardData;
+    // React's onPaste can miss file payloads on that path in some browsers.
+    useLayoutEffect(() => {
+      const textarea = textareaRef.current
+      if (!textarea) return undefined
+      const listener = (event: Event) => {
+        void processClipboardPaste(event)
+      }
+      textarea.addEventListener('paste', listener)
+      return () => textarea.removeEventListener('paste', listener)
+    }, [processClipboardPaste, composerFloating, afterResultsComposerSlotTarget])
 
     const adjustTextareaHeight = useCallback(() => {
       if (!textareaRef.current) return
@@ -709,7 +723,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             onDragOver={mirror ? undefined : handleDragOver}
             onDragLeave={mirror ? undefined : handleDragLeave}
             onDrop={mirror ? undefined : handleDrop}
-            onPaste={mirror ? undefined : handlePaste}
+            onPaste={undefined}
             placeholder={
               isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
             }
@@ -789,7 +803,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
           <div className="textarea-actions">
             <FileUpload
-              ref={fileUploadRef}
+              ref={mirror ? undefined : fileUploadRef}
               attachedFiles={attachedFiles}
               setAttachedFiles={setAttachedFiles}
               input={input}

@@ -14,7 +14,10 @@ function isRecoverableClickError(message: string): boolean {
  * Opens the sign-up auth modal from the navbar. Uses a DOM click when Playwright
  * cannot hit the button (common in Firefox when the hero layer affects viewport checks).
  */
-export async function clickNavSignUpButton(page: Page): Promise<void> {
+export async function clickNavSignUpButton(
+  page: Page,
+  options?: { browserName?: string }
+): Promise<void> {
   await dismissTutorialOverlay(page)
   await ensureUnfoldedNavbar(page)
   await page.evaluate(() =>
@@ -24,6 +27,12 @@ export async function clickNavSignUpButton(page: Page): Promise<void> {
   const signUpBtn = page.getByTestId('nav-sign-up-button')
   await signUpBtn.scrollIntoViewIfNeeded().catch(() => {})
 
+  const domClick = async () => {
+    await signUpBtn.evaluate((el: HTMLElement) => {
+      el.click()
+    })
+  }
+
   const clickWithDomFallback = async () => {
     try {
       await signUpBtn.click({ timeout: 10000 })
@@ -32,13 +41,16 @@ export async function clickNavSignUpButton(page: Page): Promise<void> {
       if (!isRecoverableClickError(msg)) throw error
       await dismissTutorialOverlay(page)
       await ensureUnfoldedNavbar(page)
-      await signUpBtn.evaluate((el: HTMLElement) => {
-        el.click()
-      })
+      await domClick()
     }
   }
 
-  await clickWithDomFallback()
+  // Firefox often rejects Playwright clicks as "outside viewport" on the hero nav.
+  if (options?.browserName === 'firefox') {
+    await domClick()
+  } else {
+    await clickWithDomFallback()
+  }
 
   const authModal = page.getByTestId('auth-modal')
   if (!(await authModal.isVisible({ timeout: 2000 }).catch(() => false))) {

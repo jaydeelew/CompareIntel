@@ -406,7 +406,7 @@ test.describe('Registration and Onboarding', () => {
     await ensureUnfoldedNavbar(page)
 
     await test.step('Register and login', async () => {
-      await clickNavSignUpButton(page)
+      await clickNavSignUpButton(page, { browserName })
 
       await page.locator('input[type="email"]').first().fill(testEmail)
       await page.locator('input[type="password"]').first().fill(testPassword)
