@@ -38,9 +38,9 @@ def test_registry_file_value_includes_snapshot_overrides() -> None:
     assert is_thinking_model_registry_file_value("anthropic/claude-3.5-haiku") is False
 
 
-def test_kimi_k25_flagged_when_missing_from_bundled_snapshot() -> None:
-    """Align T badge + extra_body reasoning with streamed separable reasoning (see STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT)."""
-    assert get_openrouter_thinking_model_flag("moonshotai/kimi-k2.5") is None
+def test_kimi_k25_flagged_in_bundled_snapshot() -> None:
+    """Kimi K2.5 is in openrouter_models.json with reasoning params (no NOT_IN_SNAPSHOT override)."""
+    assert get_openrouter_thinking_model_flag("moonshotai/kimi-k2.5") is True
     assert resolve_is_thinking_model_for_ui("moonshotai/kimi-k2.5", {}) is True
     assert is_thinking_model_registry_file_value("moonshotai/kimi-k2.5") is True
     assert should_request_openrouter_reasoning_traces("moonshotai/kimi-k2.5") is True
