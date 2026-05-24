@@ -715,6 +715,8 @@ jobs:
       - name: Check Python dependencies for vulnerabilities
         run: |
           cd backend
+          # PYSEC-2026-161 (starlette Host header bypass): fixed in starlette>=1.0.1 (see requirements.in).
+          grep '^starlette==' requirements.txt
           # CVE-2026-4539 (pygments ReDoS): no fixed release on PyPI yet; remove ignore when pygments >2.19.2 ships.
           # PYSEC-2025-183 (pyjwt weak encryption): disputed by upstream; 2.12.1 is latest on PyPI.
           pip-audit -r requirements.txt \
