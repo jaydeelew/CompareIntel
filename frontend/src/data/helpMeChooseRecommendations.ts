@@ -62,6 +62,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'meta-llama/llama-3.3-70b-instruct', evidence: 'Avg. $0.21/1M tokens.' },
       { modelId: 'openai/gpt-5-nano', evidence: 'Avg. $0.22/1M tokens.' },
       { modelId: 'google/gemma-4-31b-it', evidence: 'Avg. $0.24/1M tokens.' },
+      { modelId: 'deepseek/deepseek-v3.2', evidence: 'Avg. $0.32/1M tokens.' },
       { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'Avg. $0.34/1M tokens.' },
       { modelId: 'meta-llama/llama-4-maverick', evidence: 'Avg. $0.38/1M tokens.' },
       { modelId: 'openai/gpt-4o-mini', evidence: 'Avg. $0.38/1M tokens.' },

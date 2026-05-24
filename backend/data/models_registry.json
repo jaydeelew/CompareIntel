@@ -298,6 +298,18 @@
         "supports_vision_probed": false
       },
       {
+        "id": "deepseek/deepseek-v3.2",
+        "name": "Deepseek V3.2",
+        "description": "DeepSeek-V3.2 is a large language model designed to harmonize high computational efficiency with strong reasoning and agentic tool-use performance.",
+        "category": "Language",
+        "provider": "DeepSeek",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "supports_vision_probed": false,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "deepseek/deepseek-v4-flash",
         "name": "Deepseek V4 Flash",
         "description": "DeepSeek V4 Flash is an efficiency-optimized Mixture-of-Experts model from DeepSeek with 284B total parameters and 13B activated parameters, supporting a 1M-token context window.",
@@ -319,6 +331,18 @@
         "knowledge_cutoff": "January 2025",
         "is_thinking_model": true,
         "supports_vision_probed": false
+      },
+      {
+        "id": "deepseek/deepseek-v4-pro",
+        "name": "Deepseek V4 Pro",
+        "description": "DeepSeek V4 Pro is a large-scale Mixture-of-Experts model from DeepSeek with 1.6T total parameters and 49B activated parameters, supporting a 1M-token context window.",
+        "category": "Language",
+        "provider": "DeepSeek",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "supports_vision_probed": false,
+        "knowledge_cutoff": null
       }
     ],
     "Google": [
@@ -1316,6 +1340,7 @@
     "anthropic/claude-3.5-haiku",
     "cohere/command-r7b-12-2024",
     "deepseek/deepseek-chat-v3.1",
+    "deepseek/deepseek-v3.2",
     "deepseek/deepseek-v3.2-exp",
     "deepseek/deepseek-v4-flash",
     "google/gemini-2.5-flash",
@@ -1359,6 +1384,7 @@
     "bytedance-seed/seedream-4.5",
     "cohere/command-r-plus-08-2024",
     "deepseek/deepseek-r1",
+    "deepseek/deepseek-v4-pro",
     "google/gemini-2.5-flash-image",
     "google/gemini-3.1-flash-image-preview",
     "meta-llama/llama-4-maverick",
