@@ -217,6 +217,7 @@ export function SavedSelectionsDropdown({
       type="button"
       className={`saved-selections-button ${showDropdown ? 'active' : ''}`}
       aria-label="Save or load model selections"
+      data-testid="saved-selections-trigger"
       onClick={() => {
         setShowDropdown(!showDropdown)
         setIsInSaveMode(false)
@@ -263,7 +264,7 @@ export function SavedSelectionsDropdown({
       {showDropdown &&
         (() => {
           const dropdownPanel = (
-            <div className="saved-selections-dropdown">
+            <div className="saved-selections-dropdown" data-testid="saved-selections-dropdown">
               <div className="saved-selections-content">
                 <div className="saved-selections-header">
                   <div className="saved-selections-header-title-cluster">
@@ -381,6 +382,7 @@ export function SavedSelectionsDropdown({
                   <button
                     type="button"
                     className="saved-selections-add-btn"
+                    data-testid="saved-selections-add-btn"
                     onClick={() => {
                       if (!canSaveMoreSelections) {
                         showNotification(

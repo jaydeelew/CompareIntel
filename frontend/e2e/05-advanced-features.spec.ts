@@ -43,6 +43,33 @@ async function safeWait(page: Page, ms: number) {
   }
 }
 
+function savedSelectionsTrigger(page: Page) {
+  return page.getByTestId('saved-selections-trigger').filter({ visible: true }).first()
+}
+
+async function openSavedSelectionsDropdown(page: Page) {
+  const trigger = savedSelectionsTrigger(page)
+  await expect(trigger).toBeVisible({ timeout: 10000 })
+  const isOpen = await trigger.evaluate(el => el.classList.contains('active'))
+  if (!isOpen) {
+    await trigger.click()
+  }
+  const dropdown = page.getByTestId('saved-selections-dropdown')
+  await expect(dropdown).toBeVisible({ timeout: 10000 })
+  return { trigger, dropdown }
+}
+
+async function closeSavedSelectionsDropdown(page: Page) {
+  const trigger = savedSelectionsTrigger(page)
+  const isOpen = await trigger.evaluate(el => el.classList.contains('active')).catch(() => false)
+  if (isOpen) {
+    await trigger.click()
+  }
+  await expect(page.getByTestId('saved-selections-dropdown'))
+    .toBeHidden({ timeout: 5000 })
+    .catch(() => {})
+}
+
 test.describe('Advanced Features', () => {
   test('User can enable web search for supported models', async ({
     authenticatedPage,
@@ -332,9 +359,7 @@ test.describe('Advanced Features', () => {
     test.setTimeout(60000) // 60 seconds for this test
     // Skip if saved selections feature is not available
     test.skip(
-      !(await authenticatedPage
-        .locator('button[class*="saved"], button[class*="selection"]')
-        .first()
+      !(await savedSelectionsTrigger(authenticatedPage)
         .isVisible({ timeout: 2000 })
         .catch(() => false)),
       'Saved selections feature not available'
@@ -362,39 +387,23 @@ test.describe('Advanced Features', () => {
       }
 
       // Check if we have a saved selection, if not create one
-      const savedSelectionsButton = authenticatedPage.locator(
-        'button[class*="saved"], ' +
-          'button[class*="selection"], ' +
-          '[data-testid*="saved-selection"]'
-      )
-
-      const hasSavedSelectionsButton = await savedSelectionsButton
-        .first()
+      const hasSavedSelectionsButton = await savedSelectionsTrigger(authenticatedPage)
         .isVisible({ timeout: 2000 })
         .catch(() => false)
 
       if (hasSavedSelectionsButton) {
         if (authenticatedPage.isClosed()) return
-        await savedSelectionsButton.first().click()
+        const { dropdown } = await openSavedSelectionsDropdown(authenticatedPage)
         await safeWait(authenticatedPage, 500)
 
-        const selectionList = authenticatedPage.locator(
-          '[class*="saved-selection"], ' + '[class*="selection-list"]'
-        )
-        const _hasList = await selectionList
-          .first()
-          .isVisible({ timeout: 2000 })
-          .catch(() => false)
-
-        // Check if saved selections exist
-        const savedSelectionItems = selectionList.locator('.saved-selection-item')
-        const itemCount = await savedSelectionItems.count()
+        // Count items inside the portaled dropdown panel (not the trigger container).
+        const itemCount = await dropdown.locator('.saved-selection-item').count()
 
         // If no saved selections exist, create one
         if (itemCount === 0) {
           if (authenticatedPage.isClosed()) return
-          // Close dropdown
-          await authenticatedPage.keyboard.press('Escape')
+          // Close dropdown before selecting models (Escape is unreliable; toggle the trigger).
+          await closeSavedSelectionsDropdown(authenticatedPage)
           await safeWait(authenticatedPage, 500)
 
           // Select models
@@ -445,22 +454,11 @@ test.describe('Advanced Features', () => {
           await safeWait(authenticatedPage, 500)
 
           // Save selection - the save button should be in the saved selections dropdown
-          // First open the dropdown again
           if (authenticatedPage.isClosed()) return
-          const savedSelectionsButton2 = authenticatedPage.locator(
-            'button[class*="saved"], ' +
-              'button[class*="selection"], ' +
-              '[data-testid*="saved-selection"]'
-          )
-          await savedSelectionsButton2.first().click()
-          await safeWait(authenticatedPage, 500)
-
-          // Enter save mode via the add button inside the portaled dropdown (avoids global "Save" matches).
-          const dropdown = authenticatedPage.locator('.saved-selections-dropdown')
-          await expect(dropdown).toBeVisible({ timeout: 10000 })
+          const { dropdown: saveDropdown } = await openSavedSelectionsDropdown(authenticatedPage)
           await safeWait(authenticatedPage, 400)
 
-          const addSelectionBtn = dropdown.locator('.saved-selections-add-btn')
+          const addSelectionBtn = saveDropdown.getByTestId('saved-selections-add-btn')
           await expect(addSelectionBtn).toBeVisible({ timeout: 10000 })
           await addSelectionBtn.scrollIntoViewIfNeeded().catch(() => {})
           if (browserName === 'firefox') {
@@ -482,9 +480,7 @@ test.describe('Advanced Features', () => {
           await safeWait(authenticatedPage, 500)
 
           // Scoped to dropdown — Firefox treats off-screen / portaled inputs as not visible otherwise.
-          const nameInput = authenticatedPage.locator(
-            '.saved-selections-dropdown .saved-selections-name-input'
-          )
+          const nameInput = saveDropdown.locator('.saved-selections-name-input')
           const nameInputTimeout = browserName === 'firefox' ? 15000 : 5000
           await nameInput.scrollIntoViewIfNeeded().catch(() => {})
           await expect(nameInput).toBeVisible({ timeout: nameInputTimeout })
@@ -517,23 +513,13 @@ test.describe('Advanced Features', () => {
 
           // Close dropdown and reopen to refresh the list
           if (!authenticatedPage.isClosed()) {
-            try {
-              await authenticatedPage.keyboard.press('Escape', { timeout: 3000 })
-            } catch {
-              // If Escape fails, try clicking outside or using a different method
-              await authenticatedPage.mouse.click(10, 10).catch(() => {})
-            }
+            await closeSavedSelectionsDropdown(authenticatedPage)
             await safeWait(authenticatedPage, 300)
           }
         } else {
           // Close dropdown to prepare for loading
           if (!authenticatedPage.isClosed()) {
-            try {
-              await authenticatedPage.keyboard.press('Escape', { timeout: 3000 })
-            } catch {
-              // If Escape fails, try clicking outside or using a different method
-              await authenticatedPage.mouse.click(10, 10).catch(() => {})
-            }
+            await closeSavedSelectionsDropdown(authenticatedPage)
             await safeWait(authenticatedPage, 300)
           }
         }
@@ -547,15 +533,7 @@ test.describe('Advanced Features', () => {
       }
 
       // Open saved selections dropdown
-      const savedSelectionsButton = authenticatedPage.locator(
-        'button[class*="saved"], ' +
-          'button[class*="selection"], ' +
-          '[data-testid*="saved-selection"]'
-      )
-
-      await expect(savedSelectionsButton.first()).toBeVisible({ timeout: 5000 })
-      if (authenticatedPage.isClosed()) return
-      await savedSelectionsButton.first().click()
+      await openSavedSelectionsDropdown(authenticatedPage)
       await safeWait(authenticatedPage, 500) // Wait for dropdown to open and list to render (reduced from 1500)
 
       // Find saved selection items - wait for them to appear
@@ -568,9 +546,10 @@ test.describe('Advanced Features', () => {
         itemCount = await selectionItems.count()
         if (itemCount > 0) break
         await safeWait(authenticatedPage, 500)
-        // Try clicking the button again to refresh
+        // Try reopening the dropdown to refresh the list
         if (i < 4 && !authenticatedPage.isClosed()) {
-          await savedSelectionsButton.first().click()
+          await closeSavedSelectionsDropdown(authenticatedPage)
+          await openSavedSelectionsDropdown(authenticatedPage)
           await safeWait(authenticatedPage, 500)
         }
       }

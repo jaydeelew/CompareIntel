@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures'
+import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 
 /**
  * E2E Tests: Authenticated User Comparison Flow
@@ -574,27 +575,19 @@ test.describe('Authenticated User Comparison Flow', () => {
         await modelCheckboxes.first().check()
       }
 
-      await authenticatedPage.getByTestId('comparison-submit-button').click()
-      // Wait for load state with fallback - networkidle can be too strict
-      try {
-        await authenticatedPage.waitForLoadState('load', { timeout: 15000 })
-      } catch {
-        await authenticatedPage
-          .waitForLoadState('domcontentloaded', { timeout: 5000 })
-          .catch(() => {})
-      }
+      await submitAndAwaitCompareStream(authenticatedPage)
     })
 
     await test.step('Start new comparison', async () => {
-      // Follow-up UI mounts after streaming settles; WebKit CI sometimes needs extra time.
-      await expect(authenticatedPage.locator('.follow-up-header')).toBeVisible({ timeout: 45000 })
+      // Follow-up UI mounts after streaming settles; Firefox/WebKit CI sometimes need extra time.
+      const followUpHeader = authenticatedPage.locator(
+        '.follow-up-header:has-text("Start over"), h2:has-text("Start over")'
+      )
+      await expect(followUpHeader.first()).toBeVisible({ timeout: 45000 })
+
       const newComparisonButton = authenticatedPage
         .getByTestId('exit-follow-up-button')
-        .or(
-          authenticatedPage.locator(
-            'button.new-inquiry-button, button[title*="Exit follow up"], button[aria-label*="Exit follow up"]'
-          )
-        )
+        .filter({ visible: true })
         .first()
 
       await expect(newComparisonButton).toBeVisible({ timeout: 45000 })
