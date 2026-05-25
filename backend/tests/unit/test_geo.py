@@ -6,9 +6,12 @@ Tests cover:
 - get_timezone_from_request: timezone precedence, user preferences, validation
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
+
+pytestmark = pytest.mark.unit
+
+
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.utils.geo import get_location_from_ip, get_timezone_from_request
 

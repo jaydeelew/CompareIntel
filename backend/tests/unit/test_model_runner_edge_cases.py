@@ -8,6 +8,11 @@ Tests cover:
 - Streaming failures
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from unittest.mock import patch
 
 from app.model_runner import (

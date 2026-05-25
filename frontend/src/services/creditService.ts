@@ -130,7 +130,7 @@ export async function getCreditBalance(fingerprint?: string): Promise<CreditBala
   const queryString = params.toString()
   const response = await apiClient.get<CreditBalance>(
     `/credits/balance${queryString ? `?${queryString}` : ''}`,
-    { enableCache: false }
+    { enableCache: false, retry: false }
   )
   return response.data
 }
@@ -147,7 +147,8 @@ export async function getCreditUsage(
   params.append('per_page', String(perPage))
   const queryString = params.toString()
   const response = await apiClient.get<CreditUsageHistory>(
-    `/credits/usage${queryString ? `?${queryString}` : ''}`
+    `/credits/usage${queryString ? `?${queryString}` : ''}`,
+    { retry: false }
   )
   return response.data
 }

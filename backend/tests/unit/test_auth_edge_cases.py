@@ -9,6 +9,11 @@ Tests cover:
 - Edge cases in token generation
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from datetime import timedelta
 
 from fastapi import status

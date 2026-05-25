@@ -1,5 +1,10 @@
 """Vision probe helpers and skip paths (no live API in these tests)."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from unittest.mock import MagicMock, patch
 
 from app.llm.vision_probe import (

@@ -9,6 +9,11 @@ Tests cover:
 - Error handling scenarios
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
 from fastapi import status
 
 

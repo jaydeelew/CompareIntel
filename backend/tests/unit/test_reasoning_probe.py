@@ -1,5 +1,10 @@
 """Reasoning probe skips and shape (no live API in these tests)."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from app.llm.reasoning_probe import ReasoningProbeResult, probe_streams_separable_reasoning
 
 

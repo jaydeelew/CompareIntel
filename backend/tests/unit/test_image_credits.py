@@ -1,5 +1,10 @@
 """Unit tests for image credit calculation."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from decimal import Decimal
 from unittest.mock import patch
 

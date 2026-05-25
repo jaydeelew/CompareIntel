@@ -8,6 +8,11 @@ Tests cover:
 - Common utilities used across the application
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 

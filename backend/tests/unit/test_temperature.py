@@ -7,6 +7,11 @@ Tests cover:
 - Temperature clamping behavior
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from app.llm.registry import get_model_supports_temperature
 from app.model_runner import call_openrouter_streaming
 

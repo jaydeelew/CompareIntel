@@ -8,6 +8,11 @@ Tests cover:
 - top_p and max_tokens validation
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
 from fastapi import status
 
 

@@ -23,7 +23,7 @@ const UPDATE_THROTTLE_MS = 50
 const EMPTY_RESPONSE_ERROR = 'Error: No response received'
 
 /** Normalize image URL for deduplication - handles data URLs with encoding/padding variations. */
-function normalizeImageUrlKey(url: string): string {
+export function normalizeImageUrlKey(url: string): string {
   if (!url || typeof url !== 'string') return url || ''
   const trimmed = url.trim()
   if (trimmed.startsWith('data:') && trimmed.includes('base64,')) {

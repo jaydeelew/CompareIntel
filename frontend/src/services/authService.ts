@@ -161,7 +161,8 @@ export async function resetPassword(
  * @throws {ApiError} If request fails or user is not authenticated
  */
 export async function getCurrentUser(): Promise<User> {
-  const response = await apiClient.get<User | null>('/auth/me')
+  // Never cache/dedupe: anonymous vs authenticated differs by cookie session.
+  const response = await apiClient.get<User | null>('/auth/me', { enableCache: false })
   if (response.data === null) {
     throw new AuthenticationError('Not authenticated')
   }

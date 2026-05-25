@@ -1,5 +1,10 @@
 """Hybrid vision support resolution (probed registry overrides metadata)."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from app.llm.registry import (
     KNOWN_NON_VISION_MODEL_IDS,
     get_model_supports_vision,

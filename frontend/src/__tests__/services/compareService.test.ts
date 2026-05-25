@@ -1,30 +1,23 @@
 /**
- * Tests for compareService
- *
- * Tests comparison endpoints, streaming, rate limits, and error handling.
+ * Tests for compareService (MSW intercepts HTTP; uses real apiClient).
  */
 
+import { http, HttpResponse } from 'msw'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { apiClient } from '../../services/api/client'
 import { ApiError } from '../../services/api/errors'
 import * as compareService from '../../services/compareService'
 import { createModelId } from '../../types'
 import { STREAM_EVENT_TYPE, type StreamEvent } from '../../types'
+import { apiPathGlob } from '../msw/paths'
+import { server } from '../msw/server'
 import { createMockRateLimitStatus, createMockStreamEvent } from '../utils'
 
-// Mock the API client
-vi.mock('../../services/api/client', () => ({
-  apiClient: {
-    post: vi.fn(),
-    get: vi.fn(),
-    stream: vi.fn(),
-  },
-}))
-
 describe('compareService', () => {
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
   beforeEach(() => {
-    vi.clearAllMocks()
+    server.resetHandlers()
   })
 
   describe('compareStream', () => {
@@ -34,15 +27,19 @@ describe('compareService', () => {
         models: [createModelId('gpt-4')],
       }
 
-      const mockStream = new ReadableStream<Uint8Array>()
-      vi.mocked(apiClient.stream).mockResolvedValue(mockStream)
+      const mockStreamBody = new ReadableStream<Uint8Array>()
+      server.use(
+        http.post(apiPathGlob('/api/compare-stream'), async ({ request }) => {
+          const body = (await request.json()) as Record<string, unknown>
+          expect(body.input_data).toBe(payload.input_data)
+          return new HttpResponse(mockStreamBody, {
+            headers: { 'Content-Type': 'text/event-stream' },
+          })
+        })
+      )
 
       const result = await compareService.compareStream(payload)
-
-      expect(apiClient.stream).toHaveBeenCalledWith('/compare-stream', payload, {
-        signal: undefined,
-      })
-      expect(result).toBe(mockStream)
+      expect(result).toBeDefined()
     })
 
     it('should handle null stream response', async () => {
@@ -51,23 +48,34 @@ describe('compareService', () => {
         models: [createModelId('gpt-4')],
       }
 
-      vi.mocked(apiClient.stream).mockResolvedValue(null)
+      server.use(
+        http.post(
+          apiPathGlob('/api/compare-stream'),
+          () =>
+            new HttpResponse(null, {
+              status: 200,
+              headers: { 'Content-Type': 'text/event-stream' },
+            })
+        )
+      )
 
       const result = await compareService.compareStream(payload)
-
       expect(result).toBeNull()
     })
 
-    it('should handle streaming errors', async () => {
+    it('should handle streaming errors', () => {
       const payload = {
         input_data: 'test input',
         models: [createModelId('gpt-4')],
       }
 
-      const error = new ApiError('Stream failed', 500, 'Internal Server Error')
-      vi.mocked(apiClient.stream).mockRejectedValue(error)
+      server.use(
+        http.post(apiPathGlob('/api/compare-stream'), () =>
+          HttpResponse.json({ detail: 'Stream failed' }, { status: 500 })
+        )
+      )
 
-      await expect(compareService.compareStream(payload)).rejects.toThrow(ApiError)
+      return expect(compareService.compareStream(payload)).rejects.toThrow(ApiError)
     })
   })
 
@@ -165,52 +173,43 @@ describe('compareService', () => {
   describe('getRateLimitStatus', () => {
     it('should get rate limit status for authenticated user', async () => {
       const mockStatus = createMockRateLimitStatus()
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockStatus })
-
-      const result = await compareService.getRateLimitStatus()
-
-      // getRateLimitStatus now includes timezone parameter and cache options
-      expect(apiClient.get).toHaveBeenCalledWith(
-        expect.stringMatching(/^\/rate-limit-status\?timezone=/),
-        expect.objectContaining({
-          cacheTTL: 30000,
-          _cacheKey: expect.stringMatching(/^GET:\/rate-limit-status\?timezone=/),
+      server.use(
+        http.get(apiPathGlob('/api/rate-limit-status'), ({ request }) => {
+          const u = new URL(request.url)
+          expect(u.searchParams.get('timezone')).toBe(userTimezone)
+          expect(u.searchParams.has('fingerprint')).toBe(false)
+          return HttpResponse.json(mockStatus)
         })
       )
+
+      const result = await compareService.getRateLimitStatus()
       expect(result).toEqual(mockStatus)
     })
 
     it('should get rate limit status with fingerprint', async () => {
       const fingerprint = 'test-fingerprint'
       const mockStatus = createMockRateLimitStatus({ user_type: 'anonymous' })
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockStatus })
-
-      const result = await compareService.getRateLimitStatus(fingerprint)
-
-      // getRateLimitStatus now includes timezone parameter and cache options
-      expect(apiClient.get).toHaveBeenCalledWith(
-        expect.stringMatching(
-          new RegExp(
-            `^/rate-limit-status\\?fingerprint=${encodeURIComponent(fingerprint)}&timezone=`
-          )
-        ),
-        expect.objectContaining({
-          cacheTTL: 30000,
-          _cacheKey: expect.stringMatching(
-            new RegExp(
-              `^GET:/rate-limit-status\\?fingerprint=${encodeURIComponent(fingerprint)}&timezone=`
-            )
-          ),
+      server.use(
+        http.get(apiPathGlob('/api/rate-limit-status'), ({ request }) => {
+          const u = new URL(request.url)
+          expect(u.searchParams.get('timezone')).toBe(userTimezone)
+          expect(u.searchParams.get('fingerprint')).toBe(fingerprint)
+          return HttpResponse.json(mockStatus)
         })
       )
+
+      const result = await compareService.getRateLimitStatus(fingerprint)
       expect(result).toEqual(mockStatus)
     })
 
-    it('should handle API errors', async () => {
-      const error = new ApiError('Rate limit check failed', 500, 'Internal Server Error')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+    it('should handle API errors', () => {
+      server.use(
+        http.get(apiPathGlob('/api/rate-limit-status'), () =>
+          HttpResponse.json({ detail: 'Rate limit check failed' }, { status: 500 })
+        )
+      )
 
-      await expect(compareService.getRateLimitStatus()).rejects.toThrow(ApiError)
+      return expect(compareService.getRateLimitStatus()).rejects.toThrow(ApiError)
     })
   })
 
@@ -221,15 +220,13 @@ describe('compareService', () => {
         is_development: true,
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockStatus })
+      server.use(
+        http.get(apiPathGlob('/api/anonymous-mock-mode-status'), () =>
+          HttpResponse.json(mockStatus)
+        )
+      )
 
       const result = await compareService.getAnonymousMockModeStatus()
-
-      // getAnonymousMockModeStatus now includes cache options
-      expect(apiClient.get).toHaveBeenCalledWith('/anonymous-mock-mode-status', {
-        cacheTTL: 300000,
-        _cacheKey: 'GET:/anonymous-mock-mode-status',
-      })
       expect(result).toEqual(mockStatus)
     })
   })
@@ -247,11 +244,9 @@ describe('compareService', () => {
         },
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockStats })
+      server.use(http.get(apiPathGlob('/api/model-stats'), () => HttpResponse.json(mockStats)))
 
       const result = await compareService.getModelStats()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/model-stats')
       expect(result).toEqual(mockStats.model_stats)
     })
   })
@@ -259,22 +254,31 @@ describe('compareService', () => {
   describe('resetRateLimit', () => {
     it('should reset rate limit for authenticated user', async () => {
       const mockResponse = { message: 'Rate limit reset' }
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/dev/reset-rate-limit'), async ({ request }) => {
+          expect(request.method).toBe('POST')
+          const json = await request.json()
+          expect(json).toEqual({})
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await compareService.resetRateLimit()
-
-      expect(apiClient.post).toHaveBeenCalledWith('/dev/reset-rate-limit', {})
       expect(result).toEqual(mockResponse)
     })
 
     it('should reset rate limit with fingerprint', async () => {
       const fingerprint = 'test-fingerprint'
       const mockResponse = { message: 'Rate limit reset' }
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/dev/reset-rate-limit'), async ({ request }) => {
+          const body = (await request.json()) as { fingerprint?: string }
+          expect(body.fingerprint).toBe(fingerprint)
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await compareService.resetRateLimit(fingerprint)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/dev/reset-rate-limit', { fingerprint })
       expect(result).toEqual(mockResponse)
     })
   })

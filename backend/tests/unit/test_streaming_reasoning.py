@@ -1,5 +1,10 @@
 """Unit tests for streaming reasoning payloads (UI channel, not persisted)."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from unittest.mock import MagicMock
 
 from app.llm.streaming import REASONING_STREAM_TYPE, _reasoning_stream_payload

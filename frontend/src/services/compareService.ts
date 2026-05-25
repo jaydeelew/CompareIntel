@@ -210,9 +210,6 @@ export async function processStreamEvents(
 /**
  * Get current rate limit status for the user
  *
- * Uses short-term caching (30 seconds) to prevent duplicate requests
- * while still keeping data relatively fresh.
- *
  * @param fingerprint - Optional browser fingerprint for unregistered users
  * @returns Promise resolving to rate limit status
  * @throws {ApiError} If the request fails
@@ -226,14 +223,11 @@ export async function getRateLimitStatus(fingerprint?: string): Promise<RateLimi
   }
   params.append('timezone', userTimezone)
   const queryString = params.toString()
-  const cacheKey = fingerprint
-    ? `GET:/rate-limit-status?fingerprint=${encodeURIComponent(fingerprint)}&timezone=${userTimezone}`
-    : `GET:/rate-limit-status?timezone=${userTimezone}`
 
   const response = await apiClient.get<RateLimitStatus>(`/rate-limit-status?${queryString}`, {
-    // Cache for 30 seconds - balances freshness with deduplication
-    cacheTTL: 30 * 1000,
-    _cacheKey: cacheKey,
+    // Avoid GET dedupe on errors (Vitest stray unhandled rejections); keep calls cheap server-side instead.
+    enableCache: false,
+    retry: false,
   })
   return response.data
 }
@@ -251,6 +245,7 @@ export async function getAnonymousMockModeStatus(): Promise<AnonymousMockModeSta
     // Cache for 5 minutes - mock mode status changes infrequently
     cacheTTL: 5 * 60 * 1000,
     _cacheKey: 'GET:/anonymous-mock-mode-status',
+    retry: false,
   })
   return response.data
 }
@@ -262,7 +257,9 @@ export async function getAnonymousMockModeStatus(): Promise<AnonymousMockModeSta
  * @throws {ApiError} If the request fails
  */
 export async function getModelStats(): Promise<ModelStats> {
-  const response = await apiClient.get<{ model_stats: ModelStats }>('/model-stats')
+  const response = await apiClient.get<{ model_stats: ModelStats }>('/model-stats', {
+    retry: false,
+  })
   return response.data.model_stats
 }
 
@@ -275,7 +272,9 @@ export async function getModelStats(): Promise<ModelStats> {
  */
 export async function resetRateLimit(fingerprint?: string): Promise<{ message: string }> {
   const payload = fingerprint ? { fingerprint } : {}
-  const response = await apiClient.post<{ message: string }>('/dev/reset-rate-limit', payload)
+  const response = await apiClient.post<{ message: string }>('/dev/reset-rate-limit', payload, {
+    retry: false,
+  })
   return response.data
 }
 

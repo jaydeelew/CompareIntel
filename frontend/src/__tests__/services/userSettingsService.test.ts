@@ -1,23 +1,15 @@
 /**
- * Tests for userSettingsService
- *
- * Tests user preferences/settings API operations and error handling.
+ * Tests for userSettingsService (MSW intercepts HTTP; uses real apiClient).
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { describe, it, expect, beforeEach } from 'vitest'
 
-import { apiClient } from '../../services/api/client'
 import { ApiError } from '../../services/api/errors'
 import * as userSettingsService from '../../services/userSettingsService'
 import type { UserPreferences } from '../../services/userSettingsService'
-
-// Mock the API client
-vi.mock('../../services/api/client', () => ({
-  apiClient: {
-    get: vi.fn(),
-    put: vi.fn(),
-  },
-}))
+import { apiPathGlob } from '../msw/paths'
+import { server } from '../msw/server'
 
 describe('userSettingsService', () => {
   const mockPreferences: UserPreferences = {
@@ -35,16 +27,16 @@ describe('userSettingsService', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    server.resetHandlers()
   })
 
   describe('getUserPreferences', () => {
     it('should get user preferences', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockPreferences })
+      server.use(
+        http.get(apiPathGlob('/api/user/preferences'), () => HttpResponse.json(mockPreferences))
+      )
 
       const result = await userSettingsService.getUserPreferences()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/user/preferences', { enableCache: false })
       expect(result).toEqual(mockPreferences)
     })
 
@@ -53,23 +45,30 @@ describe('userSettingsService', () => {
         ...mockPreferences,
         zipcode: null,
       }
-      vi.mocked(apiClient.get).mockResolvedValue({ data: prefsWithoutZipcode })
+      server.use(
+        http.get(apiPathGlob('/api/user/preferences'), () => HttpResponse.json(prefsWithoutZipcode))
+      )
 
       const result = await userSettingsService.getUserPreferences()
-
       expect(result.zipcode).toBeNull()
     })
 
     it('should handle authentication errors', async () => {
-      const error = new ApiError('Not authenticated', 401, 'Unauthorized')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+      server.use(
+        http.get(apiPathGlob('/api/user/preferences'), () =>
+          HttpResponse.json({ detail: 'Not authenticated' }, { status: 401 })
+        )
+      )
 
       await expect(userSettingsService.getUserPreferences()).rejects.toThrow(ApiError)
     })
 
     it('should handle server errors', async () => {
-      const error = new ApiError('Server error', 500, 'Internal Server Error')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+      server.use(
+        http.get(apiPathGlob('/api/user/preferences'), () =>
+          HttpResponse.json({ detail: 'Server error' }, { status: 500 })
+        )
+      )
 
       await expect(userSettingsService.getUserPreferences()).rejects.toThrow(ApiError)
     })
@@ -85,11 +84,14 @@ describe('userSettingsService', () => {
         ...mockPreferences,
         ...updateData,
       }
-      vi.mocked(apiClient.put).mockResolvedValue({ data: updatedPrefs })
+      server.use(
+        http.put(apiPathGlob('/api/user/preferences'), async ({ request }) => {
+          expect(await request.json()).toEqual(updateData)
+          return HttpResponse.json(updatedPrefs)
+        })
+      )
 
       const result = await userSettingsService.updateUserPreferences(updateData)
-
-      expect(apiClient.put).toHaveBeenCalledWith('/user/preferences', updateData)
       expect(result).toEqual(updatedPrefs)
     })
 
@@ -99,11 +101,14 @@ describe('userSettingsService', () => {
         ...mockPreferences,
         zipcode: '90210',
       }
-      vi.mocked(apiClient.put).mockResolvedValue({ data: updatedPrefs })
+      server.use(
+        http.put(apiPathGlob('/api/user/preferences'), async ({ request }) => {
+          expect(await request.json()).toEqual(updateData)
+          return HttpResponse.json(updatedPrefs)
+        })
+      )
 
       const result = await userSettingsService.updateUserPreferences(updateData)
-
-      expect(apiClient.put).toHaveBeenCalledWith('/user/preferences', updateData)
       expect(result.zipcode).toBe('90210')
     })
 
@@ -113,11 +118,14 @@ describe('userSettingsService', () => {
         ...mockPreferences,
         remember_state_on_logout: true,
       }
-      vi.mocked(apiClient.put).mockResolvedValue({ data: updatedPrefs })
+      server.use(
+        http.put(apiPathGlob('/api/user/preferences'), async ({ request }) => {
+          expect(await request.json()).toEqual(updateData)
+          return HttpResponse.json(updatedPrefs)
+        })
+      )
 
       const result = await userSettingsService.updateUserPreferences(updateData)
-
-      expect(apiClient.put).toHaveBeenCalledWith('/user/preferences', updateData)
       expect(result.remember_state_on_logout).toBe(true)
     })
 
@@ -127,16 +135,23 @@ describe('userSettingsService', () => {
         ...mockPreferences,
         zipcode: null,
       }
-      vi.mocked(apiClient.put).mockResolvedValue({ data: updatedPrefs })
+      server.use(
+        http.put(apiPathGlob('/api/user/preferences'), async ({ request }) => {
+          expect(await request.json()).toEqual(updateData)
+          return HttpResponse.json(updatedPrefs)
+        })
+      )
 
       const result = await userSettingsService.updateUserPreferences(updateData)
-
       expect(result.zipcode).toBeNull()
     })
 
     it('should handle validation errors for invalid zipcode', async () => {
-      const error = new ApiError('Invalid zipcode format', 422, 'Unprocessable Entity')
-      vi.mocked(apiClient.put).mockRejectedValue(error)
+      server.use(
+        http.put(apiPathGlob('/api/user/preferences'), () =>
+          HttpResponse.json({ detail: 'Invalid zipcode format' }, { status: 422 })
+        )
+      )
 
       await expect(
         userSettingsService.updateUserPreferences({ zipcode: 'invalid' })
@@ -144,8 +159,11 @@ describe('userSettingsService', () => {
     })
 
     it('should handle authentication errors', async () => {
-      const error = new ApiError('Not authenticated', 401, 'Unauthorized')
-      vi.mocked(apiClient.put).mockRejectedValue(error)
+      server.use(
+        http.put(apiPathGlob('/api/user/preferences'), () =>
+          HttpResponse.json({ detail: 'Not authenticated' }, { status: 401 })
+        )
+      )
 
       await expect(userSettingsService.updateUserPreferences({ zipcode: '12345' })).rejects.toThrow(
         ApiError
@@ -153,8 +171,11 @@ describe('userSettingsService', () => {
     })
 
     it('should handle server errors', async () => {
-      const error = new ApiError('Server error', 500, 'Internal Server Error')
-      vi.mocked(apiClient.put).mockRejectedValue(error)
+      server.use(
+        http.put(apiPathGlob('/api/user/preferences'), () =>
+          HttpResponse.json({ detail: 'Server error' }, { status: 500 })
+        )
+      )
 
       await expect(userSettingsService.updateUserPreferences({ zipcode: '12345' })).rejects.toThrow(
         ApiError

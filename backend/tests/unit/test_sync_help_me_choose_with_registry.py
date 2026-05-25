@@ -1,5 +1,10 @@
 """Tests for the sync_help_me_choose_with_registry script."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 import json
 import sys
 import textwrap

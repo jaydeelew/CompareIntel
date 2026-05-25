@@ -9,9 +9,12 @@ Tests cover:
 - Error handling
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
+
+pytestmark = pytest.mark.unit
+
+
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.models import AppSettings
 from app.search.base import SearchResult

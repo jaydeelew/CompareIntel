@@ -1,5 +1,10 @@
 """Tests for vision multimodal message assembly (attached images without prompt placeholders)."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from unittest.mock import patch
 
 from app.llm.streaming import _build_user_message_content

@@ -29,25 +29,17 @@ export interface AvailableModelsResponse {
 /**
  * Get list of available AI models
  *
- * Uses caching with longer TTL since models list is relatively static.
+ * Listed without client-side GET caching or request dedupe: the models payload can flip (trials/tiers),
+ * and in-flight dedupe has caused orphaned rejections in edge cases after errors.
  *
- * @param skipCache - If true, bypasses AND invalidates cache to get fresh data (e.g., after registration or verification)
+ * @param _skipCache - Kept for call-site compatibility (`MainPage`, etc.).
  * @returns Promise resolving to available models
  * @throws {ApiError} If the request fails
  */
-export async function getAvailableModels(skipCache = false): Promise<AvailableModelsResponse> {
-  // When skipCache is requested, delete the existing cache entry first
-  // This prevents stale data from being returned by subsequent non-skipCache calls
-  if (skipCache) {
-    apiClient.deleteCache('GET:/models')
-  }
-
+export async function getAvailableModels(_skipCache = false): Promise<AvailableModelsResponse> {
   const response = await apiClient.get<AvailableModelsResponse>('/models', {
-    // Cache models for 10 minutes (they're relatively static)
-    // But allow bypassing cache when user status changes (registration, verification)
-    cacheTTL: skipCache ? 0 : 10 * 60 * 1000,
-    enableCache: !skipCache,
-    _cacheKey: 'GET:/models',
+    enableCache: false,
+    retry: false,
   })
   return response.data
 }

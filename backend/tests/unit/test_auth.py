@@ -9,6 +9,11 @@ Tests cover:
 - Password reset
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from fastapi import status
 
 from app.models import User

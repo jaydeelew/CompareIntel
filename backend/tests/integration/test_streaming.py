@@ -11,6 +11,11 @@ Tests cover the core differentiating feature of CompareIntel:
 - Mock mode streaming behavior
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
 import json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal

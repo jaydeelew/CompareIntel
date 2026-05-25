@@ -1,5 +1,10 @@
 """Unit tests for OpenRouter cost-based credit helpers."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from decimal import Decimal
 from unittest.mock import patch
 

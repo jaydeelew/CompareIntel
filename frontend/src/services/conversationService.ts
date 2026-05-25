@@ -67,7 +67,10 @@ export interface BreakoutConversationRequest {
  * @throws {ApiError} If the request fails or user is not authenticated
  */
 export async function getConversations(): Promise<ConversationSummary[]> {
-  const response = await apiClient.get<ConversationSummary[]>('/conversations')
+  const response = await apiClient.get<ConversationSummary[]>('/conversations', {
+    enableCache: false,
+    retry: false,
+  })
   return response.data
 }
 
@@ -79,7 +82,10 @@ export async function getConversations(): Promise<ConversationSummary[]> {
  * @throws {ApiError} If the request fails or conversation not found
  */
 export async function getConversation(conversationId: ConversationId): Promise<ConversationDetail> {
-  const response = await apiClient.get<ConversationDetail>(`/conversations/${conversationId}`)
+  const response = await apiClient.get<ConversationDetail>(`/conversations/${conversationId}`, {
+    enableCache: false,
+    retry: false,
+  })
   return response.data
 }
 
@@ -91,7 +97,7 @@ export async function getConversation(conversationId: ConversationId): Promise<C
  * @throws {ApiError} If deletion fails or conversation not found
  */
 export async function deleteConversation(conversationId: ConversationId): Promise<void> {
-  await apiClient.delete(`/conversations/${conversationId}`)
+  await apiClient.delete(`/conversations/${conversationId}`, { retry: false })
 }
 
 /**
@@ -119,7 +125,8 @@ export async function deleteAllConversations(): Promise<{
   deleted_count: number
 }> {
   const response = await apiClient.delete<{ message: string; deleted_count: number }>(
-    '/conversations/all'
+    '/conversations/all',
+    { retry: false }
   )
   return response.data
 }

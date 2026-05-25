@@ -1,5 +1,10 @@
 """Unit tests for image config aspect ratio validation."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 import sys
 from pathlib import Path
 

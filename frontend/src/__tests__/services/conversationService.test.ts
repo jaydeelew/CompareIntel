@@ -1,29 +1,20 @@
 /**
- * Tests for conversationService
- *
- * Tests conversation CRUD operations and error handling.
+ * Tests for conversationService (MSW intercepts HTTP; uses real apiClient).
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { describe, it, expect, beforeEach } from 'vitest'
 
-import { apiClient } from '../../services/api/client'
 import { ApiError } from '../../services/api/errors'
 import * as conversationService from '../../services/conversationService'
 import { createConversationId } from '../../types'
+import { apiPathGlob } from '../msw/paths'
+import { server } from '../msw/server'
 import { createMockConversationSummary } from '../utils'
-
-// Mock the API client
-vi.mock('../../services/api/client', () => ({
-  apiClient: {
-    get: vi.fn(),
-    delete: vi.fn(),
-    post: vi.fn(),
-  },
-}))
 
 describe('conversationService', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    server.resetHandlers()
   })
 
   describe('getConversations', () => {
@@ -33,34 +24,41 @@ describe('conversationService', () => {
         createMockConversationSummary({ id: createConversationId(2) }),
       ]
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockConversations })
+      server.use(
+        http.get(apiPathGlob('/api/conversations'), () => HttpResponse.json(mockConversations))
+      )
 
       const result = await conversationService.getConversations()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/conversations')
       expect(result).toEqual(mockConversations)
     })
 
     it('should return empty array when no conversations', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: [] })
+      server.use(http.get(apiPathGlob('/api/conversations'), () => HttpResponse.json([])))
 
       const result = await conversationService.getConversations()
 
       expect(result).toEqual([])
     })
 
-    it('should handle API errors', async () => {
-      const error = new ApiError('Failed to fetch conversations', 500, 'Internal Server Error')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+    it('should handle API errors', () => {
+      server.use(
+        http.get(apiPathGlob('/api/conversations'), () =>
+          HttpResponse.json({ detail: 'Failed to fetch conversations' }, { status: 500 })
+        )
+      )
 
-      await expect(conversationService.getConversations()).rejects.toThrow(ApiError)
+      return expect(conversationService.getConversations()).rejects.toThrow(ApiError)
     })
 
-    it('should handle authentication errors', async () => {
-      const error = new ApiError('Not authenticated', 401, 'Unauthorized')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+    it('should handle authentication errors', () => {
+      server.use(
+        http.get(apiPathGlob('/api/conversations'), () =>
+          HttpResponse.json({ detail: 'Not authenticated' }, { status: 401 })
+        )
+      )
 
-      await expect(conversationService.getConversations()).rejects.toThrow(ApiError)
+      return expect(conversationService.getConversations()).rejects.toThrow(ApiError)
     })
   })
 
@@ -86,47 +84,69 @@ describe('conversationService', () => {
         ],
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockConversation })
+      server.use(
+        http.get(apiPathGlob(`/api/conversations/${conversationId}`), () =>
+          HttpResponse.json(mockConversation)
+        )
+      )
 
       const result = await conversationService.getConversation(conversationId)
 
-      expect(apiClient.get).toHaveBeenCalledWith(`/conversations/${conversationId}`)
       expect(result).toEqual(mockConversation)
     })
 
-    it('should handle not found errors', async () => {
+    it('should handle not found errors', () => {
       const conversationId = createConversationId(999)
-      const error = new ApiError('Conversation not found', 404, 'Not Found')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+      server.use(
+        http.get(apiPathGlob(`/api/conversations/${conversationId}`), () =>
+          HttpResponse.json({ detail: 'Conversation not found' }, { status: 404 })
+        )
+      )
 
-      await expect(conversationService.getConversation(conversationId)).rejects.toThrow(ApiError)
+      return expect(conversationService.getConversation(conversationId)).rejects.toThrow(ApiError)
     })
   })
 
   describe('deleteConversation', () => {
     it('should delete a conversation', async () => {
       const conversationId = createConversationId(1)
-      vi.mocked(apiClient.delete).mockResolvedValue(undefined)
+      let invoked = false
+      server.use(
+        http.delete(apiPathGlob(`/api/conversations/${conversationId}`), ({ request }) => {
+          invoked = true
+          expect(request.method).toBe('DELETE')
+          return new HttpResponse(null, { status: 204 })
+        })
+      )
 
       await conversationService.deleteConversation(conversationId)
-
-      expect(apiClient.delete).toHaveBeenCalledWith(`/conversations/${conversationId}`)
+      expect(invoked).toBe(true)
     })
 
-    it('should handle deletion errors', async () => {
+    it('should handle deletion errors', () => {
       const conversationId = createConversationId(1)
-      const error = new ApiError('Failed to delete', 500, 'Internal Server Error')
-      vi.mocked(apiClient.delete).mockRejectedValue(error)
+      server.use(
+        http.delete(apiPathGlob(`/api/conversations/${conversationId}`), () =>
+          HttpResponse.json({ detail: 'Failed to delete' }, { status: 500 })
+        )
+      )
 
-      await expect(conversationService.deleteConversation(conversationId)).rejects.toThrow(ApiError)
+      return expect(conversationService.deleteConversation(conversationId)).rejects.toThrow(
+        ApiError
+      )
     })
 
-    it('should handle not found errors', async () => {
+    it('should handle not found errors', () => {
       const conversationId = createConversationId(999)
-      const error = new ApiError('Conversation not found', 404, 'Not Found')
-      vi.mocked(apiClient.delete).mockRejectedValue(error)
+      server.use(
+        http.delete(apiPathGlob(`/api/conversations/${conversationId}`), () =>
+          HttpResponse.json({ detail: 'Conversation not found' }, { status: 404 })
+        )
+      )
 
-      await expect(conversationService.deleteConversation(conversationId)).rejects.toThrow(ApiError)
+      return expect(conversationService.deleteConversation(conversationId)).rejects.toThrow(
+        ApiError
+      )
     })
   })
 
@@ -136,11 +156,12 @@ describe('conversationService', () => {
         message: 'Successfully deleted 5 conversation(s)',
         deleted_count: 5,
       }
-      vi.mocked(apiClient.delete).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.delete(apiPathGlob('/api/conversations/all'), () => HttpResponse.json(mockResponse))
+      )
 
       const result = await conversationService.deleteAllConversations()
 
-      expect(apiClient.delete).toHaveBeenCalledWith('/conversations/all')
       expect(result).toEqual(mockResponse)
       expect(result.deleted_count).toBe(5)
     })
@@ -150,25 +171,33 @@ describe('conversationService', () => {
         message: 'Successfully deleted 0 conversation(s)',
         deleted_count: 0,
       }
-      vi.mocked(apiClient.delete).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.delete(apiPathGlob('/api/conversations/all'), () => HttpResponse.json(mockResponse))
+      )
 
       const result = await conversationService.deleteAllConversations()
 
       expect(result.deleted_count).toBe(0)
     })
 
-    it('should handle authentication errors', async () => {
-      const error = new ApiError('Not authenticated', 401, 'Unauthorized')
-      vi.mocked(apiClient.delete).mockRejectedValue(error)
+    it('should handle authentication errors', () => {
+      server.use(
+        http.delete(apiPathGlob('/api/conversations/all'), () =>
+          HttpResponse.json({ detail: 'Not authenticated' }, { status: 401 })
+        )
+      )
 
-      await expect(conversationService.deleteAllConversations()).rejects.toThrow(ApiError)
+      return expect(conversationService.deleteAllConversations()).rejects.toThrow(ApiError)
     })
 
-    it('should handle server errors', async () => {
-      const error = new ApiError('Server error', 500, 'Internal Server Error')
-      vi.mocked(apiClient.delete).mockRejectedValue(error)
+    it('should handle server errors', () => {
+      server.use(
+        http.delete(apiPathGlob('/api/conversations/all'), () =>
+          HttpResponse.json({ detail: 'Server error' }, { status: 500 })
+        )
+      )
 
-      await expect(conversationService.deleteAllConversations()).rejects.toThrow(ApiError)
+      return expect(conversationService.deleteAllConversations()).rejects.toThrow(ApiError)
     })
   })
 })

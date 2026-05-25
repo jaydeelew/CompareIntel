@@ -99,7 +99,9 @@ jobs:
               '/api/auth/login',
               '/api/auth/register',
               '/api/compare-stream',
-              '/api/rate-limit-status'
+              '/api/rate-limit-status',
+              '/api/credits/balance',
+              '/api/billing/overage-settings',
           ]
           
           for endpoint in critical_endpoints:
@@ -121,6 +123,11 @@ jobs:
           health_data = health_response.json()
           assert 'status' in health_data, 'Health response missing status field'
           
+          anon_credits_response = requests.get(f'{base_url}/api/credits/balance')
+          assert anon_credits_response.status_code == 200, 'Anonymous credits balance failed'
+          anon_credits = anon_credits_response.json()
+          assert 'credits_remaining' in anon_credits, 'Credits balance missing credits_remaining'
+
           print('✅ API contract validation passed')
           "
       

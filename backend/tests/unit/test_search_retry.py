@@ -8,10 +8,14 @@ Tests cover:
 - _calculate_wait_time with Retry-After and exponential backoff
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
-import pytest
 
 from app.search.retry import RetryConfig, execute_with_retry
 

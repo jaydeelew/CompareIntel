@@ -1,5 +1,10 @@
 """Thinking-model (T) flag: separable streamed reasoning, not raw OpenRouter reasoning params."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from app.llm.registry import (
     get_openrouter_thinking_model_flag,
     is_thinking_model_from_openrouter_entry,

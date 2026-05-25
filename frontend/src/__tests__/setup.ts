@@ -5,15 +5,31 @@
 
 import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
-import { afterEach, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+
+import { apiClient } from '../services/api/client'
+
+import { server } from './msw/server'
+
+// MSW: intercept /api in service tests; non-API requests pass through to avoid breaking geo etc.
+beforeAll(() => {
+  server.listen({
+    onUnhandledRequest: 'bypass',
+  })
+})
+
+afterEach(() => {
+  server.resetHandlers()
+  apiClient.clearCache()
+  cleanup()
+})
+
+afterAll(() => {
+  server.close()
+})
 
 // Extend Vitest's expect with jest-dom matchers
 // This allows us to use matchers like toBeInTheDocument(), toHaveClass(), etc.
-
-// Cleanup after each test case (e.g., clearing jsdom)
-afterEach(() => {
-  cleanup()
-})
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {

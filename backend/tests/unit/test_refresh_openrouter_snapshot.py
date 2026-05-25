@@ -1,9 +1,12 @@
 """Bundled OpenRouter snapshot refresh and upsert helpers."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 import json
 from pathlib import Path
-
-import pytest
 
 from app.llm.registry import (
     refresh_openrouter_snapshot_from_live_api,

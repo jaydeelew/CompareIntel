@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { renderWithProviders, createMockUser, mockCompare } from '@/__tests__/utils';
+ * import { renderWithProviders, createMockUser } from '@/__tests__/utils';
  * ```
  */
 
@@ -75,30 +75,3 @@ export {
   mockRateLimitExceededResponse,
   mockInternalServerErrorResponse,
 } from './mock-api-responses'
-
-// Mock service implementations
-export {
-  mockCompare,
-  mockCompareStream,
-  mockGetRateLimitStatus,
-  mockGetAnonymousMockModeStatus,
-  mockGetModelStats,
-  mockResetRateLimit,
-  mockLogin,
-  mockRegister,
-  mockRefreshToken,
-  mockGetCurrentUser,
-  mockVerifyEmail,
-  mockResendVerification,
-  mockForgotPassword,
-  mockResetPassword,
-  mockLogout,
-  mockDeleteAccount,
-  mockGetConversations,
-  mockGetConversation,
-  mockDeleteConversation,
-  mockGetAvailableModels,
-  createMockServiceModule,
-  resetAllMocks,
-  setupMockServices,
-} from './mock-services'

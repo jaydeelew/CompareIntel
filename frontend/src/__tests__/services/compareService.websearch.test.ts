@@ -1,101 +1,111 @@
 /**
- * Tests for web search functionality in compareService
+ * Tests for web search functionality in compareService (MSW).
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { http, HttpResponse } from 'msw'
+import { describe, it, expect, beforeEach } from 'vitest'
 
 import { compareStream, processStreamEvents } from '../../services/compareService'
+import { apiPathGlob } from '../msw/paths'
+import { server } from '../msw/server'
+
+const encoder = new TextEncoder()
+
+function webSearchStream(): ReadableStream<Uint8Array> {
+  return new ReadableStream({
+    start(controller) {
+      controller.enqueue(
+        new TextEncoder().encode(
+          'data: {"type":"chunk","model":"openai/gpt-4","content":"{\\"type\\":\\"tool_call\\",\\"function\\":{\\"name\\":\\"search_web\\",\\"arguments\\":\\"{\\\\\\"query\\\\\\":\\\\\\"current weather\\\\\\"}\\"}}"}\n\n'
+        )
+      )
+      controller.enqueue(
+        new TextEncoder().encode(
+          'data: {"type":"chunk","model":"openai/gpt-4","content":"{\\"type\\":\\"tool_result\\",\\"content\\":\\"Search results: Sunny, 75°F\\"}"}\n\n'
+        )
+      )
+      controller.enqueue(
+        new TextEncoder().encode(
+          'data: {"type":"chunk","model":"openai/gpt-4","content":"Based on the search results"}\n\n'
+        )
+      )
+      controller.enqueue(
+        new TextEncoder().encode('data: {"type":"done","model":"openai/gpt-4"}\n\n')
+      )
+      controller.enqueue(new TextEncoder().encode('data: {"type":"complete"}\n\n'))
+      controller.close()
+    },
+  })
+}
 
 describe('compareService - Web Search', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    server.resetHandlers()
   })
 
   describe('compareStream with web search', () => {
     it('should include enable_web_search in request payload', async () => {
-      const mockStream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(new TextEncoder().encode('data: {"type":"complete"}\n\n'))
-          controller.close()
-        },
-      })
+      server.use(
+        http.post(apiPathGlob('/api/compare-stream'), async ({ request }) => {
+          const body = (await request.json()) as Record<string, unknown>
+          expect(body.enable_web_search).toBe(true)
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        body: mockStream,
-      })
+          const stream = new ReadableStream({
+            start(c) {
+              c.enqueue(encoder.encode('data: {"type":"complete"}\n\n'))
+              c.close()
+            },
+          })
+          return new HttpResponse(stream, {
+            headers: { 'Content-Type': 'text/event-stream' },
+          })
+        })
+      )
 
       await compareStream({
         input_data: 'What is the current weather?',
         models: ['openai/gpt-4'],
         enable_web_search: true,
       })
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/compare-stream'),
-        expect.objectContaining({
-          method: 'POST',
-          body: expect.stringContaining('"enable_web_search":true'),
-        })
-      )
     })
 
     it('should not include enable_web_search when false', async () => {
-      const mockStream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(new TextEncoder().encode('data: {"type":"complete"}\n\n'))
-          controller.close()
-        },
-      })
+      server.use(
+        http.post(apiPathGlob('/api/compare-stream'), async ({ request }) => {
+          const body = (await request.json()) as Record<string, unknown>
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        body: mockStream,
-      })
+          expect(body.enable_web_search).toBe(false)
+
+          const stream = new ReadableStream({
+            start(c) {
+              c.enqueue(encoder.encode('data: {"type":"complete"}\n\n'))
+              c.close()
+            },
+          })
+          return new HttpResponse(stream, {
+            headers: { 'Content-Type': 'text/event-stream' },
+          })
+        })
+      )
 
       await compareStream({
         input_data: 'What is AI?',
         models: ['openai/gpt-4'],
         enable_web_search: false,
       })
-
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
-      const body = JSON.parse(callArgs[1].body)
-      expect(body.enable_web_search).toBe(false)
     })
 
     it('should handle web search tool calls in stream', async () => {
-      const mockStream = new ReadableStream({
-        start(controller) {
-          // Simulate tool call for web search
-          controller.enqueue(
-            new TextEncoder().encode(
-              'data: {"type":"chunk","model":"openai/gpt-4","content":"{\\"type\\":\\"tool_call\\",\\"function\\":{\\"name\\":\\"search_web\\",\\"arguments\\":\\"{\\\\\\"query\\\\\\":\\\\\\"current weather\\\\\\"}\\"}}"}\n\n'
-            )
-          )
-          // Simulate tool result
-          controller.enqueue(
-            new TextEncoder().encode(
-              'data: {"type":"chunk","model":"openai/gpt-4","content":"{\\"type\\":\\"tool_result\\",\\"content\\":\\"Search results: Sunny, 75°F\\"}"}\n\n'
-            )
-          )
-          // Simulate final response
-          controller.enqueue(
-            new TextEncoder().encode(
-              'data: {"type":"chunk","model":"openai/gpt-4","content":"Based on the search results"}\n\n'
-            )
-          )
-          controller.enqueue(
-            new TextEncoder().encode('data: {"type":"done","model":"openai/gpt-4"}\n\n')
-          )
-          controller.enqueue(new TextEncoder().encode('data: {"type":"complete"}\n\n'))
-          controller.close()
-        },
-      })
+      server.use(
+        http.post(apiPathGlob('/api/compare-stream'), async ({ request }) => {
+          const body = (await request.json()) as Record<string, unknown>
+          expect(body.enable_web_search).toBe(true)
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        body: mockStream,
-      })
+          return new HttpResponse(webSearchStream(), {
+            headers: { 'Content-Type': 'text/event-stream' },
+          })
+        })
+      )
 
       const stream = await compareStream({
         input_data: 'What is the current weather?',
@@ -107,33 +117,36 @@ describe('compareService - Web Search', () => {
 
       const chunks: string[] = []
       await processStreamEvents(stream!, {
-        onChunk: (model, content) => {
+        onChunk: (_model, content) => {
           chunks.push(content)
         },
       })
 
-      // Should have received tool call and response chunks
       expect(chunks.length).toBeGreaterThan(0)
     })
   })
 
   describe('web search error handling', () => {
     it('should handle web search provider unavailable', async () => {
-      const mockStream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(
-            new TextEncoder().encode(
-              'data: {"type":"error","message":"Web search provider not configured"}\n\n'
-            )
-          )
-          controller.close()
-        },
-      })
+      server.use(
+        http.post(apiPathGlob('/api/compare-stream'), async ({ request }) => {
+          await request.json()
+          const stream = new ReadableStream({
+            start(c) {
+              c.enqueue(
+                new TextEncoder().encode(
+                  'data: {"type":"error","message":"Web search provider not configured"}\n\n'
+                )
+              )
+              c.close()
+            },
+          })
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        body: mockStream,
-      })
+          return new HttpResponse(stream, {
+            headers: { 'Content-Type': 'text/event-stream' },
+          })
+        })
+      )
 
       const stream = await compareStream({
         input_data: 'What is the weather?',
@@ -143,8 +156,8 @@ describe('compareService - Web Search', () => {
 
       const errors: string[] = []
       await processStreamEvents(stream!, {
-        onError: message => {
-          errors.push(message)
+        onError: err => {
+          errors.push(err.message)
         },
       })
 
@@ -152,28 +165,30 @@ describe('compareService - Web Search', () => {
     })
 
     it('should handle web search API errors gracefully', async () => {
-      const mockStream = new ReadableStream({
-        start(controller) {
-          // Tool call
-          controller.enqueue(
-            new TextEncoder().encode(
-              'data: {"type":"chunk","model":"openai/gpt-4","content":"{\\"type\\":\\"tool_call\\",\\"function\\":{\\"name\\":\\"search_web\\"}}"}\n\n'
-            )
-          )
-          // Error in tool execution
-          controller.enqueue(
-            new TextEncoder().encode(
-              'data: {"type":"error","message":"Search failed: Rate limit exceeded"}\n\n'
-            )
-          )
-          controller.close()
-        },
-      })
+      server.use(
+        http.post(apiPathGlob('/api/compare-stream'), async ({ request }) => {
+          await request.json()
+          const stream = new ReadableStream({
+            start(c) {
+              c.enqueue(
+                new TextEncoder().encode(
+                  'data: {"type":"chunk","model":"openai/gpt-4","content":"{\\"type\\":\\"tool_call\\",\\"function\\":{\\"name\\":\\"search_web\\"}}"}\n\n'
+                )
+              )
+              c.enqueue(
+                new TextEncoder().encode(
+                  'data: {"type":"error","message":"Search failed: Rate limit exceeded"}\n\n'
+                )
+              )
+              c.close()
+            },
+          })
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        body: mockStream,
-      })
+          return new HttpResponse(stream, {
+            headers: { 'Content-Type': 'text/event-stream' },
+          })
+        })
+      )
 
       const stream = await compareStream({
         input_data: 'Test query',
@@ -183,8 +198,8 @@ describe('compareService - Web Search', () => {
 
       const errors: string[] = []
       await processStreamEvents(stream!, {
-        onError: message => {
-          errors.push(message)
+        onError: err => {
+          errors.push(err.message)
         },
       })
 

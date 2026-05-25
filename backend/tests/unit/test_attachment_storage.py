@@ -1,5 +1,10 @@
 """Tests for conversation attachment serialization."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from app.attachment_storage import parse_file_contents, serialize_attached_images
 
 

@@ -43,7 +43,7 @@ The frontend test suite uses multiple testing tools:
 
 ### Testing Framework Stack
 
-- **Vitest** 2.0+ - Fast test runner (Jest-compatible)
+- **Vitest** 4.x - Fast test runner (Jest-compatible)
 - **@testing-library/react** - React component testing
 - **@testing-library/jest-dom** - DOM matchers
 - **@testing-library/user-event** - User interaction simulation
@@ -75,13 +75,14 @@ frontend/
 │       │   ├── useModelComparison.edge-cases.test.ts
 │       │   ├── useModelSelection.test.ts
 │       │   ├── useRateLimitStatus.test.ts
-│       │   └── useWebSearch.test.ts          # Web search hook tests
+│       │   └── (web search is tested via compareService + compareStream — see compareService.websearch.test.ts)
 │       ├── services/           # Service layer tests
 │       │   ├── compareService.test.ts
 │       │   ├── compareService.edge-cases.test.ts
+│       │   ├── compareService.websearch.test.ts    # enable_web_search on compare-stream
+│       │   ├── compareService.temperature.test.ts
 │       │   ├── authService.test.ts
 │       │   ├── adminService.test.ts
-│       │   └── webSearchService.test.ts     # Web search service tests
 │       ├── utils/              # Test utilities and helpers
 │       │   ├── test-utils.tsx   # Custom render functions
 │       │   ├── test-factories.ts # Mock data factories
@@ -455,67 +456,55 @@ describe('useMyHook', () => {
 });
 ```
 
-### Service Test Example
+### Service Test Example (MSW — preferred)
+
+Vitest boots **MSW** in [`frontend/src/__tests__/setup.ts`](../../frontend/src/__tests__/setup.ts). Prefer intercepting **`/api/...`** with `server.use(http.get|post(...))` and asserting on the **real `apiClient`**, rather than mocking `../../services/api/client`.
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { compareService } from '../services/compareService';
+import { http, HttpResponse } from 'msw';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ApiError } from '../../services/api/errors';
+import * as billingService from '../../services/billingService';
+import { apiPathGlob } from '../msw/paths';
+import { server } from '../msw/server';
 
-describe('compareService', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+describe('billingService', () => {
+  beforeEach(() => server.resetHandlers());
+
+  it('returns checkout URL', async () => {
+    server.use(
+      http.post(apiPathGlob('/api/billing/create-checkout-session'), () =>
+        HttpResponse.json({ url: 'https://checkout.example/session' }),
+      ),
+    );
+    await expect(billingService.createSubscriptionCheckoutSession('starter')).resolves.toBe(
+      'https://checkout.example/session',
+    );
   });
 
-  it('should fetch comparison results', async () => {
-    const mockResponse = {
-      results: [{ model: 'gpt-4', response: 'Test response' }],
-    };
-
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => mockResponse,
-    });
-
-    const result = await compareService.compare({
-      input: 'test',
-      models: ['gpt-4'],
-    });
-
-    expect(result.results).toHaveLength(1);
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-  });
-
-  it('should handle API errors', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: async () => ({ error: 'Server error' }),
-    });
-
-    await expect(
-      compareService.compare({ input: 'test', models: ['gpt-4'] })
-    ).rejects.toThrow();
+  it('maps HTTP errors to ApiError', () => {
+    server.use(
+      http.post(apiPathGlob('/api/billing/create-checkout-session'), () =>
+        HttpResponse.json({ detail: 'Stripe not configured' }, { status: 503 }),
+      ),
+    );
+    return expect(billingService.createSubscriptionCheckoutSession('pro')).rejects.toThrow(ApiError);
   });
 });
 ```
 
-### Testing with Mocks
+**SSE / compare-stream**: return `text/event-stream` with `data: {...}\n\n` chunks (see [`compareService` tests](../../frontend/src/__tests__/services/compareService.test.ts)).
+
+### Hook tests: mock modules, not `apiClient`
+
+For hooks, mock **`services` or `sseProcessor`** with `vi.mock(...)` and assert orchestration behavior; reserve MSW + real `apiClient` for **`__tests__/services/**`** suites.
 
 ```typescript
 import { vi } from 'vitest';
-import { setupMockServices } from '@/__tests__/utils';
 
-describe('MyComponent', () => {
-  beforeEach(() => {
-    setupMockServices();
-  });
-
-  it('should use mocked service', async () => {
-    // Service is automatically mocked
-    render(<MyComponent />);
-    // Test implementation
-  });
-});
+vi.mock('../../services/compareService', () => ({
+  getRateLimitStatus: vi.fn(),
+}));
 ```
 
 ### Testing Async Operations
@@ -610,13 +599,11 @@ import { vi } from 'vitest';
 import { mockCompare, mockGetRateLimitStatus, mockWebSearch } from '@/__tests__/utils';
 
 vi.mock('../../services/compareService', () => ({
-  compare: mockCompare,
+  compareStream: mockCompare,
   getRateLimitStatus: mockGetRateLimitStatus,
 }));
 
-vi.mock('../../services/webSearchService', () => ({
-  search: mockWebSearch,
-}));
+// Web search is part of compareStream (enable_web_search); test in compareService.websearch.test.ts
 ```
 
 Or use `setupMockServices()` in `beforeEach`:
@@ -1646,45 +1633,14 @@ describe('ComparisonForm', () => {
 
 ### 2. Web Search Testing
 
-**Location**: `src/__tests__/hooks/useWebSearch.test.ts`, `src/__tests__/services/webSearchService.test.ts`, `e2e/05-advanced-features.spec.ts`
+**Location**: `src/__tests__/services/compareService.websearch.test.ts`, `e2e/05-advanced-features.spec.ts`
 
 **Coverage**:
-- Web search toggle functionality
-- Web search enabled state management
-- Search provider availability checking
-- Model web search capability detection
-- Search execution during comparison
-- Search result display
-- Error handling (provider unavailable, search failures)
-- Integration with comparison flow
+- `enable_web_search` on compare-stream payloads
+- Web search-related stream events (`compareService.processStreamEvents`, tool calls)
+- E2E: user enables web search for supported models
 
-**Example**:
-```typescript
-describe('useWebSearch', () => {
-  it('should toggle web search enabled state', () => {
-    const { result } = renderHook(() => useWebSearch());
-    
-    expect(result.current.enabled).toBe(false);
-    
-    act(() => {
-      result.current.toggle();
-    });
-    
-    expect(result.current.enabled).toBe(true);
-  });
-
-  it('should check if models support web search', () => {
-    const { result } = renderHook(() => useWebSearch());
-    
-    const models = [
-      { id: 'gpt-4', supports_web_search: true },
-      { id: 'claude-3', supports_web_search: false },
-    ];
-    
-    expect(result.current.hasWebSearchSupport(models)).toBe(true);
-  });
-});
-```
+**Example**: See [`compareService.websearch.test.ts`](../../frontend/src/__tests__/services/compareService.websearch.test.ts) and MSW-backed service tests once migrated.
 
 ### 3. Authentication Testing
 
@@ -1993,7 +1949,7 @@ screen.getByClassName('btn-primary');
 ---
 
 **Last Updated**: January 2025  
-**Test Framework**: Vitest 2.0+  
+**Test Framework**: Vitest 4.x  
 **E2E Framework**: Playwright  
 **Coverage Tool**: @vitest/coverage-v8  
 **Target Coverage**: 70%+

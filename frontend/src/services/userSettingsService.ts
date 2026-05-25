@@ -77,6 +77,7 @@ export async function getUserPreferences(): Promise<UserPreferences> {
   // breaks layout until cache TTL expires after toggles or auth/user ref updates.
   const response = await apiClient.get<UserPreferences>('/user/preferences', {
     enableCache: false,
+    retry: false,
   })
   return response.data
 }
@@ -91,6 +92,8 @@ export async function getUserPreferences(): Promise<UserPreferences> {
 export async function updateUserPreferences(
   preferences: UserPreferencesUpdate
 ): Promise<UserPreferences> {
-  const response = await apiClient.put<UserPreferences>('/user/preferences', preferences)
+  const response = await apiClient.put<UserPreferences>('/user/preferences', preferences, {
+    retry: false,
+  })
   return response.data
 }

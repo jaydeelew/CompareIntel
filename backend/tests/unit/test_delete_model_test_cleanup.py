@@ -1,14 +1,18 @@
-"""Tests for admin delete_model test reference cleanup."""
-
 from __future__ import annotations
+
+"""Tests for admin delete_model test reference cleanup."""
 
 import textwrap
 from typing import TYPE_CHECKING
 
+import pytest
+
+from app.routers.admin.delete_model_test_cleanup import strip_deleted_model_from_tests
+
 if TYPE_CHECKING:
     from pathlib import Path
 
-from app.routers.admin.delete_model_test_cleanup import strip_deleted_model_from_tests
+pytestmark = pytest.mark.unit
 
 
 def _layout_backend_tests(project: Path) -> Path:

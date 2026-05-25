@@ -8,9 +8,12 @@ Tests cover:
 - Error handling in web search flow
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
+
+pytestmark = pytest.mark.integration
+
+
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.models import AppSettings
 from tests.factories import create_app_settings

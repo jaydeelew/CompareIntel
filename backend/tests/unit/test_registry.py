@@ -1,5 +1,10 @@
 """Unit tests for llm.registry JSON loading and tier filtering."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from pathlib import Path
 
 from app.llm import registry

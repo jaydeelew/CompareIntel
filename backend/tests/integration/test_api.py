@@ -8,6 +8,11 @@ Tests cover:
 - Status codes
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
 from fastapi import status
 
 

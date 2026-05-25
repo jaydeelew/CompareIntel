@@ -1,26 +1,19 @@
 /**
- * Tests for modelsService
- *
- * Tests model listing endpoints and error handling.
+ * Tests for modelsService (MSW intercepts HTTP; uses real apiClient).
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { describe, it, expect, beforeEach } from 'vitest'
 
-import { apiClient } from '../../services/api/client'
 import { ApiError } from '../../services/api/errors'
 import * as modelsService from '../../services/modelsService'
+import { apiPathGlob } from '../msw/paths'
+import { server } from '../msw/server'
 import { createMockModelsByProvider } from '../utils'
-
-// Mock the API client
-vi.mock('../../services/api/client', () => ({
-  apiClient: {
-    get: vi.fn(),
-  },
-}))
 
 describe('modelsService', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    server.resetHandlers()
   })
 
   describe('getAvailableModels', () => {
@@ -47,24 +40,26 @@ describe('modelsService', () => {
         models_by_provider: createMockModelsByProvider(),
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.get(apiPathGlob('/api/models'), ({ request }) => {
+          const url = new URL(request.url)
+          expect(url.pathname.endsWith('/api/models')).toBe(true)
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await modelsService.getAvailableModels()
-
-      // getAvailableModels now includes cache options
-      expect(apiClient.get).toHaveBeenCalledWith('/models', {
-        cacheTTL: 600000,
-        enableCache: true,
-        _cacheKey: 'GET:/models',
-      })
       expect(result).toEqual(mockResponse)
     })
 
-    it('should handle API errors', async () => {
-      const error = new ApiError('Failed to fetch models', 500, 'Internal Server Error')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+    it('should handle API errors', () => {
+      server.use(
+        http.get(apiPathGlob('/api/models'), () =>
+          HttpResponse.json({ detail: 'Failed to fetch models' }, { status: 500 })
+        )
+      )
 
-      await expect(modelsService.getAvailableModels()).rejects.toThrow(ApiError)
+      return expect(modelsService.getAvailableModels()).rejects.toThrow(ApiError)
     })
   })
 
@@ -76,16 +71,9 @@ describe('modelsService', () => {
         models_by_provider: mockModelsByProvider,
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
+      server.use(http.get(apiPathGlob('/api/models'), () => HttpResponse.json(mockResponse)))
 
       const result = await modelsService.getModelsByProvider()
-
-      // getModelsByProvider now includes cache options
-      expect(apiClient.get).toHaveBeenCalledWith('/models', {
-        cacheTTL: 600000,
-        enableCache: true,
-        _cacheKey: 'GET:/models',
-      })
       expect(result).toEqual(mockModelsByProvider)
     })
 
@@ -95,18 +83,20 @@ describe('modelsService', () => {
         models_by_provider: {},
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
+      server.use(http.get(apiPathGlob('/api/models'), () => HttpResponse.json(mockResponse)))
 
       const result = await modelsService.getModelsByProvider()
-
       expect(result).toEqual({})
     })
 
-    it('should handle API errors', async () => {
-      const error = new ApiError('Failed to fetch models', 500, 'Internal Server Error')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+    it('should handle API errors', () => {
+      server.use(
+        http.get(apiPathGlob('/api/models'), () =>
+          HttpResponse.json({ detail: 'Failed to fetch models' }, { status: 500 })
+        )
+      )
 
-      await expect(modelsService.getModelsByProvider()).rejects.toThrow(ApiError)
+      return expect(modelsService.getModelsByProvider()).rejects.toThrow(ApiError)
     })
   })
 })

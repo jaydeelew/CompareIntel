@@ -48,7 +48,7 @@ Current test coverage includes:
 - ✅ Model comparison and streaming
 - ✅ Rate limiting and credit system
 - ✅ Web search functionality
-- ✅ File upload handling
+- ✅ Attachment handling via compare payload (`attached_images` JSON — see Backend Testing Guide)
 - ✅ Conversation history
 - ✅ Admin functionality
 - ✅ Edge cases and error handling

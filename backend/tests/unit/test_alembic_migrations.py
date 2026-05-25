@@ -7,10 +7,13 @@ These tests verify that:
 3. Migration upgrade/downgrade functions are defined
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 import os
 import sys
-
-import pytest
 
 
 class TestAlembicSetup:

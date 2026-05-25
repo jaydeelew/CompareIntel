@@ -6,6 +6,11 @@ Tests cover:
 - Error handling
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from app.llm.streaming import REASONING_STREAM_TYPE
 from app.model_runner import (
     call_openrouter_streaming,

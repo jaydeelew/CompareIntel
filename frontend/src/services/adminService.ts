@@ -143,7 +143,9 @@ export async function listUsers(params?: {
   const queryString = queryParams.toString()
   const url = `/admin/users${queryString ? `?${queryString}` : ''}`
 
-  const response = await apiClient.get<AdminUserList>(url)
+  const response = await apiClient.get<AdminUserList>(url, {
+    enableCache: false,
+  })
   return response.data
 }
 

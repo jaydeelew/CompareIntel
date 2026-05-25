@@ -8,6 +8,11 @@ Tests cover:
 - Rate limit handling workflows
 """
 
+import pytest
+
+pytestmark = pytest.mark.e2e
+
+
 from unittest.mock import patch
 
 from fastapi import status

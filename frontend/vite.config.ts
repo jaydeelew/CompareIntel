@@ -462,6 +462,13 @@ export default defineConfig({
         '**/*.test.{ts,tsx}',
         '**/*.spec.{ts,tsx}',
       ],
+      // Baseline from `npm run test:coverage` (Feb 2026) minus ~2pp buffer
+      thresholds: {
+        statements: 32,
+        branches: 24,
+        functions: 35,
+        lines: 32,
+      },
     },
   },
 })

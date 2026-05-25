@@ -11,13 +11,16 @@ Validates that:
 8. Reasoning models are detected
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 import json
 import sys
 import textwrap
 from pathlib import Path
 from unittest.mock import patch
-
-import pytest
 
 # Add backend to path so we can import the script
 BACKEND_DIR = Path(__file__).resolve().parent.parent.parent

@@ -8,6 +8,11 @@ Tests cover:
 - Validation of zipcode format
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from fastapi import status
 
 

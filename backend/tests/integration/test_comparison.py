@@ -7,6 +7,11 @@ Tests cover:
 - Result formatting
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
 from datetime import UTC
 
 from fastapi import status

@@ -38,6 +38,12 @@ Tests are organized by user journey and functionality:
 - **`05-advanced-features.spec.ts`**: Web search, file uploads, saved model selections
 - **`06-navigation-content.spec.ts`**: Navigation, SEO pages, scroll behavior
 - **`07-admin-functionality.spec.ts`**: Admin panel, user management, system statistics
+- **`08-mobile-platforms.spec.ts`**: Mobile breakpoints, touch gestures, responsive UI
+- **`09-results-display-regression.spec.ts`**: Results grids, tabs, follow-up mode, breakout
+- **`10-accessibility.spec.ts`**: WCAG-oriented checks on core flows and landmarks
+- **`11-pwa-features.spec.ts`**: Install prompt / PWA-oriented behavior
+
+CI runs a **focused Chromium subset** (`ci.yml`) matching these journeys (see `--grep=` in **E2E Tests — Critical User Flows**); full **`npm run test:e2e`** still exercises every spec locally and in cross-browser jobs.
 
 ## E2E Test Coverage
 
@@ -49,6 +55,10 @@ Comprehensive E2E test coverage includes:
 - ✅ **Conversation Management**: Saving, viewing, loading, deleting conversations
 - ✅ **Advanced Features**: Web search, file uploads, model selection management
 - ✅ **Navigation & Content**: Footer navigation, SEO pages, scroll behavior
+- ✅ **Mobile platforms**: Narrow viewports and mobile-specific UX
+- ✅ **Results display regressions**: Multi-model grids, tabs, breakout, follow-ups
+- ✅ **Accessibility (WCAG-focused)**: Landmarks and keyboard-critical paths (`10-accessibility.spec.ts`)
+- ✅ **PWA-oriented flows**: Progressive web app prompts and related UI (`11-pwa-features.spec.ts`)
 - ✅ **Admin Functionality**: User management, filtering, statistics, user creation/updates
 
 All tests are written from a user experience perspective, focusing on real user workflows and interactions.

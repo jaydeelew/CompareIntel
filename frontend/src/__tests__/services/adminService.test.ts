@@ -1,30 +1,29 @@
 /**
- * Tests for adminService
- *
- * Tests admin endpoints, user management, and error handling.
+ * Tests for adminService (MSW intercepts HTTP; uses real apiClient).
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { describe, it, expect, beforeEach } from 'vitest'
 
 import * as adminService from '../../services/adminService'
-import { apiClient } from '../../services/api/client'
 import { ApiError } from '../../services/api/errors'
 import { createUserId } from '../../types'
+import { apiPathGlob } from '../msw/paths'
+import { server } from '../msw/server'
 import { createMockUser } from '../utils'
 
-// Mock the API client
-vi.mock('../../services/api/client', () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  },
-}))
+const baseAppSettings: adminService.AppSettings = {
+  anonymous_mock_mode_enabled: false,
+  is_development: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  anonymous_users_with_usage: 0,
+  anonymous_db_usage_count: 0,
+}
 
 describe('adminService', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    server.resetHandlers()
   })
 
   describe('listUsers', () => {
@@ -37,11 +36,16 @@ describe('adminService', () => {
         total_pages: 1,
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.get(apiPathGlob('/api/admin/users'), ({ request }) => {
+          const u = new URL(request.url)
+          expect(u.pathname.endsWith('/api/admin/users')).toBe(true)
+          expect(u.searchParams.toString()).toBe('')
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await adminService.listUsers()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/admin/users')
       expect(result).toEqual(mockResponse)
     })
 
@@ -54,11 +58,16 @@ describe('adminService', () => {
         total_pages: 1,
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.get(apiPathGlob('/api/admin/users'), ({ request }) => {
+          const u = new URL(request.url)
+          expect(u.searchParams.get('page')).toBe('2')
+          expect(u.searchParams.get('per_page')).toBe('10')
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await adminService.listUsers({ page: 2, per_page: 10 })
-
-      expect(apiClient.get).toHaveBeenCalledWith('/admin/users?page=2&per_page=10')
       expect(result).toEqual(mockResponse)
     })
 
@@ -71,7 +80,16 @@ describe('adminService', () => {
         total_pages: 1,
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.get(apiPathGlob('/api/admin/users'), ({ request }) => {
+          const u = new URL(request.url)
+          expect(u.searchParams.get('search')).toBe('test')
+          expect(u.searchParams.get('role')).toBe('user')
+          expect(u.searchParams.get('tier')).toBe('pro')
+          expect(u.searchParams.get('is_active')).toBe('true')
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await adminService.listUsers({
         search: 'test',
@@ -79,18 +97,17 @@ describe('adminService', () => {
         tier: 'pro',
         is_active: true,
       })
-
-      expect(apiClient.get).toHaveBeenCalledWith(
-        '/admin/users?search=test&role=user&tier=pro&is_active=true'
-      )
       expect(result).toEqual(mockResponse)
     })
 
-    it('should handle API errors', async () => {
-      const error = new ApiError('Access forbidden', 403, 'Forbidden')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+    it('should handle API errors', () => {
+      server.use(
+        http.get(apiPathGlob('/api/admin/users'), () =>
+          HttpResponse.json({ detail: 'Access forbidden' }, { status: 403 })
+        )
+      )
 
-      await expect(adminService.listUsers()).rejects.toThrow(ApiError)
+      return expect(adminService.listUsers()).rejects.toThrow(ApiError)
     })
   })
 
@@ -107,11 +124,9 @@ describe('adminService', () => {
         admin_actions_today: 5,
       }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockStats })
+      server.use(http.get(apiPathGlob('/api/admin/stats'), () => HttpResponse.json(mockStats)))
 
       const result = await adminService.getAdminStats()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/admin/stats')
       expect(result).toEqual(mockStats)
     })
   })
@@ -121,11 +136,11 @@ describe('adminService', () => {
       const userId = createUserId(1)
       const mockUser = createMockUser({ id: userId })
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
+      server.use(
+        http.get(apiPathGlob(`/api/admin/users/${userId}`), () => HttpResponse.json(mockUser))
+      )
 
       const result = await adminService.getUser(userId)
-
-      expect(apiClient.get).toHaveBeenCalledWith(`/admin/users/${userId}`)
       expect(result).toEqual(mockUser)
     })
   })
@@ -139,11 +154,15 @@ describe('adminService', () => {
       }
 
       const mockUser = createMockUser({ email: userData.email })
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockUser })
+      server.use(
+        http.post(apiPathGlob('/api/admin/users'), async ({ request }) => {
+          const body = (await request.json()) as Record<string, unknown>
+          expect(body.email).toBe(userData.email)
+          return HttpResponse.json(mockUser)
+        })
+      )
 
       const result = await adminService.createUser(userData)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/admin/users', userData)
       expect(result).toEqual(mockUser)
     })
   })
@@ -157,11 +176,16 @@ describe('adminService', () => {
       }
 
       const mockUser = createMockUser({ id: userId, subscription_tier: 'pro' })
-      vi.mocked(apiClient.put).mockResolvedValue({ data: mockUser })
+      server.use(
+        http.put(apiPathGlob(`/api/admin/users/${userId}`), async ({ request }) => {
+          const body = (await request.json()) as Record<string, unknown>
+          expect(body.subscription_tier).toBe('pro')
+          expect(body.is_active).toBe(true)
+          return HttpResponse.json(mockUser)
+        })
+      )
 
       const result = await adminService.updateUser(userId, userData)
-
-      expect(apiClient.put).toHaveBeenCalledWith(`/admin/users/${userId}`, userData)
       expect(result).toEqual(mockUser)
     })
   })
@@ -169,11 +193,17 @@ describe('adminService', () => {
   describe('deleteUser', () => {
     it('should delete a user', async () => {
       const userId = createUserId(1)
-      vi.mocked(apiClient.delete).mockResolvedValue(undefined)
+      let invoked = false
+      server.use(
+        http.delete(apiPathGlob(`/api/admin/users/${userId}`), ({ request }) => {
+          invoked = true
+          expect(request.method).toBe('DELETE')
+          return new HttpResponse(null, { status: 204 })
+        })
+      )
 
       await adminService.deleteUser(userId)
-
-      expect(apiClient.delete).toHaveBeenCalledWith(`/admin/users/${userId}`)
+      expect(invoked).toBe(true)
     })
   })
 
@@ -183,13 +213,15 @@ describe('adminService', () => {
       const newPassword = 'new-password-123'
       const mockResponse = { message: 'Password reset successfully' }
 
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob(`/api/admin/users/${userId}/reset-password`), async ({ request }) => {
+          const body = (await request.json()) as { new_password: string }
+          expect(body.new_password).toBe(newPassword)
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await adminService.resetUserPassword(userId, newPassword)
-
-      expect(apiClient.post).toHaveBeenCalledWith(`/admin/users/${userId}/reset-password`, {
-        new_password: newPassword,
-      })
       expect(result).toEqual(mockResponse)
     })
   })
@@ -199,11 +231,13 @@ describe('adminService', () => {
       const userId = createUserId(1)
       const mockResponse = { message: 'Verification email sent' }
 
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob(`/api/admin/users/${userId}/send-verification`), () =>
+          HttpResponse.json(mockResponse)
+        )
+      )
 
       const result = await adminService.sendUserVerification(userId)
-
-      expect(apiClient.post).toHaveBeenCalledWith(`/admin/users/${userId}/send-verification`)
       expect(result).toEqual(mockResponse)
     })
   })
@@ -212,11 +246,13 @@ describe('adminService', () => {
     it('should toggle user active status', async () => {
       const userId = createUserId(1)
       const mockUser = createMockUser({ id: userId, is_active: false })
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockUser })
+      server.use(
+        http.post(apiPathGlob(`/api/admin/users/${userId}/toggle-active`), () =>
+          HttpResponse.json(mockUser)
+        )
+      )
 
       const result = await adminService.toggleUserActive(userId)
-
-      expect(apiClient.post).toHaveBeenCalledWith(`/admin/users/${userId}/toggle-active`)
       expect(result).toEqual(mockUser)
     })
   })
@@ -225,11 +261,13 @@ describe('adminService', () => {
     it('should reset user usage statistics', async () => {
       const userId = createUserId(1)
       const mockUser = createMockUser({ id: userId, daily_usage_count: 0 })
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockUser })
+      server.use(
+        http.post(apiPathGlob(`/api/admin/users/${userId}/reset-usage`), () =>
+          HttpResponse.json(mockUser)
+        )
+      )
 
       const result = await adminService.resetUserUsage(userId)
-
-      expect(apiClient.post).toHaveBeenCalledWith(`/admin/users/${userId}/reset-usage`)
       expect(result).toEqual(mockUser)
     })
   })
@@ -238,11 +276,13 @@ describe('adminService', () => {
     it('should toggle user mock mode', async () => {
       const userId = createUserId(1)
       const mockUser = createMockUser({ id: userId, mock_mode_enabled: true })
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockUser })
+      server.use(
+        http.post(apiPathGlob(`/api/admin/users/${userId}/toggle-mock-mode`), () =>
+          HttpResponse.json(mockUser)
+        )
+      )
 
       const result = await adminService.toggleUserMockMode(userId)
-
-      expect(apiClient.post).toHaveBeenCalledWith(`/admin/users/${userId}/toggle-mock-mode`)
       expect(result).toEqual(mockUser)
     })
   })
@@ -252,13 +292,15 @@ describe('adminService', () => {
       const userId = createUserId(1)
       const tier = 'pro'
       const mockUser = createMockUser({ id: userId, subscription_tier: tier })
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockUser })
+      server.use(
+        http.post(apiPathGlob(`/api/admin/users/${userId}/change-tier`), async ({ request }) => {
+          const body = (await request.json()) as { subscription_tier: string }
+          expect(body.subscription_tier).toBe(tier)
+          return HttpResponse.json(mockUser)
+        })
+      )
 
       const result = await adminService.changeUserTier(userId, tier)
-
-      expect(apiClient.post).toHaveBeenCalledWith(`/admin/users/${userId}/change-tier`, {
-        subscription_tier: tier,
-      })
       expect(result).toEqual(mockUser)
     })
   })
@@ -279,44 +321,51 @@ describe('adminService', () => {
         },
       ]
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockLogs })
+      server.use(
+        http.get(apiPathGlob('/api/admin/action-logs'), ({ request }) => {
+          expect(new URL(request.url).searchParams.toString()).toBe('')
+          return HttpResponse.json(mockLogs)
+        })
+      )
 
       const result = await adminService.getActionLogs()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/admin/action-logs')
       expect(result).toEqual(mockLogs)
     })
 
     it('should get action logs with filters', async () => {
       const mockLogs: adminService.AdminActionLog[] = []
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockLogs })
+      server.use(
+        http.get(apiPathGlob('/api/admin/action-logs'), ({ request }) => {
+          const u = new URL(request.url)
+          expect(u.searchParams.get('page')).toBe('1')
+          expect(u.searchParams.get('per_page')).toBe('20')
+          expect(u.searchParams.get('action_type')).toBe('user_update')
+          return HttpResponse.json(mockLogs)
+        })
+      )
 
       const result = await adminService.getActionLogs({
         page: 1,
         per_page: 20,
         action_type: 'user_update',
       })
-
-      expect(apiClient.get).toHaveBeenCalledWith(
-        '/admin/action-logs?page=1&per_page=20&action_type=user_update'
-      )
       expect(result).toEqual(mockLogs)
     })
   })
 
   describe('getAppSettings', () => {
     it('should get app settings', async () => {
-      const mockSettings = {
-        anonymous_mock_mode_enabled: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
+      const mockSettings = { ...baseAppSettings }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockSettings })
+      server.use(
+        http.get(apiPathGlob('/api/admin/settings'), ({ request }) => {
+          const u = new URL(request.url)
+          expect(u.pathname.endsWith('/api/admin/settings')).toBe(true)
+          return HttpResponse.json(mockSettings)
+        })
+      )
 
       const result = await adminService.getAppSettings()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/admin/settings', { enableCache: false })
       expect(result).toEqual(mockSettings)
     })
   })
@@ -324,16 +373,17 @@ describe('adminService', () => {
   describe('toggleAnonymousMockMode', () => {
     it('should toggle anonymous mock mode', async () => {
       const mockSettings = {
+        ...baseAppSettings,
         anonymous_mock_mode_enabled: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       }
 
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockSettings })
+      server.use(
+        http.post(apiPathGlob('/api/admin/settings/toggle-anonymous-mock-mode'), () =>
+          HttpResponse.json(mockSettings)
+        )
+      )
 
       const result = await adminService.toggleAnonymousMockMode()
-
-      expect(apiClient.post).toHaveBeenCalledWith('/admin/settings/toggle-anonymous-mock-mode')
       expect(result).toEqual(mockSettings)
     })
   })
@@ -342,11 +392,13 @@ describe('adminService', () => {
     it('should zero out anonymous usage statistics', async () => {
       const mockResponse = { message: 'Anonymous usage zeroed' }
 
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/admin/settings/zero-anonymous-usage'), () =>
+          HttpResponse.json(mockResponse)
+        )
+      )
 
       const result = await adminService.zeroAnonymousUsage()
-
-      expect(apiClient.post).toHaveBeenCalledWith('/admin/settings/zero-anonymous-usage')
       expect(result).toEqual(mockResponse)
     })
   })

@@ -7,6 +7,10 @@ These tests verify that:
 3. Backward compatibility is maintained
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 class TestAPIVersioning:
     """Tests for API versioning with /api/ and /api/v1/ prefixes."""

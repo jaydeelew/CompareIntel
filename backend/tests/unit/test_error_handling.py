@@ -1,5 +1,10 @@
 """Unit tests for utils.error_handling API error classification."""
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from app.utils.error_handling import (
     ClassifiedError,
     classify_api_error,

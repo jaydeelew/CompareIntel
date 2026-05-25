@@ -7,11 +7,14 @@ These tests verify that:
 3. Error capture functions work without crashing
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 import os
 import sys
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 
 class TestSentryInitialization:

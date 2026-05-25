@@ -10,6 +10,11 @@ Covers:
 - allocate_monthly_credits preserves overage preference across renewals
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 

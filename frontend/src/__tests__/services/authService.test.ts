@@ -1,14 +1,14 @@
 /**
- * Tests for authService
- *
- * Tests authentication endpoints, token management, and error handling.
+ * Tests for authService (MSW intercepts HTTP; uses real apiClient).
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { describe, it, expect, beforeEach } from 'vitest'
 
-import { apiClient } from '../../services/api/client'
 import { ApiError } from '../../services/api/errors'
 import * as authService from '../../services/authService'
+import { apiPathGlob } from '../msw/paths'
+import { server } from '../msw/server'
 import {
   createMockUser,
   createMockAuthResponse,
@@ -16,41 +16,37 @@ import {
   createMockRegisterData,
 } from '../utils'
 
-// Mock the API client
-vi.mock('../../services/api/client', () => ({
-  apiClient: {
-    post: vi.fn(),
-    get: vi.fn(),
-    delete: vi.fn(),
-  },
-}))
-
 describe('authService', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    server.resetHandlers()
   })
 
   describe('register', () => {
     it('should register a new user', async () => {
       const registerData = createMockRegisterData()
       const mockResponse = createMockAuthResponse()
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/auth/register'), async ({ request }) => {
+          const body = (await request.json()) as Record<string, unknown>
+          expect(body.email).toBe(registerData.email)
+          expect(body.password).toBe(registerData.password)
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await authService.register(registerData)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/register', {
-        email: registerData.email,
-        password: registerData.password,
-      })
       expect(result).toEqual(mockResponse)
     })
 
-    it('should handle registration errors', async () => {
+    it('should handle registration errors', () => {
       const registerData = createMockRegisterData()
-      const error = new ApiError('Email already exists', 400, 'Bad Request')
-      vi.mocked(apiClient.post).mockRejectedValue(error)
+      server.use(
+        http.post(apiPathGlob('/api/auth/register'), () =>
+          HttpResponse.json({ detail: 'Email already exists' }, { status: 400 })
+        )
+      )
 
-      await expect(authService.register(registerData)).rejects.toThrow(ApiError)
+      return expect(authService.register(registerData)).rejects.toThrow(ApiError)
     })
   })
 
@@ -58,48 +54,58 @@ describe('authService', () => {
     it('should login a user', async () => {
       const credentials = createMockLoginCredentials()
       const mockResponse = createMockAuthResponse()
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/auth/login'), async ({ request }) => {
+          expect(await request.json()).toEqual(credentials)
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await authService.login(credentials)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/login', credentials)
       expect(result).toEqual(mockResponse)
     })
 
-    it('should handle login errors', async () => {
+    it('should handle login errors', () => {
       const credentials = createMockLoginCredentials()
-      const error = new ApiError('Invalid credentials', 401, 'Unauthorized')
-      vi.mocked(apiClient.post).mockRejectedValue(error)
+      server.use(
+        http.post(apiPathGlob('/api/auth/login'), () =>
+          HttpResponse.json({ detail: 'Invalid credentials' }, { status: 401 })
+        )
+      )
 
-      await expect(authService.login(credentials)).rejects.toThrow(ApiError)
+      return expect(authService.login(credentials)).rejects.toThrow(ApiError)
     })
   })
 
   describe('refreshToken', () => {
     it('should refresh access token', async () => {
-      const refreshToken = 'refresh-token-123'
+      const refreshTokenVal = 'refresh-token-123'
       const mockResponse = {
         access_token: 'new-access-token',
         refresh_token: 'new-refresh-token',
         token_type: 'bearer',
       }
 
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/auth/refresh'), async ({ request }) => {
+          expect(await request.json()).toEqual({ refresh_token: refreshTokenVal })
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
-      const result = await authService.refreshToken(refreshToken)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/refresh', {
-        refresh_token: refreshToken,
-      })
+      const result = await authService.refreshToken(refreshTokenVal)
       expect(result).toEqual(mockResponse)
     })
 
-    it('should handle refresh token errors', async () => {
-      const refreshToken = 'invalid-token'
-      const error = new ApiError('Invalid refresh token', 401, 'Unauthorized')
-      vi.mocked(apiClient.post).mockRejectedValue(error)
+    it('should handle refresh token errors', () => {
+      const refreshTokenVal = 'invalid-token'
+      server.use(
+        http.post(apiPathGlob('/api/auth/refresh'), () =>
+          HttpResponse.json({ detail: 'Invalid refresh token' }, { status: 401 })
+        )
+      )
 
-      await expect(authService.refreshToken(refreshToken)).rejects.toThrow(ApiError)
+      return expect(authService.refreshToken(refreshTokenVal)).rejects.toThrow(ApiError)
     })
   })
 
@@ -108,20 +114,26 @@ describe('authService', () => {
       const token = 'verification-token-123'
       const mockResponse = { message: 'Email verified successfully' }
 
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/auth/verify-email'), async ({ request }) => {
+          expect(await request.json()).toEqual({ token })
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await authService.verifyEmail(token)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/verify-email', { token })
       expect(result).toEqual(mockResponse)
     })
 
-    it('should handle verification errors', async () => {
+    it('should handle verification errors', () => {
       const token = 'invalid-token'
-      const error = new ApiError('Invalid token', 400, 'Bad Request')
-      vi.mocked(apiClient.post).mockRejectedValue(error)
+      server.use(
+        http.post(apiPathGlob('/api/auth/verify-email'), () =>
+          HttpResponse.json({ detail: 'Invalid token' }, { status: 400 })
+        )
+      )
 
-      await expect(authService.verifyEmail(token)).rejects.toThrow(ApiError)
+      return expect(authService.verifyEmail(token)).rejects.toThrow(ApiError)
     })
   })
 
@@ -130,11 +142,14 @@ describe('authService', () => {
       const email = 'test@example.com'
       const mockResponse = { message: 'Verification email sent' }
 
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/auth/resend-verification'), async ({ request }) => {
+          expect(await request.json()).toEqual({ email })
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await authService.resendVerification(email)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/resend-verification', { email })
       expect(result).toEqual(mockResponse)
     })
   })
@@ -144,11 +159,14 @@ describe('authService', () => {
       const email = 'test@example.com'
       const mockResponse = { message: 'Password reset email sent' }
 
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/auth/forgot-password'), async ({ request }) => {
+          expect(await request.json()).toEqual({ email })
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await authService.forgotPassword(email)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/forgot-password', { email })
       expect(result).toEqual(mockResponse)
     })
   })
@@ -159,54 +177,58 @@ describe('authService', () => {
       const newPassword = 'new-password-123'
       const mockResponse = { message: 'Password reset successfully' }
 
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.post(apiPathGlob('/api/auth/reset-password'), async ({ request }) => {
+          expect(await request.json()).toEqual({ token, new_password: newPassword })
+          return HttpResponse.json(mockResponse)
+        })
+      )
 
       const result = await authService.resetPassword(token, newPassword)
-
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/reset-password', {
-        token,
-        new_password: newPassword,
-      })
       expect(result).toEqual(mockResponse)
     })
 
-    it('should handle reset password errors', async () => {
+    it('should handle reset password errors', () => {
       const token = 'invalid-token'
       const newPassword = 'new-password'
-      const error = new ApiError('Invalid token', 400, 'Bad Request')
-      vi.mocked(apiClient.post).mockRejectedValue(error)
+      server.use(
+        http.post(apiPathGlob('/api/auth/reset-password'), () =>
+          HttpResponse.json({ detail: 'Invalid token' }, { status: 400 })
+        )
+      )
 
-      await expect(authService.resetPassword(token, newPassword)).rejects.toThrow(ApiError)
+      return expect(authService.resetPassword(token, newPassword)).rejects.toThrow(ApiError)
     })
   })
 
   describe('getCurrentUser', () => {
     it('should get current authenticated user', async () => {
       const mockUser = createMockUser()
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser })
+      server.use(http.get(apiPathGlob('/api/auth/me'), () => HttpResponse.json(mockUser)))
 
       const result = await authService.getCurrentUser()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/auth/me')
       expect(result).toEqual(mockUser)
     })
 
-    it('should handle authentication errors', async () => {
-      const error = new ApiError('Not authenticated', 401, 'Unauthorized')
-      vi.mocked(apiClient.get).mockRejectedValue(error)
+    it('should handle authentication errors', () => {
+      server.use(
+        http.get(apiPathGlob('/api/auth/me'), () =>
+          HttpResponse.json({ detail: 'Not authenticated' }, { status: 401 })
+        )
+      )
 
-      await expect(authService.getCurrentUser()).rejects.toThrow(ApiError)
+      return expect(authService.getCurrentUser()).rejects.toThrow(ApiError)
     })
   })
 
   describe('deleteAccount', () => {
     it('should delete user account', async () => {
       const mockResponse = { message: 'Account deleted successfully' }
-      vi.mocked(apiClient.delete).mockResolvedValue({ data: mockResponse })
+      server.use(
+        http.delete(apiPathGlob('/api/auth/delete-account'), () => HttpResponse.json(mockResponse))
+      )
 
       const result = await authService.deleteAccount()
-
-      expect(apiClient.delete).toHaveBeenCalledWith('/auth/delete-account')
       expect(result).toEqual(mockResponse)
     })
   })
@@ -214,11 +236,9 @@ describe('authService', () => {
   describe('logout', () => {
     it('should logout user', async () => {
       const mockResponse = { message: 'Logged out successfully' }
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse })
+      server.use(http.post(apiPathGlob('/api/auth/logout'), () => HttpResponse.json(mockResponse)))
 
       const result = await authService.logout()
-
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/logout')
       expect(result).toEqual(mockResponse)
     })
   })
@@ -226,11 +246,9 @@ describe('authService', () => {
   describe('testAuth', () => {
     it('should test authentication endpoint', async () => {
       const mockResponse = { message: 'Auth test successful' }
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
+      server.use(http.get(apiPathGlob('/api/auth/test'), () => HttpResponse.json(mockResponse)))
 
       const result = await authService.testAuth()
-
-      expect(apiClient.get).toHaveBeenCalledWith('/auth/test')
       expect(result).toEqual(mockResponse)
     })
   })

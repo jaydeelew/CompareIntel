@@ -8,6 +8,11 @@ Tests cover:
 - Admin authentication
 """
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
 from fastapi import status
 from fastapi.testclient import TestClient
 

@@ -1,0 +1,34 @@
+# Nightly configurable smoke probes against a deployed base URL (set LOAD_TEST_URL in repo Variables).
+name: Nightly load / smoke probes
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  configurable-smoke:
+    name: Lightweight API smoke (${{ vars.LOAD_TEST_URL || 'not configured' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Probe public health + anonymous credits balance
+        env:
+          LOAD_TEST_URL: ${{ vars.LOAD_TEST_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${LOAD_TEST_URL:-}" ]; then
+            echo "LOAD_TEST_URL is not configured in repository Variables; skipping."
+            exit 0
+          fi
+          base="${LOAD_TEST_URL%/}"
+          curl -sfS "${base}/health" | head -c 512
+          echo ""
+          curl -sfS "${base}/api/credits/balance" | head -c 512
+          echo ""
+          echo "✅ Smoke probes completed for ${base}"

@@ -24,20 +24,27 @@ export interface OverageSettingsUpdate {
 export async function createSubscriptionCheckoutSession(
   tier: PaidSubscriptionTier
 ): Promise<string> {
-  const { data } = await apiClient.post<{ url: string }>('/billing/create-checkout-session', {
-    tier,
-  })
+  const { data } = await apiClient.post<{ url: string }>(
+    '/billing/create-checkout-session',
+    { tier },
+    { retry: false }
+  )
   return data.url
 }
 
 export async function createBillingPortalSession(): Promise<string> {
-  const { data } = await apiClient.post<{ url: string }>('/billing/create-portal-session', {})
+  const { data } = await apiClient.post<{ url: string }>(
+    '/billing/create-portal-session',
+    {},
+    { retry: false }
+  )
   return data.url
 }
 
 export async function getOverageSettings(): Promise<OverageSettings> {
   const { data } = await apiClient.get<OverageSettings>('/billing/overage-settings', {
     enableCache: false,
+    retry: false,
   })
   return data
 }
@@ -45,6 +52,8 @@ export async function getOverageSettings(): Promise<OverageSettings> {
 export async function updateOverageSettings(
   update: OverageSettingsUpdate
 ): Promise<OverageSettings> {
-  const { data } = await apiClient.put<OverageSettings>('/billing/overage-settings', update)
+  const { data } = await apiClient.put<OverageSettings>('/billing/overage-settings', update, {
+    retry: false,
+  })
   return data
 }
