@@ -95,7 +95,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
     billing_fractional_total = Decimal(0)
     total_usd_for_log = Decimal(0)
 
-    is_development = os.environ.get("ENVIRONMENT") == "development"
+    allow_mock_responses = os.environ.get("ENVIRONMENT") in ("development", "test")
     use_mock = False
 
     if ctx.has_authenticated_user and ctx.user_id:
@@ -103,12 +103,12 @@ async def generate_stream(ctx: StreamContext) -> Any:
         try:
             fresh_user = fresh_db.query(User).filter(User.id == ctx.user_id).first()
             if fresh_user and fresh_user.mock_mode_enabled:
-                if is_development or fresh_user.role in ["admin", "super_admin"]:
+                if allow_mock_responses or fresh_user.role in ["admin", "super_admin"]:
                     use_mock = True
         finally:
             fresh_db.close()
     elif not ctx.has_authenticated_user:
-        if is_development:
+        if allow_mock_responses:
             from ..cache import get_cached_app_settings
 
             def get_settings():
