@@ -8,7 +8,11 @@ pytestmark = pytest.mark.unit
 from decimal import Decimal
 from unittest.mock import patch
 
-from app.llm.image_credits import calculate_image_credits
+from app.llm.image_credits import (
+    calculate_image_credits,
+    calculate_image_credits_fractional,
+    usd_logged_for_image,
+)
 
 
 class TestCalculateImageCredits:
@@ -52,3 +56,31 @@ class TestCalculateImageCredits:
         result = calculate_image_credits("cheap/model", 1)
         # 0.001 * 100 * 1 = 0.1, rounds up to 1
         assert result == Decimal("1")
+
+
+class TestCalculateImageCreditsFractional:
+    @patch("app.llm.image_credits.get_model_image_price_per_image")
+    def test_uses_model_price_when_available(self, mock_get_price):
+        mock_get_price.return_value = 0.03
+        result = calculate_image_credits_fractional("openai/dall-e-3", 2)
+        assert result == Decimal("6")
+
+    @patch("app.llm.image_credits.get_model_image_price_per_image")
+    def test_falls_back_to_default_per_image(self, mock_get_price):
+        mock_get_price.return_value = None
+        result = calculate_image_credits_fractional("unknown/model", 3)
+        assert result == Decimal("15")
+
+
+class TestUsdLoggedForImage:
+    @patch("app.llm.image_credits.get_model_image_price_per_image")
+    def test_uses_model_price_when_available(self, mock_get_price):
+        mock_get_price.return_value = 0.04
+        result = usd_logged_for_image("openai/dall-e-3", 2)
+        assert result == Decimal("0.08")
+
+    @patch("app.llm.image_credits.get_model_image_price_per_image")
+    def test_derives_usd_from_default_credits_when_no_price(self, mock_get_price):
+        mock_get_price.return_value = None
+        result = usd_logged_for_image("unknown/model", 2)
+        assert result == Decimal("0.10")

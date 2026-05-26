@@ -77,3 +77,13 @@ def test_resolution_mismatch():
     """Wrong resolution fails validation."""
     assert resolution_matches(1024, 1024, "4K") is False
     assert resolution_matches(4096, 4096, "1K") is False
+
+
+def test_resolution_matches_rejects_unknown_size():
+    assert resolution_matches(1024, 1024, "") is False
+    assert resolution_matches(1024, 1024, "8K") is False
+
+
+def test_resolution_matches_rejects_non_positive_dimensions():
+    assert resolution_matches(0, 0, "1K") is False
+    assert resolution_matches(-100, -100, "1K") is False
