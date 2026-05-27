@@ -419,7 +419,7 @@ export const Features: React.FC = () => {
                 the text content for seamless integration with AI models.
               </li>
               <li>
-                <strong>Image Upload:</strong> Attach images (PNG, JPEG, WebP, GIF) for
+                <strong>Image Upload:</strong> Attach images (PNG, JPEG, WebP, GIF, HEIC) for
                 vision-capable models. When you attach an image, the model selector automatically
                 filters to show only vision-capable models. Use images to describe photos, analyze
                 diagrams, extract text from screenshots, or ask questions about visual content.

@@ -4,6 +4,8 @@
  * Tests conversation history management, localStorage operations, API calls, and error handling.
  */
 
+import 'fake-indexeddb/auto'
+
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
@@ -13,6 +15,7 @@ import { ApiError } from '../../services/api/errors'
 import * as conversationService from '../../services/conversationService'
 import type { ConversationSummary } from '../../types'
 import { createConversationId, createModelId } from '../../types'
+import { loadLocalConversationRecord } from '../../utils/conversationAttachmentStore'
 import {
   createMockUser,
   createMockConversationSummary,
@@ -177,7 +180,7 @@ describe('useConversationHistory', () => {
   })
 
   describe('saveConversationToLocalStorage', () => {
-    it('should save new conversation to localStorage', () => {
+    it('should save new conversation to localStorage', async () => {
       const { result } = renderHook(() =>
         useConversationHistory({
           isAuthenticated: false,
@@ -195,8 +198,8 @@ describe('useConversationHistory', () => {
         }),
       ]
 
-      act(() => {
-        const conversationId = result.current.saveConversationToLocalStorage(
+      await act(async () => {
+        const conversationId = await result.current.saveConversationToLocalStorage(
           'test input',
           [createModelId('gpt-4')],
           conversations,
@@ -212,7 +215,7 @@ describe('useConversationHistory', () => {
       expect(localStorage.getItem(`compareintel_conversation_${savedHistory[0].id}`)).toBeTruthy()
     })
 
-    it('persists imageComposerAdvanced in localStorage payload', () => {
+    it('persists imageComposerAdvanced in localStorage payload', async () => {
       const { result } = renderHook(() =>
         useConversationHistory({
           isAuthenticated: false,
@@ -230,8 +233,8 @@ describe('useConversationHistory', () => {
         }),
       ]
 
-      act(() => {
-        result.current.saveConversationToLocalStorage(
+      await act(async () => {
+        await result.current.saveConversationToLocalStorage(
           'prompt',
           ['openai/gpt-5-image'],
           conversations,
@@ -254,7 +257,7 @@ describe('useConversationHistory', () => {
       expect(parsed.imageComposerAdvanced).toEqual({ aspectRatio: '16:9', imageSize: '2K' })
     })
 
-    it('should limit to 2 conversations for anonymous users', () => {
+    it('should limit to 2 conversations for anonymous users', async () => {
       const { result } = renderHook(() =>
         useConversationHistory({
           isAuthenticated: false,
@@ -270,20 +273,20 @@ describe('useConversationHistory', () => {
       ]
 
       // Save 3 conversations
-      act(() => {
-        result.current.saveConversationToLocalStorage(
+      await act(async () => {
+        await result.current.saveConversationToLocalStorage(
           'input1',
           [createModelId('gpt-4')],
           conversations,
           false
         )
-        result.current.saveConversationToLocalStorage(
+        await result.current.saveConversationToLocalStorage(
           'input2',
           [createModelId('gpt-4')],
           conversations,
           false
         )
-        result.current.saveConversationToLocalStorage(
+        await result.current.saveConversationToLocalStorage(
           'input3',
           [createModelId('gpt-4')],
           conversations,
@@ -296,7 +299,7 @@ describe('useConversationHistory', () => {
       expect(savedHistory[0].input_data).toBe('input3') // Most recent first
     })
 
-    it('should update existing conversation when isUpdate is true', () => {
+    it('should update existing conversation when isUpdate is true', async () => {
       const { result } = renderHook(() =>
         useConversationHistory({
           isAuthenticated: false,
@@ -313,8 +316,8 @@ describe('useConversationHistory', () => {
 
       let _conversationId: string
 
-      act(() => {
-        _conversationId = result.current.saveConversationToLocalStorage(
+      await act(async () => {
+        _conversationId = await result.current.saveConversationToLocalStorage(
           'test input',
           [createModelId('gpt-4')],
           conversations,
@@ -326,7 +329,7 @@ describe('useConversationHistory', () => {
       expect(initialHistory.length).toBe(1)
 
       // Update the conversation
-      act(() => {
+      await act(async () => {
         const updatedConversations = [
           createMockModelConversation({
             modelId: createModelId('gpt-4'),
@@ -334,7 +337,7 @@ describe('useConversationHistory', () => {
           }),
         ]
 
-        result.current.saveConversationToLocalStorage(
+        await result.current.saveConversationToLocalStorage(
           'test input',
           [createModelId('gpt-4')],
           updatedConversations,
@@ -345,6 +348,54 @@ describe('useConversationHistory', () => {
       const updatedHistory = result.current.loadHistoryFromLocalStorage()
       expect(updatedHistory.length).toBe(1)
       expect(updatedHistory[0].message_count).toBe(2)
+    })
+
+    it('externalizes JPEG attachments out of localStorage JSON', async () => {
+      const { result } = renderHook(() =>
+        useConversationHistory({
+          isAuthenticated: false,
+          user: null,
+        })
+      )
+
+      const conversations = [
+        createMockModelConversation({
+          modelId: createModelId('gpt-4'),
+          messages: [
+            createMockConversationMessage({ type: 'user' }),
+            createMockConversationMessage({ type: 'assistant' }),
+          ],
+        }),
+      ]
+
+      await act(async () => {
+        await result.current.saveConversationToLocalStorage(
+          'describe this photo',
+          [createModelId('gpt-4')],
+          conversations,
+          false,
+          [
+            {
+              name: 'photo.jpg',
+              placeholder: '[image: photo.jpg]',
+              mime_type: 'image/jpeg',
+              base64_data: 'a'.repeat(5000),
+            },
+          ]
+        )
+      })
+
+      const savedHistory = result.current.loadHistoryFromLocalStorage()
+      const raw = localStorage.getItem(`compareintel_conversation_${savedHistory[0].id}`)
+      expect(raw).toBeTruthy()
+      const parsed = JSON.parse(raw!) as {
+        file_contents?: Array<{ attachment_ref?: string; base64_data?: string }>
+      }
+      expect(parsed.file_contents?.[0]?.attachment_ref).toBeTruthy()
+      expect(parsed.file_contents?.[0]?.base64_data).toBeUndefined()
+
+      const loaded = await loadLocalConversationRecord(String(savedHistory[0].id))
+      expect(loaded?.file_contents?.[0]?.base64_data).toHaveLength(5000)
     })
   })
 
@@ -476,7 +527,7 @@ describe('useConversationHistory', () => {
       expect(mockEvent.stopPropagation).toHaveBeenCalled()
     })
 
-    it('should delete conversation from localStorage for anonymous users', () => {
+    it('should delete conversation from localStorage for anonymous users', async () => {
       const { result } = renderHook(() =>
         useConversationHistory({
           isAuthenticated: false,
@@ -493,8 +544,8 @@ describe('useConversationHistory', () => {
 
       let conversationId: string
 
-      act(() => {
-        conversationId = result.current.saveConversationToLocalStorage(
+      await act(async () => {
+        conversationId = await result.current.saveConversationToLocalStorage(
           'test input',
           [createModelId('gpt-4')],
           conversations,

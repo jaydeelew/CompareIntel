@@ -3,6 +3,15 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
+// Stale service workers can serve old Vite dep chunks alongside new ones (invalid hook call).
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  void navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (const registration of registrations) {
+      void registration.unregister()
+    }
+  })
+}
+
 // React's development build logs a DevTools install hint; it is not an application error.
 if (import.meta.env.DEV) {
   const isReactDevtoolsAd = (args: unknown[]) =>

@@ -153,7 +153,7 @@ export interface StreamingHelperCallbacks {
     breakoutModelId?: string | null,
     textComposerAdvanced?: TextComposerAdvancedSettings,
     imageComposerAdvanced?: ImageComposerAdvancedSettings
-  ) => string | null
+  ) => Promise<string | null>
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   loadHistoryFromAPI: () => Promise<void>
   getFirstUserMessage: () => ConversationMessage | undefined

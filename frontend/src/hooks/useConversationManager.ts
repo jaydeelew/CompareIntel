@@ -16,7 +16,11 @@ import { createConversationId, createMessageId, createModelId } from '../types'
 import type { ModelConversation, StoredMessage } from '../types/conversation'
 import type { StoredFileContentRecord } from '../utils/attachmentStorage'
 import { storedRecordsToAttachedFiles } from '../utils/attachmentStorage'
-import { isErrorMessage } from '../utils/error'
+import {
+  loadLocalConversationRecord,
+  parseLocalConversationRecord,
+} from '../utils/conversationAttachmentStore'
+import { isErrorMessage, showNotification } from '../utils/error'
 import logger from '../utils/logger'
 import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
@@ -138,44 +142,46 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       breakout_model_id?: string | null
       already_broken_out_models?: string[]
     } | null => {
-      try {
-        const stored = localStorage.getItem(`compareintel_conversation_${id}`)
-        if (stored) {
-          const parsed = JSON.parse(stored)
-
-          // Calculate already_broken_out_models for unregistered users
-          // Only check if this is a comparison (not a breakout itself)
-          const already_broken_out_models: string[] = []
-          if (parsed.conversation_type !== 'breakout') {
-            // Load all conversations from history to find breakouts
-            const historyJson = localStorage.getItem('compareintel_conversation_history')
-            if (historyJson) {
-              const history = JSON.parse(historyJson) as ConversationSummary[]
-              // Compare parent_conversation_id (number) with conversation id (string timestamp)
-              const conversationIdNum = parseInt(id, 10)
-              const existingBreakouts = history.filter(
-                conv =>
-                  conv.parent_conversation_id === conversationIdNum &&
-                  conv.conversation_type === 'breakout' &&
-                  conv.breakout_model_id
-              )
-              already_broken_out_models.push(
-                ...existingBreakouts.map(conv => String(conv.breakout_model_id)).filter(Boolean)
-              )
-            }
-          }
-
-          return {
-            ...parsed,
-            already_broken_out_models,
-          }
-        } else {
-          logger.warn('No conversation found in localStorage for id:', id)
-        }
-      } catch (e) {
-        logger.error('Failed to load conversation from localStorage:', e, { id })
+      const parsed = parseLocalConversationRecord(id)
+      if (!parsed) {
+        logger.warn('No conversation found in localStorage for id:', id)
+        return null
       }
-      return null
+
+      const already_broken_out_models: string[] = []
+      if (parsed.conversation_type !== 'breakout') {
+        const historyJson = localStorage.getItem('compareintel_conversation_history')
+        if (historyJson) {
+          try {
+            const history = JSON.parse(historyJson) as ConversationSummary[]
+            const conversationIdNum = parseInt(id, 10)
+            const existingBreakouts = history.filter(
+              conv =>
+                conv.parent_conversation_id === conversationIdNum &&
+                conv.conversation_type === 'breakout' &&
+                conv.breakout_model_id
+            )
+            already_broken_out_models.push(
+              ...existingBreakouts.map(conv => String(conv.breakout_model_id)).filter(Boolean)
+            )
+          } catch (error) {
+            logger.warn('Failed to compute breakout models for conversation:', error)
+          }
+        }
+      }
+
+      return {
+        ...(parsed as {
+          input_data: string
+          models_used: string[]
+          messages: StoredMessage[]
+          file_contents?: StoredFileContentRecord[]
+          conversation_type?: 'comparison' | 'breakout'
+          parent_conversation_id?: string | null
+          breakout_model_id?: string | null
+        }),
+        already_broken_out_models,
+      }
     },
     []
   )
@@ -273,11 +279,39 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         if (isAuthenticated && typeof summary.id === 'number') {
           conversationData = await loadConversationFromAPI(summary.id)
         } else if (!isAuthenticated && typeof summary.id === 'string') {
-          conversationData = loadConversationFromLocalStorage(summary.id)
+          conversationData = await loadLocalConversationRecord(summary.id)
+          if (conversationData) {
+            const already_broken_out_models: string[] = []
+            if (conversationData.conversation_type !== 'breakout') {
+              const historyJson = localStorage.getItem('compareintel_conversation_history')
+              if (historyJson) {
+                try {
+                  const history = JSON.parse(historyJson) as ConversationSummary[]
+                  const conversationIdNum = parseInt(summary.id, 10)
+                  const existingBreakouts = history.filter(
+                    conv =>
+                      conv.parent_conversation_id === conversationIdNum &&
+                      conv.conversation_type === 'breakout' &&
+                      conv.breakout_model_id
+                  )
+                  already_broken_out_models.push(
+                    ...existingBreakouts.map(conv => String(conv.breakout_model_id)).filter(Boolean)
+                  )
+                } catch (error) {
+                  logger.warn('Failed to compute breakout models when loading conversation:', error)
+                }
+              }
+            }
+            conversationData = { ...conversationData, already_broken_out_models }
+          }
         }
 
         if (!conversationData) {
           logger.error('Failed to load conversation data', { summary, isAuthenticated })
+          showNotification(
+            'Could not load this conversation. It may have been cleared from browser storage.',
+            'error'
+          )
           return
         }
 

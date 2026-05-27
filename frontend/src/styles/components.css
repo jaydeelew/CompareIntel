@@ -411,6 +411,21 @@
   border-width: 5px;
 }
 
+.notification-loading-spinner {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  border-color: rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-loading-spinner.modern-spinner {
+    animation: none;
+    opacity: 0.9;
+  }
+}
+
 .loading-spinner-container {
   display: flex;
   flex-direction: column;

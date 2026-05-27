@@ -7,10 +7,19 @@ export interface StoredFileContentRecord {
   content?: string
   mime_type?: string
   base64_data?: string
+  /** Present when image bytes are stored in IndexedDB instead of inline JSON. */
+  attachment_ref?: string
 }
 
 export function isImageStoredRecord(record: StoredFileContentRecord): boolean {
   return Boolean(record.base64_data)
+}
+
+/** Normalize non-standard image MIME types for data URLs and API payloads. */
+export function normalizeImageMimeType(mime: string | undefined): string {
+  const normalized = (mime || 'image/png').toLowerCase()
+  if (normalized === 'image/jpg') return 'image/jpeg'
+  return normalized
 }
 
 export function storedRecordsToAttachedFiles(
@@ -26,7 +35,7 @@ export function storedRecordsToAttachedFiles(
         name: record.name,
         placeholder: record.placeholder,
         base64Data: record.base64_data,
-        mimeType: record.mime_type || 'image/png',
+        mimeType: normalizeImageMimeType(record.mime_type),
       }
     }
     return {
@@ -46,7 +55,7 @@ export function attachedFilesToStoredRecords(
       return {
         name: f.name,
         placeholder: f.placeholder,
-        mime_type: ('mimeType' in f && f.mimeType) || 'image/png',
+        mime_type: normalizeImageMimeType(('mimeType' in f && f.mimeType) || 'image/png'),
         base64_data: f.base64Data,
       }
     }
@@ -87,7 +96,7 @@ export function getImageAttachmentsForApi(
   return files
     .filter(f => 'base64Data' in f && !!f.base64Data)
     .map(f => ({
-      mime_type: ('mimeType' in f && f.mimeType) || 'image/png',
+      mime_type: normalizeImageMimeType(('mimeType' in f && f.mimeType) || 'image/png'),
       base64_data: f.base64Data as string,
       filename: f.name,
       placeholder: f.placeholder,

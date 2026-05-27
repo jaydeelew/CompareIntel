@@ -30,14 +30,14 @@ interface UseBreakoutConversationConfig {
 
 interface UseBreakoutConversationCallbacks {
   loadHistoryFromAPI: () => Promise<void>
-  loadConversationFromLocalStorage: (id: string | number) => {
+  loadConversationFromLocalStorage: (id: string | number) => Promise<{
     input_data: string
     models_used: string[]
     messages: StoredMessage[]
     file_contents?: import('../utils/attachmentStorage').StoredFileContentRecord[]
     textComposerAdvanced?: TextComposerAdvancedSettings
     imageComposerAdvanced?: ImageComposerAdvancedSettings
-  } | null
+  } | null>
   loadHistoryFromLocalStorage: () => ConversationSummary[]
   saveConversationToLocalStorage: (
     inputData: string,
@@ -50,7 +50,7 @@ interface UseBreakoutConversationCallbacks {
     breakoutModelId?: string | null,
     textComposerAdvanced?: TextComposerAdvancedSettings,
     imageComposerAdvanced?: ImageComposerAdvancedSettings
-  ) => string
+  ) => Promise<string>
   setConversationHistory: (history: ConversationSummary[]) => void
   setConversations: React.Dispatch<React.SetStateAction<ModelConversation[]>>
   setSelectedModels: (models: string[]) => void
@@ -128,7 +128,7 @@ export function useBreakoutConversation(
             output_tokens: msg.output_tokens,
           }))
         } else {
-          const parentData = loadConversationFromLocalStorage(conversationId)
+          const parentData = await loadConversationFromLocalStorage(conversationId)
           if (!parentData) {
             setError('Failed to load parent conversation')
             setBreakoutPhase('idle')
@@ -154,7 +154,7 @@ export function useBreakoutConversation(
             messages: breakoutMessages,
           }
 
-          saveConversationToLocalStorage(
+          await saveConversationToLocalStorage(
             parentData.input_data,
             [modelId],
             [breakoutModelConversationForStorage],

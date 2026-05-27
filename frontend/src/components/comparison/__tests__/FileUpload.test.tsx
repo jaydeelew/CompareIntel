@@ -3,17 +3,20 @@
  */
 /// <reference types="@testing-library/jest-dom" />
 
-import { render } from '@testing-library/react'
+import { act, render } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { FileUpload } from '../FileUpload'
 
 const mockNotificationController = Object.assign(vi.fn(), {
   clearAutoRemove: vi.fn(),
+  setIcon: vi.fn(),
 })
 const mockShowNotification = vi.fn(() => mockNotificationController)
 
 vi.mock('../../../utils/error', () => ({
+  NOTIFICATION_LOADING_SPINNER_HTML:
+    '<span class="modern-spinner notification-loading-spinner"></span>',
   showNotification: (...args: unknown[]) => mockShowNotification(...args),
 }))
 
@@ -24,6 +27,17 @@ vi.mock('../../../utils/logger', () => ({
   },
 }))
 
+const mockConvertHeicToJpeg = vi.fn()
+
+vi.mock('../../../utils/convertHeicToJpeg', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../../utils/convertHeicToJpeg')>()
+  return {
+    ...actual,
+    convertHeicToJpeg: (...args: Parameters<typeof actual.convertHeicToJpeg>) =>
+      mockConvertHeicToJpeg(...args),
+  }
+})
+
 describe('FileUpload', () => {
   let setInput: ReturnType<typeof vi.fn>
   let setAttachedFiles: ReturnType<typeof vi.fn>
@@ -32,6 +46,7 @@ describe('FileUpload', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockConvertHeicToJpeg.mockReset()
     setInput = vi.fn()
     setAttachedFiles = vi.fn()
     textarea = document.createElement('textarea')
@@ -185,5 +200,48 @@ describe('FileUpload', () => {
       expect.stringContaining('Only text, code, document, and image files'),
       'error'
     )
+  })
+
+  it('converts HEIC to JPEG before attaching', async () => {
+    mockFileReader('heic-converted')
+    const jpegFile = new File(['jpeg'], 'photo.jpg', { type: 'image/jpeg' })
+    mockConvertHeicToJpeg.mockResolvedValue(jpegFile)
+
+    const ref = renderFileUpload('')
+    const heicFile = new File(['heic'], 'photo.heic', { type: 'image/heic' })
+    let result = false
+    await act(async () => {
+      result = (await ref.current!.processFile(heicFile)) ?? false
+    })
+
+    expect(result).toBe(true)
+    expect(mockConvertHeicToJpeg).toHaveBeenCalledWith(heicFile)
+    expect(mockShowNotification).toHaveBeenCalledWith('Converting HEIC to JPEG…', 'success')
+    expect(mockNotificationController.setIcon).toHaveBeenCalled()
+    expect(setAttachedFiles).toHaveBeenCalledTimes(1)
+    const [files] = setAttachedFiles.mock.calls[0]
+    expect(files[0]).toMatchObject({
+      name: 'photo.jpg',
+      placeholder: '[image: photo.jpg]',
+      base64Data: 'heic-converted',
+      mimeType: 'image/jpeg',
+    })
+  })
+
+  it('shows error when HEIC conversion fails', async () => {
+    mockConvertHeicToJpeg.mockRejectedValue(new Error('Conversion failed'))
+
+    const ref = renderFileUpload('')
+    let result = false
+    await act(async () => {
+      result =
+        (await ref.current!.processFile(
+          new File(['heic'], 'broken.heic', { type: 'image/heic' })
+        )) ?? false
+    })
+
+    expect(result).toBe(false)
+    expect(setAttachedFiles).not.toHaveBeenCalled()
+    expect(mockShowNotification).toHaveBeenCalledWith('Conversion failed', 'error')
   })
 })

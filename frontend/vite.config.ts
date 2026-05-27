@@ -310,10 +310,17 @@ export default defineConfig({
       'react-router',
       'react-router-dom',
     ],
+    // Wait for the full import graph before optimizing so partial re-optimizes cannot
+    // leave the browser with mixed dep chunk versions (useState null dispatcher).
+    holdUntilCrawlEnd: true,
   },
   server: {
     port: 5173,
     strictPort: false,
+    // Avoid stale optimized-dep chunks after restarts (mixed ?v= hashes → invalid hook call).
+    headers: {
+      'Cache-Control': 'no-store',
+    },
     proxy: {
       // Photon (Komoot) does not always respond with CORS headers when the browser blocks
       // or fails the cross-origin request (e.g. extensions). Same-origin proxy avoids that.

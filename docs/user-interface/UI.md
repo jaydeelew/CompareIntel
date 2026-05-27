@@ -26,7 +26,7 @@ All GUI components for CompareIntel, organized by Main and Admin sections.
 
 ### FileUpload
 - **Parent:** `ComparisonForm`
-- **Description:** File and image attachment. Supports drag-and-drop and file picker. Accepts text, code, documents (PDF, Word), and images (PNG, JPEG, WebP, GIF). Images require vision-capable models; when an image is attached, the model selector filters to vision-capable models only.
+- **Description:** File and image attachment. Supports drag-and-drop and file picker. Accepts text, code, documents (PDF, Word), and images (PNG, JPEG, WebP, GIF, HEIC). HEIC is converted to JPEG client-side before upload. Images require vision-capable models; when an image is attached, the model selector filters to vision-capable models only.
 - **File:** `frontend/src/components/comparison/FileUpload.tsx`
 
 ### ConversationItem

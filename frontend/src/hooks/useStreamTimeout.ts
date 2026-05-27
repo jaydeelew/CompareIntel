@@ -58,7 +58,7 @@ export interface UseStreamTimeoutCallbacks {
     breakoutModelId?: string | null,
     textComposerAdvanced?: import('../types').TextComposerAdvancedSettings,
     imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings
-  ) => string | null
+  ) => Promise<string | null>
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
   refreshUser: () => Promise<void>
@@ -240,7 +240,7 @@ export function useStreamTimeout(
                       attachedFiles,
                       extractFileContentForStorage
                     )
-                    const savedId = saveConversationToLocalStorage(
+                    const savedId = await saveConversationToLocalStorage(
                       inputData,
                       selectedModels,
                       conversationsWithMessages,

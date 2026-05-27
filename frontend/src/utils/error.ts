@@ -21,6 +21,10 @@ export interface NotificationController {
   setIcon: (iconHtml: string) => void // Set a custom icon
 }
 
+/** Animated spinner HTML for in-progress notifications (uses the shared modern-spinner). */
+export const NOTIFICATION_LOADING_SPINNER_HTML =
+  '<span class="modern-spinner notification-loading-spinner" role="status" aria-label="Loading"></span>'
+
 /**
  * Show a temporary notification to the user.
  *

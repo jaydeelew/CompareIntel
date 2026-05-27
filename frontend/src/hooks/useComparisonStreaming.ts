@@ -254,7 +254,7 @@ export function useComparisonStreaming(
               modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
             const imageComposerSnapshot =
               modelMode === 'image' ? { aspectRatio, imageSize } : undefined
-            helpers.saveConversationToLocalStorage(
+            void helpers.saveConversationToLocalStorage(
               inputData,
               previousModels,
               conversationsWithMessages,

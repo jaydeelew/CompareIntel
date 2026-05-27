@@ -115,10 +115,11 @@ export const HowItWorks: React.FC = () => {
                 </p>
                 <p>
                   <strong>Attach files (optional):</strong> Drag and drop or use the file picker.
-                  Supported: PDF, Word, text, code, and images (PNG, JPEG, WebP, GIF). Document and
-                  text contents persist across sessions for follow-ups. For images, select at least
-                  one vision-capable model—the model list automatically filters to vision-capable
-                  models when an image is attached.
+                  Supported: PDF, Word, text, code, and images (PNG, JPEG, WebP, GIF, HEIC). HEIC is
+                  converted to JPEG in your browser. Document and text contents persist across
+                  sessions for follow-ups. For images, select at least one vision-capable model—the
+                  model list automatically filters to vision-capable models when an image is
+                  attached.
                 </p>
                 <p>
                   <strong>Tips for effective prompts:</strong>
@@ -425,7 +426,7 @@ export const HowItWorks: React.FC = () => {
               <div className="use-case-card">
                 <h3>🖼️ Image Analysis</h3>
                 <p>
-                  Attach images (PNG, JPEG, WebP, GIF) and compare how vision-capable models
+                  Attach images (PNG, JPEG, WebP, GIF, HEIC) and compare how vision-capable models
                   interpret them. Describe photos, analyze diagrams, extract text from screenshots,
                   or ask questions about visual content. The model selector automatically filters to
                   vision-capable models when an image is attached.

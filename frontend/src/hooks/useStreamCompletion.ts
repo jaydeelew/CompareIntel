@@ -59,7 +59,7 @@ export interface UseStreamCompletionCallbacks {
     breakoutModelId?: string | null,
     textComposerAdvanced?: import('../types').TextComposerAdvancedSettings,
     imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings
-  ) => string | null
+  ) => Promise<string | null>
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
   scrollConversationsToBottom: () => void
@@ -301,7 +301,7 @@ export function useStreamCompletion(
                       attachedFiles,
                       extractFileContentForStorage
                     )
-                    const savedId = saveConversationToLocalStorage(
+                    const savedId = await saveConversationToLocalStorage(
                       inputData,
                       selectedModels,
                       conversationsWithMessages,
@@ -355,7 +355,7 @@ export function useStreamCompletion(
                       attachedFiles,
                       extractFileContentForStorage
                     )
-                    const savedId = saveConversationToLocalStorage(
+                    const savedId = await saveConversationToLocalStorage(
                       inputData,
                       selectedModels,
                       conversationsWithMessages,

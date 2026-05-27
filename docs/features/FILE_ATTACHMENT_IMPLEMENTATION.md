@@ -4,7 +4,7 @@ File attachments in model comparisons with conversation history persistence.
 
 ## Overview
 
-Implemented a file attachment system that allows users to attach text, code, document files (PDF, DOCX, DOC, ODT), and images (PNG, JPEG, WebP, GIF) to their model comparison queries. Images are processed by vision-capable models and sent as base64-encoded content. The system uses a **"Stored Content Approach"** where file contents are extracted and stored separately from placeholders, enabling file content to persist across conversation sessions and be available for follow-up questions.
+Implemented a file attachment system that allows users to attach text, code, document files (PDF, DOCX, DOC, ODT), and images (PNG, JPEG, WebP, GIF, HEIC) to their model comparison queries. HEIC/HEIF files are converted to JPEG in the browser (via lazy-loaded `heic2any`) before base64 encoding. Images are processed by vision-capable models and sent as base64-encoded content. The system uses a **"Stored Content Approach"** where file contents are extracted and stored separately from placeholders, enabling file content to persist across conversation sessions and be available for follow-up questions.
 
 ---
 
@@ -219,7 +219,7 @@ if (isFollowUpMode && conversations.length > 0) {
 - **Text files**: `.txt`, `.md`, `.json`, `.xml`, `.csv`, etc.
 - **Code files**: `.js`, `.ts`, `.py`, `.java`, `.cpp`, `.html`, `.css`, etc.
 - **Documents**: `.pdf`, `.docx`, `.doc`, `.odt`
-- **Images**: `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif` — Images are sent to vision-capable models as base64. When an image is attached, the model selector filters to show only vision-capable models. At least one vision-capable model must be selected to interpret the image.
+- **Images**: `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.heic`, `.heif` — Images are sent to vision-capable models as base64. HEIC/HEIF is converted to JPEG in the browser before encoding. When an image is attached, the model selector filters to show only vision-capable models. At least one vision-capable model must be selected to interpret the image.
 
 ### File Processing
 
@@ -448,7 +448,7 @@ const [attachedFiles, setAttachedFiles] = useState<
 
 ### File Type Validation
 
-- Only text, code, document, and image files allowed (PNG, JPEG, WebP, GIF for images)
+- Only text, code, document, and image files allowed (PNG, JPEG, WebP, GIF, HEIC for images; HEIC converted to JPEG client-side)
 - Binary files rejected
 - File type checked before processing
 

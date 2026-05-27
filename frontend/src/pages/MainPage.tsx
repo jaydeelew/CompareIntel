@@ -68,6 +68,7 @@ import {
 import { generateBrowserFingerprint } from '../utils'
 import { removePlaceholderFromInput } from '../utils/attachmentInputUtils'
 import { BILLING_UPDATED_EVENT } from '../utils/billingSync'
+import { loadLocalConversationRecord } from '../utils/conversationAttachmentStore'
 import { isErrorMessage } from '../utils/error'
 import {
   getAllKnownAspectRatios,
@@ -1103,16 +1104,7 @@ export function MainPage() {
     },
     {
       loadHistoryFromAPI,
-      loadConversationFromLocalStorage: id => {
-        const key = `compareintel_conversation_${id}`
-        const data = localStorage.getItem(key)
-        if (!data) return null
-        try {
-          return JSON.parse(data)
-        } catch {
-          return null
-        }
-      },
+      loadConversationFromLocalStorage: id => loadLocalConversationRecord(String(id)),
       loadHistoryFromLocalStorage,
       saveConversationToLocalStorage,
       setConversationHistory,

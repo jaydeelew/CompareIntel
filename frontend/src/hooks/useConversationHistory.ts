@@ -20,6 +20,10 @@ import type {
   ImageComposerAdvancedSettings,
 } from '../types'
 import type { StoredFileContentRecord } from '../utils/attachmentStorage'
+import {
+  deleteConversationAttachments,
+  externalizeImageAttachmentsForStorage,
+} from '../utils/conversationAttachmentStore'
 import logger from '../utils/logger'
 
 export interface UseConversationHistoryOptions {
@@ -51,7 +55,7 @@ export interface UseConversationHistoryReturn {
     breakoutModelId?: string | null,
     textComposerAdvanced?: TextComposerAdvancedSettings,
     imageComposerAdvanced?: ImageComposerAdvancedSettings
-  ) => string
+  ) => Promise<string>
   deleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => Promise<void>
   loadConversationFromAPI: (conversationId: ConversationId) => Promise<ModelConversation[] | null>
   loadConversationFromLocalStorage: (conversationId: string) => ModelConversation[]
@@ -92,7 +96,7 @@ export function useConversationHistory({
   // Save conversation to localStorage (unregistered users)
   // Returns the conversationId of the saved conversation
   const saveConversationToLocalStorage = useCallback(
-    (
+    async (
       inputData: string,
       modelsUsed: string[],
       conversationsToSave: ModelConversation[],
@@ -103,7 +107,7 @@ export function useConversationHistory({
       breakoutModelId?: string | null,
       textComposerAdvanced?: TextComposerAdvancedSettings,
       imageComposerAdvanced?: ImageComposerAdvancedSettings
-    ): string => {
+    ): Promise<string> => {
       try {
         const history = loadHistoryFromLocalStorage()
 
@@ -251,9 +255,6 @@ export function useConversationHistory({
         // Keep only the 2 most recent conversations
         const limited = sorted.slice(0, 2)
 
-        // Store summary list (save maximum 2 in localStorage)
-        localStorage.setItem('compareintel_conversation_history', JSON.stringify(limited))
-
         // Store full conversation data with ID as key
         // Format: messages with role and model_id for proper reconstruction
         const conversationMessages: StoredMessage[] = []
@@ -326,6 +327,11 @@ export function useConversationHistory({
           storedImageAdvanced = existingData.imageComposerAdvanced as ImageComposerAdvancedSettings
         }
 
+        const externalizedFileContents = await externalizeImageAttachmentsForStorage(
+          conversationId,
+          fileContents || []
+        )
+
         localStorage.setItem(
           `compareintel_conversation_${conversationId}`,
           JSON.stringify({
@@ -336,11 +342,14 @@ export function useConversationHistory({
             breakout_model_id: breakoutModelId || null,
             created_at: existingData?.created_at || conversationSummary.created_at,
             messages: conversationMessages,
-            file_contents: fileContents || [], // Store extracted file contents separately
+            file_contents: externalizedFileContents,
             ...(storedTextAdvanced != null ? { textComposerAdvanced: storedTextAdvanced } : {}),
             ...(storedImageAdvanced != null ? { imageComposerAdvanced: storedImageAdvanced } : {}),
           })
         )
+
+        // Store summary list only after full conversation payload succeeds
+        localStorage.setItem('compareintel_conversation_history', JSON.stringify(limited))
 
         // Delete full conversation data for any conversations that are no longer in the limited list
         // This ensures we only keep data for the 2 most recent comparisons
@@ -363,6 +372,8 @@ export function useConversationHistory({
         // Delete the old conversation data
         keysToDelete.forEach(key => {
           localStorage.removeItem(key)
+          const evictedId = key.replace('compareintel_conversation_', '')
+          void deleteConversationAttachments(evictedId)
         })
 
         // Reload all saved conversations from localStorage to state
@@ -456,6 +467,7 @@ export function useConversationHistory({
         try {
           // Remove the conversation data
           localStorage.removeItem(`compareintel_conversation_${summary.id}`)
+          void deleteConversationAttachments(String(summary.id))
 
           // Update history list
           const history = loadHistoryFromLocalStorage()

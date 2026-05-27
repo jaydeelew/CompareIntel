@@ -1,6 +1,14 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
-import { showNotification } from '../../utils/error'
+import { convertHeicToJpeg, isHeicFile } from '../../utils/convertHeicToJpeg'
+import { NOTIFICATION_LOADING_SPINNER_HTML, showNotification } from '../../utils/error'
 import logger from '../../utils/logger'
 import { StyledTooltip } from '../shared'
 
@@ -49,8 +57,16 @@ export interface FileUploadHandle {
   openFilePicker: () => void
 }
 
-const IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
-const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif']
+const IMAGE_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+]
+const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.heic', '.heif']
 
 /** Threshold above which we warn about large image size and credit costs (1 MB) */
 const LARGE_IMAGE_THRESHOLD_BYTES = 1024 * 1024
@@ -259,7 +275,9 @@ async function isTextOrCodeFile(file: File): Promise<boolean> {
 
 function getFileTypeLabel(fileName: string): string {
   const lower = fileName.toLowerCase()
-  if (['.png', '.jpg', '.jpeg', '.webp', '.gif'].some(e => lower.endsWith(e))) return 'Image file'
+  if (['.png', '.jpg', '.jpeg', '.webp', '.gif', '.heic', '.heif'].some(e => lower.endsWith(e))) {
+    return 'Image file'
+  }
   if (lower.endsWith('.pdf')) return 'PDF file'
   if (lower.endsWith('.docx')) return 'DOCX file'
   if (lower.endsWith('.py')) return 'Python file'
@@ -284,10 +302,10 @@ function getFileTypeLabel(fileName: string): string {
 }
 
 const MOBILE_ACCEPT =
-  'text/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,application/rtf,application/json,application/javascript,application/xml,image/png,image/jpeg,image/webp,image/gif,.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,.png,.jpg,.jpeg,.webp,.gif'
+  'text/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,application/rtf,application/json,application/javascript,application/xml,image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif,.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,.png,.jpg,.jpeg,.webp,.gif,.heic,.heif'
 
 const DESKTOP_ACCEPT =
-  '.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,.png,.jpg,.jpeg,.webp,.gif,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text,image/png,image/jpeg,image/webp,image/gif'
+  '.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,.png,.jpg,.jpeg,.webp,.gif,.heic,.heif,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text,image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif'
 
 const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(function FileUpload(
   {
@@ -305,6 +323,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
   ref
 ) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [isConverting, setIsConverting] = useState(false)
 
   const isMobileDevice = useMemo(() => {
     if (typeof navigator === 'undefined') return false
@@ -315,19 +334,48 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
 
   const processFile = useCallback(
     async (file: File) => {
+      const isHeic = isHeicFile(file)
       const isText = await isTextOrCodeFile(file)
-      const isImage = isImageFile(file)
+      const isImage = isImageFile(file) || isHeic
       if (!isText && !isImage) {
         showNotification(
-          'Only text, code, document, and image files (PNG, JPEG, WebP, GIF) can be uploaded. Please select a supported file.',
+          'Only text, code, document, and image files (PNG, JPEG, WebP, GIF, HEIC) can be uploaded. Please select a supported file.',
           'error'
         )
         return false
       }
 
+      let convertingNotification: ReturnType<typeof showNotification> | null = null
+
       try {
+        let imageFile = file
+        if (isImage && isHeic) {
+          setIsConverting(true)
+          convertingNotification = showNotification('Converting HEIC to JPEG…', 'success')
+          convertingNotification.clearAutoRemove()
+          convertingNotification.setIcon(NOTIFICATION_LOADING_SPINNER_HTML)
+          try {
+            imageFile = await convertHeicToJpeg(file)
+          } catch (conversionError) {
+            convertingNotification()
+            convertingNotification = null
+            const message =
+              conversionError instanceof Error
+                ? conversionError.message
+                : 'Failed to convert HEIC image. Try exporting as JPEG from Photos and attach again.'
+            showNotification(message, 'error')
+            logger.error('HEIC conversion error:', conversionError)
+            return false
+          } finally {
+            setIsConverting(false)
+          }
+          convertingNotification()
+          convertingNotification = null
+        }
+
         const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        const placeholder = isImage ? `[image: ${file.name}]` : `[file: ${file.name}]`
+        const attachmentName = isImage ? imageFile.name : file.name
+        const placeholder = isImage ? `[image: ${attachmentName}]` : `[file: ${attachmentName}]`
         let attachedFile: AttachedFile
 
         if (isImage) {
@@ -339,13 +387,13 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
               resolve(base64 || '')
             }
             reader.onerror = reject
-            reader.readAsDataURL(file)
+            reader.readAsDataURL(imageFile)
           })
-          const mimeType = file.type || 'image/png'
+          const mimeType = imageFile.type || 'image/jpeg'
           attachedFile = {
             id: fileId,
-            file,
-            name: file.name,
+            file: imageFile,
+            name: attachmentName,
             placeholder,
             base64Data,
             mimeType,
@@ -354,7 +402,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
           attachedFile = {
             id: fileId,
             file,
-            name: file.name,
+            name: attachmentName,
             placeholder,
           }
         }
@@ -390,16 +438,17 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
           setInput(input + '\n\n')
         }
 
-        const fileType = getFileTypeLabel(file.name)
-        const notification = showNotification(
-          `${fileType} "${file.name}" attached (will be expanded on submit)`,
-          'success'
-        )
+        const fileType = getFileTypeLabel(attachmentName)
+        const attachedLabel =
+          isHeic && file.name !== attachmentName
+            ? `${fileType} "${file.name}" attached as JPEG (will be expanded on submit)`
+            : `${fileType} "${attachmentName}" attached (will be expanded on submit)`
+        const notification = showNotification(attachedLabel, 'success')
         notification.clearAutoRemove()
         setTimeout(() => notification(), 5000)
 
-        if (isImage && file.size > LARGE_IMAGE_THRESHOLD_BYTES) {
-          const sizeStr = formatFileSize(file.size)
+        if (isImage && imageFile.size > LARGE_IMAGE_THRESHOLD_BYTES) {
+          const sizeStr = formatFileSize(imageFile.size)
           const warningNotif = showNotification(
             `Large image (${sizeStr}) uses more credits. Consider compressing or resizing to reduce cost.`,
             'warning'
@@ -410,6 +459,8 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
 
         return true
       } catch (error) {
+        convertingNotification?.()
+        setIsConverting(false)
         const errorMessage =
           error instanceof Error ? error.message : 'Error attaching file. Please try again.'
         showNotification(errorMessage, 'error')
@@ -419,6 +470,8 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
     },
     [attachedFiles, setAttachedFiles, input, setInput, textareaRef]
   )
+
+  const uploadDisabled = disabled || isConverting
 
   const handleFileUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -471,7 +524,8 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
             onClick={handleUploadButtonClick}
             className="textarea-icon-button file-upload-button"
             aria-label="Select, paste, or drag text and image files here"
-            disabled={disabled}
+            disabled={uploadDisabled}
+            aria-busy={isConverting}
           >
             <svg
               viewBox="0 0 24 24"
@@ -495,7 +549,8 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
           onClick={handleUploadButtonClick}
           className="textarea-icon-button file-upload-button"
           aria-label="Select, paste, or drag text and image files here"
-          disabled={disabled}
+          disabled={uploadDisabled}
+          aria-busy={isConverting}
         >
           <svg
             viewBox="0 0 24 24"
