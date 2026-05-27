@@ -150,6 +150,9 @@ function checkBundleSize() {
   const lazyLoadedChunkPatterns = [
     'vendor-files',
     'vendor-export',
+    'vendor-pwa',
+    'vendor-heic',
+    'vendor-mailcheck',
     'pages',
     'AdminPanel',
     'latex-renderer',
@@ -160,6 +163,10 @@ function checkBundleSize() {
     'RegisterForm',
     'ForgotPasswordForm',
     'virtual_pwa-register',
+    'TutorialManager',
+    'TutorialOverlay',
+    'TermsOfService',
+    'model_renderer_configs',
     'sentry.', // e.g. sentry.BRnHB_4e.js alongside vendor-sentry split
   ];
   

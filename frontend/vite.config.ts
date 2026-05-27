@@ -411,8 +411,18 @@ export default defineConfig({
             if (id.includes('web-vitals')) {
               return 'vendor-vitals';
             }
-            // Try to identify and split other large packages
-            // If vendor chunk gets too large, Vite will warn us
+            // PWA / service worker (deferred via virtual:pwa-register in main.tsx)
+            if (id.includes('workbox')) {
+              return 'vendor-pwa';
+            }
+            // HEIC conversion (dynamic import in convertHeicToJpeg.ts)
+            if (id.includes('heic2any')) {
+              return 'vendor-heic';
+            }
+            // Auth email typo hints (RegisterForm lazy route)
+            if (id.includes('mailcheck')) {
+              return 'vendor-mailcheck';
+            }
             return 'vendor';
           }
           // Split large application files
