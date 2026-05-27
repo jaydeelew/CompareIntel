@@ -1,17 +1,20 @@
+import type { ImageComposerAdvancedSettings, TextComposerAdvancedSettings } from '../types'
+import type { StoredMessage } from '../types/conversation'
+
 import type { StoredFileContentRecord } from './attachmentStorage'
 import logger from './logger'
 
 export interface LocalConversationRecord {
   input_data: string
   models_used: string[]
-  messages: Array<Record<string, unknown>>
+  messages: StoredMessage[]
   file_contents?: StoredFileContentRecord[]
   conversation_type?: 'comparison' | 'breakout'
   parent_conversation_id?: string | null
   breakout_model_id?: string | null
   created_at?: string
-  textComposerAdvanced?: unknown
-  imageComposerAdvanced?: unknown
+  textComposerAdvanced?: TextComposerAdvancedSettings
+  imageComposerAdvanced?: ImageComposerAdvancedSettings
   already_broken_out_models?: string[]
 }
 
@@ -116,7 +119,7 @@ export async function externalizeImageAttachmentsForStorage(
 
 /** Restore inline base64 for attachments saved via IndexedDB. */
 export async function hydrateStoredFileContents(
-  conversationId: string,
+  _conversationId: string,
   records: StoredFileContentRecord[] | undefined
 ): Promise<StoredFileContentRecord[]> {
   if (!records?.length) return []

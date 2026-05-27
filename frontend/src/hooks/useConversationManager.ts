@@ -171,15 +171,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       }
 
       return {
-        ...(parsed as {
-          input_data: string
-          models_used: string[]
-          messages: StoredMessage[]
-          file_contents?: StoredFileContentRecord[]
-          conversation_type?: 'comparison' | 'breakout'
-          parent_conversation_id?: string | null
-          breakout_model_id?: string | null
-        }),
+        ...parsed,
         already_broken_out_models,
       }
     },
@@ -266,6 +258,9 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           models_used: string[]
           messages: StoredMessage[]
           file_contents?: StoredFileContentRecord[]
+          conversation_type?: 'comparison' | 'breakout'
+          parent_conversation_id?: string | null
+          breakout_model_id?: string | null
           already_broken_out_models?: string[]
           textComposerAdvanced?: TextComposerAdvancedSettings
           composer_temperature?: number | null
