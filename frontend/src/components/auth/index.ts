@@ -2,7 +2,7 @@
  * Auth Components Exports
  *
  * Note: LoginForm, RegisterForm, and ForgotPasswordForm are not re-exported here so
- * AuthModal can lazy-load them without the barrel pulling them into the main chunk.
+ * the barrel does not pull them into unrelated import sites.
  */
 
 export { AuthModal } from './AuthModal'

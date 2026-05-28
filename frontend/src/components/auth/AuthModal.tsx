@@ -3,17 +3,12 @@
  * Displays login or register form in a modal
  */
 
-import React, { useState, useEffect, lazy, Suspense } from 'react'
+import React, { useState, useEffect } from 'react'
 
+import { ForgotPasswordForm } from './ForgotPasswordForm'
+import { LoginForm } from './LoginForm'
+import { RegisterForm } from './RegisterForm'
 import './AuthForms.css'
-
-const LoginFormLazy = lazy(() => import('./LoginForm').then(m => ({ default: m.LoginForm })))
-const RegisterFormLazy = lazy(() =>
-  import('./RegisterForm').then(m => ({ default: m.RegisterForm }))
-)
-const ForgotPasswordFormLazy = lazy(() =>
-  import('./ForgotPasswordForm').then(m => ({ default: m.ForgotPasswordForm }))
-)
 
 interface AuthModalProps {
   isOpen: boolean
@@ -81,45 +76,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </button>
 
         {mode === 'login' ? (
-          <Suspense fallback={<div className="auth-modal-form-fallback" aria-busy="true" />}>
-            <LoginFormLazy
-              onSuccess={handleSuccess}
-              onSwitchToRegister={email => {
-                setRegisterEmail(email || '')
-                setLoginEmail('')
-                setMode('register')
-              }}
-              onForgotPassword={email => {
-                setForgotPasswordEmail(email || '')
-                setMode('forgot-password')
-              }}
-              initialEmail={loginEmail || initialEmail}
-            />
-          </Suspense>
+          <LoginForm
+            onSuccess={handleSuccess}
+            onSwitchToRegister={email => {
+              setRegisterEmail(email || '')
+              setLoginEmail('')
+              setMode('register')
+            }}
+            onForgotPassword={email => {
+              setForgotPasswordEmail(email || '')
+              setMode('forgot-password')
+            }}
+            initialEmail={loginEmail || initialEmail}
+          />
         ) : mode === 'register' ? (
-          <Suspense fallback={<div className="auth-modal-form-fallback" aria-busy="true" />}>
-            <RegisterFormLazy
-              onSuccess={handleSuccess}
-              onSwitchToLogin={email => {
-                setLoginEmail(email || '')
-                setRegisterEmail('')
-                setMode('login')
-              }}
-              initialEmail={registerEmail}
-            />
-          </Suspense>
+          <RegisterForm
+            onSuccess={handleSuccess}
+            onSwitchToLogin={email => {
+              setLoginEmail(email || '')
+              setRegisterEmail('')
+              setMode('login')
+            }}
+            initialEmail={registerEmail}
+          />
         ) : (
-          <Suspense fallback={<div className="auth-modal-form-fallback" aria-busy="true" />}>
-            <ForgotPasswordFormLazy
-              onSuccess={handleSuccess}
-              onBackToLogin={() => {
-                setForgotPasswordEmail('')
-                setMode('login')
-              }}
-              onClose={handleClose}
-              initialEmail={forgotPasswordEmail}
-            />
-          </Suspense>
+          <ForgotPasswordForm
+            onSuccess={handleSuccess}
+            onBackToLogin={() => {
+              setForgotPasswordEmail('')
+              setMode('login')
+            }}
+            onClose={handleClose}
+            initialEmail={forgotPasswordEmail}
+          />
         )}
       </div>
     </div>
