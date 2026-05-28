@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react'
 import type { ConversationSummary, ModelConversation } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
 import { getSafeId } from '../utils'
+import { landOnFollowUpComposerAfterTutorial } from '../utils/tutorialPositioning'
 
 import type { TutorialState } from './useTutorialComplete'
 
@@ -28,6 +29,7 @@ export interface UseMainPageEffectsConfig {
 
   // Focus
   isTouchDevice: boolean
+  isMobileLayout: boolean
   currentView: string
   showWelcomeModal: boolean
   tutorialState: TutorialState
@@ -73,6 +75,7 @@ export interface UseMainPageEffectsConfig {
 
 export function useMainPageEffects(config: UseMainPageEffectsConfig) {
   const prevErrorRef = useRef<string | null>(null)
+  const prevTutorialActiveRef = useRef(false)
 
   const {
     error,
@@ -83,6 +86,7 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     visibleConversationsLength,
     setActiveTabIndex,
     isTouchDevice,
+    isMobileLayout,
     currentView,
     showWelcomeModal,
     tutorialState,
@@ -130,6 +134,17 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
       setActiveTabIndex(0)
     }
   }, [activeTabIndex, visibleConversationsLength, setActiveTabIndex])
+
+  // Mobile tutorial: scroll to bottom and focus follow-up composer when onboarding ends.
+  useEffect(() => {
+    const wasActive = prevTutorialActiveRef.current
+    prevTutorialActiveRef.current = tutorialState.isActive
+
+    if (!wasActive || tutorialState.isActive) return
+    if (currentView !== 'main' || showWelcomeModal || !isFollowUpMode || !isMobileLayout) return
+
+    landOnFollowUpComposerAfterTutorial()
+  }, [tutorialState.isActive, currentView, showWelcomeModal, isFollowUpMode, isMobileLayout])
 
   // Focus (RAF + staggered timeouts)
   useEffect(() => {

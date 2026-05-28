@@ -762,6 +762,7 @@ export function MainPage() {
     visibleConversationsLength: visibleConversations.length,
     setActiveTabIndex,
     isTouchDevice,
+    isMobileLayout,
     currentView,
     showWelcomeModal,
     tutorialState,

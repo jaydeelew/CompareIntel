@@ -132,6 +132,66 @@ export function getTutorialScrollMax(): number {
   return Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
 }
 
+const AFTER_RESULTS_COMPOSER_SLOT = '[data-after-results-composer-slot]'
+const COMPARISON_TEXTAREA = '[data-testid="comparison-input-textarea"]'
+
+function hasBlockingOverlayForComposerFocus(): boolean {
+  return Boolean(
+    document.querySelector(
+      '.tutorial-welcome-backdrop, .tutorial-backdrop, .mobile-tutorial-backdrop, [role="dialog"]'
+    )
+  )
+}
+
+/** Focus the follow-up composer textarea (below results when portaled). */
+export function focusFollowUpComposerTextarea(): boolean {
+  if (typeof document === 'undefined' || hasBlockingOverlayForComposerFocus()) {
+    return false
+  }
+
+  const textarea =
+    (document.querySelector(
+      `${AFTER_RESULTS_COMPOSER_SLOT} ${COMPARISON_TEXTAREA}`
+    ) as HTMLTextAreaElement | null) ??
+    (document.querySelector(COMPARISON_TEXTAREA) as HTMLTextAreaElement | null)
+
+  if (!textarea || textarea.disabled) return false
+
+  const rect = textarea.getBoundingClientRect()
+  if (rect.width <= 0 || rect.height <= 0) return false
+
+  textarea.focus()
+  return true
+}
+
+/**
+ * After onboarding on mobile, scroll to the page bottom and focus the follow-up composer —
+ * mirrors desktop post-tutorial landing (scroll + cursor in the below-results composer).
+ */
+export function landOnFollowUpComposerAfterTutorial(): void {
+  const root = getTutorialScrollRoot()
+  const maxScroll = getTutorialScrollMax()
+
+  root.scrollToTop(maxScroll, 'auto')
+
+  const scheduleFocusAttempts = () => {
+    requestAnimationFrame(() => {
+      if (focusFollowUpComposerTextarea()) return
+      setTimeout(() => {
+        if (focusFollowUpComposerTextarea()) return
+        setTimeout(focusFollowUpComposerTextarea, 400)
+      }, 200)
+    })
+  }
+
+  scheduleFocusAttempts()
+
+  requestAnimationFrame(() => {
+    root.scrollToTop(maxScroll, 'smooth')
+    setTimeout(scheduleFocusAttempts, 350)
+  })
+}
+
 export function getGoogleProviderTutorialAnchor(): HTMLElement | null {
   return document.querySelector(
     '.provider-dropdown[data-provider-name="Google"]'
