@@ -226,7 +226,7 @@ export function StyledTooltip({
         createPortal(
           <span
             ref={tooltipRef}
-            className="tooltip-content tooltip-content--portaled"
+            className={`tooltip-content tooltip-content--portaled ${className}`.trim()}
             role="tooltip"
             style={
               {

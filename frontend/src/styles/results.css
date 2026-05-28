@@ -715,6 +715,36 @@
   max-width: calc(100% - 8rem);
 }
 
+/* Title is wrapped in StyledTooltip; the wrapper takes the flex/sizing role so the h3 still truncates with an ellipsis. */
+.result-header-top > .result-card-title-tooltip {
+  min-width: 0;
+  max-width: calc(100% - 8rem);
+  margin-right: 1rem;
+  overflow: hidden;
+  justify-content: flex-start;
+}
+
+.result-header-top > .result-card-title-tooltip > h3 {
+  min-width: 0;
+  max-width: 100%;
+  margin-right: 0;
+}
+
+.results-section-tabbed .result-header-top > .result-card-title-tooltip {
+  flex: 1 1 auto;
+  max-width: none;
+  margin-right: 0.5rem;
+}
+
+.results-section-tabbed .result-header-top > .result-card-title-tooltip > h3 {
+  margin-right: 0;
+}
+
+/* Header title tooltip sits a bit closer to the header than the default portaled offset. */
+.tooltip-content--portaled.result-card-title-tooltip {
+  transform: translate(-50%, calc(-100% - 6px));
+}
+
 .close-card-btn {
   background: none;
   border: none;
