@@ -177,6 +177,41 @@ def _sort_providers_alphabetically(mbp: dict[str, list]) -> dict[str, list]:
     return dict(sorted(mbp.items(), key=lambda x: x[0].lower()))
 
 
+def _normalize_provider_key(name: str) -> str:
+    """Normalize provider display names for comparison (ignore case and spaces)."""
+    return re.sub(r"\s+", "", name).lower()
+
+
+def _display_provider_from_openrouter_slug(slug: str) -> str:
+    """Map an OpenRouter provider slug to a registry provider display name."""
+    slug_lower = slug.lower()
+    if slug_lower == "meta-llama":
+        return "Meta"
+    if slug_lower == "x-ai":
+        return "xAI"
+    if slug_lower == "openai":
+        return "OpenAI"
+    if slug_lower == "moonshotai":
+        return "Moonshot AI"
+    provider_name = slug.replace("-", " ").title().replace(" ", "")
+    if provider_name.lower() == "xai":
+        return "xAI"
+    if provider_name.lower() == "openai":
+        return "OpenAI"
+    return provider_name
+
+
+def _resolve_provider_name_for_registry(model_id: str, models_by_provider: dict[str, list]) -> str:
+    """Resolve the registry provider bucket for a new model id."""
+    slug = model_id.split("/")[0]
+    provider_name = _display_provider_from_openrouter_slug(slug)
+    normalized = _normalize_provider_key(provider_name)
+    for existing_provider in models_by_provider:
+        if _normalize_provider_key(existing_provider) == normalized:
+            return existing_provider
+    return provider_name
+
+
 def _apply_reasoning_probe_result(
     model_id: str,
     model_data: dict[str, Any] | None,
@@ -343,21 +378,8 @@ async def add_model(
             status_code=400, detail="Invalid model ID format. Expected: provider/model-name"
         )
 
-    provider_name = model_id.split("/")[0]
-    original_provider = provider_name
-
-    if original_provider.lower() == "meta-llama":
-        provider_name = "Meta"
-    elif original_provider.lower() == "x-ai":
-        provider_name = "xAI"
-    elif original_provider.lower() == "openai":
-        provider_name = "OpenAI"
-    else:
-        provider_name = provider_name.replace("-", " ").title().replace(" ", "")
-        if provider_name.lower() == "xai":
-            provider_name = "xAI"
-        elif provider_name.lower() == "openai":
-            provider_name = "OpenAI"
+    mbp = registry["models_by_provider"]
+    provider_name = _resolve_provider_name_for_registry(model_id, mbp)
 
     model_name = model_id.split("/")[-1]
     model_name = model_name.replace("-", " ").replace("_", " ").title()
@@ -372,13 +394,6 @@ async def add_model(
     supports_web_search = await capability_service.check_tool_calling_support(model_id)
 
     try:
-        mbp = registry["models_by_provider"]
-
-        for existing_provider in mbp.keys():
-            if existing_provider.lower() == provider_name.lower():
-                provider_name = existing_provider
-                break
-
         model_data = await fetch_model_data_from_openrouter(model_id)
         tier_classification = await classify_model_by_pricing(model_id, model_data)
         is_image_model = _is_image_generation_model(model_data)
@@ -637,21 +652,9 @@ async def add_model_stream(
                     raise
                 return
 
-            provider_name = model_id.split("/")[0]
-            original_provider = provider_name
-
-            if original_provider.lower() == "meta-llama":
-                provider_name = "Meta"
-            elif original_provider.lower() == "x-ai":
-                provider_name = "xAI"
-            elif original_provider.lower() == "openai":
-                provider_name = "OpenAI"
-            else:
-                provider_name = provider_name.replace("-", " ").title().replace(" ", "")
-                if provider_name.lower() == "xai":
-                    provider_name = "xAI"
-                elif provider_name.lower() == "openai":
-                    provider_name = "OpenAI"
+            provider_name = _resolve_provider_name_for_registry(
+                model_id, fresh_registry.get("models_by_provider", {})
+            )
 
             model_name = model_id.split("/")[-1]
             model_name = model_name.replace("-", " ").replace("_", " ").title()
@@ -681,11 +684,6 @@ async def add_model_stream(
 
             registry = load_registry()
             mbp = registry["models_by_provider"]
-
-            for existing_provider in mbp.keys():
-                if existing_provider.lower() == provider_name.lower():
-                    provider_name = existing_provider
-                    break
 
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': 'Classifying model tier based on pricing...', 'progress': 25})}\n\n"

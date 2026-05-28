@@ -257,6 +257,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'openai/gpt-5.5', evidence: 'Vision Arena (lmarena.ai): 1295.' },
       { modelId: 'google/gemini-3-flash-preview', evidence: 'Vision Arena (lmarena.ai): 1282.' },
       { modelId: 'anthropic/claude-sonnet-4.6', evidence: 'Vision Arena (lmarena.ai): 1280.' },
+      { modelId: 'moonshotai/kimi-k2.6', evidence: 'Vision Arena (lmarena.ai): 1277.' },
       { modelId: 'openai/gpt-5.2', evidence: 'Vision Arena (lmarena.ai): 1266.' },
       { modelId: 'moonshotai/kimi-k2.5', evidence: 'Vision Arena (lmarena.ai): 1266.' },
       { modelId: 'google/gemini-2.5-pro', evidence: 'Vision Arena (lmarena.ai): 1262.' },
