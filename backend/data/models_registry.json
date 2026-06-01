@@ -1315,6 +1315,17 @@
         "supports_vision_probed": false
       },
       {
+        "id": "xiaomi/mimo-v2.5",
+        "name": "Mimo V2.5",
+        "description": "MiMo-V2.5 is a native omnimodal model by Xiaomi.",
+        "category": "Language",
+        "provider": "Xiaomi",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "xiaomi/mimo-v2-omni",
         "name": "Mimo V2 Omni",
         "description": "MiMo-V2-Omni is a frontier omni-modal model that natively processes image, video, and audio inputs within a unified architecture.",
@@ -1335,6 +1346,18 @@
         "supports_image_generation": false,
         "knowledge_cutoff": "December 2024",
         "supports_vision_probed": false
+      },
+      {
+        "id": "xiaomi/mimo-v2.5-pro",
+        "name": "Mimo V2.5 Pro",
+        "description": "MiMo-V2.5-Pro is Xiaomi’s flagship model, delivering strong performance in general agentic capabilities, complex software engineering, and long-horizon tasks, with top rankings on benchmarks such as ClawEval, GDPVal, and SWE-bench Pro....",
+        "category": "Language",
+        "provider": "Xiaomi",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "supports_vision_probed": false,
+        "knowledge_cutoff": null
       }
     ],
     "ZAi": [
@@ -1389,7 +1412,8 @@
     "openai/gpt-5-image-mini",
     "openai/gpt-oss-120b",
     "qwen/qwen3-coder-next",
-    "xiaomi/mimo-v2-flash"
+    "xiaomi/mimo-v2-flash",
+    "xiaomi/mimo-v2.5"
   ],
   "image_unregistered_tier_models": [
     "google/gemini-2.5-flash-image",
@@ -1447,6 +1471,7 @@
     "x-ai/grok-4.3",
     "xiaomi/mimo-v2-omni",
     "xiaomi/mimo-v2-pro",
+    "xiaomi/mimo-v2.5-pro",
     "z-ai/glm-5",
     "z-ai/glm-5-turbo"
   ]

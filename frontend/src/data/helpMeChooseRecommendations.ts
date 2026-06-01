@@ -60,6 +60,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'xiaomi/mimo-v2-flash', evidence: 'Avg. $0.20/1M tokens.' },
       { modelId: 'mistralai/devstral-small', evidence: 'Avg. $0.20/1M tokens.' },
       { modelId: 'meta-llama/llama-3.3-70b-instruct', evidence: 'Avg. $0.21/1M tokens.' },
+      { modelId: 'xiaomi/mimo-v2.5', evidence: 'Avg. $0.21/1M tokens.' },
       { modelId: 'openai/gpt-5-nano', evidence: 'Avg. $0.22/1M tokens.' },
       { modelId: 'google/gemma-4-31b-it', evidence: 'Avg. $0.24/1M tokens.' },
       { modelId: 'deepseek/deepseek-v3.2', evidence: 'Avg. $0.32/1M tokens.' },
@@ -76,6 +77,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'microsoft/wizardlm-2-8x22b', evidence: 'Avg. $0.62/1M tokens.' },
       { modelId: 'minimax/minimax-m2', evidence: 'Avg. $0.63/1M tokens.' },
       { modelId: 'minimax/minimax-m2.5', evidence: 'Avg. $0.65/1M tokens.' },
+      { modelId: 'xiaomi/mimo-v2.5-pro', evidence: 'Avg. $0.65/1M tokens.' },
       { modelId: 'google/gemini-3.1-flash-lite-preview', evidence: 'Avg. $0.88/1M tokens.' },
       { modelId: 'qwen/qwen3.5-plus-02-15', evidence: 'Avg. $0.91/1M tokens.' },
     ],
@@ -266,6 +268,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'google/gemini-2.5-flash', evidence: 'Vision Arena (lmarena.ai): 1249.' },
       { modelId: 'openai/gpt-5.1', evidence: 'Vision Arena (lmarena.ai): 1249.' },
       { modelId: 'openai/gpt-4o', evidence: 'Vision Arena (lmarena.ai): 1244.' },
+      { modelId: 'xiaomi/mimo-v2.5', evidence: 'Vision Arena (lmarena.ai): 1242.' },
       {
         modelId: 'google/gemini-3.1-flash-lite-preview',
         evidence: 'Vision Arena (lmarena.ai): 1243.',

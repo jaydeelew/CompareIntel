@@ -47,6 +47,7 @@ const PROVIDER_COLORS: Record<string, string> = {
   Stepfun: '#8b5cf6',
   ZAi: '#6366f1',
   Kwaipilot: '#f59e0b',
+  Tencent: '#0052D9',
 }
 
 /* ──────────────────────────────── icon SVGs ──────────────────────────────── */
@@ -72,6 +73,7 @@ const PROVIDER_ABBR: Record<string, string> = {
   Stepfun: 'St',
   ZAi: 'Z',
   Kwaipilot: 'Kw',
+  Tencent: 'Tc',
 }
 
 export function ProviderIcon({ provider }: { provider: string }) {
@@ -306,6 +308,17 @@ export function ProviderIcon({ provider }: { provider: string }) {
           <path
             clipRule="evenodd"
             d="M11.765.03C5.327.03.108 5.25.108 11.686c0 3.514 1.556 6.665 4.015 8.804L9.89 8.665h6.451L9.31 23.083c.807.173 1.63.26 2.455.26 6.438 0 11.657-5.22 11.657-11.658S18.202.028 11.765.028V.03z"
+            fill={color}
+          />
+        </svg>
+      )
+    case 'Tencent':
+      // Official Tencent icon mark (tencent.com favicon / brand identity)
+      return (
+        <svg viewBox="0 0 24 24" className="provider-carousel-svg" aria-hidden>
+          <path
+            fillRule="evenodd"
+            d="M9.976 1L24 9.8l-10.587.015L10.723 23H5.489L8.18 9.8H3.244L1 5.4h8.077L9.976 1z"
             fill={color}
           />
         </svg>
