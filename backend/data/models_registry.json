@@ -626,26 +626,6 @@
         "supports_vision_probed": false
       },
       {
-        "id": "mistralai/devstral-medium",
-        "name": "Devstral Medium",
-        "description": "A high-performance model for code generation and agentic reasoning in complex development workflows.",
-        "category": "Code",
-        "provider": "Mistral",
-        "supports_web_search": true,
-        "knowledge_cutoff": "December 2025",
-        "supports_vision_probed": false
-      },
-      {
-        "id": "mistralai/devstral-small",
-        "name": "Devstral Small",
-        "description": "A 24B open-weight model specialized for software engineering agents and autonomous coding tasks.",
-        "category": "Code",
-        "provider": "Mistral",
-        "supports_web_search": true,
-        "knowledge_cutoff": "April 2024",
-        "supports_vision_probed": false
-      },
-      {
         "id": "mistralai/mistral-medium-3.1",
         "name": "Mistral Medium 3.1",
         "description": "An enterprise-grade model delivering frontier-level capabilities at significantly reduced operational cost.",
@@ -1326,28 +1306,6 @@
         "knowledge_cutoff": null
       },
       {
-        "id": "xiaomi/mimo-v2-omni",
-        "name": "Mimo V2 Omni",
-        "description": "MiMo-V2-Omni is a frontier omni-modal model that natively processes image, video, and audio inputs within a unified architecture.",
-        "category": "Language",
-        "provider": "Xiaomi",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "knowledge_cutoff": "December 2024",
-        "supports_vision_probed": true
-      },
-      {
-        "id": "xiaomi/mimo-v2-pro",
-        "name": "Mimo V2 Pro",
-        "description": "MiMo-V2-Pro is Xiaomi's flagship foundation model, featuring over 1T total parameters and a 1M context length, deeply optimized for agentic scenarios.",
-        "category": "Language",
-        "provider": "Xiaomi",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "knowledge_cutoff": "December 2024",
-        "supports_vision_probed": false
-      },
-      {
         "id": "xiaomi/mimo-v2.5-pro",
         "name": "Mimo V2.5 Pro",
         "description": "MiMo-V2.5-Pro is Xiaomi’s flagship model, delivering strong performance in general agentic capabilities, complex software engineering, and long-horizon tasks, with top rankings on benchmarks such as ClawEval, GDPVal, and SWE-bench Pro....",
@@ -1451,8 +1409,6 @@
     "microsoft/phi-4-reasoning-plus",
     "microsoft/wizardlm-2-8x22b",
     "minimax/minimax-m2.5",
-    "mistralai/devstral-medium",
-    "mistralai/devstral-small",
     "mistralai/mistral-medium-3.1",
     "mistralai/mistral-small-3.2-24b-instruct",
     "moonshotai/kimi-k2.5",
@@ -1469,8 +1425,6 @@
     "qwen/qwen3.5-plus-02-15",
     "sourceful/riverflow-v2-standard-preview",
     "x-ai/grok-4.3",
-    "xiaomi/mimo-v2-omni",
-    "xiaomi/mimo-v2-pro",
     "xiaomi/mimo-v2.5-pro",
     "z-ai/glm-5",
     "z-ai/glm-5-turbo"
