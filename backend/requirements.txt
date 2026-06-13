@@ -135,7 +135,7 @@ pydantic-settings==2.13.1
     # via
     #   -r requirements.in
     #   fastapi-mail
-pyjwt==2.12.1
+pyjwt==2.13.0
     # via -r requirements.in
 python-dotenv==1.2.2
     # via
