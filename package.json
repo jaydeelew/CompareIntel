@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged --config package.json"
   },
   "devDependencies": {
     "husky": "^9.0.11",
