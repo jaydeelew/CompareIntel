@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -11,6 +12,17 @@ import { defineConfig } from 'vitest/config'
 import { securityHeadersPlugin } from './vite-plugin-security-headers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
+
+/** Resolve a package root (works with npm workspace hoisting). */
+function resolvePackageRoot(name: string): string {
+  return path.dirname(require.resolve(`${name}/package.json`))
+}
+
+/** Resolve a package subpath export (e.g. react/jsx-runtime). */
+function resolvePackageSubpath(subpath: string): string {
+  return require.resolve(subpath)
+}
 
 // Plugin to auto-version social sharing images (cache busting)
 // Replaces __SOCIAL_IMAGE_VERSION__ with build timestamp in index.html
@@ -32,14 +44,14 @@ export default defineConfig({
   resolve: {
     // Force single copies (fixes invalid hook call when lazy chunks resolve a different optimized graph)
     alias: {
-      react: path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      react: resolvePackageRoot('react'),
+      'react-dom': resolvePackageRoot('react-dom'),
       // Subpaths must match the same install; otherwise prebundles can load a second React (null dispatcher).
-      'react/jsx-runtime': path.resolve(__dirname, 'node_modules/react/jsx-runtime.js'),
-      'react/jsx-dev-runtime': path.resolve(__dirname, 'node_modules/react/jsx-dev-runtime.js'),
-      'react-dom/client': path.resolve(__dirname, 'node_modules/react-dom/client.js'),
+      'react/jsx-runtime': resolvePackageSubpath('react/jsx-runtime'),
+      'react/jsx-dev-runtime': resolvePackageSubpath('react/jsx-dev-runtime'),
+      'react-dom/client': resolvePackageSubpath('react-dom/client'),
       // Do not alias `react-router` — react-router-dom imports `react-router/dom` (package subpath).
-      'react-router-dom': path.resolve(__dirname, 'node_modules/react-router-dom'),
+      'react-router-dom': resolvePackageRoot('react-router-dom'),
     },
     dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom'],
   },

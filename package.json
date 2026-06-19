@@ -2,9 +2,17 @@
   "name": "compareintel",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "extension",
+    "frontend"
+  ],
   "scripts": {
     "prepare": "husky",
-    "lint-staged": "lint-staged --config package.json"
+    "lint-staged": "lint-staged --config package.json",
+    "extension:build": "npm run build -w @compareintel/extension",
+    "extension:dev": "npm run dev -w @compareintel/extension",
+    "core:test": "npm run test -w @compareintel/core"
   },
   "devDependencies": {
     "husky": "^9.0.11",
@@ -14,5 +22,16 @@
     "backend/**/*.py": [
       "bash backend/scripts/lint-staged.sh"
     ]
+  },
+  "overrides": {
+    "vitest@^4": {
+      "std-env": "^4.1.0"
+    },
+    "@vitest/coverage-v8@^4": {
+      "std-env": "^4.1.0"
+    },
+    "@vitest/ui@^4": {
+      "std-env": "^4.1.0"
+    }
   }
 }
