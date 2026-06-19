@@ -57,7 +57,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'meta-llama/llama-4-scout', evidence: 'Avg. $0.19/1M tokens.' },
       { modelId: 'qwen/qwen3-30b-a3b-instruct-2507', evidence: 'Avg. $0.20/1M tokens.' },
       { modelId: 'google/gemma-4-26b-a4b-it', evidence: 'Avg. $0.20/1M tokens.' },
-      { modelId: 'xiaomi/mimo-v2-flash', evidence: 'Avg. $0.20/1M tokens.' },
       { modelId: 'meta-llama/llama-3.3-70b-instruct', evidence: 'Avg. $0.21/1M tokens.' },
       { modelId: 'xiaomi/mimo-v2.5', evidence: 'Avg. $0.21/1M tokens.' },
       { modelId: 'openai/gpt-5-nano', evidence: 'Avg. $0.22/1M tokens.' },

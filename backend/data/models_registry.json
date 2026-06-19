@@ -1285,16 +1285,6 @@
     ],
     "Xiaomi": [
       {
-        "id": "xiaomi/mimo-v2-flash",
-        "name": "Mimo V2 Flash",
-        "description": "MiMo-V2-Flash is an open-source foundation language model developed by Xiaomi.",
-        "category": "Language",
-        "provider": "Xiaomi",
-        "supports_web_search": true,
-        "knowledge_cutoff": "December 2024",
-        "supports_vision_probed": false
-      },
-      {
         "id": "xiaomi/mimo-v2.5",
         "name": "Mimo V2.5",
         "description": "MiMo-V2.5 is a native omnimodal model by Xiaomi.",
@@ -1370,7 +1360,6 @@
     "openai/gpt-5-image-mini",
     "openai/gpt-oss-120b",
     "qwen/qwen3-coder-next",
-    "xiaomi/mimo-v2-flash",
     "xiaomi/mimo-v2.5"
   ],
   "image_unregistered_tier_models": [
