@@ -127,3 +127,7 @@ certs/
 
 # TypeScript
 *.tsbuildinfo
+
+# Browser extension build artifacts
+extension/dist/
+extension/compareintel-extension.zip

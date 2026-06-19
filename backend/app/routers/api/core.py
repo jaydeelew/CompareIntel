@@ -82,6 +82,7 @@ class CompareRequest(BaseModel):
     image_config: dict | None = (
         None  # {"aspect_ratio": "16:9", "image_size": "2K"} for image models
     )
+    client_source: str | None = None  # e.g. "extension" for analytics
 
     model_config = ConfigDict(
         json_schema_extra={

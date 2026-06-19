@@ -1,0 +1,29 @@
+name: Extension Build
+
+on:
+  push:
+    paths:
+      - 'extension/**'
+      - 'packages/compare-core/**'
+  pull_request:
+    paths:
+      - 'extension/**'
+      - 'packages/compare-core/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run core:test
+      - run: npm run extension:build
+      - run: npm run test -w @compareintel/extension
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compareintel-extension-dist
+          path: extension/dist/

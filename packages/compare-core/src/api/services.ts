@@ -1,0 +1,113 @@
+import type { CompareIntelApiClient } from './client'
+
+export interface ModelInfo {
+  id: string
+  name: string
+  provider: string
+  tier_access?: string[]
+  supports_vision?: boolean
+  supports_web_search?: boolean
+  supports_image_generation?: boolean
+}
+
+export interface ModelsResponse {
+  models_by_provider: Record<string, ModelInfo[]>
+}
+
+export interface CompareRequest {
+  input_data: string
+  models: string[]
+  conversation_history?: Array<{ role: string; content: string; model_id?: string }>
+  browser_fingerprint?: string
+  conversation_id?: number
+  enable_web_search?: boolean
+  temperature?: number
+  top_p?: number
+  max_tokens?: number | null
+  client_source?: string
+}
+
+export interface RateLimitStatus {
+  daily_usage: number
+  daily_limit: number
+  remaining_usage: number
+  subscription_tier: string
+  model_limit: number
+  user_type: 'authenticated' | 'anonymous'
+  fingerprint_usage?: number
+  fingerprint_remaining?: number
+}
+
+export interface StreamEvent {
+  type: string
+  model_id?: string
+  content?: string
+  error?: string
+  conversation_id?: number
+  [key: string]: unknown
+}
+
+export interface User {
+  id: number
+  email: string
+  subscription_tier: string
+  is_verified: boolean
+  monthly_credits_allocated?: number
+  credits_used_this_period?: number
+}
+
+export interface AuthResponse {
+  access_token: string
+  refresh_token: string
+  token_type: string
+  user?: User
+}
+
+export async function fetchModels(client: CompareIntelApiClient): Promise<ModelsResponse> {
+  return client.get<ModelsResponse>('/models', true)
+}
+
+export async function fetchRateLimitStatus(
+  client: CompareIntelApiClient,
+  fingerprint?: string
+): Promise<RateLimitStatus> {
+  const qs = fingerprint ? `?browser_fingerprint=${encodeURIComponent(fingerprint)}` : ''
+  return client.get<RateLimitStatus>(`/rate-limit-status${qs}`)
+}
+
+export async function login(
+  client: CompareIntelApiClient,
+  email: string,
+  password: string
+): Promise<AuthResponse> {
+  return client.post<AuthResponse>('/auth/login', { email, password }, true)
+}
+
+export async function register(
+  client: CompareIntelApiClient,
+  email: string,
+  password: string
+): Promise<AuthResponse> {
+  return client.post<AuthResponse>('/auth/register', { email, password }, true)
+}
+
+export async function fetchCurrentUser(client: CompareIntelApiClient): Promise<User | null> {
+  try {
+    return await client.get<User>('/auth/me')
+  } catch {
+    return null
+  }
+}
+
+export function* parseSSEEvents(chunks: AsyncGenerator<string>): AsyncGenerator<StreamEvent> {
+  return (async function* () {
+    for await (const chunk of chunks) {
+      if (!chunk.trim() || chunk === '[DONE]') continue
+      try {
+        yield JSON.parse(chunk) as StreamEvent
+      } catch {
+        // skip malformed
+      }
+    }
+  })()
+}

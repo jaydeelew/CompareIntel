@@ -9,6 +9,7 @@ import type { ApiErrorResponse } from '../../types/api'
 import { abortControllerWithReason } from '../../utils/abortSignal'
 import logger from '../../utils/logger'
 
+import { getAuthMode, getBearerAccessToken } from './authMode'
 import { ApiError, NetworkError, TimeoutError, isCancellationError } from './errors'
 import type {
   RequestInterceptor,
@@ -29,10 +30,18 @@ export const authInterceptor: RequestInterceptor = async (url, config) => {
     return [url, config]
   }
 
-  // Ensure credentials are included for cookie-based authentication
-  // Cookies are automatically sent by the browser, no need to manually add Authorization header
+  const headers = new Headers(config.headers)
+
+  if (getAuthMode() === 'bearer') {
+    const token = getBearerAccessToken()
+    if (token) headers.set('Authorization', `Bearer ${token}`)
+    return [url, { ...config, headers, credentials: 'omit' as RequestCredentials }]
+  }
+
+  // Cookie-based authentication for the web app
   const enhancedConfig = {
     ...config,
+    headers,
     credentials: 'include' as RequestCredentials,
   }
 

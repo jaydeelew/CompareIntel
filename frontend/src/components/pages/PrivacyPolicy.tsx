@@ -88,6 +88,39 @@ export const PrivacyPolicy: React.FC = () => {
                 tracking technologies to maintain your session and preferences.
               </li>
             </ul>
+
+            <h3>CompareIntel Browser Extension</h3>
+            <p>
+              If you use the CompareIntel browser extension, additional data may be processed when
+              you enable <strong>Page context</strong> and submit a comparison:
+            </p>
+            <ul className="seo-list">
+              <li>
+                <strong>Page content:</strong> Text extracted from tabs you explicitly include
+                (current tab and/or pinned tabs) is sent to our servers only when you submit a
+                comparison with page context enabled. We do not read page content continuously or in
+                the background.
+              </li>
+              <li>
+                <strong>Tab metadata:</strong> Page titles and URLs for tabs you include in context
+                may be sent with your comparison request.
+              </li>
+              <li>
+                <strong>Selections:</strong> Text you highlight on a page may be included when page
+                context is enabled and you submit a comparison.
+              </li>
+              <li>
+                <strong>Extension authentication:</strong> If you sign in through the extension,
+                access tokens are stored in your browser&apos;s extension session storage (not in
+                page localStorage).
+              </li>
+            </ul>
+            <p>
+              You can disable page context at any time using the Page context toggle in the
+              extension sidebar. Page content is handled under the same pass-through principles
+              described above — we send it to AI providers to generate responses and do not use it
+              for training or unrelated purposes.
+            </p>
           </section>
 
           <section className="seo-section">

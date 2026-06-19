@@ -195,14 +195,21 @@ else:
         "http://localhost:5173",  # Vite default port
         "http://localhost:4173",  # Vite preview (production build testing)
         "http://localhost:5174",  # Alternative Vite port
-        "http://localhost:5175",  # Alternative Vite port
+        "http://localhost:5175",  # Extension dev / alternative Vite port
         "http://localhost:3000",  # Alternative local port
         "http://127.0.0.1:5173",  # Alternative localhost
         "http://127.0.0.1:4173",  # Vite preview (production build testing)
         "http://127.0.0.1:5174",  # Alternative localhost
-        "http://127.0.0.1:5175",  # Alternative localhost
+        "http://127.0.0.1:5175",  # Extension dev
         "http://127.0.0.1:3000",  # Alternative localhost
     ]
+
+# Chrome extension origins (chrome-extension://<id>) — set after Web Store publish
+_extension_origins = os.environ.get("EXTENSION_CORS_ORIGINS", "")
+if _extension_origins:
+    allowed_origins.extend(
+        origin.strip() for origin in _extension_origins.split(",") if origin.strip()
+    )
 
 app.add_middleware(
     CORSMiddleware,
