@@ -40,11 +40,21 @@ export interface RateLimitStatus {
 
 export interface StreamEvent {
   type: string
+  /** Model ID — backend sends this as `model`, not `model_id` */
+  model?: string
   model_id?: string
   content?: string
-  error?: string
+  message?: string
+  error?: boolean | string
+  url?: string
+  metadata?: Record<string, unknown>
   conversation_id?: number
   [key: string]: unknown
+}
+
+export function getEventModelId(event: StreamEvent): string | undefined {
+  const id = event.model ?? event.model_id
+  return typeof id === 'string' && id.trim() ? id.trim() : undefined
 }
 
 export interface User {

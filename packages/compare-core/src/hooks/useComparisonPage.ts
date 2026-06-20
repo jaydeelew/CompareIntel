@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 
 import type { CompareIntelApiClient } from '../api/client'
 import type { ModelInfo, StreamEvent } from '../api/services'
+import { getEventModelId } from '../api/services'
 import { buildPromptWithPageContext } from '../tabContext/promptBuilder'
 import type { TabContextBundle } from '../tabContext/types'
 
@@ -142,27 +143,67 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
           setConversationId(event.conversation_id)
         }
 
-        if (event.model_id) {
+        if (event.type === 'error') {
+          const errMsg =
+            typeof event.message === 'string'
+              ? event.message
+              : typeof event.error === 'string'
+                ? event.error
+                : 'Streaming error'
+          setError(errMsg)
           setResults((prev) =>
-            prev.map((r) => {
-              if (r.modelId !== event.model_id) return r
-              if (event.type === 'chunk' && event.content) {
-                return { ...r, content: r.content + event.content }
-              }
-              if (event.type === 'error') {
-                return { ...r, error: event.error ?? 'Unknown error', isStreaming: false, isComplete: true }
-              }
-              if (event.type === 'done' || event.type === 'complete') {
-                return { ...r, isStreaming: false, isComplete: true }
-              }
-              return r
-            })
+            prev.map((r) => ({ ...r, error: errMsg, isStreaming: false, isComplete: true }))
           )
+          break
         }
+
+        const modelId = getEventModelId(event)
+        if (!modelId) continue
+
+        setResults((prev) =>
+          prev.map((r) => {
+            if (r.modelId !== modelId) return r
+
+            if (event.type === 'chunk' || event.type === 'reasoning') {
+              const piece = typeof event.content === 'string' ? event.content : ''
+              if (piece) return { ...r, content: r.content + piece }
+              return r
+            }
+
+            if (event.type === 'image' && typeof event.url === 'string') {
+              return { ...r, content: r.content + `\n![generated image](${event.url})\n` }
+            }
+
+            if (event.type === 'done') {
+              const failed = event.error === true
+              const empty = !r.content.trim() && !failed
+              return {
+                ...r,
+                isStreaming: false,
+                isComplete: true,
+                error: failed
+                  ? r.error ?? 'Model returned an error'
+                  : empty
+                    ? 'No response received'
+                    : null,
+              }
+            }
+
+            return r
+          })
+        )
       }
 
       setResults((prev) => {
-        const updated = prev.map((r) => ({ ...r, isStreaming: false, isComplete: true }))
+        const updated = prev.map((r) => {
+          const empty = !r.content.trim() && !r.error
+          return {
+            ...r,
+            isStreaming: false,
+            isComplete: true,
+            error: r.error ?? (empty ? 'No response received' : null),
+          }
+        })
         setConversationHistory((hist) => [
           ...hist,
           { role: 'user', content: input.trim() },

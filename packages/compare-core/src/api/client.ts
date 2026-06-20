@@ -142,5 +142,7 @@ export class CompareIntelApiClient {
         if (line.startsWith('data: ')) yield line.slice(6)
       }
     }
+    // Flush any remaining buffered SSE line
+    if (buffer.startsWith('data: ')) yield buffer.slice(6)
   }
 }
