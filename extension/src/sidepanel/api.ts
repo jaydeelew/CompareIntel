@@ -1,20 +1,31 @@
 import {
   BearerAuthStorage,
   CompareIntelApiClient,
+  fetchCreditBalance,
   fetchCurrentUser,
   fetchModels,
-  fetchRateLimitStatus,
   login,
   register,
   type AuthResponse,
+  type CreditBalance,
   type ModelInfo,
-  type RateLimitStatus,
   type User,
 } from '@compareintel/core'
 import browser from 'webextension-polyfill'
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ?? 'https://compareintel.com/api'
+
+export function getWebAppUrl(): string {
+  const configured = import.meta.env.VITE_WEB_APP_URL
+  if (configured) return configured
+
+  if (API_BASE_URL.includes('localhost:8000')) {
+    return 'http://localhost:5173'
+  }
+
+  return API_BASE_URL.replace(/\/api\/?$/, '') || 'https://compareintel.com'
+}
 
 const chromeSessionStorage = {
   async get(keys: string[]) {
@@ -63,8 +74,8 @@ export async function loadModels(): Promise<Record<string, ModelInfo[]>> {
   return data.models_by_provider
 }
 
-export async function loadRateLimitStatus(fingerprint?: string): Promise<RateLimitStatus> {
-  return fetchRateLimitStatus(apiClient, fingerprint)
+export async function loadCreditBalance(fingerprint?: string): Promise<CreditBalance> {
+  return fetchCreditBalance(apiClient, fingerprint)
 }
 
 export async function fetchCurrentUserFromApi(): Promise<User | null> {

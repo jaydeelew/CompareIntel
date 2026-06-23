@@ -1,4 +1,7 @@
 export * from './auth'
 export * from './tabContext'
 export * from './api'
+export * from './conversation'
 export * from './hooks'
+export * from './models'
+export * from './webSearch'

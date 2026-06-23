@@ -7,8 +7,9 @@ This script checks if all models configured in CompareIntel are available for AP
 The script performs the following tasks:
 1. Fetches all available models from OpenRouter's API
 2. Checks each configured model in `OPENROUTER_MODELS` against OpenRouter's list
-3. Identifies any unavailable models
-4. Sends an email report to support@compareintel.com with the status
+3. For models still listed in the catalog, checks OpenRouter's per-model endpoints API for provider health (0% uptime in the last 24h indicates a retired/unroutable model that still appears in the catalog)
+4. Identifies any unavailable models
+5. Sends an email report to support@compareintel.com with the status
 
 ## Scripts
 
@@ -123,7 +124,7 @@ python3 backend/scripts/check_model_availability.py
 The email report includes:
 - **Status**: Success (all models available), Warning (some unavailable), or Error
 - **Summary**: Total models checked, available count, unavailable count
-- **Unavailable Models**: List of models not found in OpenRouter with details
+- **Unavailable Models**: Models missing from OpenRouter or listed but unroutable (for example, all provider endpoints at 0% uptime)
 - **Timestamp**: When the check was performed
 
 ## Logging

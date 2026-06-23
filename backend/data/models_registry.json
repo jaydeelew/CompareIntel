@@ -2,16 +2,6 @@
   "models_by_provider": {
     "Anthropic": [
       {
-        "id": "anthropic/claude-3.5-haiku",
-        "name": "Claude Haiku 3.5",
-        "description": "A fast, efficient model optimized for speed, coding accuracy, and tool use at low cost.",
-        "category": "Language",
-        "provider": "Anthropic",
-        "supports_web_search": true,
-        "knowledge_cutoff": "July 2024",
-        "supports_vision_probed": false
-      },
-      {
         "id": "anthropic/claude-haiku-4.5",
         "name": "Claude Haiku 4.5",
         "description": "Anthropic's fastest model delivering near-frontier intelligence with minimal latency and cost.",
@@ -1343,7 +1333,6 @@
     ]
   },
   "unregistered_tier_models": [
-    "anthropic/claude-3.5-haiku",
     "cohere/command-r7b-12-2024",
     "deepseek/deepseek-chat-v3.1",
     "deepseek/deepseek-v3.2",

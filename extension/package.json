@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch",
+    "predev": "node scripts/ensure-dist-manifest.mjs",
+    "dev": "vite",
+    "dev:watch": "vite build --watch",
     "build": "vite build",
     "type-check": "tsc -b --noEmit",
     "test": "vitest run",
@@ -19,13 +21,13 @@
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
-    "archiver": "^7.0.1",
-    "@crxjs/vite-plugin": "^2.0.0-beta.28",
+    "@crxjs/vite-plugin": "^2.7.0",
     "@types/chrome": "^0.0.287",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/webextension-polyfill": "^0.12.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "archiver": "^7.0.1",
     "typescript": "~5.7.2",
     "vite": "^6.0.5",
     "vitest": "^3.0.5"

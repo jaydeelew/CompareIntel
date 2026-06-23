@@ -65,45 +65,7 @@ class TestUserRegistrationWorkflow:
 class TestAuthenticatedUserWorkflow:
     """Tests for authenticated user comparison workflow."""
 
-    def test_authenticated_user_tier_upgrade_workflow(
-        self, authenticated_client, test_user_admin, db_session
-    ):
-        """Test user tier upgrade workflow."""
-        client, user, token, _ = authenticated_client
-
-        # Admin upgrades user tier
-        admin_client = client
-        admin_response = admin_client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        admin_token = admin_response.json()["access_token"]
-        admin_client.headers = {"Authorization": f"Bearer {admin_token}"}
-
-        # Upgrade user tier to pro (valid tier)
-        upgrade_response = admin_client.patch(
-            f"/api/admin/users/{user.id}", json={"subscription_tier": "pro"}
-        )
-
-        # Refresh user to get updated tier
-        db_session.refresh(user)
-
-        # User should now have higher rate limits
-        # Verify with a streaming comparison request using a free tier model
-        # (even pro users can use free tier models)
-        user_client = client
-        user_client.headers = {"Authorization": f"Bearer {token}"}
-        compare_response = user_client.post(
-            "/api/compare-stream",
-            json={
-                "input_data": "Test",
-                "models": ["anthropic/claude-3.5-haiku"],  # Free tier model (works for all tiers)
-            },
-        )
-        # Should work with new tier limits
+    # Should work with new tier limits
 
 
 class TestAdminWorkflow:

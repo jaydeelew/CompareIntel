@@ -44,13 +44,7 @@ _image_price_cache: dict[str, float] | None = None
 _text_token_price_cache: dict[str, tuple[Decimal, Decimal]] | None = None
 
 # Models that OpenRouter metadata incorrectly marks as vision-capable but the API rejects image input.
-# See: claude-3-5-haiku-20241022 description "It does not support image inputs."
-KNOWN_NON_VISION_MODEL_IDS: frozenset[str] = frozenset(
-    {
-        "anthropic/claude-3.5-haiku",
-        "anthropic/claude-3.5-haiku-20241022",
-    }
-)
+KNOWN_NON_VISION_MODEL_IDS: frozenset[str] = frozenset()
 
 # Models that do not support the temperature parameter (provider returns 400 if passed).
 KNOWN_NO_TEMPERATURE_MODEL_IDS: frozenset[str] = frozenset(

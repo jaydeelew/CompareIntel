@@ -4,10 +4,13 @@ export interface ModelInfo {
   id: string
   name: string
   provider: string
-  tier_access?: string[]
+  tier_access?: 'unregistered' | 'free' | 'paid'
+  trial_unlocked?: boolean
+  available?: boolean
   supports_vision?: boolean
   supports_web_search?: boolean
   supports_image_generation?: boolean
+  knowledge_cutoff?: string | null
 }
 
 export interface ModelsResponse {
@@ -36,6 +39,11 @@ export interface RateLimitStatus {
   user_type: 'authenticated' | 'anonymous'
   fingerprint_usage?: number
   fingerprint_remaining?: number
+  /** Credits-based fields (primary; legacy comparison fields are always 0). */
+  credits_allocated?: number
+  credits_used_this_period?: number
+  credits_used_today?: number
+  credits_remaining?: number
 }
 
 export interface StreamEvent {
@@ -81,8 +89,17 @@ export async function fetchRateLimitStatus(
   client: CompareIntelApiClient,
   fingerprint?: string
 ): Promise<RateLimitStatus> {
-  const qs = fingerprint ? `?browser_fingerprint=${encodeURIComponent(fingerprint)}` : ''
-  return client.get<RateLimitStatus>(`/rate-limit-status${qs}`)
+  const params = new URLSearchParams()
+  if (fingerprint) {
+    params.append('fingerprint', fingerprint)
+  }
+  try {
+    params.append('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone)
+  } catch {
+    // timezone unavailable in some environments
+  }
+  const qs = params.toString()
+  return client.get<RateLimitStatus>(`/rate-limit-status${qs ? `?${qs}` : ''}`)
 }
 
 export async function login(

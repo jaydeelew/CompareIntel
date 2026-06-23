@@ -14,32 +14,34 @@ interface ExtensionContextBarProps {
   sharePageContext: boolean
   onSharePageContextChange: (enabled: boolean) => void
   onContextTabsChange: (tabIds: number[]) => void
-  tokenEstimate?: number
 }
 
 export function ExtensionContextBar({
   sharePageContext,
   onSharePageContextChange,
   onContextTabsChange,
-  tokenEstimate,
 }: ExtensionContextBarProps) {
   const [activeTab, setActiveTab] = useState<TabInfo | null>(null)
   const [pinnedTabs, setPinnedTabs] = useState<TabInfo[]>([])
   const [showTabPicker, setShowTabPicker] = useState(false)
   const [allTabs, setAllTabs] = useState<TabInfo[]>([])
+  const [collapsed, setCollapsed] = useState(false)
 
   const refreshTabs = useCallback(async () => {
-    const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
-    if (activeRes.type === 'ACTIVE_TAB' && activeRes.tab) {
-      setActiveTab({ ...activeRes.tab, pinned: false })
-    } else {
-      setActiveTab(null)
+    const listRes = await sendTabContextMessage({ type: 'LIST_TABS' })
+    let tabs: TabInfo[] = []
+    if (listRes.type === 'TABS_LIST') {
+      tabs = listRes.tabs
+      setAllTabs(tabs)
+      setPinnedTabs(tabs.filter((t) => t.pinned))
     }
 
-    const listRes = await sendTabContextMessage({ type: 'LIST_TABS' })
-    if (listRes.type === 'TABS_LIST') {
-      setAllTabs(listRes.tabs)
-      setPinnedTabs(listRes.tabs.filter((t) => t.pinned))
+    const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
+    if (activeRes.type === 'ACTIVE_TAB' && activeRes.tab) {
+      const pinned = tabs.find((t) => t.tabId === activeRes.tab!.tabId)?.pinned ?? false
+      setActiveTab({ ...activeRes.tab, pinned })
+    } else {
+      setActiveTab(null)
     }
 
     const pinnedRes = await sendTabContextMessage({ type: 'GET_PINNED_TABS' })
@@ -65,8 +67,10 @@ export function ExtensionContextBar({
     await refreshTabs()
   }
 
-  const handleClearCache = async () => {
+  const handleClearContext = async () => {
     await sendTabContextMessage({ type: 'CLEAR_CONTEXT_CACHE' })
+    onSharePageContextChange(false)
+    await refreshTabs()
   }
 
   const contextTabs: TabInfo[] = [
@@ -75,45 +79,107 @@ export function ExtensionContextBar({
   ]
 
   return (
-    <div className="context-bar">
+    <div className={`context-bar${collapsed ? ' context-bar-collapsed' : ''}`}>
       <div className="context-header">
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={sharePageContext}
-            onChange={(e) => onSharePageContextChange(e.target.checked)}
-          />
+        <button
+          type="button"
+          className="ghost context-collapse-toggle"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? 'Expand context tabs' : 'Collapse context tabs'}
+        >
+          <span className="context-collapse-chevron" aria-hidden="true">
+            {collapsed ? '▶' : '▼'}
+          </span>
           Page context
-        </label>
-        <div style={{ display: 'flex', gap: 4 }}>
-          <button type="button" className="ghost" onClick={() => setShowTabPicker(true)}>
-            + Pin tab
-          </button>
-          <button type="button" className="ghost" onClick={handleClearCache}>
-            Clear
-          </button>
-        </div>
-      </div>
-
-      {tokenEstimate !== undefined && sharePageContext && (
-        <div className="token-estimate">~{tokenEstimate.toLocaleString()} tokens estimated</div>
-      )}
-
-      <div className="tab-chips">
-        {contextTabs.length === 0 && (
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>No page context included</span>
-        )}
-        {contextTabs.map((tab) => (
-          <div key={tab.tabId} className="tab-chip">
-            <span title={tab.url}>{tab.title || tab.url}</span>
-            {tab.pinned && (
-              <button type="button" className="ghost" onClick={() => handleUnpin(tab.tabId)}>
-                ×
-              </button>
-            )}
+        </button>
+        {!collapsed && (
+          <div style={{ display: 'flex', gap: 4 }}>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={sharePageContext}
+                onChange={(e) => onSharePageContextChange(e.target.checked)}
+              />
+              Active tab
+            </label>
+            <button type="button" className="ghost" onClick={() => setShowTabPicker(true)}>
+              + Pin tab
+            </button>
+            <button type="button" className="ghost" onClick={handleClearContext}>
+              Clear
+            </button>
           </div>
-        ))}
+        )}
       </div>
+
+      {collapsed ? (
+        <div className="tab-icons">
+          {contextTabs.length === 0 && (
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>None</span>
+          )}
+          {contextTabs.map((tab) => (
+            <span
+              key={tab.tabId}
+              className="tab-icon"
+              title={tab.title || tab.url}
+            >
+              {tab.favIconUrl ? (
+                <img src={tab.favIconUrl} alt="" width={16} height={16} />
+              ) : (
+                <span className="tab-icon-fallback">
+                  {(tab.title || tab.url).charAt(0).toUpperCase()}
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <div className="tab-chips">
+          {contextTabs.length === 0 && (
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>No page context included</span>
+          )}
+          {contextTabs.map((tab) => {
+            const isActiveContext = sharePageContext && activeTab?.tabId === tab.tabId
+            const showClose = tab.pinned || isActiveContext
+
+            const handleClose = () => {
+              if (tab.pinned) {
+                void handleUnpin(tab.tabId)
+              } else if (isActiveContext) {
+                onSharePageContextChange(false)
+              }
+            }
+
+            return (
+              <div key={tab.tabId} className="tab-chip">
+                {tab.favIconUrl && (
+                  <img
+                    src={tab.favIconUrl}
+                    alt=""
+                    width={14}
+                    height={14}
+                    className="tab-chip-favicon"
+                  />
+                )}
+                <span className="tab-chip-label" title={tab.title || tab.url}>
+                  {tab.title || tab.url}
+                </span>
+                {showClose && (
+                  <button
+                    type="button"
+                    className="ghost tab-chip-close"
+                    onClick={handleClose}
+                    aria-label="Remove tab from context"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {showTabPicker && (
         <div className="modal-overlay" onClick={() => setShowTabPicker(false)}>
@@ -124,6 +190,9 @@ export function ExtensionContextBar({
                 .filter((t) => !t.pinned)
                 .map((tab) => (
                   <div key={tab.tabId} className="tab-picker-item" onClick={() => handlePin(tab.tabId)}>
+                    {tab.favIconUrl && (
+                      <img src={tab.favIconUrl} alt="" width={16} height={16} />
+                    )}
                     <span>{tab.title || tab.url}</span>
                   </div>
                 ))}
@@ -143,10 +212,12 @@ export function TabMentionInput({
   value,
   onChange,
   placeholder,
+  className,
 }: {
   value: string
   onChange: (v: string) => void
   placeholder?: string
+  className?: string
 }) {
   const [tabs, setTabs] = useState<TabInfo[]>([])
   const [showMentions, setShowMentions] = useState(false)
@@ -207,6 +278,7 @@ export function TabMentionInput({
   return (
     <div className="composer-wrapper">
       <textarea
+        className={className}
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}

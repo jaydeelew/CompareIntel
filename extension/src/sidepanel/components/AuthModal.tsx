@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
-import browser from 'webextension-polyfill'
 
 import {
   extensionLogin,
-  extensionLogout,
   extensionRegister,
   fetchCurrentUserFromApi,
-  apiClient,
 } from '../api'
 import type { User } from '@compareintel/core'
 
@@ -85,14 +82,5 @@ export function useAuth() {
       .finally(() => setLoading(false))
   }, [])
 
-  const logout = async () => {
-    await extensionLogout()
-    setUser(null)
-  }
-
-  const openBilling = () => {
-    browser.tabs.create({ url: 'https://compareintel.com/?settings=billing' })
-  }
-
-  return { user, loading, setUser, logout, openBilling }
+  return { user, loading, setUser }
 }

@@ -11,6 +11,8 @@ export interface TabContextEntry {
 export interface TabContextBundle {
   tabs: TabContextEntry[]
   tokenEstimate: number
+  /** Tabs that were requested but could not be read (e.g. permission denied). */
+  extractionFailures?: Array<{ tabId: number; url: string; title: string }>
 }
 
 export interface TabContextSettings {
@@ -27,8 +29,20 @@ export const DEFAULT_TAB_CONTEXT_SETTINGS: TabContextSettings = {
   maxCharsPerTab: 50_000,
 }
 
+export interface PreloadedTabContent {
+  url: string
+  title: string
+  text: string
+  selection: string
+}
+
 export type TabContextMessage =
-  | { type: 'GET_TAB_CONTEXT'; tabIds: number[]; includeSelection?: boolean }
+  | {
+      type: 'GET_TAB_CONTEXT'
+      tabIds: number[]
+      includeSelection?: boolean
+      preloaded?: Record<number, PreloadedTabContent>
+    }
   | { type: 'GET_ACTIVE_TAB' }
   | { type: 'LIST_TABS' }
   | { type: 'PIN_TAB'; tabId: number }

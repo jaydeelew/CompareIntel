@@ -124,7 +124,7 @@ Without `.env`, the extension defaults to `https://compareintel.com/api` (see [`
 ## Daily Development Workflow
 
 ```bash
-npm run extension:dev   # vite build --watch — leave running while editing
+npm run extension:dev   # vite dev (CRXJS) — leave running while editing
 ```
 
 After each rebuild: `chrome://extensions` → CompareIntel → **Reload**
@@ -164,6 +164,7 @@ E2E tests: [`extension/e2e/`](../../extension/e2e/) (require a built extension).
 | Auth works on web but not extension | Extension uses Bearer tokens, not cookies | Sign in via extension modal |
 | Page context fails | Non-HTTP(S) tab | Test on a normal `https://` page |
 | Changes not appearing | Forgot reload after watch build | Reload on `chrome://extensions` |
+| “Manifest file is missing or unreadable” | Watch build failed and wiped `dist/` | Run `npm run extension:build`, reload unpacked extension; restart `extension:dev` |
 
 ---
 
@@ -295,7 +296,7 @@ Firefox uses `sidebar_action` instead of `side_panel`. See [`extension/manifest.
 npm install
 
 # Local API (extension/.env → localhost:8000)
-npm run extension:dev          # watch rebuild
+npm run extension:dev          # vite dev (CRXJS) — leave running while editing
 npm run extension:build        # one-off build
 
 # Production API (no extension/.env)

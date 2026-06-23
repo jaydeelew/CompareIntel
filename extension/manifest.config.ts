@@ -35,7 +35,7 @@ const manifest: ManifestV3Export = {
   ],
   permissions: ['sidePanel', 'storage', 'scripting', 'tabs', 'activeTab'],
   host_permissions: ['https://compareintel.com/*', 'http://localhost:8000/*', 'http://localhost:5173/*'],
-  optional_host_permissions: ['<all_urls>'],
+  optional_host_permissions: ['https://*/*', 'http://*/*'],
   web_accessible_resources: [
     {
       resources: ['src/sidepanel/index.html'],

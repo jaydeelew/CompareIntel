@@ -9,7 +9,7 @@ from fastapi import status
 
 pytestmark = pytest.mark.integration
 
-FREE_TIER_MODEL = "anthropic/claude-3.5-haiku"
+FREE_TIER_MODEL = "deepseek/deepseek-chat-v3.1"
 
 
 class TestCompareStreamAttachedImagesValidation:

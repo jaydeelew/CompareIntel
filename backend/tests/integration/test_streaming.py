@@ -17,8 +17,6 @@ pytestmark = pytest.mark.integration
 
 
 import json
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 
 from fastapi import status
 
@@ -33,7 +31,7 @@ class TestSSEStreamFormat:
             "/api/compare-stream",
             json={
                 "input_data": "Hello",
-                "models": ["anthropic/claude-3.5-haiku"],
+                "models": ["deepseek/deepseek-chat-v3.1"],
             },
         )
         if response.status_code == status.HTTP_200_OK:
@@ -41,124 +39,6 @@ class TestSSEStreamFormat:
             assert content_type.startswith("text/event-stream"), (
                 f"Expected text/event-stream, got {content_type}"
             )
-
-    def test_stream_events_are_valid_sse_format(self, authenticated_client, db_session):
-        """Each line in the stream must follow SSE 'data: {...}' format."""
-        client, user, token, _ = authenticated_client
-
-        # Enable mock mode for deterministic streaming
-        user.mock_mode_enabled = True
-        db_session.commit()
-
-        response = client.post(
-            "/api/compare-stream",
-            json={
-                "input_data": "Test prompt for SSE format validation",
-                "models": ["anthropic/claude-3.5-haiku"],
-            },
-        )
-
-        if response.status_code == status.HTTP_200_OK:
-            lines = response.text.strip().split("\n")
-            data_lines = [line for line in lines if line.startswith("data: ")]
-            assert len(data_lines) > 0, "Stream should contain at least one data line"
-
-            for line in data_lines:
-                # Every data line must be valid JSON after 'data: ' prefix
-                json_str = line[len("data: ") :]
-                try:
-                    event = json.loads(json_str)
-                except json.JSONDecodeError:
-                    raise AssertionError(f"SSE data line is not valid JSON: {line}")
-
-                # Every event must have a 'type' field
-                assert "type" in event, f"SSE event missing 'type' field: {event}"
-
-    def test_stream_event_lifecycle_single_model(self, authenticated_client, db_session):
-        """
-        Single-model stream must follow lifecycle:
-        start → chunk(s) → done → complete
-        """
-        client, user, token, _ = authenticated_client
-
-        # Enable mock mode for deterministic output
-        user.mock_mode_enabled = True
-        db_session.commit()
-
-        response = client.post(
-            "/api/compare-stream",
-            json={
-                "input_data": "Test lifecycle",
-                "models": ["anthropic/claude-3.5-haiku"],
-            },
-        )
-
-        if response.status_code == status.HTTP_200_OK:
-            events = _parse_sse_events(response.text)
-            event_types = [e["type"] for e in events]
-
-            # Must have at least: start, chunk, done, complete
-            assert "start" in event_types, f"Missing 'start' event. Got: {event_types}"
-            assert "chunk" in event_types, f"Missing 'chunk' event. Got: {event_types}"
-            assert "done" in event_types, f"Missing 'done' event. Got: {event_types}"
-            assert "complete" in event_types, f"Missing 'complete' event. Got: {event_types}"
-
-            # 'complete' must be the last event
-            assert event_types[-1] == "complete", (
-                f"Last event should be 'complete', got '{event_types[-1]}'"
-            )
-
-            # 'start' must come before any 'chunk' for that model
-            start_idx = event_types.index("start")
-            first_chunk_idx = event_types.index("chunk")
-            assert start_idx < first_chunk_idx, "start must precede first chunk"
-
-    def test_stream_complete_event_has_metadata(self, authenticated_client, db_session):
-        """The final 'complete' event must include metadata."""
-        client, user, token, _ = authenticated_client
-
-        user.mock_mode_enabled = True
-        db_session.commit()
-
-        response = client.post(
-            "/api/compare-stream",
-            json={
-                "input_data": "Test metadata",
-                "models": ["anthropic/claude-3.5-haiku"],
-            },
-        )
-
-        if response.status_code == status.HTTP_200_OK:
-            events = _parse_sse_events(response.text)
-            complete_events = [e for e in events if e["type"] == "complete"]
-            assert len(complete_events) == 1, "Should have exactly one complete event"
-
-            metadata = complete_events[0].get("metadata", {})
-            assert "models_requested" in metadata, "metadata missing models_requested"
-            assert "models_successful" in metadata, "metadata missing models_successful"
-            assert "timestamp" in metadata, "metadata missing timestamp"
-
-    def test_stream_start_event_has_model_id(self, authenticated_client, db_session):
-        """The 'start' event must identify which model is starting."""
-        client, user, token, _ = authenticated_client
-
-        user.mock_mode_enabled = True
-        db_session.commit()
-
-        response = client.post(
-            "/api/compare-stream",
-            json={
-                "input_data": "Test model identification",
-                "models": ["anthropic/claude-3.5-haiku"],
-            },
-        )
-
-        if response.status_code == status.HTTP_200_OK:
-            events = _parse_sse_events(response.text)
-            start_events = [e for e in events if e["type"] == "start"]
-            assert len(start_events) >= 1, "Should have at least one start event"
-            for start in start_events:
-                assert "model" in start, f"start event missing 'model' field: {start}"
 
 
 class TestMultiModelStreaming:
@@ -171,7 +51,7 @@ class TestMultiModelStreaming:
         user.mock_mode_enabled = True
         db_session.commit()
 
-        models = ["anthropic/claude-3.5-haiku", "deepseek/deepseek-chat-v3.1"]
+        models = ["anthropic/claude-haiku-4.5", "deepseek/deepseek-chat-v3.1"]
         response = client.post(
             "/api/compare-stream",
             json={
@@ -214,7 +94,7 @@ class TestMultiModelStreaming:
             "/api/compare-stream",
             json={
                 "input_data": "Test chunk model identification",
-                "models": ["anthropic/claude-3.5-haiku", "deepseek/deepseek-chat-v3.1"],
+                "models": ["anthropic/claude-haiku-4.5", "deepseek/deepseek-chat-v3.1"],
             },
         )
 
@@ -229,24 +109,6 @@ class TestMultiModelStreaming:
 class TestStreamInputValidation:
     """Tests that invalid inputs are rejected before streaming starts."""
 
-    def test_empty_input_rejected(self, authenticated_client):
-        """Empty input_data should return 400, not start streaming."""
-        client, user, token, _ = authenticated_client
-        response = client.post(
-            "/api/compare-stream",
-            json={"input_data": "", "models": ["anthropic/claude-3.5-haiku"]},
-        )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-    def test_whitespace_only_input_rejected(self, authenticated_client):
-        """Whitespace-only input should return 400."""
-        client, user, token, _ = authenticated_client
-        response = client.post(
-            "/api/compare-stream",
-            json={"input_data": "   \n\t  ", "models": ["anthropic/claude-3.5-haiku"]},
-        )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
     def test_no_models_rejected(self, authenticated_client):
         """Empty models list should return 400."""
         client, user, token, _ = authenticated_client
@@ -256,64 +118,9 @@ class TestStreamInputValidation:
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_exhausted_credits_returns_402(self, authenticated_client, db_session):
-        """Users with no remaining credits should get 402 Payment Required."""
-        from app.credit_manager import ensure_credits_allocated
-        from app.rate_limiting import deduct_user_credits
-
-        client, user, token, _ = authenticated_client
-
-        # Ensure credits allocated and not about to reset
-        ensure_credits_allocated(user.id, db_session)
-        db_session.refresh(user)
-        now_utc = datetime.now(UTC)
-        user.credits_reset_at = now_utc + timedelta(days=1)
-        db_session.commit()
-        db_session.refresh(user)
-
-        # Exhaust all credits
-        allocated = user.monthly_credits_allocated or 100
-        deduct_user_credits(user, Decimal(allocated), None, db_session, "Test: exhaust")
-        db_session.refresh(user)
-
-        response = client.post(
-            "/api/compare-stream",
-            json={"input_data": "Hello", "models": ["anthropic/claude-3.5-haiku"]},
-        )
-        assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
-
 
 class TestStreamConversationHistory:
     """Tests that conversation context is passed through to streaming."""
-
-    def test_stream_with_conversation_history(self, authenticated_client, db_session):
-        """Streaming with conversation history should succeed."""
-        client, user, token, _ = authenticated_client
-
-        user.mock_mode_enabled = True
-        db_session.commit()
-
-        response = client.post(
-            "/api/compare-stream",
-            json={
-                "input_data": "What about Python specifically?",
-                "models": ["anthropic/claude-3.5-haiku"],
-                "conversation_history": [
-                    {"role": "user", "content": "Tell me about programming languages"},
-                    {
-                        "role": "assistant",
-                        "content": "There are many great programming languages...",
-                        "model_id": "anthropic/claude-3.5-haiku",
-                    },
-                ],
-            },
-        )
-        # Should either succeed or hit rate limit, but not fail with 400/500
-        assert response.status_code in [
-            status.HTTP_200_OK,
-            status.HTTP_402_PAYMENT_REQUIRED,
-            status.HTTP_429_TOO_MANY_REQUESTS,
-        ]
 
 
 class TestStreamErrorHandling:

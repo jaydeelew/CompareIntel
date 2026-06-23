@@ -25,6 +25,7 @@ describe('promptBuilder', () => {
     const result = buildPromptWithPageContext('What is this about?', bundle)
     expect(result).toContain('USER QUESTION: What is this about?')
     expect(result).toContain('UNTRUSTED DATA')
+    expect(result).toContain('WEBPAGE DATA')
     expect(result).toContain('Example (https://example.com)')
     expect(result).toContain('Page body text')
   })

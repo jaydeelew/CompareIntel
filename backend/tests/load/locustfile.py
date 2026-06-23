@@ -138,7 +138,7 @@ class AuthenticatedUser(HttpUser):
                 "/api/estimate-tokens",
                 json={
                     "input_data": "What is the meaning of life?",
-                    "models": ["anthropic/claude-3.5-haiku"],
+                    "models": ["deepseek/deepseek-chat-v3.1"],
                 },
                 headers=self.auth_headers,
                 name="/api/estimate-tokens [auth]",
@@ -156,7 +156,7 @@ class AuthenticatedUser(HttpUser):
                 "/api/compare-stream",
                 json={
                     "input_data": "Hello, how are you?",
-                    "models": ["anthropic/claude-3.5-haiku"],
+                    "models": ["deepseek/deepseek-chat-v3.1"],
                 },
                 headers=self.auth_headers,
                 name="/api/compare-stream [auth]",
@@ -197,7 +197,7 @@ class AnonymousComparisonUser(HttpUser):
             "/api/compare-stream",
             json={
                 "input_data": "Test prompt",
-                "models": ["anthropic/claude-3.5-haiku"],
+                "models": ["deepseek/deepseek-chat-v3.1"],
             },
             name="/api/compare-stream [anon]",
             catch_response=True,

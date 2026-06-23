@@ -421,19 +421,12 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             )
                             task.cancel()
                             timed_out_tasks.add(task)
-                            await chunk_queue.put(
-                                {
-                                    "type": "chunk",
-                                    "model": mid,
-                                    "content": "Error: Model timed out after 1 minute of inactivity",
-                                }
-                            )
-                            results_dict[mid] = (
-                                "Error: Model timed out after 1 minute of inactivity"
-                            )
+                            timeout_msg = "Error: Model timed out after 1 minute of inactivity"
+                            results_dict[mid] = timeout_msg
                             done_sent.add(mid)
                             model_stats[mid]["failure"] += 1
                             failed_models += 1
+                            yield f"data: {json.dumps({'model': mid, 'type': 'chunk', 'content': timeout_msg})}\n\n"
                             yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': True})}\n\n"
                             if mid in model_last_activity:
                                 del model_last_activity[mid]

@@ -22,10 +22,6 @@ def test_anthropic_opus_and_sonnet_4_flagged_when_in_snapshot() -> None:
     assert get_openrouter_thinking_model_flag("anthropic/claude-opus-4.1") is True
 
 
-def test_anthropic_haiku_not_thinking_in_snapshot() -> None:
-    assert get_openrouter_thinking_model_flag("anthropic/claude-3.5-haiku") is False
-
-
 def test_unknown_model_id_returns_none() -> None:
     assert get_openrouter_thinking_model_flag("definitely/not-in-openrouter-snapshot-xyz") is None
 
@@ -40,7 +36,7 @@ def test_qwen_instruct_not_thinking_in_snapshot() -> None:
 
 def test_registry_file_value_includes_snapshot_overrides() -> None:
     assert is_thinking_model_registry_file_value("anthropic/claude-opus-4.5") is True
-    assert is_thinking_model_registry_file_value("anthropic/claude-3.5-haiku") is False
+    assert is_thinking_model_registry_file_value("qwen/qwen3-next-80b-a3b-instruct") is False
 
 
 def test_kimi_k25_flagged_in_bundled_snapshot() -> None:

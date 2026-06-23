@@ -1,49 +1,60 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import browser from 'webextension-polyfill'
 
-import type { RateLimitStatus } from '@compareintel/core'
+import type { CreditBalance } from '@compareintel/core'
+import { getDisplayCreditsRemaining } from '@compareintel/core'
 
-import { loadRateLimitStatus } from './api'
+import { getWebAppUrl, loadCreditBalance } from './api'
 import { AuthModal, useAuth } from './components/AuthModal'
 import { ExtensionComparisonShell } from './components/ExtensionComparisonShell'
-import { ExtensionSettings } from './components/ExtensionSettings'
 import { generateBrowserFingerprint } from './utils/fingerprint'
 
 export function App() {
-  const { user, loading: authLoading, setUser, logout, openBilling } = useAuth()
+  const { user, loading: authLoading, setUser } = useAuth()
   const [showAuth, setShowAuth] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const [rateLimit, setRateLimit] = useState<RateLimitStatus | null>(null)
+  const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [fingerprint, setFingerprint] = useState<string | undefined>()
+
+  const openWebApp = () => {
+    browser.tabs.create({ url: getWebAppUrl() })
+  }
 
   useEffect(() => {
     generateBrowserFingerprint().then(setFingerprint).catch(() => undefined)
   }, [])
 
-  useEffect(() => {
+  const refreshCredits = useCallback(() => {
     if (authLoading) return
-    loadRateLimitStatus(fingerprint)
-      .then(setRateLimit)
+    loadCreditBalance(fingerprint)
+      .then(setCreditBalance)
       .catch(() => undefined)
-  }, [user, fingerprint, authLoading])
+  }, [authLoading, fingerprint, user])
 
-  const creditsText = user
-    ? `${(user.monthly_credits_allocated ?? 0) - (user.credits_used_this_period ?? 0)} credits remaining`
-    : rateLimit
-      ? `${rateLimit.remaining_usage ?? rateLimit.fingerprint_remaining ?? 0} comparisons remaining today`
-      : 'Loading limits…'
+  useEffect(() => {
+    refreshCredits()
+  }, [refreshCredits])
+
+  const tier = user?.subscription_tier ?? creditBalance?.subscription_tier ?? 'unregistered'
+  const creditsRemaining = getDisplayCreditsRemaining(creditBalance, tier)
+  const creditsText =
+    creditsRemaining === null
+      ? 'Loading credits…'
+      : `${Math.round(creditsRemaining)} credits remaining`
 
   return (
     <div className="app">
       <header className="header">
-        <h1>CompareIntel</h1>
+        {!user && (
+          <span className="header-signin-prompt">Sign in for more models and higher limits</span>
+        )}
         <div className="header-actions">
           {!user && (
             <button type="button" className="secondary" onClick={() => setShowAuth(true)}>
               Sign in
             </button>
           )}
-          <button type="button" className="ghost" onClick={() => setShowSettings(true)}>
-            ⚙
+          <button type="button" className="secondary" onClick={openWebApp}>
+            Web App
           </button>
         </div>
       </header>
@@ -52,9 +63,9 @@ export function App() {
 
       <ExtensionComparisonShell
         user={user}
-        rateLimit={rateLimit}
         browserFingerprint={fingerprint}
         onOpenAuth={() => setShowAuth(true)}
+        onComparisonFinished={refreshCredits}
       />
 
       {showAuth && (
@@ -64,18 +75,6 @@ export function App() {
             setUser(u)
             setShowAuth(false)
           }}
-        />
-      )}
-
-      {showSettings && (
-        <ExtensionSettings
-          onClose={() => setShowSettings(false)}
-          onLogout={async () => {
-            await logout()
-            setShowSettings(false)
-          }}
-          onOpenBilling={openBilling}
-          userEmail={user?.email}
         />
       )}
     </div>

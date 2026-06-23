@@ -35,88 +35,23 @@ for env_path in env_paths:
         break
 
 from app.email_service import EMAIL_CONFIGURED, send_model_availability_report
+from app.llm.model_availability import check_model_availability as run_availability_check
 from app.model_runner import OPENROUTER_MODELS, fetch_all_models_from_openrouter
 
 
 def check_model_availability() -> dict[str, Any]:
-    """
-    Check availability of all configured models in OpenRouter.
+    print("Fetching models from OpenRouter API...")
+    openrouter_models = fetch_all_models_from_openrouter()
 
-    Returns:
-        Dictionary with check results including:
-        - total_models: Total number of models checked
-        - available_models: List of available model IDs
-        - unavailable_models: List of unavailable model IDs with details
-        - check_timestamp: When the check was performed
-        - error: Any error that occurred during the check
-    """
-    result = {
-        "total_models": len(OPENROUTER_MODELS),
-        "available_models": [],
-        "unavailable_models": [],
-        "check_timestamp": datetime.now().isoformat(),
-        "error": None,
-    }
+    if openrouter_models is None:
+        return run_availability_check(OPENROUTER_MODELS, None)
 
-    try:
-        # Fetch all available models from OpenRouter (synchronous function)
-        print("Fetching models from OpenRouter API...")
-        openrouter_models = fetch_all_models_from_openrouter()
+    print(f"Found {len(openrouter_models)} models in OpenRouter")
+    print(f"Checking {len(OPENROUTER_MODELS)} configured models (catalog + endpoint health)...")
 
-        if openrouter_models is None:
-            result["error"] = "Failed to fetch models from OpenRouter API"
-            return result
-
-        print(f"Found {len(openrouter_models)} models in OpenRouter")
-        print(f"Checking {len(OPENROUTER_MODELS)} configured models...")
-
-        # Check each configured model
-        openrouter_model_ids = set(openrouter_models.keys())
-
-        for model in OPENROUTER_MODELS:
-            model_id = model.get("id")
-            if not model_id:
-                continue
-
-            # Skip models marked as not available (e.g., "Coming Soon" models)
-            if model.get("available") is False:
-                result["unavailable_models"].append(
-                    {
-                        "id": model_id,
-                        "name": model.get("name", model_id),
-                        "reason": "Marked as not available in configuration",
-                        "provider": model.get("provider", "Unknown"),
-                    }
-                )
-                continue
-
-            # Check if model exists in OpenRouter's list
-            if model_id in openrouter_model_ids:
-                result["available_models"].append(
-                    {
-                        "id": model_id,
-                        "name": model.get("name", model_id),
-                        "provider": model.get("provider", "Unknown"),
-                    }
-                )
-            else:
-                # Model not found in OpenRouter
-                result["unavailable_models"].append(
-                    {
-                        "id": model_id,
-                        "name": model.get("name", model_id),
-                        "reason": "Not found in OpenRouter's model list",
-                        "provider": model.get("provider", "Unknown"),
-                    }
-                )
-
-        print(f"✓ Available: {len(result['available_models'])}")
-        print(f"✗ Unavailable: {len(result['unavailable_models'])}")
-
-    except Exception as e:
-        result["error"] = f"Error during model availability check: {str(e)}"
-        print(f"ERROR: {result['error']}")
-
+    result = run_availability_check(OPENROUTER_MODELS, openrouter_models)
+    print(f"✓ Available: {len(result['available_models'])}")
+    print(f"✗ Unavailable: {len(result['unavailable_models'])}")
     return result
 
 

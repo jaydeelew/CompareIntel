@@ -1,10 +1,13 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 import type { CompareIntelApiClient } from '../api/client'
+import { getPerModelContextMessageCount } from '../conversation/contextMessageCount'
 import type { ModelInfo, StreamEvent } from '../api/services'
+import { deriveStreamErrorMessage } from '../api/streamErrors'
 import { getEventModelId } from '../api/services'
 import { buildPromptWithPageContext } from '../tabContext/promptBuilder'
 import type { TabContextBundle } from '../tabContext/types'
+import { shouldAutoEnableWebSearch } from '../webSearch/autoEnable'
 
 export interface ModelResult {
   modelId: string
@@ -22,7 +25,6 @@ export interface ComparisonPageState {
   isLoading: boolean
   error: string | null
   conversationId: number | null
-  webSearchEnabled: boolean
 }
 
 export interface UseComparisonPageOptions {
@@ -32,6 +34,7 @@ export interface UseComparisonPageOptions {
   getTabContext?: () => Promise<TabContextBundle | null>
   sharePageContext?: boolean
   maxModels?: number
+  onComparisonFinished?: () => void
 }
 
 export function useComparisonPage(options: UseComparisonPageOptions) {
@@ -42,6 +45,7 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
     getTabContext,
     sharePageContext = false,
     maxModels = 4,
+    onComparisonFinished,
   } = options
 
   const [input, setInput] = useState('')
@@ -50,7 +54,6 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [conversationId, setConversationId] = useState<number | null>(null)
-  const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [conversationHistory, setConversationHistory] = useState<
     Array<{ role: string; content: string; model_id?: string }>
   >([])
@@ -97,15 +100,26 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
     abortRef.current = new AbortController()
 
     let promptText = input.trim()
+    let contextWarning: string | null = null
     if (sharePageContext && getTabContext) {
       try {
         const bundle = await getTabContext()
         promptText = buildPromptWithPageContext(promptText, bundle)
-      } catch {
-        setError('Failed to read page context. Try again or disable page context.')
-        setIsLoading(false)
-        return
+        const requestedTabs = bundle?.tabs.length ?? 0
+        const failures = bundle?.extractionFailures ?? []
+        if (failures.length > 0 && requestedTabs === 0) {
+          contextWarning = `Could not read page content from ${failures.map((t) => t.title).join(', ')}. Refresh the page, reopen CompareIntel from the extension icon on that tab, or allow site access if Chrome prompts you.`
+        } else if (failures.length > 0) {
+          contextWarning = `Could not read content from: ${failures.map((t) => t.title).join(', ')}.`
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to read page context.'
+        contextWarning = `${message} Continuing without page context.`
       }
+    }
+    if (contextWarning) {
+      setError(contextWarning)
     }
 
     const initialResults: ModelResult[] = selectedModels.map((modelId) => ({
@@ -118,6 +132,12 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
     }))
     setResults(initialResults)
 
+    const enableWebSearch = shouldAutoEnableWebSearch(
+      input.trim(),
+      selectedModels,
+      modelsByProvider
+    )
+
     try {
       const stream = apiClient.stream('/compare-stream', {
         input_data: promptText,
@@ -125,7 +145,7 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
         conversation_history: conversationHistory,
         browser_fingerprint: browserFingerprint,
         conversation_id: conversationId,
-        enable_web_search: webSearchEnabled,
+        enable_web_search: enableWebSearch,
         client_source: 'extension',
       })
 
@@ -166,8 +186,13 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
 
             if (event.type === 'chunk' || event.type === 'reasoning') {
               const piece = typeof event.content === 'string' ? event.content : ''
-              if (piece) return { ...r, content: r.content + piece }
-              return r
+              if (!piece) return r
+              const content = r.content + piece
+              const error =
+                r.isComplete && r.error
+                  ? deriveStreamErrorMessage(content, r.error)
+                  : r.error
+              return { ...r, content, error }
             }
 
             if (event.type === 'image' && typeof event.url === 'string') {
@@ -182,7 +207,7 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
                 isStreaming: false,
                 isComplete: true,
                 error: failed
-                  ? r.error ?? 'Model returned an error'
+                  ? deriveStreamErrorMessage(r.content, r.error ?? undefined)
                   : empty
                     ? 'No response received'
                     : null,
@@ -224,6 +249,7 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
     } finally {
       setIsLoading(false)
       abortRef.current = null
+      onComparisonFinished?.()
     }
   }, [
     input,
@@ -234,8 +260,9 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
     conversationHistory,
     browserFingerprint,
     conversationId,
-    webSearchEnabled,
+    modelsByProvider,
     getModelName,
+    onComparisonFinished,
   ])
 
   const newComparison = useCallback(() => {
@@ -246,6 +273,11 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
     setConversationId(null)
     setError(null)
   }, [cancelComparison])
+
+  const contextMessageCount = useMemo(
+    () => getPerModelContextMessageCount(conversationHistory, selectedModels),
+    [conversationHistory, selectedModels]
+  )
 
   return {
     input,
@@ -258,11 +290,10 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
     error,
     setError,
     conversationId,
-    webSearchEnabled,
-    setWebSearchEnabled,
     submitComparison,
     cancelComparison,
     newComparison,
     conversationHistory,
+    contextMessageCount,
   }
 }
