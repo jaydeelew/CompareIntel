@@ -1111,30 +1111,6 @@
     ],
     "Sourceful": [
       {
-        "id": "sourceful/riverflow-v2-standard-preview",
-        "name": "Riverflow V2 Standard",
-        "description": "Unified text-to-image and image-to-image model for versatile image generation.",
-        "category": "Image",
-        "provider": "Sourceful",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": "N/A",
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "9:16"
-        ],
-        "image_sizes": [
-          "1K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
         "id": "sourceful/riverflow-v2-fast",
         "name": "Riverflow V2 Fast",
         "description": "Fastest variant of Sourceful's Riverflow 2.0 lineup for production deployments and low latency.",
@@ -1158,54 +1134,6 @@
         "image_sizes": [
           "1K",
           "2K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
-        "id": "sourceful/riverflow-v2-fast-preview",
-        "name": "Riverflow V2 Fast Preview",
-        "description": "The fastest variant of Sourceful's Riverflow V2 preview lineup for low-latency image generation.",
-        "category": "Image",
-        "provider": "Sourceful",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": "N/A",
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "9:16"
-        ],
-        "image_sizes": [
-          "1K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
-        "id": "sourceful/riverflow-v2-max-preview",
-        "name": "Riverflow V2 Max Preview",
-        "description": "Most powerful variant of Sourceful's Riverflow V2 preview lineup for top-tier image generation.",
-        "category": "Image",
-        "provider": "Sourceful",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": "N/A",
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "9:16"
-        ],
-        "image_sizes": [
-          "1K"
         ],
         "returns_multiple_images": false
       },
@@ -1363,9 +1291,6 @@
     "black-forest-labs/flux.2-pro",
     "black-forest-labs/flux.2-flex",
     "black-forest-labs/flux.2-klein-4b",
-    "sourceful/riverflow-v2-max-preview",
-    "sourceful/riverflow-v2-standard-preview",
-    "sourceful/riverflow-v2-fast-preview",
     "sourceful/riverflow-v2-fast",
     "sourceful/riverflow-v2-pro",
     "bytedance-seed/seedream-4.5",
@@ -1401,7 +1326,6 @@
     "qwen/qwen3-next-80b-a3b-instruct",
     "qwen/qwen3.5-397b-a17b",
     "qwen/qwen3.5-plus-02-15",
-    "sourceful/riverflow-v2-standard-preview",
     "x-ai/grok-4.3",
     "xiaomi/mimo-v2.5-pro",
     "z-ai/glm-5",
