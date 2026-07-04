@@ -8,7 +8,7 @@
     "frontend"
   ],
   "scripts": {
-    "prepare": "husky",
+    "prepare": "node -e \"if(process.env.CI||process.env.HUSKY==='0')process.exit(0);const fs=require('fs'),cp=require('child_process');if(fs.existsSync('node_modules/husky/bin.js'))cp.execSync('node node_modules/husky/bin.js',{stdio:'inherit'})\"",
     "lint-staged": "lint-staged --config package.json",
     "extension:build": "npm run build -w @compareintel/extension",
     "extension:dev": "npm run dev -w @compareintel/extension",
