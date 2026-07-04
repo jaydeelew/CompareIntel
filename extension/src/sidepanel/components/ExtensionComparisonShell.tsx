@@ -65,6 +65,29 @@ interface ExtensionComparisonShellProps {
   onComparisonFinished?: () => void
 }
 
+function isModelTurnInHistory(
+  history: Array<{ role: string; content: string; model_id?: string }>,
+  userPrompt: string,
+  modelId: string,
+  assistantContent: string
+): boolean {
+  let lastMatchingUserIndex = -1
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    if (history[index]?.role === 'user' && history[index]?.content === userPrompt) {
+      lastMatchingUserIndex = index
+      break
+    }
+  }
+  if (lastMatchingUserIndex < 0) return false
+
+  return history.slice(lastMatchingUserIndex + 1).some(
+    (message) =>
+      message.role === 'assistant' &&
+      message.model_id === modelId &&
+      message.content === assistantContent
+  )
+}
+
 export function ExtensionComparisonShell({
   user,
   browserFingerprint,
@@ -172,6 +195,10 @@ export function ExtensionComparisonShell({
     }
   }, [comparison.results.length])
 
+  const isActiveTurn =
+    comparison.isLoading ||
+    comparison.results.some((result) => result.isStreaming)
+
   const handleSubmit = () => {
     setSubmittedPrompt(comparison.input.trim())
     comparison.submitComparison()
@@ -271,17 +298,30 @@ export function ExtensionComparisonShell({
                 }
               }
 
-              const currentTurnMessages: Array<{ role: 'user' | 'assistant'; content: string }> = []
-              if (submittedPrompt) {
+              const assistantContent = result.error
+                ? result.error
+                : result.content || (result.isStreaming ? '' : 'No response')
+              const turnInHistory =
+                !!submittedPrompt &&
+                isModelTurnInHistory(
+                  comparison.conversationHistory,
+                  submittedPrompt,
+                  result.modelId,
+                  assistantContent
+                )
+              const shouldShowCurrentTurn =
+                !!submittedPrompt && (isActiveTurn || !turnInHistory)
+
+              const currentTurnMessages: Array<{ role: 'user' | 'assistant'; content: string }> =
+                []
+              if (shouldShowCurrentTurn) {
                 currentTurnMessages.push({ role: 'user', content: submittedPrompt })
-              }
-              if (result.content || result.isStreaming || result.error) {
-                currentTurnMessages.push({
-                  role: 'assistant',
-                  content: result.error
-                    ? result.error
-                    : result.content || (result.isStreaming ? '' : 'No response'),
-                })
+                if (result.content || result.isStreaming || result.error) {
+                  currentTurnMessages.push({
+                    role: 'assistant',
+                    content: assistantContent,
+                  })
+                }
               }
 
               const allMessages = [...pastMessages, ...currentTurnMessages]

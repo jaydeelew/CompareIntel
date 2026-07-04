@@ -60,6 +60,32 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
 
   const abortRef = useRef<AbortController | null>(null)
 
+  const finalizeResults = (resultsToFinalize: ModelResult[]): ModelResult[] =>
+    resultsToFinalize.map((result) => {
+      const empty = !result.content.trim() && !result.error
+      return {
+        ...result,
+        isStreaming: false,
+        isComplete: true,
+        error: result.error ?? (empty ? 'No response received' : null),
+      }
+    })
+
+  const commitTurnToHistory = (
+    userPrompt: string,
+    completedResults: ModelResult[]
+  ) => {
+    setConversationHistory((history) => [
+      ...history,
+      { role: 'user', content: userPrompt },
+      ...completedResults.map((result) => ({
+        role: 'assistant',
+        content: result.content,
+        model_id: result.modelId,
+      })),
+    ])
+  }
+
   const getModelName = useCallback(
     (modelId: string) => {
       for (const models of Object.values(modelsByProvider)) {
@@ -122,6 +148,8 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
       setError(contextWarning)
     }
 
+    const userPromptForHistory = input.trim()
+
     const initialResults: ModelResult[] = selectedModels.map((modelId) => ({
       modelId,
       modelName: getModelName(modelId),
@@ -131,9 +159,10 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
       isComplete: false,
     }))
     setResults(initialResults)
+    let latestResults = initialResults
 
     const enableWebSearch = shouldAutoEnableWebSearch(
-      input.trim(),
+      userPromptForHistory,
       selectedModels,
       modelsByProvider
     )
@@ -171,75 +200,63 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
                 ? event.error
                 : 'Streaming error'
           setError(errMsg)
-          setResults((prev) =>
-            prev.map((r) => ({ ...r, error: errMsg, isStreaming: false, isComplete: true }))
-          )
+          latestResults = latestResults.map((result) => ({
+            ...result,
+            error: errMsg,
+            isStreaming: false,
+            isComplete: true,
+          }))
+          setResults(latestResults)
           break
         }
 
         const modelId = getEventModelId(event)
         if (!modelId) continue
 
-        setResults((prev) =>
-          prev.map((r) => {
-            if (r.modelId !== modelId) return r
+        latestResults = latestResults.map((result) => {
+          if (result.modelId !== modelId) return result
 
-            if (event.type === 'chunk' || event.type === 'reasoning') {
-              const piece = typeof event.content === 'string' ? event.content : ''
-              if (!piece) return r
-              const content = r.content + piece
-              const error =
-                r.isComplete && r.error
-                  ? deriveStreamErrorMessage(content, r.error)
-                  : r.error
-              return { ...r, content, error }
+          if (event.type === 'chunk' || event.type === 'reasoning') {
+            const piece = typeof event.content === 'string' ? event.content : ''
+            if (!piece) return result
+            const content = result.content + piece
+            const error =
+              result.isComplete && result.error
+                ? deriveStreamErrorMessage(content, result.error)
+                : result.error
+            return { ...result, content, error }
+          }
+
+          if (event.type === 'image' && typeof event.url === 'string') {
+            return {
+              ...result,
+              content: result.content + `\n![generated image](${event.url})\n`,
             }
+          }
 
-            if (event.type === 'image' && typeof event.url === 'string') {
-              return { ...r, content: r.content + `\n![generated image](${event.url})\n` }
+          if (event.type === 'done') {
+            const failed = event.error === true
+            const empty = !result.content.trim() && !failed
+            return {
+              ...result,
+              isStreaming: false,
+              isComplete: true,
+              error: failed
+                ? deriveStreamErrorMessage(result.content, result.error ?? undefined)
+                : empty
+                  ? 'No response received'
+                  : null,
             }
+          }
 
-            if (event.type === 'done') {
-              const failed = event.error === true
-              const empty = !r.content.trim() && !failed
-              return {
-                ...r,
-                isStreaming: false,
-                isComplete: true,
-                error: failed
-                  ? deriveStreamErrorMessage(r.content, r.error ?? undefined)
-                  : empty
-                    ? 'No response received'
-                    : null,
-              }
-            }
-
-            return r
-          })
-        )
+          return result
+        })
+        setResults(latestResults)
       }
 
-      setResults((prev) => {
-        const updated = prev.map((r) => {
-          const empty = !r.content.trim() && !r.error
-          return {
-            ...r,
-            isStreaming: false,
-            isComplete: true,
-            error: r.error ?? (empty ? 'No response received' : null),
-          }
-        })
-        setConversationHistory((hist) => [
-          ...hist,
-          { role: 'user', content: input.trim() },
-          ...updated.map((r) => ({
-            role: 'assistant',
-            content: r.content,
-            model_id: r.modelId,
-          })),
-        ])
-        return updated
-      })
+      latestResults = finalizeResults(latestResults)
+      setResults(latestResults)
+      commitTurnToHistory(userPromptForHistory, latestResults)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Comparison failed'
       setError(message)
