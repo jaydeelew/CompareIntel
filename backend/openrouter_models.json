@@ -5411,6 +5411,190 @@
       }
     },
     {
+      "id": "x-ai/grok-4.5",
+      "canonical_slug": "x-ai/grok-4.5-20260708",
+      "hugging_face_id": null,
+      "name": "xAI: Grok 4.5",
+      "created": 1783523154,
+      "description": "Grok 4.5 is SpaceXAI's smartest model with frontier performance on coding, knowledge work, and STEM.",
+      "context_length": 500000,
+      "architecture": {
+        "modality": "text+image+file->text",
+        "input_modalities": [
+          "text",
+          "image",
+          "file"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Grok",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.000002",
+        "completion": "0.000006",
+        "web_search": "0.005",
+        "input_cache_read": "0.0000005",
+        "overrides": [
+          {
+            "min_prompt_tokens": 200000,
+            "prompt": "0.000004",
+            "completion": "0.000012",
+            "input_cache_read": "0.000001"
+          }
+        ]
+      },
+      "top_provider": {
+        "context_length": 500000,
+        "max_completion_tokens": null,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logprobs",
+        "max_tokens",
+        "presence_penalty",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_logprobs",
+        "top_p"
+      ],
+      "default_parameters": {
+        "temperature": null,
+        "top_p": null,
+        "top_k": null,
+        "frequency_penalty": null,
+        "presence_penalty": null,
+        "repetition_penalty": null
+      },
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/x-ai/grok-4.5-20260708/endpoints"
+      },
+      "benchmarks": {
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "agenticgamedev",
+            "elo": 1235,
+            "win_rate": 52.3,
+            "rank": 5
+          },
+          {
+            "arena": "agents",
+            "category": "androidnative",
+            "elo": 1224,
+            "win_rate": 52.4,
+            "rank": 13
+          },
+          {
+            "arena": "agents",
+            "category": "fullstack",
+            "elo": 1302,
+            "win_rate": 60.4,
+            "rank": 4
+          },
+          {
+            "arena": "agents",
+            "category": "godotgamedev",
+            "elo": 1304,
+            "win_rate": 60.6,
+            "rank": 2
+          },
+          {
+            "arena": "agents",
+            "category": "htmlslides",
+            "elo": 1242,
+            "win_rate": 55.3,
+            "rank": 2
+          },
+          {
+            "arena": "agents",
+            "category": "python-pptxslides",
+            "elo": 1240,
+            "win_rate": 50.8,
+            "rank": 7
+          },
+          {
+            "arena": "agents",
+            "category": "webapps",
+            "elo": 1271,
+            "win_rate": 52.6,
+            "rank": 6
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1345,
+            "win_rate": 61.4,
+            "rank": 3
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1328,
+            "win_rate": 58.2,
+            "rank": 4
+          },
+          {
+            "arena": "models",
+            "category": "dataviz",
+            "elo": 1315,
+            "win_rate": 58.3,
+            "rank": 7
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1331,
+            "win_rate": 54.4,
+            "rank": 8
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1337,
+            "win_rate": 56.4,
+            "rank": 5
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1326,
+            "win_rate": 58.3,
+            "rank": 4
+          }
+        ],
+        "artificial_analysis": {
+          "intelligence_index": 53.8,
+          "coding_index": 72.4,
+          "agentic_index": 45.7
+        }
+      },
+      "reasoning": {
+        "mandatory": true,
+        "default_enabled": true,
+        "supported_efforts": [
+          "high",
+          "medium",
+          "low"
+        ],
+        "default_effort": "high"
+      }
+    },
+    {
       "id": "xiaomi/mimo-v2.5",
       "canonical_slug": "xiaomi/mimo-v2.5-20260422",
       "hugging_face_id": "XiaomiMiMo/MiMo-V2.5",
