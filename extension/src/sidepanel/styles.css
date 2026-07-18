@@ -118,6 +118,94 @@ textarea {
   border-bottom: 1px solid var(--border);
 }
 
+.recent-chats {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.recent-chats-collapsed {
+  padding: 8px 14px;
+}
+
+.recent-chats:not(.recent-chats-collapsed) {
+  padding: 10px 14px 12px;
+}
+
+.recent-chats-header {
+  display: flex;
+  align-items: center;
+}
+
+.recent-chats-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.recent-chats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.recent-chats-empty {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 4px 0;
+}
+
+.recent-chat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+  font-weight: 500;
+}
+
+.recent-chat-item:hover:not(.active) {
+  background: var(--border);
+}
+
+.recent-chat-item.active {
+  background: rgba(59, 130, 246, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.45);
+}
+
+.recent-chat-title {
+  font-size: 13px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.recent-chat-meta {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
 .scroll-body {
   flex: 1;
   overflow-y: auto;
@@ -691,6 +779,42 @@ textarea {
 
 .page-context-intro-note {
   font-size: 12px !important;
+}
+
+.settings-modal {
+  max-width: 400px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.settings-row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-row-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.settings-row-description {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.settings-toggle {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.header-icon-button {
+  padding: 6px;
 }
 
 .tab-picker-list {

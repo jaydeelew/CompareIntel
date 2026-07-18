@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   useComparisonPage,
@@ -21,6 +21,8 @@ import {
 import { ExtensionContextBar, TabMentionInput } from './ExtensionContextBar'
 import { ExtensionModelPicker } from './ExtensionModelPicker'
 import { PageContextIntroModal } from './PageContextIntroModal'
+import type { ExtensionShellPersistedState } from '../types/shellState'
+import { upsertRecentChat } from '../../shared/recentChats'
 
 function SendIcon() {
   return (
@@ -63,6 +65,11 @@ interface ExtensionComparisonShellProps {
   browserFingerprint?: string
   onOpenAuth: () => void
   onComparisonFinished?: () => void
+  persistedState?: ExtensionShellPersistedState
+  persistTabId?: number
+  onPersistState?: (tabId: number, state: ExtensionShellPersistedState) => void
+  onRecentChatSaved?: () => void
+  onActiveRecentChatChange?: (chatId: string | null) => void
 }
 
 function isModelTurnInHistory(
@@ -93,14 +100,26 @@ export function ExtensionComparisonShell({
   browserFingerprint,
   onOpenAuth,
   onComparisonFinished,
+  persistedState,
+  persistTabId,
+  onPersistState,
+  onRecentChatSaved,
+  onActiveRecentChatChange,
 }: ExtensionComparisonShellProps) {
+  const [activeRecentChatId, setActiveRecentChatId] = useState<string | null>(
+    persistedState?.activeRecentChatId ?? null
+  )
   const [modelsByProvider, setModelsByProvider] = useState<Record<string, ModelInfo[]>>({})
   const [showModelPicker, setShowModelPicker] = useState(false)
-  const [sharePageContext, setSharePageContext] = useState(true)
+  const [sharePageContext, setSharePageContext] = useState(
+    persistedState?.sharePageContext ?? true
+  )
   const [contextTabIds, setContextTabIds] = useState<number[]>([])
-  const [collapsedResultIds, setCollapsedResultIds] = useState<Set<string>>(new Set())
+  const [collapsedResultIds, setCollapsedResultIds] = useState<Set<string>>(
+    () => new Set(persistedState?.collapsedResultIds ?? [])
+  )
   const [showPageContextIntro, setShowPageContextIntro] = useState(false)
-  const [submittedPrompt, setSubmittedPrompt] = useState('')
+  const [submittedPrompt, setSubmittedPrompt] = useState(persistedState?.submittedPrompt ?? '')
 
   const maxModels = user
     ? getModelLimit(user.subscription_tier)
@@ -177,8 +196,118 @@ export function ExtensionComparisonShell({
     getTabContext: sharePageContext || contextTabIds.length > 0 ? getTabContext : undefined,
     sharePageContext: sharePageContext || contextTabIds.length > 0,
     maxModels,
-    onComparisonFinished,
+    onComparisonFinished: handleComparisonFinished,
+    initialState: persistedState
+      ? {
+          input: persistedState.input,
+          selectedModels: persistedState.selectedModels,
+          results: persistedState.results,
+          conversationId: persistedState.conversationId,
+          conversationHistory: persistedState.conversationHistory,
+          error: persistedState.error,
+        }
+      : undefined,
   })
+
+  const capturePersistedState = useCallback((): ExtensionShellPersistedState => {
+    return {
+      input: comparison.input,
+      selectedModels: comparison.selectedModels,
+      results: comparison.results,
+      conversationId: comparison.conversationId,
+      conversationHistory: comparison.conversationHistory,
+      error: comparison.error,
+      sharePageContext,
+      collapsedResultIds: [...collapsedResultIds],
+      submittedPrompt,
+      activeRecentChatId,
+    }
+  }, [
+    activeRecentChatId,
+    collapsedResultIds,
+    comparison.conversationHistory,
+    comparison.conversationId,
+    comparison.error,
+    comparison.input,
+    comparison.results,
+    comparison.selectedModels,
+    sharePageContext,
+    submittedPrompt,
+  ])
+
+  const saveRecentChat = useCallback(async () => {
+    if (comparison.conversationHistory.length === 0 && comparison.results.length === 0) {
+      return
+    }
+
+    const state = capturePersistedState()
+    let sourceTabId = persistTabId
+    let sourceTabTitle: string | undefined
+
+    if (sourceTabId == null) {
+      const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
+      if (activeRes.type === 'ACTIVE_TAB' && activeRes.tab) {
+        sourceTabId = activeRes.tab.tabId
+        sourceTabTitle = activeRes.tab.title
+      }
+    } else {
+      const listRes = await sendTabContextMessage({ type: 'LIST_TABS' })
+      if (listRes.type === 'TABS_LIST') {
+        sourceTabTitle = listRes.tabs.find((tab) => tab.tabId === sourceTabId)?.title
+      }
+    }
+
+    const saved = await upsertRecentChat({
+      id: activeRecentChatId,
+      state,
+      sourceTabId,
+      sourceTabTitle,
+    })
+    setActiveRecentChatId(saved.id)
+    onActiveRecentChatChange?.(saved.id)
+    onRecentChatSaved?.()
+  }, [
+    activeRecentChatId,
+    capturePersistedState,
+    comparison.conversationHistory.length,
+    comparison.results.length,
+    onActiveRecentChatChange,
+    onRecentChatSaved,
+    persistTabId,
+  ])
+
+  const handleComparisonFinished = useCallback(() => {
+    onComparisonFinished?.()
+  }, [onComparisonFinished])
+
+  const wasLoadingRef = useRef(false)
+  useEffect(() => {
+    const justFinished = wasLoadingRef.current && !comparison.isLoading
+    wasLoadingRef.current = comparison.isLoading
+    if (
+      justFinished &&
+      (comparison.conversationHistory.length > 0 || comparison.results.length > 0)
+    ) {
+      void saveRecentChat().catch(() => undefined)
+    }
+  }, [
+    comparison.conversationHistory.length,
+    comparison.isLoading,
+    comparison.results.length,
+    saveRecentChat,
+  ])
+
+  useEffect(() => {
+    if (!onPersistState || persistTabId == null) return
+    onPersistState(persistTabId, capturePersistedState())
+  }, [capturePersistedState, onPersistState, persistTabId])
+
+  useEffect(() => {
+    if (!onPersistState || persistTabId == null) return
+    return () => {
+      onPersistState(persistTabId, capturePersistedState())
+    }
+  }, [capturePersistedState, onPersistState, persistTabId])
 
   useEffect(() => {
     comparison.setSelectedModels((prev) =>
@@ -225,6 +354,12 @@ export function ExtensionComparisonShell({
       return
     }
     comparison.toggleModel(modelId)
+  }
+
+  const handleNewComparison = () => {
+    comparison.newComparison()
+    setActiveRecentChatId(null)
+    onActiveRecentChatChange?.(null)
   }
 
   return (
@@ -405,7 +540,7 @@ export function ExtensionComparisonShell({
             <button
               type="button"
               className="icon-button icon-button-ghost"
-              onClick={comparison.newComparison}
+              onClick={handleNewComparison}
               title="New comparison"
               aria-label="New comparison"
             >

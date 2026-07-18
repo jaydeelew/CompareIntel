@@ -27,6 +27,15 @@ export interface ComparisonPageState {
   conversationId: number | null
 }
 
+export interface ComparisonConversationState {
+  input: string
+  selectedModels: string[]
+  results: ModelResult[]
+  conversationId: number | null
+  conversationHistory: Array<{ role: string; content: string; model_id?: string }>
+  error: string | null
+}
+
 export interface UseComparisonPageOptions {
   apiClient: CompareIntelApiClient
   modelsByProvider: Record<string, ModelInfo[]>
@@ -35,6 +44,7 @@ export interface UseComparisonPageOptions {
   sharePageContext?: boolean
   maxModels?: number
   onComparisonFinished?: () => void
+  initialState?: Partial<ComparisonConversationState>
 }
 
 export function useComparisonPage(options: UseComparisonPageOptions) {
@@ -46,17 +56,20 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
     sharePageContext = false,
     maxModels = 4,
     onComparisonFinished,
+    initialState,
   } = options
 
-  const [input, setInput] = useState('')
-  const [selectedModels, setSelectedModels] = useState<string[]>([])
-  const [results, setResults] = useState<ModelResult[]>([])
+  const [input, setInput] = useState(initialState?.input ?? '')
+  const [selectedModels, setSelectedModels] = useState(initialState?.selectedModels ?? [])
+  const [results, setResults] = useState<ModelResult[]>(initialState?.results ?? [])
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [conversationId, setConversationId] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(initialState?.error ?? null)
+  const [conversationId, setConversationId] = useState<number | null>(
+    initialState?.conversationId ?? null
+  )
   const [conversationHistory, setConversationHistory] = useState<
     Array<{ role: string; content: string; model_id?: string }>
-  >([])
+  >(initialState?.conversationHistory ?? [])
 
   const abortRef = useRef<AbortController | null>(null)
 
