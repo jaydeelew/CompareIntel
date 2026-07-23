@@ -189,6 +189,10 @@ export function ExtensionComparisonShell({
     return null
   }
 
+  const handleComparisonFinished = useCallback(() => {
+    onComparisonFinished?.()
+  }, [onComparisonFinished])
+
   const comparison = useComparisonPage({
     apiClient,
     modelsByProvider: textModelsByProvider,
@@ -275,10 +279,6 @@ export function ExtensionComparisonShell({
     onRecentChatSaved,
     persistTabId,
   ])
-
-  const handleComparisonFinished = useCallback(() => {
-    onComparisonFinished?.()
-  }, [onComparisonFinished])
 
   const wasLoadingRef = useRef(false)
   useEffect(() => {
