@@ -32,7 +32,7 @@ describe('AttachmentChips', () => {
 
     expect(screen.getByTestId('composer-attachment-thumbnail')).toBeInTheDocument()
     const img = screen.getByRole('img', { name: 'photo.png' })
-    expect(img.closest('.composer-attachment-thumbnail-tooltip')).toHaveClass('tooltip')
+    expect(img.closest('.tooltip')).toBeTruthy()
     expect(img).toHaveAttribute('src', 'data:image/png;base64,YWJj')
     expect(screen.queryByText('photo.png')).not.toBeInTheDocument()
   })

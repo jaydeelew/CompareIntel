@@ -49,11 +49,11 @@ function ImageAttachmentThumbnail({
       data-testid="composer-attachment-thumbnail"
     >
       {tooltipUsePortal ? (
-        <StyledTooltip text={file.name} usePortal className="composer-attachment-thumbnail-tooltip">
+        <StyledTooltip text={file.name} usePortal>
           <img src={src} alt={file.name} className="composer-attachment-thumbnail-img" />
         </StyledTooltip>
       ) : (
-        <span className="composer-attachment-thumbnail-tooltip" title={file.name}>
+        <span className="composer-attachment-thumbnail-anchor" title={file.name}>
           <img src={src} alt={file.name} className="composer-attachment-thumbnail-img" />
         </span>
       )}

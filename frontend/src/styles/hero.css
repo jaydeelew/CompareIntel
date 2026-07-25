@@ -1756,15 +1756,15 @@ video.capability-tile-image-lightbox-img {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
-.composer-attachment-thumbnail-tooltip {
+/* Fill the thumbnail: target the direct child (StyledTooltip anchor or native title span).
+   Do not put fill sizing on a className passed into StyledTooltip — that class is also
+   applied to the portaled bubble and produced a giant empty white popup. */
+.composer-attachment-thumbnail > .tooltip,
+.composer-attachment-thumbnail > .composer-attachment-thumbnail-anchor {
   display: block;
   width: 100%;
   height: 100%;
   line-height: 0;
-}
-
-.composer-attachment-thumbnail-tooltip.tooltip {
-  display: block;
 }
 
 .composer-attachment-thumbnail-img {
