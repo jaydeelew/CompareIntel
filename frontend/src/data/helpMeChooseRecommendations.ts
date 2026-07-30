@@ -108,7 +108,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'sourceful/riverflow-v2-fast', evidence: 'LMSpeed (lmspeed.net): 133 t/s.' },
       { modelId: 'qwen/qwen3-next-80b-a3b-instruct', evidence: 'LMSpeed (lmspeed.net): 116 t/s.' },
       { modelId: 'qwen/qwen3-coder-flash', evidence: 'LMSpeed (lmspeed.net): 110 t/s.' },
-      { modelId: 'openai/gpt-5-chat', evidence: 'LMSpeed (lmspeed.net): 102 t/s.' },
       { modelId: 'google/gemini-2.5-pro', evidence: 'LMSpeed (lmspeed.net): 97 t/s.' },
       { modelId: 'google/gemini-3.1-pro-preview', evidence: 'LMSpeed (lmspeed.net): 96 t/s.' },
       { modelId: 'openai/gpt-5.2-chat', evidence: 'LMSpeed (lmspeed.net): 93 t/s.' },
@@ -237,7 +236,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'google/gemini-2.5-flash',
         evidence: 'Creative Writing Arena (kearai.com): 1398 Elo.',
       },
-      { modelId: 'openai/gpt-5-chat', evidence: 'Creative Writing Arena (kearai.com): 1394 Elo.' },
       {
         modelId: 'deepseek/deepseek-r1',
         evidence: 'Mazur Writing Score: 8.54. Strong narrative generation.',
@@ -272,7 +270,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Vision Arena (lmarena.ai): 1243.',
       },
       { modelId: 'x-ai/grok-4.3', evidence: 'Vision Arena (lmarena.ai): 1241.' },
-      { modelId: 'openai/gpt-5-chat', evidence: 'Vision Arena (lmarena.ai): 1232.' },
       { modelId: 'qwen/qwen3-vl-235b-a22b-thinking', evidence: 'Vision Arena (lmarena.ai): 1208.' },
       { modelId: 'google/gemma-3-27b-it', evidence: 'Vision Arena (lmarena.ai): 1166.' },
       { modelId: 'mistralai/mistral-medium-3.1', evidence: 'Vision Arena (lmarena.ai): 1158.' },

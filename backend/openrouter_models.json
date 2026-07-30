@@ -3103,53 +3103,6 @@
       }
     },
     {
-      "id": "openai/gpt-5-chat",
-      "canonical_slug": "openai/gpt-5-chat-2025-08-07",
-      "hugging_face_id": "",
-      "name": "OpenAI: GPT-5 Chat",
-      "created": 1754587837,
-      "description": "GPT-5 Chat is designed for advanced, natural, multimodal, and context-aware conversations for enterprise applications.",
-      "context_length": 128000,
-      "architecture": {
-        "modality": "text+image+file->text",
-        "input_modalities": [
-          "file",
-          "image",
-          "text"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "GPT",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.00000125",
-        "completion": "0.00001",
-        "web_search": "0.01",
-        "input_cache_read": "0.000000125"
-      },
-      "top_provider": {
-        "context_length": 128000,
-        "max_completion_tokens": 16384,
-        "is_moderated": true
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "max_tokens",
-        "response_format",
-        "seed",
-        "structured_outputs"
-      ],
-      "default_parameters": {},
-      "supported_voices": null,
-      "knowledge_cutoff": "2024-09-30",
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/openai/gpt-5-chat-2025-08-07/endpoints"
-      }
-    },
-    {
       "id": "openai/gpt-5-codex",
       "canonical_slug": "openai/gpt-5-codex",
       "hugging_face_id": "",
