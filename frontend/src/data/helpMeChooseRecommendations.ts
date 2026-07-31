@@ -93,7 +93,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'moonshotai/kimi-k2.5', evidence: 'LMSpeed (lmspeed.net): 1383 t/s.' },
       { modelId: 'minimax/minimax-m2.5', evidence: 'LMSpeed (lmspeed.net): 729 t/s.' },
       { modelId: 'openai/gpt-5', evidence: 'LMSpeed (lmspeed.net): 490 t/s.' },
-      { modelId: 'openai/gpt-5-codex', evidence: 'LMSpeed (lmspeed.net): 466 t/s.' },
       { modelId: 'openai/gpt-5.2-codex', evidence: 'LMSpeed (lmspeed.net): 405 t/s.' },
       { modelId: 'openai/gpt-5-nano', evidence: 'LMSpeed (lmspeed.net): 263 t/s.' },
       { modelId: 'openai/gpt-oss-120b', evidence: 'LMSpeed (lmspeed.net): 205 t/s.' },

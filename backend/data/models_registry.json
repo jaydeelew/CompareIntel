@@ -606,16 +606,6 @@
     ],
     "Mistral": [
       {
-        "id": "mistralai/devstral-2512",
-        "name": "Devstral 2512",
-        "description": "Devstral 2 is a state-of-the-art open-source model by Mistral AI specializing in agentic coding.",
-        "category": "Code",
-        "provider": "Mistral",
-        "supports_web_search": true,
-        "knowledge_cutoff": null,
-        "supports_vision_probed": false
-      },
-      {
         "id": "mistralai/mistral-medium-3.1",
         "name": "Mistral Medium 3.1",
         "description": "An enterprise-grade model delivering frontier-level capabilities at significantly reduced operational cost.",
@@ -775,16 +765,6 @@
         "knowledge_cutoff": "September 2024",
         "is_thinking_model": true,
         "supports_vision_probed": false
-      },
-      {
-        "id": "openai/gpt-5-codex",
-        "name": "GPT-5 Codex",
-        "description": "A specialized GPT-5 variant optimized for software engineering, code generation, and development workflows.",
-        "category": "Code",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "knowledge_cutoff": "September 2024",
-        "supports_vision_probed": true
       },
       {
         "id": "openai/gpt-5-image",
@@ -1275,7 +1255,6 @@
     "google/gemma-4-26b-a4b-it",
     "google/gemma-4-31b-it",
     "microsoft/phi-4",
-    "mistralai/devstral-2512",
     "openai/gpt-5-image-mini",
     "openai/gpt-oss-120b",
     "qwen/qwen3-coder-next",

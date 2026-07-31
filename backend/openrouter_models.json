@@ -2571,62 +2571,6 @@
       }
     },
     {
-      "id": "mistralai/devstral-2512",
-      "canonical_slug": "mistralai/devstral-2512",
-      "hugging_face_id": "mistralai/Devstral-2-123B-Instruct-2512",
-      "name": "Mistral: Devstral 2 2512",
-      "created": 1765285419,
-      "description": "Devstral 2 is a state-of-the-art open-source model by Mistral AI specializing in agentic coding. It is a 123B-parameter dense transformer model supporting a 256K context window. Devstral 2 supports exploring...",
-      "context_length": 262144,
-      "architecture": {
-        "modality": "text+file->text",
-        "input_modalities": [
-          "text",
-          "file"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "Mistral",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.0000004",
-        "completion": "0.000002",
-        "input_cache_read": "0.00000004"
-      },
-      "top_provider": {
-        "context_length": 262144,
-        "max_completion_tokens": null,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "frequency_penalty",
-        "max_tokens",
-        "presence_penalty",
-        "response_format",
-        "seed",
-        "stop",
-        "structured_outputs",
-        "temperature",
-        "tool_choice",
-        "tools",
-        "top_p"
-      ],
-      "default_parameters": {
-        "temperature": 0.3,
-        "top_p": null,
-        "frequency_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": null,
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/mistralai/devstral-2512/endpoints"
-      }
-    },
-    {
       "id": "mistralai/mistral-large",
       "canonical_slug": "mistralai/mistral-large",
       "hugging_face_id": null,
@@ -3100,60 +3044,6 @@
       "expiration_date": null,
       "links": {
         "details": "/api/v1/models/openai/gpt-5-2025-08-07/endpoints"
-      }
-    },
-    {
-      "id": "openai/gpt-5-codex",
-      "canonical_slug": "openai/gpt-5-codex",
-      "hugging_face_id": "",
-      "name": "OpenAI: GPT-5 Codex",
-      "created": 1758643403,
-      "description": "GPT-5-Codex is a specialized version of GPT-5 optimized for software engineering and coding workflows. It is designed for both interactive development sessions and long, independent execution of complex engineering tasks....",
-      "context_length": 400000,
-      "architecture": {
-        "modality": "text+image->text",
-        "input_modalities": [
-          "text",
-          "image"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "GPT",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.00000125",
-        "completion": "0.00001",
-        "web_search": "0.01",
-        "input_cache_read": "0.000000125"
-      },
-      "top_provider": {
-        "context_length": 400000,
-        "max_completion_tokens": 128000,
-        "is_moderated": true
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "include_reasoning",
-        "max_tokens",
-        "reasoning",
-        "response_format",
-        "seed",
-        "structured_outputs",
-        "tool_choice",
-        "tools"
-      ],
-      "default_parameters": {
-        "temperature": null,
-        "top_p": null,
-        "frequency_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": "2024-09-30",
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/openai/gpt-5-codex/endpoints"
       }
     },
     {
