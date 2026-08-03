@@ -811,16 +811,6 @@
         "supports_vision_probed": true
       },
       {
-        "id": "openai/gpt-5.1-chat",
-        "name": "GPT-5.1 Chat",
-        "description": "A fast, lightweight model optimized for low-latency chat while retaining strong general intelligence.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "knowledge_cutoff": "June 2025",
-        "supports_vision_probed": true
-      },
-      {
         "id": "openai/gpt-5.1-codex",
         "name": "GPT-5.1-Codex",
         "description": "The most capable GPT-5.1 variant specialized for advanced software engineering and coding workflows.",
