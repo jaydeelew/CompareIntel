@@ -112,7 +112,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'openai/gpt-5.2-chat', evidence: 'LMSpeed (lmspeed.net): 93 t/s.' },
       { modelId: 'openai/gpt-5.4', evidence: 'LMSpeed (lmspeed.net): 89 t/s.' },
       { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'LMSpeed (lmspeed.net): 83 t/s.' },
-      { modelId: 'openai/gpt-5.3-chat', evidence: 'LMSpeed (lmspeed.net): 64 t/s.' },
     ],
   },
   {
