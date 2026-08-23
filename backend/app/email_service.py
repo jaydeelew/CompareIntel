@@ -413,6 +413,43 @@ async def send_new_model_discovery_report(
         raise
 
 
+async def send_new_models_added_email(email: EmailStr, new_models: list[dict[str, str]]) -> None:
+    """Notify a registered user that one or more models were added in a production deploy."""
+    if not EMAIL_CONFIGURED:
+        print(f"Email service not configured - skipping new models email for {email}")
+        return
+
+    if not new_models:
+        return
+
+    from .services.new_models_notify import build_new_models_list_html, new_models_email_copy
+
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+    compare_url = frontend_url or "https://compareintel.com"
+    copy = new_models_email_copy(new_models)
+    models_html = build_new_models_list_html(new_models)
+
+    html_body = _load_template("new_models_added.html").substitute(
+        header_title=copy["header_title"],
+        intro_text=copy["intro_text"],
+        count_label=copy["count_label"],
+        models_html=models_html,
+        compare_url=compare_url,
+    )
+
+    message = MessageSchema(
+        subject=copy["subject"],
+        recipients=[email],
+        body=html_body,
+        subtype="html",
+    )
+    try:
+        await fm.send_message(message)
+    except Exception as e:
+        print(f"Failed to send new models email to {email}: {str(e)}")
+        raise
+
+
 async def send_trial_expired_email(email: EmailStr) -> None:
     if not EMAIL_CONFIGURED:
         print(f"Email service not configured - skipping trial expired email for {email}")

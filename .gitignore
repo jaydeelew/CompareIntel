@@ -85,6 +85,7 @@ yarn-error.log*
 tmp/
 temp/
 *.tgz
+.last_deployed_commit
 
 # AI/ML & Database
 *.pkl

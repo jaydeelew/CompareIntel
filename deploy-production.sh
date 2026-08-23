@@ -15,6 +15,7 @@ source "$DEPLOY_DIR/build.sh"
 source "$DEPLOY_DIR/verify.sh"
 source "$DEPLOY_DIR/status.sh"
 source "$DEPLOY_DIR/rollback.sh"
+source "$DEPLOY_DIR/notify_new_models.sh"
 
 main() {
     echo ""
@@ -31,9 +32,11 @@ main() {
         build)
             msg "Build mode: skipping git pull, forcing rebuild"
             check_system_requirements
+            capture_prev_deploy_commit
             backup_database
             build_and_deploy
             verify_deployment
+            notify_new_models_if_added
             show_status
             echo ""
             ok "Build and deploy completed"
@@ -41,18 +44,22 @@ main() {
         deploy)
             check_system_requirements
             check_ssl_certificates
+            capture_prev_deploy_commit
             backup_database
             CODE_CHANGED=false
             pull_latest_code
             if [ "$CODE_CHANGED" = false ]; then
                 msg "No code changes. Skipping rebuild. Use ./deploy-production.sh build to force."
                 verify_deployment
+                # First run of this notifier: remember HEAD so later deploys can diff.
+                [ ! -f "$LAST_DEPLOYED_COMMIT_FILE" ] && record_deployed_commit
                 show_status
                 ok "Deployment verified (no changes)"
             else
                 msg "Code changed. Full deployment..."
                 build_and_deploy
                 verify_deployment
+                notify_new_models_if_added
                 show_status
                 ok "Deployment completed"
             fi
@@ -61,9 +68,11 @@ main() {
         quick-deploy)
             warn "Quick deploy: skipping git pull"
             check_system_requirements
+            capture_prev_deploy_commit
             backup_database
             build_and_deploy
             verify_deployment
+            notify_new_models_if_added
             show_status
             ok "Quick deployment completed"
             echo ""

@@ -41,6 +41,7 @@ email_service_mock.send_verification_email = AsyncMock(return_value=None)
 email_service_mock.send_password_reset_email = AsyncMock(return_value=None)
 email_service_mock.send_subscription_confirmation_email = AsyncMock(return_value=None)
 email_service_mock.send_usage_limit_warning_email = AsyncMock(return_value=None)
+email_service_mock.send_new_models_added_email = AsyncMock(return_value=None)
 email_service_mock.EMAIL_CONFIGURED = False
 
 # Patch the email_service module before it's imported
