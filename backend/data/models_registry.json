@@ -111,18 +111,6 @@
         "knowledge_cutoff": null
       },
       {
-        "id": "anthropic/claude-opus-4.8-fast",
-        "name": "Claude Opus 4.8 Fast",
-        "description": "Fast-mode variant of [Opus 4.8](/anthropic/claude-opus-4.8) - identical capabilities with higher output speed at 2x pricing relative to regular Opus 4.8.",
-        "category": "Language",
-        "provider": "Anthropic",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "is_thinking_model": true,
-        "supports_vision_probed": true,
-        "knowledge_cutoff": null
-      },
-      {
         "id": "anthropic/claude-fable-5",
         "name": "Claude Fable 5",
         "description": "Claude Fable 5 is a Mythos-class model from Anthropic, built for autonomous knowledge work and coding.",
