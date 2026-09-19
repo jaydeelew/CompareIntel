@@ -13,6 +13,7 @@ export interface RecentChat {
   sourceTabTitle?: string
   sourceTabUrl?: string
   saved?: boolean
+  importedToAccount?: boolean
   state: ExtensionShellPersistedState
 }
 
@@ -164,6 +165,13 @@ export async function getRecentChat(id: string): Promise<RecentChat | null> {
   return chats.find((chat) => chat.id === id) ?? null
 }
 
+export async function getRecentChatByConversationId(
+  conversationId: number
+): Promise<RecentChat | null> {
+  const chats = await readStoredChats()
+  return chats.find((chat) => chat.state.conversationId === conversationId) ?? null
+}
+
 export async function deleteRecentChat(id: string): Promise<void> {
   const chats = await readStoredChats()
   const removed = chats.find((chat) => chat.id === id)
@@ -210,6 +218,7 @@ export async function upsertRecentChat(params: {
   sourceTabId?: number
   sourceTabTitle?: string
   sourceTabUrl?: string
+  importedToAccount?: boolean
 }): Promise<RecentChat> {
   const chats = await readStoredChats()
   const savedServerIds = new Set(await readSavedServerIds())
@@ -231,6 +240,8 @@ export async function upsertRecentChat(params: {
     sourceTabUrl: params.sourceTabUrl,
     saved:
       existing?.saved === true || (conversationId != null && savedServerIds.has(conversationId)),
+    importedToAccount:
+      params.importedToAccount === true || existing?.importedToAccount === true,
     state: {
       ...params.state,
       activeRecentChatId: id,

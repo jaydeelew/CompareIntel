@@ -482,6 +482,11 @@ export function ExtensionComparisonShell({
           onPageContextsChange={setPageContexts}
           restoreKey={activeRecentChatId ?? undefined}
         />
+        {persistedState?.pageContextUnavailable && (
+          <p className="page-context-unavailable">
+            Page context from the original tab is not stored with this chat.
+          </p>
+        )}
 
         <div className={`models-section${modelsCollapsed ? ' models-section-collapsed' : ''}`}>
           <div className="models-header">

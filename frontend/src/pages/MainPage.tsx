@@ -654,6 +654,7 @@ export function MainPage() {
   const conversationHistoryHook = useConversationHistory({
     isAuthenticated,
     user,
+    authLoading,
     onDeleteActiveConversation: handleDeleteActiveConversation,
   })
 
@@ -672,6 +673,7 @@ export function MainPage() {
     saveConversationToLocalStorage,
     deleteConversation,
     loadHistoryFromLocalStorage,
+    toggleConversationSaved,
   } = conversationHistoryHook
 
   const {
@@ -2730,6 +2732,7 @@ export function MainPage() {
             currentVisibleComparisonId,
             onLoadConversation: loadConversation,
             onDeleteConversation: deleteConversation,
+            onToggleSaved: toggleConversationSaved,
           }}
           onSubmitClick={handleSubmitClick}
           onContinueConversation={handleContinueConversation}

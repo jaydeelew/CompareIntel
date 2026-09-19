@@ -14,6 +14,7 @@ export interface RecentHistoryServerSummary {
   input_data: string
   created_at: string
   client_source?: string
+  saved?: boolean
 }
 
 export type MergedRecentHistoryItem =
@@ -24,11 +25,6 @@ function isSaved(item: { saved?: boolean }): boolean {
   return item.saved === true
 }
 
-/**
- * Keep every saved item, then fill remaining slots with the newest unsaved items.
- * Saved chats are never auto-deleted. If every slot is already saved, the newest
- * unsaved chat is still kept so the current comparison is not dropped.
- */
 export function trimRecentChats<T extends { updatedAt: number; saved?: boolean }>(
   items: T[],
   max = MAX_RECENT_CHATS
@@ -44,7 +40,7 @@ export function mergeRecentHistory(params: {
   localChats: RecentHistoryLocalChat[]
   serverHistory: RecentHistoryServerSummary[]
   savedServerIds?: Iterable<number>
-  max?: number
+  max?: number | null
 }): MergedRecentHistoryItem[] {
   const savedServerIds = new Set(params.savedServerIds ?? [])
   const seenServerIds = new Set<number>()
@@ -55,7 +51,9 @@ export function mergeRecentHistory(params: {
     items.push({
       kind: 'local',
       chat,
-      saved: isSaved(chat) || (chat.conversationId != null && savedServerIds.has(chat.conversationId)),
+      saved:
+        isSaved(chat) ||
+        (chat.conversationId != null && savedServerIds.has(chat.conversationId)),
       updatedAt: chat.updatedAt,
     })
   }
@@ -66,10 +64,12 @@ export function mergeRecentHistory(params: {
     items.push({
       kind: 'server',
       summary,
-      saved: savedServerIds.has(summary.id),
+      saved: savedServerIds.has(summary.id) || summary.saved === true,
       updatedAt: Number.isFinite(updatedAt) ? updatedAt : 0,
     })
   }
 
-  return trimRecentChats(items, params.max ?? MAX_RECENT_CHATS)
+  const sorted = items.sort((a, b) => b.updatedAt - a.updatedAt)
+  if (params.max == null) return sorted
+  return trimRecentChats(sorted, params.max)
 }

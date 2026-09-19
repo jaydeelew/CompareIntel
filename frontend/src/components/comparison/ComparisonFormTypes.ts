@@ -14,6 +14,7 @@ export interface HistoryProps {
   currentVisibleComparisonId: string | null
   onLoadConversation: (summary: ConversationSummary) => void
   onDeleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => void
+  onToggleSaved?: (summary: ConversationSummary, saved: boolean) => void
 }
 
 export interface SelectionProps {

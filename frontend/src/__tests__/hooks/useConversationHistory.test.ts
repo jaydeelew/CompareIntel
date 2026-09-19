@@ -27,6 +27,8 @@ import {
 vi.mock('../../services/conversationService', () => ({
   getConversations: vi.fn(),
   deleteConversation: vi.fn(),
+  setConversationSaved: vi.fn(),
+  importConversations: vi.fn().mockResolvedValue({ imported_ids: [], skipped: 0 }),
 }))
 
 vi.mock('../../services/api/client', () => ({
@@ -68,7 +70,7 @@ describe('useConversationHistory', () => {
         })
       )
 
-      expect(result.current.historyLimit).toBe(2)
+      expect(result.current.historyLimit).toBe(10)
     })
 
     it('should set correct history limit for free tier', () => {
@@ -257,7 +259,7 @@ describe('useConversationHistory', () => {
       expect(parsed.imageComposerAdvanced).toEqual({ aspectRatio: '16:9', imageSize: '2K' })
     })
 
-    it('should limit to 2 conversations for anonymous users', async () => {
+    it('should limit anonymous history and keep the newest chats', async () => {
       const { result } = renderHook(() =>
         useConversationHistory({
           isAuthenticated: false,
@@ -295,7 +297,7 @@ describe('useConversationHistory', () => {
       })
 
       const savedHistory = result.current.loadHistoryFromLocalStorage()
-      expect(savedHistory.length).toBe(2)
+      expect(savedHistory.length).toBe(3)
       expect(savedHistory[0].input_data).toBe('input3') // Most recent first
     })
 

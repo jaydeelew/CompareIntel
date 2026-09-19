@@ -11,7 +11,8 @@ import {
   type FontSizes,
 } from '../shared/extensionSettings'
 import { getRecentChat } from '../shared/recentChats'
-import { loadCreditBalance } from './api'
+import { importExtensionChatsToAccount } from '../shared/importLocalHistory'
+import { apiClient, loadCreditBalance } from './api'
 import { ExtensionComparisonShell } from './components/ExtensionComparisonShell'
 import { RecentChatsSection } from './components/RecentChatsSection'
 import { SettingsModal } from './components/SettingsModal'
@@ -121,6 +122,20 @@ export function App() {
   useEffect(() => {
     refreshCredits()
   }, [refreshCredits])
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    void importExtensionChatsToAccount(apiClient)
+      .then((ids) => {
+        if (cancelled || ids.length === 0) return
+        setRecentChatsRefreshToken((value) => value + 1)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [user])
 
   const handlePersistShellState = useCallback(
     (tabId: number, state: ExtensionShellPersistedState) => {

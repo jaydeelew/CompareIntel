@@ -136,6 +136,7 @@ export interface ConversationSummary {
   breakout_model_id?: string | null
   created_at: string
   message_count?: number
+  saved?: boolean
 }
 
 export interface ConversationDetailMessage {
@@ -174,6 +175,30 @@ export async function deleteConversation(
   conversationId: number
 ): Promise<void> {
   await client.delete(`/conversations/${conversationId}`)
+}
+
+export async function setConversationSaved(
+  client: CompareIntelApiClient,
+  conversationId: number,
+  saved: boolean
+): Promise<ConversationSummary> {
+  return client.patch<ConversationSummary>(`/conversations/${conversationId}`, { saved })
+}
+
+export interface ImportedConversationPayload {
+  input_data: string
+  models_used: string[]
+  messages: Array<{ role: 'user' | 'assistant'; content: string; model_id?: string | null }>
+  client_source?: string
+  created_at?: string
+  saved?: boolean
+}
+
+export async function importConversations(
+  client: CompareIntelApiClient,
+  conversations: ImportedConversationPayload[]
+): Promise<{ imported_ids: Array<number | null>; skipped: number }> {
+  return client.post('/conversations/import', { conversations })
 }
 
 export async function* parseSSEEvents(

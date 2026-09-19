@@ -15,9 +15,13 @@ from ...models import ConversationMessage as ConversationMessageModel
 from ...schemas import (
     BreakoutConversationCreate,
     ConversationDetail,
+    ConversationSavedUpdate,
     ConversationSummary,
+    ImportConversationsRequest,
+    ImportConversationsResponse,
     StoredFileContent,
 )
+from ...services.conversation_history import enforce_history_limit
 
 router = APIRouter(tags=["API - Conversations"])
 
@@ -27,27 +31,22 @@ async def get_conversations(
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_current_user),
 ):
-    """Get list of user's conversations, limited by subscription tier history cap."""
+    """Get the current user's conversations."""
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
 
     tier = current_user.subscription_tier or "free"
     history_limit = get_history_entry_limit(tier)
+    deleted = enforce_history_limit(db, current_user.id, history_limit)
+    if deleted:
+        db.commit()
 
     conversations = (
         db.query(Conversation)
         .filter(Conversation.user_id == current_user.id)
         .order_by(Conversation.created_at.desc())
-        .limit(history_limit + 1)
         .all()
     )
-
-    if len(conversations) > history_limit:
-        conversations_to_delete = conversations[history_limit:]
-        for conv_to_delete in conversations_to_delete:
-            db.delete(conv_to_delete)
-        db.commit()
-        conversations = conversations[:history_limit]
 
     conversation_ids = [conv.id for conv in conversations]
     message_counts = {}
@@ -87,6 +86,7 @@ async def get_conversations(
                 composer_aspect_ratio=conv.composer_aspect_ratio,
                 composer_image_size=conv.composer_image_size,
                 client_source=conv.client_source or "web",
+                saved=bool(conv.saved),
             )
         )
 
@@ -191,6 +191,62 @@ async def get_conversation(
         composer_aspect_ratio=conversation.composer_aspect_ratio,
         composer_image_size=conversation.composer_image_size,
         client_source=conversation.client_source or "web",
+        saved=bool(conversation.saved),
+    )
+
+
+@router.patch("/conversations/{conversation_id}", response_model=ConversationSummary)
+async def update_conversation_saved(
+    conversation_id: int,
+    payload: ConversationSavedUpdate,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user),
+):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    conversation = (
+        db.query(Conversation)
+        .filter(
+            Conversation.id == conversation_id,
+            Conversation.user_id == current_user.id,
+        )
+        .first()
+    )
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    conversation.saved = payload.saved
+    db.commit()
+    db.refresh(conversation)
+
+    message_count = (
+        db.query(func.count(ConversationMessageModel.id))
+        .filter(ConversationMessageModel.conversation_id == conversation.id)
+        .scalar()
+        or 0
+    )
+    try:
+        models_used = json.loads(conversation.models_used) if conversation.models_used else []
+    except (json.JSONDecodeError, TypeError):
+        models_used = []
+
+    return ConversationSummary(
+        id=conversation.id,
+        input_data=conversation.input_data,
+        models_used=models_used,
+        conversation_type=conversation.conversation_type or "comparison",
+        parent_conversation_id=conversation.parent_conversation_id,
+        breakout_model_id=conversation.breakout_model_id,
+        created_at=conversation.created_at,
+        message_count=message_count,
+        composer_temperature=conversation.composer_temperature,
+        composer_top_p=conversation.composer_top_p,
+        composer_max_tokens=conversation.composer_max_tokens,
+        composer_aspect_ratio=conversation.composer_aspect_ratio,
+        composer_image_size=conversation.composer_image_size,
+        client_source=conversation.client_source or "web",
+        saved=bool(conversation.saved),
     )
 
 
@@ -210,6 +266,59 @@ async def delete_all_conversations(
         "message": f"Successfully deleted {deleted_count} conversation(s)",
         "deleted_count": deleted_count,
     }
+
+
+@router.post("/conversations/import", response_model=ImportConversationsResponse)
+async def import_conversations(
+    payload: ImportConversationsRequest,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user),
+):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    imported_ids: list[int | None] = []
+    skipped = 0
+    for item in payload.conversations:
+        user_messages = [msg for msg in item.messages if msg.role == "user" and msg.content.strip()]
+        if not user_messages:
+            skipped += 1
+            imported_ids.append(None)
+            continue
+
+        conversation = Conversation(
+            user_id=current_user.id,
+            input_data=item.input_data.strip() or user_messages[0].content,
+            models_used=json.dumps(item.models_used),
+            client_source=item.client_source or "web",
+            saved=bool(item.saved),
+        )
+        if item.created_at is not None:
+            conversation.created_at = item.created_at
+            conversation.updated_at = item.created_at
+        db.add(conversation)
+        db.flush()
+
+        for msg in item.messages:
+            if not msg.content.strip() and msg.role == "assistant":
+                continue
+            row = ConversationMessageModel(
+                conversation_id=conversation.id,
+                role=msg.role,
+                content=msg.content,
+                model_id=msg.model_id,
+            )
+            if msg.created_at is not None:
+                row.created_at = msg.created_at
+            db.add(row)
+        imported_ids.append(conversation.id)
+
+    history_limit = get_history_entry_limit(current_user.subscription_tier or "free")
+    deleted_ids = set(enforce_history_limit(db, current_user.id, history_limit))
+    if deleted_ids:
+        imported_ids = [None if conv_id in deleted_ids else conv_id for conv_id in imported_ids]
+    db.commit()
+    return ImportConversationsResponse(imported_ids=imported_ids, skipped=skipped)
 
 
 @router.delete("/conversations/{conversation_id}", status_code=200)

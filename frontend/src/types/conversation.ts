@@ -113,6 +113,8 @@ export interface ConversationSummary {
   message_count?: number
   /** Platform where the comparison was initiated */
   client_source?: 'web' | 'extension' | string
+  /** Skip automatic history trimming */
+  saved?: boolean
   /** Saved Text Models Advanced settings (from API); localStorage uses textComposerAdvanced on full payload */
   composer_temperature?: number | null
   composer_top_p?: number | null

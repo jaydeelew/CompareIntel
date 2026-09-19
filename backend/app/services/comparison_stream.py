@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 from openai import OpenAI
 
 from ..config import get_history_entry_limit
+from ..services.conversation_history import enforce_history_limit
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -1006,45 +1007,35 @@ async def generate_stream(ctx: StreamContext) -> Any:
                     user_obj = conv_db.query(User).filter(User.id == ctx.user_id).first()
                     tier = user_obj.subscription_tier if user_obj else "free"
                     storage_limit = get_history_entry_limit(tier)
-
-                    all_conversations = (
-                        conv_db.query(Conversation)
-                        .filter(Conversation.user_id == ctx.user_id)
-                        .order_by(Conversation.created_at.desc())
-                        .all()
-                    )
-
-                    if len(all_conversations) > storage_limit:
-                        conversations_to_delete = all_conversations[storage_limit:]
-                        for conv_to_delete in conversations_to_delete:
-                            conv_db.delete(conv_to_delete)
-                        conv_db.commit()
+                    enforce_history_limit(conv_db, ctx.user_id, storage_limit)
+                    conv_db.commit()
+                    return conversation.id
 
                 except Exception as e:
                     logger.error(f"Failed to save conversation to database: {e}", exc_info=True)
                     conv_db.rollback()
+                    return None
                 finally:
                     conv_db.close()
 
+            conversation_id = None
             try:
                 loop = asyncio.get_running_loop()
-                future = loop.run_in_executor(None, save_conversation_to_db)
-
-                def log_executor_error(fut):
-                    try:
-                        fut.result()
-                    except Exception as e:
-                        logger.error(f"Exception in save_conversation_to_db executor: {e}")
-
-                future.add_done_callback(log_executor_error)
+                conversation_id = await loop.run_in_executor(None, save_conversation_to_db)
             except Exception as e:
                 logger.error(f"Failed to start save_conversation_to_db executor: {e}")
                 try:
-                    save_conversation_to_db()
+                    conversation_id = save_conversation_to_db()
                 except Exception as e2:
                     logger.error(f"Fallback synchronous save also failed: {e2}")
 
-        yield f"data: {json.dumps({'type': 'complete', 'metadata': metadata})}\n\n"
+            if conversation_id:
+                metadata["conversation_id"] = conversation_id
+
+        complete_event: dict[str, Any] = {"type": "complete", "metadata": metadata}
+        if ctx.user_id and successful_models > 0 and metadata.get("conversation_id"):
+            complete_event["conversation_id"] = metadata["conversation_id"]
+        yield f"data: {json.dumps(complete_event)}\n\n"
 
     except Exception as e:
         logger.error(f"[MultiModel] Outer exception: {type(e).__name__}: {str(e)}", exc_info=True)

@@ -231,6 +231,7 @@ class Conversation(Base):
     created_at = Column(DateTime, default=func.now(), index=True)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     client_source = Column(String(32), default="web", nullable=False)
+    saved = Column(Boolean, default=False, nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="conversations")

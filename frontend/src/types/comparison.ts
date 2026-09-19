@@ -41,6 +41,8 @@ export interface ComparisonMetadata {
   overage_credits_used_this_period?: number
   /** Max overage credits allowed (null = unlimited) */
   overage_limit_credits?: number | null
+  /** Server conversation id, present after a signed-in comparison is stored */
+  conversation_id?: number
 }
 
 /**

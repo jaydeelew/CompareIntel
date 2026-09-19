@@ -115,6 +115,19 @@ export class CompareIntelApiClient {
     return res.json() as Promise<T>
   }
 
+  async patch<T>(path: string, body: unknown, skipAuth = false): Promise<T> {
+    const res = await this.fetchWithAuth(
+      path,
+      { method: 'PATCH', body: JSON.stringify(body) },
+      skipAuth
+    )
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new ApiError('Request failed', res.status, (data as { detail?: string }).detail)
+    }
+    return res.json() as Promise<T>
+  }
+
   async delete(path: string, skipAuth = false): Promise<void> {
     const res = await this.fetchWithAuth(path, { method: 'DELETE' }, skipAuth)
     if (!res.ok) {

@@ -66,9 +66,9 @@ MODEL_LIMITS: dict[str, int] = {
 ANONYMOUS_MODEL_LIMIT: int = 3  # Maximum models per comparison for unregistered users
 
 
-# Maximum comparison history entries (stored conversations) per tier; oldest trimmed when exceeded.
+# History cap per tier; oldest unsaved conversations are trimmed first.
 HISTORY_ENTRY_LIMITS: dict[str, int] = {
-    "unregistered": 2,
+    "unregistered": 10,
     "free": 3,
     "starter": 10,
     "starter_plus": 20,

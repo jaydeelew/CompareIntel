@@ -542,7 +542,17 @@ export async function processComparisonStream(
             }
           } else if (event.type === 'complete') {
             // Keep streamingReasoningByModel until a new comparison, refresh, or login (cleared elsewhere).
-            streamingMetadata = event.metadata
+            streamingMetadata = event.metadata ?? null
+            if (
+              streamingMetadata &&
+              typeof event.conversation_id === 'number' &&
+              streamingMetadata.conversation_id == null
+            ) {
+              streamingMetadata = {
+                ...streamingMetadata,
+                conversation_id: event.conversation_id,
+              }
+            }
             setProcessingTime(Date.now() - startTime)
             shouldUpdate = true
 

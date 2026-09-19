@@ -326,6 +326,7 @@ class ConversationListItem(BaseModel):
     )
     created_at: datetime
     message_count: int
+    saved: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -390,6 +391,7 @@ class ConversationSummary(BaseModel):
     composer_aspect_ratio: str | None = None
     composer_image_size: str | None = None
     client_source: str = Field(default="web")
+    saved: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -436,6 +438,7 @@ class ConversationDetail(BaseModel):
     composer_aspect_ratio: str | None = None
     composer_image_size: str | None = None
     client_source: str = Field(default="web")
+    saved: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -451,6 +454,35 @@ class BreakoutConversationCreate(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={"example": {"parent_conversation_id": 123, "model_id": "openai/gpt-4o"}}
     )
+
+
+class ConversationSavedUpdate(BaseModel):
+    saved: bool
+
+
+class ImportedConversationMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(..., max_length=200_000)
+    model_id: str | None = Field(None, max_length=255)
+    created_at: datetime | None = None
+
+
+class ImportedConversation(BaseModel):
+    input_data: str = Field(..., max_length=50_000)
+    models_used: list[str] = Field(..., max_length=20)
+    messages: list[ImportedConversationMessage] = Field(..., max_length=80)
+    client_source: str = Field(default="web", max_length=32)
+    created_at: datetime | None = None
+    saved: bool = False
+
+
+class ImportConversationsRequest(BaseModel):
+    conversations: list[ImportedConversation] = Field(..., max_length=20)
+
+
+class ImportConversationsResponse(BaseModel):
+    imported_ids: list[int | None]
+    skipped: int = 0
 
 
 class AdminUserResponse(BaseModel):

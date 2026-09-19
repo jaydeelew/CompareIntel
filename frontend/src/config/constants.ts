@@ -26,10 +26,10 @@ export const MODEL_LIMITS = {
   pro_plus: 12,
 } as const
 
-// Comparison history entries (stored conversations) per tier; must match backend HISTORY_ENTRY_LIMITS.
+// History cap per tier; must match backend HISTORY_ENTRY_LIMITS. Oldest unsaved are trimmed first.
 
 export const HISTORY_ENTRY_LIMITS = {
-  unregistered: 2,
+  unregistered: 10,
   free: 3,
   starter: 10,
   starter_plus: 20,

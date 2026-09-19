@@ -130,3 +130,40 @@ export async function deleteAllConversations(): Promise<{
   )
   return response.data
 }
+
+export async function setConversationSaved(
+  conversationId: ConversationId,
+  saved: boolean
+): Promise<ConversationSummary> {
+  const response = await apiClient.patch<ConversationSummary>(
+    `/conversations/${conversationId}`,
+    { saved },
+    { retry: false }
+  )
+  return response.data
+}
+
+export interface ImportedConversationPayload {
+  input_data: string
+  models_used: string[]
+  messages: Array<{
+    role: 'user' | 'assistant'
+    content: string
+    model_id?: string | null
+    created_at?: string
+  }>
+  client_source?: string
+  created_at?: string
+  saved?: boolean
+}
+
+export async function importConversations(
+  conversations: ImportedConversationPayload[]
+): Promise<{ imported_ids: Array<number | null>; skipped: number }> {
+  const response = await apiClient.post<{ imported_ids: Array<number | null>; skipped: number }>(
+    '/conversations/import',
+    { conversations },
+    { retry: false }
+  )
+  return response.data
+}

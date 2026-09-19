@@ -183,8 +183,13 @@ export function useStreamCompletion(
           ).length,
           timestamp: new Date().toISOString(),
           processing_time_ms: Date.now() - startTime,
+          conversation_id: streamingMetadata?.conversation_id,
         },
       })
+
+      if (isAuthenticated && streamingMetadata?.conversation_id) {
+        setCurrentVisibleComparisonId(String(streamingMetadata.conversation_id))
+      }
 
       if (!isFollowUpMode) {
         setConversations(prevConversations => {

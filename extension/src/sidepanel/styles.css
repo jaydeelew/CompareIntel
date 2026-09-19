@@ -243,6 +243,13 @@ textarea {
   padding: 4px 0;
 }
 
+.page-context-unavailable {
+  margin: 8px 14px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .recent-chat-item {
   display: flex;
   flex-direction: column;

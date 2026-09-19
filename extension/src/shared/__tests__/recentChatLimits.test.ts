@@ -112,7 +112,7 @@ describe('mergeRecentHistory', () => {
       client_source: 'web' as const,
     }))
 
-    const items = mergeRecentHistory({ localChats, serverHistory })
+    const items = mergeRecentHistory({ localChats, serverHistory, max: MAX_RECENT_CHATS })
     expect(items).toHaveLength(MAX_RECENT_CHATS)
     expect(items.filter((item) => item.kind === 'local')).toHaveLength(7)
     expect(
@@ -134,6 +134,7 @@ describe('mergeRecentHistory', () => {
       localChats: [],
       serverHistory,
       savedServerIds: [1],
+      max: MAX_RECENT_CHATS,
     })
 
     expect(items).toHaveLength(MAX_RECENT_CHATS)

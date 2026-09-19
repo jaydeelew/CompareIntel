@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import type { ConversationSummary, User } from '@compareintel/core'
-import { deleteConversation, fetchConversations } from '@compareintel/core'
+import {
+  deleteConversation,
+  fetchConversations,
+  setConversationSaved,
+} from '@compareintel/core'
 
 import {
+  MAX_RECENT_CHATS,
   mergeRecentHistory,
   type MergedRecentHistoryItem,
 } from '../../shared/recentChatLimits'
@@ -67,7 +72,7 @@ function KeepCheckbox({
         type="checkbox"
         checked={saved}
         aria-label="Save this chat"
-        title="Save this chat so it is not auto-deleted"
+        title="Keep this chat"
         onClick={(event) => event.stopPropagation()}
         onChange={(event) => onChange(event.target.checked)}
       />
@@ -123,10 +128,11 @@ export function RecentChatsSection({
     () =>
       mergeRecentHistory({
         localChats,
-        serverHistory,
+        serverHistory: user != null ? serverHistory : [],
         savedServerIds,
+        max: user != null ? null : MAX_RECENT_CHATS,
       }),
-    [localChats, savedServerIds, serverHistory]
+    [localChats, savedServerIds, serverHistory, user]
   )
 
   const reloadHistory = async () => {
@@ -188,23 +194,38 @@ export function RecentChatsSection({
     })()
   }
 
+  const persistSaved = async (conversationId: number | null, saved: boolean) => {
+    if (conversationId != null) {
+      setSavedServerIds((current) => {
+        const next = new Set(current)
+        if (saved) next.add(conversationId)
+        else next.delete(conversationId)
+        return [...next]
+      })
+      setServerHistory((current) =>
+        current.map((summary) =>
+          summary.id === conversationId ? { ...summary, saved } : summary
+        )
+      )
+    }
+    if (user != null && conversationId != null) {
+      await setConversationSaved(apiClient, conversationId, saved)
+    }
+    if (conversationId != null) {
+      await setServerConversationSaved(conversationId, saved)
+    }
+  }
+
   const handleKeepToggle = (item: MergedRecentHistoryItem, saved: boolean) => {
     if (item.kind === 'local') {
       const conversationId = item.chat.conversationId ?? null
       setLocalChats((current) =>
         current.map((chat) => (chat.id === item.chat.id ? { ...chat, saved } : chat))
       )
-      if (conversationId != null) {
-        setSavedServerIds((current) => {
-          const next = new Set(current)
-          if (saved) next.add(conversationId)
-          else next.delete(conversationId)
-          return [...next]
-        })
-      }
       void (async () => {
         try {
           await setRecentChatSaved(item.chat.id, saved)
+          await persistSaved(conversationId, saved)
           const [local, savedIds] = await Promise.all([
             listRecentChatSummaries(),
             listSavedServerConversationIds(),
@@ -219,17 +240,9 @@ export function RecentChatsSection({
     }
 
     const conversationId = item.summary.id
-    setSavedServerIds((current) => {
-      const next = new Set(current)
-      if (saved) next.add(conversationId)
-      else next.delete(conversationId)
-      return [...next]
+    void persistSaved(conversationId, saved).catch(() => {
+      void reloadHistory().catch(() => undefined)
     })
-    void setServerConversationSaved(conversationId, saved)
-      .then((savedIds) => setSavedServerIds(savedIds))
-      .catch(() => {
-        void reloadHistory().catch(() => undefined)
-      })
   }
 
   return (

@@ -20,29 +20,25 @@ export function HistoryDropdown({
     showHistoryDropdown,
     conversationHistory,
     isLoadingHistory,
-    historyLimit,
     currentVisibleComparisonId,
     onLoadConversation,
     onDeleteConversation,
+    onToggleSaved,
   } = historyProps
 
   if (!showHistoryDropdown) return null
 
   const userTier = isAuthenticated ? userSubscriptionTier : 'unregistered'
   const tierLimit = getHistoryEntryLimit(userTier)
-  const shouldShowNotification =
-    (userTier === 'unregistered' || userTier === 'free') && conversationHistory.length >= tierLimit
-  const maxVisibleEntries = userTier === 'unregistered' ? 2 : 3
+  const atCap = conversationHistory.length >= tierLimit
+  const shouldShowNotification = userTier === 'unregistered' || (userTier === 'free' && atCap)
   const isPaidTier = userTier !== 'unregistered' && userTier !== 'free'
   const shouldHideScrollbar = conversationHistory.length <= 3 && !shouldShowNotification
 
   let maxHeight: string | undefined
   if (conversationHistory.length > 0) {
     const notificationHeight = shouldShowNotification ? (isSmallLayout ? 95 : 70) : 0
-    const actualEntriesToShow = isPaidTier
-      ? Math.min(conversationHistory.length, historyLimit)
-      : Math.min(conversationHistory.length, maxVisibleEntries)
-    const entriesForHeight = Math.min(actualEntriesToShow, 3)
+    const entriesForHeight = Math.min(conversationHistory.length, 3)
     const baseHeight = entriesForHeight === 1 ? 83 : entriesForHeight === 2 ? 165 : 250
     maxHeight = `${baseHeight + notificationHeight}px`
   }
@@ -65,17 +61,30 @@ export function HistoryDropdown({
           <div className="history-empty">No conversation history</div>
         ) : (
           <>
-            {conversationHistory
-              .slice(0, isPaidTier ? historyLimit : maxVisibleEntries)
-              .map(summary => {
+            {conversationHistory.map(summary => {
                 const isActive =
                   currentVisibleComparisonId && String(summary.id) === currentVisibleComparisonId
                 return (
                   <div
                     key={summary.id}
-                    className={`history-item ${isActive ? 'history-item-active' : ''}`}
+                    className={`history-item ${isActive ? 'history-item-active' : ''}${
+                      summary.saved ? ' history-item-saved' : ''
+                    }`}
                     onClick={() => onLoadConversation(summary)}
                   >
+                    <label
+                      className="history-item-save"
+                      onClick={e => e.stopPropagation()}
+                      title="Keep this comparison"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={summary.saved === true}
+                        aria-label="Save this comparison"
+                        onChange={e => onToggleSaved?.(summary, e.target.checked)}
+                      />
+                      <span>Save</span>
+                    </label>
                     <div className="history-item-content">
                       <div className="history-item-prompt">
                         {truncatePrompt(summary.input_data)}
@@ -113,23 +122,24 @@ export function HistoryDropdown({
                   </div>
                 )
               })}
-            {(userTier === 'unregistered' || userTier === 'free') &&
-              conversationHistory.length >= tierLimit && (
+            {userTier === 'unregistered' && (
                 <div className="history-signup-prompt">
                   <div className="history-signup-message">
-                    {userTier === 'unregistered' ? (
-                      <span className="history-signup-line">Sign up to save more history.</span>
-                    ) : (
-                      <>
-                        <span className="history-signup-line">
-                          You only have 3 saves for your tier.
-                        </span>
-                        <span className="history-signup-line">
-                          {' '}
-                          Upgrade to save more comparisons!
-                        </span>
-                      </>
-                    )}
+                    <span className="history-signup-line">
+                      {atCap
+                        ? 'Older unsaved comparisons are removed first. Sign in to keep them.'
+                        : 'Sign in to keep this history on every device.'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            {userTier === 'free' && atCap && (
+                <div className="history-signup-prompt">
+                  <div className="history-signup-message">
+                    <span className="history-signup-line">
+                      Free accounts keep {tierLimit} comparisons. Save the ones you need, or
+                      upgrade for more.
+                    </span>
                   </div>
                 </div>
               )}

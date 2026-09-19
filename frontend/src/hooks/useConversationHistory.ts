@@ -8,6 +8,8 @@ import { ApiError } from '../services/api/errors'
 import {
   getConversations,
   deleteConversation as deleteConversationFromAPI,
+  setConversationSaved as setConversationSavedOnAPI,
+  importConversations,
 } from '../services/conversationService'
 import { createConversationId, createModelId } from '../types'
 import type {
@@ -23,12 +25,15 @@ import type { StoredFileContentRecord } from '../utils/attachmentStorage'
 import {
   deleteConversationAttachments,
   externalizeImageAttachmentsForStorage,
+  loadLocalConversationRecord,
 } from '../utils/conversationAttachmentStore'
+import { trimHistoryEntries } from '../utils/historyRetention'
 import logger from '../utils/logger'
 
 export interface UseConversationHistoryOptions {
   isAuthenticated: boolean
   user: User | null
+  authLoading?: boolean
   onDeleteActiveConversation?: () => void
 }
 
@@ -60,11 +65,13 @@ export interface UseConversationHistoryReturn {
   loadConversationFromAPI: (conversationId: ConversationId) => Promise<ModelConversation[] | null>
   loadConversationFromLocalStorage: (conversationId: string) => ModelConversation[]
   syncHistoryAfterComparison: (inputData: string, selectedModels: string[]) => Promise<void>
+  toggleConversationSaved: (summary: ConversationSummary, saved: boolean) => Promise<void>
 }
 
 export function useConversationHistory({
   isAuthenticated,
   user,
+  authLoading = false,
   onDeleteActiveConversation,
 }: UseConversationHistoryOptions): UseConversationHistoryReturn {
   const [conversationHistory, setConversationHistory] = useState<ConversationSummary[]>([])
@@ -92,6 +99,22 @@ export function useConversationHistory({
       return []
     }
   }, [])
+
+  const applyLocalHistoryCap = useCallback((): ConversationSummary[] => {
+    const history = loadHistoryFromLocalStorage()
+    const limited = trimHistoryEntries(history, historyLimit)
+    if (limited.length === history.length) return limited
+
+    localStorage.setItem('compareintel_conversation_history', JSON.stringify(limited))
+    const kept = new Set(limited.map(item => String(item.id)))
+    for (const item of history) {
+      if (!kept.has(String(item.id))) {
+        localStorage.removeItem(`compareintel_conversation_${item.id}`)
+        void deleteConversationAttachments(String(item.id))
+      }
+    }
+    return limited
+  }, [historyLimit, loadHistoryFromLocalStorage])
 
   // Save conversation to localStorage (unregistered users)
   // Returns the conversationId of the saved conversation
@@ -197,7 +220,7 @@ export function useConversationHistory({
                     ? createModelId(breakoutModelId)
                     : null
                   : existingConversation.breakout_model_id,
-              // Keep original created_at for existing conversations
+              saved: existingConversation.saved === true,
             }
           : {
               id: createConversationId(conversationId),
@@ -210,6 +233,7 @@ export function useConversationHistory({
               breakout_model_id: breakoutModelId ? createModelId(breakoutModelId) : null,
               created_at: new Date().toISOString(),
               message_count: totalMessages,
+              saved: false,
             }
 
         // Update history list
@@ -238,9 +262,6 @@ export function useConversationHistory({
             )
           })
 
-          // For new conversations: add the new one and limit to 2 most recent after sorting
-          // When user has A & B and runs C, comparison C appears at top and A is deleted
-          // Always add the new conversation - we'll limit to 2 most recent after sorting
           filteredHistory.unshift(conversationSummary)
           updatedHistory = filteredHistory
         }
@@ -249,11 +270,7 @@ export function useConversationHistory({
         const sorted = updatedHistory.sort(
           (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
-
-        // For unregistered users, save maximum of 2 conversations
-        // When comparison 3 is made, comparison 1 is deleted and comparison 3 appears at the top
-        // Keep only the 2 most recent conversations
-        const limited = sorted.slice(0, 2)
+        const limited = trimHistoryEntries(sorted, historyLimit)
 
         // Store full conversation data with ID as key
         // Format: messages with role and model_id for proper reconstruction
@@ -352,7 +369,6 @@ export function useConversationHistory({
         localStorage.setItem('compareintel_conversation_history', JSON.stringify(limited))
 
         // Delete full conversation data for any conversations that are no longer in the limited list
-        // This ensures we only keep data for the 2 most recent comparisons
         const limitedIds = new Set(limited.map(conv => conv.id))
         const keysToDelete: string[] = []
         for (let i = 0; i < localStorage.length; i++) {
@@ -376,10 +392,7 @@ export function useConversationHistory({
           void deleteConversationAttachments(evictedId)
         })
 
-        // Reload all saved conversations from localStorage to state
-        // This ensures dropdown can show all saved conversations, and filtering/slicing handles the display limit
-        const reloadedHistory = loadHistoryFromLocalStorage()
-        setConversationHistory(reloadedHistory)
+        setConversationHistory(loadHistoryFromLocalStorage())
 
         return conversationId
       } catch (e) {
@@ -387,7 +400,7 @@ export function useConversationHistory({
         return ''
       }
     },
-    [loadHistoryFromLocalStorage]
+    [loadHistoryFromLocalStorage, historyLimit]
   )
 
   // Load conversation history from API (authenticated users)
@@ -537,27 +550,78 @@ export function useConversationHistory({
 
   // Load conversation history on mount and when auth status changes
   useEffect(() => {
+    if (authLoading) return
     if (isAuthenticated) {
       loadHistoryFromAPI()
     } else {
-      const history = loadHistoryFromLocalStorage()
-      setConversationHistory(history)
+      setConversationHistory(applyLocalHistoryCap())
     }
-  }, [isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
+  }, [authLoading, isAuthenticated, loadHistoryFromAPI, applyLocalHistoryCap])
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return
+    let cancelled = false
+
+    const migrateDeviceHistory = async () => {
+      const local = loadHistoryFromLocalStorage()
+      if (local.length === 0) return
+
+      const conversations = []
+      for (const summary of local) {
+        const record = await loadLocalConversationRecord(String(summary.id))
+        if (!record?.messages?.length) continue
+        conversations.push({
+          input_data: record.input_data || summary.input_data,
+          models_used: (record.models_used || summary.models_used).map(String),
+          messages: record.messages.map(message => ({
+            role: message.role,
+            content: message.content,
+            model_id: message.model_id ?? null,
+            created_at: message.created_at,
+          })),
+          client_source: summary.client_source || 'web',
+          created_at: record.created_at || summary.created_at,
+          saved: summary.saved === true,
+        })
+      }
+      if (cancelled || conversations.length === 0) return
+
+      await importConversations(conversations)
+      if (cancelled) return
+
+      for (const summary of local) {
+        localStorage.removeItem(`compareintel_conversation_${summary.id}`)
+        void deleteConversationAttachments(String(summary.id))
+      }
+      localStorage.removeItem('compareintel_conversation_history')
+      await loadHistoryFromAPI()
+    }
+
+    void migrateDeviceHistory().catch(error => {
+      logger.error('Failed to move device history onto the account:', error)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
 
   // Refresh history when dropdown is opened for authenticated users
   useEffect(() => {
-    if (showHistoryDropdown) {
-      if (isAuthenticated) {
-        loadHistoryFromAPI()
-      } else {
-        // For unregistered users, localStorage is synchronous - ensure loading state is false
-        setIsLoadingHistory(false)
-        const history = loadHistoryFromLocalStorage()
-        setConversationHistory(history)
-      }
+    if (!showHistoryDropdown || authLoading) return
+    if (isAuthenticated) {
+      loadHistoryFromAPI()
+    } else {
+      setIsLoadingHistory(false)
+      setConversationHistory(applyLocalHistoryCap())
     }
-  }, [showHistoryDropdown, isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
+  }, [
+    showHistoryDropdown,
+    authLoading,
+    isAuthenticated,
+    loadHistoryFromAPI,
+    applyLocalHistoryCap,
+  ])
 
   /**
    * Sync conversation history after a comparison completes
@@ -669,6 +733,51 @@ export function useConversationHistory({
     [isAuthenticated, loadHistoryFromAPI]
   )
 
+  const toggleConversationSaved = useCallback(
+    async (summary: ConversationSummary, saved: boolean) => {
+      setConversationHistory(current =>
+        current.map(item => (item.id === summary.id ? { ...item, saved } : item))
+      )
+
+      if (isAuthenticated && typeof summary.id === 'number') {
+        try {
+          const updated = await setConversationSavedOnAPI(summary.id, saved)
+          setConversationHistory(current =>
+            current.map(item => (item.id === updated.id ? { ...item, saved: updated.saved } : item))
+          )
+        } catch (error) {
+          setConversationHistory(current =>
+            current.map(item => (item.id === summary.id ? { ...item, saved: summary.saved } : item))
+          )
+          logger.error('Failed to update saved conversation:', error)
+        }
+        return
+      }
+
+      if (typeof summary.id !== 'string') return
+      try {
+        const history = loadHistoryFromLocalStorage()
+        const next = trimHistoryEntries(
+          history.map(item => (String(item.id) === String(summary.id) ? { ...item, saved } : item)),
+          historyLimit
+        )
+        localStorage.setItem('compareintel_conversation_history', JSON.stringify(next))
+        const kept = new Set(next.map(item => String(item.id)))
+        for (const item of history) {
+          if (!kept.has(String(item.id))) {
+            localStorage.removeItem(`compareintel_conversation_${item.id}`)
+            void deleteConversationAttachments(String(item.id))
+          }
+        }
+        setConversationHistory(next)
+      } catch (error) {
+        logger.error('Failed to update saved conversation in localStorage:', error)
+        setConversationHistory(loadHistoryFromLocalStorage())
+      }
+    },
+    [historyLimit, isAuthenticated, loadHistoryFromLocalStorage]
+  )
+
   return {
     conversationHistory,
     setConversationHistory,
@@ -686,5 +795,6 @@ export function useConversationHistory({
     loadConversationFromAPI,
     loadConversationFromLocalStorage,
     syncHistoryAfterComparison,
+    toggleConversationSaved,
   }
 }

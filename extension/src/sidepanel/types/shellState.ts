@@ -17,4 +17,5 @@ export interface ExtensionShellPersistedState {
   activeRecentChatId?: string | null
   closedModelIds?: string[]
   pageContexts?: SavedPageContext[]
+  pageContextUnavailable?: boolean
 }
