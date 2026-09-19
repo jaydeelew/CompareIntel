@@ -23,7 +23,6 @@ def test_includes_images_when_prompt_has_no_placeholders(_mock_vision: object) -
     ]
     content = _build_user_message_content(
         "What is in this image?",
-        "anthropic/claude-opus-4",
         attached,
     )
     assert isinstance(content, list)
@@ -63,7 +62,6 @@ def test_interleaves_when_placeholder_present_in_prompt(_mock_vision: object) ->
     ]
     content = _build_user_message_content(
         "Before [image: a.png] after",
-        "anthropic/claude-opus-4",
         attached,
     )
     assert isinstance(content, list)
