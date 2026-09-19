@@ -11,6 +11,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Shared package lives one level above the frontend context (see additional_contexts / build-contexts).
+COPY --from=core . /packages/compare-core
+
 # Set environment variable to fix crypto issue
 ENV NODE_OPTIONS="--openssl-legacy-provider"
 
@@ -31,6 +34,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+COPY --from=core . /packages/compare-core
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 

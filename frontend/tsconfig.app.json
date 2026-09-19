@@ -9,6 +9,11 @@
     "resolveJsonModule": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@compareintel/core": ["../packages/compare-core/src/index.ts"],
+      "@compareintel/core/*": ["../packages/compare-core/src/*"]
+    },
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",

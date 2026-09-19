@@ -10,6 +10,7 @@ on:
       - 'nginx/**'
       - 'backend/requirements.txt'
       - 'frontend/package.json'
+      - 'packages/compare-core/**'
       - '.github/workflows/docker-build.yml'
   pull_request:
     branches: [master]
@@ -20,6 +21,7 @@ on:
       - 'nginx/**'
       - 'backend/requirements.txt'
       - 'frontend/package.json'
+      - 'packages/compare-core/**'
       - '.github/workflows/docker-build.yml'
   workflow_dispatch:
 
@@ -144,6 +146,7 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
+          build-contexts: core=./packages/compare-core
           push: false
           tags: compareintel-frontend:build-test
           target: build
@@ -155,6 +158,7 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
+          build-contexts: core=./packages/compare-core
           push: false
           tags: compareintel-frontend:dev-test
           target: dev
@@ -166,6 +170,7 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
+          build-contexts: core=./packages/compare-core
           push: false
           load: true
           tags: compareintel-frontend:prod-test

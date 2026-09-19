@@ -37,11 +37,15 @@ services:
   frontend:
     build: 
       context: ./frontend
+      dockerfile: Dockerfile
+      additional_contexts:
+        core: ./packages/compare-core
       target: dev
     ports:
       - "5173:5173"
     volumes:
       - ./frontend:/app
+      - ./packages/compare-core:/packages/compare-core
       - /app/node_modules
     environment:
       - VITE_API_URL=https://localhost/api

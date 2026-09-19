@@ -44,6 +44,7 @@ export default defineConfig({
   resolve: {
     // Force single copies (fixes invalid hook call when lazy chunks resolve a different optimized graph)
     alias: {
+      '@compareintel/core': path.resolve(__dirname, '../packages/compare-core/src'),
       react: resolvePackageRoot('react'),
       'react-dom': resolvePackageRoot('react-dom'),
       // Subpaths must match the same install; otherwise prebundles can load a second React (null dispatcher).
