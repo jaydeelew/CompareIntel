@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   useComparisonPage,
@@ -9,8 +9,10 @@ import {
 import type { ModelInfo, User } from '@compareintel/core'
 
 import type { PreloadedTabContent } from '@compareintel/core'
+import { ProviderIcon } from '@frontend/components/layout/ProviderIcon'
 
 import { apiClient, loadModels } from '../api'
+import { openWebAppLogin } from '../webAppActions'
 import { extractTabContentFromSidePanel } from '../extractTabContent'
 import { sendTabContextMessage } from '../messaging'
 import {
@@ -22,7 +24,19 @@ import { ExtensionContextBar, TabMentionInput } from './ExtensionContextBar'
 import { ExtensionModelPicker } from './ExtensionModelPicker'
 import { PageContextIntroModal } from './PageContextIntroModal'
 import type { ExtensionShellPersistedState } from '../types/shellState'
+import {
+  addPinnedContext,
+  matchOpenTabsToContexts,
+  type SavedPageContext,
+} from '../utils/pageContextSnapshot'
 import { upsertRecentChat } from '../../shared/recentChats'
+import {
+  hydrateConversationResults,
+  hydrateSelectedModelIds,
+  isModelCatalogReady,
+  resolveSelectedModelsForCatalog,
+  sameModelIds,
+} from '../utils/resolveSelectedModels'
 
 function SendIcon() {
   return (
@@ -60,10 +74,11 @@ function NewIcon() {
   )
 }
 
+const LatexRenderer = lazy(() => import('@frontend/components/LatexRenderer'))
+
 interface ExtensionComparisonShellProps {
   user: User | null
   browserFingerprint?: string
-  onOpenAuth: () => void
   onComparisonFinished?: () => void
   persistedState?: ExtensionShellPersistedState
   persistTabId?: number
@@ -98,7 +113,6 @@ function isModelTurnInHistory(
 export function ExtensionComparisonShell({
   user,
   browserFingerprint,
-  onOpenAuth,
   onComparisonFinished,
   persistedState,
   persistTabId,
@@ -110,23 +124,48 @@ export function ExtensionComparisonShell({
     persistedState?.activeRecentChatId ?? null
   )
   const [modelsByProvider, setModelsByProvider] = useState<Record<string, ModelInfo[]>>({})
+  const [modelsLoadError, setModelsLoadError] = useState<string | null>(null)
   const [showModelPicker, setShowModelPicker] = useState(false)
+  const [modelsCollapsed, setModelsCollapsed] = useState(false)
   const [sharePageContext, setSharePageContext] = useState(
     persistedState?.sharePageContext ?? true
   )
-  const [contextTabIds, setContextTabIds] = useState<number[]>([])
+  const [pageContexts, setPageContexts] = useState<SavedPageContext[]>(
+    persistedState?.pageContexts ?? []
+  )
   const [collapsedResultIds, setCollapsedResultIds] = useState<Set<string>>(
     () => new Set(persistedState?.collapsedResultIds ?? [])
   )
   const [showPageContextIntro, setShowPageContextIntro] = useState(false)
   const [submittedPrompt, setSubmittedPrompt] = useState(persistedState?.submittedPrompt ?? '')
+  const [closedModelIds, setClosedModelIds] = useState<Set<string>>(
+    () => new Set(persistedState?.closedModelIds ?? [])
+  )
 
   const maxModels = user
     ? getModelLimit(user.subscription_tier)
     : getModelLimit('unregistered')
 
   useEffect(() => {
-    loadModels().then(setModelsByProvider).catch(() => undefined)
+    let cancelled = false
+    setModelsLoadError(null)
+    loadModels()
+      .then((data) => {
+        if (cancelled) return
+        setModelsByProvider(data ?? {})
+      })
+      .catch((err) => {
+        if (cancelled) return
+        const message = err instanceof Error ? err.message : 'Failed to load models'
+        setModelsLoadError(
+          message === 'Failed to fetch'
+            ? 'Can’t reach the API. Start the local backend on port 8000, then reload the extension.'
+            : message
+        )
+      })
+    return () => {
+      cancelled = true
+    }
   }, [user])
 
   useEffect(() => {
@@ -150,10 +189,13 @@ export function ExtensionComparisonShell({
     () => Object.values(textModelsByProvider).flat(),
     [textModelsByProvider]
   )
+  const pickerModelsByProvider = isModelCatalogReady(textModelsByProvider)
+    ? textModelsByProvider
+    : modelsByProvider
 
-  const getTabContext = async () => {
+  const getTabContext = useCallback(async () => {
     const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
-    const tabIds = new Set(contextTabIds)
+    const tabIds = new Set<number>()
     if (sharePageContext && activeRes.type === 'ACTIVE_TAB' && activeRes.tab) {
       tabIds.add(activeRes.tab.tabId)
     }
@@ -162,10 +204,13 @@ export function ExtensionComparisonShell({
     if (activeRes.type === 'ACTIVE_TAB' && activeRes.tab) {
       tabUrlById.set(activeRes.tab.tabId, activeRes.tab.url)
     }
-    const listRes = await sendTabContextMessage({ type: 'LIST_TABS' })
+    const listRes = await sendTabContextMessage({ type: 'LIST_TABS', allWindows: true })
     if (listRes.type === 'TABS_LIST') {
       for (const tab of listRes.tabs) {
         tabUrlById.set(tab.tabId, tab.url)
+      }
+      for (const tabId of matchOpenTabsToContexts(pageContexts, listRes.tabs)) {
+        tabIds.add(tabId)
       }
     }
 
@@ -187,7 +232,7 @@ export function ExtensionComparisonShell({
       return res.bundle
     }
     return null
-  }
+  }, [pageContexts, sharePageContext])
 
   const handleComparisonFinished = useCallback(() => {
     onComparisonFinished?.()
@@ -197,15 +242,23 @@ export function ExtensionComparisonShell({
     apiClient,
     modelsByProvider: textModelsByProvider,
     browserFingerprint,
-    getTabContext: sharePageContext || contextTabIds.length > 0 ? getTabContext : undefined,
-    sharePageContext: sharePageContext || contextTabIds.length > 0,
+    getTabContext:
+      sharePageContext || pageContexts.length > 0 ? getTabContext : undefined,
+    sharePageContext: sharePageContext || pageContexts.length > 0,
     maxModels,
     onComparisonFinished: handleComparisonFinished,
     initialState: persistedState
       ? {
           input: persistedState.input,
-          selectedModels: persistedState.selectedModels,
-          results: persistedState.results,
+          selectedModels: hydrateSelectedModelIds({
+            selectedModels: persistedState.selectedModels,
+            results: persistedState.results,
+            conversationHistory: persistedState.conversationHistory,
+          }),
+          results: hydrateConversationResults(
+            persistedState.results,
+            persistedState.conversationHistory
+          ),
           conversationId: persistedState.conversationId,
           conversationHistory: persistedState.conversationHistory,
           error: persistedState.error,
@@ -222,12 +275,15 @@ export function ExtensionComparisonShell({
       conversationHistory: comparison.conversationHistory,
       error: comparison.error,
       sharePageContext,
+      pageContexts,
       collapsedResultIds: [...collapsedResultIds],
       submittedPrompt,
       activeRecentChatId,
+      closedModelIds: [...closedModelIds],
     }
   }, [
     activeRecentChatId,
+    closedModelIds,
     collapsedResultIds,
     comparison.conversationHistory,
     comparison.conversationId,
@@ -235,6 +291,7 @@ export function ExtensionComparisonShell({
     comparison.input,
     comparison.results,
     comparison.selectedModels,
+    pageContexts,
     sharePageContext,
     submittedPrompt,
   ])
@@ -247,17 +304,21 @@ export function ExtensionComparisonShell({
     const state = capturePersistedState()
     let sourceTabId = persistTabId
     let sourceTabTitle: string | undefined
+    let sourceTabUrl = state.pageContexts?.[0]?.url
 
     if (sourceTabId == null) {
       const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
       if (activeRes.type === 'ACTIVE_TAB' && activeRes.tab) {
         sourceTabId = activeRes.tab.tabId
         sourceTabTitle = activeRes.tab.title
+        sourceTabUrl = sourceTabUrl ?? activeRes.tab.url
       }
     } else {
-      const listRes = await sendTabContextMessage({ type: 'LIST_TABS' })
+      const listRes = await sendTabContextMessage({ type: 'LIST_TABS', allWindows: true })
       if (listRes.type === 'TABS_LIST') {
-        sourceTabTitle = listRes.tabs.find((tab) => tab.tabId === sourceTabId)?.title
+        const sourceTab = listRes.tabs.find((tab) => tab.tabId === sourceTabId)
+        sourceTabTitle = sourceTab?.title
+        sourceTabUrl = sourceTabUrl ?? sourceTab?.url
       }
     }
 
@@ -266,6 +327,7 @@ export function ExtensionComparisonShell({
       state,
       sourceTabId,
       sourceTabTitle,
+      sourceTabUrl,
     })
     setActiveRecentChatId(saved.id)
     onActiveRecentChatChange?.(saved.id)
@@ -299,8 +361,12 @@ export function ExtensionComparisonShell({
 
   useEffect(() => {
     if (!onPersistState || persistTabId == null) return
-    onPersistState(persistTabId, capturePersistedState())
-  }, [capturePersistedState, onPersistState, persistTabId])
+    const delayMs = comparison.isLoading ? 400 : 0
+    const timer = window.setTimeout(() => {
+      onPersistState(persistTabId, capturePersistedState())
+    }, delayMs)
+    return () => window.clearTimeout(timer)
+  }, [capturePersistedState, comparison.isLoading, onPersistState, persistTabId])
 
   useEffect(() => {
     if (!onPersistState || persistTabId == null) return
@@ -309,20 +375,44 @@ export function ExtensionComparisonShell({
     }
   }, [capturePersistedState, onPersistState, persistTabId])
 
-  useEffect(() => {
-    comparison.setSelectedModels((prev) =>
-      prev.filter((id) =>
-        isModelIdSelectableForUser(id, textModelsByProvider, !!user, user)
-      )
-    )
-  }, [user, textModelsByProvider, comparison.setSelectedModels])
+  const isFollowUpMode =
+    comparison.results.length > 0 || comparison.conversationHistory.length > 0
 
   useEffect(() => {
-    if (comparison.results.length === 0) {
+    if (isFollowUpMode) setShowModelPicker(false)
+  }, [isFollowUpMode])
+
+  useEffect(() => {
+    if (isFollowUpMode) return
+    if (!isModelCatalogReady(textModelsByProvider)) return
+    comparison.setSelectedModels((prev) => {
+      const next = resolveSelectedModelsForCatalog({
+        selectedModels: prev,
+        fallbackModelIds: [],
+        modelsByProvider: textModelsByProvider,
+        isAuthenticated: !!user,
+        user,
+      })
+      return sameModelIds(prev, next) ? prev : next
+    })
+  }, [user, textModelsByProvider, comparison.setSelectedModels, isFollowUpMode])
+
+  useEffect(() => {
+    if (comparison.results.length === 0 && comparison.conversationHistory.length === 0) {
       setCollapsedResultIds(new Set())
       setSubmittedPrompt('')
+      setClosedModelIds(new Set())
     }
-  }, [comparison.results.length])
+  }, [comparison.results.length, comparison.conversationHistory.length])
+
+  const conversationResults =
+    comparison.results.length > 0
+      ? comparison.results
+      : hydrateConversationResults([], comparison.conversationHistory)
+
+  const visibleResults = conversationResults.filter(
+    (result) => !closedModelIds.has(result.modelId)
+  )
 
   const isActiveTurn =
     comparison.isLoading ||
@@ -346,9 +436,23 @@ export function ExtensionComparisonShell({
     })
   }
 
+  const handleCloseModel = (modelId: string) => {
+    setClosedModelIds((prev) => {
+      const next = new Set(prev)
+      next.add(modelId)
+      return next
+    })
+    comparison.setSelectedModels((prev) => prev.filter((id) => id !== modelId))
+  }
+
   const handleToggleModel = (modelId: string) => {
+    const isSelected = comparison.selectedModels.includes(modelId)
+    if (isFollowUpMode) {
+      if (isSelected) handleCloseModel(modelId)
+      return
+    }
     if (
-      !comparison.selectedModels.includes(modelId) &&
+      !isSelected &&
       !isModelIdSelectableForUser(modelId, textModelsByProvider, !!user, user)
     ) {
       return
@@ -358,6 +462,9 @@ export function ExtensionComparisonShell({
 
   const handleNewComparison = () => {
     comparison.newComparison()
+    setShowModelPicker(false)
+    setClosedModelIds(new Set())
+    setPageContexts([])
     setActiveRecentChatId(null)
     onActiveRecentChatChange?.(null)
   }
@@ -371,43 +478,114 @@ export function ExtensionComparisonShell({
         <ExtensionContextBar
           sharePageContext={sharePageContext}
           onSharePageContextChange={setSharePageContext}
-          onContextTabsChange={setContextTabIds}
+          pageContexts={pageContexts}
+          onPageContextsChange={setPageContexts}
+          restoreKey={activeRecentChatId ?? undefined}
         />
 
-        <div className="models-section">
-          <h3>Models ({comparison.selectedModels.length}/{maxModels})</h3>
-          <div className="model-chips">
-            {comparison.selectedModels.map((id) => {
-              const model = allModels.find((m) => m.id === id)
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  className="model-chip selected"
-                  onClick={() => handleToggleModel(id)}
-                >
-                  {model?.name ?? id} ×
-                </button>
-              )
-            })}
+        <div className={`models-section${modelsCollapsed ? ' models-section-collapsed' : ''}`}>
+          <div className="models-header">
             <button
               type="button"
-              className="model-chip"
-              onClick={() => setShowModelPicker(!showModelPicker)}
-              aria-expanded={showModelPicker}
+              className="ghost context-collapse-toggle"
+              onClick={() => setModelsCollapsed((value) => !value)}
+              aria-expanded={!modelsCollapsed}
+              aria-label={modelsCollapsed ? 'Expand models' : 'Collapse models'}
             >
-              {showModelPicker ? 'Collapse' : '+ Add'}
+              <span className="context-collapse-chevron" aria-hidden="true">
+                {modelsCollapsed ? '▶' : '▼'}
+              </span>
+              Models
+              <span className="section-count">
+                {isFollowUpMode
+                  ? comparison.selectedModels.length
+                  : `${comparison.selectedModels.length}/${maxModels}`}
+              </span>
             </button>
+            {comparison.selectedModels.length > 0 && (
+              <div className="tab-icons" aria-hidden="true">
+                {comparison.selectedModels.map((id) => {
+                  const model = allModels.find((m) => m.id === id)
+                  const name = model?.name ?? id
+                  return (
+                    <span key={id} className="tab-icon" title={name}>
+                      {model?.provider ? (
+                        <ProviderIcon provider={model.provider} />
+                      ) : (
+                        <span className="tab-icon-fallback">
+                          {name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
           </div>
-          {showModelPicker && (
-            <ExtensionModelPicker
-              modelsByProvider={textModelsByProvider}
-              selectedModels={comparison.selectedModels}
-              maxModels={maxModels}
-              user={user}
-              onToggleModel={handleToggleModel}
-              onOpenAuth={onOpenAuth}
-            />
+          {!modelsCollapsed && (
+            <>
+              <div className="model-chips">
+                {comparison.selectedModels.map((id) => {
+                  const model = allModels.find((m) => m.id === id)
+                  const name = model?.name ?? id
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className="model-chip selected"
+                      onClick={() => handleToggleModel(id)}
+                      title={
+                        isFollowUpMode
+                          ? `Stop getting replies from ${name}`
+                          : `Remove ${name}`
+                      }
+                      aria-label={
+                        isFollowUpMode
+                          ? `Stop getting replies from ${name}`
+                          : `Remove ${name}`
+                      }
+                    >
+                      {name} ×
+                    </button>
+                  )
+                })}
+                {!isFollowUpMode && (
+                  <button
+                    type="button"
+                    className="model-chip"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setModelsCollapsed(false)
+                      setShowModelPicker((open) => !open)
+                    }}
+                    aria-expanded={showModelPicker}
+                  >
+                    {showModelPicker ? 'Collapse' : '+ Add'}
+                  </button>
+                )}
+              </div>
+              {!isFollowUpMode && showModelPicker && modelsLoadError && (
+                <div className="recent-chats-empty">{modelsLoadError}</div>
+              )}
+              {!isFollowUpMode &&
+                showModelPicker &&
+                !modelsLoadError &&
+                !isModelCatalogReady(pickerModelsByProvider) && (
+                  <div className="recent-chats-empty">Loading models…</div>
+                )}
+              {!isFollowUpMode &&
+                showModelPicker &&
+                isModelCatalogReady(pickerModelsByProvider) && (
+                  <ExtensionModelPicker
+                    modelsByProvider={pickerModelsByProvider}
+                    selectedModels={comparison.selectedModels}
+                    maxModels={maxModels}
+                    user={user}
+                    onToggleModel={handleToggleModel}
+                    onOpenAuth={() => void openWebAppLogin()}
+                  />
+                )}
+            </>
           )}
         </div>
 
@@ -419,9 +597,9 @@ export function ExtensionComparisonShell({
           </div>
         )}
 
-        {comparison.results.length > 0 && (
+        {visibleResults.length > 0 && (
           <div className="results">
-            {comparison.results.map((result) => {
+            {visibleResults.map((result) => {
               const isCollapsed = collapsedResultIds.has(result.modelId)
 
               const pastMessages: Array<{ role: 'user' | 'assistant'; content: string }> = []
@@ -466,24 +644,37 @@ export function ExtensionComparisonShell({
                   key={result.modelId}
                   className={`result-card${isCollapsed ? ' collapsed' : ''}`}
                 >
-                  <button
-                    type="button"
-                    className="result-card-header"
-                    onClick={() => toggleResultCollapsed(result.modelId)}
-                    aria-expanded={!isCollapsed}
-                    aria-controls={`result-body-${result.modelId}`}
-                  >
-                    <span className="result-card-chevron" aria-hidden="true">
-                      {isCollapsed ? '▶' : '▼'}
-                    </span>
-                    <span className="result-card-title">{result.modelName}</span>
-                    {isCollapsed && result.isStreaming && (
-                      <span className="result-card-status">Streaming…</span>
+                  <div className="result-card-header">
+                    <button
+                      type="button"
+                      className="result-card-toggle"
+                      onClick={() => toggleResultCollapsed(result.modelId)}
+                      aria-expanded={!isCollapsed}
+                      aria-controls={`result-body-${result.modelId}`}
+                    >
+                      <span className="result-card-chevron" aria-hidden="true">
+                        {isCollapsed ? '▶' : '▼'}
+                      </span>
+                      <span className="result-card-title">{result.modelName}</span>
+                      {isCollapsed && result.isStreaming && (
+                        <span className="result-card-status">Streaming…</span>
+                      )}
+                      {isCollapsed && result.error && (
+                        <span className="result-card-status error">Error</span>
+                      )}
+                    </button>
+                    {isFollowUpMode && (
+                      <button
+                        type="button"
+                        className="result-card-close"
+                        onClick={() => handleCloseModel(result.modelId)}
+                        title={`Stop getting replies from ${result.modelName}`}
+                        aria-label={`Stop getting replies from ${result.modelName}`}
+                      >
+                        ×
+                      </button>
                     )}
-                    {isCollapsed && result.error && (
-                      <span className="result-card-status error">Error</span>
-                    )}
-                  </button>
+                  </div>
                   {!isCollapsed && (
                     <div
                       id={`result-body-${result.modelId}`}
@@ -498,16 +689,29 @@ export function ExtensionComparisonShell({
                             {msg.role === 'user' ? 'You' : result.modelName}
                           </div>
                           <div
-                            className={`ext-message-content${msg.role === 'assistant' &&
-                                i === allMessages.length - 1 &&
-                                result.isStreaming
+                            className={`ext-message-content${
+                              msg.role === 'assistant' &&
+                              i === allMessages.length - 1 &&
+                              result.isStreaming
                                 ? ' streaming'
-                                : ''
-                              }`}
+                                : msg.role === 'assistant'
+                                  ? ' message-content'
+                                  : ''
+                            }`}
                           >
-                            {msg.role === 'assistant' && !msg.content && result.isStreaming
-                              ? 'Thinking…'
-                              : msg.content}
+                            {msg.role === 'assistant' && !msg.content && result.isStreaming ? (
+                              'Thinking…'
+                            ) : msg.role === 'assistant' &&
+                              result.isStreaming &&
+                              i === allMessages.length - 1 ? (
+                              msg.content
+                            ) : msg.role === 'assistant' ? (
+                              <Suspense fallback={msg.content}>
+                                <LatexRenderer modelId={result.modelId}>{msg.content}</LatexRenderer>
+                              </Suspense>
+                            ) : (
+                              msg.content
+                            )}
                           </div>
                         </div>
                       ))}
@@ -530,10 +734,13 @@ export function ExtensionComparisonShell({
             className="composer-input"
             value={comparison.input}
             onChange={comparison.setInput}
+            onPinTab={(tab) => {
+              setPageContexts((prev) => addPinnedContext(prev, tab))
+            }}
             placeholder={
               comparison.results.length > 0
                 ? 'Continue the conversation here...'
-                : 'Ask about this page… Use @ to include other tabs'
+                : 'Ask anything… Optionally include one or more tabs with @'
             }
           />
           <div className="composer-actions">

@@ -10,7 +10,7 @@ const manifest: ManifestV3Export = {
   name: 'CompareIntel',
   version: '0.1.0',
   description:
-    'Compare AI model responses side-by-side with awareness of your current browser tab.',
+    'Compare AI model responses side-by-side. Page context is optional and can come from any open tab, not just the active one.',
   browser_specific_settings: {
     gecko: {
       id: 'compareintel@compareintel.com',

@@ -111,6 +111,8 @@ export interface ConversationSummary {
   created_at: string
   /** Optional count of messages in the conversation */
   message_count?: number
+  /** Platform where the comparison was initiated */
+  client_source?: 'web' | 'extension' | string
   /** Saved Text Models Advanced settings (from API); localStorage uses textComposerAdvanced on full payload */
   composer_temperature?: number | null
   composer_top_p?: number | null

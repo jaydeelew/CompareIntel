@@ -11,7 +11,11 @@
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["chrome", "vite/client"]
+    "types": ["chrome", "vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@frontend/*": ["../frontend/src/*"]
+    }
   },
   "include": ["src"]
 }

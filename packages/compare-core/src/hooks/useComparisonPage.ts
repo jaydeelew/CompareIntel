@@ -114,11 +114,12 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
     (modelId: string) => {
       setSelectedModels((prev) => {
         if (prev.includes(modelId)) return prev.filter((id) => id !== modelId)
-        if (prev.length >= maxModels) return prev
+        const isFollowUp = conversationHistory.length > 0
+        if (isFollowUp || prev.length >= maxModels) return prev
         return [...prev, modelId]
       })
     },
-    [maxModels]
+    [conversationHistory.length, maxModels]
   )
 
   const cancelComparison = useCallback(() => {
@@ -229,7 +230,7 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
         latestResults = latestResults.map((result) => {
           if (result.modelId !== modelId) return result
 
-          if (event.type === 'chunk' || event.type === 'reasoning') {
+          if (event.type === 'chunk') {
             const piece = typeof event.content === 'string' ? event.content : ''
             if (!piece) return result
             const content = result.content + piece

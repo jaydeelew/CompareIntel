@@ -874,6 +874,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             input_data=req.input_data,
                             models_used=json.dumps(req.models),
                             file_contents=file_contents_json,
+                            client_source=(req.client_source or "web"),
                         )
                         conv_db.add(conversation)
                         conv_db.flush()

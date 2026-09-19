@@ -30,6 +30,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Process request
         response = await call_next(request)
 
+        if request.headers.get("access-control-request-private-network") == "true":
+            response.headers["Access-Control-Allow-Private-Network"] = "true"
+
         # Remove X-Powered-By header (security best practice)
         # This prevents information disclosure about the server stack
         if "X-Powered-By" in response.headers:

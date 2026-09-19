@@ -115,9 +115,17 @@ export class CompareIntelApiClient {
     return res.json() as Promise<T>
   }
 
+  async delete(path: string, skipAuth = false): Promise<void> {
+    const res = await this.fetchWithAuth(path, { method: 'DELETE' }, skipAuth)
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new ApiError('Request failed', res.status, (data as { detail?: string }).detail)
+    }
+  }
+
   async *stream(path: string, body: unknown): AsyncGenerator<string> {
     const payload = {
-      ...body,
+      ...(typeof body === 'object' && body !== null ? body : {}),
       ...(this.config.clientSource ? { client_source: this.config.clientSource } : {}),
     }
     const res = await this.fetchWithAuth(path, {

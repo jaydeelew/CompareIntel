@@ -86,6 +86,7 @@ async def get_conversations(
                 composer_max_tokens=conv.composer_max_tokens,
                 composer_aspect_ratio=conv.composer_aspect_ratio,
                 composer_image_size=conv.composer_image_size,
+                client_source=conv.client_source or "web",
             )
         )
 
@@ -189,6 +190,7 @@ async def get_conversation(
         composer_max_tokens=conversation.composer_max_tokens,
         composer_aspect_ratio=conversation.composer_aspect_ratio,
         composer_image_size=conversation.composer_image_size,
+        client_source=conversation.client_source or "web",
     )
 
 

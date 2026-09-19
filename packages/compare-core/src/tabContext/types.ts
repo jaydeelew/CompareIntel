@@ -44,9 +44,10 @@ export type TabContextMessage =
       preloaded?: Record<number, PreloadedTabContent>
     }
   | { type: 'GET_ACTIVE_TAB' }
-  | { type: 'LIST_TABS' }
+  | { type: 'LIST_TABS'; allWindows?: boolean }
   | { type: 'PIN_TAB'; tabId: number }
   | { type: 'UNPIN_TAB'; tabId: number }
+  | { type: 'SET_PINNED_TABS'; tabIds: number[] }
   | { type: 'GET_PINNED_TABS' }
   | { type: 'GET_SELECTION'; tabId: number }
   | { type: 'CLEAR_CONTEXT_CACHE' }

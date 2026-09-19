@@ -439,49 +439,48 @@ export function useConversationHistory({
       if (isActiveItem && onDeleteActiveConversation) {
         onDeleteActiveConversation()
       }
+      if (isActiveItem) {
+        setCurrentVisibleComparisonId(null)
+      }
+
+      // Optimistically remove from UI immediately
+      setConversationHistory(prev => prev.filter(conv => conv.id !== summary.id))
 
       if (isAuthenticated && typeof summary.id === 'number') {
-        // Delete from API
         try {
           await deleteConversationFromAPI(summary.id)
-
-          // Clear cache for conversations endpoint to force fresh data
           apiClient.deleteCache('GET:/conversations')
-
-          // Immediately update state to remove the deleted conversation from UI
-          setConversationHistory(prev => prev.filter(conv => conv.id !== summary.id))
-
-          // If this was the active item, reset the visible comparison ID
-          if (isActiveItem) {
-            setCurrentVisibleComparisonId(null)
-          }
-
-          // Reload history from API to ensure sync (will fetch fresh data due to cache clear)
-          await loadHistoryFromAPI()
         } catch (error) {
+          setConversationHistory(prev => {
+            if (prev.some(conv => conv.id === summary.id)) return prev
+            return [summary, ...prev].sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )
+          })
+          if (isActiveItem) {
+            setCurrentVisibleComparisonId(String(summary.id))
+          }
           const ctx = error instanceof ApiError ? error.message : error
           logger.error('Failed to delete conversation:', ctx)
         }
       } else if (!isAuthenticated && typeof summary.id === 'string') {
-        // Delete from localStorage
         try {
-          // Remove the conversation data
           localStorage.removeItem(`compareintel_conversation_${summary.id}`)
           void deleteConversationAttachments(String(summary.id))
 
-          // Update history list
           const history = loadHistoryFromLocalStorage()
           const updatedHistory = history.filter(conv => conv.id !== summary.id)
           localStorage.setItem('compareintel_conversation_history', JSON.stringify(updatedHistory))
-
-          // Immediately update state to remove the deleted conversation from UI
-          setConversationHistory(updatedHistory)
-
-          // If this was the active item, reset the visible comparison ID
-          if (isActiveItem) {
-            setCurrentVisibleComparisonId(null)
-          }
         } catch (error) {
+          setConversationHistory(prev => {
+            if (prev.some(conv => conv.id === summary.id)) return prev
+            return [summary, ...prev].sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )
+          })
+          if (isActiveItem) {
+            setCurrentVisibleComparisonId(String(summary.id))
+          }
           logger.error('Failed to delete conversation from localStorage:', error)
         }
       }
@@ -489,7 +488,6 @@ export function useConversationHistory({
     [
       isAuthenticated,
       currentVisibleComparisonId,
-      loadHistoryFromAPI,
       loadHistoryFromLocalStorage,
       onDeleteActiveConversation,
     ]

@@ -1,109 +1,270 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { sendTabContextMessage } from '../messaging'
+import { subscribeToTabChanges } from '../subscribeToTabChanges'
+import {
+  addPinnedContext,
+  matchOpenTabsToContexts,
+  normalizePageUrl,
+  promoteActiveContextsToPinned,
+  removePageContext,
+  replaceActiveContext,
+  samePageContexts,
+  type SavedPageContext,
+} from '../utils/pageContextSnapshot'
 
 interface TabInfo {
   tabId: number
   url: string
   title: string
   favIconUrl?: string
-  pinned: boolean
 }
 
 interface ExtensionContextBarProps {
   sharePageContext: boolean
   onSharePageContextChange: (enabled: boolean) => void
-  onContextTabsChange: (tabIds: number[]) => void
+  pageContexts: SavedPageContext[]
+  onPageContextsChange: (contexts: SavedPageContext[]) => void
+  restoreKey?: string
 }
 
 export function ExtensionContextBar({
   sharePageContext,
   onSharePageContextChange,
-  onContextTabsChange,
+  pageContexts,
+  onPageContextsChange,
+  restoreKey,
 }: ExtensionContextBarProps) {
   const [activeTab, setActiveTab] = useState<TabInfo | null>(null)
-  const [pinnedTabs, setPinnedTabs] = useState<TabInfo[]>([])
+  const [openTabs, setOpenTabs] = useState<TabInfo[]>([])
   const [showTabPicker, setShowTabPicker] = useState(false)
-  const [allTabs, setAllTabs] = useState<TabInfo[]>([])
   const [collapsed, setCollapsed] = useState(false)
 
-  const refreshTabs = useCallback(async () => {
-    const listRes = await sendTabContextMessage({ type: 'LIST_TABS' })
-    let tabs: TabInfo[] = []
-    if (listRes.type === 'TABS_LIST') {
-      tabs = listRes.tabs
-      setAllTabs(tabs)
-      setPinnedTabs(tabs.filter((t) => t.pinned))
-    }
+  const pageContextsRef = useRef(pageContexts)
+  const sharePageContextRef = useRef(sharePageContext)
+  const activeTabRef = useRef(activeTab)
+  const restoreDoneRef = useRef(!restoreKey)
+  const onPageContextsChangeRef = useRef(onPageContextsChange)
+  const onSharePageContextChangeRef = useRef(onSharePageContextChange)
+  const syncGenerationRef = useRef(0)
+  const syncQueueRef = useRef(Promise.resolve())
 
-    const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
-    if (activeRes.type === 'ACTIVE_TAB' && activeRes.tab) {
-      const pinned = tabs.find((t) => t.tabId === activeRes.tab!.tabId)?.pinned ?? false
-      setActiveTab({ ...activeRes.tab, pinned })
-    } else {
-      setActiveTab(null)
-    }
-
-    const pinnedRes = await sendTabContextMessage({ type: 'GET_PINNED_TABS' })
-    if (pinnedRes.type === 'PINNED_TABS') {
-      onContextTabsChange(pinnedRes.tabIds)
-    }
-  }, [onContextTabsChange])
+  sharePageContextRef.current = sharePageContext
+  activeTabRef.current = activeTab
+  onPageContextsChangeRef.current = onPageContextsChange
+  onSharePageContextChangeRef.current = onSharePageContextChange
 
   useEffect(() => {
-    refreshTabs().catch(() => undefined)
-    const interval = setInterval(() => refreshTabs().catch(() => undefined), 5000)
-    return () => clearInterval(interval)
-  }, [refreshTabs])
+    pageContextsRef.current = pageContexts
+  }, [pageContexts])
 
-  const handlePin = async (tabId: number) => {
-    await sendTabContextMessage({ type: 'PIN_TAB', tabId })
-    await refreshTabs()
+  const emitPageContexts = useCallback((next: SavedPageContext[]) => {
+    if (samePageContexts(pageContextsRef.current, next)) return
+    pageContextsRef.current = next
+    onPageContextsChangeRef.current(next)
+  }, [])
+
+  const syncBackgroundPins = useCallback((contexts: SavedPageContext[]) => {
+    const generation = ++syncGenerationRef.current
+    syncQueueRef.current = syncQueueRef.current
+      .then(async () => {
+        if (generation !== syncGenerationRef.current) return
+        const listRes = await sendTabContextMessage({ type: 'LIST_TABS', allWindows: true })
+        if (generation !== syncGenerationRef.current) return
+        const tabs = listRes.type === 'TABS_LIST' ? listRes.tabs : []
+        setOpenTabs(tabs)
+        const tabIds = matchOpenTabsToContexts(contexts, tabs)
+        if (generation !== syncGenerationRef.current) return
+        await sendTabContextMessage({ type: 'SET_PINNED_TABS', tabIds })
+      })
+      .catch(() => undefined)
+  }, [])
+
+  const pinnedKey = pageContexts
+    .filter((context) => context.source === 'pinned')
+    .map((context) => normalizePageUrl(context.url))
+    .join('\n')
+
+  useEffect(() => {
+    syncBackgroundPins(pageContextsRef.current)
+  }, [pinnedKey, syncBackgroundPins])
+
+  useEffect(() => {
+    let lastKey = ''
+    const pollActiveTab = async () => {
+      const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
+      const tab = activeRes.type === 'ACTIVE_TAB' ? activeRes.tab : null
+      const nextKey = tab ? `${tab.tabId}|${tab.url}|${tab.title}` : ''
+      const tabChanged = nextKey !== lastKey
+      if (tabChanged) {
+        lastKey = nextKey
+        setActiveTab(tab)
+        activeTabRef.current = tab
+      }
+      if (!restoreDoneRef.current || !tabChanged) return
+      emitPageContexts(
+        replaceActiveContext(pageContextsRef.current, tab, sharePageContextRef.current)
+      )
+    }
+
+    void pollActiveTab().catch(() => undefined)
+    return subscribeToTabChanges(() => {
+      void pollActiveTab().catch(() => undefined)
+    })
+  }, [emitPageContexts])
+
+  useEffect(() => {
+    emitPageContexts(
+      replaceActiveContext(pageContextsRef.current, activeTabRef.current, sharePageContext)
+    )
+  }, [emitPageContexts, sharePageContext])
+
+  useEffect(() => {
+    restoreDoneRef.current = !restoreKey
+    if (!restoreKey || pageContextsRef.current.length === 0) {
+      restoreDoneRef.current = true
+      return
+    }
+
+    const promoted = promoteActiveContextsToPinned(pageContextsRef.current)
+    emitPageContexts(promoted)
+
+    const finishRestore = async () => {
+      const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
+      const tab = activeRes.type === 'ACTIVE_TAB' ? activeRes.tab : null
+      const savedUrls = new Set(promoted.map((context) => normalizePageUrl(context.url)))
+      if (tab && !savedUrls.has(normalizePageUrl(tab.url))) {
+        sharePageContextRef.current = false
+        onSharePageContextChangeRef.current(false)
+      }
+      restoreDoneRef.current = true
+      emitPageContexts(
+        replaceActiveContext(pageContextsRef.current, tab, sharePageContextRef.current)
+      )
+    }
+
+    void finishRestore().catch(() => {
+      restoreDoneRef.current = true
+    })
+  }, [emitPageContexts, restoreKey])
+
+  useEffect(() => {
+    const refreshOpenTabs = async () => {
+      const listRes = await sendTabContextMessage({ type: 'LIST_TABS', allWindows: true })
+      if (listRes.type === 'TABS_LIST') setOpenTabs(listRes.tabs)
+    }
+    void refreshOpenTabs().catch(() => undefined)
+    return subscribeToTabChanges(() => {
+      void refreshOpenTabs().catch(() => undefined)
+    }, 300)
+  }, [])
+
+  const handlePin = (tab: TabInfo) => {
     setShowTabPicker(false)
+    emitPageContexts(addPinnedContext(pageContextsRef.current, tab))
   }
 
-  const handleUnpin = async (tabId: number) => {
-    await sendTabContextMessage({ type: 'UNPIN_TAB', tabId })
-    await refreshTabs()
+  const handleRemove = (url: string) => {
+    const key = normalizePageUrl(url)
+    const isCurrent =
+      activeTabRef.current != null && normalizePageUrl(activeTabRef.current.url) === key
+    if (isCurrent) {
+      sharePageContextRef.current = false
+      onSharePageContextChangeRef.current(false)
+    }
+    emitPageContexts(
+      replaceActiveContext(
+        removePageContext(pageContextsRef.current, url),
+        activeTabRef.current,
+        isCurrent ? false : sharePageContextRef.current
+      )
+    )
   }
 
-  const handleClearContext = async () => {
-    await sendTabContextMessage({ type: 'CLEAR_CONTEXT_CACHE' })
-    onSharePageContextChange(false)
-    await refreshTabs()
+  const handleOpenTabPicker = async () => {
+    setShowTabPicker(true)
+    const listRes = await sendTabContextMessage({ type: 'LIST_TABS', allWindows: true })
+    if (listRes.type === 'TABS_LIST') setOpenTabs(listRes.tabs)
   }
 
-  const contextTabs: TabInfo[] = [
-    ...(sharePageContext && activeTab ? [activeTab] : []),
-    ...pinnedTabs.filter((p) => p.tabId !== activeTab?.tabId),
-  ]
+  const handleClearContext = () => {
+    sharePageContextRef.current = false
+    onSharePageContextChangeRef.current(false)
+    emitPageContexts([])
+    syncBackgroundPins([])
+    void sendTabContextMessage({ type: 'CLEAR_CONTEXT_CACHE' }).catch(() => undefined)
+  }
+
+  const pinnedUrls = new Set(
+    pageContexts
+      .filter((context) => context.source === 'pinned')
+      .map((context) => normalizePageUrl(context.url))
+  )
+  const liveTabsByUrl = new Map(
+    [...openTabs, ...(activeTab ? [activeTab] : [])].map((tab) => [
+      normalizePageUrl(tab.url),
+      tab,
+    ])
+  )
+  const pickerTabs = openTabs.filter((tab) => !pinnedUrls.has(normalizePageUrl(tab.url)))
+  const contextTabs = pageContexts.map((context) => {
+    const live = liveTabsByUrl.get(normalizePageUrl(context.url))
+    return {
+      ...context,
+      tabId: live?.tabId,
+      open: live != null,
+      title: live?.title || context.title,
+      favIconUrl: live?.favIconUrl ?? context.favIconUrl,
+    }
+  })
 
   return (
     <div className={`context-bar${collapsed ? ' context-bar-collapsed' : ''}`}>
       <div className="context-header">
-        <button
-          type="button"
-          className="ghost context-collapse-toggle"
-          onClick={() => setCollapsed((c) => !c)}
-          aria-expanded={!collapsed}
-          aria-label={collapsed ? 'Expand context tabs' : 'Collapse context tabs'}
-        >
-          <span className="context-collapse-chevron" aria-hidden="true">
-            {collapsed ? '▶' : '▼'}
-          </span>
-          Page context
-        </button>
+        <div className="context-header-lead">
+          <button
+            type="button"
+            className="ghost context-collapse-toggle"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? 'Expand context tabs' : 'Collapse context tabs'}
+          >
+            <span className="context-collapse-chevron" aria-hidden="true">
+              {collapsed ? '▶' : '▼'}
+            </span>
+            Page context
+          </button>
+          {contextTabs.length > 0 && (
+            <div className="tab-icons" aria-hidden="true">
+              {contextTabs.map((tab) => (
+                <span
+                  key={normalizePageUrl(tab.url)}
+                  className="tab-icon"
+                  title={tab.title || tab.url}
+                >
+                  {tab.favIconUrl ? (
+                    <img src={tab.favIconUrl} alt="" width={14} height={14} />
+                  ) : (
+                    <span className="tab-icon-fallback">
+                      {(tab.title || tab.url).charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
         {!collapsed && (
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div className="context-header-actions">
             <label className="toggle">
               <input
                 type="checkbox"
                 checked={sharePageContext}
                 onChange={(e) => onSharePageContextChange(e.target.checked)}
               />
-              Active tab
+              <span>Active tab</span>
             </label>
-            <button type="button" className="ghost" onClick={() => setShowTabPicker(true)}>
+            <button type="button" className="ghost" onClick={() => void handleOpenTabPicker()}>
               + Pin tab
             </button>
             <button type="button" className="ghost" onClick={handleClearContext}>
@@ -113,71 +274,39 @@ export function ExtensionContextBar({
         )}
       </div>
 
-      {collapsed ? (
-        <div className="tab-icons">
-          {contextTabs.length === 0 && (
-            <span style={{ fontSize: 11, color: 'var(--muted)' }}>None</span>
-          )}
-          {contextTabs.map((tab) => (
-            <span
-              key={tab.tabId}
-              className="tab-icon"
-              title={tab.title || tab.url}
-            >
-              {tab.favIconUrl ? (
-                <img src={tab.favIconUrl} alt="" width={16} height={16} />
-              ) : (
-                <span className="tab-icon-fallback">
-                  {(tab.title || tab.url).charAt(0).toUpperCase()}
-                </span>
-              )}
-            </span>
-          ))}
-        </div>
-      ) : (
+      {!collapsed && (
         <div className="tab-chips">
           {contextTabs.length === 0 && (
             <span style={{ fontSize: 12, color: 'var(--muted)' }}>No page context included</span>
           )}
-          {contextTabs.map((tab) => {
-            const isActiveContext = sharePageContext && activeTab?.tabId === tab.tabId
-            const showClose = tab.pinned || isActiveContext
-
-            const handleClose = () => {
-              if (tab.pinned) {
-                void handleUnpin(tab.tabId)
-              } else if (isActiveContext) {
-                onSharePageContextChange(false)
-              }
-            }
-
-            return (
-              <div key={tab.tabId} className="tab-chip">
-                {tab.favIconUrl && (
-                  <img
-                    src={tab.favIconUrl}
-                    alt=""
-                    width={14}
-                    height={14}
-                    className="tab-chip-favicon"
-                  />
-                )}
-                <span className="tab-chip-label" title={tab.title || tab.url}>
-                  {tab.title || tab.url}
-                </span>
-                {showClose && (
-                  <button
-                    type="button"
-                    className="ghost tab-chip-close"
-                    onClick={handleClose}
-                    aria-label="Remove tab from context"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            )
-          })}
+          {contextTabs.map((tab) => (
+            <div
+              key={normalizePageUrl(tab.url)}
+              className={`tab-chip${tab.open ? '' : ' tab-chip-unavailable'}`}
+              title={tab.open ? tab.title || tab.url : `${tab.title || tab.url} (tab not open)`}
+            >
+              {tab.favIconUrl && (
+                <img
+                  src={tab.favIconUrl}
+                  alt=""
+                  width={14}
+                  height={14}
+                  className="tab-chip-favicon"
+                />
+              )}
+              <span className="tab-chip-label" title={tab.title || tab.url}>
+                {tab.title || tab.url}
+              </span>
+              <button
+                type="button"
+                className="ghost tab-chip-close"
+                onClick={() => handleRemove(tab.url)}
+                aria-label="Remove tab from context"
+              >
+                ×
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
@@ -186,16 +315,19 @@ export function ExtensionContextBar({
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>Pin a tab</h2>
             <div className="tab-picker-list">
-              {allTabs
-                .filter((t) => !t.pinned)
-                .map((tab) => (
-                  <div key={tab.tabId} className="tab-picker-item" onClick={() => handlePin(tab.tabId)}>
-                    {tab.favIconUrl && (
-                      <img src={tab.favIconUrl} alt="" width={16} height={16} />
-                    )}
-                    <span>{tab.title || tab.url}</span>
-                  </div>
-                ))}
+              {pickerTabs.length === 0 && (
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>No tabs available to pin</span>
+              )}
+              {pickerTabs.map((tab) => (
+                <div
+                  key={tab.tabId}
+                  className="tab-picker-item"
+                  onClick={() => handlePin(tab)}
+                >
+                  {tab.favIconUrl && <img src={tab.favIconUrl} alt="" width={16} height={16} />}
+                  <span>{tab.title || tab.url}</span>
+                </div>
+              ))}
             </div>
             <button type="button" className="secondary" onClick={() => setShowTabPicker(false)}>
               Close
@@ -207,15 +339,16 @@ export function ExtensionContextBar({
   )
 }
 
-/** @ mention autocomplete for tabs */
 export function TabMentionInput({
   value,
   onChange,
+  onPinTab,
   placeholder,
   className,
 }: {
   value: string
   onChange: (v: string) => void
+  onPinTab?: (tab: TabInfo) => void
   placeholder?: string
   className?: string
 }) {
@@ -225,7 +358,7 @@ export function TabMentionInput({
   const [mentionIndex, setMentionIndex] = useState(0)
 
   useEffect(() => {
-    sendTabContextMessage({ type: 'LIST_TABS' })
+    sendTabContextMessage({ type: 'LIST_TABS', allWindows: true })
       .then((res) => {
         if (res.type === 'TABS_LIST') setTabs(res.tabs)
       })
@@ -252,11 +385,11 @@ export function TabMentionInput({
     }
   }
 
-  const insertMention = async (tab: TabInfo) => {
+  const insertMention = (tab: TabInfo) => {
     const newValue = value.replace(/@([^\s@]*)$/, `@${tab.title} `)
     onChange(newValue)
     setShowMentions(false)
-    await sendTabContextMessage({ type: 'PIN_TAB', tabId: tab.tabId })
+    onPinTab?.(tab)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

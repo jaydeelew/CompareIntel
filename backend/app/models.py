@@ -230,6 +230,7 @@ class Conversation(Base):
     # Timestamps
     created_at = Column(DateTime, default=func.now(), index=True)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    client_source = Column(String(32), default="web", nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="conversations")

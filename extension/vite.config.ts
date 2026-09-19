@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 import manifest from './manifest.config'
+import { classicContentScriptsPlugin } from './scripts/classicContentScriptsPlugin.mjs'
 import { ensureDistManifestPlugin } from './scripts/ensureDistManifestPlugin.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -15,7 +16,12 @@ const isCleanProductionBuild =
   process.argv.includes('build') && !process.argv.includes('--watch')
 
 export default defineConfig({
-  plugins: [react(), crx({ manifest }), ensureDistManifestPlugin(__dirname)],
+  plugins: [
+    react(),
+    crx({ manifest }),
+    ensureDistManifestPlugin(__dirname),
+    classicContentScriptsPlugin(__dirname),
+  ],
   resolve: {
     alias: {
       '@compareintel/core': path.resolve(__dirname, '../packages/compare-core/src'),
@@ -26,6 +32,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: isCleanProductionBuild,
+    // Service workers have no `document`; Vite's modulepreload helper throws if enabled.
+    modulePreload: false,
   },
   server: {
     port: 5175,

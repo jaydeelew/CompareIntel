@@ -1,20 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import browser from 'webextension-polyfill'
 
 import type { CreditBalance } from '@compareintel/core'
 import { getDisplayCreditsRemaining } from '@compareintel/core'
 
 import type { PanelScope } from '../shared/extensionSettings'
+import {
+  DEFAULT_CONVERSATION_FONT_SIZE,
+  DEFAULT_INPUT_FONT_SIZE,
+  getFontSizes,
+  type FontSizes,
+} from '../shared/extensionSettings'
 import { getRecentChat } from '../shared/recentChats'
-import { getWebAppUrl, loadCreditBalance } from './api'
-import { AuthModal, useAuth } from './components/AuthModal'
+import { loadCreditBalance } from './api'
 import { ExtensionComparisonShell } from './components/ExtensionComparisonShell'
 import { RecentChatsSection } from './components/RecentChatsSection'
 import { SettingsModal } from './components/SettingsModal'
 import { sendTabContextMessage } from './messaging'
+import { subscribeToTabChanges } from './subscribeToTabChanges'
 import { fetchPanelScope } from './settingsMessaging'
 import type { ExtensionShellPersistedState } from './types/shellState'
+import { useAuth } from './useAuth'
+import { openWebAppLogin, openWebAppWithHandoff, signOutFromExtension } from './webAppActions'
 import { generateBrowserFingerprint } from './utils/fingerprint'
+
+const MAX_SHELL_STATES = 12
 
 function SettingsIcon() {
   return (
@@ -38,21 +47,23 @@ function SettingsIcon() {
 }
 
 export function App() {
-  const { user, loading: authLoading, setUser } = useAuth()
-  const [showAuth, setShowAuth] = useState(false)
+  const { user, loading: authLoading } = useAuth()
   const [showSettings, setShowSettings] = useState(false)
   const [panelScope, setPanelScope] = useState<PanelScope>('always_open')
+  const [fontSizes, setFontSizes] = useState<FontSizes>({
+    inputFontSize: DEFAULT_INPUT_FONT_SIZE,
+    conversationFontSize: DEFAULT_CONVERSATION_FONT_SIZE,
+  })
   const [activeTabId, setActiveTabId] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [fingerprint, setFingerprint] = useState<string | undefined>()
   const [activeRecentChatId, setActiveRecentChatId] = useState<string | null>(null)
   const [recentChatsRefreshToken, setRecentChatsRefreshToken] = useState(0)
   const [shellSessionKey, setShellSessionKey] = useState(0)
+  const [loadedChatState, setLoadedChatState] = useState<
+    ExtensionShellPersistedState | undefined
+  >()
   const shellStatesRef = useRef(new Map<number, ExtensionShellPersistedState>())
-
-  const openWebApp = () => {
-    browser.tabs.create({ url: getWebAppUrl() })
-  }
 
   useEffect(() => {
     generateBrowserFingerprint().then(setFingerprint).catch(() => undefined)
@@ -62,7 +73,18 @@ export function App() {
     fetchPanelScope()
       .then(setPanelScope)
       .catch(() => undefined)
+    getFontSizes()
+      .then(setFontSizes)
+      .catch(() => undefined)
   }, [])
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--input-font-size', `${fontSizes.inputFontSize}px`)
+    document.documentElement.style.setProperty(
+      '--conversation-font-size',
+      `${fontSizes.conversationFontSize}px`
+    )
+  }, [fontSizes])
 
   useEffect(() => {
     if (panelScope !== 'always_open') {
@@ -76,6 +98,7 @@ export function App() {
         setActiveTabId((currentTabId) => {
           if (currentTabId === activeRes.tab!.tabId) return currentTabId
           const nextTabState = shellStatesRef.current.get(activeRes.tab!.tabId)
+          setLoadedChatState(undefined)
           setActiveRecentChatId(nextTabState?.activeRecentChatId ?? null)
           return activeRes.tab!.tabId
         })
@@ -83,8 +106,9 @@ export function App() {
     }
 
     refreshActiveTab().catch(() => undefined)
-    const interval = setInterval(() => refreshActiveTab().catch(() => undefined), 1000)
-    return () => clearInterval(interval)
+    return subscribeToTabChanges(() => {
+      void refreshActiveTab().catch(() => undefined)
+    })
   }, [panelScope])
 
   const refreshCredits = useCallback(() => {
@@ -100,7 +124,14 @@ export function App() {
 
   const handlePersistShellState = useCallback(
     (tabId: number, state: ExtensionShellPersistedState) => {
-      shellStatesRef.current.set(tabId, state)
+      const states = shellStatesRef.current
+      states.delete(tabId)
+      states.set(tabId, state)
+      while (states.size > MAX_SHELL_STATES) {
+        const oldest = states.keys().next().value
+        if (oldest == null) break
+        states.delete(oldest)
+      }
       if (panelScope === 'always_open' && tabId === activeTabId) {
         setActiveRecentChatId(state.activeRecentChatId ?? null)
       }
@@ -108,20 +139,54 @@ export function App() {
     [activeTabId, panelScope]
   )
 
+  useEffect(() => {
+    const tabsApi = globalThis.chrome?.tabs
+    if (!tabsApi?.onRemoved) return
+    const onRemoved = (tabId: number) => {
+      shellStatesRef.current.delete(tabId)
+    }
+    tabsApi.onRemoved.addListener(onRemoved)
+    return () => tabsApi.onRemoved.removeListener(onRemoved)
+  }, [])
+
   const handleSelectRecentChat = useCallback(
     async (chatId: string) => {
       const chat = await getRecentChat(chatId)
       if (!chat) return
 
+      const pageContexts =
+        chat.state.pageContexts && chat.state.pageContexts.length > 0
+          ? chat.state.pageContexts
+          : chat.sourceTabUrl
+            ? [
+                {
+                  url: chat.sourceTabUrl,
+                  title: chat.sourceTabTitle || chat.sourceTabUrl,
+                  source: 'active' as const,
+                },
+              ]
+            : []
+      const loadedState = { ...chat.state, pageContexts }
+
       if (panelScope === 'always_open' && activeTabId != null) {
-        shellStatesRef.current.set(activeTabId, chat.state)
+        shellStatesRef.current.set(activeTabId, loadedState)
       }
 
+      setLoadedChatState(loadedState)
       setActiveRecentChatId(chat.id)
       setShellSessionKey((value) => value + 1)
     },
     [activeTabId, panelScope]
   )
+
+  const openWebApp = () => {
+    const shellState =
+      loadedChatState ??
+      (panelScope === 'always_open' && activeTabId != null
+        ? shellStatesRef.current.get(activeTabId)
+        : undefined)
+    void openWebAppWithHandoff(shellState, fingerprint)
+  }
 
   const tier = user?.subscription_tier ?? creditBalance?.subscription_tier ?? 'unregistered'
   const creditsRemaining = getDisplayCreditsRemaining(creditBalance, tier)
@@ -133,9 +198,38 @@ export function App() {
   const shellKey =
     panelScope === 'always_open' ? String(activeTabId ?? 'pending') : 'single'
   const persistedState =
-    panelScope === 'always_open' && activeTabId != null
+    loadedChatState ??
+    (panelScope === 'always_open' && activeTabId != null
       ? shellStatesRef.current.get(activeTabId)
-      : undefined
+      : undefined)
+
+  const resetActiveConversation = useCallback(() => {
+    if (panelScope === 'always_open' && activeTabId != null) {
+      shellStatesRef.current.delete(activeTabId)
+    }
+    setLoadedChatState(undefined)
+    setActiveRecentChatId(null)
+    setShellSessionKey((value) => value + 1)
+  }, [activeTabId, panelScope])
+
+  const handleDeleteRecentChat = useCallback(
+    (chatId: string) => {
+      if (activeRecentChatId === chatId) {
+        resetActiveConversation()
+      }
+    },
+    [activeRecentChatId, resetActiveConversation]
+  )
+
+  const handleDeleteServerConversation = useCallback(
+    (conversationId: number) => {
+      const activeConversationId = persistedState?.conversationId ?? null
+      if (activeConversationId === conversationId) {
+        resetActiveConversation()
+      }
+    },
+    [persistedState?.conversationId, resetActiveConversation]
+  )
 
   return (
     <div className="app">
@@ -143,6 +237,7 @@ export function App() {
         {!user && (
           <span className="header-signin-prompt">Sign in for more models and higher limits</span>
         )}
+        {user && <span className="header-user-email">{user.email}</span>}
         <div className="header-actions">
           <button
             type="button"
@@ -153,9 +248,13 @@ export function App() {
           >
             <SettingsIcon />
           </button>
-          {!user && (
-            <button type="button" className="secondary" onClick={() => setShowAuth(true)}>
+          {!user ? (
+            <button type="button" className="secondary" onClick={() => void openWebAppLogin()}>
               Sign in
+            </button>
+          ) : (
+            <button type="button" className="secondary" onClick={() => void signOutFromExtension()}>
+              Sign out
             </button>
           )}
           <button type="button" className="secondary" onClick={openWebApp}>
@@ -167,8 +266,20 @@ export function App() {
       <div className="credits-bar">{creditsText}</div>
 
       <RecentChatsSection
+        user={user}
         activeChatId={activeRecentChatId}
+        activeConversationId={persistedState?.conversationId ?? null}
         onSelectChat={(chatId) => void handleSelectRecentChat(chatId)}
+        onSelectServerConversation={(state) => {
+          if (panelScope === 'always_open' && activeTabId != null) {
+            shellStatesRef.current.set(activeTabId, state)
+          }
+          setLoadedChatState(state)
+          setActiveRecentChatId(null)
+          setShellSessionKey((value) => value + 1)
+        }}
+        onDeleteChat={handleDeleteRecentChat}
+        onDeleteServerConversation={handleDeleteServerConversation}
         refreshToken={recentChatsRefreshToken}
       />
 
@@ -176,7 +287,6 @@ export function App() {
         key={`${shellKey}-${shellSessionKey}`}
         user={user}
         browserFingerprint={fingerprint}
-        onOpenAuth={() => setShowAuth(true)}
         onComparisonFinished={refreshCredits}
         persistedState={persistedState}
         persistTabId={panelScope === 'always_open' ? activeTabId ?? undefined : undefined}
@@ -184,23 +294,17 @@ export function App() {
           panelScope === 'always_open' ? handlePersistShellState : undefined
         }
         onRecentChatSaved={() => setRecentChatsRefreshToken((value) => value + 1)}
-        onActiveRecentChatChange={setActiveRecentChatId}
+        onActiveRecentChatChange={(chatId) => {
+          setActiveRecentChatId(chatId)
+          if (chatId == null) setLoadedChatState(undefined)
+        }}
       />
 
       {showSettings && (
         <SettingsModal
           onClose={() => setShowSettings(false)}
           onScopeChange={setPanelScope}
-        />
-      )}
-
-      {showAuth && (
-        <AuthModal
-          onClose={() => setShowAuth(false)}
-          onSuccess={(u) => {
-            setUser(u)
-            setShowAuth(false)
-          }}
+          onFontSizesChange={setFontSizes}
         />
       )}
     </div>

@@ -1,7 +1,11 @@
 import type { TabContextMessage, TabContextResponse } from '@compareintel/core'
-import type { PanelScope } from '../shared/extensionSettings'
+import { getPanelScope, setPanelScope, type PanelScope } from '../shared/extensionSettings'
 import browser from 'webextension-polyfill'
 
+import { authStorage } from '../shared/authStorage'
+import { consumeHandoff, storeHandoff } from '../shared/handoff'
+import type { CiExternalMessage } from '../shared/messages'
+import { isAllowedWebAppOrigin } from '../shared/webAppOrigins'
 import {
   applyPanelScope,
   handleNewTab,
@@ -18,12 +22,31 @@ type BackgroundMessage =
   | { type: 'SELECTION_CAPTURED'; text: string }
   | { type: 'GET_PANEL_SCOPE' }
   | { type: 'SET_PANEL_SCOPE'; scope: PanelScope }
+  | { type: 'GET_HANDOFF' }
+  | { type: 'STORE_HANDOFF'; payload: Parameters<typeof storeHandoff>[0] }
+  | { type: 'BROADCAST_LOGOUT' }
+  | { type: 'WEB_APP_BRIDGE_READY' }
 
 type BackgroundResponse =
   | TabContextResponse
   | { type: 'OK' }
   | { type: 'PANEL_SCOPE'; scope: PanelScope }
   | { type: 'ERROR'; message: string }
+  | { type: 'HANDOFF'; payload: Awaited<ReturnType<typeof consumeHandoff>> }
+
+async function notifyWebAppTabsLogout(): Promise<void> {
+  const tabs = await browser.tabs.query({})
+  for (const tab of tabs) {
+    if (!tab.id || !tab.url) continue
+    try {
+      const origin = new URL(tab.url).origin
+      if (!isAllowedWebAppOrigin(origin)) continue
+      await browser.tabs.sendMessage(tab.id, { type: 'CI_EXTENSION_LOGOUT' }).catch(() => undefined)
+    } catch {
+      // ignore invalid URLs
+    }
+  }
+}
 
 browser.runtime.onInstalled.addListener(() => {
   void initializeSidePanel()
@@ -49,6 +72,38 @@ browser.action.onClicked.addListener(async (tab) => {
   }
 })
 
+browser.runtime.onMessageExternal.addListener(
+  (message: unknown, sender, sendResponse: (response?: { ok: boolean }) => void) => {
+    if (!isAllowedWebAppOrigin(sender.url ? new URL(sender.url).origin : sender.origin)) {
+      sendResponse({ ok: false })
+      return true
+    }
+
+    const typed = message as CiExternalMessage
+    if (typed.type === 'CI_AUTH') {
+      void authStorage
+        .setTokens({
+          accessToken: typed.access_token,
+          refreshToken: typed.refresh_token,
+        })
+        .then(() => sendResponse({ ok: true }))
+        .catch(() => sendResponse({ ok: false }))
+      return true
+    }
+
+    if (typed.type === 'CI_LOGOUT') {
+      void authStorage
+        .clearTokens()
+        .then(() => sendResponse({ ok: true }))
+        .catch(() => sendResponse({ ok: false }))
+      return true
+    }
+
+    sendResponse({ ok: false })
+    return true
+  }
+)
+
 browser.runtime.onMessage.addListener(
   (
     message: unknown,
@@ -64,8 +119,7 @@ browser.runtime.onMessage.addListener(
     }
 
     if (typedMessage.type === 'GET_PANEL_SCOPE') {
-      import('../shared/extensionSettings')
-        .then(({ getPanelScope }) => getPanelScope())
+      void getPanelScope()
         .then((scope) => sendResponse({ type: 'PANEL_SCOPE', scope }))
         .catch((err: unknown) => {
           sendResponse({
@@ -77,8 +131,7 @@ browser.runtime.onMessage.addListener(
     }
 
     if (typedMessage.type === 'SET_PANEL_SCOPE') {
-      import('../shared/extensionSettings')
-        .then(({ setPanelScope }) => setPanelScope(typedMessage.scope))
+      void setPanelScope(typedMessage.scope)
         .then(() => applyPanelScope(typedMessage.scope))
         .then(() => sendResponse({ type: 'OK' }))
         .catch((err: unknown) => {
@@ -87,6 +140,30 @@ browser.runtime.onMessage.addListener(
             message: err instanceof Error ? err.message : 'Failed to save settings',
           })
         })
+      return true
+    }
+
+    if (typedMessage.type === 'GET_HANDOFF') {
+      void consumeHandoff()
+        .then((payload) => sendResponse({ type: 'HANDOFF', payload }))
+        .catch(() => sendResponse({ type: 'HANDOFF', payload: null }))
+      return true
+    }
+
+    if (typedMessage.type === 'STORE_HANDOFF') {
+      void storeHandoff(typedMessage.payload)
+        .then(() => sendResponse({ type: 'OK' }))
+        .catch((err: unknown) => {
+          sendResponse({
+            type: 'ERROR',
+            message: err instanceof Error ? err.message : 'Failed to store handoff',
+          })
+        })
+      return true
+    }
+
+    if (typedMessage.type === 'BROADCAST_LOGOUT') {
+      void notifyWebAppTabsLogout().then(() => sendResponse({ type: 'OK' }))
       return true
     }
 

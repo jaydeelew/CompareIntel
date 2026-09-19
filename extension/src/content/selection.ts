@@ -1,52 +1,46 @@
-import { extractPageContent } from '../shared/extractPageContent'
+import { extractPageContent, MAX_SELECTION_CHARS } from '../shared/extractPageContent'
+import { addExtensionMessageListener, sendExtensionMessage } from '../shared/extensionRuntime'
 
-const SELECTION_DEBOUNCE_MS = 300
-let debounceTimer: ReturnType<typeof setTimeout> | null = null
-
-function extractSimplePageContent() {
-  const selection = window.getSelection()?.toString() ?? ''
-  const url = location.href
-  const title = document.title
-  const body = document.body?.cloneNode(true) as HTMLElement | null
-  if (body) {
-    body.querySelectorAll('script, style, noscript, iframe').forEach((el) => el.remove())
-    return {
-      url,
-      title,
-      text: body.innerText?.trim() ?? '',
-      selection,
-    }
+declare global {
+  interface Window {
+    __compareIntelContentScript?: boolean
   }
-  return { url, title, text: '', selection }
 }
 
-document.addEventListener('mouseup', () => {
-  if (debounceTimer) clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => {
-    const text = window.getSelection()?.toString().trim() ?? ''
-    if (text) {
-      chrome.runtime.sendMessage({ type: 'SELECTION_CAPTURED', text }).catch(() => {
-        // extension context may be invalidated
-      })
-    }
-  }, SELECTION_DEBOUNCE_MS)
-})
+const SELECTION_DEBOUNCE_MS = 300
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.type === 'EXTRACT_PAGE_CONTENT') {
-    try {
-      sendResponse({ type: 'PAGE_CONTENT', content: extractPageContent() })
-    } catch {
+if (!window.__compareIntelContentScript) {
+  window.__compareIntelContentScript = true
+
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+  document.addEventListener('mouseup', () => {
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+      const text = (window.getSelection()?.toString() ?? '').trim().slice(0, MAX_SELECTION_CHARS)
+      if (text) {
+        void sendExtensionMessage({ type: 'SELECTION_CAPTURED', text })
+      }
+    }, SELECTION_DEBOUNCE_MS)
+  })
+
+  addExtensionMessageListener((message, _sender, sendResponse) => {
+    if (message && typeof message === 'object' && (message as { type?: string }).type === 'EXTRACT_PAGE_CONTENT') {
       try {
-        sendResponse({ type: 'PAGE_CONTENT', content: extractSimplePageContent() })
+        sendResponse({ type: 'PAGE_CONTENT', content: extractPageContent() })
       } catch {
         sendResponse({
           type: 'PAGE_CONTENT',
-          content: { url: location.href, title: document.title, text: '', selection: '' },
+          content: {
+            url: location.href,
+            title: document.title,
+            text: '',
+            selection: (window.getSelection()?.toString() ?? '').slice(0, MAX_SELECTION_CHARS),
+          },
         })
       }
+      return true
     }
-    return true
-  }
-  return false
-})
+    return false
+  })
+}

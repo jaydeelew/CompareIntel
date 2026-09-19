@@ -45,6 +45,7 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_ENVIRONMENT?: string
   readonly VITE_APP_VERSION?: string
   readonly VITE_PERFORMANCE_ENDPOINT?: string
+  readonly VITE_EXTENSION_ID?: string
 }
 
 interface ImportMeta {

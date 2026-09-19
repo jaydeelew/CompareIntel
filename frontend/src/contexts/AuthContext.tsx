@@ -7,6 +7,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 
 import type { User, AuthContextType, LoginCredentials, RegisterData, AuthResponse } from '../types'
 import logger from '../utils/logger'
+import { syncAuthToExtension, syncLogoutToExtension } from '../utils/extensionBridge'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -77,6 +78,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return
       }
 
+      const responseData: AuthResponse = await response.json()
+      if (responseData.access_token && responseData.refresh_token) {
+        syncAuthToExtension({
+          accessToken: responseData.access_token,
+          refreshToken: responseData.refresh_token,
+        })
+      }
+
       // Tokens are now set in cookies by the backend, no need to save them
       // Fetch user data after refreshing token
       const userData = await fetchCurrentUser()
@@ -134,9 +143,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Tokens are now set in HTTP-only cookies by the backend
-      // No need to save them to localStorage
-      // Consume the response to ensure it's fully read
-      await response.json()
+      const responseData: AuthResponse = await response.json()
+      if (responseData.access_token && responseData.refresh_token) {
+        syncAuthToExtension({
+          accessToken: responseData.access_token,
+          refreshToken: responseData.refresh_token,
+        })
+      }
 
       // Fetch user data - retry with delays to ensure cookies are available
       // Cookies may not be immediately available after response, so we retry
@@ -212,6 +225,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Tokens are now set in HTTP-only cookies by the backend
       const responseData: AuthResponse = await response.json()
+      if (responseData.access_token && responseData.refresh_token) {
+        syncAuthToExtension({
+          accessToken: responseData.access_token,
+          refreshToken: responseData.refresh_token,
+        })
+      }
 
       // Clear any stale token from URL (legacy cleanup)
       const url = new URL(window.location.href)
@@ -248,6 +267,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Logout function
   const logout = async () => {
+    syncLogoutToExtension()
     try {
       // Call logout endpoint to clear cookies on server
       await fetch(`${API_BASE_URL}/auth/logout`, {

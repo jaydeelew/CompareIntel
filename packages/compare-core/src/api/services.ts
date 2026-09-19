@@ -126,15 +126,65 @@ export async function fetchCurrentUser(client: CompareIntelApiClient): Promise<U
   }
 }
 
-export function* parseSSEEvents(chunks: AsyncGenerator<string>): AsyncGenerator<StreamEvent> {
-  return (async function* () {
-    for await (const chunk of chunks) {
-      if (!chunk.trim() || chunk === '[DONE]') continue
-      try {
-        yield JSON.parse(chunk) as StreamEvent
-      } catch {
-        // skip malformed
-      }
+export interface ConversationSummary {
+  id: number
+  input_data: string
+  models_used: string[]
+  client_source?: string
+  conversation_type?: string
+  parent_conversation_id?: number | null
+  breakout_model_id?: string | null
+  created_at: string
+  message_count?: number
+}
+
+export interface ConversationDetailMessage {
+  id: number
+  model_id: string | null
+  role: 'user' | 'assistant'
+  content: string
+  created_at: string
+}
+
+export interface ConversationDetail {
+  id: number
+  title: string | null
+  input_data: string
+  models_used: string[]
+  client_source?: string
+  created_at: string
+  messages: ConversationDetailMessage[]
+}
+
+export async function fetchConversations(
+  client: CompareIntelApiClient
+): Promise<ConversationSummary[]> {
+  return client.get<ConversationSummary[]>('/conversations')
+}
+
+export async function fetchConversationDetail(
+  client: CompareIntelApiClient,
+  conversationId: number
+): Promise<ConversationDetail> {
+  return client.get<ConversationDetail>(`/conversations/${conversationId}`)
+}
+
+export async function deleteConversation(
+  client: CompareIntelApiClient,
+  conversationId: number
+): Promise<void> {
+  await client.delete(`/conversations/${conversationId}`)
+}
+
+export async function* parseSSEEvents(
+  chunks: AsyncGenerator<string>
+): AsyncGenerator<StreamEvent> {
+  for await (const chunk of chunks) {
+    if (!chunk.trim() || chunk === '[DONE]') continue
+    try {
+      yield JSON.parse(chunk) as StreamEvent
+    } catch {
+      // skip malformed
     }
-  })()
+  }
 }

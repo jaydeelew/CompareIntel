@@ -1,5 +1,9 @@
 import type { ModelResult } from '@compareintel/core'
 
+import type { SavedPageContext } from '../utils/pageContextSnapshot'
+
+export type { SavedPageContext }
+
 export interface ExtensionShellPersistedState {
   input: string
   selectedModels: string[]
@@ -11,4 +15,6 @@ export interface ExtensionShellPersistedState {
   collapsedResultIds: string[]
   submittedPrompt: string
   activeRecentChatId?: string | null
+  closedModelIds?: string[]
+  pageContexts?: SavedPageContext[]
 }

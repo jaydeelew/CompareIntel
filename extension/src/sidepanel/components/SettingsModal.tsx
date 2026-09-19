@@ -1,22 +1,41 @@
 import { useEffect, useState } from 'react'
 
 import type { PanelScope } from '../../shared/extensionSettings'
-import { getPanelScope } from '../../shared/extensionSettings'
+import {
+  DEFAULT_CONVERSATION_FONT_SIZE,
+  DEFAULT_INPUT_FONT_SIZE,
+  FONT_SIZE_OPTIONS,
+  getFontSizes,
+  getPanelScope,
+  setFontSizes,
+  type FontSizes,
+} from '../../shared/extensionSettings'
 import { applyPanelScope } from '../settingsMessaging'
 
 interface SettingsModalProps {
   onClose: () => void
   onScopeChange: (scope: PanelScope) => void
+  onFontSizesChange: (sizes: FontSizes) => void
 }
 
-export function SettingsModal({ onClose, onScopeChange }: SettingsModalProps) {
+export function SettingsModal({
+  onClose,
+  onScopeChange,
+  onFontSizesChange,
+}: SettingsModalProps) {
   const [scope, setScope] = useState<PanelScope>('always_open')
+  const [inputFontSize, setInputFontSize] = useState(DEFAULT_INPUT_FONT_SIZE)
+  const [conversationFontSize, setConversationFontSize] = useState(DEFAULT_CONVERSATION_FONT_SIZE)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    getPanelScope()
-      .then((value) => setScope(value))
+    Promise.all([getPanelScope(), getFontSizes()])
+      .then(([nextScope, sizes]) => {
+        setScope(nextScope)
+        setInputFontSize(sizes.inputFontSize)
+        setConversationFontSize(sizes.conversationFontSize)
+      })
       .catch(() => undefined)
       .finally(() => setLoading(false))
   }, [])
@@ -33,6 +52,16 @@ export function SettingsModal({ onClose, onScopeChange }: SettingsModalProps) {
     } catch {
       const previous = await getPanelScope()
       setScope(previous)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const persistFontSizes = async (next: FontSizes) => {
+    setSaving(true)
+    try {
+      await setFontSizes(next)
+      onFontSizesChange(next)
     } finally {
       setSaving(false)
     }
@@ -59,6 +88,52 @@ export function SettingsModal({ onClose, onScopeChange }: SettingsModalProps) {
               onChange={(e) => void handleToggle(e.target.checked)}
             />
           </label>
+        </div>
+
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <div className="settings-row-label">Input font size</div>
+            <p className="settings-row-description">Text size for the prompt box.</p>
+          </div>
+          <select
+            className="settings-select"
+            value={inputFontSize}
+            disabled={loading || saving}
+            onChange={(e) => {
+              const value = Number(e.target.value)
+              setInputFontSize(value)
+              void persistFontSizes({ inputFontSize: value, conversationFontSize })
+            }}
+          >
+            {FONT_SIZE_OPTIONS.map((size) => (
+              <option key={`input-${size}`} value={size}>
+                {size}px
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="settings-row">
+          <div className="settings-row-text">
+            <div className="settings-row-label">Conversation font size</div>
+            <p className="settings-row-description">Text size for model responses.</p>
+          </div>
+          <select
+            className="settings-select"
+            value={conversationFontSize}
+            disabled={loading || saving}
+            onChange={(e) => {
+              const value = Number(e.target.value)
+              setConversationFontSize(value)
+              void persistFontSizes({ inputFontSize, conversationFontSize: value })
+            }}
+          >
+            {FONT_SIZE_OPTIONS.map((size) => (
+              <option key={`conversation-${size}`} value={size}>
+                {size}px
+              </option>
+            ))}
+          </select>
         </div>
 
         <button type="button" className="secondary" onClick={onClose}>

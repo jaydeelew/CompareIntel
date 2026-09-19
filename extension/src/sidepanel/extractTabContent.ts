@@ -1,4 +1,4 @@
-import type { ExtractedPageContent } from '../shared/extractPageContent'
+import { extractPageContent, type ExtractedPageContent } from '../shared/extractPageContent'
 
 type PageContentResponse = { type: 'PAGE_CONTENT'; content: ExtractedPageContent }
 
@@ -22,22 +22,7 @@ async function extractViaScripting(tabId: number): Promise<ExtractedPageContent 
   try {
     const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId },
-      func: () => {
-        const selection = window.getSelection()?.toString() ?? ''
-        const url = location.href
-        const title = document.title
-        const body = document.body?.cloneNode(true) as HTMLElement | null
-        if (body) {
-          body.querySelectorAll('script, style, noscript, iframe').forEach((el) => el.remove())
-          return {
-            url,
-            title,
-            text: body.innerText?.trim() ?? '',
-            selection,
-          }
-        }
-        return { url, title, text: '', selection }
-      },
+      func: extractPageContent,
     })
     return (result as ExtractedPageContent) ?? null
   } catch {

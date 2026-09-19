@@ -389,6 +389,7 @@ class ConversationSummary(BaseModel):
     composer_max_tokens: int | None = None
     composer_aspect_ratio: str | None = None
     composer_image_size: str | None = None
+    client_source: str = Field(default="web")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -434,6 +435,7 @@ class ConversationDetail(BaseModel):
     composer_max_tokens: int | None = None
     composer_aspect_ratio: str | None = None
     composer_image_size: str | None = None
+    client_source: str = Field(default="web")
 
     model_config = ConfigDict(from_attributes=True)
 

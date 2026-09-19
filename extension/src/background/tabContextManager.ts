@@ -8,7 +8,12 @@ import {
   type TabContextSettings,
 } from '@compareintel/core'
 
-import type { ExtractedPageContent } from '../shared/extractPageContent'
+import {
+  extractPageContent,
+  MAX_PAGE_TEXT_CHARS,
+  MAX_SELECTION_CHARS,
+  type ExtractedPageContent,
+} from '../shared/extractPageContent'
 import { canExtractTab } from '../shared/urlPolicy'
 
 interface CachedEntry {
@@ -23,6 +28,8 @@ const CONTENT_SCRIPT_RETRY_MS = [0, 50, 100, 200, 400, 800]
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
+
+const MAX_CACHED_TABS = 20
 
 export class TabContextManager {
   private cache = new Map<number, CachedEntry>()
@@ -52,6 +59,7 @@ export class TabContextManager {
   }
 
   async pinTab(tabId: number): Promise<void> {
+    if (this.pinnedTabIds.has(tabId)) return
     if (this.pinnedTabIds.size >= this.settings.maxPinnedTabs) {
       throw new Error(`Maximum ${this.settings.maxPinnedTabs} pinned tabs`)
     }
@@ -67,7 +75,7 @@ export class TabContextManager {
   }
 
   setSelection(tabId: number, text: string): void {
-    this.selectionByTab.set(tabId, text)
+    this.selectionByTab.set(tabId, text.slice(0, MAX_SELECTION_CHARS))
   }
 
   clearPageContext(): void {
@@ -99,7 +107,7 @@ export class TabContextManager {
           }
         }
         case 'LIST_TABS': {
-          const tabs = await chrome.tabs.query({ currentWindow: true })
+          const tabs = await chrome.tabs.query(message.allWindows ? {} : { currentWindow: true })
           return {
             type: 'TABS_LIST',
             tabs: tabs
@@ -118,6 +126,9 @@ export class TabContextManager {
           return { type: 'OK' }
         case 'UNPIN_TAB':
           this.unpinTab(message.tabId)
+          return { type: 'OK' }
+        case 'SET_PINNED_TABS':
+          this.pinnedTabIds = new Set(message.tabIds.slice(0, this.settings.maxPinnedTabs))
           return { type: 'OK' }
         case 'GET_PINNED_TABS':
           return { type: 'PINNED_TABS', tabIds: this.getPinnedTabIds() }
@@ -204,14 +215,14 @@ export class TabContextManager {
       tabId,
       url: result.url,
       title: result.title || tab.title || result.url,
-      text: result.text,
-      selection: selection || result.selection,
+      text: result.text.slice(0, MAX_PAGE_TEXT_CHARS),
+      selection: (selection || result.selection).slice(0, MAX_SELECTION_CHARS),
       extractedAt: Date.now(),
       favIconUrl: tab.favIconUrl,
     }
 
     const contentHash = `${entry.url}:${entry.text.length}`
-    this.cache.set(tabId, { entry, contentHash })
+    this.rememberCache(tabId, { entry, contentHash })
     return entry
   }
 
@@ -225,7 +236,18 @@ export class TabContextManager {
     return null
   }
 
+  private rememberCache(tabId: number, value: CachedEntry): void {
+    this.cache.delete(tabId)
+    this.cache.set(tabId, value)
+    while (this.cache.size > MAX_CACHED_TABS) {
+      const oldest = this.cache.keys().next().value
+      if (oldest == null) break
+      this.cache.delete(oldest)
+    }
+  }
+
   private async extractViaContentScript(tabId: number): Promise<ExtractedPageContent | null> {
+    let injected = false
     for (const delayMs of CONTENT_SCRIPT_RETRY_MS) {
       try {
         const response = (await chrome.tabs.sendMessage(tabId, {
@@ -235,16 +257,9 @@ export class TabContextManager {
           return response.content
         }
       } catch {
-        await this.injectBundledContentScript(tabId)
-        try {
-          const response = (await chrome.tabs.sendMessage(tabId, {
-            type: 'EXTRACT_PAGE_CONTENT',
-          })) as PageContentResponse | undefined
-          if (response?.type === 'PAGE_CONTENT' && response.content) {
-            return response.content
-          }
-        } catch {
-          // Still unavailable; retry after delay.
+        if (!injected) {
+          await this.injectBundledContentScript(tabId)
+          injected = true
         }
       }
       if (delayMs > 0) await sleep(delayMs)
@@ -271,22 +286,7 @@ export class TabContextManager {
     try {
       const [{ result }] = await chrome.scripting.executeScript({
         target: { tabId },
-        func: () => {
-          const selection = window.getSelection()?.toString() ?? ''
-          const url = location.href
-          const title = document.title
-          const body = document.body?.cloneNode(true) as HTMLElement | null
-          if (body) {
-            body.querySelectorAll('script, style, noscript, iframe').forEach((el) => el.remove())
-            return {
-              url,
-              title,
-              text: body.innerText?.trim() ?? '',
-              selection,
-            }
-          }
-          return { url, title, text: '', selection }
-        },
+        func: extractPageContent,
       })
       return (result as ExtractedPageContent) ?? null
     } catch {

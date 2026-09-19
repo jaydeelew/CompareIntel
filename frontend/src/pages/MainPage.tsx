@@ -13,6 +13,7 @@ import {
   CREDITS_MESSAGE,
 } from '../components/comparison'
 import { Navigation, MockModeBanner } from '../components/layout'
+import { ExtensionSignedInBanner } from '../components/auth/ExtensionSignedInBanner'
 import { ComparisonPageContent, ModalManager } from '../components/main-page'
 import { DoneSelectingCard } from '../components/shared'
 import {
@@ -49,6 +50,8 @@ import {
   usePersistedComposerAdvancedSettings,
   useAuthModals,
   useBreakoutConversation,
+  useExtensionAuthEffects,
+  useExtensionHandoff,
   useGeolocation,
   useTutorialComplete,
   useSavedSelectionsComplete,
@@ -806,6 +809,53 @@ export function MainPage() {
     openLoginAfterVerificationCode,
     handleVerified,
   } = authModals
+
+  const { showExtensionSignedInBanner, dismissExtensionSignedInBanner } = useExtensionAuthEffects({
+    openLogin,
+  })
+
+  const handleExtensionHandoffHydrate = useCallback(
+    (hydration: {
+      input: string
+      selectedModels: string[]
+      conversations: typeof conversations
+      conversationId: number | null
+      isFollowUpMode: boolean
+    }) => {
+      setInput(hydration.input)
+      setSelectedModels(hydration.selectedModels)
+      setOriginalSelectedModels(hydration.selectedModels)
+      setConversations(hydration.conversations)
+      setIsFollowUpMode(hydration.isFollowUpMode)
+      setIsModelsHidden(hydration.isFollowUpMode)
+      setClosedCards(new Set())
+      setResponse(null)
+      setError(null)
+      if (hydration.conversationId != null) {
+        setCurrentVisibleComparisonId(String(hydration.conversationId))
+      }
+    },
+    [
+      setClosedCards,
+      setConversations,
+      setCurrentVisibleComparisonId,
+      setError,
+      setInput,
+      setIsFollowUpMode,
+      setIsModelsHidden,
+      setOriginalSelectedModels,
+      setResponse,
+      setSelectedModels,
+    ]
+  )
+
+  useExtensionHandoff({
+    authLoading,
+    isAuthenticated,
+    refreshUser,
+    onHydrate: handleExtensionHandoffHydrate,
+    setBrowserFingerprint,
+  })
 
   const resetUsage = async () => {
     try {
@@ -2588,6 +2638,11 @@ export function MainPage() {
           tutorialWelcomeModalOpen={showWelcomeModal && !isAuthenticated}
           welcomeModalEverShown={welcomeModalEverShownRef.current}
           welcomeSkipFoldNonce={welcomeSkipFoldNonce}
+        />
+
+        <ExtensionSignedInBanner
+          visible={showExtensionSignedInBanner}
+          onDismiss={dismissExtensionSignedInBanner}
         />
 
         {/* Eager load: lazy ModalManager + Vite dev could load a second React copy and break hooks in modals. */}

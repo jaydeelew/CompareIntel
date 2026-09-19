@@ -95,6 +95,13 @@ export function HistoryDropdown({
                             : `${summary.models_used.length} models`}
                         </span>
                         <span className="history-item-date">{formatDate(summary.created_at)}</span>
+                        {summary.client_source && (
+                          <span
+                            className={`history-item-source history-item-source-${summary.client_source}`}
+                          >
+                            {summary.client_source === 'extension' ? 'Extension' : 'Web'}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <button

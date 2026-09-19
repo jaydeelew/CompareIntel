@@ -11,6 +11,9 @@ type SettingsResponse =
   | { type: 'ERROR'; message: string }
 
 async function sendSettingsMessage(message: SettingsMessage): Promise<SettingsResponse> {
+  if (typeof browser.runtime?.sendMessage !== 'function') {
+    throw new Error('Extension runtime is unavailable')
+  }
   const response = (await browser.runtime.sendMessage(message)) as SettingsResponse
   if (response?.type === 'ERROR') {
     throw new Error(response.message)

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { ModelInfo, User } from '@compareintel/core'
 import {
@@ -32,12 +32,19 @@ export function ExtensionModelPicker({
 }: ExtensionModelPickerProps) {
   const isAuthenticated = !!user
   const { userTier, isPaidTier } = getUserTierInfo(isAuthenticated, user)
-  const [expandedProviders, setExpandedProviders] = useState<Set<string>>(() => new Set())
-
   const providers = useMemo(
     () => Object.entries(modelsByProvider).sort(([a], [b]) => a.localeCompare(b)),
     [modelsByProvider]
   )
+  const [expandedProviders, setExpandedProviders] = useState<Set<string>>(() => new Set())
+  const didExpandFirst = useRef(false)
+
+  useEffect(() => {
+    const first = providers[0]?.[0]
+    if (didExpandFirst.current || !first) return
+    didExpandFirst.current = true
+    setExpandedProviders(new Set([first]))
+  }, [providers])
 
   const toggleProvider = (provider: string) => {
     setExpandedProviders((prev) => {
