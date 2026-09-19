@@ -3,7 +3,7 @@ import {
   CI_PAGE_MESSAGE,
   isCiPageMessage,
   type ExtensionHandoffPayload,
-} from '@compareintel/core'
+} from '@compareintel/core/extensionBridge'
 
 export { type ExtensionHandoffPayload }
 

@@ -13,6 +13,8 @@ COPY . .
 
 # Shared package lives one level above the frontend context (see additional_contexts / build-contexts).
 COPY --from=core . /packages/compare-core
+# Peer deps (react) live in the frontend install; let core files resolve them.
+RUN ln -sfn /app/node_modules /packages/node_modules
 
 # Set environment variable to fix crypto issue
 ENV NODE_OPTIONS="--openssl-legacy-provider"
@@ -35,6 +37,7 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 COPY --from=core . /packages/compare-core
+RUN ln -sfn /app/node_modules /packages/node_modules
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 

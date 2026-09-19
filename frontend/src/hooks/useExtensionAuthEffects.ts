@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { CI_PAGE_MESSAGE, isCiPageMessage } from '@compareintel/core'
+import { CI_PAGE_MESSAGE, isCiPageMessage } from '@compareintel/core/extensionBridge'
 
 import { useAuth } from '../contexts/AuthContext'
 import {

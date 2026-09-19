@@ -10,7 +10,8 @@
     "./auth": "./src/auth/index.ts",
     "./tabContext": "./src/tabContext/index.ts",
     "./api": "./src/api/index.ts",
-    "./hooks": "./src/hooks/index.ts"
+    "./hooks": "./src/hooks/index.ts",
+    "./extensionBridge": "./src/extensionBridge/index.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit",

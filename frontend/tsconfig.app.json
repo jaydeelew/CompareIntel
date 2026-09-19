@@ -11,7 +11,9 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
-      "@compareintel/core": ["../packages/compare-core/src/index.ts"],
+      "@compareintel/core/extensionBridge": [
+        "../packages/compare-core/src/extensionBridge/index.ts"
+      ],
       "@compareintel/core/*": ["../packages/compare-core/src/*"]
     },
     "allowImportingTsExtensions": true,
