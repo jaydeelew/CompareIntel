@@ -1,3 +1,5 @@
+import { promptDedupeKey } from './chatTitle'
+
 export const MAX_RECENT_CHATS = 10
 
 export interface RecentHistoryLocalChat {
@@ -46,8 +48,12 @@ export function mergeRecentHistory(params: {
   const seenServerIds = new Set<number>()
   const items: MergedRecentHistoryItem[] = []
 
+  const seenPromptKeys = new Set<string>()
+
   for (const chat of params.localChats) {
     if (chat.conversationId != null) seenServerIds.add(chat.conversationId)
+    const promptKey = promptDedupeKey(chat.title)
+    if (promptKey && promptKey !== 'untitled comparison') seenPromptKeys.add(promptKey)
     items.push({
       kind: 'local',
       chat,
@@ -60,6 +66,9 @@ export function mergeRecentHistory(params: {
 
   for (const summary of params.serverHistory) {
     if (seenServerIds.has(summary.id)) continue
+    const promptKey = promptDedupeKey(summary.input_data)
+    if (promptKey && seenPromptKeys.has(promptKey)) continue
+    if (promptKey && promptKey !== 'untitled comparison') seenPromptKeys.add(promptKey)
     const updatedAt = new Date(summary.created_at).getTime()
     items.push({
       kind: 'server',

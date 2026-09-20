@@ -137,6 +137,8 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 10px;
+  color-scheme: dark;
+  color: #f8fafc;
 }
 
 .recent-chats-header,
@@ -171,14 +173,15 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 220px;
+  max-height: 360px;
   overflow-y: auto;
 }
 
 .recent-chat-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: stretch;
-  gap: 2px;
+  flex-shrink: 0;
   border-radius: 6px;
   overflow: hidden;
 }
@@ -189,14 +192,13 @@ textarea {
 }
 
 .recent-chat-keep {
-  flex: 0 0 42px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
   margin: 0;
-  padding: 4px 2px;
+  padding: 6px 8px;
   background: var(--surface-2);
   color: var(--muted);
   cursor: pointer;
@@ -218,7 +220,7 @@ textarea {
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  line-height: 1;
+  line-height: 1.25;
 }
 
 .recent-chat-row:hover .recent-chat-keep {
@@ -253,19 +255,29 @@ textarea {
 .recent-chat-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  flex: 1;
+  justify-content: center;
   min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
   padding: 8px 10px;
   background: var(--surface-2);
-  color: var(--text);
+  color: #f8fafc;
+  -webkit-text-fill-color: #f8fafc;
   text-align: left;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1.35;
+  cursor: pointer;
+  border-radius: 0;
 }
 
 .recent-chat-item:hover {
   background: var(--border);
+}
+
+.recent-chat-item:focus {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
 }
 
 .recent-chat-row:hover .recent-chat-item {
@@ -277,15 +289,17 @@ textarea {
 }
 
 .recent-chat-delete {
-  flex: 0 0 28px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 32px;
   padding: 0;
   background: var(--surface-2);
   color: var(--muted);
   font-size: 16px;
+  font-weight: 400;
   line-height: 1;
+  border-radius: 0;
 }
 
 .recent-chat-delete:hover:not(:disabled) {
@@ -302,22 +316,33 @@ textarea {
   background: var(--border);
 }
 
+.recent-chat-title,
+.recent-chat-meta {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .recent-chat-title {
   font-size: 13px;
-  line-height: 1.35;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #f8fafc;
+  -webkit-text-fill-color: #f8fafc;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 100%;
 }
 
 .recent-chat-meta {
+  margin-top: 2px;
   font-size: 11px;
-  color: var(--muted);
+  font-weight: 400;
+  color: #94a3b8;
+  -webkit-text-fill-color: #94a3b8;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 100%;
 }
 
 .scroll-body {

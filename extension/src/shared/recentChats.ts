@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill'
 
 import type { ExtensionShellPersistedState } from '../sidepanel/types/shellState'
+import { chatTitleFromPrompt, promptDedupeKey } from './chatTitle'
 import { trimRecentChats } from './recentChatLimits'
 
 export { MAX_RECENT_CHATS } from './recentChatLimits'
@@ -30,9 +31,7 @@ const SAVED_SERVER_IDS_KEY = 'savedRecentConversationIds'
 function deriveTitle(state: ExtensionShellPersistedState): string {
   const firstUser = state.conversationHistory.find((message) => message.role === 'user')
   const text = firstUser?.content || state.submittedPrompt || state.input
-  const trimmed = text.trim()
-  if (!trimmed) return 'Untitled comparison'
-  return trimmed.length > 80 ? `${trimmed.slice(0, 80)}…` : trimmed
+  return chatTitleFromPrompt(text, 80)
 }
 
 function normalizeChat(value: unknown): RecentChat | null {
@@ -116,6 +115,10 @@ async function readStoredChats(): Promise<RecentChat[]> {
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .map((chat) => ({
       ...chat,
+      title: (() => {
+        const fromState = deriveTitle(chat.state)
+        return fromState === 'Untitled comparison' ? chatTitleFromPrompt(chat.title) : fromState
+      })(),
       saved:
         chat.saved === true ||
         (chat.state.conversationId != null && savedIds.has(chat.state.conversationId)),
@@ -255,4 +258,39 @@ export async function upsertRecentChat(params: {
   })
   await persistChats([entry, ...filtered])
   return entry
+}
+
+export async function linkRecentChatsToServer(
+  serverHistory: Array<{ id: number; input_data: string }>
+): Promise<boolean> {
+  const chats = await readStoredChats()
+  const usedIds = new Set<number>()
+  let changed = false
+
+  const next = chats.map((chat) => {
+    if (chat.state.conversationId != null) {
+      usedIds.add(chat.state.conversationId)
+      return chat
+    }
+    const localPrompt =
+      chat.state.conversationHistory.find((message) => message.role === 'user')?.content ||
+      chat.state.submittedPrompt ||
+      chat.title
+    const key = promptDedupeKey(localPrompt)
+    if (!key || key === 'untitled comparison') return chat
+    const match = serverHistory.find(
+      (summary) => !usedIds.has(summary.id) && promptDedupeKey(summary.input_data) === key
+    )
+    if (!match) return chat
+    usedIds.add(match.id)
+    changed = true
+    return {
+      ...chat,
+      importedToAccount: true,
+      state: { ...chat.state, conversationId: match.id },
+    }
+  })
+
+  if (changed) await persistChats(next)
+  return changed
 }

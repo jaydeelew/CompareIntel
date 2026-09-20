@@ -70,6 +70,8 @@ export interface User {
   email: string
   subscription_tier: string
   is_verified: boolean
+  is_admin?: boolean
+  role?: string
   monthly_credits_allocated?: number
   credits_used_this_period?: number
 }

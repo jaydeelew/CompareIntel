@@ -7,6 +7,7 @@ import {
   setConversationSaved,
 } from '@compareintel/core'
 
+import { chatTitleFromPrompt } from '../../shared/chatTitle'
 import {
   MAX_RECENT_CHATS,
   mergeRecentHistory,
@@ -15,6 +16,7 @@ import {
 import {
   deleteRecentChat,
   deleteRecentChatsByConversationId,
+  linkRecentChatsToServer,
   listRecentChatSummaries,
   listSavedServerConversationIds,
   setRecentChatSaved,
@@ -49,10 +51,9 @@ function formatRelativeTime(timestamp: number | string): string {
   return new Date(value).toLocaleDateString()
 }
 
-function truncateTitle(value: string, max = 72): string {
-  const trimmed = value.trim()
-  if (trimmed.length <= max) return trimmed
-  return `${trimmed.slice(0, max - 1)}…`
+function displayChatTitle(value: string): string {
+  const title = chatTitleFromPrompt(value)
+  return /[A-Za-z0-9]/.test(title) ? title : 'Untitled comparison'
 }
 
 function itemKey(item: MergedRecentHistoryItem): string {
@@ -78,6 +79,49 @@ function KeepCheckbox({
       />
       <span className="recent-chat-keep-label">Save</span>
     </label>
+  )
+}
+
+function RecentChatCopy({
+  title,
+  meta,
+}: {
+  title: string
+  meta: string
+}) {
+  const label = displayChatTitle(title)
+  return (
+    <>
+      <div className="recent-chat-title" title={label}>
+        {label}
+      </div>
+      <div className="recent-chat-meta">{meta}</div>
+    </>
+  )
+}
+
+function RecentChatOpenButton({
+  onClick,
+  children,
+}: {
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className="recent-chat-item"
+      onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onClick()
+        }
+      }}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -109,9 +153,16 @@ export function RecentChatsSection({
     const loadSavedIds = listSavedServerConversationIds().catch(() => [] as number[])
 
     Promise.all([loadLocal, loadServer, loadSavedIds])
-      .then(([local, server, savedIds]) => {
+      .then(async ([local, server, savedIds]) => {
         if (cancelled) return
-        setLocalChats(local)
+        let nextLocal = local
+        if (user != null && server.length > 0) {
+          const linked = await linkRecentChatsToServer(server)
+          if (cancelled) return
+          if (linked) nextLocal = await listRecentChatSummaries().catch(() => local)
+        }
+        if (cancelled) return
+        setLocalChats(nextLocal)
         setServerHistory(server)
         setSavedServerIds(savedIds)
       })
@@ -130,12 +181,12 @@ export function RecentChatsSection({
         localChats,
         serverHistory: user != null ? serverHistory : [],
         savedServerIds,
-        max: user != null ? null : MAX_RECENT_CHATS,
+        max: MAX_RECENT_CHATS,
       }),
     [localChats, savedServerIds, serverHistory, user]
   )
 
-  const reloadHistory = async () => {
+  const applyHistory = async () => {
     const [local, server, savedIds] = await Promise.all([
       listRecentChatSummaries().catch(() => [] as RecentChatSummary[]),
       user != null
@@ -143,6 +194,16 @@ export function RecentChatsSection({
         : Promise.resolve([] as ConversationSummary[]),
       listSavedServerConversationIds().catch(() => [] as number[]),
     ])
+    let nextLocal = local
+    if (user != null && server.length > 0) {
+      const linked = await linkRecentChatsToServer(server)
+      if (linked) nextLocal = await listRecentChatSummaries().catch(() => local)
+    }
+    return { local: nextLocal, server, savedIds }
+  }
+
+  const reloadHistory = async () => {
+    const { local, server, savedIds } = await applyHistory()
     setLocalChats(local)
     setServerHistory(server)
     setSavedServerIds(savedIds)
@@ -290,22 +351,19 @@ export function RecentChatsSection({
                       saved={item.saved}
                       onChange={(saved) => handleKeepToggle(item, saved)}
                     />
-                    <button
-                      type="button"
-                      className="recent-chat-item"
+                    <RecentChatOpenButton
                       onClick={() => {
                         setExpanded(false)
                         onSelectChat(chat.id)
                       }}
                     >
-                      <span className="recent-chat-title">{chat.title}</span>
-                      <span className="recent-chat-meta">
-                        {item.saved ? 'Saved · ' : ''}
-                        {formatRelativeTime(chat.updatedAt)}
-                        {chat.sourceTabTitle ? ` · ${chat.sourceTabTitle}` : ''}
-                        <span className="history-source-badge">Extension</span>
-                      </span>
-                    </button>
+                      <RecentChatCopy
+                        title={chat.title}
+                        meta={`${item.saved ? 'Saved · ' : ''}${formatRelativeTime(chat.updatedAt)}${
+                          chat.sourceTabTitle ? ` · ${chat.sourceTabTitle}` : ''
+                        } · Extension`}
+                      />
+                    </RecentChatOpenButton>
                     <button
                       type="button"
                       className="recent-chat-delete"
@@ -331,9 +389,7 @@ export function RecentChatsSection({
                     saved={item.saved}
                     onChange={(saved) => handleKeepToggle(item, saved)}
                   />
-                  <button
-                    type="button"
-                    className="recent-chat-item"
+                  <RecentChatOpenButton
                     onClick={() => {
                       setExpanded(false)
                       void loadServerConversationState(summary.id).then((state) => {
@@ -341,15 +397,13 @@ export function RecentChatsSection({
                       })
                     }}
                   >
-                    <span className="recent-chat-title">{truncateTitle(summary.input_data)}</span>
-                    <span className="recent-chat-meta">
-                      {item.saved ? 'Saved · ' : ''}
-                      {formatRelativeTime(summary.created_at)}
-                      <span className="history-source-badge">
-                        {formatClientSource(summary.client_source)}
-                      </span>
-                    </span>
-                  </button>
+                    <RecentChatCopy
+                      title={summary.input_data}
+                      meta={`${item.saved ? 'Saved · ' : ''}${formatRelativeTime(
+                        summary.created_at
+                      )} · ${formatClientSource(summary.client_source)}`}
+                    />
+                  </RecentChatOpenButton>
                   <button
                     type="button"
                     className="recent-chat-delete"

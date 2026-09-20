@@ -122,6 +122,26 @@ describe('mergeRecentHistory', () => {
     ).toEqual([106, 105, 104])
   })
 
+  it('dedupes local and server copies that share a prompt but not a conversation id', () => {
+    const items = mergeRecentHistory({
+      localChats: Array.from({ length: 7 }, (_, index) => ({
+        id: `local-${index}`,
+        title: `Prompt ${index}`,
+        updatedAt: 2_000 + index,
+      })),
+      serverHistory: Array.from({ length: 7 }, (_, index) => ({
+        id: index + 100,
+        input_data: `Prompt ${index}`,
+        created_at: new Date(1_000 + index).toISOString(),
+        client_source: 'extension' as const,
+      })),
+      max: MAX_RECENT_CHATS,
+    })
+
+    expect(items).toHaveLength(7)
+    expect(items.every((item) => item.kind === 'local')).toBe(true)
+  })
+
   it('keeps an older saved server conversation even when it is outside the newest ten', () => {
     const serverHistory = Array.from({ length: 14 }, (_, index) => ({
       id: index + 1,

@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #334155;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --accent: #3b82f6;
+  --border: #475569;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); width: 380px; padding: 12px; }
+
+.recent-chats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.recent-chat-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: stretch;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.recent-chat-keep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.recent-chat-keep input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.recent-chat-keep-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.25;
+}
+
+.recent-chat-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  color: #f8fafc;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.recent-chat-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  padding: 0;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+  border-radius: 0;
+}
+
+.recent-chat-title, .recent-chat-meta { display: block; min-width: 0; max-width: 100%; }
+.recent-chat-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #f8fafc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recent-chat-meta {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+<div class="recent-chats-list" id="list"></div>
+<script>
+const rows = [
+  ["what services does this company provide?", "9/12/2026 · Media · Extension"],
+  ["What is this page about? Briefly summarize it for me please", "9/11/2026 · Well Drilling | Fort Worth, TX | ABC"],
+  ["how can I tell which gauge speaker wire I need?", "9/6/2026 · Web"],
+  ["I have the following stereo components and want advice", "9/6/2026 · Web"],
+  ["I have the following stereo components and want advice again", "9/6/2026 · Web"],
+  ["I want to place my mother-in-law on the title", "6/20/2026 · Web"],
+  ["what is the square root of 4?", "6/1/2026 · Web"],
+  ["sqrt 4?", "6/1/2026 · Web"],
+  ["sqrt 2?", "6/1/2026 · Web"],
+  ["sqrt 100?", "5/20/2026 · Web"],
+];
+document.getElementById("list").innerHTML = rows.map(([t,m]) => `
+  <div class="recent-chat-row">
+    <label class="recent-chat-keep"><input type="checkbox"><span class="recent-chat-keep-label">Save</span></label>
+    <div class="recent-chat-item"><div class="recent-chat-title">${t}</div><div class="recent-chat-meta">${m}</div></div>
+    <button class="recent-chat-delete">×</button>
+  </div>`).join("");
+</script>
+</body>
+</html>
