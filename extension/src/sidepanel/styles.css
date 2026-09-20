@@ -131,6 +131,7 @@ textarea {
 }
 
 .recent-chats {
+  position: relative;
   margin: 12px 14px 0;
   flex-shrink: 0;
   background: var(--surface);
@@ -149,7 +150,6 @@ textarea {
   min-width: 0;
 }
 
-.recent-chats:not(.recent-chats-collapsed) .recent-chats-header,
 .models-section:not(.models-section-collapsed) .models-header {
   margin-bottom: 8px;
 }
@@ -170,6 +170,17 @@ textarea {
 }
 
 .recent-chats-list {
+  position: absolute;
+  top: 100%;
+  left: -1px;
+  right: -1px;
+  z-index: 30;
+  margin-top: 6px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -418,18 +429,6 @@ textarea {
   line-height: 1;
 }
 
-.recent-chats-collapsed,
-.context-bar-collapsed {
-  padding: 4px 8px;
-  overflow: hidden;
-  min-height: 36px;
-}
-
-.models-section-collapsed {
-  padding: 4px 8px;
-  overflow: hidden;
-}
-
 .models-header .tab-icons {
   flex: 1;
 }
@@ -535,6 +534,14 @@ textarea {
   padding: 10px;
   overflow: visible;
   flex-shrink: 0;
+}
+
+.recent-chats-collapsed,
+.context-bar-collapsed,
+.models-section-collapsed {
+  padding: 4px 8px;
+  overflow: hidden;
+  min-height: 36px;
 }
 
 .model-chips {
@@ -708,6 +715,31 @@ textarea {
 .app:has(.composer-footer-expanded) .scroll-body {
   flex: 0 1 auto;
   min-height: 0;
+}
+
+/* When the model picker is open, the model list is the only scroll region.
+   Page context + Models headers stay fixed instead of scrolling together. */
+.app:has(.model-picker) .composer-footer-expanded {
+  flex: 0 1 auto;
+}
+
+.app:has(.model-picker) .scroll-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scroll-body:has(.model-picker) .models-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.scroll-body:has(.model-picker) .model-picker {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
 }
 
 .composer {

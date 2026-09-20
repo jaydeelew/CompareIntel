@@ -501,12 +501,19 @@ export function ExtensionComparisonShell({
                 {modelsCollapsed ? '▶' : '▼'}
               </span>
               Models
-              <span className="section-count">
-                {isFollowUpMode
-                  ? comparison.selectedModels.length
-                  : `${comparison.selectedModels.length}/${maxModels}`}
-              </span>
             </button>
+            <span
+              className="section-count"
+              aria-label={
+                isFollowUpMode
+                  ? `${comparison.selectedModels.length} selected models`
+                  : `${comparison.selectedModels.length} of ${maxModels} models selected`
+              }
+            >
+              {isFollowUpMode
+                ? comparison.selectedModels.length
+                : `${comparison.selectedModels.length}/${maxModels}`}
+            </span>
             {comparison.selectedModels.length > 0 && (
               <div className="tab-icons" aria-hidden="true">
                 {comparison.selectedModels.map((id) => {
