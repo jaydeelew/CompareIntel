@@ -17,17 +17,40 @@ function buildWebAppHandoffUrl(): string {
   return url.toString()
 }
 
+async function closeSidePanelInCurrentWindow(): Promise<void> {
+  const sidePanel = globalThis.chrome?.sidePanel as
+    | { close?: (options: { windowId: number }) => Promise<void> }
+    | undefined
+  if (typeof sidePanel?.close !== 'function') return
+
+  const currentWindowId = globalThis.chrome?.windows?.WINDOW_ID_CURRENT
+  if (typeof currentWindowId === 'number') {
+    await sidePanel.close({ windowId: currentWindowId }).catch(() => undefined)
+    return
+  }
+
+  const currentWindow = await browser.windows.getCurrent().catch(() => undefined)
+  if (currentWindow?.id == null) return
+  await sidePanel.close({ windowId: currentWindow.id }).catch(() => undefined)
+}
+
 async function openWebAppTab(url: string): Promise<void> {
+  const currentWindow = await browser.windows.getCurrent().catch(() => undefined)
   try {
     const response = (await browser.runtime.sendMessage({
       type: 'OPEN_TAB_WITHOUT_PANEL',
       url,
+      windowId: currentWindow?.id,
     })) as { type?: string } | undefined
-    if (response?.type === 'OK') return
+    if (response?.type === 'OK') {
+      await closeSidePanelInCurrentWindow()
+      return
+    }
   } catch {
     // Fall back to a normal tab open if the background helper is unavailable.
   }
   await browser.tabs.create({ url })
+  await closeSidePanelInCurrentWindow()
 }
 
 export async function openWebAppLogin(): Promise<void> {

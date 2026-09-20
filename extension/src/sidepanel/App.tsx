@@ -25,6 +25,7 @@ import { openWebAppLogin, openWebAppWithHandoff, signOutFromExtension } from './
 import { generateBrowserFingerprint } from './utils/fingerprint'
 
 const MAX_SHELL_STATES = 12
+const FALLBACK_SHELL_TAB_ID = -1
 
 function SettingsIcon() {
   return (
@@ -155,6 +156,9 @@ export function App() {
     [activeTabId, panelScope]
   )
 
+  const shellPersistTabId =
+    panelScope === 'always_open' && activeTabId != null ? activeTabId : FALLBACK_SHELL_TAB_ID
+
   useEffect(() => {
     const tabsApi = globalThis.chrome?.tabs
     if (!tabsApi?.onRemoved) return
@@ -184,23 +188,17 @@ export function App() {
             : []
       const loadedState = { ...chat.state, pageContexts }
 
-      if (panelScope === 'always_open' && activeTabId != null) {
-        shellStatesRef.current.set(activeTabId, loadedState)
-      }
+      shellStatesRef.current.set(shellPersistTabId, loadedState)
 
       setLoadedChatState(loadedState)
       setActiveRecentChatId(chat.id)
       setShellSessionKey((value) => value + 1)
     },
-    [activeTabId, panelScope]
+    [shellPersistTabId]
   )
 
   const openWebApp = () => {
-    const shellState =
-      loadedChatState ??
-      (panelScope === 'always_open' && activeTabId != null
-        ? shellStatesRef.current.get(activeTabId)
-        : undefined)
+    const shellState = shellStatesRef.current.get(shellPersistTabId) ?? loadedChatState
     void openWebAppWithHandoff(shellState, fingerprint)
   }
 
@@ -215,20 +213,14 @@ export function App() {
 
   const shellKey =
     panelScope === 'always_open' ? String(activeTabId ?? 'pending') : 'single'
-  const persistedState =
-    loadedChatState ??
-    (panelScope === 'always_open' && activeTabId != null
-      ? shellStatesRef.current.get(activeTabId)
-      : undefined)
+  const persistedState = shellStatesRef.current.get(shellPersistTabId) ?? loadedChatState
 
   const resetActiveConversation = useCallback(() => {
-    if (panelScope === 'always_open' && activeTabId != null) {
-      shellStatesRef.current.delete(activeTabId)
-    }
+    shellStatesRef.current.delete(shellPersistTabId)
     setLoadedChatState(undefined)
     setActiveRecentChatId(null)
     setShellSessionKey((value) => value + 1)
-  }, [activeTabId, panelScope])
+  }, [shellPersistTabId])
 
   const handleDeleteRecentChat = useCallback(
     (chatId: string) => {
@@ -301,9 +293,7 @@ export function App() {
           activeConversationId={persistedState?.conversationId ?? null}
           onSelectChat={(chatId) => void handleSelectRecentChat(chatId)}
           onSelectServerConversation={(state) => {
-            if (panelScope === 'always_open' && activeTabId != null) {
-              shellStatesRef.current.set(activeTabId, state)
-            }
+            shellStatesRef.current.set(shellPersistTabId, state)
             setLoadedChatState(state)
             setActiveRecentChatId(null)
             setShellSessionKey((value) => value + 1)
@@ -321,10 +311,8 @@ export function App() {
         browserFingerprint={fingerprint}
         onComparisonFinished={refreshCredits}
         persistedState={persistedState}
-        persistTabId={panelScope === 'always_open' ? activeTabId ?? undefined : undefined}
-        onPersistState={
-          panelScope === 'always_open' ? handlePersistShellState : undefined
-        }
+        persistTabId={shellPersistTabId}
+        onPersistState={handlePersistShellState}
         onRecentChatSaved={() => setRecentChatsRefreshToken((value) => value + 1)}
         onActiveRecentChatChange={(chatId) => {
           setActiveRecentChatId(chatId)

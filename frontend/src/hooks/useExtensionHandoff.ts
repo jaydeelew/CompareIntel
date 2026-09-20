@@ -21,18 +21,34 @@ export interface ExtensionHandoffHydration {
   isFollowUpMode: boolean
 }
 
+function resultHasSubmittedOutput(
+  result: ExtensionHandoffPayload['results'][number]
+): boolean {
+  return result.content.trim().length > 0 || Boolean(result.error) || result.isStreaming
+}
+
 function buildConversationsFromHandoff(payload: ExtensionHandoffPayload): ModelConversation[] {
+  const submittedResults = payload.results.filter(resultHasSubmittedOutput)
+  const hasHistory = payload.conversationHistory.length > 0
+  if (!hasHistory && submittedResults.length === 0) {
+    return []
+  }
+
   const modelIds = new Set<string>()
-  for (const modelId of payload.selectedModels) modelIds.add(modelId)
-  for (const result of payload.results) modelIds.add(result.modelId)
+  if (hasHistory) {
+    for (const modelId of payload.selectedModels) modelIds.add(modelId)
+    for (const result of payload.results) modelIds.add(result.modelId)
+  }
+  for (const result of submittedResults) modelIds.add(result.modelId)
   for (const message of payload.conversationHistory) {
     if (message.role === 'assistant' && message.model_id) {
       modelIds.add(message.model_id)
     }
   }
 
-  const messagesByModel = new Map<string, ModelConversation['messages']>()
+  if (modelIds.size === 0) return []
 
+  const messagesByModel = new Map<string, ModelConversation['messages']>()
   for (const modelId of modelIds) {
     messagesByModel.set(modelId, [])
   }
@@ -60,15 +76,14 @@ function buildConversationsFromHandoff(payload: ExtensionHandoffPayload): ModelC
     }
   }
 
-  if (payload.results.length > 0) {
+  if (submittedResults.length > 0) {
     const userPrompt =
-      payload.input.trim() ||
       [...payload.conversationHistory].reverse().find((entry) => entry.role === 'user')?.content ||
       ''
 
-    if (userPrompt) {
-      for (const result of payload.results) {
-        const messages = messagesByModel.get(result.modelId) ?? []
+    for (const result of submittedResults) {
+      const messages = messagesByModel.get(result.modelId) ?? []
+      if (userPrompt) {
         const hasCurrentUser = messages.some(
           (entry) => entry.type === 'user' && entry.content === userPrompt
         )
@@ -80,7 +95,12 @@ function buildConversationsFromHandoff(payload: ExtensionHandoffPayload): ModelC
             timestamp: new Date().toISOString(),
           })
         }
-        if (result.content.trim()) {
+      }
+      if (result.content.trim()) {
+        const hasAssistant = messages.some(
+          (entry) => entry.type === 'assistant' && entry.content === result.content
+        )
+        if (!hasAssistant) {
           messages.push({
             id: createMessageId(`${Date.now()}-assistant-${Math.random()}`),
             type: 'assistant',
@@ -88,8 +108,8 @@ function buildConversationsFromHandoff(payload: ExtensionHandoffPayload): ModelC
             timestamp: new Date().toISOString(),
           })
         }
-        messagesByModel.set(result.modelId, messages)
       }
+      messagesByModel.set(result.modelId, messages)
     }
   }
 
@@ -107,14 +127,15 @@ export function mapExtensionHandoff(
     payload.selectedModels.length > 0
       ? payload.selectedModels
       : conversations.map((conversation) => String(conversation.modelId))
+  const isFollowUpMode = conversations.some((conversation) => conversation.messages.length > 0)
 
   return {
     input: payload.input,
     selectedModels,
     conversations,
-    conversationId: payload.conversationId,
+    conversationId: isFollowUpMode ? payload.conversationId : null,
     browserFingerprint: payload.browserFingerprint,
-    isFollowUpMode: conversations.some((conversation) => conversation.messages.length > 0),
+    isFollowUpMode,
   }
 }
 

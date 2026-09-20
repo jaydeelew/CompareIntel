@@ -9,6 +9,7 @@ import { isAllowedWebAppOrigin } from '../shared/webAppOrigins'
 import {
   applyPanelScope,
   handleNewTab,
+  handleTabActivated,
   handleTabRemoved,
   initializeSidePanel,
   openPanelForTab,
@@ -27,7 +28,7 @@ type BackgroundMessage =
   | { type: 'STORE_HANDOFF'; payload: Parameters<typeof storeHandoff>[0] }
   | { type: 'BROADCAST_LOGOUT' }
   | { type: 'WEB_APP_BRIDGE_READY' }
-  | { type: 'OPEN_TAB_WITHOUT_PANEL'; url: string }
+  | { type: 'OPEN_TAB_WITHOUT_PANEL'; url: string; windowId?: number }
 
 type BackgroundResponse =
   | TabContextResponse
@@ -66,6 +67,10 @@ browser.tabs.onCreated.addListener((tab) => {
 
 browser.tabs.onRemoved.addListener((tabId) => {
   handleTabRemoved(tabId)
+})
+
+browser.tabs.onActivated.addListener((activeInfo) => {
+  void handleTabActivated(activeInfo.tabId, activeInfo.windowId)
 })
 
 browser.action.onClicked.addListener(async (tab) => {
@@ -181,7 +186,7 @@ browser.runtime.onMessage.addListener(
         return true
       }
 
-      void openUrlWithoutSidePanel(typedMessage.url)
+      void openUrlWithoutSidePanel(typedMessage.url, typedMessage.windowId)
         .then(() => sendResponse({ type: 'OK' }))
         .catch((err: unknown) => {
           sendResponse({

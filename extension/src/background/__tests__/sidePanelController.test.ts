@@ -30,8 +30,8 @@ describe('openUrlWithoutSidePanel', () => {
     tabsCreate.mockReset()
     tabsUpdate.mockReset()
     sidebarClose.mockReset()
-    tabsCreate.mockResolvedValue({ id: 42 })
-    tabsUpdate.mockResolvedValue({ id: 42 })
+    tabsCreate.mockResolvedValue({ id: 42, windowId: 7 })
+    tabsUpdate.mockResolvedValue({ id: 42, windowId: 7 })
     sidebarClose.mockResolvedValue(undefined)
   })
 
@@ -50,6 +50,7 @@ describe('openUrlWithoutSidePanel', () => {
     })
     expect(setOptions).toHaveBeenCalledWith({ tabId: 42, enabled: false })
     expect(tabsUpdate).toHaveBeenCalledWith(42, { active: true })
+    expect(close).toHaveBeenCalledWith({ windowId: 7 })
     expect(close).toHaveBeenCalledWith({ tabId: 42 })
     expect(sidebarClose).toHaveBeenCalled()
 
@@ -58,6 +59,24 @@ describe('openUrlWithoutSidePanel', () => {
     const closeOrder = close.mock.invocationCallOrder[0]
     expect(setOptionsOrder).toBeLessThan(updateOrder)
     expect(updateOrder).toBeLessThan(closeOrder)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('creates the tab in the provided window', async () => {
+    const setOptions = vi.fn().mockResolvedValue(undefined)
+    const close = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('chrome', {
+      sidePanel: { setOptions, close },
+    })
+
+    await openUrlWithoutSidePanel('https://compareintel.com/?handoff=1', 7)
+
+    expect(tabsCreate).toHaveBeenCalledWith({
+      url: 'https://compareintel.com/?handoff=1',
+      active: false,
+      windowId: 7,
+    })
 
     vi.unstubAllGlobals()
   })

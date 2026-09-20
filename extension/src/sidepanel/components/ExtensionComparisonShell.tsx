@@ -387,7 +387,7 @@ export function ExtensionComparisonShell({
     let sourceTabTitle: string | undefined
     let sourceTabUrl = state.pageContexts?.[0]?.url
 
-    if (sourceTabId == null) {
+    if (sourceTabId == null || sourceTabId < 0) {
       const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
       if (activeRes.type === 'ACTIVE_TAB' && activeRes.tab) {
         sourceTabId = activeRes.tab.tabId

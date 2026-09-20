@@ -825,16 +825,20 @@ export function MainPage() {
       isFollowUpMode: boolean
     }) => {
       setInput(hydration.input)
-      setSelectedModels(hydration.selectedModels)
-      setOriginalSelectedModels(hydration.selectedModels)
+      if (hydration.selectedModels.length > 0) {
+        setSelectedModels(hydration.selectedModels)
+        setOriginalSelectedModels(hydration.selectedModels)
+      }
       setConversations(hydration.conversations)
       setIsFollowUpMode(hydration.isFollowUpMode)
       setIsModelsHidden(hydration.isFollowUpMode)
       setClosedCards(new Set())
       setResponse(null)
       setError(null)
-      if (hydration.conversationId != null) {
+      if (hydration.isFollowUpMode && hydration.conversationId != null) {
         setCurrentVisibleComparisonId(String(hydration.conversationId))
+      } else if (!hydration.isFollowUpMode) {
+        setCurrentVisibleComparisonId(null)
       }
     },
     [
