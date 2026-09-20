@@ -50,6 +50,7 @@ function SettingsIcon() {
 export function App() {
   const { user, loading: authLoading } = useAuth()
   const [showSettings, setShowSettings] = useState(false)
+  const [showRecentChats, setShowRecentChats] = useState(false)
   const [panelScope, setPanelScope] = useState<PanelScope>('always_open')
   const [fontSizes, setFontSizes] = useState<FontSizes>({
     inputFontSize: DEFAULT_INPUT_FONT_SIZE,
@@ -278,25 +279,39 @@ export function App() {
         </div>
       </header>
 
-      <div className="credits-bar">{creditsText}</div>
+      <div className="credits-bar">
+        <span className="credits-bar-text">{creditsText}</span>
+        <button
+          type="button"
+          className="recent-chats-trigger"
+          onClick={() => setShowRecentChats(true)}
+          aria-haspopup="dialog"
+          aria-expanded={showRecentChats}
+        >
+          Recent chats
+        </button>
+      </div>
 
-      <RecentChatsSection
-        user={user}
-        activeChatId={activeRecentChatId}
-        activeConversationId={persistedState?.conversationId ?? null}
-        onSelectChat={(chatId) => void handleSelectRecentChat(chatId)}
-        onSelectServerConversation={(state) => {
-          if (panelScope === 'always_open' && activeTabId != null) {
-            shellStatesRef.current.set(activeTabId, state)
-          }
-          setLoadedChatState(state)
-          setActiveRecentChatId(null)
-          setShellSessionKey((value) => value + 1)
-        }}
-        onDeleteChat={handleDeleteRecentChat}
-        onDeleteServerConversation={handleDeleteServerConversation}
-        refreshToken={recentChatsRefreshToken}
-      />
+      {showRecentChats && (
+        <RecentChatsSection
+          user={user}
+          activeChatId={activeRecentChatId}
+          activeConversationId={persistedState?.conversationId ?? null}
+          onSelectChat={(chatId) => void handleSelectRecentChat(chatId)}
+          onSelectServerConversation={(state) => {
+            if (panelScope === 'always_open' && activeTabId != null) {
+              shellStatesRef.current.set(activeTabId, state)
+            }
+            setLoadedChatState(state)
+            setActiveRecentChatId(null)
+            setShellSessionKey((value) => value + 1)
+          }}
+          onDeleteChat={handleDeleteRecentChat}
+          onDeleteServerConversation={handleDeleteServerConversation}
+          onClose={() => setShowRecentChats(false)}
+          refreshToken={recentChatsRefreshToken}
+        />
+      )}
 
       <ExtensionComparisonShell
         key={`${shellKey}-${shellSessionKey}`}

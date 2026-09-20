@@ -35,6 +35,7 @@ interface RecentChatsSectionProps {
   onSelectServerConversation: (state: ExtensionShellPersistedState) => void
   onDeleteChat?: (chatId: string) => void
   onDeleteServerConversation?: (conversationId: number) => void
+  onClose: () => void
   refreshToken?: number
 }
 
@@ -133,9 +134,9 @@ export function RecentChatsSection({
   onSelectServerConversation,
   onDeleteChat,
   onDeleteServerConversation,
+  onClose,
   refreshToken = 0,
 }: RecentChatsSectionProps) {
-  const [expanded, setExpanded] = useState(false)
   const [localChats, setLocalChats] = useState<RecentChatSummary[]>([])
   const [serverHistory, setServerHistory] = useState<ConversationSummary[]>([])
   const [savedServerIds, setSavedServerIds] = useState<number[]>([])
@@ -174,6 +175,14 @@ export function RecentChatsSection({
       cancelled = true
     }
   }, [refreshToken, user])
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
 
   const items = useMemo(
     () =>
@@ -307,28 +316,35 @@ export function RecentChatsSection({
   }
 
   return (
-    <section className={`recent-chats${expanded ? '' : ' recent-chats-collapsed'}`}>
-      <div className="recent-chats-header">
-        <button
-          type="button"
-          className="ghost context-collapse-toggle"
-          onClick={() => setExpanded((value) => !value)}
-          aria-expanded={expanded}
-          aria-label={expanded ? 'Collapse recent chats' : 'Expand recent chats'}
-        >
-          <span className="context-collapse-chevron" aria-hidden="true">
-            {expanded ? '▼' : '▶'}
-          </span>
-          Recent chats
-        </button>
-        {!loading && (
-          <span className="section-count" aria-label={`${items.length} recent chats`}>
-            {items.length}
-          </span>
-        )}
-      </div>
+    <div
+      className="recent-chats-overlay"
+      role="presentation"
+      onClick={onClose}
+    >
+      <div
+        className="recent-chats-popup"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Recent chats"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="recent-chats-popup-header">
+          <span className="recent-chats-popup-title">Recent chats</span>
+          {!loading && (
+            <span className="section-count" aria-label={`${items.length} recent chats`}>
+              {items.length}
+            </span>
+          )}
+          <button
+            type="button"
+            className="recent-chats-close"
+            onClick={onClose}
+            aria-label="Close recent chats"
+          >
+            ×
+          </button>
+        </div>
 
-      {expanded && (
         <div className="recent-chats-list">
           {loading && <div className="recent-chats-empty">Loading chats…</div>}
           {!loading && items.length === 0 && (
@@ -353,7 +369,7 @@ export function RecentChatsSection({
                     />
                     <RecentChatOpenButton
                       onClick={() => {
-                        setExpanded(false)
+                        onClose()
                         onSelectChat(chat.id)
                       }}
                     >
@@ -391,7 +407,7 @@ export function RecentChatsSection({
                   />
                   <RecentChatOpenButton
                     onClick={() => {
-                      setExpanded(false)
+                      onClose()
                       void loadServerConversationState(summary.id).then((state) => {
                         if (state) onSelectServerConversation(state)
                       })
@@ -416,7 +432,7 @@ export function RecentChatsSection({
               )
             })}
         </div>
-      )}
-    </section>
+      </div>
+    </div>
   )
 }
