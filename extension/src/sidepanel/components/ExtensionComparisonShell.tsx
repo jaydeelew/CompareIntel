@@ -22,6 +22,7 @@ import {
 
 import { ExtensionContextBar, TabMentionInput } from './ExtensionContextBar'
 import { ExtensionModelPicker } from './ExtensionModelPicker'
+import { ExtensionDefaultsMenu } from './ExtensionDefaultsMenu'
 import { PageContextIntroModal } from './PageContextIntroModal'
 import type { ExtensionShellPersistedState } from '../types/shellState'
 import {
@@ -30,6 +31,15 @@ import {
   type SavedPageContext,
 } from '../utils/pageContextSnapshot'
 import { upsertRecentChat } from '../../shared/recentChats'
+import {
+  deleteModelDefault,
+  getLastModelDefaultId,
+  listModelDefaults,
+  MAX_MODEL_DEFAULTS,
+  saveModelDefault,
+  setLastModelDefaultId,
+  type ModelDefault,
+} from '../../shared/modelDefaults'
 import {
   hydrateConversationResults,
   hydrateSelectedModelIds,
@@ -87,6 +97,12 @@ interface ExtensionComparisonShellProps {
   onActiveRecentChatChange?: (chatId: string | null) => void
 }
 
+function sameModelSet(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false
+  const set = new Set(left)
+  return right.every((id) => set.has(id))
+}
+
 function isModelTurnInHistory(
   history: Array<{ role: string; content: string; model_id?: string }>,
   userPrompt: string,
@@ -141,6 +157,25 @@ export function ExtensionComparisonShell({
   const [closedModelIds, setClosedModelIds] = useState<Set<string>>(
     () => new Set(persistedState?.closedModelIds ?? [])
   )
+  const [modelDefaults, setModelDefaults] = useState<ModelDefault[]>([])
+  const [activeModelDefaultId, setActiveModelDefaultId] = useState<string | null>(
+    persistedState?.activeModelDefaultId ?? null
+  )
+  const [showDefaultsMenu, setShowDefaultsMenu] = useState(false)
+  const [defaultsMenuPos, setDefaultsMenuPos] = useState<{ top: number; right: number } | null>(
+    null
+  )
+  // The default that brand-new tabs should open with. Kept in sync with storage
+  // so selecting/saving a default in one tab only affects tabs opened later.
+  const [lastDefaultId, setLastDefaultId] = useState<string | null>(null)
+  const [lastDefaultLoaded, setLastDefaultLoaded] = useState(false)
+  // A shell only counts as "fresh" (eligible for the latest default) when it
+  // mounts without any persisted state — i.e. a brand-new tab or comparison.
+  // Existing tabs always carry persisted state, so their selection is untouched.
+  const isFreshShellRef = useRef(!persistedState)
+  const appliedInitialDefaultRef = useRef(false)
+  const defaultsControlRef = useRef<HTMLDivElement>(null)
+  const defaultsTriggerRef = useRef<HTMLButtonElement>(null)
 
   const maxModels = user
     ? getModelLimit(user.subscription_tier)
@@ -179,6 +214,50 @@ export function ExtensionComparisonShell({
   const handleAcknowledgePageContextIntro = () => {
     void acknowledgePageContextIntro().then(() => setShowPageContextIntro(false))
   }
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([listModelDefaults(), getLastModelDefaultId()])
+      .then(([defaults, lastId]) => {
+        if (cancelled) return
+        setModelDefaults(defaults)
+        setLastDefaultId(lastId)
+        setLastDefaultLoaded(true)
+      })
+      .catch(() => {
+        if (!cancelled) setLastDefaultLoaded(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const updateDefaultsMenuPosition = useCallback(() => {
+    const rect = defaultsTriggerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    setDefaultsMenuPos({
+      top: rect.bottom + 6,
+      right: Math.max(8, window.innerWidth - rect.right),
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!showDefaultsMenu) return
+    updateDefaultsMenuPosition()
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!defaultsControlRef.current?.contains(event.target as Node)) {
+        setShowDefaultsMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handlePointerDown)
+    window.addEventListener('resize', updateDefaultsMenuPosition)
+    window.addEventListener('scroll', updateDefaultsMenuPosition, true)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      window.removeEventListener('resize', updateDefaultsMenuPosition)
+      window.removeEventListener('scroll', updateDefaultsMenuPosition, true)
+    }
+  }, [showDefaultsMenu, updateDefaultsMenuPosition])
 
   const textModelsByProvider = useMemo(
     () => filterModelsByProviderToText(modelsByProvider),
@@ -279,9 +358,11 @@ export function ExtensionComparisonShell({
       collapsedResultIds: [...collapsedResultIds],
       submittedPrompt,
       activeRecentChatId,
+      activeModelDefaultId,
       closedModelIds: [...closedModelIds],
     }
   }, [
+    activeModelDefaultId,
     activeRecentChatId,
     closedModelIds,
     collapsedResultIds,
@@ -405,6 +486,76 @@ export function ExtensionComparisonShell({
     }
   }, [comparison.results.length, comparison.conversationHistory.length])
 
+  const activeModelDefault = activeModelDefaultId
+    ? modelDefaults.find((entry) => entry.id === activeModelDefaultId) ?? null
+    : null
+
+  // The models from a saved default that the current user can actually select,
+  // capped to their model limit. Used both when applying a default and when
+  // deciding whether the active default still matches the live selection.
+  const applicableDefaultModelIds = useCallback(
+    (def: ModelDefault) =>
+      def.modelIds
+        .filter((modelId) =>
+          isModelIdSelectableForUser(modelId, textModelsByProvider, !!user, user)
+        )
+        .slice(0, maxModels),
+    [textModelsByProvider, user, maxModels]
+  )
+
+  // A default is only "active" while the current selection still matches it.
+  // Any manual model change (add/remove) drops back to normal selection mode.
+  useEffect(() => {
+    if (!activeModelDefaultId) return
+    const def = modelDefaults.find((entry) => entry.id === activeModelDefaultId)
+    if (!def || !sameModelSet(applicableDefaultModelIds(def), comparison.selectedModels)) {
+      setActiveModelDefaultId(null)
+    }
+  }, [activeModelDefaultId, modelDefaults, comparison.selectedModels, applicableDefaultModelIds])
+
+  // On a brand-new tab/comparison, open with the latest default selection.
+  // Runs once, only while the selection is still empty, so it never overrides a
+  // selection restored for an existing tab or loaded chat.
+  useEffect(() => {
+    if (appliedInitialDefaultRef.current) return
+    if (!isFreshShellRef.current || isFollowUpMode) {
+      appliedInitialDefaultRef.current = true
+      return
+    }
+    if (!lastDefaultLoaded) return
+    if (!isModelCatalogReady(textModelsByProvider)) return
+    if (comparison.selectedModels.length > 0) {
+      appliedInitialDefaultRef.current = true
+      return
+    }
+    appliedInitialDefaultRef.current = true
+    const def = lastDefaultId ? modelDefaults.find((entry) => entry.id === lastDefaultId) : null
+    if (!def) return
+    const applicable = applicableDefaultModelIds(def)
+    if (applicable.length === 0) return
+    comparison.setSelectedModels(applicable)
+    setActiveModelDefaultId(def.id)
+    // A default already picks the models, so open a new tab compactly.
+    setModelsCollapsed(true)
+  }, [
+    lastDefaultLoaded,
+    lastDefaultId,
+    modelDefaults,
+    textModelsByProvider,
+    isFollowUpMode,
+    comparison.selectedModels,
+    comparison.setSelectedModels,
+    applicableDefaultModelIds,
+  ])
+
+  // Defaults only apply to a fresh selection, not an in-progress conversation.
+  useEffect(() => {
+    if (isFollowUpMode) {
+      setShowDefaultsMenu(false)
+      setActiveModelDefaultId(null)
+    }
+  }, [isFollowUpMode])
+
   const conversationResults =
     comparison.results.length > 0
       ? comparison.results
@@ -463,10 +614,48 @@ export function ExtensionComparisonShell({
   const handleNewComparison = () => {
     comparison.newComparison()
     setShowModelPicker(false)
+    setShowDefaultsMenu(false)
+    setActiveModelDefaultId(null)
     setClosedModelIds(new Set())
     setPageContexts([])
     setActiveRecentChatId(null)
     onActiveRecentChatChange?.(null)
+  }
+
+  const handleSelectDefault = (id: string) => {
+    const def = modelDefaults.find((entry) => entry.id === id)
+    if (!def) return
+    const applicable = applicableDefaultModelIds(def)
+    if (applicable.length === 0) return
+    comparison.setSelectedModels(applicable)
+    setActiveModelDefaultId(def.id)
+    setLastDefaultId(def.id)
+    void setLastModelDefaultId(def.id)
+    setShowDefaultsMenu(false)
+  }
+
+  const handleSaveDefault = (name: string) => {
+    const modelIds = [...comparison.selectedModels]
+    void saveModelDefault({ name, modelIds }).then((result) => {
+      setModelDefaults(result.defaults)
+      if (result.status === 'saved') {
+        setActiveModelDefaultId(result.saved.id)
+        setLastDefaultId(result.saved.id)
+        void setLastModelDefaultId(result.saved.id)
+      }
+    })
+  }
+
+  const handleDeleteDefault = (id: string) => {
+    void deleteModelDefault(id).then((defaults) => {
+      setModelDefaults(defaults)
+      setActiveModelDefaultId((current) => (current === id ? null : current))
+      setLastDefaultId((current) => (current === id ? null : current))
+    })
+  }
+
+  const clearActiveDefault = () => {
+    setActiveModelDefaultId(null)
   }
 
   return (
@@ -502,35 +691,89 @@ export function ExtensionComparisonShell({
               </span>
               Models
             </button>
-            <span
-              className="section-count"
-              aria-label={
-                isFollowUpMode
-                  ? `${comparison.selectedModels.length} selected models`
-                  : `${comparison.selectedModels.length} of ${maxModels} models selected`
-              }
-            >
-              {isFollowUpMode
-                ? comparison.selectedModels.length
-                : `${comparison.selectedModels.length}/${maxModels}`}
-            </span>
-            {comparison.selectedModels.length > 0 && (
-              <div className="tab-icons" aria-hidden="true">
-                {comparison.selectedModels.map((id) => {
-                  const model = allModels.find((m) => m.id === id)
-                  const name = model?.name ?? id
-                  return (
-                    <span key={id} className="tab-icon" title={name}>
-                      {model?.provider ? (
-                        <ProviderIcon provider={model.provider} />
-                      ) : (
-                        <span className="tab-icon-fallback">
-                          {name.charAt(0).toUpperCase()}
+            {activeModelDefault ? (
+              <span
+                className="model-default-indicator"
+                aria-label={`Default selection: ${activeModelDefault.name}`}
+              >
+                <span className="model-default-indicator-name">{activeModelDefault.name}</span>
+                <button
+                  type="button"
+                  className="model-default-indicator-close"
+                  onClick={clearActiveDefault}
+                  title="Clear default selection"
+                  aria-label="Clear default selection"
+                >
+                  ×
+                </button>
+              </span>
+            ) : (
+              <>
+                <span
+                  className="section-count"
+                  aria-label={
+                    isFollowUpMode
+                      ? `${comparison.selectedModels.length} selected models`
+                      : `${comparison.selectedModels.length} of ${maxModels} models selected`
+                  }
+                >
+                  {isFollowUpMode
+                    ? comparison.selectedModels.length
+                    : `${comparison.selectedModels.length}/${maxModels}`}
+                </span>
+                {comparison.selectedModels.length > 0 && (
+                  <div className="tab-icons" aria-hidden="true">
+                    {comparison.selectedModels.map((id) => {
+                      const model = allModels.find((m) => m.id === id)
+                      const name = model?.name ?? id
+                      return (
+                        <span key={id} className="tab-icon" title={name}>
+                          {model?.provider ? (
+                            <ProviderIcon provider={model.provider} />
+                          ) : (
+                            <span className="tab-icon-fallback">
+                              {name.charAt(0).toUpperCase()}
+                            </span>
+                          )}
                         </span>
-                      )}
-                    </span>
-                  )
-                })}
+                      )
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+            {!modelsCollapsed && !isFollowUpMode && !activeModelDefault && (
+              <div className="model-defaults-control" ref={defaultsControlRef}>
+                <button
+                  type="button"
+                  ref={defaultsTriggerRef}
+                  className="model-defaults-trigger"
+                  onClick={() => {
+                    if (!showDefaultsMenu) updateDefaultsMenuPosition()
+                    setShowDefaultsMenu((open) => !open)
+                  }}
+                  aria-expanded={showDefaultsMenu}
+                  aria-haspopup="dialog"
+                  title="Save the current selection as a default"
+                >
+                  Set default
+                </button>
+                {showDefaultsMenu && (
+                  <ExtensionDefaultsMenu
+                    defaults={modelDefaults}
+                    activeDefaultId={activeModelDefaultId}
+                    selectedCount={comparison.selectedModels.length}
+                    maxDefaults={MAX_MODEL_DEFAULTS}
+                    style={
+                      defaultsMenuPos
+                        ? { top: defaultsMenuPos.top, right: defaultsMenuPos.right }
+                        : undefined
+                    }
+                    onSelectDefault={handleSelectDefault}
+                    onSaveDefault={handleSaveDefault}
+                    onDeleteDefault={handleDeleteDefault}
+                  />
+                )}
               </div>
             )}
           </div>

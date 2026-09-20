@@ -17,8 +17,21 @@ function buildWebAppHandoffUrl(): string {
   return url.toString()
 }
 
+async function openWebAppTab(url: string): Promise<void> {
+  try {
+    const response = (await browser.runtime.sendMessage({
+      type: 'OPEN_TAB_WITHOUT_PANEL',
+      url,
+    })) as { type?: string } | undefined
+    if (response?.type === 'OK') return
+  } catch {
+    // Fall back to a normal tab open if the background helper is unavailable.
+  }
+  await browser.tabs.create({ url })
+}
+
 export async function openWebAppLogin(): Promise<void> {
-  await browser.tabs.create({ url: buildWebAppLoginUrl() })
+  await openWebAppTab(buildWebAppLoginUrl())
 }
 
 export async function openWebAppWithHandoff(
@@ -38,7 +51,7 @@ export async function openWebAppWithHandoff(
   }
 
   await browser.runtime.sendMessage({ type: 'STORE_HANDOFF', payload })
-  await browser.tabs.create({ url: buildWebAppHandoffUrl() })
+  await openWebAppTab(buildWebAppHandoffUrl())
 }
 
 export async function signOutFromExtension(): Promise<void> {

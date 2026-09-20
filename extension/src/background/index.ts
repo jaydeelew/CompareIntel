@@ -12,6 +12,7 @@ import {
   handleTabRemoved,
   initializeSidePanel,
   openPanelForTab,
+  openUrlWithoutSidePanel,
 } from './sidePanelController'
 import { TabContextManager } from './tabContextManager'
 
@@ -26,6 +27,7 @@ type BackgroundMessage =
   | { type: 'STORE_HANDOFF'; payload: Parameters<typeof storeHandoff>[0] }
   | { type: 'BROADCAST_LOGOUT' }
   | { type: 'WEB_APP_BRIDGE_READY' }
+  | { type: 'OPEN_TAB_WITHOUT_PANEL'; url: string }
 
 type BackgroundResponse =
   | TabContextResponse
@@ -164,6 +166,29 @@ browser.runtime.onMessage.addListener(
 
     if (typedMessage.type === 'BROADCAST_LOGOUT') {
       void notifyWebAppTabsLogout().then(() => sendResponse({ type: 'OK' }))
+      return true
+    }
+
+    if (typedMessage.type === 'OPEN_TAB_WITHOUT_PANEL') {
+      let origin: string | undefined
+      try {
+        origin = new URL(typedMessage.url).origin
+      } catch {
+        origin = undefined
+      }
+      if (!isAllowedWebAppOrigin(origin)) {
+        sendResponse({ type: 'ERROR', message: 'Invalid web app URL' })
+        return true
+      }
+
+      void openUrlWithoutSidePanel(typedMessage.url)
+        .then(() => sendResponse({ type: 'OK' }))
+        .catch((err: unknown) => {
+          sendResponse({
+            type: 'ERROR',
+            message: err instanceof Error ? err.message : 'Failed to open tab',
+          })
+        })
       return true
     }
 

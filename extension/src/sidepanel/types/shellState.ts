@@ -15,6 +15,7 @@ export interface ExtensionShellPersistedState {
   collapsedResultIds: string[]
   submittedPrompt: string
   activeRecentChatId?: string | null
+  activeModelDefaultId?: string | null
   closedModelIds?: string[]
   pageContexts?: SavedPageContext[]
   pageContextUnavailable?: boolean

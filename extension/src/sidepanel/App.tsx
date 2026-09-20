@@ -209,7 +209,9 @@ export function App() {
   const creditsText =
     creditsRemaining === null
       ? 'Loading credits…'
-      : `${Math.round(creditsRemaining)} credits remaining`
+      : `${Math.round(creditsRemaining)} ${
+          tier === 'unregistered' ? 'daily credits' : 'credits'
+        } remaining`
 
   const shellKey =
     panelScope === 'always_open' ? String(activeTabId ?? 'pending') : 'single'

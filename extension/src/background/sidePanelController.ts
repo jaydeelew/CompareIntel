@@ -4,23 +4,44 @@ import { getPanelScope, type PanelScope } from '../shared/extensionSettings'
 
 const panelEnabledTabs = new Set<number>()
 
+type SidePanelApi = typeof chrome.sidePanel & {
+  close?: (options: { tabId?: number; windowId?: number }) => Promise<void>
+}
+
+type FirefoxBrowser = typeof browser & {
+  sidebarAction?: { close?: () => Promise<void> }
+}
+
+function getSidePanelApi(): SidePanelApi | undefined {
+  return globalThis.chrome?.sidePanel as SidePanelApi | undefined
+}
+
 async function setSidePanelEnabledForTab(tabId: number, enabled: boolean): Promise<void> {
-  await chrome.sidePanel.setOptions({ tabId, enabled }).catch(() => undefined)
+  await getSidePanelApi()?.setOptions({ tabId, enabled }).catch(() => undefined)
+}
+
+async function hideSidePanelOnTab(tabId: number): Promise<void> {
+  const sidePanel = getSidePanelApi()
+  if (typeof sidePanel?.close === 'function') {
+    await sidePanel.close({ tabId }).catch(() => undefined)
+  }
+
+  const sidebarAction = (browser as FirefoxBrowser).sidebarAction
+  if (typeof sidebarAction?.close === 'function') {
+    await sidebarAction.close().catch(() => undefined)
+  }
 }
 
 export async function applyPanelScope(scope: PanelScope): Promise<void> {
+  const sidePanel = getSidePanelApi()
   if (scope === 'always_open') {
-    await chrome.sidePanel.setOptions({ enabled: true }).catch(() => undefined)
-    await chrome.sidePanel
-      .setPanelBehavior({ openPanelOnActionClick: true })
-      .catch(() => undefined)
+    await sidePanel?.setOptions({ enabled: true }).catch(() => undefined)
+    await sidePanel?.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => undefined)
     return
   }
 
-  await chrome.sidePanel.setOptions({ enabled: false }).catch(() => undefined)
-  await chrome.sidePanel
-    .setPanelBehavior({ openPanelOnActionClick: true })
-    .catch(() => undefined)
+  await sidePanel?.setOptions({ enabled: false }).catch(() => undefined)
+  await sidePanel?.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => undefined)
 
   const tabs = await browser.tabs.query({})
   await Promise.all(
@@ -42,7 +63,16 @@ export async function openPanelForTab(tabId: number): Promise<void> {
     panelEnabledTabs.add(tabId)
     await setSidePanelEnabledForTab(tabId, true)
   }
-  await chrome.sidePanel.open({ tabId }).catch(() => undefined)
+  await getSidePanelApi()?.open({ tabId }).catch(() => undefined)
+}
+
+export async function openUrlWithoutSidePanel(url: string): Promise<void> {
+  const tab = await browser.tabs.create({ url, active: false })
+  if (tab.id == null) return
+
+  await setSidePanelEnabledForTab(tab.id, false)
+  await browser.tabs.update(tab.id, { active: true }).catch(() => undefined)
+  await hideSidePanelOnTab(tab.id)
 }
 
 export async function handleNewTab(tabId: number): Promise<void> {
