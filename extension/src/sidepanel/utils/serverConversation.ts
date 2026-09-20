@@ -28,6 +28,7 @@ export async function loadServerConversationState(
       activeRecentChatId: null,
       closedModelIds: [],
       pageContexts: [],
+      pageContextCollapsed: true,
       pageContextUnavailable: true,
     }
   } catch {

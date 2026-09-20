@@ -143,6 +143,9 @@ export function ExtensionComparisonShell({
   const [modelsLoadError, setModelsLoadError] = useState<string | null>(null)
   const [showModelPicker, setShowModelPicker] = useState(false)
   const [modelsCollapsed, setModelsCollapsed] = useState(false)
+  const [pageContextCollapsed, setPageContextCollapsed] = useState(
+    persistedState?.pageContextCollapsed ?? true
+  )
   const [sharePageContext, setSharePageContext] = useState(
     persistedState?.sharePageContext ?? true
   )
@@ -166,7 +169,8 @@ export function ExtensionComparisonShell({
     null
   )
   // The default that brand-new tabs should open with. Kept in sync with storage
-  // so selecting/saving a default in one tab only affects tabs opened later.
+  // so selecting/saving a default in one tab only affects tabs opened later,
+  // and closing the named default means later tabs open with no default.
   const [lastDefaultId, setLastDefaultId] = useState<string | null>(null)
   const [lastDefaultLoaded, setLastDefaultLoaded] = useState(false)
   // A shell only counts as "fresh" (eligible for the latest default) when it
@@ -355,6 +359,7 @@ export function ExtensionComparisonShell({
       error: comparison.error,
       sharePageContext,
       pageContexts,
+      pageContextCollapsed,
       collapsedResultIds: [...collapsedResultIds],
       submittedPrompt,
       activeRecentChatId,
@@ -373,6 +378,7 @@ export function ExtensionComparisonShell({
     comparison.results,
     comparison.selectedModels,
     pageContexts,
+    pageContextCollapsed,
     sharePageContext,
     submittedPrompt,
   ])
@@ -656,6 +662,8 @@ export function ExtensionComparisonShell({
 
   const clearActiveDefault = () => {
     setActiveModelDefaultId(null)
+    setLastDefaultId(null)
+    void setLastModelDefaultId(null)
   }
 
   return (
@@ -669,6 +677,8 @@ export function ExtensionComparisonShell({
           onSharePageContextChange={setSharePageContext}
           pageContexts={pageContexts}
           onPageContextsChange={setPageContexts}
+          collapsed={pageContextCollapsed}
+          onCollapsedChange={setPageContextCollapsed}
           restoreKey={activeRecentChatId ?? undefined}
         />
         {persistedState?.pageContextUnavailable && (

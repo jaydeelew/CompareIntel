@@ -18,5 +18,6 @@ export interface ExtensionShellPersistedState {
   activeModelDefaultId?: string | null
   closedModelIds?: string[]
   pageContexts?: SavedPageContext[]
+  pageContextCollapsed?: boolean
   pageContextUnavailable?: boolean
 }

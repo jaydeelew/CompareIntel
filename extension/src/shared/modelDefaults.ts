@@ -114,7 +114,8 @@ export async function deleteModelDefault(id: string): Promise<ModelDefault[]> {
 
 /**
  * The id of the default that new tabs should open with. Updated whenever a
- * default is selected or (re)saved. Reading it never mutates other tabs.
+ * default is selected or (re)saved, and cleared when the user dismisses the
+ * named default. Reading it never mutates other tabs.
  */
 export async function getLastModelDefaultId(): Promise<string | null> {
   const result = await browser.storage.local.get(LAST_USED_KEY)

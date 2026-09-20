@@ -25,6 +25,8 @@ interface ExtensionContextBarProps {
   onSharePageContextChange: (enabled: boolean) => void
   pageContexts: SavedPageContext[]
   onPageContextsChange: (contexts: SavedPageContext[]) => void
+  collapsed: boolean
+  onCollapsedChange: (collapsed: boolean) => void
   restoreKey?: string
 }
 
@@ -33,12 +35,13 @@ export function ExtensionContextBar({
   onSharePageContextChange,
   pageContexts,
   onPageContextsChange,
+  collapsed,
+  onCollapsedChange,
   restoreKey,
 }: ExtensionContextBarProps) {
   const [activeTab, setActiveTab] = useState<TabInfo | null>(null)
   const [openTabs, setOpenTabs] = useState<TabInfo[]>([])
   const [showTabPicker, setShowTabPicker] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)
 
   const pageContextsRef = useRef(pageContexts)
   const sharePageContextRef = useRef(sharePageContext)
@@ -225,7 +228,7 @@ export function ExtensionContextBar({
           <button
             type="button"
             className="ghost context-collapse-toggle"
-            onClick={() => setCollapsed((c) => !c)}
+            onClick={() => onCollapsedChange(!collapsed)}
             aria-expanded={!collapsed}
             aria-label={collapsed ? 'Expand context tabs' : 'Collapse context tabs'}
           >
