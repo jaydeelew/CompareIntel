@@ -1050,27 +1050,6 @@
         "supports_vision_probed": true
       },
       {
-        "id": "qwen/qwen-plus-2025-07-28",
-        "name": "Qwen Plus 2025 07 28",
-        "description": "Qwen Plus 0728, based on the Qwen3 foundation model, is a 1 million context hybrid reasoning model with a balanced performance, speed, and cost combination.",
-        "category": "Language",
-        "provider": "Qwen",
-        "supports_web_search": true,
-        "knowledge_cutoff": "March 2025",
-        "supports_vision_probed": false
-      },
-      {
-        "id": "qwen/qwen3-235b-a22b",
-        "name": "Qwen3 235B A22B",
-        "description": "A 235B MoE model (22B active) with strong reasoning, coding, and multilingual capabilities.",
-        "category": "Language",
-        "provider": "Qwen",
-        "supports_web_search": true,
-        "knowledge_cutoff": "April 2025",
-        "is_thinking_model": true,
-        "supports_vision_probed": false
-      },
-      {
         "id": "qwen/qwen3-coder",
         "name": "Qwen3 Coder 480B A35B",
         "description": "A 480B MoE model (35B active) achieving state-of-the-art code generation and agentic coding performance.",
@@ -1078,36 +1057,6 @@
         "provider": "Qwen",
         "supports_web_search": true,
         "knowledge_cutoff": "June 2025",
-        "supports_vision_probed": false
-      },
-      {
-        "id": "qwen/qwen3-coder-plus",
-        "name": "Qwen3 Coder Plus",
-        "description": "Alibaba's proprietary coding model with enhanced performance for complex development tasks.",
-        "category": "Code",
-        "provider": "Qwen",
-        "supports_web_search": true,
-        "knowledge_cutoff": "June 2025",
-        "supports_vision_probed": false
-      },
-      {
-        "id": "qwen/qwen3-max",
-        "name": "Qwen3 Max",
-        "description": "Qwen's most capable model with strong reasoning, instruction-following, and multilingual abilities.",
-        "category": "Language",
-        "provider": "Qwen",
-        "supports_web_search": true,
-        "knowledge_cutoff": "April 2025",
-        "supports_vision_probed": false
-      },
-      {
-        "id": "qwen/qwen3-max-thinking",
-        "name": "Qwen3 Max Thinking",
-        "description": "Qwen3-Max-Thinking is the flagship reasoning model in the Qwen3 series, designed for high-stakes cognitive tasks that require deep, multi-step reasoning.",
-        "category": "Language",
-        "provider": "Qwen",
-        "supports_web_search": true,
-        "knowledge_cutoff": null,
         "supports_vision_probed": false
       },
       {
@@ -1120,16 +1069,6 @@
         "knowledge_cutoff": "September 2025",
         "is_thinking_model": true,
         "supports_vision_probed": false
-      },
-      {
-        "id": "qwen/qwen3-vl-235b-a22b-thinking",
-        "name": "Qwen3 VL 235B A22B Thinking",
-        "description": "A multimodal reasoning model unifying text generation with visual understanding across images and video.",
-        "category": "Multimodal/Reasoning",
-        "provider": "Qwen",
-        "supports_web_search": true,
-        "knowledge_cutoff": "April 2025",
-        "supports_vision_probed": true
       }
     ],
     "Sourceful": [
@@ -1369,7 +1308,6 @@
     "openai/gpt-5.1-codex-mini",
     "openai/gpt-5.6-luna",
     "openai/o3-mini",
-    "qwen/qwen-plus-2025-07-28",
     "qwen/qwen3-30b-a3b-instruct-2507",
     "qwen/qwen3-coder-flash",
     "qwen/qwen3-next-80b-a3b-instruct",
