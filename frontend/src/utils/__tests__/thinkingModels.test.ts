@@ -18,8 +18,8 @@ describe('isThinkingModel', () => {
     expect(
       isThinkingModel({
         ...base,
-        id: 'anthropic/claude-sonnet-4',
-        name: 'Claude Sonnet 4',
+        id: 'anthropic/claude-sonnet-4.5',
+        name: 'Claude Sonnet 4.5',
         category: 'Language',
         description: 'No magic phrases.',
         is_thinking_model: true,

@@ -265,7 +265,6 @@ def get_model_max_tokens(model_id: str) -> int:
         max_output = 8192
     model_limits = {
         "anthropic/claude-opus-4.1": 4096,
-        "anthropic/claude-opus-4": 4096,
     }
     if model_id in model_limits:
         return min(model_limits[model_id], max_output)

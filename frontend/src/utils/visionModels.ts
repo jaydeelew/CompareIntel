@@ -9,7 +9,6 @@ import type { ModelsByProvider } from '../types'
 export const KNOWN_VISION_MODEL_IDS = new Set([
   'openai/gpt-4o',
   'openai/gpt-4o-mini',
-  'anthropic/claude-3.5-sonnet',
   'anthropic/claude-sonnet-4.6',
   'anthropic/claude-opus-4.1',
   'google/gemini-2.5-flash',

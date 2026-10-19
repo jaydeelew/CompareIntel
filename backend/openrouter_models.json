@@ -721,66 +721,6 @@
       }
     },
     {
-      "id": "anthropic/claude-sonnet-4",
-      "canonical_slug": "anthropic/claude-4-sonnet-20250522",
-      "hugging_face_id": "",
-      "name": "Anthropic: Claude Sonnet 4",
-      "created": 1747930371,
-      "description": "Claude Sonnet 4 significantly enhances the capabilities of its predecessor, Sonnet 3.7, excelling in both coding and reasoning tasks with improved precision and controllability. Achieving state-of-the-art performance on SWE-bench (72.7%),...",
-      "context_length": 1000000,
-      "architecture": {
-        "modality": "text+image+file->text",
-        "input_modalities": [
-          "image",
-          "text",
-          "file"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "Claude",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.000003",
-        "completion": "0.000015",
-        "web_search": "0.01",
-        "input_cache_read": "0.0000003",
-        "input_cache_write": "0.00000375"
-      },
-      "top_provider": {
-        "context_length": 1000000,
-        "max_completion_tokens": 64000,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "include_reasoning",
-        "max_tokens",
-        "reasoning",
-        "stop",
-        "temperature",
-        "tool_choice",
-        "tools",
-        "top_k",
-        "top_p"
-      ],
-      "default_parameters": {
-        "temperature": null,
-        "top_p": null,
-        "top_k": null,
-        "frequency_penalty": null,
-        "presence_penalty": null,
-        "repetition_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": "2025-01-31",
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/anthropic/claude-4-sonnet-20250522/endpoints"
-      }
-    },
-    {
       "id": "anthropic/claude-sonnet-4.5",
       "canonical_slug": "anthropic/claude-4.5-sonnet-20250929",
       "hugging_face_id": "",

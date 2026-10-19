@@ -16,10 +16,9 @@ from app.llm.registry import (
 )
 
 
-def test_anthropic_opus_and_sonnet_4_flagged_when_in_snapshot() -> None:
-    assert get_openrouter_thinking_model_flag("anthropic/claude-opus-4") is True
-    assert get_openrouter_thinking_model_flag("anthropic/claude-sonnet-4") is True
+def test_anthropic_opus_and_sonnet_flagged_when_in_snapshot() -> None:
     assert get_openrouter_thinking_model_flag("anthropic/claude-opus-4.1") is True
+    assert get_openrouter_thinking_model_flag("anthropic/claude-sonnet-4.5") is True
 
 
 def test_unknown_model_id_returns_none() -> None:

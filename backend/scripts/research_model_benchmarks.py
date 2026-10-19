@@ -182,8 +182,6 @@ MATH_SLUG_TO_MODEL_ID: dict[str, str] = {
     "gemini-2-0-flash-lite": "google/gemini-2.5-flash",
     "gpt-4o": "openai/gpt-4o",
     "claude-3-5-sonnet": "anthropic/claude-sonnet-4.5",
-    "claude-3-opus": "anthropic/claude-opus-4",
-    "claude-3-sonnet": "anthropic/claude-sonnet-4",
     "claude-3-haiku": "anthropic/claude-haiku-4.5",
 }
 
@@ -484,7 +482,6 @@ SWE_BENCH_PRO_SLUG_TO_MODEL_ID: dict[str, str] = {
     "claude-opus-4-5-20251101": "anthropic/claude-opus-4.5",
     "claude-4-5-Sonnet": "anthropic/claude-sonnet-4.5",
     "gemini-3-pro-preview": "google/gemini-3.1-pro-preview",
-    "claude-4-Sonnet": "anthropic/claude-sonnet-4",
     "gpt-5-2025-08-07 (High)": "openai/gpt-5",
     "gpt-5.2-codex": "openai/gpt-5.2-codex",
     "claude-4-5-haiku": "anthropic/claude-haiku-4.5",
@@ -641,8 +638,6 @@ WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
     "Claude Sonnet 4 5 20250929 Thinking 32k": "anthropic/claude-sonnet-4.5",
     "Claude Opus 4 1 20250805 Thinking 16k": "anthropic/claude-opus-4.1",
     "Claude Opus 4 1 20250805": "anthropic/claude-opus-4.1",
-    "Claude Opus 4 20250514 Thinking 16k": "anthropic/claude-opus-4",
-    "Claude Opus 4 20250514": "anthropic/claude-opus-4",
     "Gpt 4.5 Preview 2025 02 27": "openai/gpt-4o",
     "Gpt 5.1 High": "openai/gpt-5.1",
     "Gpt 5.1": "openai/gpt-5.1",

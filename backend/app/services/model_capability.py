@@ -66,7 +66,7 @@ class ModelCapabilityService:
         Check if a model supports function/tool calling.
 
         Args:
-            model_id: The model ID to check (e.g., "openai/gpt-4")
+            model_id: The model ID to check (e.g., "openai/gpt-5")
 
         Returns:
             True if the model supports tool calling, False otherwise

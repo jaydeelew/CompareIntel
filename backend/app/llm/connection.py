@@ -10,7 +10,7 @@ from .registry import client
 
 def test_connection_quality() -> ConnectionQualityDict:
     """Test connection quality by making a quick API call."""
-    test_model = "anthropic/claude-3-haiku"
+    test_model = "anthropic/claude-haiku-4.5"
     test_prompt = "Hello"
     start_time = time.time()
     try:

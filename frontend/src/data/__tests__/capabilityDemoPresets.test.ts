@@ -171,13 +171,13 @@ describe('pickTwoDemoModels', () => {
 
   it('excludes paid models for unregistered users', () => {
     const withPaid: ModelsByProvider = {
-      Anthropic: [m('anthropic/claude-sonnet-4', 'Anthropic', 'paid')],
+      Anthropic: [m('anthropic/claude-sonnet-4.5', 'Anthropic', 'paid')],
       Google: [m('google/gemini-2.5-flash', 'Google')],
       xAI: [m('x-ai/grok-4.20', 'xAI')],
     }
     const result = pickTwoDemoModels('natural-language', withPaid, false, null)
     expect(result).not.toBeNull()
-    expect(result).not.toContain('anthropic/claude-sonnet-4')
+    expect(result).not.toContain('anthropic/claude-sonnet-4.5')
   })
 
   it('excludes thinking models for faster demos', () => {
