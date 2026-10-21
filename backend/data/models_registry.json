@@ -325,17 +325,6 @@
         "knowledge_cutoff": null
       },
       {
-        "id": "deepseek/deepseek-r1",
-        "name": "DeepSeek R1",
-        "description": "An open-source reasoning model matching OpenAI o1 performance with fully transparent chain-of-thought.",
-        "category": "Reasoning",
-        "provider": "DeepSeek",
-        "supports_web_search": true,
-        "knowledge_cutoff": "January 2025",
-        "is_thinking_model": true,
-        "supports_vision_probed": false
-      },
-      {
         "id": "deepseek/deepseek-v4-pro",
         "name": "Deepseek V4 Pro",
         "description": "DeepSeek V4 Pro is a large-scale Mixture-of-Experts model from DeepSeek with 1.6T total parameters and 49B activated parameters, supporting a 1M-token context window.",
@@ -1278,7 +1267,6 @@
     "black-forest-labs/flux.2-pro",
     "bytedance-seed/seedream-4.5",
     "cohere/command-r-plus-08-2024",
-    "deepseek/deepseek-r1",
     "deepseek/deepseek-v4-pro",
     "google/gemini-2.5-flash-image",
     "google/gemini-3.1-flash-image-preview",

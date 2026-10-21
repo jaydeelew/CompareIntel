@@ -182,15 +182,15 @@ describe('pickTwoDemoModels', () => {
 
   it('excludes thinking models for faster demos', () => {
     const withThinking: ModelsByProvider = {
-      DeepSeek: [
-        m('deepseek/deepseek-r1', 'DeepSeek', 'unregistered', { is_thinking_model: true }),
-        m('deepseek/deepseek-chat-v3.1', 'DeepSeek'),
+      Qwen: [
+        m('qwen/qwen3-next-80b-a3b-thinking', 'Qwen', 'unregistered', { is_thinking_model: true }),
       ],
+      DeepSeek: [m('deepseek/deepseek-chat-v3.1', 'DeepSeek')],
       Google: [m('google/gemini-2.5-flash', 'Google')],
     }
     const result = pickTwoDemoModels('natural-language', withThinking, false, null)
     expect(result).not.toBeNull()
-    expect(result).not.toContain('deepseek/deepseek-r1')
+    expect(result).not.toContain('qwen/qwen3-next-80b-a3b-thinking')
   })
 
   it('falls back to same-provider pair when only one provider available', () => {

@@ -224,10 +224,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'google/gemini-2.5-flash',
         evidence: 'Creative Writing Arena (kearai.com): 1398 Elo.',
       },
-      {
-        modelId: 'deepseek/deepseek-r1',
-        evidence: 'Mazur Writing Score: 8.54. Strong narrative generation.',
-      },
     ],
   },
   {
@@ -337,10 +333,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'anthropic/claude-opus-4.5', evidence: 'MMLU-Pro (awesomeagents.ai): 87.1%.' },
       { modelId: 'openai/gpt-5.2', evidence: 'MMLU-Pro (awesomeagents.ai): 86.3%.' },
       { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'MMLU-Pro (awesomeagents.ai): 85.9%.' },
-      {
-        modelId: 'deepseek/deepseek-r1',
-        evidence: 'MMLU-Pro: 84.6%. Math 92.8%. Matches o1 performance.',
-      },
       { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'MMLU-Pro (awesomeagents.ai): 84.6%.' },
     ],
   },

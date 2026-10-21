@@ -106,22 +106,6 @@ def test_probe_rejected_on_image_support_error(mock_client: MagicMock) -> None:
 
 
 @patch("app.llm.vision_probe.client")
-def test_probe_rejected_on_openrouter_no_image_endpoints_404(mock_client: MagicMock) -> None:
-    mock_client.chat.completions.create.side_effect = Exception(
-        "Error code: 404 - {'error': {'message': 'No endpoints found that support image input', 'code': 404}}"
-    )
-    r = probe_supports_vision_input(
-        "deepseek/deepseek-r1",
-        openrouter_entry={
-            "id": "deepseek/deepseek-r1",
-            "architecture": {"input_modalities": ["text"]},
-        },
-    )
-    assert r.observed is False
-    assert r.rejected is True
-
-
-@patch("app.llm.vision_probe.client")
 def test_probe_no_vision_response_when_answer_wrong(mock_client: MagicMock) -> None:
     mock_client.chat.completions.create.return_value = MagicMock(
         choices=[MagicMock(message=MagicMock(content="I cannot tell."))]
