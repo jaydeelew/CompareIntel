@@ -561,16 +561,6 @@
         "supports_web_search": false,
         "knowledge_cutoff": "June 2024",
         "supports_vision_probed": false
-      },
-      {
-        "id": "microsoft/wizardlm-2-8x22b",
-        "name": "WizardLM-2 8x22B",
-        "description": "Microsoft's advanced MoE model with strong performance across reasoning, coding, and creative tasks.",
-        "category": "Language/Reasoning",
-        "provider": "Microsoft",
-        "supports_web_search": false,
-        "knowledge_cutoff": "April 2024",
-        "supports_vision_probed": false
       }
     ],
     "Minimax": [
@@ -1274,7 +1264,6 @@
     "meta-llama/llama-4-maverick",
     "meta-llama/llama-4-scout",
     "microsoft/phi-4-reasoning-plus",
-    "microsoft/wizardlm-2-8x22b",
     "minimax/minimax-m2.5",
     "mistralai/mistral-medium-3.1",
     "mistralai/mistral-small-3.2-24b-instruct",

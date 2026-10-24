@@ -71,7 +71,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'qwen/qwen3-coder-flash', evidence: 'Avg. $0.58/1M tokens.' },
       { modelId: 'qwen/qwen3-next-80b-a3b-instruct', evidence: 'Avg. $0.60/1M tokens.' },
       { modelId: 'mistralai/codestral-2508', evidence: 'Avg. $0.60/1M tokens.' },
-      { modelId: 'microsoft/wizardlm-2-8x22b', evidence: 'Avg. $0.62/1M tokens.' },
       { modelId: 'minimax/minimax-m2', evidence: 'Avg. $0.63/1M tokens.' },
       { modelId: 'minimax/minimax-m2.5', evidence: 'Avg. $0.65/1M tokens.' },
       { modelId: 'xiaomi/mimo-v2.5-pro', evidence: 'Avg. $0.65/1M tokens.' },
