@@ -193,3 +193,4 @@ Dev/test environments work without Redis; production should enable it for consis
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — Data flow, components
 - [DATA_RETENTION_IMPLEMENTATION.md](../features/DATA_RETENTION_IMPLEMENTATION.md) — UsageLog cleanup
 - [REDIS_DEPLOYMENT.md](../deployment/REDIS_DEPLOYMENT.md) — Distributed rate limiting
+- [backup-rollback.md](../runbooks/backup-rollback.md) — Database backups and rollback procedures
