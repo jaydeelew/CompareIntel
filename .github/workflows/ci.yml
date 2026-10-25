@@ -710,6 +710,8 @@ jobs:
       - name: Check Python dependencies for vulnerabilities
         run: |
           cd backend
+          # Verify starlette is pinned to a secure version (fixed PYSEC-2026-248/249 in 1.3+)
+          grep '^starlette==' requirements.txt
           # CVE-2026-4539 (pygments ReDoS): no fixed release on PyPI yet; remove ignore when pygments >2.19.2 ships.
           # PYSEC-2025-183 (pyjwt weak encryption): disputed by upstream; fixed in PyJWT>=2.15.0 for all other PyJWT vulns.
           pip-audit -r requirements.txt \
