@@ -16,6 +16,8 @@ regexes = [
   '''sk-or-v1-abc123\.\.\.''',
   '''YOUR_ADMIN_TOKEN''',
   '''6LeIxAc''',
+  '''cafebabe:deadbeef''',
+  '''BUNDLE_ENTERPRISE''',
 ]
 
 # Documentation and example files
