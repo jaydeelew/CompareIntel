@@ -331,7 +331,7 @@ function generatePDFHTML(data: ComparisonExportData): string {
       code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'Monaco', 'Menlo', monospace; font-size: 11px; }
       pre code { background: none; padding: 0; }
     </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css" crossorigin="anonymous" />
   `
 
   let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${styles}</head><body>`
@@ -778,7 +778,7 @@ export async function exportToHTML(data: ComparisonExportData): Promise<string> 
       code { background: #f1f5f9; padding: 3px 8px; border-radius: 4px; font-family: 'Monaco', 'Menlo', 'Consolas', monospace; font-size: 13px; color: #be185d; }
       pre code { background: none; padding: 0; color: inherit; }
     </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css" crossorigin="anonymous" />
   `
 
   let html = `<!DOCTYPE html>
