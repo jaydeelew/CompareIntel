@@ -697,11 +697,13 @@ jobs:
         run: |
           # Run only tests tagged with @smoke on Chromium for speed
           # These tests use mocked OpenRouter responses and should complete quickly
+          # Running 10 times to check for flakiness (deterministic tests should pass 100%)
           npm run test:e2e -- \
             --project=chromium \
             --grep="@smoke" \
             --timeout=30000 \
-            --retries=0
+            --retries=0 \
+            --repeat-each=10
       
       - name: Upload Playwright report
         if: always()
