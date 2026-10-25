@@ -3,8 +3,13 @@ Credit-based usage for authenticated and unregistered users.
 
 Paid tiers: monthly credit pools. Free and unregistered: daily credit limits.
 Legacy daily model-response fields in API stats are unused (zeros); enforcement is credits-only.
+
+STATELESS DESIGN: Anonymous rate limiting uses Redis when available, with automatic
+fallback to in-memory storage. This enables horizontal scaling across workers/replicas.
 """
 
+import json
+import logging
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_CEILING, Decimal
@@ -29,14 +34,17 @@ from .credit_manager import (
     ensure_credits_allocated,
 )
 from .models import UsageLog, User
+from .redis_client import get_redis_client
 from .type_defs import (
     AnonymousRateLimitData,
     FullUsageStatsDict,
     UsageStatsDict,
 )
 
+logger = logging.getLogger(__name__)
 
-# In-memory storage for anonymous rate limiting
+
+# In-memory storage for anonymous rate limiting (fallback when Redis unavailable)
 # Structure: { "identifier": { "count": int, "date": str, "first_seen": datetime, "timezone": str, "last_reset_at": datetime } }
 def _default_rate_limit_data() -> AnonymousRateLimitData:
     """Default factory for anonymous rate limit storage."""
@@ -121,6 +129,153 @@ def _can_reset_credits(last_reset_at: datetime | None, min_hours_between_resets:
     return hours_since_reset >= min_hours_between_resets
 
 
+def _get_redis_rate_limit_data(identifier: str) -> AnonymousRateLimitData | None:
+    """
+    Get anonymous rate limit data from Redis.
+
+    Args:
+        identifier: Unique identifier (e.g., "ip:192.168.1.1")
+
+    Returns:
+        Rate limit data dict or None if Redis unavailable or key not found
+    """
+    redis_client = get_redis_client()
+    if not redis_client or not redis_client.is_available:
+        return None
+
+    try:
+        with redis_client.get_sync_connection() as conn:
+            if not conn:
+                return None
+
+            key = f"rate_limit:anon:{identifier}"
+            data = conn.get(key)
+            if not data:
+                return None
+
+            parsed = json.loads(data)
+            if "first_seen" in parsed and parsed["first_seen"]:
+                parsed["first_seen"] = datetime.fromisoformat(parsed["first_seen"])
+            if "last_reset_at" in parsed and parsed["last_reset_at"]:
+                parsed["last_reset_at"] = datetime.fromisoformat(parsed["last_reset_at"])
+
+            return parsed
+    except Exception as e:
+        logger.warning(f"Failed to get rate limit data from Redis for {identifier}: {e}")
+        return None
+
+
+def _set_redis_rate_limit_data(identifier: str, data: AnonymousRateLimitData) -> bool:
+    """
+    Set anonymous rate limit data in Redis with TTL.
+
+    Args:
+        identifier: Unique identifier
+        data: Rate limit data to store
+
+    Returns:
+        True if successful, False otherwise
+    """
+    redis_client = get_redis_client()
+    if not redis_client or not redis_client.is_available:
+        return False
+
+    try:
+        with redis_client.get_sync_connection() as conn:
+            if not conn:
+                return False
+
+            key = f"rate_limit:anon:{identifier}"
+            serializable_data = data.copy()
+
+            if "first_seen" in serializable_data and serializable_data["first_seen"]:
+                serializable_data["first_seen"] = serializable_data["first_seen"].isoformat()
+            if "last_reset_at" in serializable_data and serializable_data["last_reset_at"]:
+                serializable_data["last_reset_at"] = serializable_data["last_reset_at"].isoformat()
+
+            conn.set(key, json.dumps(serializable_data), ex=172800)
+            return True
+    except Exception as e:
+        logger.warning(f"Failed to set rate limit data in Redis for {identifier}: {e}")
+        return False
+
+
+def _incr_redis_credits(identifier: str, credits_to_add: int, timezone_str: str, date_str: str) -> tuple[int, bool]:
+    """
+    Atomically increment credits in Redis using a Lua script for consistency.
+
+    Args:
+        identifier: Unique identifier
+        credits_to_add: Credits to add
+        timezone_str: Timezone string
+        date_str: Date string (YYYY-MM-DD)
+
+    Returns:
+        Tuple of (new_count, success)
+    """
+    redis_client = get_redis_client()
+    if not redis_client or not redis_client.is_available:
+        return (0, False)
+
+    try:
+        with redis_client.get_sync_connection() as conn:
+            if not conn:
+                return (0, False)
+
+            key = f"rate_limit:anon:{identifier}"
+            allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
+
+            lua_script = """
+            local key = KEYS[1]
+            local credits_to_add = tonumber(ARGV[1])
+            local allocated = tonumber(ARGV[2])
+            local timezone = ARGV[3]
+            local date = ARGV[4]
+            local now = ARGV[5]
+
+            local data = redis.call('GET', key)
+            local current_count = 0
+            local stored_date = ""
+            local stored_timezone = timezone
+            local first_seen = now
+            local last_reset_at = nil
+
+            if data then
+                local parsed = cjson.decode(data)
+                current_count = tonumber(parsed.count) or 0
+                stored_date = parsed.date or ""
+                stored_timezone = parsed.timezone or timezone
+                first_seen = parsed.first_seen or now
+                last_reset_at = parsed.last_reset_at
+            end
+
+            if stored_date ~= date then
+                current_count = 0
+                last_reset_at = now
+            end
+
+            local new_count = math.min(current_count + credits_to_add, allocated)
+
+            local new_data = {
+                count = new_count,
+                date = date,
+                timezone = timezone,
+                first_seen = first_seen,
+                last_reset_at = last_reset_at
+            }
+
+            redis.call('SET', key, cjson.encode(new_data), 'EX', 172800)
+            return new_count
+            """
+
+            now_iso = datetime.now(UTC).isoformat()
+            result = conn.eval(lua_script, 1, key, credits_to_add, allocated, timezone_str, date_str, now_iso)
+            return (int(result), True)
+    except Exception as e:
+        logger.warning(f"Failed to increment credits in Redis for {identifier}: {e}")
+        return (0, False)
+
+
 def check_user_credits(user: User, required_credits: Decimal, db: Session) -> tuple[bool, int, int]:
     """
     Check if authenticated user has sufficient credits for a request.
@@ -175,7 +330,9 @@ def check_anonymous_credits(
     """
     Check if unregistered user has sufficient credits for a request.
 
-    Uses in-memory storage to track daily credits. If db is provided, syncs with database for persistence.
+    Uses Redis when available for distributed rate limiting across workers/replicas.
+    Falls back to in-memory storage when Redis is unavailable.
+    If db is provided, syncs with database for persistence.
 
     Args:
         identifier: Unique identifier (e.g., "ip:192.168.1.1" or "fp:xxx")
@@ -191,7 +348,15 @@ def check_anonymous_credits(
 
     # Get today's date in user's timezone
     today = _get_local_date(timezone_str)
-    user_data = anonymous_rate_limit_storage[identifier]
+
+    # Try Redis first for distributed state
+    redis_data = _get_redis_rate_limit_data(identifier)
+    use_redis = redis_data is not None or (get_redis_client() and get_redis_client().is_available)
+
+    if use_redis and redis_data:
+        user_data = redis_data
+    else:
+        user_data = anonymous_rate_limit_storage[identifier]
 
     # Initialize timezone if not set
     if not user_data.get("timezone"):
@@ -320,6 +485,10 @@ def check_anonymous_credits(
         )
         user_data.pop("_admin_reset", None)
 
+    # Save updated data back to Redis if using Redis
+    if use_redis:
+        _set_redis_rate_limit_data(identifier, user_data)
+
     return is_allowed, credits_remaining, credits_allocated
 
 
@@ -327,8 +496,8 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal, timezone_str: st
     """
     Deduct credits from unregistered user's daily balance.
 
-    CREDITS-BASED: Replaces increment_anonymous_usage() for credit-based system.
-    Credits are capped at allocated amount (50 for unregistered) - zero out instead of going negative.
+    Uses Redis for atomic operations when available, falls back to in-memory storage.
+    Credits are capped at allocated amount (50 for unregistered).
 
     Args:
         identifier: Unique identifier (e.g., "ip:192.168.1.1" or "fp:xxx")
@@ -342,6 +511,21 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal, timezone_str: st
 
     # Get today's date in user's timezone
     today = _get_local_date(timezone_str)
+
+    # Convert Decimal to int (round UP to be conservative - never give free credits)
+    credits_int = int(credits.quantize(Decimal("1"), rounding=ROUND_CEILING))
+
+    # Try Redis atomic increment first
+    new_count, redis_success = _incr_redis_credits(identifier, credits_int, timezone_str, today)
+    if redis_success:
+        allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
+        logger.debug(
+            f"[REDIS] deduct_anonymous_credits - {identifier}: deducted {credits_int} credits "
+            f"(from {float(credits):.4f}), new count: {new_count} (capped at {allocated})"
+        )
+        return
+
+    # Fallback to in-memory storage
     user_data = anonymous_rate_limit_storage[identifier]
 
     # Initialize timezone if not set
@@ -373,10 +557,6 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal, timezone_str: st
             if not user_data.get("first_seen"):
                 user_data["first_seen"] = datetime.now(UTC)
 
-    # Convert Decimal to int (round UP to be conservative - never give free credits)
-    # Use ceiling to ensure we always deduct at least 1 credit for any usage
-    credits_int = int(credits.quantize(Decimal("1"), rounding=ROUND_CEILING))
-
     # Get allocated amount for unregistered users (50 credits)
     allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
 
@@ -384,8 +564,9 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal, timezone_str: st
     new_count = user_data["count"] + credits_int
     user_data["count"] = min(new_count, allocated)
 
-    print(
-        f"[DEBUG] deduct_anonymous_credits - {identifier}: deducted {credits_int} credits (from {float(credits):.4f}), new count: {user_data['count']} (capped at {allocated})"
+    logger.debug(
+        f"[MEMORY] deduct_anonymous_credits - {identifier}: deducted {credits_int} credits "
+        f"(from {float(credits):.4f}), new count: {user_data['count']} (capped at {allocated})"
     )
 
 

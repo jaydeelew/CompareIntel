@@ -1,15 +1,22 @@
 """
 Caching utilities for CompareIntel backend.
 
-This module provides a simple in-memory cache for frequently accessed,
-rarely-changing data like AppSettings and model lists.
+This module provides caching for frequently accessed, rarely-changing data
+like AppSettings and model lists. Uses Redis when available for distributed
+caching across workers/replicas, with automatic fallback to in-memory storage.
+
+STATELESS DESIGN: Enables horizontal scaling by sharing cache state via Redis.
 """
 
+import json
 import logging
+import pickle
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import TypeVar
+
+from .redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +25,10 @@ T = TypeVar("T")
 
 class SimpleCache:
     """
-    Simple in-memory cache with TTL (Time To Live) support.
+    Cache with Redis backend and in-memory fallback.
 
-    Suitable for caching:
+    Uses Redis for distributed caching when available, automatically falls back
+    to in-memory storage when Redis is unavailable. Suitable for caching:
     - AppSettings (rarely changes)
     - Model lists (static data)
     - User data (with short TTL)
@@ -29,8 +37,84 @@ class SimpleCache:
     def __init__(self):
         self._cache: dict[str, tuple[any, datetime]] = {}
 
+    def _get_from_redis(self, key: str) -> tuple[any, bool]:
+        """
+        Try to get value from Redis.
+
+        Returns:
+            Tuple of (value, found) where found indicates if key was in Redis
+        """
+        redis_client = get_redis_client()
+        if not redis_client or not redis_client.is_available:
+            return (None, False)
+
+        try:
+            with redis_client.get_sync_connection() as conn:
+                if not conn:
+                    return (None, False)
+
+                redis_key = f"cache:{key}"
+                data = conn.get(redis_key)
+                if not data:
+                    return (None, False)
+
+                value = pickle.loads(data.encode('latin1'))
+                return (value, True)
+        except Exception as e:
+            logger.warning(f"Failed to get cache key {key} from Redis: {e}")
+            return (None, False)
+
+    def _set_to_redis(self, key: str, value: any, ttl_seconds: int) -> bool:
+        """
+        Try to set value in Redis.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        redis_client = get_redis_client()
+        if not redis_client or not redis_client.is_available:
+            return False
+
+        try:
+            with redis_client.get_sync_connection() as conn:
+                if not conn:
+                    return False
+
+                redis_key = f"cache:{key}"
+                serialized = pickle.dumps(value).decode('latin1')
+                conn.set(redis_key, serialized, ex=ttl_seconds)
+                return True
+        except Exception as e:
+            logger.warning(f"Failed to set cache key {key} in Redis: {e}")
+            return False
+
+    def _delete_from_redis(self, key: str) -> bool:
+        """Try to delete value from Redis."""
+        redis_client = get_redis_client()
+        if not redis_client or not redis_client.is_available:
+            return False
+
+        try:
+            with redis_client.get_sync_connection() as conn:
+                if not conn:
+                    return False
+
+                redis_key = f"cache:{key}"
+                conn.delete(redis_key)
+                return True
+        except Exception as e:
+            logger.warning(f"Failed to delete cache key {key} from Redis: {e}")
+            return False
+
     def get(self, key: str, default: T | None = None) -> T | None:
         """Get value from cache if it exists and hasn't expired."""
+        # Try Redis first
+        value, found = self._get_from_redis(key)
+        if found:
+            logger.debug(f"Cache hit (Redis): {key}")
+            return value
+
+        # Fallback to in-memory
         if key not in self._cache:
             return default
 
@@ -41,24 +125,33 @@ class SimpleCache:
             del self._cache[key]
             return default
 
+        logger.debug(f"Cache hit (memory): {key}")
         return value
 
     def set(self, key: str, value: T, ttl_seconds: int = 300) -> None:
         """Set value in cache with TTL."""
-        expiry = datetime.now() + timedelta(seconds=ttl_seconds)
-        self._cache[key] = (value, expiry)
+        # Try Redis first
+        if self._set_to_redis(key, value, ttl_seconds):
+            logger.debug(f"Cache set (Redis): {key}")
+        else:
+            # Fallback to in-memory
+            expiry = datetime.now() + timedelta(seconds=ttl_seconds)
+            self._cache[key] = (value, expiry)
+            logger.debug(f"Cache set (memory): {key}")
 
     def delete(self, key: str) -> None:
         """Delete a key from cache."""
+        # Delete from both Redis and memory
+        self._delete_from_redis(key)
         if key in self._cache:
             del self._cache[key]
 
     def clear(self) -> None:
-        """Clear all cache entries."""
+        """Clear all cache entries from memory (Redis keys expire naturally)."""
         self._cache.clear()
 
     def cleanup_expired(self) -> int:
-        """Remove expired entries. Returns count of removed entries."""
+        """Remove expired entries from memory. Returns count of removed entries."""
         now = datetime.now()
         expired_keys = [key for key, (_, expiry) in self._cache.items() if now > expiry]
         for key in expired_keys:
