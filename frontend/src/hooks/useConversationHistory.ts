@@ -615,13 +615,7 @@ export function useConversationHistory({
       setIsLoadingHistory(false)
       setConversationHistory(applyLocalHistoryCap())
     }
-  }, [
-    showHistoryDropdown,
-    authLoading,
-    isAuthenticated,
-    loadHistoryFromAPI,
-    applyLocalHistoryCap,
-  ])
+  }, [showHistoryDropdown, authLoading, isAuthenticated, loadHistoryFromAPI, applyLocalHistoryCap])
 
   /**
    * Sync conversation history after a comparison completes

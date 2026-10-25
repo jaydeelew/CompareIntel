@@ -19,10 +19,7 @@ function getChromeRuntime(): ChromeRuntime | null {
   return runtime
 }
 
-export function syncAuthToExtension(tokens: {
-  accessToken: string
-  refreshToken: string
-}): void {
+export function syncAuthToExtension(tokens: { accessToken: string; refreshToken: string }): void {
   const runtime = getChromeRuntime()
   const extensionId = getExtensionId()
   if (!runtime || !extensionId) return

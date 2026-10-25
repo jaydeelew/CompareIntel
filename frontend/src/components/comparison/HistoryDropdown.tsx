@@ -62,87 +62,84 @@ export function HistoryDropdown({
         ) : (
           <>
             {conversationHistory.map(summary => {
-                const isActive =
-                  currentVisibleComparisonId && String(summary.id) === currentVisibleComparisonId
-                return (
-                  <div
-                    key={summary.id}
-                    className={`history-item ${isActive ? 'history-item-active' : ''}${
-                      summary.saved ? ' history-item-saved' : ''
-                    }`}
-                    onClick={() => onLoadConversation(summary)}
+              const isActive =
+                currentVisibleComparisonId && String(summary.id) === currentVisibleComparisonId
+              return (
+                <div
+                  key={summary.id}
+                  className={`history-item ${isActive ? 'history-item-active' : ''}${
+                    summary.saved ? ' history-item-saved' : ''
+                  }`}
+                  onClick={() => onLoadConversation(summary)}
+                >
+                  <label
+                    className="history-item-save"
+                    onClick={e => e.stopPropagation()}
+                    title="Keep this comparison"
                   >
-                    <label
-                      className="history-item-save"
-                      onClick={e => e.stopPropagation()}
-                      title="Keep this comparison"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={summary.saved === true}
-                        aria-label="Save this comparison"
-                        onChange={e => onToggleSaved?.(summary, e.target.checked)}
-                      />
-                      <span>Save</span>
-                    </label>
-                    <div className="history-item-content">
-                      <div className="history-item-prompt">
-                        {truncatePrompt(summary.input_data)}
-                        {summary.conversation_type === 'breakout' && (
-                          <span
-                            className="history-item-breakout-badge"
-                            title="Breakout conversation"
-                          >
-                            ↗
-                          </span>
-                        )}
-                      </div>
-                      <div className="history-item-meta">
-                        <span className="history-item-models">
-                          {summary.models_used.length === 1
-                            ? summary.models_used[0].split('/').pop() || summary.models_used[0]
-                            : `${summary.models_used.length} models`}
+                    <input
+                      type="checkbox"
+                      checked={summary.saved === true}
+                      aria-label="Save this comparison"
+                      onChange={e => onToggleSaved?.(summary, e.target.checked)}
+                    />
+                    <span>Save</span>
+                  </label>
+                  <div className="history-item-content">
+                    <div className="history-item-prompt">
+                      {truncatePrompt(summary.input_data)}
+                      {summary.conversation_type === 'breakout' && (
+                        <span className="history-item-breakout-badge" title="Breakout conversation">
+                          ↗
                         </span>
-                        <span className="history-item-date">{formatDate(summary.created_at)}</span>
-                        {summary.client_source && (
-                          <span
-                            className={`history-item-source history-item-source-${summary.client_source}`}
-                          >
-                            {summary.client_source === 'extension' ? 'Extension' : 'Web'}
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
-                    <button
-                      className="history-item-delete"
-                      onClick={e => onDeleteConversation(summary, e)}
-                    >
-                      ×
-                    </button>
+                    <div className="history-item-meta">
+                      <span className="history-item-models">
+                        {summary.models_used.length === 1
+                          ? summary.models_used[0].split('/').pop() || summary.models_used[0]
+                          : `${summary.models_used.length} models`}
+                      </span>
+                      <span className="history-item-date">{formatDate(summary.created_at)}</span>
+                      {summary.client_source && (
+                        <span
+                          className={`history-item-source history-item-source-${summary.client_source}`}
+                        >
+                          {summary.client_source === 'extension' ? 'Extension' : 'Web'}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )
-              })}
+                  <button
+                    className="history-item-delete"
+                    onClick={e => onDeleteConversation(summary, e)}
+                  >
+                    ×
+                  </button>
+                </div>
+              )
+            })}
             {userTier === 'unregistered' && (
-                <div className="history-signup-prompt">
-                  <div className="history-signup-message">
-                    <span className="history-signup-line">
-                      {atCap
-                        ? 'Older unsaved comparisons are removed first. Sign in to keep them.'
-                        : 'Sign in to keep this history on every device.'}
-                    </span>
-                  </div>
+              <div className="history-signup-prompt">
+                <div className="history-signup-message">
+                  <span className="history-signup-line">
+                    {atCap
+                      ? 'Older unsaved comparisons are removed first. Sign in to keep them.'
+                      : 'Sign in to keep this history on every device.'}
+                  </span>
                 </div>
-              )}
+              </div>
+            )}
             {userTier === 'free' && atCap && (
-                <div className="history-signup-prompt">
-                  <div className="history-signup-message">
-                    <span className="history-signup-line">
-                      Free accounts keep {tierLimit} comparisons. Save the ones you need, or
-                      upgrade for more.
-                    </span>
-                  </div>
+              <div className="history-signup-prompt">
+                <div className="history-signup-message">
+                  <span className="history-signup-line">
+                    Free accounts keep {tierLimit} comparisons. Save the ones you need, or upgrade
+                    for more.
+                  </span>
                 </div>
-              )}
+              </div>
+            )}
           </>
         )}
       </div>
