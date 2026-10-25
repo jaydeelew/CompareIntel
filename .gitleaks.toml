@@ -1,0 +1,27 @@
+# Gitleaks configuration for CompareIntel
+# Allowlist specific files and patterns to avoid false positives from documentation
+
+title = "CompareIntel gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist for documented example credentials and test keys"
+
+# Allowlist specific file paths where examples are documented
+paths = [
+  '''backend/app/schemas\.py''',
+  '''docs/architecture/API\.md''',
+  '''docs/features/DATA_RETENTION_IMPLEMENTATION\.md''',
+  '''docs/development/ENVIRONMENT_SETUP\.md''',
+  '''README\.md''',
+]
+
+# Allowlist specific patterns that are examples only
+regexes = [
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.\.\.''',  # Truncated JWT example token
+  '''YOUR_ADMIN_TOKEN''',                               # Placeholder token in docs
+  '''sk-or-v1-abc123\.\.\.''',                         # Truncated OpenRouter API key example
+  '''6LeIxAc''',                                        # Google reCAPTCHA official test keys
+]
