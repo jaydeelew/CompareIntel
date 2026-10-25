@@ -8,8 +8,6 @@ Tests cover:
 - Atomic credit operations in Redis
 """
 
-import os
-from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 

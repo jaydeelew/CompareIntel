@@ -95,7 +95,7 @@ class TestRedisRateLimitingDistributed:
 
     def test_atomic_credit_operations(self, redis_rate_limiting, db_session):
         """Credit operations should be atomic in Redis."""
-        from app.rate_limiting import deduct_anonymous_credits, check_anonymous_credits
+        from app.rate_limiting import check_anonymous_credits, deduct_anonymous_credits
 
         identifier = "ip:192.168.1.51"
 
@@ -174,6 +174,7 @@ class TestRedisCacheDistributed:
     def test_cache_ttl_respected(self, redis_rate_limiting):
         """Cache TTL should be respected in Redis."""
         import time
+
         from app.cache import cache
 
         key = "ttl_test"
@@ -244,8 +245,8 @@ class TestRedisMemoryManagement:
 
     def test_redis_key_naming_convention(self, redis_rate_limiting):
         """Redis keys should follow naming conventions."""
-        from app.rate_limiting import deduct_anonymous_credits
         from app.cache import cache
+        from app.rate_limiting import deduct_anonymous_credits
 
         identifier = "ip:192.168.1.70"
         
