@@ -48,7 +48,7 @@ passlib[bcrypt]>=1.7.4
 bcrypt==4.0.1
 
 # Database
-sqlalchemy>=2.0.0
+sqlalchemy[asyncio]>=2.0.0  # asyncio extra includes greenlet, required for SQLAlchemy 2.1+
 psycopg2-binary>=2.9.9
 alembic>=1.13.0
 
