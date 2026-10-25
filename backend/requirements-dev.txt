@@ -26,7 +26,7 @@ pre-commit>=3.7.0        # Git hooks framework
 # ============================================================================
 types-sqlalchemy>=1.4.0  # Type stubs for SQLAlchemy
 # PyJWT has built-in type stubs since 2.0
-types-passlib>=1.7.6     # Type stubs for passlib
+types-passlib>=1.7.7.20260211     # Type stubs for passlib
 types-PyYAML>=6.0.12.20260906      # Type stubs for PyYAML
 
 # ============================================================================
