@@ -48,6 +48,8 @@ function runCommand(command, args, description) {
 }
 
 async function build() {
+  const skipPrerender = process.env.SKIP_PRERENDER === 'true'
+  
   try {
     // Step 1: Generate sitemap
     await runCommand(
@@ -69,6 +71,14 @@ async function build() {
       ['vite', 'build'],
       'Building with Vite'
     )
+    
+    if (skipPrerender) {
+      console.log('\n' + '='.repeat(60))
+      console.log('⚠️  Skipping prerendering (SKIP_PRERENDER=true)')
+      console.log('   Pages will be rendered client-side only')
+      console.log('='.repeat(60) + '\n')
+      return
+    }
     
     // Step 4: Start preview server in background
     console.log(`\n${'='.repeat(60)}`)

@@ -27,6 +27,11 @@ ENV VITE_API_URL=${VITE_API_URL}
 ARG VITE_RECAPTCHA_SITE_KEY
 ENV VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY}
 
+# Skip prerendering in Docker by default (Playwright requires heavy dependencies)
+# Set SKIP_PRERENDER=false at build time to enable prerendering if Playwright is installed
+ARG SKIP_PRERENDER=true
+ENV SKIP_PRERENDER=${SKIP_PRERENDER}
+
 # Build the app
 RUN npm run build
 

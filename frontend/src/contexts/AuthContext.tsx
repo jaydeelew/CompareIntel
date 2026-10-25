@@ -6,8 +6,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 
 import type { User, AuthContextType, LoginCredentials, RegisterData, AuthResponse } from '../types'
-import logger from '../utils/logger'
 import { syncAuthToExtension, syncLogoutToExtension } from '../utils/extensionBridge'
+import logger from '../utils/logger'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
