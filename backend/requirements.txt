@@ -4,8 +4,10 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-aiosmtplib==5.1.0
-    # via fastapi-mail
+aiosmtplib==5.1.3
+    # via
+    #   -r requirements.in
+    #   fastapi-mail
 alembic==1.18.4
     # via -r requirements.in
 annotated-doc==0.0.4
@@ -16,7 +18,7 @@ annotated-types==0.7.0
     #   pydantic
 anthropic==0.83.0
     # via -r requirements.in
-anyio==4.12.1
+anyio==4.14.2
     # via
     #   -r requirements.in
     #   anthropic
@@ -31,8 +33,9 @@ beautifulsoup4==4.14.3
     # via -r requirements.in
 blinker==1.9.0
     # via fastapi-mail
-certifi==2026.1.4
+certifi==2026.10.23
     # via
+    #   -r requirements.in
     #   httpcore
     #   httpx
     #   requests
@@ -45,7 +48,7 @@ click==8.3.1
     # via
     #   -r requirements.in
     #   uvicorn
-cryptography==47.0.0
+cryptography==50.0.2
     # via
     #   -r requirements.in
     #   fastapi-mail
@@ -65,7 +68,7 @@ fastapi==0.136.3
     # via
     #   -r requirements.in
     #   sentry-sdk
-fastapi-mail==1.6.4
+fastapi-mail==1.6.8
     # via -r requirements.in
 greenlet==3.3.1
     # via sqlalchemy
@@ -100,9 +103,7 @@ jiter==0.13.0
     #   anthropic
     #   openai
 mako==1.3.12
-    # via
-    #   -r requirements.in
-    #   alembic
+    # via alembic
 markupsafe==3.0.3
     # via
     #   jinja2
@@ -113,7 +114,7 @@ packaging==26.0
     # via gunicorn
 passlib[bcrypt]==1.7.4
     # via -r requirements.in
-pillow==12.2.0
+pillow==13.0.0
     # via -r requirements.in
 psycopg2-binary==2.9.11
     # via -r requirements.in
@@ -131,17 +132,17 @@ pydantic-core==2.41.5
     # via
     #   -r requirements.in
     #   pydantic
-pydantic-settings==2.13.1
+pydantic-settings==2.16.1
     # via
     #   -r requirements.in
     #   fastapi-mail
-pyjwt==2.13.0
+pyjwt==2.15.1
     # via -r requirements.in
 python-dotenv==1.2.2
     # via
     #   -r requirements.in
     #   pydantic-settings
-python-multipart==0.0.27
+python-multipart==0.0.32
     # via -r requirements.in
 pytz==2025.2
     # via -r requirements.in
@@ -165,13 +166,15 @@ sniffio==1.3.1
     #   -r requirements.in
     #   anthropic
     #   openai
-soupsieve==2.8.3
-    # via beautifulsoup4
+soupsieve==3.0.4
+    # via
+    #   -r requirements.in
+    #   beautifulsoup4
 sqlalchemy==2.0.46
     # via
     #   -r requirements.in
     #   alembic
-starlette==1.1.0
+starlette==1.10.0
     # via
     #   -r requirements.in
     #   fastapi
@@ -194,6 +197,7 @@ typing-extensions==4.15.0
     #   openai
     #   pydantic
     #   pydantic-core
+    #   pydantic-settings
     #   sqlalchemy
     #   starlette
     #   stripe
@@ -203,7 +207,7 @@ typing-inspection==0.4.2
     #   fastapi
     #   pydantic
     #   pydantic-settings
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   -r requirements.in
     #   requests
