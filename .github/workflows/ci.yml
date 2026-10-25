@@ -292,7 +292,7 @@ jobs:
       run:
         working-directory: backend
     
-    # Redis service container for distributed rate limiting tests
+    # Service containers for testing
     services:
       redis:
         image: redis:7-alpine
@@ -303,6 +303,20 @@ jobs:
           --health-interval 5s
           --health-timeout 3s
           --health-retries 5
+      
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
     
     env:
       DATABASE_URL: sqlite:///./test.db
@@ -310,6 +324,7 @@ jobs:
       ENVIRONMENT: test
       SKIP_CONFIG_VALIDATION: true
       TEST_REDIS_URL: redis://localhost:6379/15
+      TEST_POSTGRES_URL: postgresql://testuser:testpass@localhost:5432/testdb
     
     steps:
       - name: Checkout code
@@ -347,6 +362,27 @@ jobs:
       
       - name: Run backend E2E tests
         run: pytest tests/e2e/ -v --no-cov
+      
+      - name: Test Alembic migrations (upgrade/downgrade)
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+        run: |
+          echo "Testing alembic upgrade to head..."
+          alembic upgrade head
+          
+          echo "Verifying alembic current..."
+          alembic current
+          
+          echo "Testing alembic downgrade (1 step)..."
+          alembic downgrade -1
+          
+          echo "Verifying downgrade..."
+          alembic current
+          
+          echo "Re-upgrading to head..."
+          alembic upgrade head
+          
+          echo "✓ Alembic migration test passed"
       
       - name: Check coverage threshold
         run: python -m coverage report --precision=6 --fail-under=69.99
