@@ -2,10 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import { createMessageId, createModelId } from '../types'
 import type { ModelConversation } from '../types/conversation'
-import {
-  clearExtensionHandoffParam,
-  shouldRequestExtensionHandoff,
-} from '../utils/extensionBridge'
+import { clearExtensionHandoffParam, shouldRequestExtensionHandoff } from '../utils/extensionBridge'
 import {
   establishSessionFromRefreshToken,
   requestExtensionHandoff,
