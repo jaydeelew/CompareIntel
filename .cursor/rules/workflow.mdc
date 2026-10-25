@@ -1,0 +1,138 @@
+---
+alwaysApply: true
+---
+
+# CompareIntel Workflow Rules
+
+## Source of Truth
+
+**GitHub Issues are the single source of truth.** Every change must link to an issue.
+
+- Before implementing, verify an issue exists and is labeled `ready`
+- Reference the issue in your PR description: `Fixes #123` or `Closes #456`
+- If no issue exists, file one first with clear acceptance criteria
+
+## Branch Naming Convention
+
+All branches must follow this pattern:
+
+```
+cursor/<short-topic>-<suffix>
+```
+
+Examples:
+- `cursor/fix-credit-calc-a1b2`
+- `cursor/add-export-html-c3d4`
+- `cursor/update-model-list-e5f6`
+
+**For Cursor Cloud Agents:** The suffix is provided in your instructions. Never create branches without it.
+
+## Commit Conventions
+
+Use **Conventional Commits** format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `ci`
+
+Examples:
+- `feat(compare): add export to HTML`
+- `fix(auth): resolve password reset token expiry`
+- `docs(readme): update installation steps`
+- `refactor(api): simplify credit calculation`
+
+## Pre-PR Checklist
+
+**Before opening a PR, run:**
+
+```bash
+./check-ci.sh
+```
+
+This script runs the same checks as CI:
+- Backend: ruff, mypy, pytest
+- Frontend: ESLint, TypeScript, build, Vitest
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md#pull-request-guidelines) for detailed requirements.
+
+**All checks must pass** before requesting review. If you cannot fix a failure that also exists on master, document it in the PR body.
+
+## Testing Requirements
+
+### Required Gates
+- **Playwright E2E tests in GitHub Actions** must pass (hard gate for merge)
+- Run locally before pushing: `cd frontend && npm run test:e2e`
+
+### Advisory Only
+- **Grok Bot visual testing** on PR previews is advisory, not a gate
+- Browser testing by bots informs decisions but never blocks merge
+
+## Service Restrictions
+
+**Never add paid services** without explicit approval:
+
+- No new SaaS subscriptions
+- No paid API tiers
+- No additional monitoring services beyond existing free tiers (Sentry Developer, UptimeRobot)
+
+When in doubt, ask in the PR description before implementing.
+
+## Approval and Deployment
+
+**Agents never merge or deploy. Jack reviews and merges all PRs.**
+
+### PR Readiness
+Submit PRs to Jack only when:
+- ✅ All CI checks are green, OR
+- ⚠️ A check fails but master already has the same failure (name it in PR body)
+
+### Deployment
+Deployment is manual and Jack-approved only. Do not:
+- Run deployment scripts
+- Modify production database
+- Change production environment variables
+- Push to production hosting
+
+## Database Migrations
+
+When adding or changing database models:
+
+1. **Generate migration:**
+   ```bash
+   cd backend
+   alembic revision --autogenerate -m "description of changes"
+   ```
+
+2. **Test locally:**
+   ```bash
+   alembic upgrade head
+   ```
+
+3. **CI will test** the migration on a throwaway Postgres instance
+
+4. **Atlas bot maintains** pre-migration backups for rollback
+
+**Never modify production database directly.** All schema changes go through Alembic.
+
+## Code Review Triggers
+
+**Sentinel bot reviews** security-sensitive changes:
+- Authentication and authorization logic
+- Stripe integration code
+- CORS configuration
+- Environment variable usage
+
+These PRs may require additional review time.
+
+## Additional Context
+
+For complete context on tech stack, patterns, and guardrails, see:
+- [AGENTS.md](../../AGENTS.md) - Essential context for AI agents
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) - Full contributor guide
+- [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) - System architecture
