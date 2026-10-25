@@ -178,7 +178,14 @@ The script logs output to:
    ```python
    from app.email_service import send_model_availability_report
    import asyncio
-   results = {"total_models": 0, "available_models": [], "unavailable_models": [], "check_timestamp": "2025-01-01T00:00:00", "error": None}
+
+   results = {
+       "total_models": 0,
+       "available_models": [],
+       "unavailable_models": [],
+       "check_timestamp": "2025-01-01T00:00:00",
+       "error": None,
+   }
    asyncio.run(send_model_availability_report(results))
    ```
 

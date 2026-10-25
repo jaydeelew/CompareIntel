@@ -23,6 +23,7 @@ from ...email_service import send_verification_email
 from ...models import AdminActionLog, User
 from ...schemas import (
     AdminActionLogResponse,
+    AdminPasswordReset,
     AdminUserCreate,
     AdminUserListResponse,
     AdminUserResponse,
@@ -264,7 +265,7 @@ async def delete_user(
 @router.post("/users/{user_id}/reset-password", status_code=status.HTTP_200_OK)
 async def reset_user_password(
     user_id: int,
-    new_password: str,
+    password_data: AdminPasswordReset,
     request: Request,
     current_user: User = Depends(require_admin_role("admin")),
     db: Session = Depends(get_db),
@@ -274,10 +275,7 @@ async def reset_user_password(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if len(new_password) < 8:
-        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
-
-    user.password_hash = get_password_hash(new_password)
+    user.password_hash = get_password_hash(password_data.new_password)
     db.commit()
 
     log_admin_action(

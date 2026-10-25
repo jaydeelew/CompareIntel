@@ -242,6 +242,48 @@ class TestAdminUserActions:
             status.HTTP_404_NOT_FOUND,
         ]
 
+    def test_reset_user_password_via_body(self, client, test_user_admin, test_user):
+        """Test resetting user password with password in request body (secure method)."""
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
+
+        # Reset password with password in body
+        new_pass = "NewSecurePass123!"
+        response = client.post(
+            f"/api/admin/users/{test_user.id}/reset-password",
+            json={"new_password": new_pass},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert "message" in data
+        # Verify the actual password value is not leaked in the response
+        assert new_pass not in str(data)
+
+    def test_reset_user_password_rejects_query_param(self, client, test_user_admin, test_user):
+        """Test that password reset rejects password via query parameter (security issue)."""
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
+
+        # Try to reset password with password in query string (should fail)
+        response = client.post(
+            f"/api/admin/users/{test_user.id}/reset-password?new_password=BadQueryPass123!",
+            json={},  # Empty body
+        )
+        # Should return 422 (validation error) because new_password is required in body
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_reset_user_password_validates_strength(self, client, test_user_admin, test_user):
+        """Test that password reset validates password strength."""
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
+
+        # Try weak password
+        response = client.post(
+            f"/api/admin/users/{test_user.id}/reset-password",
+            json={"new_password": "weak"},
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
     def test_reset_user_usage(self, client, test_user_admin, test_user, db_session):
         """Test resetting user usage."""
         # Set some usage
