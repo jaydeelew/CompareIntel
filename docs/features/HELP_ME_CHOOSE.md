@@ -4,7 +4,7 @@ The "Help me choose" feature provides decision support for model selection. User
 
 ## Overview
 
-A "Help me choose" button sits next to the Advanced button in the model selection area. Clicking it opens a dropdown with six categories displayed horizontally (stacking vertically on mobile). Each category lists models ranked by benchmark score (highest first). All models shown are strong in their category. Users can check individual models or use "Select top 3" per category; selections apply immediately and respect tier restrictions and `maxModelsLimit`.
+A "Help me choose" button sits next to the Advanced button in the model selection area. Clicking it opens a dropdown with twelve categories displayed horizontally (stacking vertically on mobile). Each category lists models ranked by benchmark score (highest first). All models shown are strong in their category. Users can check individual models or use "Select top 3" per category; selections apply immediately and respect tier restrictions and `maxModelsLimit`.
 
 **Categories:** Best for coding, Best for writing, Best for math, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for vision, Best for image generation, Best for medical.
 
@@ -21,6 +21,26 @@ A "Help me choose" button sits next to the Advanced button in the model selectio
 ## Methodology Page
 
 A public page at `/help-me-choose-methodology` (linked in the footer) explains inclusion criteria, evidence sources by category, ordering rules, and how recommendations are updated.
+
+## Cold-Start Ranking Methodology
+
+CompareIntel's long-term vision is a ranking system based on real user votes from blind side-by-side comparisons. Until enough user data is collected, rankings are seeded with clearly labeled public benchmark data from trusted third parties.
+
+### Current Data Sources (Live)
+
+All rankings today come from **public benchmarks**—independent evaluations conducted by research labs, universities, and benchmark organizations. Each model shows its source and score in the tooltip. The twelve categories and their sources are documented in `backend/scripts/research_model_benchmarks.py` and `frontend/src/data/helpMeChooseRecommendations.ts`.
+
+### Planned Data Sources (Not Yet Live)
+
+Two additional data sources are planned:
+
+1. **CompareIntel's own fixed-prompt evaluations (planned):** Standardized evaluations using model-judged scoring. The judge model will be disclosed. These results will be clearly labeled as CompareIntel evaluations—never as user votes.
+
+2. **User votes from blind side-by-side comparisons (planned):** Users will see two model outputs side-by-side (without revealing which model produced each) and pick the better one. Vote-based rankings will only be shown once a model has received at least 200 votes against at least 5 different opponent models. Models below this threshold will continue to show benchmark-based rankings.
+
+### Labeling and Transparency
+
+Every ranking is labeled by its source type: **Public benchmark**, **CompareIntel evaluation** (planned), or **User votes** (planned). Model-judged or synthetic results will never be presented as user votes. When transitioning a category from benchmark data to user votes, this documentation will be updated and vote counts will be shown alongside rankings.
 
 ## Evidence Sources
 
