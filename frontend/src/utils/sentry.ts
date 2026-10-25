@@ -50,7 +50,7 @@ export function initSentry(): void {
     replaysOnErrorSampleRate: environment === 'production' ? 0.1 : 0,
 
     // Release tracking
-    release: import.meta.env.VITE_APP_VERSION || undefined,
+    release: import.meta.env.VITE_SENTRY_RELEASE || import.meta.env.VITE_APP_VERSION || undefined,
 
     // Filter out noisy errors
     ignoreErrors: [
@@ -85,7 +85,7 @@ export function initSentry(): void {
       // Add custom tags
       event.tags = {
         ...event.tags,
-        app_version: import.meta.env.VITE_APP_VERSION || 'unknown',
+        app_version: import.meta.env.VITE_SENTRY_RELEASE || import.meta.env.VITE_APP_VERSION || 'unknown',
       }
 
       return event
