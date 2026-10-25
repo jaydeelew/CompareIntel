@@ -15,7 +15,6 @@ paths = [
   '''docs/architecture/API\.md''',
   '''docs/features/DATA_RETENTION_IMPLEMENTATION\.md''',
   '''docs/development/ENVIRONMENT_SETUP\.md''',
-  '''README\.md''',
 ]
 
 # Allowlist specific patterns that are examples only
@@ -24,4 +23,6 @@ regexes = [
   '''YOUR_ADMIN_TOKEN''',                               # Placeholder token in docs
   '''sk-or-v1-abc123\.\.\.''',                         # Truncated OpenRouter API key example
   '''6LeIxAc''',                                        # Google reCAPTCHA official test keys
+  '''YOUR_TOKEN''',                                     # Placeholder in deleted doc history
+  '''YOUR_ACCESS_TOKEN_HERE''',                         # Placeholder in deleted doc history
 ]
