@@ -130,3 +130,4 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
     setTimeout(registerSW, 2000)
   }
 }
+// Trigger CI for smoke tests
