@@ -29,7 +29,7 @@ class TestRedisRateLimitingWithFallback:
         from app.redis_client import RedisClient
 
         # Mock Redis connection
-        with patch('redis.from_url') as mock_redis:
+        with patch("redis.from_url") as mock_redis:
             mock_client = MagicMock()
             mock_client.ping.return_value = True
             mock_redis.return_value = mock_client
@@ -43,7 +43,7 @@ class TestRedisRateLimitingWithFallback:
 
         # Invalid Redis URL should trigger fallback
         client = RedisClient("redis://invalid-host:9999/0")
-        
+
         # Should not raise error, just fall back
         sync_client = client.get_sync_client()
         assert sync_client is None

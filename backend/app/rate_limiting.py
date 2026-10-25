@@ -200,7 +200,9 @@ def _set_redis_rate_limit_data(identifier: str, data: AnonymousRateLimitData) ->
         return False
 
 
-def _incr_redis_credits(identifier: str, credits_to_add: int, timezone_str: str, date_str: str) -> tuple[int, bool]:
+def _incr_redis_credits(
+    identifier: str, credits_to_add: int, timezone_str: str, date_str: str
+) -> tuple[int, bool]:
     """
     Atomically increment credits in Redis using a Lua script for consistency.
 
@@ -269,7 +271,9 @@ def _incr_redis_credits(identifier: str, credits_to_add: int, timezone_str: str,
             """
 
             now_iso = datetime.now(UTC).isoformat()
-            result = conn.eval(lua_script, 1, key, credits_to_add, allocated, timezone_str, date_str, now_iso)
+            result = conn.eval(
+                lua_script, 1, key, credits_to_add, allocated, timezone_str, date_str, now_iso
+            )
             return (int(result), True)
     except Exception as e:
         logger.warning(f"Failed to increment credits in Redis for {identifier}: {e}")

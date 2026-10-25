@@ -24,6 +24,7 @@ def redis_available() -> bool:
     """Check if a Redis instance is reachable."""
     try:
         import redis
+
         client = redis.from_url(TEST_REDIS_URL, socket_connect_timeout=2)
         client.ping()
         client.close()
@@ -46,14 +47,14 @@ pytestmark = [
 def test_redis_client():
     """Provide a clean Redis client for testing, flushing the test DB before/after."""
     import redis
-    
+
     client = redis.from_url(TEST_REDIS_URL, decode_responses=True)
-    
+
     # Clean before test
     client.flushdb()
-    
+
     yield client
-    
+
     # Clean after test
     client.flushdb()
     client.close()
@@ -63,12 +64,12 @@ def test_redis_client():
 def redis_rate_limiting(test_redis_client):
     """Set up Redis-backed rate limiting for testing."""
     from app.redis_client import init_redis_client
-    
+
     # Initialize with test Redis URL
     client = init_redis_client(TEST_REDIS_URL)
-    
+
     yield test_redis_client
-    
+
     # Cleanup
     test_redis_client.flushdb()
 
@@ -122,8 +123,9 @@ class TestRedisRateLimitingDistributed:
 
         # Simulate next day by manually updating the stored date
         from app.redis_client import get_redis_client
+
         redis_client = get_redis_client()
-        
+
         if redis_client and redis_client.is_available:
             with redis_client.get_sync_connection() as conn:
                 if conn:
@@ -249,18 +251,18 @@ class TestRedisMemoryManagement:
         from app.rate_limiting import deduct_anonymous_credits
 
         identifier = "ip:192.168.1.70"
-        
+
         # Generate some rate limit and cache keys
         deduct_anonymous_credits(identifier, Decimal("5"), "UTC")
         cache.set("test_key", "test_value")
 
         # Check Redis keys follow conventions
         keys = redis_rate_limiting.keys("*")
-        
+
         # Should have keys with proper prefixes
         rate_limit_keys = [k for k in keys if k.startswith("rate_limit:anon:")]
         cache_keys = [k for k in keys if k.startswith("cache:")]
-        
+
         assert len(rate_limit_keys) > 0 or len(cache_keys) > 0
 
     def test_redis_ttl_set_on_rate_limit_keys(self, redis_rate_limiting):
@@ -304,17 +306,17 @@ class TestRedisProductionScenarios:
         from app.cache import cache
 
         key = "worker_shared_settings"
-        
+
         # Worker 1 sets initial value
         cache.set(key, {"version": 1})
-        
+
         # Worker 2 reads
         value = cache.get(key)
         assert value == {"version": 1}
-        
+
         # Worker 3 updates
         cache.set(key, {"version": 2})
-        
+
         # Worker 4 reads updated value
         value = cache.get(key)
         assert value == {"version": 2}

@@ -57,7 +57,7 @@ class SimpleCache:
                 if not data:
                     return (None, False)
 
-                value = pickle.loads(data.encode('latin1'))  # noqa: S301
+                value = pickle.loads(data.encode("latin1"))  # noqa: S301
                 return (value, True)
         except Exception as e:
             logger.warning(f"Failed to get cache key {key} from Redis: {e}")
@@ -80,7 +80,7 @@ class SimpleCache:
                     return False
 
                 redis_key = f"cache:{key}"
-                serialized = pickle.dumps(value).decode('latin1')
+                serialized = pickle.dumps(value).decode("latin1")
                 conn.set(redis_key, serialized, ex=ttl_seconds)
                 return True
         except Exception as e:
