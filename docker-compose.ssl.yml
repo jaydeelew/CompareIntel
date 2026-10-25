@@ -39,6 +39,8 @@ services:
       args:
         - VITE_API_URL=/api
         - VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY:-}
+        - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+        - VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT:-production}
     volumes:
       - ./frontend/dist:/app/dist
     depends_on:
@@ -56,6 +58,8 @@ services:
       args:
         - VITE_API_URL=/api
         - VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY:-}
+        - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+        - VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT:-production}
     ports:
       - "80:80"
       - "443:443"
