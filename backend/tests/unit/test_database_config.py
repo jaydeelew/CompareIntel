@@ -305,7 +305,10 @@ class TestNormalizePostgresUrl:
 
         url = "postgresql://user:pass@localhost:5432/dbname?sslmode=require&application_name=myapp"
         normalized = normalize_postgres_url(url)
-        assert normalized == "postgresql+psycopg2://user:pass@localhost:5432/dbname?sslmode=require&application_name=myapp"
+        assert (
+            normalized
+            == "postgresql+psycopg2://user:pass@localhost:5432/dbname?sslmode=require&application_name=myapp"
+        )
 
     def test_url_with_special_chars_in_password(self):
         """URLs with special characters in password should be normalized correctly."""
