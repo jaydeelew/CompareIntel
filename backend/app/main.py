@@ -159,7 +159,9 @@ async def lifespan(app: FastAPI):
                 logger.info(f"Initializing Redis client for distributed state: {redis_url}")
                 init_redis_client(redis_url)
             else:
-                logger.info("Redis not configured, using in-memory fallback for rate limiting and caching")
+                logger.info(
+                    "Redis not configured, using in-memory fallback for rate limiting and caching"
+                )
                 init_redis_client(None)
 
             preload_model_token_limits()
