@@ -120,7 +120,7 @@ jobs:
         run: npm run test:coverage
       
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           file: ./frontend/coverage/coverage-final.json
           flags: frontend
@@ -394,7 +394,7 @@ jobs:
       
       - name: Upload coverage to Codecov
         if: always()
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           file: ./backend/coverage.xml
           flags: backend
