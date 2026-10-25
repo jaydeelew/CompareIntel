@@ -58,7 +58,8 @@
     "ws": ">=8.17.1",
     "dompurify": ">=3.4.17",
     "underscore": ">=1.13.8",
-    "jszip": "3.10.1"
+    "jszip": "3.10.1",
+    "ajv": "^8.0.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.0",
