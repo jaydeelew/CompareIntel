@@ -6,9 +6,8 @@ with appropriate pool settings based on environment variables.
 """
 
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool, QueuePool
 
