@@ -110,72 +110,103 @@ test.describe('Smoke Tests @smoke', () => {
     // This blocks any real OpenRouter API calls and fails the test if attempted
     const openrouterCheck = await setupOpenRouterMock(page)
 
+    // Mock the /api/models endpoint to ensure models are always available
+    await page.route('**/api/models', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          models: [
+            {
+              id: 'anthropic/claude-3.5-haiku',
+              name: 'Claude 3.5 Haiku',
+              provider: 'Anthropic',
+              context_length: 200000,
+              pricing: { prompt: '0.0000008', completion: '0.000004' },
+            },
+            {
+              id: 'openai/gpt-4o-mini',
+              name: 'GPT-4o Mini',
+              provider: 'OpenAI',
+              context_length: 128000,
+              pricing: { prompt: '0.00000015', completion: '0.0000006' },
+            },
+          ],
+        }),
+      })
+    })
+
+    // Mock the /api/compare-stream endpoint to return deterministic responses
+    await page.route('**/api/compare-stream', async route => {
+      const mockStream = [
+        'data: {"model":"anthropic/claude-3.5-haiku","content":"2+2 equals 4. "}',
+        'data: {"model":"anthropic/claude-3.5-haiku","content":"This is a basic arithmetic fact."}',
+        'data: {"model":"anthropic/claude-3.5-haiku","done":true,"usage":{"prompt_tokens":10,"completion_tokens":15,"total_tokens":25}}',
+        '',
+      ].join('\n\n')
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: mockStream,
+      })
+    })
+
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout })
     await waitForReactHydration(page)
 
-    // Verify the comparison interface is present
+    // STRICT: Verify the comparison interface is present
     const promptArea = page.locator('textarea').first()
     await expect(promptArea).toBeVisible({ timeout: 15000 })
 
-    // Enter test prompt to verify interaction works
+    // Enter test prompt
     await promptArea.fill('What is 2+2? (smoke test)')
 
-    // Verify the compare button exists
+    // STRICT: Verify the compare button exists
     const compareButton = page.getByTestId('comparison-submit-button').first()
     await expect(compareButton).toBeAttached({ timeout: 10000 })
 
-    // Check if models section is visible (it should be)
+    // STRICT: Models section must be visible
     const modelsSection = page.locator('.models-section, [data-testid="models-section"], .model-selection').first()
     await expect(modelsSection).toBeVisible({ timeout: 15000 })
 
-    // Try to find model checkboxes (but don't fail if they're slow to load)
+    // STRICT: Model checkboxes must be available (no conditional checks)
     const checkboxes = page.locator('[data-testid^="model-checkbox-"], input[type="checkbox"]')
-    const hasCheckboxes = await checkboxes.first().isVisible({ timeout: 5000 }).catch(() => false)
+    await expect(checkboxes.first()).toBeVisible({ timeout: 10000 })
 
-    // If checkboxes are available, try to select one and submit
-    if (hasCheckboxes) {
-      const count = await checkboxes.count()
-      
-      // Try to find and check an enabled checkbox
-      for (let i = 0; i < Math.min(count, 5); i++) {
-        const checkbox = checkboxes.nth(i)
-        const isDisabled = await checkbox.isDisabled().catch(() => true)
-        if (!isDisabled) {
-          await checkbox.check({ force: true }).catch(() => {})
-          break
-        }
-      }
+    // Select the first enabled model
+    const checkbox = checkboxes.first()
+    await checkbox.check({ force: true })
 
-      // Try to submit if button becomes enabled
-      const isEnabled = await compareButton.isEnabled({ timeout: 3000 }).catch(() => false)
-      if (isEnabled) {
-        // Set up response waiter before clicking
-        const responsePromise = page.waitForResponse(
-          response => response.url().includes('/api/compare-stream'),
-          { timeout: 30000 }
-        ).catch(() => null)
+    // STRICT: Compare button must be enabled after selecting a model
+    await expect(compareButton).toBeEnabled({ timeout: 5000 })
 
-        await compareButton.click().catch(() => {})
-        
-        // Wait for response if it happens
-        const response = await responsePromise
-        if (response) {
-          // Wait for results to appear
-          const resultsSection = page.locator('.results-section, .result-card').first()
-          await expect(resultsSection).toBeVisible({ timeout: 30000 })
-        }
-      }
-    }
+    // Submit the comparison
+    const responsePromise = page.waitForResponse(
+      response => response.url().includes('/api/compare-stream'),
+      { timeout: 30000 }
+    )
 
-    // The critical test: verify no real OpenRouter calls were made
+    await compareButton.click()
+
+    // STRICT: Response must be received
+    const response = await responsePromise
+    expect(response.status()).toBe(200)
+
+    // STRICT: Results must appear with the mocked response text
+    const resultsSection = page.locator('.results-section, .result-card').first()
+    await expect(resultsSection).toBeVisible({ timeout: 30000 })
+
+    // STRICT: Verify the mocked response text appears in the results
+    await expect(page.getByText(/2\+2 equals 4/i)).toBeVisible({ timeout: 10000 })
+
+    // CRITICAL: verify no real OpenRouter calls were made
     const openrouterCalled = openrouterCheck.wasOpenRouterCalled()
     if (openrouterCalled) {
       throw new Error(
         '❌ SMOKE TEST FAILURE: Real OpenRouter API call was attempted. All OpenRouter calls must be mocked in smoke tests to prevent API spend.'
       )
     }
-
-    // Test passes if UI loaded and no OpenRouter calls were made
   })
 
   test('should complete signup and login flow', async ({ page, browserName, context }) => {
@@ -193,68 +224,56 @@ test.describe('Smoke Tests @smoke', () => {
     const testEmail = `smoke-test-${Date.now()}@example.com`
     const testPassword = 'TestPassword123!'
 
-    // Click sign up button
+    // STRICT: Sign up button must be visible
     const signupButton = page.getByTestId('nav-sign-up-button')
     await expect(signupButton).toBeVisible({ timeout: 15000 })
     await signupButton.click()
 
-    // Wait for auth modal to open
+    // STRICT: Auth modal must open
     const authModal = page.locator('.auth-modal, [role="dialog"]').first()
     await expect(authModal).toBeVisible({ timeout: 10000 })
 
     // Fill signup form
-    await page.locator('input[type="email"]').first().fill(testEmail)
-    await page.locator('input[type="password"]').first().fill(testPassword)
+    const emailInput = page.locator('input[type="email"]').first()
+    const passwordInput = page.locator('input[type="password"]').first()
+    
+    await expect(emailInput).toBeVisible({ timeout: 5000 })
+    await expect(passwordInput).toBeVisible({ timeout: 5000 })
+    
+    await emailInput.fill(testEmail)
+    await passwordInput.fill(testPassword)
 
     // Submit signup
     const submitButton = page.locator('button[type="submit"]').first()
+    await expect(submitButton).toBeVisible({ timeout: 5000 })
     await submitButton.click()
 
-    // Wait for either success (modal closes) or error message
+    // STRICT: Wait for signup to complete - modal must close or error must appear
     await Promise.race([
-      authModal.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {}),
-      page.locator('.error-message, .alert-error').first().waitFor({ timeout: 15000 }).catch(() => {}),
+      authModal.waitFor({ state: 'hidden', timeout: 15000 }),
+      page.locator('.error-message, .alert-error').first().waitFor({ timeout: 15000 }),
     ])
 
-    // Check if we're logged in (user menu appears) or if there was an error
+    // STRICT: Check authenticated state - user menu must be visible
     const userMenu = page.locator('[data-testid="user-menu"], .user-menu, .profile-menu').first()
-    const userMenuVisible = await userMenu.isVisible().catch(() => false)
-
-    // If not logged in via signup, try logging in (user might already exist from previous run)
-    if (!userMenuVisible) {
-      // Close modal if still open
-      const closeButton = page.locator('[aria-label="Close"], .close-button').first()
-      if (await closeButton.isVisible().catch(() => false)) {
-        await closeButton.click()
-      }
-
-      // Click login (could be in nav or a link)
-      const loginButton = page.locator('button:has-text("Log In"), a:has-text("Log In")').first()
-      if (await loginButton.isVisible().catch(() => false)) {
-        await loginButton.click()
-
-        // Fill login form
-        await page.locator('input[type="email"]').first().fill(testEmail)
-        await page.locator('input[type="password"]').first().fill(testPassword)
-        await page.locator('button[type="submit"]').first().click()
-
-        // Wait for login to complete
-        await Promise.race([
-          page.locator('.auth-modal, [role="dialog"]').first().waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {}),
-          userMenu.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {}),
-        ])
-      }
+    
+    // If signup succeeded, user menu should be visible
+    const isLoggedIn = await userMenu.isVisible({ timeout: 3000 }).catch(() => false)
+    
+    // STRICT: If not logged in after signup, authentication MUST succeed
+    // This is not optional - we require deterministic login flow
+    if (!isLoggedIn) {
+      throw new Error(
+        '❌ SMOKE TEST FAILURE: Signup did not complete successfully. ' +
+        'The authentication flow must be deterministic in smoke tests.'
+      )
     }
 
-    // Verify authentication completed (either signup or login)
-    // Check for authenticated state indicators
-    const isAuthenticated =
-      (await userMenu.isVisible().catch(() => false)) ||
-      (await signupButton.isHidden().catch(() => false))
-
-    // We verify the flow completed without errors (authentication may or may not succeed
-    // depending on email verification settings, but the forms should work)
-    expect(isAuthenticated || true).toBe(true)
+    // STRICT: Verify user menu is visible (hard assertion)
+    await expect(userMenu).toBeVisible({ timeout: 5000 })
+    
+    // STRICT: Sign up button must be hidden when logged in
+    await expect(signupButton).toBeHidden({ timeout: 5000 })
   })
 
   test('should have valid PWA manifest', async ({ page, browserName }) => {
