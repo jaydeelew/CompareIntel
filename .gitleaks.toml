@@ -15,6 +15,7 @@ paths = [
   '''docs/architecture/API\.md''',
   '''docs/features/DATA_RETENTION_IMPLEMENTATION\.md''',
   '''docs/development/ENVIRONMENT_SETUP\.md''',
+  '''README\.md''',
 ]
 
 # Allowlist specific patterns that are examples only
