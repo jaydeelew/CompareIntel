@@ -132,6 +132,7 @@ The email includes:
    ```python
    from app.email_service import send_trial_expired_email
    import asyncio
+
    asyncio.run(send_trial_expired_email("test@example.com"))
    ```
 
