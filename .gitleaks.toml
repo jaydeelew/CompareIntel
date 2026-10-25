@@ -1,28 +1,26 @@
 # Gitleaks configuration for CompareIntel
-# See https://github.com/gitleaks/gitleaks for documentation
+# Allowlist specific files and patterns to avoid false positives from documentation
 
 title = "CompareIntel gitleaks config"
 
 [extend]
-# Use the default gitleaks ruleset
 useDefault = true
 
 [allowlist]
-description = "Allowlist for known false positives"
+description = "Allowlist for documented example credentials and test keys"
 
-# Example JWT tokens in documentation and schemas
-regexes = [
-  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.\.\.''',
-  '''sk-or-v1-abc123\.\.\.''',
-  '''YOUR_ADMIN_TOKEN''',
-  '''6LeIxAc''',
-  '''cafebabe:deadbeef''',
-  '''BUNDLE_ENTERPRISE''',
+# Allowlist specific file paths where examples are documented
+paths = [
+  '''backend/app/schemas\.py''',
+  '''docs/architecture/API\.md''',
+  '''docs/features/DATA_RETENTION_IMPLEMENTATION\.md''',
+  '''docs/development/ENVIRONMENT_SETUP\.md''',
 ]
 
-# Documentation and example files
-paths = [
-  '''docs/''',
-  '''backend/app/schemas\.py''',
-  '''\.example$''',
+# Allowlist specific patterns that are examples only
+regexes = [
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.\.\.''',  # Truncated JWT example token
+  '''YOUR_ADMIN_TOKEN''',                               # Placeholder token in docs
+  '''sk-or-v1-abc123\.\.\.''',                         # Truncated OpenRouter API key example
+  '''6LeIxAc''',                                        # Google reCAPTCHA official test keys
 ]
