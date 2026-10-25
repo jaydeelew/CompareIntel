@@ -248,14 +248,16 @@ class TestAdminUserActions:
         login_as_admin(client, test_user_admin.email)
 
         # Reset password with password in body
+        new_pass = "NewSecurePass123!"
         response = client.post(
             f"/api/admin/users/{test_user.id}/reset-password",
-            json={"new_password": "NewSecurePass123!"},
+            json={"new_password": new_pass},
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "message" in data
-        assert "password" not in data.get("message", "").lower()
+        # Verify the actual password value is not leaked in the response
+        assert new_pass not in str(data)
 
     def test_reset_user_password_rejects_query_param(self, client, test_user_admin, test_user):
         """Test that password reset rejects password via query parameter (security issue)."""
