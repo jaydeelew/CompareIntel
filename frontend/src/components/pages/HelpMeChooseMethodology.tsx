@@ -34,7 +34,7 @@ export const HelpMeChooseMethodology: React.FC = () => {
               run by third parties use the same tasks for every model, so you can compare apples to
               apples. We link to each source so you can verify the numbers yourself.
             </p>
-            <p className="last-updated">Last updated: May 2026</p>
+            <p className="last-updated">Last updated: October 2026</p>
           </header>
 
           <section className="seo-section">
@@ -319,6 +319,51 @@ export const HelpMeChooseMethodology: React.FC = () => {
               Within each category, models are ranked by score (highest first). Every model listed
               is strong—we rank them to help you choose. For cost, lower is better; for speed,
               higher is better.
+            </p>
+          </section>
+
+          <section className="seo-section">
+            <h2>Cold-Start Methodology: How We Bootstrap Rankings</h2>
+            <p>
+              CompareIntel is building toward a ranking system based on real user votes from blind
+              side-by-side comparisons. Until we have enough user data, we seed the rankings with
+              clearly labeled public benchmark data from trusted third parties.
+            </p>
+            <h3>Current Data Sources (Live)</h3>
+            <p>
+              All rankings today come from <strong>public benchmarks</strong>—independent
+              evaluations conducted by research labs, universities, and benchmark organizations.
+              Each model in "Help me choose" shows its source and score when you hover over it. The
+              twelve categories and their sources are documented in this repository's{' '}
+              <code>research_model_benchmarks.py</code> and{' '}
+              <code>helpMeChooseRecommendations.ts</code> files.
+            </p>
+            <h3>Planned Data Sources (Not Yet Live)</h3>
+            <p>We are developing two additional data sources:</p>
+            <ul className="seo-list">
+              <li>
+                <strong>CompareIntel's own fixed-prompt evaluations (planned):</strong> We plan to
+                run standardized evaluations using model-judged scoring. When we do, we will
+                disclose the judge model and clearly label these results as CompareIntel
+                evaluations—never as user votes.
+              </li>
+              <li>
+                <strong>User votes from blind side-by-side comparisons (planned):</strong> We plan
+                to show you two model outputs side-by-side (without revealing which model produced
+                each) and ask you to pick the better one. Vote-based rankings will only be shown
+                once a model has received at least 200 votes against at least 5 different opponent
+                models. This threshold ensures statistical reliability. Models that don't meet the
+                threshold will continue to show benchmark-based rankings until enough votes are
+                collected.
+              </li>
+            </ul>
+            <h3>Labeling and Transparency</h3>
+            <p>
+              Every ranking will be labeled by its source type: <strong>Public benchmark</strong>,{' '}
+              <strong>CompareIntel evaluation</strong>, or <strong>User votes</strong>. We will
+              never present model-judged or synthetic results as user votes. When we transition a
+              category from benchmark data to user votes, we will update this page and show vote
+              counts alongside rankings so you can see what's behind each number.
             </p>
           </section>
 
