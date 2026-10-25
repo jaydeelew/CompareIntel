@@ -46,6 +46,11 @@ services:
       additional_contexts:
         core: ./packages/compare-core
       target: prod
+      args:
+        - VITE_API_URL=/api
+        - VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY:-}
+        - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+        - VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT:-production}
     ports:
       - "8080:8080"
     volumes:

@@ -523,7 +523,7 @@ SENTRY_DSN=your-sentry-dsn
 SENTRY_ENVIRONMENT=production
 ```
 
-**Frontend** (add to build environment):
+**Frontend** (add to the repo-root `.env`, which docker-compose reads for substitution):
 ```bash
 VITE_SENTRY_DSN=your-sentry-dsn
 VITE_SENTRY_ENVIRONMENT=production
