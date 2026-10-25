@@ -28,6 +28,17 @@ class Settings(BaseSettings):
     # Default path is now in backend/data/ directory for clean project structure
     database_url: str = "sqlite:///./data/compareintel.db"
 
+    # Database Connection Pooling (PostgreSQL only)
+    # These settings are ignored for SQLite, which uses NullPool.
+    # Defaults are sized for production with 4 Gunicorn workers and free-tier Postgres (20-100 connections).
+    # Formula: workers × (pool_size + max_overflow) × replicas ≤ database connection limit
+    # With defaults: 4 workers × (5 + 10) × 1 replica = 60 total connections (safe for free-tier)
+    db_pool_size: int = 5
+    db_max_overflow: int = 10
+    db_pool_timeout: int = 30
+    db_pool_recycle: int = 3600
+    db_pool_pre_ping: bool = True
+
     # Security
     secret_key: str
 
@@ -75,6 +86,11 @@ class Settings(BaseSettings):
     # Performance Configuration
     # These can be overridden via environment variables.
     individual_model_timeout: int = 120
+
+    # Gunicorn worker count (production mode only)
+    # Development mode uses uvicorn with --reload instead.
+    # Consider database pool sizing when changing this: workers × (pool_size + max_overflow) × replicas
+    gunicorn_workers: int = 4
 
     # Backend per-model inactivity timeout (in seconds)
     # If a model doesn't send any chunks within this time, it's marked as timed out.
