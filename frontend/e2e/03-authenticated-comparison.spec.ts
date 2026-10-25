@@ -55,6 +55,17 @@ test.describe('Authenticated User Comparison Flow', () => {
       const checkboxCount = await modelCheckboxes.count()
       expect(checkboxCount).toBeGreaterThan(0)
 
+      // Wait for at least one checkbox to be enabled (models need to load)
+      await authenticatedPage.waitForFunction(
+        () => {
+          const checkboxes = document.querySelectorAll(
+            '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+          )
+          return Array.from(checkboxes).some(cb => !(cb as HTMLInputElement).disabled)
+        },
+        { timeout: 30000 }
+      )
+
       // Select at least 2 models for comparison (skip disabled checkboxes)
       let selectedCount = 0
       const minToSelect = 2
@@ -478,6 +489,17 @@ test.describe('Authenticated User Comparison Flow', () => {
 
       const checkboxCount = await modelCheckboxes.count()
       expect(checkboxCount).toBeGreaterThan(0)
+
+      // Wait for at least one checkbox to be enabled (models need to load)
+      await authenticatedPage.waitForFunction(
+        () => {
+          const checkboxes = document.querySelectorAll(
+            '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+          )
+          return Array.from(checkboxes).some(cb => !(cb as HTMLInputElement).disabled)
+        },
+        { timeout: 30000 }
+      )
 
       if (checkboxCount >= 2) {
         // Select first two enabled models

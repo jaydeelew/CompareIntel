@@ -414,6 +414,17 @@ test.describe('Advanced Features', () => {
 
           expect(checkboxCount).toBeGreaterThan(0)
 
+          // Wait for at least one checkbox to be enabled (models need to load)
+          await authenticatedPage.waitForFunction(
+            () => {
+              const checkboxes = document.querySelectorAll(
+                '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+              )
+              return Array.from(checkboxes).some(cb => !(cb as HTMLInputElement).disabled)
+            },
+            { timeout: 30000 }
+          )
+
           // Find first two enabled, unchecked models
           let selectedCount = 0
           for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {

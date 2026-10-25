@@ -640,6 +640,17 @@ test.describe('Unregistered User Journey', () => {
       const checkboxCount = await modelCheckboxes.count()
       expect(checkboxCount).toBeGreaterThan(0)
 
+      // Wait for at least one checkbox to be enabled (models need to load)
+      await page.waitForFunction(
+        () => {
+          const checkboxes = document.querySelectorAll(
+            '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+          )
+          return Array.from(checkboxes).some(cb => !(cb as HTMLInputElement).disabled)
+        },
+        { timeout: 30000 }
+      )
+
       // Select up to 3 models (skip disabled checkboxes)
       let selectedCount = 0
       const maxToSelect = 3
@@ -858,6 +869,17 @@ test.describe('Unregistered User Journey', () => {
 
     const checkboxCount = await modelCheckboxes.count()
     expect(checkboxCount).toBeGreaterThan(0)
+
+    // Wait for at least one checkbox to be enabled (models need to load)
+    await page.waitForFunction(
+      () => {
+        const checkboxes = document.querySelectorAll(
+          '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+        )
+        return Array.from(checkboxes).some(cb => !(cb as HTMLInputElement).disabled)
+      },
+      { timeout: 30000 }
+    )
 
     if (checkboxCount > 3) {
       // Select first 3 enabled models

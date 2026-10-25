@@ -622,6 +622,19 @@ test.describe('Registration and Onboarding', () => {
         await safeWait(page, 1200)
       }
 
+      // Wait for at least one model checkbox to be enabled before proceeding
+      await page.waitForFunction(
+        () => {
+          const checkboxes = document.querySelectorAll(
+            '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+          )
+          return Array.from(checkboxes).some(cb => !(cb as HTMLInputElement).disabled)
+        },
+        { timeout: 30000 }
+      ).catch(() => {
+        // If no models become enabled within 30s, continue anyway - we'll handle it in the loop
+      })
+
       // Cap how many provider rows we try: .nth(i) waits until the (i+1)th match exists — if
       // count() races ahead of the DOM (Firefox), a high index can stall until test timeout.
       const rawProviderCount = await providerHeaders.count()
