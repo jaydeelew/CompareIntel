@@ -6,6 +6,7 @@ import '../styles/hero.css'
 import '../styles/models.css'
 import '../styles/results.css'
 
+import { ExtensionSignedInBanner } from '../components/auth/ExtensionSignedInBanner'
 import {
   type AttachedFile,
   type StoredAttachedFile,
@@ -13,7 +14,6 @@ import {
   CREDITS_MESSAGE,
 } from '../components/comparison'
 import { Navigation, MockModeBanner } from '../components/layout'
-import { ExtensionSignedInBanner } from '../components/auth/ExtensionSignedInBanner'
 import { ComparisonPageContent, ModalManager } from '../components/main-page'
 import { DoneSelectingCard } from '../components/shared'
 import {

@@ -1,4 +1,4 @@
-FROM node:20-alpine as build
+FROM mcr.microsoft.com/playwright:v1.56.1-noble as build
 
 WORKDIR /app
 
@@ -34,7 +34,7 @@ ENV VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
 ARG VITE_SENTRY_ENVIRONMENT
 ENV VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT}
 
-# Build the app
+# Build the app with prerendering (Playwright is available in this image)
 RUN npm run build
 
 # For development (default)

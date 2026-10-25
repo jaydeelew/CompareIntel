@@ -1214,9 +1214,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const isFollowUpPostSubmit = step === 'follow-up' && followUpSubmitStarted
   const isLoadingStreamingPhase = Boolean(
     loadingStreamingRect &&
-      ((isSubmitStep && isLoading) ||
-        (step === 'view-follow-up-results' && isLoading) ||
-        (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)))
+    ((isSubmitStep && isLoading) ||
+      (step === 'view-follow-up-results' && isLoading) ||
+      (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)))
   )
 
   // Render scroll indicator if target is off-screen

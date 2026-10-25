@@ -24,7 +24,7 @@ export async function establishSessionFromRefreshToken(refreshToken: string): Pr
 }
 
 export function requestExtensionHandoff(): Promise<ExtensionHandoffPayload | null> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const timeout = window.setTimeout(() => {
       window.removeEventListener('message', onMessage)
       resolve(null)

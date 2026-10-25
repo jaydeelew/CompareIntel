@@ -52,7 +52,7 @@ export async function loadKatexCss(): Promise<void> {
         // Fallback: create link element
         const link = document.createElement('link')
         link.rel = 'stylesheet'
-        link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css'
+        link.href = 'https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css'
         link.onload = () => {
           katexCssLoaded = true
           katexCssLoading = false
