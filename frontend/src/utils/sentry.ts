@@ -85,7 +85,8 @@ export function initSentry(): void {
       // Add custom tags
       event.tags = {
         ...event.tags,
-        app_version: import.meta.env.VITE_SENTRY_RELEASE || import.meta.env.VITE_APP_VERSION || 'unknown',
+        app_version:
+          import.meta.env.VITE_SENTRY_RELEASE || import.meta.env.VITE_APP_VERSION || 'unknown',
       }
 
       return event
