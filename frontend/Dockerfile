@@ -1,4 +1,4 @@
-FROM node:20-alpine as build
+FROM mcr.microsoft.com/playwright:v1.45.0-jammy as build
 
 WORKDIR /app
 
@@ -27,12 +27,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 ARG VITE_RECAPTCHA_SITE_KEY
 ENV VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY}
 
-# Skip prerendering in Docker by default (Playwright requires heavy dependencies)
-# Set SKIP_PRERENDER=false at build time to enable prerendering if Playwright is installed
-ARG SKIP_PRERENDER=true
-ENV SKIP_PRERENDER=${SKIP_PRERENDER}
-
-# Build the app
+# Build the app with prerendering (Playwright is available in this image)
 RUN npm run build
 
 # For development (default)
