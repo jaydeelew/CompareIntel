@@ -217,6 +217,16 @@ See [docs/testing/FRONTEND_TESTING.md](docs/testing/FRONTEND_TESTING.md).
 
 ### Before Submitting
 
+Run the pre-push check script to catch issues early:
+
+```bash
+./check-ci.sh
+```
+
+This runs the same checks as CI: lint, type-check, build, and tests for both frontend and backend.
+
+**Manual checklist:**
+
 - [ ] All tests pass locally
 - [ ] Linting and type checking pass
 - [ ] Pre-commit hooks pass

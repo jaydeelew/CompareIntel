@@ -381,7 +381,7 @@ jobs:
       (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
       (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     
     env:
@@ -484,7 +484,7 @@ jobs:
       (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
       (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     
     env:
@@ -601,7 +601,7 @@ jobs:
       (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
       (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     
     env:
