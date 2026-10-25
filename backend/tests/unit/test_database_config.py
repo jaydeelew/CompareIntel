@@ -254,3 +254,63 @@ class TestSettingsConfiguration:
         with patch.dict(os.environ, {}, clear=True):
             workers = int(os.environ.get("GUNICORN_WORKERS", "4"))
             assert workers == 4
+
+
+class TestNormalizePostgresUrl:
+    """Test PostgreSQL URL normalization for psycopg2 driver compatibility."""
+
+    def test_postgresql_url_gets_psycopg2_driver(self):
+        """Generic postgresql:// URLs should be normalized to postgresql+psycopg2://."""
+        from app.database import normalize_postgres_url
+
+        url = "postgresql://user:pass@localhost:5432/dbname"
+        normalized = normalize_postgres_url(url)
+        assert normalized == "postgresql+psycopg2://user:pass@localhost:5432/dbname"
+
+    def test_postgres_url_gets_normalized_to_postgresql_psycopg2(self):
+        """postgres:// URLs should be normalized to postgresql+psycopg2://."""
+        from app.database import normalize_postgres_url
+
+        url = "postgres://user:pass@localhost:5432/dbname"
+        normalized = normalize_postgres_url(url)
+        assert normalized == "postgresql+psycopg2://user:pass@localhost:5432/dbname"
+
+    def test_postgresql_psycopg2_url_unchanged(self):
+        """postgresql+psycopg2:// URLs should remain unchanged."""
+        from app.database import normalize_postgres_url
+
+        url = "postgresql+psycopg2://user:pass@localhost:5432/dbname"
+        normalized = normalize_postgres_url(url)
+        assert normalized == url
+
+    def test_postgresql_psycopg_url_unchanged(self):
+        """postgresql+psycopg:// URLs (psycopg3) should remain unchanged."""
+        from app.database import normalize_postgres_url
+
+        url = "postgresql+psycopg://user:pass@localhost:5432/dbname"
+        normalized = normalize_postgres_url(url)
+        assert normalized == url
+
+    def test_sqlite_url_unchanged(self):
+        """SQLite URLs should remain unchanged."""
+        from app.database import normalize_postgres_url
+
+        url = "sqlite:///./test.db"
+        normalized = normalize_postgres_url(url)
+        assert normalized == url
+
+    def test_complex_postgresql_url_preserved(self):
+        """Complex PostgreSQL URLs with query params should be normalized correctly."""
+        from app.database import normalize_postgres_url
+
+        url = "postgresql://user:pass@localhost:5432/dbname?sslmode=require&application_name=myapp"
+        normalized = normalize_postgres_url(url)
+        assert normalized == "postgresql+psycopg2://user:pass@localhost:5432/dbname?sslmode=require&application_name=myapp"
+
+    def test_url_with_special_chars_in_password(self):
+        """URLs with special characters in password should be normalized correctly."""
+        from app.database import normalize_postgres_url
+
+        url = "postgresql://user:p@ss%3Aword@localhost:5432/dbname"
+        normalized = normalize_postgres_url(url)
+        assert normalized == "postgresql+psycopg2://user:p@ss%3Aword@localhost:5432/dbname"
