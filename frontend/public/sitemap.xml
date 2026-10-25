@@ -4,74 +4,68 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   
-  <!-- Homepage -->
+  <!-- Generated automatically at build time from scripts/generate-sitemap.js -->
+  <!-- Last updated: 2026-10-25 -->
+  
   <url>
     <loc>https://compareintel.com/</loc>
-    <lastmod>2026-09-07</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   
-  <!-- About Page -->
   <url>
     <loc>https://compareintel.com/about</loc>
-    <lastmod>2026-09-07</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
-  <!-- Features Page -->
   <url>
     <loc>https://compareintel.com/features</loc>
-    <lastmod>2026-09-07</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
-  <!-- How It Works Page -->
   <url>
     <loc>https://compareintel.com/how-it-works</loc>
-    <lastmod>2026-09-07</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
-  <!-- FAQ Page -->
   <url>
     <loc>https://compareintel.com/faq</loc>
-    <lastmod>2026-09-07</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   
-  <!-- Image Generation -->
   <url>
     <loc>https://compareintel.com/image-generation</loc>
-    <lastmod>2026-09-07</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
-  <!-- Help Me Choose Methodology -->
   <url>
     <loc>https://compareintel.com/help-me-choose-methodology</loc>
-    <lastmod>2026-09-07</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   
-  <!-- Privacy Policy -->
   <url>
     <loc>https://compareintel.com/privacy-policy</loc>
-    <lastmod>2026-09-07</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   
-  <!-- Terms of Service -->
   <url>
     <loc>https://compareintel.com/terms-of-service</loc>
-    <lastmod>2026-09-07</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>

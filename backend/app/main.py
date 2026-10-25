@@ -151,6 +151,19 @@ async def lifespan(app: FastAPI):
             if environment != "production":
                 Base.metadata.create_all(bind=engine, checkfirst=True)
 
+            # Initialize Redis client for distributed rate limiting and caching
+            from .redis_client import init_redis_client
+
+            redis_url = settings.redis_url if settings.redis_enabled else None
+            if redis_url:
+                logger.info(f"Initializing Redis client for distributed state: {redis_url}")
+                init_redis_client(redis_url)
+            else:
+                logger.info(
+                    "Redis not configured, using in-memory fallback for rate limiting and caching"
+                )
+                init_redis_client(None)
+
             preload_model_token_limits()
 
             from .search.rate_limiter import get_rate_limiter

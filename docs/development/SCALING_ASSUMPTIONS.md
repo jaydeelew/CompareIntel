@@ -36,7 +36,7 @@ Load, concurrency, and retention expectations for CompareIntel infrastructure an
 1. **OpenRouter API** — parallel model calls; rate limits and latency are external.
 2. **Search API** — 3 req/min per worker (or global if Redis); Brave/Tavily limits.
 3. **Database** — PostgreSQL connection pool sized by SQLAlchemy defaults.
-4. **Anonymous rate limit storage** — in-memory `defaultdict`; not shared across workers (use Redis for multi-worker consistency).
+4. **Anonymous rate limit storage** — Redis-backed when enabled; falls back to in-memory per-worker when Redis unavailable.
 
 ---
 
@@ -132,10 +132,59 @@ SQLite uses `NullPool` (no connection pooling) to avoid locking issues. Pool set
 
 ## Scaling Considerations
 
-1. **Horizontal scaling** — Add Gunicorn workers (`GUNICORN_WORKERS`) or run multiple backend replicas behind a load balancer. When scaling workers or replicas, adjust pool settings to stay under the database connection limit. Use Redis for distributed rate limiting.
+1. **Horizontal scaling** — Add Gunicorn workers (`GUNICORN_WORKERS`) or run multiple backend replicas behind a load balancer. When scaling workers or replicas, adjust database pool settings to stay under the connection limit. Redis is used for distributed anonymous rate limiting and shared caching to maintain consistency across workers/replicas.
 2. **Database** — Tune connection pool settings based on your Postgres instance's connection limit and replica count. Monitor connection usage with `SELECT count(*) FROM pg_stat_activity;`. Run data retention job monthly (see `DATA_RETENTION_IMPLEMENTATION.md`).
-3. **Redis** — Enable for production; coordinates search rate limits across workers.
+3. **Redis** — Enable for production; coordinates search rate limits AND anonymous user rate limits across workers. Also provides shared cache for AppSettings, models, and user data. See Redis section below.
 4. **OpenRouter** — No control; design for graceful degradation when external API is slow or rate-limited.
+
+---
+
+## Redis for Stateless Scaling
+
+**Added:** Redis support for distributed state management enables true horizontal scaling.
+
+### What Uses Redis
+
+1. **Anonymous rate limiting** (`app/rate_limiting.py`)
+   - Daily credit limits for unregistered users
+   - Atomic operations via Lua scripts prevent race conditions
+   - Keys: `rate_limit:anon:{identifier}` with 48-hour TTL
+   - Fallback: In-memory `defaultdict` when Redis unavailable
+
+2. **Shared cache** (`app/cache.py`)
+   - AppSettings (5-minute TTL)
+   - Model lists (1-hour TTL, mtime-aware)
+   - User data (1-minute TTL)
+   - Keys: `cache:{key}` with configurable TTLs
+   - Fallback: In-memory dict when Redis unavailable
+
+3. **Search rate limiting** (`app/search/distributed_rate_limiter.py`)
+   - Already implemented; now joined by anonymous rate limiting
+
+### Configuration
+
+Set in `.env`:
+```bash
+REDIS_URL=redis://localhost:6379/0
+REDIS_ENABLED=true
+```
+
+When unset or Redis unreachable, backend gracefully falls back to in-memory storage.
+Dev/test environments work without Redis; production should enable it for consistency.
+
+### Memory Footprint
+
+- **Anonymous rate limits:** ~200 bytes/user × active users (48h retention)
+- **Cache entries:** ~1–10 KB each (AppSettings, models, user records)
+- **Expected total:** <10 MB for typical load (hundreds of active users/day)
+- **Redis configured:** 256 MB max with `allkeys-lru` eviction (see `docker-compose.prod.yml`)
+
+### Rollout Notes
+
+- **Backward compatible:** Enabling Redis requires no code changes; backend detects and uses it
+- **No breaking changes:** Fallback ensures dev/test work without Redis
+- **Atomic operations:** Lua scripts prevent credit race conditions across workers
+- **Observability:** Logs indicate Redis vs. in-memory mode at startup
 
 ---
 

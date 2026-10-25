@@ -1,4 +1,4 @@
-FROM node:20-alpine as build
+FROM mcr.microsoft.com/playwright:v1.56.1-noble as build
 
 WORKDIR /app
 
@@ -27,7 +27,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 ARG VITE_RECAPTCHA_SITE_KEY
 ENV VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY}
 
-# Build the app
+# Build the app with prerendering (Playwright is available in this image)
 RUN npm run build
 
 # For development (default)

@@ -491,4 +491,3 @@ body:has([role='dialog'][aria-modal='true']) .extension-signed-in-banner {
     animation: none;
   }
 }
-

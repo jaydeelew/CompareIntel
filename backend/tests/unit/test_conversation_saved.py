@@ -53,9 +53,7 @@ class TestConversationSavedAndImport:
         imported_ids = response.json()["imported_ids"]
         assert len(imported_ids) == 1
 
-        stored = (
-            db_session.query(Conversation).filter(Conversation.user_id == user.id).one()
-        )
+        stored = db_session.query(Conversation).filter(Conversation.user_id == user.id).one()
         assert stored.input_data == "Device chat"
         assert stored.saved is True
         assert stored.client_source == "extension"

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import type { ImgHTMLAttributes } from 'react'
 
-export interface LazyImageProps
-  extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'loading'> {
+export interface LazyImageProps extends Omit<
+  ImgHTMLAttributes<HTMLImageElement>,
+  'src' | 'srcSet' | 'loading'
+> {
   /**
    * Image source URL
    */

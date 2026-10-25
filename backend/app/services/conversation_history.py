@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy.orm import Session
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 from ..models import Conversation
 

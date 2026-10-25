@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { useResponsive } from '../../hooks'
+
 import '../../styles/providerCarousel.css'
 import { ProviderIcon } from './ProviderIcon'
 
