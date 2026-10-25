@@ -10,9 +10,9 @@ will be skipped if Redis is not available.
 """
 
 import os
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytestmark = pytest.mark.integration
 

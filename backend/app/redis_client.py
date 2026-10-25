@@ -10,7 +10,6 @@ Provides a centralized Redis connection manager that:
 
 import logging
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any
 
 logger = logging.getLogger(__name__)
 

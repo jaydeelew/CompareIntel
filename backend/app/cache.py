@@ -8,7 +8,6 @@ caching across workers/replicas, with automatic fallback to in-memory storage.
 STATELESS DESIGN: Enables horizontal scaling by sharing cache state via Redis.
 """
 
-import json
 import logging
 import pickle
 from collections.abc import Callable
@@ -58,7 +57,7 @@ class SimpleCache:
                 if not data:
                     return (None, False)
 
-                value = pickle.loads(data.encode('latin1'))
+                value = pickle.loads(data.encode('latin1'))  # noqa: S301
                 return (value, True)
         except Exception as e:
             logger.warning(f"Failed to get cache key {key} from Redis: {e}")
