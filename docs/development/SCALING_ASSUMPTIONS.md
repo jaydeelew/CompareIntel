@@ -25,11 +25,11 @@ Load, concurrency, and retention expectations for CompareIntel infrastructure an
 
 | Component | Current Setting | Notes |
 |-----------|-----------------|-------|
-| **Gunicorn workers** | 4 | `entrypoint.sh`; one process per worker |
+| **Gunicorn workers** | 4 (configurable via `GUNICORN_WORKERS`) | `entrypoint.sh`; one process per worker |
 | **SSE connections per worker** | Many | async; each comparison holds one long-lived connection |
 | **Models per comparison** | 3–12 (tier-dependent) | run in parallel via `ThreadPoolExecutor` |
 | **ThreadPoolExecutor** | `max(len(models), 1)` | one thread per model per comparison |
-| **DB connections** | Per-request session | SQLAlchemy `SessionLocal`; no explicit pool sizing in app |
+| **DB connections (PostgreSQL)** | Configurable pool | See "Database Connection Pooling" below |
 
 ### Bottlenecks
 
@@ -71,10 +71,69 @@ Load, concurrency, and retention expectations for CompareIntel infrastructure an
 
 ---
 
+## Database Connection Pooling
+
+### PostgreSQL Production Configuration
+
+SQLAlchemy connection pooling is configured via environment variables to prevent connection exhaustion on free/small-tier Postgres instances.
+
+**Connection Limit Formula:**
+
+```
+workers × (pool_size + max_overflow) × replicas ≤ database connection limit
+```
+
+### Default Settings (Free-Tier Safe)
+
+| Setting | Default | Environment Variable | Description |
+|---------|---------|----------------------|-------------|
+| **Pool size** | 5 | `DB_POOL_SIZE` | Persistent connections per worker |
+| **Max overflow** | 10 | `DB_MAX_OVERFLOW` | Additional connections allowed beyond pool_size |
+| **Pool timeout** | 30s | `DB_POOL_TIMEOUT` | Wait time for available connection |
+| **Pool recycle** | 3600s | `DB_POOL_RECYCLE` | Recycle connections after 1 hour |
+| **Pool pre-ping** | true | `DB_POOL_PRE_PING` | Verify connections before use |
+
+**Total connections with defaults:**
+- 4 workers × (5 + 10) = **60 connections** per replica
+- Safe for free-tier Postgres (typically 20-100 connection limit)
+
+### Scaling Examples
+
+**Small production instance (100-200 connections):**
+```bash
+DB_POOL_SIZE=10
+DB_MAX_OVERFLOW=15
+GUNICORN_WORKERS=4
+# Total: 4 × (10 + 15) = 100 connections
+```
+
+**Large production instance (200+ connections):**
+```bash
+DB_POOL_SIZE=15
+DB_MAX_OVERFLOW=20
+GUNICORN_WORKERS=6
+# Total: 6 × (15 + 20) = 210 connections
+```
+
+**Multi-replica deployment (3 replicas, 200 connection limit):**
+```bash
+DB_POOL_SIZE=5
+DB_MAX_OVERFLOW=5
+GUNICORN_WORKERS=6
+# Total per replica: 6 × (5 + 5) = 60 connections
+# Total across replicas: 60 × 3 = 180 connections
+```
+
+### SQLite Development
+
+SQLite uses `NullPool` (no connection pooling) to avoid locking issues. Pool settings are ignored for SQLite.
+
+---
+
 ## Scaling Considerations
 
-1. **Horizontal scaling** — Add Gunicorn workers or run multiple backend replicas behind a load balancer. Use Redis for distributed rate limiting.
-2. **Database** — Tune connection pool; run data retention job monthly (see `DATA_RETENTION_IMPLEMENTATION.md`).
+1. **Horizontal scaling** — Add Gunicorn workers (`GUNICORN_WORKERS`) or run multiple backend replicas behind a load balancer. When scaling workers or replicas, adjust pool settings to stay under the database connection limit. Use Redis for distributed rate limiting.
+2. **Database** — Tune connection pool settings based on your Postgres instance's connection limit and replica count. Monitor connection usage with `SELECT count(*) FROM pg_stat_activity;`. Run data retention job monthly (see `DATA_RETENTION_IMPLEMENTATION.md`).
 3. **Redis** — Enable for production; coordinates search rate limits across workers.
 4. **OpenRouter** — No control; design for graceful degradation when external API is slow or rate-limited.
 

@@ -78,13 +78,15 @@ is_sqlite = "sqlite" in DATABASE_URL
 
 if is_postgresql:
     # PostgreSQL: Use connection pooling for better performance
+    # Pool settings are configurable via environment variables (see backend/.env.example)
+    # Defaults are sized for production: 4 workers × (5 + 10) = 60 total connections per replica
     engine = create_engine(
         DATABASE_URL,
-        pool_size=10,  # Number of connections to maintain
-        max_overflow=20,  # Additional connections allowed beyond pool_size
-        pool_pre_ping=True,  # Verify connections before using them (prevents stale connections)
-        pool_recycle=3600,  # Recycle connections after 1 hour
-        pool_timeout=30,  # Wait up to 30 seconds for a connection from the pool
+        pool_size=settings.db_pool_size,  # Number of connections to maintain
+        max_overflow=settings.db_max_overflow,  # Additional connections allowed beyond pool_size
+        pool_pre_ping=settings.db_pool_pre_ping,  # Verify connections before using them (prevents stale connections)
+        pool_recycle=settings.db_pool_recycle,  # Recycle connections after this many seconds
+        pool_timeout=settings.db_pool_timeout,  # Wait this many seconds for a connection from the pool
         connect_args={
             "connect_timeout": 10,  # Wait up to 10 seconds to establish connection
         },
