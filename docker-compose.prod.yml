@@ -19,6 +19,7 @@ services:
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: production
+        GIT_SHA: ${GIT_SHA:-}
     environment:
       - PYTHONPATH=/app
     env_file:
@@ -51,6 +52,7 @@ services:
         - VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY:-}
         - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
         - VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT:-production}
+        - VITE_SENTRY_RELEASE=${GIT_SHA:-}
     ports:
       - "8080:8080"
     volumes:

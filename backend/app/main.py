@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
@@ -8,10 +10,9 @@ from fastapi.responses import JSONResponse
 # Initialize Sentry error monitoring early, before other imports
 from .sentry import init_sentry
 
-init_sentry(app_version="1.0.0")
-
-import logging
-import os
+# Use git commit SHA for release tracking if available, fall back to version string
+sentry_release = os.getenv("SENTRY_RELEASE") or os.getenv("GIT_SHA") or "1.0.0"
+init_sentry(app_version=sentry_release)
 
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware

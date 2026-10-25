@@ -1,8 +1,10 @@
 FROM python:3.11-slim
 
-# Accept build argument
+# Accept build arguments
 ARG ENVIRONMENT=production
+ARG GIT_SHA
 ENV ENVIRONMENT=${ENVIRONMENT}
+ENV GIT_SHA=${GIT_SHA}
 
 WORKDIR /app
 
