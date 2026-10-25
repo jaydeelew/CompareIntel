@@ -5,6 +5,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Upgrade npm to fix lockfile resolution issues (Playwright image ships with npm 10.9.3)
+RUN npm install -g npm@latest
+
 # Install dependencies (npm ci for reproducible, lockfile-based builds)
 RUN npm ci
 
