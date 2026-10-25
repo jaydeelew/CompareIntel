@@ -324,7 +324,7 @@ jobs:
       ENVIRONMENT: test
       SKIP_CONFIG_VALIDATION: true
       TEST_REDIS_URL: redis://localhost:6379/15
-      TEST_POSTGRES_URL: postgresql://testuser:testpass@localhost:5432/testdb
+      TEST_POSTGRES_URL: postgresql+psycopg2://testuser:testpass@localhost:5432/testdb
     
     steps:
       - name: Checkout code
@@ -365,7 +365,7 @@ jobs:
       
       - name: Test Alembic migrations (upgrade/downgrade)
         env:
-          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+          DATABASE_URL: postgresql+psycopg2://testuser:testpass@localhost:5432/testdb
         run: |
           echo "Testing alembic upgrade to head..."
           alembic upgrade head
