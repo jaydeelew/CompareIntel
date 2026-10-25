@@ -3,9 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { mapExtensionHandoff } from '../../hooks/useExtensionHandoff'
 import type { ExtensionHandoffPayload } from '../../utils/extensionHandoff'
 
-function payload(
-  overrides: Partial<ExtensionHandoffPayload> = {}
-): ExtensionHandoffPayload {
+function payload(overrides: Partial<ExtensionHandoffPayload> = {}): ExtensionHandoffPayload {
   return {
     input: '',
     selectedModels: [],
@@ -20,7 +18,11 @@ describe('mapExtensionHandoff', () => {
   it('does not create comparison results from a model selection alone', () => {
     const hydration = mapExtensionHandoff(
       payload({
-        selectedModels: ['deepseek/deepseek-chat', 'deepseek/deepseek-v3.2-exp', 'cohere/command-r7b'],
+        selectedModels: [
+          'deepseek/deepseek-chat',
+          'deepseek/deepseek-v3.2-exp',
+          'cohere/command-r7b',
+        ],
       })
     )
 
@@ -127,7 +129,7 @@ describe('mapExtensionHandoff', () => {
     expect(hydration.isFollowUpMode).toBe(true)
     expect(hydration.conversationId).toBe(42)
     expect(hydration.conversations).toHaveLength(1)
-    expect(hydration.conversations[0]?.messages.map((message) => message.content)).toEqual([
+    expect(hydration.conversations[0]?.messages.map(message => message.content)).toEqual([
       'What is 2+2?',
       '4',
     ])

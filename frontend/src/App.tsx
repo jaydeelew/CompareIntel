@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 
 import './styles/variables.css'
 import './styles/base.css'
@@ -44,6 +44,9 @@ const ImageGeneration = lazy(() =>
   import('./components/pages/ImageGeneration').then(module => ({
     default: module.ImageGeneration,
   }))
+)
+const NotFound = lazy(() =>
+  import('./components/pages/NotFound').then(module => ({ default: module.NotFound }))
 )
 
 function App() {
@@ -122,7 +125,14 @@ function App() {
                 {/* MainPage is eager-loaded: lazy route + Vite dev can load a second `react` copy and break hooks (Invalid hook call / useRef null). */}
                 <Route path="/" element={<MainPage />} />
                 <Route path="/admin" element={<AdminPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route
+                  path="*"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <NotFound />
+                    </Suspense>
+                  }
+                />
               </Route>
             </Routes>
           </PWAInstallProvider>

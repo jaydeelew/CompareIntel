@@ -148,10 +148,65 @@ jobs:
           file: ./frontend/Dockerfile
           build-contexts: core=./packages/compare-core
           push: false
+          load: true
           tags: compareintel-frontend:build-test
           target: build
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      
+      - name: Verify prerendering worked
+        run: |
+          # Extract the built files from the build stage
+          docker create --name temp-build compareintel-frontend:build-test
+          docker cp temp-build:/app/dist ./temp-dist
+          docker rm temp-build
+          
+          # Verify prerendered HTML files exist and contain correct content
+          echo "Checking for prerendered pages..."
+          
+          # Check homepage
+          if [ ! -f "./temp-dist/index.html" ]; then
+            echo "❌ Homepage index.html not found!"
+            exit 1
+          fi
+          
+          # Check /features page
+          if [ ! -f "./temp-dist/features/index.html" ]; then
+            echo "❌ Features page not found at dist/features/index.html!"
+            exit 1
+          fi
+          
+          # Verify Features page contains correct title
+          if ! grep -q '<title>Features - CompareIntel</title>' "./temp-dist/features/index.html"; then
+            echo "❌ Features page does not contain correct title!"
+            exit 1
+          fi
+          
+          # Verify Features page contains visible content (not just the shell)
+          if ! grep -q 'CompareIntel Features' "./temp-dist/features/index.html"; then
+            echo "❌ Features page does not contain visible H1 content!"
+            exit 1
+          fi
+          
+          # Check a few more pages
+          for page in about how-it-works faq; do
+            if [ ! -f "./temp-dist/$page/index.html" ]; then
+              echo "❌ Page /$page not prerendered!"
+              exit 1
+            fi
+            echo "✅ /$page prerendered successfully"
+          done
+          
+          # Check 404.html exists
+          if [ ! -f "./temp-dist/404.html" ]; then
+            echo "❌ 404.html not found!"
+            exit 1
+          fi
+          
+          echo "✅ All prerendered pages verified!"
+          
+          # Cleanup
+          rm -rf ./temp-dist
 
       - name: Build frontend image (dev stage)
         uses: docker/build-push-action@v6

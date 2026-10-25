@@ -159,6 +159,8 @@ jobs:
         run: npm ci
       
       - name: Build for production
+        env:
+          SKIP_PRERENDER: true
         run: npm run build
       
       - name: Check bundle size

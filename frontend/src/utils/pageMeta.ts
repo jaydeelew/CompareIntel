@@ -4,7 +4,11 @@
  * Manages dynamic meta tags (canonical, description, Open Graph, etc.)
  * for SEO optimization per route. This ensures each page has unique
  * meta tags that help search engines properly index and display pages.
+ *
+ * Now uses the centralized pageMetadata config.
  */
+
+import { getPageMetadata } from '../config/pageMetadata'
 
 const BASE_URL = 'https://compareintel.com'
 const DEFAULT_OG_IMAGE = 'https://compareintel.com/brand/CompareIntel-social.png'
@@ -18,111 +22,35 @@ interface PageMeta {
   ogImage?: string
 }
 
-const PAGE_META: Record<string, PageMeta> = {
-  '/': {
-    title: 'CompareIntel - Compare AI & Image Models Side-by-Side | Free',
-    description:
-      'Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, FLUX, DALL-E from OpenAI, Anthropic, Google, Meta, xAI. Image generation comparison included. Free tier.',
-    canonical: `${BASE_URL}/`,
-    ogTitle: 'CompareIntel - AI & Image Model Comparison Side-by-Side | Free',
-    ogDescription:
-      'Compare AI language and image models side-by-side. Test GPT-5.4, Claude 4.6, Gemini 3, FLUX from OpenAI, Anthropic, Google, Meta, xAI. Free tier.',
-    ogImage: DEFAULT_OG_IMAGE,
-  },
-  '/about': {
-    title: 'About - CompareIntel',
-    description:
-      'Learn about CompareIntel, the platform for comparing AI models side-by-side. Discover our mission and how we help you find the best AI for your needs.',
-    canonical: `${BASE_URL}/about`,
-    ogTitle: 'About - CompareIntel',
-    ogDescription:
-      'Learn about CompareIntel, the platform for comparing AI models side-by-side. Discover our mission and how we help you find the best AI for your needs.',
-    ogImage: DEFAULT_OG_IMAGE,
-  },
-  '/features': {
-    title: 'Features - CompareIntel',
-    description:
-      'Explore CompareIntel: side-by-side AI comparison, streaming, thinking models with optional Reasoning blocks (not saved), LaTeX, code highlighting, and conversation history.',
-    canonical: `${BASE_URL}/features`,
-    ogTitle: 'Features - CompareIntel',
-    ogDescription:
-      'Explore CompareIntel: side-by-side AI comparison, streaming, thinking models with optional Reasoning blocks (not saved), LaTeX, code highlighting, and conversation history.',
-    ogImage: DEFAULT_OG_IMAGE,
-  },
-  '/image-generation': {
-    title: 'Image Generation - CompareIntel',
-    description:
-      'Compare AI image models side-by-side with aspect ratio and resolution controls. Free tier: limited by daily credits, up to 3 image models per run.',
-    canonical: `${BASE_URL}/image-generation`,
-    ogTitle: 'Image Generation - CompareIntel',
-    ogDescription:
-      'Compare AI image models side-by-side with aspect ratio and resolution controls. Free tier: limited by daily credits, up to 3 image models per run.',
-    ogImage: DEFAULT_OG_IMAGE,
-  },
-  '/how-it-works': {
-    title: 'How It Works - CompareIntel',
-    description:
-      'How to compare AI models on CompareIntel: select models, prompt once, stream answers side-by-side. Thinking models may show a Reasoning section (not saved); some models reason internally without exposing it.',
-    canonical: `${BASE_URL}/how-it-works`,
-    ogTitle: 'How It Works - CompareIntel',
-    ogDescription:
-      'How to compare AI models on CompareIntel: select models, prompt once, stream answers side-by-side. Thinking models may show a Reasoning section (not saved); some models reason internally without exposing it.',
-    ogImage: DEFAULT_OG_IMAGE,
-  },
-  '/faq': {
-    title: 'FAQ - CompareIntel',
-    description:
-      'CompareIntel FAQ: AI model comparison, credits, thinking models, Reasoning blocks (not saved), features, pricing, and getting started.',
-    canonical: `${BASE_URL}/faq`,
-    ogTitle: 'FAQ - CompareIntel',
-    ogDescription:
-      'CompareIntel FAQ: AI model comparison, credits, thinking models, Reasoning blocks (not saved), features, pricing, and getting started.',
-    ogImage: DEFAULT_OG_IMAGE,
-  },
-  '/privacy-policy': {
-    title: 'Privacy Policy - CompareIntel',
-    description:
-      "Read CompareIntel's privacy policy. Learn how we protect your data and respect your privacy.",
-    canonical: `${BASE_URL}/privacy-policy`,
-    ogTitle: 'Privacy Policy - CompareIntel',
-    ogDescription:
-      "Read CompareIntel's privacy policy. Learn how we protect your data and respect your privacy.",
-    ogImage: DEFAULT_OG_IMAGE,
-  },
-  '/terms-of-service': {
-    title: 'Terms of Service - CompareIntel',
-    description:
-      "Read CompareIntel's terms of service. Understand the rules and guidelines for using our platform.",
-    canonical: `${BASE_URL}/terms-of-service`,
-    ogTitle: 'Terms of Service - CompareIntel',
-    ogDescription:
-      "Read CompareIntel's terms of service. Understand the rules and guidelines for using our platform.",
-    ogImage: DEFAULT_OG_IMAGE,
-  },
-  '/admin': {
-    title: 'Admin Panel - CompareIntel',
-    description: 'CompareIntel admin dashboard for site management.',
-    canonical: `${BASE_URL}/admin`,
-  },
-}
-
 /**
  * Get meta information for a given route
  * @param pathname - The current route pathname
  * @returns PageMeta object with all meta information
  */
 export function getPageMeta(pathname: string): PageMeta {
-  // Normalize pathname (remove trailing slash, handle exact matches)
-  const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '')
+  // Try to get from the page metadata config
+  const metadata = getPageMetadata(pathname)
 
-  // Check for exact match first
-  if (PAGE_META[normalizedPath]) {
-    return PAGE_META[normalizedPath]
+  if (metadata) {
+    return {
+      title: metadata.title,
+      description: metadata.description,
+      canonical: metadata.path === '/' ? `${BASE_URL}/` : `${BASE_URL}${metadata.path}`,
+      ogTitle: metadata.title,
+      ogDescription: metadata.description,
+      ogImage: DEFAULT_OG_IMAGE,
+    }
   }
 
-  // Check if it's an admin route (could be /admin/*)
+  // Check if it's an admin route
+  const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '')
   if (normalizedPath.startsWith('/admin')) {
-    return PAGE_META['/admin']
+    return {
+      title: 'Admin Panel - CompareIntel',
+      description: 'CompareIntel admin dashboard for site management.',
+      canonical: `${BASE_URL}/admin`,
+      ogImage: DEFAULT_OG_IMAGE,
+    }
   }
 
   // Default fallback

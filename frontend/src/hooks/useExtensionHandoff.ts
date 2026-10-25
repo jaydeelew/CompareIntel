@@ -1,16 +1,13 @@
 import { useEffect, useRef } from 'react'
 
-import {
-  clearExtensionHandoffParam,
-  shouldRequestExtensionHandoff,
-} from '../utils/extensionBridge'
+import { createMessageId, createModelId } from '../types'
+import type { ModelConversation } from '../types/conversation'
+import { clearExtensionHandoffParam, shouldRequestExtensionHandoff } from '../utils/extensionBridge'
 import {
   establishSessionFromRefreshToken,
   requestExtensionHandoff,
   type ExtensionHandoffPayload,
 } from '../utils/extensionHandoff'
-import { createMessageId, createModelId } from '../types'
-import type { ModelConversation } from '../types/conversation'
 
 export interface ExtensionHandoffHydration {
   input: string
@@ -21,9 +18,7 @@ export interface ExtensionHandoffHydration {
   isFollowUpMode: boolean
 }
 
-function resultHasSubmittedOutput(
-  result: ExtensionHandoffPayload['results'][number]
-): boolean {
+function resultHasSubmittedOutput(result: ExtensionHandoffPayload['results'][number]): boolean {
   return result.content.trim().length > 0 || Boolean(result.error) || result.isStreaming
 }
 
@@ -78,14 +73,13 @@ function buildConversationsFromHandoff(payload: ExtensionHandoffPayload): ModelC
 
   if (submittedResults.length > 0) {
     const userPrompt =
-      [...payload.conversationHistory].reverse().find((entry) => entry.role === 'user')?.content ||
-      ''
+      [...payload.conversationHistory].reverse().find(entry => entry.role === 'user')?.content || ''
 
     for (const result of submittedResults) {
       const messages = messagesByModel.get(result.modelId) ?? []
       if (userPrompt) {
         const hasCurrentUser = messages.some(
-          (entry) => entry.type === 'user' && entry.content === userPrompt
+          entry => entry.type === 'user' && entry.content === userPrompt
         )
         if (!hasCurrentUser) {
           messages.push({
@@ -98,7 +92,7 @@ function buildConversationsFromHandoff(payload: ExtensionHandoffPayload): ModelC
       }
       if (result.content.trim()) {
         const hasAssistant = messages.some(
-          (entry) => entry.type === 'assistant' && entry.content === result.content
+          entry => entry.type === 'assistant' && entry.content === result.content
         )
         if (!hasAssistant) {
           messages.push({
@@ -113,21 +107,19 @@ function buildConversationsFromHandoff(payload: ExtensionHandoffPayload): ModelC
     }
   }
 
-  return [...modelIds].map((modelId) => ({
+  return [...modelIds].map(modelId => ({
     modelId: createModelId(modelId),
     messages: messagesByModel.get(modelId) ?? [],
   }))
 }
 
-export function mapExtensionHandoff(
-  payload: ExtensionHandoffPayload
-): ExtensionHandoffHydration {
+export function mapExtensionHandoff(payload: ExtensionHandoffPayload): ExtensionHandoffHydration {
   const conversations = buildConversationsFromHandoff(payload)
   const selectedModels =
     payload.selectedModels.length > 0
       ? payload.selectedModels
-      : conversations.map((conversation) => String(conversation.modelId))
-  const isFollowUpMode = conversations.some((conversation) => conversation.messages.length > 0)
+      : conversations.map(conversation => String(conversation.modelId))
+  const isFollowUpMode = conversations.some(conversation => conversation.messages.length > 0)
 
   return {
     input: payload.input,

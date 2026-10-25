@@ -3,7 +3,7 @@ import compression from 'compression'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -65,20 +65,70 @@ app.use(compression({
 const distPath = join(__dirname, '..', 'dist')
 app.use(express.static(distPath))
 
-// SPA fallback - serve index.html for all routes
+// Known public routes that should serve their prerendered HTML
+const PUBLIC_ROUTES = [
+  '/',
+  '/about',
+  '/features',
+  '/how-it-works',
+  '/faq',
+  '/image-generation',
+  '/help-me-choose-methodology',
+  '/privacy-policy',
+  '/terms-of-service',
+]
+
+// SPA fallback with 404 handling
 app.get('*', (req, res) => {
   try {
-    const indexPath = join(distPath, 'index.html')
-    const indexHtml = readFileSync(indexPath, 'utf-8')
-    res.setHeader('Content-Type', 'text/html')
-    res.send(indexHtml)
+    const path = req.path
+    
+    // Check if this is a known public route or /admin
+    const isKnownRoute = PUBLIC_ROUTES.includes(path) || path.startsWith('/admin')
+    
+    if (isKnownRoute) {
+      // Serve the appropriate prerendered HTML or index.html
+      let htmlPath
+      if (path === '/') {
+        htmlPath = join(distPath, 'index.html')
+      } else if (path.startsWith('/admin')) {
+        // Admin routes use the main SPA
+        htmlPath = join(distPath, 'index.html')
+      } else {
+        // Try to serve prerendered HTML
+        const pagePath = join(distPath, path.slice(1), 'index.html')
+        htmlPath = existsSync(pagePath) ? pagePath : join(distPath, 'index.html')
+      }
+      
+      const indexHtml = readFileSync(htmlPath, 'utf-8')
+      res.setHeader('Content-Type', 'text/html')
+      res.send(indexHtml)
+    } else {
+      // Unknown route - serve 404.html with 404 status
+      const notFoundPath = join(distPath, '404.html')
+      if (existsSync(notFoundPath)) {
+        const notFoundHtml = readFileSync(notFoundPath, 'utf-8')
+        res.status(404)
+        res.setHeader('Content-Type', 'text/html')
+        res.send(notFoundHtml)
+      } else {
+        // Fallback if 404.html doesn't exist
+        res.status(404)
+        res.setHeader('Content-Type', 'text/html')
+        res.send('<h1>404 - Page Not Found</h1>')
+      }
+    }
   } catch (error) {
-    res.status(500).send('Error serving index.html')
+    console.error('Error serving page:', error)
+    res.status(500).send('Internal Server Error')
   }
 })
 
 app.listen(PORT, () => {
-  console.log(`Preview server with compression running at http://localhost:${PORT}`)
-  console.log(`API requests (/api/*) are proxied to ${BACKEND_URL}`)
-  console.log(`Ensure the backend is running (e.g. python3 -m uvicorn app.main:app --port 8000)`)
+  console.log(`\n${'='.repeat(60)}`)
+  console.log(`✨ Preview server running at http://localhost:${PORT}`)
+  console.log(`   API proxy: ${BACKEND_URL}`)
+  console.log(`${'='.repeat(60)}\n`)
+  console.log('💡 Tip: Ensure the backend is running:')
+  console.log('   python3 -m uvicorn app.main:app --port 8000\n')
 })

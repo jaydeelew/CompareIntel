@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:clean": "rm -rf node_modules/.vite && vite",
-    "build": "node scripts/update-sitemap.js && tsc -b && vite build",
+    "build": "node scripts/build-with-prerender.js",
     "build:analyze": "tsc -b && vite build && echo 'Bundle analysis available at dist/stats.html'",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
