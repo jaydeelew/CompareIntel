@@ -594,6 +594,95 @@ jobs:
           path: frontend/test-results/
           retention-days: 7
 
+  e2e-test-smoke:
+    name: Smoke (Playwright)
+    needs: [detect-changes, frontend-build, backend-test]
+    if: |
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
+      (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
+      (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    
+    env:
+      DATABASE_URL: sqlite:///./test-e2e.db
+      SECRET_KEY: test-secret-key-for-ci-only
+      ENVIRONMENT: test
+      SKIP_CONFIG_VALIDATION: true
+      CI: true
+      PLAYWRIGHT_BASE_URL: http://localhost:5173
+      BACKEND_URL: http://localhost:8000
+      # Smoke tests should NEVER use real OpenRouter API
+      # Set a dummy key - real calls will be blocked by test guards
+      OPENROUTER_API_KEY: smoke-test-dummy-key-must-not-be-used
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+      
+      - name: Install Playwright browsers
+        run: |
+          cd frontend
+          npx playwright install --with-deps chromium
+      
+      - name: Initialize test database directory
+        run: |
+          cd backend
+          mkdir -p data
+          touch data/.gitkeep || true
+      
+      - name: Run smoke tests
+        working-directory: frontend
+        run: |
+          # Run only tests tagged with @smoke on Chromium for speed
+          # These tests use mocked OpenRouter responses and should complete quickly
+          npm run test:e2e -- \
+            --project=chromium \
+            --grep="@smoke" \
+            --timeout=30000 \
+            --retries=0
+      
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report-smoke
+          path: frontend/playwright-report/
+          retention-days: 7
+      
+      - name: Upload Playwright screenshots
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-screenshots-smoke
+          path: frontend/test-results/
+          retention-days: 7
+
   e2e-test-accessibility:
     name: E2E Tests - Accessibility (WCAG 2.1 AA)
     needs: [detect-changes, frontend-build, backend-test]
@@ -789,6 +878,7 @@ jobs:
       frontend-lighthouse,
       backend-lint,
       backend-test,
+      e2e-test-smoke,
       e2e-test-critical,
       e2e-test-browsers,
       e2e-test-accessibility,
@@ -813,6 +903,7 @@ jobs:
             echo "| Lighthouse | ${{ needs.frontend-lighthouse.result }} |"
             echo "| Backend Lint | ${{ needs.backend-lint.result }} |"
             echo "| Backend Tests | ${{ needs.backend-test.result }} |"
+            echo "| E2E Smoke Tests | ${{ needs.e2e-test-smoke.result }} |"
             echo "| E2E Tests (Critical) | ${{ needs.e2e-test-critical.result }} |"
             echo "| E2E Tests (Cross-browser) | ${{ needs.e2e-test-browsers.result }} |"
             echo "| E2E Tests (Accessibility) | ${{ needs.e2e-test-accessibility.result }} |"
@@ -840,6 +931,7 @@ jobs:
           check_job "Lighthouse Performance" "${{ needs.frontend-lighthouse.result }}"
           check_job "Backend Lint" "${{ needs.backend-lint.result }}"
           check_job "Backend Tests" "${{ needs.backend-test.result }}"
+          check_job "E2E Smoke Tests" "${{ needs.e2e-test-smoke.result }}"
           check_job "E2E Tests (Critical)" "${{ needs.e2e-test-critical.result }}"
           check_job "E2E Tests (Cross-browser)" "${{ needs.e2e-test-browsers.result }}"
           check_job "E2E Tests (Accessibility)" "${{ needs.e2e-test-accessibility.result }}"
