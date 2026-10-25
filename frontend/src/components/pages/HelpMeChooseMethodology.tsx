@@ -332,8 +332,8 @@ export const HelpMeChooseMethodology: React.FC = () => {
             <h3>Current Data Sources (Live)</h3>
             <p>
               All rankings today come from <strong>public benchmarks</strong>—independent
-              evaluations conducted by research labs, universities, and benchmark organizations. Each
-              model in "Help me choose" shows its source and score when you hover over it. The
+              evaluations conducted by research labs, universities, and benchmark organizations.
+              Each model in "Help me choose" shows its source and score when you hover over it. The
               twelve categories and their sources are documented in this repository's{' '}
               <code>research_model_benchmarks.py</code> and{' '}
               <code>helpMeChooseRecommendations.ts</code> files.
@@ -344,8 +344,8 @@ export const HelpMeChooseMethodology: React.FC = () => {
               <li>
                 <strong>CompareIntel's own fixed-prompt evaluations (planned):</strong> We plan to
                 run standardized evaluations using model-judged scoring. When we do, we will
-                disclose the judge model and clearly label these results as CompareIntel evaluations—never
-                as user votes.
+                disclose the judge model and clearly label these results as CompareIntel
+                evaluations—never as user votes.
               </li>
               <li>
                 <strong>User votes from blind side-by-side comparisons (planned):</strong> We plan
