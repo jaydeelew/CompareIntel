@@ -1,3 +1,24 @@
+# Security Fixes & Audit Policy
+
+## Audit Policy
+
+**Dependency Scanning:**
+- **Automated:** Dependabot monitors backend (pip), frontend (npm), and GitHub Actions for security updates weekly
+- **CI Enforcement:** `pip-audit` (backend) and `npm audit` (frontend) run on every PR and block merges on high-severity vulnerabilities
+- **Secret Scanning:** Gitleaks scans all code for hardcoded secrets and blocks merges on findings
+- **SQL Injection:** Grep-based detection monitors for unsafe f-string SQL patterns (informational only)
+
+**Vulnerability Response:**
+- Security updates are grouped and prioritized for review
+- Vulnerabilities without fixes are documented below with removal conditions
+- Ignored vulnerabilities are tracked with inline CI comments and reviewed quarterly
+
+**Review Schedule:**
+- Dependabot PRs: reviewed within 3 business days
+- Ignored vulnerabilities: quarterly review (next: Q2 2026)
+
+---
+
 # Security Fixes - February 2026 ZAP Scan Issues
 
 ## Summary
@@ -119,3 +140,37 @@ If you want to restore ZAP scanning **without** GitHub issue creation:
 - ✅ **ZAP issue spam**: Already resolved (workflow deleted Feb 15)
 
 The repository is now secure against both issues. The ZAP workflow will not create any more GitHub issues because it no longer exists.
+
+---
+
+## Tracked Ignored Vulnerabilities
+
+This section documents vulnerabilities that are temporarily ignored in CI because no fixed release is available. Each entry includes the removal condition.
+
+### CVE-2026-4539 (pygments ReDoS)
+
+**Status:** Ignored in CI (pip-audit)  
+**Package:** pygments (transitive dependency, not directly required)  
+**Issue:** Regular expression Denial of Service (ReDoS) vulnerability  
+**Current Version:** Not directly installed (may be pulled by dev tools)  
+**Fixed Version:** None available as of Oct 25, 2026  
+**Last Checked:** Oct 25, 2026  
+**Removal Condition:** Remove ignore when pygments >2.21.0 is released with a fix  
+**Next Review:** Q1 2027 or when pygments releases a new version  
+**Workaround:** pygments is not a production dependency; vulnerability impact is limited to dev/doc tooling  
+**CI Location:** `.github/workflows/ci.yml` line ~720
+
+### PYSEC-2025-183 (PyJWT weak encryption claim)
+
+**Status:** Ignored in CI (pip-audit) - DISPUTED BY UPSTREAM  
+**Package:** PyJWT  
+**Issue:** Disputed vulnerability regarding JWT encryption weakness  
+**Current Version:** 2.15.1 (latest)  
+**Fixed Version:** Upstream maintainers dispute this vulnerability; all other PyJWT CVEs are fixed in >=2.15.0  
+**Last Checked:** Oct 25, 2026  
+**Removal Condition:** Remove ignore when PYSEC-2025-183 is marked as withdrawn/invalid, or when PyJWT releases a version that explicitly addresses it with a security patch note  
+**Next Review:** Q1 2027  
+**Workaround:** CompareIntel uses PyJWT 2.15.1, which contains fixes for all non-disputed vulnerabilities  
+**CI Location:** `.github/workflows/ci.yml` line ~721
+
+**Review Schedule:** Quarterly (Q1, Q2, Q3, Q4) - check for new releases and CVE status updates

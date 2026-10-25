@@ -1,0 +1,26 @@
+# Gitleaks configuration for CompareIntel
+# See https://github.com/gitleaks/gitleaks for documentation
+
+title = "CompareIntel gitleaks config"
+
+[extend]
+# Use the default gitleaks ruleset
+useDefault = true
+
+[allowlist]
+description = "Allowlist for known false positives"
+
+# Example JWT tokens in documentation and schemas
+regexes = [
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.\.\.''',
+  '''sk-or-v1-abc123\.\.\.''',
+  '''YOUR_ADMIN_TOKEN''',
+  '''6LeIxAc''',
+]
+
+# Documentation and example files
+paths = [
+  '''docs/''',
+  '''backend/app/schemas\.py''',
+  '''\.example$''',
+]
