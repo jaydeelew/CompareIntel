@@ -46,6 +46,8 @@ jobs:
             frontend:
               - 'frontend/**'
               - '.github/workflows/ci.yml'
+              - 'frontend/e2e/**'
+              - 'frontend/playwright.config.*'
             backend:
               - 'backend/**'
               - 'frontend/src/data/**'
