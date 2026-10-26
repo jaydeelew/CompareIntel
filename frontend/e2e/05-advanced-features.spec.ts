@@ -50,11 +50,22 @@ function savedSelectionsTrigger(page: Page) {
 async function openSavedSelectionsDropdown(page: Page) {
   const trigger = savedSelectionsTrigger(page)
   await expect(trigger).toBeVisible({ timeout: 10000 })
-  const isOpen = await trigger.evaluate(el => el.classList.contains('active'))
-  if (!isOpen) {
-    await trigger.click()
-  }
   const dropdown = page.getByTestId('saved-selections-dropdown')
+
+  // Playwright pointer clicks can hit the portaled tooltip instead of the button,
+  // which fires the document mousedown outside-handler and never opens the panel.
+  // DOM click() matches the other Firefox workarounds in this file.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const isOpen = await trigger.evaluate(el => el.classList.contains('active'))
+    if (!isOpen) {
+      await trigger.evaluate((el: HTMLElement) => (el as HTMLButtonElement).click())
+    }
+    if (await dropdown.isVisible().catch(() => false)) {
+      return { trigger, dropdown }
+    }
+    await page.waitForTimeout(400)
+  }
+
   await expect(dropdown).toBeVisible({ timeout: 10000 })
   return { trigger, dropdown }
 }
