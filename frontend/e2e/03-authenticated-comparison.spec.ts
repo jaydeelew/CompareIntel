@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
+import { mockModelsApi } from './helpers/mockModels'
 
 /**
  * E2E Tests: Authenticated User Comparison Flow
@@ -12,6 +13,11 @@ import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
  */
 
 test.describe('Authenticated User Comparison Flow', () => {
+  test.beforeEach(async ({ authenticatedPage }) => {
+    // Mock models API for deterministic tests
+    await mockModelsApi(authenticatedPage, 'free')
+  })
+
   test('User can perform a complete comparison', async ({ authenticatedPage }) => {
     await test.step('Enter comparison prompt', async () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')

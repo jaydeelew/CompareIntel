@@ -7,6 +7,7 @@ import {
   waitForReactHydration,
   dismissTutorialOverlay,
 } from './fixtures'
+import { mockModelsApi } from './helpers/mockModels'
 
 /**
  * E2E Tests: Unregistered User Journey
@@ -60,6 +61,9 @@ test.describe('Unregistered User Journey', () => {
     // Clear all authentication state
     await context.clearCookies()
     await context.clearPermissions()
+
+    // Mock models API for deterministic tests
+    await mockModelsApi(page, 'unregistered')
 
     // Set up wait for models API before navigating (exclude CSS/static files)
     const modelsResponsePromise = page
