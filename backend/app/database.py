@@ -31,10 +31,43 @@ os.makedirs(db_dir, exist_ok=True)  # Ensure directory exists
 db_file = os.path.join(db_dir, "compareintel.db")
 default_db_path = f"sqlite:///{db_file}"
 
+
+def normalize_postgres_url(url: str) -> str:
+    """
+    Normalize PostgreSQL URLs to explicitly use psycopg2 driver.
+
+    SQLAlchemy 2.1+ prefers psycopg3 for generic postgresql:// URLs,
+    but we use psycopg2-binary. This function ensures we always use psycopg2.
+
+    Examples:
+        postgresql://user:pass@host/db -> postgresql+psycopg2://user:pass@host/db
+        postgres://user:pass@host/db -> postgresql+psycopg2://user:pass@host/db
+        postgresql+psycopg2://... -> postgresql+psycopg2://... (unchanged)
+
+    Args:
+        url: Database URL string
+
+    Returns:
+        Normalized URL with explicit psycopg2 driver
+    """
+    if url.startswith("postgres://") and not url.startswith("postgresql://"):
+        # Normalize postgres:// to postgresql://
+        url = "postgresql://" + url[len("postgres://") :]
+
+    if url.startswith("postgresql://") and "+psycopg" not in url:
+        # Add explicit psycopg2 driver
+        url = url.replace("postgresql://", "postgresql+psycopg2://")
+
+    return url
+
+
 # Use database URL from settings, with fallback to default SQLite path
 # Only use default if settings still has the old default path
 old_default = "sqlite:///./compareintel.db"
 DATABASE_URL = settings.database_url if settings.database_url != old_default else default_db_path
+
+# Normalize PostgreSQL URLs to use psycopg2 driver explicitly
+DATABASE_URL = normalize_postgres_url(DATABASE_URL)
 
 # Convert relative SQLite paths to absolute paths for reliability
 if DATABASE_URL.startswith("sqlite:///./"):

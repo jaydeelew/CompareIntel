@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import the SQLAlchemy models and Base
 # Import settings for database URL
 from app.config import settings
-from app.database import Base
+from app.database import Base, normalize_postgres_url
 
 # Import all models so Alembic can detect them for autogenerate
 # This ensures all models are included in migration generation
@@ -56,7 +56,7 @@ def get_database_url() -> str:
         # Fallback to SQLite for development
         url = "sqlite:///./compareintel.db"
 
-    return url
+    return normalize_postgres_url(url)
 
 
 def run_migrations_offline() -> None:
