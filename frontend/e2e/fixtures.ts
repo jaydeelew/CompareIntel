@@ -1166,6 +1166,7 @@ export const test = base.extend<TestFixtures>({
       window.__PLAYWRIGHT__ = true
       window.__PW_INTERNAL__ = true
     })
+    
     await use(page)
   },
 

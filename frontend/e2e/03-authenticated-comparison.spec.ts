@@ -1,3 +1,5 @@
+import type { Page, BrowserContext } from '@playwright/test'
+
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { mockModelsApi, mockComparisonStream } from './helpers/mockModels'
@@ -12,13 +14,38 @@ import { mockModelsApi, mockComparisonStream } from './helpers/mockModels'
  * - Model response interactions
  */
 
-test.describe('Authenticated User Comparison Flow', () => {
-  test.beforeEach(async ({ authenticatedPage }) => {
-    // Mock models API for deterministic tests
-    await mockModelsApi(authenticatedPage, 'free')
-  })
+const TEST_FREE_EMAIL = process.env.TEST_FREE_EMAIL || 'free@test.com'
+const TEST_FREE_PASSWORD = process.env.TEST_FREE_PASSWORD || 'Test12345678/'
 
-  test('User can perform a complete comparison', async ({ authenticatedPage }) => {
+async function setupAuthenticatedPageWithMocks(page: Page, context: BrowserContext): Promise<Page> {
+  // Set up mocks FIRST, before any navigation
+  const { mockModelsApi, mockComparisonStream } = await import('./helpers/mockModels')
+  const { ensureAuthenticated, waitForAuthState, waitForReactHydration, dismissTutorialOverlay } = await import('./fixtures')
+  
+  await mockModelsApi(page, 'free')
+  await mockComparisonStream(page)
+  
+  // Now navigate
+  await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+  try {
+    await page.waitForLoadState('load', { timeout: 15000 })
+  } catch {
+    await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+  }
+  await waitForReactHydration(page)
+  await waitForAuthState(page)
+  await dismissTutorialOverlay(page)
+  
+  // Authenticate  
+  const { ensureAuthenticated: ensureAuth } = await import('./helpers/auth')
+  await ensureAuth(page, TEST_FREE_EMAIL, TEST_FREE_PASSWORD, context)
+  
+  return page
+}
+
+test.describe('Authenticated User Comparison Flow', () => {
+  test('User can perform a complete comparison', async ({ page, context }) => {
+    const authenticatedPage = await setupAuthenticatedPageWithMocks(page, context)
     await test.step('Enter comparison prompt', async () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
       await expect(inputField).toBeVisible()
