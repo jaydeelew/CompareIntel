@@ -19,8 +19,7 @@ const TEST_FREE_PASSWORD = process.env.TEST_FREE_PASSWORD || 'Test12345678/'
 async function setupAuthenticatedPageWithMocks(page: Page, context: BrowserContext): Promise<Page> {
   // Set up mocks FIRST, before any navigation
   const { mockModelsApi, mockComparisonStream } = await import('./helpers/mockModels')
-  const { waitForAuthState, waitForReactHydration, dismissTutorialOverlay } = await import('./fixtures')
-  const { ensureAuthenticated } = await import('./helpers/auth')
+  const { waitForAuthState, waitForReactHydration, dismissTutorialOverlay, ensureAuthenticated } = await import('./fixtures')
   
   await mockModelsApi(page, 'free')
   await mockComparisonStream(page)
