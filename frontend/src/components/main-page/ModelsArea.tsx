@@ -37,10 +37,10 @@ export interface ModelsAreaProps {
   hasAttachedImages?: boolean
   /** When set, shows a persistent warning that selected model(s) cannot process images */
   nonVisionModelsWarning?: string | null
-  /** "text" = text models, "image" = image generation models */
-  modelMode?: 'text' | 'image'
-  /** Called when user switches between text and image model modes */
-  onModelModeChange?: (mode: 'text' | 'image') => void
+  /** "text" = text models, "image" = image generation, "voice" = spoken turn-taking */
+  modelMode?: 'text' | 'image' | 'voice'
+  /** Called when user switches between text, voice, and image model modes */
+  onModelModeChange?: (mode: 'text' | 'image' | 'voice') => void
   modelsByProvider: ModelsByProvider
   /** Full models for Help Me Choose lookups (avoids greying text/image models when filtered by mode) */
   allModelsByProvider?: ModelsByProvider
@@ -325,6 +325,7 @@ export function ModelsArea({
                 role="group"
                 aria-label="Model type"
                 data-mode={modelMode}
+                data-tabs="3"
               >
                 <span className="models-section-mode-slider" aria-hidden />
                 <button
@@ -332,14 +333,25 @@ export function ModelsArea({
                   className={`models-section-mode-btn ${modelMode === 'text' ? 'active' : ''}`}
                   onClick={() => onModelModeChange('text')}
                   aria-pressed={modelMode === 'text'}
+                  data-testid="text-tab-button"
                 >
                   Text models
+                </button>
+                <button
+                  type="button"
+                  className={`models-section-mode-btn ${modelMode === 'voice' ? 'active' : ''}`}
+                  onClick={() => onModelModeChange('voice')}
+                  aria-pressed={modelMode === 'voice'}
+                  data-testid="voice-tab-button"
+                >
+                  Voice
                 </button>
                 <button
                   type="button"
                   className={`models-section-mode-btn ${modelMode === 'image' ? 'active' : ''}`}
                   onClick={() => onModelModeChange('image')}
                   aria-pressed={modelMode === 'image'}
+                  data-testid="image-tab-button"
                 >
                   Image generation models
                 </button>

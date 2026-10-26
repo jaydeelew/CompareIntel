@@ -32,6 +32,7 @@ function streamingRefs(): StreamingRefs {
     isPageScrollingRef: { current: false },
     scrollListenersRef: { current: new Map() },
     lastSubmittedInputRef: { current: '' },
+    pendingInputOverrideRef: { current: null },
   }
 }
 
@@ -177,6 +178,27 @@ describe('useComparisonStreaming', () => {
 
     expect(stateCb.setError).toHaveBeenCalledWith('Please select at least one model')
     expect(compareService.compareStream).not.toHaveBeenCalled()
+  })
+
+  it('uses a pending voice transcript even when input state is still empty', async () => {
+    const cfg = baseConfig()
+    cfg.input = { ...cfg.input, input: '' }
+    cfg.refs.pendingInputOverrideRef = { current: 'What is photosynthesis?' }
+    vi.mocked(compareService.compareStream).mockRejectedValue(new Error('stop after payload'))
+    const { result, stateCb } = renderStreaming(cfg)
+
+    await act(async () => {
+      await result.current.submitComparison()
+    })
+
+    expect(stateCb.setError).not.toHaveBeenCalledWith('Please enter some text to compare')
+    expect(cfg.refs.pendingInputOverrideRef?.current).toBeNull()
+    expect(compareService.compareStream).toHaveBeenCalled()
+    const payload = vi.mocked(compareService.compareStream).mock.calls[0]?.[0]
+    expect(payload).toMatchObject({
+      input_data: 'What is photosynthesis?',
+      mode: 'text',
+    })
   })
 
   it('scrolls to top when user must verify email', async () => {

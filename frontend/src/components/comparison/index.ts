@@ -8,6 +8,8 @@ export { ResultsDisplay } from './ResultsDisplay'
 export type { ResultsDisplayProps } from './ResultsDisplay'
 
 export { ComparisonForm } from './ComparisonForm'
+export { VoiceComposer } from './VoiceComposer'
+export type { VoiceComposerProps } from './VoiceComposer'
 export type {
   AttachedFile,
   StoredAttachedFile,

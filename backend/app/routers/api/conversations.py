@@ -85,6 +85,7 @@ async def get_conversations(
                 composer_max_tokens=conv.composer_max_tokens,
                 composer_aspect_ratio=conv.composer_aspect_ratio,
                 composer_image_size=conv.composer_image_size,
+                composer_mode=conv.composer_mode,
                 client_source=conv.client_source or "web",
                 saved=bool(conv.saved),
             )
@@ -190,6 +191,7 @@ async def get_conversation(
         composer_max_tokens=conversation.composer_max_tokens,
         composer_aspect_ratio=conversation.composer_aspect_ratio,
         composer_image_size=conversation.composer_image_size,
+        composer_mode=conversation.composer_mode,
         client_source=conversation.client_source or "web",
         saved=bool(conversation.saved),
     )
@@ -245,6 +247,7 @@ async def update_conversation_saved(
         composer_max_tokens=conversation.composer_max_tokens,
         composer_aspect_ratio=conversation.composer_aspect_ratio,
         composer_image_size=conversation.composer_image_size,
+        composer_mode=conversation.composer_mode,
         client_source=conversation.client_source or "web",
         saved=bool(conversation.saved),
     )
@@ -404,6 +407,7 @@ async def create_breakout_conversation(
         composer_max_tokens=parent_conversation.composer_max_tokens,
         composer_aspect_ratio=parent_conversation.composer_aspect_ratio,
         composer_image_size=parent_conversation.composer_image_size,
+        composer_mode=parent_conversation.composer_mode,
         file_contents=parent_conversation.file_contents,
     )
     db.add(breakout_conversation)
@@ -482,4 +486,5 @@ async def create_breakout_conversation(
         composer_max_tokens=breakout_conversation.composer_max_tokens,
         composer_aspect_ratio=breakout_conversation.composer_aspect_ratio,
         composer_image_size=breakout_conversation.composer_image_size,
+        composer_mode=breakout_conversation.composer_mode,
     )

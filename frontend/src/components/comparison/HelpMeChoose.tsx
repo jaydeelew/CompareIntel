@@ -265,7 +265,7 @@ export interface HelpMeChooseProps {
    * Text mode: hide "Best for image generation" (T2I). Image mode: show only that category.
    * Matches the Text models / Image generation models toggle.
    */
-  modelMode?: 'text' | 'image'
+  modelMode?: 'text' | 'image' | 'voice'
   /**
    * When the dropdown opens, scroll this category column into view horizontally
    * (e.g. `HELP_ME_CHOOSE_CATEGORY_IMAGES_ID` when opening from "Pick a vision model").

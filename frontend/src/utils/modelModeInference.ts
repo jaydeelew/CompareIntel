@@ -2,23 +2,28 @@ import type {
   ImageComposerAdvancedSettings,
   TextComposerAdvancedSettings,
   ModelsByProvider,
+  ModelMode,
 } from '../types'
 
 import { modelSupportsImageGeneration } from './visionModels'
 
 /**
- * Choose text vs image model-mode when restoring models from storage or history.
+ * Choose text vs image vs voice model-mode when restoring models from storage or history.
  * Uses saved composer snapshots when present, otherwise infers from model capabilities.
  */
 export function inferModelModeForLoadedModels(
   modelIds: string[],
   modelsByProvider: ModelsByProvider,
   opts?: {
+    composerMode?: ModelMode | string | null
     textComposerAdvanced?: TextComposerAdvancedSettings
     imageComposerAdvanced?: ImageComposerAdvancedSettings
   }
-): 'text' | 'image' {
-  const { textComposerAdvanced, imageComposerAdvanced } = opts ?? {}
+): ModelMode {
+  const { composerMode, textComposerAdvanced, imageComposerAdvanced } = opts ?? {}
+  if (composerMode === 'voice' || composerMode === 'image' || composerMode === 'text') {
+    return composerMode
+  }
   const hasText = textComposerAdvanced != null
   const hasImage = imageComposerAdvanced != null
   if (hasImage && !hasText) return 'image'

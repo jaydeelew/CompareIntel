@@ -9,6 +9,7 @@ import './styles/components.css'
 import './styles/navigation.css'
 import './styles/layout.css'
 import './styles/responsive.css'
+import './styles/voice.css'
 import './App.css'
 
 import { Layout, ThemeSync } from './components'
