@@ -18,7 +18,7 @@ watchfiles>=0.18.0    # Development auto-reload for uvicorn
 # ============================================================================
 ruff>=0.6.0              # Fast Python linter (replaces flake8, isort, etc.)
 black>=24.0.0            # Code formatter
-mypy>=1.11.0             # Static type checker
+mypy>=2.4.0             # Static type checker
 pre-commit>=3.7.0        # Git hooks framework
 
 # ============================================================================
@@ -26,8 +26,8 @@ pre-commit>=3.7.0        # Git hooks framework
 # ============================================================================
 types-sqlalchemy>=1.4.0  # Type stubs for SQLAlchemy
 # PyJWT has built-in type stubs since 2.0
-types-passlib>=1.7.6     # Type stubs for passlib
-types-PyYAML>=6.0.0      # Type stubs for PyYAML
+types-passlib>=1.7.7.20260211     # Type stubs for passlib
+types-PyYAML>=6.0.12.20260906      # Type stubs for PyYAML
 
 # ============================================================================
 # Testing Framework & Tools
@@ -38,7 +38,7 @@ pytest-cov>=5.0.0        # Coverage reporting
 pytest-mock>=3.14.0      # Mocking utilities
 pytest-timeout>=2.3.0    # Test timeout management
 faker>=24.0.0            # Fake data generation
-freezegun>=1.5.0         # Time mocking for testing
+freezegun>=1.5.5         # Time mocking for testing
 
 # ============================================================================
 # Load Testing
