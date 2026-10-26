@@ -1,104 +1,35 @@
 import type { Page } from '@playwright/test'
 
-/**
- * Mock models data for E2E tests
- * These models are consistently available and don't depend on the backend API key
- */
+function mockModel(id: string, name: string, tierAccess: 'unregistered' | 'free') {
+  return {
+    id,
+    name,
+    provider: 'OpenAI',
+    tier_access: tierAccess,
+    supports_temperature: true,
+    supports_vision: false,
+    supports_image_generation: false,
+    max_input_tokens: 128000,
+    max_output_tokens: 16384,
+    is_thinking_model: false,
+  }
+}
+
+// One provider holds every model: specs expand only the first provider dropdown. Five
+// unregistered-tier models exceed the 3-model limit so the limit test has something to block.
+const MOCK_OPENAI_MODELS = [
+  mockModel('openai/gpt-4o-mini', 'GPT-4o Mini', 'unregistered'),
+  mockModel('openai/gpt-3.5-turbo', 'GPT-3.5 Turbo', 'unregistered'),
+  mockModel('openai/gpt-4.1-nano', 'GPT-4.1 Nano', 'unregistered'),
+  mockModel('openai/gpt-4.1-mini', 'GPT-4.1 Mini', 'unregistered'),
+  mockModel('openai/gpt-oss-20b', 'GPT OSS 20B', 'unregistered'),
+  mockModel('openai/gpt-4o', 'GPT-4o', 'free'),
+  mockModel('openai/gpt-4.1', 'GPT-4.1', 'free'),
+]
+
 export const MOCK_MODELS_RESPONSE = {
-  models: [
-    {
-      id: 'openai/gpt-4o-mini',
-      name: 'GPT-4o Mini',
-      tier_access: 'unregistered',
-      supports_temperature: true,
-      supports_vision: false,
-      supports_image_generation: false,
-      max_input_tokens: 128000,
-      max_output_tokens: 16384,
-      is_thinking_model: false,
-    },
-    {
-      id: 'openai/gpt-4o',
-      name: 'GPT-4o',
-      tier_access: 'free',
-      supports_temperature: true,
-      supports_vision: true,
-      supports_image_generation: false,
-      max_input_tokens: 128000,
-      max_output_tokens: 16384,
-      is_thinking_model: false,
-    },
-    {
-      id: 'openai/o1-mini',
-      name: 'OpenAI o1-mini',
-      tier_access: 'free',
-      supports_temperature: false,
-      supports_vision: false,
-      supports_image_generation: false,
-      max_input_tokens: 128000,
-      max_output_tokens: 65536,
-      is_thinking_model: true,
-    },
-    {
-      id: 'openai/gpt-3.5-turbo',
-      name: 'GPT-3.5 Turbo',
-      tier_access: 'unregistered',
-      supports_temperature: true,
-      supports_vision: false,
-      supports_image_generation: false,
-      max_input_tokens: 16385,
-      max_output_tokens: 4096,
-      is_thinking_model: false,
-    },
-  ],
-  models_by_provider: {
-    openai: [
-      {
-        id: 'openai/gpt-4o-mini',
-        name: 'GPT-4o Mini',
-        tier_access: 'unregistered',
-        supports_temperature: true,
-        supports_vision: false,
-        supports_image_generation: false,
-        max_input_tokens: 128000,
-        max_output_tokens: 16384,
-        is_thinking_model: false,
-      },
-      {
-        id: 'openai/gpt-4o',
-        name: 'GPT-4o',
-        tier_access: 'free',
-        supports_temperature: true,
-        supports_vision: true,
-        supports_image_generation: false,
-        max_input_tokens: 128000,
-        max_output_tokens: 16384,
-        is_thinking_model: false,
-      },
-      {
-        id: 'openai/o1-mini',
-        name: 'OpenAI o1-mini',
-        tier_access: 'free',
-        supports_temperature: false,
-        supports_vision: false,
-        supports_image_generation: false,
-        max_input_tokens: 128000,
-        max_output_tokens: 65536,
-        is_thinking_model: true,
-      },
-      {
-        id: 'openai/gpt-3.5-turbo',
-        name: 'GPT-3.5 Turbo',
-        tier_access: 'unregistered',
-        supports_temperature: true,
-        supports_vision: false,
-        supports_image_generation: false,
-        max_input_tokens: 16385,
-        max_output_tokens: 4096,
-        is_thinking_model: false,
-      },
-    ],
-  },
+  models: MOCK_OPENAI_MODELS,
+  models_by_provider: { OpenAI: MOCK_OPENAI_MODELS },
   user_tier: 'unregistered',
   is_trial_active: false,
 }
