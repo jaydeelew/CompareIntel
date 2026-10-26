@@ -88,14 +88,10 @@ export function TutorialManager({
             setShowWelcomeModal(false)
             resetAppStateForTutorial()
             startTutorial()
-            // Mark as shown this session to prevent re-showing on state updates
-            sessionStorage.setItem('compareintel_welcome_shown_session', 'true')
           }}
           onSkip={() => {
             setShowWelcomeModal(false)
             skipTutorial()
-            // Mark as shown this session to prevent re-showing on state updates
-            sessionStorage.setItem('compareintel_welcome_shown_session', 'true')
             onTutorialWelcomeSkipped?.()
           }}
           onDontShowAgain={() => {

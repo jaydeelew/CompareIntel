@@ -14,6 +14,8 @@ const __dirname = path.dirname(__filename);
  */
 export default defineConfig({
   testDir: './e2e',
+  /* Prerendered-build specs run via playwright.prerender.config.ts */
+  testIgnore: ['prerendered/**'],
 
   /* Global setup runs once before all tests */
   globalSetup: './e2e/global-setup.ts',
