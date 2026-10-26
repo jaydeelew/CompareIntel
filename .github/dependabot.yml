@@ -52,32 +52,12 @@ updates:
     reviewers:
       - "jaydeelew"
 
-  # Root npm dependencies (workspace tools)
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "America/New_York"
-    groups:
-      security-updates:
-        patterns:
-          - "*"
-        update-types:
-          - "patch"
-          - "minor"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "security"
-      - "tooling"
-    commit-message:
-      prefix: "build(root)"
-      include: "scope"
-    reviewers:
-      - "jaydeelew"
-
+  # Root npm is intentionally omitted. The workspace root lists
+  # packages/*, extension, and frontend, and extension depends on
+  # @compareintel/core via file:../compare-core (a path that does not
+  # exist from extension/). Dependabot's "npm_and_yarn in /." job
+  # therefore fails with path_dependencies_not_reachable. Frontend
+  # already has its own npm entry below; keep that as the npm source.
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
