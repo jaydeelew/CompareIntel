@@ -130,7 +130,7 @@ jobs:
           fail_ci_if_error: false
       
       - name: Upload coverage report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-coverage
           path: frontend/coverage/
@@ -169,7 +169,7 @@ jobs:
         run: npm run bundle:size
       
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: frontend/dist/
@@ -177,7 +177,7 @@ jobs:
       
       - name: Upload bundle analysis
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: bundle-analysis
           path: frontend/dist/stats.html
@@ -242,7 +242,7 @@ jobs:
 
       - name: Upload Lighthouse report
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: lighthouse-report
           path: frontend/.lighthouseci/
@@ -405,7 +405,7 @@ jobs:
       
       - name: Upload coverage report
         if: success()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: backend-coverage
           path: backend/htmlcov/
@@ -506,7 +506,7 @@ jobs:
       
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-critical
           path: frontend/playwright-report/
@@ -514,7 +514,7 @@ jobs:
       
       - name: Upload Playwright screenshots
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-screenshots-critical
           path: frontend/test-results/
@@ -629,7 +629,7 @@ jobs:
       
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-${{ matrix.project }}
           path: frontend/playwright-report/
@@ -637,7 +637,7 @@ jobs:
       
       - name: Upload Playwright screenshots
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-screenshots-${{ matrix.project }}
           path: frontend/test-results/
@@ -721,7 +721,7 @@ jobs:
       
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-smoke
           path: frontend/playwright-report/
@@ -729,7 +729,7 @@ jobs:
       
       - name: Upload Playwright screenshots
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-screenshots-smoke
           path: frontend/test-results/
@@ -821,7 +821,7 @@ jobs:
       
       - name: Upload accessibility report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: accessibility-report
           path: frontend/playwright-report/
@@ -961,7 +961,7 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-prerendered
           path: frontend/playwright-report-prerender/
