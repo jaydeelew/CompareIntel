@@ -1,5 +1,3 @@
-import type { Page, BrowserContext } from '@playwright/test'
-
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 
@@ -13,37 +11,10 @@ import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
  * - Model response interactions
  */
 
-const TEST_FREE_EMAIL = process.env.TEST_FREE_EMAIL || 'free@test.com'
-const TEST_FREE_PASSWORD = process.env.TEST_FREE_PASSWORD || 'Test12345678/'
-
-async function setupAuthenticatedPageWithMocks(page: Page, context: BrowserContext): Promise<Page> {
-  // Set up mocks FIRST, before any navigation
-  const { mockModelsApi, mockComparisonStream } = await import('./helpers/mockModels')
-  const { waitForAuthState, waitForReactHydration, dismissTutorialOverlay, ensureAuthenticated } = await import('./fixtures')
-  
-  await mockModelsApi(page, 'free')
-  await mockComparisonStream(page)
-  
-  // Now navigate
-  await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
-  try {
-    await page.waitForLoadState('load', { timeout: 15000 })
-  } catch {
-    await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
-  }
-  await waitForReactHydration(page)
-  await waitForAuthState(page)
-  await dismissTutorialOverlay(page)
-  
-  // Authenticate  
-  await ensureAuthenticated(page, TEST_FREE_EMAIL, TEST_FREE_PASSWORD, context)
-  
-  return page
-}
-
 test.describe('Authenticated User Comparison Flow', () => {
-  test('User can perform a complete comparison', async ({ page, context }) => {
-    const authenticatedPage = await setupAuthenticatedPageWithMocks(page, context)
+  test('User can perform a complete comparison', async ({
+    mockedModelsAuthenticatedPage: authenticatedPage,
+  }) => {
     await test.step('Enter comparison prompt', async () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
       await expect(inputField).toBeVisible()
@@ -481,7 +452,9 @@ test.describe('Authenticated User Comparison Flow', () => {
     expect(indicatorCount).toBeGreaterThanOrEqual(0)
   })
 
-  test('User can select different model combinations', async ({ authenticatedPage }) => {
+  test('User can select different model combinations', async ({
+    mockedModelsAuthenticatedPage: authenticatedPage,
+  }) => {
     // Wait for models to load first
     const loadingMessage = authenticatedPage.locator(
       '.loading-message:has-text("Loading available models")'

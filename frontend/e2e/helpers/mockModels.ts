@@ -103,39 +103,39 @@ export const MOCK_MODELS_RESPONSE = {
   is_trial_active: false,
 }
 
+const MOCK_RESPONSE_TEXT = 'Test response from mocked API.'
+
 /**
- * Mock comparison stream response
- * Returns a deterministic SSE stream
+ * Builds an SSE body in the same `data: {"type": ...}` shape that
+ * backend/app/services/comparison_stream.py emits and sseProcessor.ts parses.
  */
-export const MOCK_COMPARISON_STREAM = `event: status
-data: {"model":"openai/gpt-4o-mini","status":"starting"}
-
-event: chunk
-data: {"model":"openai/gpt-4o-mini","content":"Test "}
-
-event: chunk
-data: {"model":"openai/gpt-4o-mini","content":"response "}
-
-event: chunk
-data: {"model":"openai/gpt-4o-mini","content":"from "}
-
-event: chunk
-data: {"model":"openai/gpt-4o-mini","content":"mocked "}
-
-event: chunk
-data: {"model":"openai/gpt-4o-mini","content":"API"}
-
-event: status
-data: {"model":"openai/gpt-4o-mini","status":"completed"}
-
-event: done
-data: {"conversation_id":"test-conversation-123"}
-
-`
+export function buildMockComparisonStream(models: string[]): string {
+  const events: object[] = []
+  for (const model of models) {
+    events.push({ model, type: 'start' })
+    for (const word of MOCK_RESPONSE_TEXT.split(' ')) {
+      events.push({ model, type: 'chunk', content: `${word} ` })
+    }
+    events.push({ model, type: 'done', error: false })
+  }
+  events.push({
+    type: 'complete',
+    metadata: {
+      input_length: 0,
+      models_requested: models.length,
+      models_successful: models.length,
+      models_failed: 0,
+      timestamp: new Date().toISOString(),
+      processing_time_ms: 10,
+    },
+  })
+  return events.map(e => `data: ${JSON.stringify(e)}\n\n`).join('')
+}
 
 /**
- * Set up mocks for /api/models endpoint
- * This makes tests deterministic and independent of backend API keys
+ * Mocks GET /api/models. The models all sit under one provider because specs only expand the
+ * first provider dropdown, and the real catalog's first provider (Anthropic) has a single
+ * non-paid model.
  */
 export async function mockModelsApi(page: Page, userTier: string = 'unregistered'): Promise<void> {
   const mockResponse = {
@@ -144,6 +144,9 @@ export async function mockModelsApi(page: Page, userTier: string = 'unregistered
   }
 
   await page.route('**/api/models', async route => {
+    if (process.env.E2E_LOG_API_REQUESTS) {
+      console.log(`[MOCK HIT] ${route.request().method()} ${route.request().url()}`)
+    }
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -153,22 +156,28 @@ export async function mockModelsApi(page: Page, userTier: string = 'unregistered
 }
 
 /**
- * Set up mocks for /api/compare-stream endpoint
- * This prevents real API calls and makes tests fast and deterministic
+ * Mocks POST /api/compare-stream with a successful response for every requested model.
  */
 export async function mockComparisonStream(page: Page): Promise<void> {
   await page.route('**/api/compare-stream', async route => {
+    if (process.env.E2E_LOG_API_REQUESTS) {
+      console.log(`[MOCK HIT] ${route.request().method()} ${route.request().url()}`)
+    }
+    let models: string[] = []
+    try {
+      models = (route.request().postDataJSON() as { models?: string[] })?.models ?? []
+    } catch {
+      models = []
+    }
     await route.fulfill({
       status: 200,
       contentType: 'text/event-stream',
-      body: MOCK_COMPARISON_STREAM,
+      headers: { 'Cache-Control': 'no-cache' },
+      body: buildMockComparisonStream(models),
     })
   })
 }
 
-/**
- * Set up all necessary mocks for E2E tests
- */
 export async function setupE2EMocks(page: Page, userTier: string = 'unregistered'): Promise<void> {
   await mockModelsApi(page, userTier)
   await mockComparisonStream(page)
