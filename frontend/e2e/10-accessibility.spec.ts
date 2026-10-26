@@ -20,16 +20,22 @@ import { test, expect, waitForReactHydration } from './fixtures'
 async function dismissTutorialIfVisible(_page: Page) {}
 
 /**
- * Wait until landmark structure is in the DOM. Do not use `networkidle`:
+ * Wait until the page has rendered navigation. Do not use `networkidle`:
  * the homepage keeps connections open (Vite HMR websocket, hero MP4
  * preload, credit/rate-limit fetches), so Firefox can hang until the
  * test timeout. CI run 40328308199 timed out on that wait.
+ *
+ * Only the homepage wraps content in `<main>`; SEO pages use `<article>`.
  */
 async function gotoReady(page: Page, path: string): Promise<void> {
   await page.goto(path, { waitUntil: 'domcontentloaded' })
   await waitForReactHydration(page)
-  await page.locator('main, [role="main"]').first().waitFor({ state: 'attached' })
   await page.locator('nav, [role="navigation"]').first().waitFor({ state: 'attached' })
+  if (path === '/') {
+    await page.locator('main, [role="main"]').first().waitFor({ state: 'attached' })
+  } else {
+    await page.locator('article, h1, .seo-page').first().waitFor({ state: 'attached' })
+  }
 }
 
 async function clickLoginButton(page: Page): Promise<boolean> {
