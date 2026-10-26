@@ -14,10 +14,29 @@
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 
-import { test, expect } from './fixtures'
+import { test, expect, waitForReactHydration } from './fixtures'
 
 /** No-op: guest welcome and guided tutorial were removed from production. */
 async function dismissTutorialIfVisible(_page: Page) {}
+
+/**
+ * Wait until the page has rendered navigation. Do not use `networkidle`:
+ * the homepage keeps connections open (Vite HMR websocket, hero MP4
+ * preload, credit/rate-limit fetches), so Firefox can hang until the
+ * test timeout. CI run 40328308199 timed out on that wait.
+ *
+ * Only the homepage wraps content in `<main>`; SEO pages use `<article>`.
+ */
+async function gotoReady(page: Page, path: string): Promise<void> {
+  await page.goto(path, { waitUntil: 'domcontentloaded' })
+  await waitForReactHydration(page)
+  await page.locator('nav, [role="navigation"]').first().waitFor({ state: 'attached' })
+  if (path === '/') {
+    await page.locator('main, [role="main"]').first().waitFor({ state: 'attached' })
+  } else {
+    await page.locator('article, h1, .seo-page').first().waitFor({ state: 'attached' })
+  }
+}
 
 async function clickLoginButton(page: Page): Promise<boolean> {
   const loginButton = page.getByRole('button', { name: /log in|sign in/i })
@@ -77,8 +96,7 @@ function formatViolations(violations: (typeof import('axe-core').Result)[]) {
 test.describe('Accessibility Tests', () => {
   test.describe('Core Pages', () => {
     test('Homepage should meet WCAG 2.1 AA standards', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/')
       await dismissTutorialIfVisible(page)
 
       const results = await runAccessibilityAudit(page)
@@ -103,8 +121,7 @@ test.describe('Accessibility Tests', () => {
     })
 
     test('About page should meet WCAG 2.1 AA standards', async ({ page }) => {
-      await page.goto('/about')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/about')
 
       const results = await runAccessibilityAudit(page)
 
@@ -116,8 +133,7 @@ test.describe('Accessibility Tests', () => {
     })
 
     test('Features page should meet WCAG 2.1 AA standards', async ({ page }) => {
-      await page.goto('/features')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/features')
 
       const results = await runAccessibilityAudit(page)
 
@@ -129,8 +145,7 @@ test.describe('Accessibility Tests', () => {
     })
 
     test('FAQ page should meet WCAG 2.1 AA standards', async ({ page }) => {
-      await page.goto('/faq')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/faq')
 
       const results = await runAccessibilityAudit(page)
 
@@ -142,8 +157,7 @@ test.describe('Accessibility Tests', () => {
     })
 
     test('Privacy Policy page should meet WCAG 2.1 AA standards', async ({ page }) => {
-      await page.goto('/privacy-policy')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/privacy-policy')
 
       const results = await runAccessibilityAudit(page)
 
@@ -155,8 +169,7 @@ test.describe('Accessibility Tests', () => {
     })
 
     test('Terms of Service page should meet WCAG 2.1 AA standards', async ({ page }) => {
-      await page.goto('/terms-of-service')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/terms-of-service')
 
       const results = await runAccessibilityAudit(page)
 
@@ -180,8 +193,7 @@ test.describe('Accessibility Tests', () => {
 
   test.describe('Interactive Components', () => {
     test('Login modal should be accessible', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/')
 
       await dismissTutorialIfVisible(page)
 
@@ -207,8 +219,7 @@ test.describe('Accessibility Tests', () => {
     })
 
     test('Model selection should be keyboard navigable', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/')
 
       // Check if model selection area exists and is accessible
       const modelSection = page
@@ -225,8 +236,7 @@ test.describe('Accessibility Tests', () => {
 
   test.describe('Keyboard Navigation', () => {
     test('Should be able to navigate homepage with keyboard only', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/')
 
       // Start from beginning
       await page.keyboard.press('Tab')
@@ -249,8 +259,7 @@ test.describe('Accessibility Tests', () => {
     })
 
     test('Focus should be visible on interactive elements', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/')
 
       // Tab to first button
       await page.keyboard.press('Tab')
@@ -286,8 +295,7 @@ test.describe('Accessibility Tests', () => {
 
   test.describe('Color Contrast', () => {
     test('Text should have sufficient color contrast', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/')
 
       const results = await new AxeBuilder({ page }).withTags(['wcag2aa']).analyze()
 
@@ -309,8 +317,7 @@ test.describe('Accessibility Tests', () => {
 
   test.describe('ARIA and Semantic HTML', () => {
     test('Interactive elements should have accessible names', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/')
 
       const results = await new AxeBuilder({ page }).analyze()
 
@@ -333,8 +340,7 @@ test.describe('Accessibility Tests', () => {
     })
 
     test('Page should have proper landmark structure', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/')
 
       // Check for main landmark
       const mainLandmark = await page.locator('main, [role="main"]').count()
@@ -346,8 +352,7 @@ test.describe('Accessibility Tests', () => {
     })
 
     test('Headings should be in logical order', async ({ page }) => {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await gotoReady(page, '/')
 
       await dismissTutorialIfVisible(page)
 
