@@ -88,7 +88,7 @@ class CompareRequest(BaseModel):
         json_schema_extra={
             "example": {
                 "input_data": "Explain quantum computing",
-                "models": ["openai/gpt-5", "anthropic/claude-opus-4.5"],
+                "models": ["openai/gpt-5", "anthropic/claude-opus-5.5"],
                 "conversation_history": [],
                 "conversation_id": 123,
             }

@@ -38,7 +38,7 @@ const FIXTURE: ModelsByProvider = {
     m('google/gemini-2.5-flash-image', 'Google', 'free', { supports_image_generation: true }),
   ],
   xAI: [m('x-ai/grok-4.20', 'xAI')],
-  DeepSeek: [m('deepseek/deepseek-chat-v3.1', 'DeepSeek')],
+  DeepSeek: [m('deepseek/deepseek-v4.1-flash', 'DeepSeek')],
   OpenAI: [m('openai/gpt-oss-120b', 'OpenAI')],
 }
 
@@ -162,7 +162,7 @@ describe('pickTwoDemoModels', () => {
     const withUnavailable: ModelsByProvider = {
       Google: [m('google/gemini-2.5-flash', 'Google', 'unregistered', { available: false })],
       xAI: [m('x-ai/grok-4.20', 'xAI')],
-      DeepSeek: [m('deepseek/deepseek-chat-v3.1', 'DeepSeek')],
+      DeepSeek: [m('deepseek/deepseek-v4.1-flash', 'DeepSeek')],
     }
     const result = pickTwoDemoModels('natural-language', withUnavailable, false, null)
     expect(result).not.toBeNull()
@@ -171,13 +171,13 @@ describe('pickTwoDemoModels', () => {
 
   it('excludes paid models for unregistered users', () => {
     const withPaid: ModelsByProvider = {
-      Anthropic: [m('anthropic/claude-sonnet-4.5', 'Anthropic', 'paid')],
+      Anthropic: [m('anthropic/claude-sonnet-5.5', 'Anthropic', 'paid')],
       Google: [m('google/gemini-2.5-flash', 'Google')],
       xAI: [m('x-ai/grok-4.20', 'xAI')],
     }
     const result = pickTwoDemoModels('natural-language', withPaid, false, null)
     expect(result).not.toBeNull()
-    expect(result).not.toContain('anthropic/claude-sonnet-4.5')
+    expect(result).not.toContain('anthropic/claude-sonnet-5.5')
   })
 
   it('excludes thinking models for faster demos', () => {
@@ -185,7 +185,7 @@ describe('pickTwoDemoModels', () => {
       Qwen: [
         m('qwen/qwen3-next-80b-a3b-thinking', 'Qwen', 'unregistered', { is_thinking_model: true }),
       ],
-      DeepSeek: [m('deepseek/deepseek-chat-v3.1', 'DeepSeek')],
+      DeepSeek: [m('deepseek/deepseek-v4.1-flash', 'DeepSeek')],
       Google: [m('google/gemini-2.5-flash', 'Google')],
     }
     const result = pickTwoDemoModels('natural-language', withThinking, false, null)

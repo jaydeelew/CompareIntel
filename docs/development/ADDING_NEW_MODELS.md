@@ -42,11 +42,11 @@ cd backend
 python scripts/collect_model_responses.py
 
 # Or collect from specific new models only
-python scripts/collect_model_responses.py --models openai/gpt-5.1 openai/gpt-5.1-chat
+python scripts/collect_model_responses.py --models openai/gpt-6-luna openai/gpt-5.6-sol
 
 # With custom options
 python scripts/collect_model_responses.py \
-  --models openai/gpt-5.1 openai/gpt-5.1-chat \
+  --models openai/gpt-6-luna openai/gpt-5.6-sol \
   --delay 1.5 \
   --max-retries 5 \
   --concurrency 10 \
@@ -134,14 +134,14 @@ python scripts/generate_renderer_configs.py analysis.json --overwrite
 
 ## Complete Example
 
-Here's a complete example for adding 4 new GPT 5.1 models:
+Here's a complete example for adding 4 new GPT 5.6 / GPT-6 models:
 
 ```bash
 cd backend
 
 # Step 1: Collect responses from new models
 python scripts/collect_model_responses.py \
-  --models openai/gpt-5.1 openai/gpt-5.1-chat openai/gpt-5.1-codex openai/gpt-5.1-codex-mini \
+  --models openai/gpt-6-luna openai/gpt-5.6-sol openai/gpt-5.1-codex-max openai/gpt-5.1-codex-mini \
   --delay 1.0
 
 # Step 2: Analyze responses (use the file created in step 1)
@@ -191,7 +191,7 @@ After running the workflow:
 
    ```bash
    # View the config file
-   cat frontend/src/config/model_renderer_configs.json | jq '.[] | select(.modelId | startswith("openai/gpt-5.1"))'
+   cat frontend/src/config/model_renderer_configs.json | jq '.[] | select(.modelId | startswith("openai/gpt-6"))'
    ```
 
 2. **Test in application:**

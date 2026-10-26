@@ -173,15 +173,11 @@ def get_model_id_to_name_map() -> dict[str, str]:
 
 # llmdb MATH/GSM8K slug -> registry model_id (llmdb uses different naming)
 MATH_SLUG_TO_MODEL_ID: dict[str, str] = {
-    "kimi-k2": "moonshotai/kimi-k2.5",
-    "claude-3-7-sonnet": "anthropic/claude-3.7-sonnet",
     "o1": "openai/o3",
     "gemini-2-0-pro": "google/gemini-2.5-pro",
     "gemini-2-0-flash": "google/gemini-2.5-flash",
-    "deepseek-v3": "deepseek/deepseek-v3.2-exp",
     "gemini-2-0-flash-lite": "google/gemini-2.5-flash",
     "gpt-4o": "openai/gpt-4o",
-    "claude-3-5-sonnet": "anthropic/claude-sonnet-4.5",
     "claude-3-haiku": "anthropic/claude-haiku-4.5",
 }
 
@@ -190,7 +186,6 @@ VALS_TO_MODEL_ID: dict[str, str] = {
     "google_gemini-3-pro-preview": "google/gemini-3.1-pro-preview",
     "google_gemini-3-flash-preview": "google/gemini-3-flash-preview",
     "openai_gpt-5-2025-08-07": "openai/gpt-5",
-    "openai_gpt-5.1-2025-11-13": "openai/gpt-5.1",
 }
 
 
@@ -406,8 +401,6 @@ def _normalize_lmspeed_name(name: str) -> str:
 # that automated matching can't resolve.
 LMSPEED_NAME_TO_MODEL_ID: dict[str, str] = {
     "claude-haiku-4-5-20251001": "anthropic/claude-haiku-4.5",
-    "gpt-5-chat-latest": "openai/gpt-5-chat",
-    "self-deepseek-v3.2": "deepseek/deepseek-v3.2-exp",
 }
 
 
@@ -479,20 +472,19 @@ SWE_BENCH_PRO_SLUG_TO_MODEL_ID: dict[str, str] = {
     # Explicit rows where leaderboard label does not normalize to registry display name
     "claude-opus-4-6 (thinking)*": "anthropic/claude-opus-4.6",
     "gemini-3.1-pro (thinking)*": "google/gemini-3.1-pro-preview",
-    "claude-opus-4-5-20251101": "anthropic/claude-opus-4.5",
-    "claude-4-5-Sonnet": "anthropic/claude-sonnet-4.5",
     "gemini-3-pro-preview": "google/gemini-3.1-pro-preview",
     "gpt-5-2025-08-07 (High)": "openai/gpt-5",
-    "gpt-5.2-codex": "openai/gpt-5.2-codex",
     "claude-4-5-haiku": "anthropic/claude-haiku-4.5",
     "qwen3-coder-480b-a35b": "qwen/qwen3-coder",
     "minimax-2.1": "minimax/minimax-m2.5",
     "gemini-3-flash": "google/gemini-3-flash-preview",
     "gpt-5.2": "openai/gpt-5.2",
-    "qwen3-235b-a22b": "qwen/qwen3-235b-a22b",
-    "kimi-k2-instruct": "moonshotai/kimi-k2.5",
     "gpt-oss-120b": "openai/gpt-oss-120b",
-    "deepseek-v3p2": "deepseek/deepseek-v3.2-exp",
+    "claude-opus-5 (thinking)*": "anthropic/claude-opus-5",
+    "claude-opus-5": "anthropic/claude-opus-5",
+    "gpt-5.6-sol": "openai/gpt-5.6-sol",
+    "grok-4.5": "x-ai/grok-4.5",
+    "kimi-k3": "moonshotai/kimi-k3",
     "llama4-maverick-17b-instruct": "meta-llama/llama-4-maverick",
     "glm-4.6": "z-ai/glm-5",
     "codestral-2405": "mistralai/codestral-2508",
@@ -589,9 +581,11 @@ def fetch_swe_bench_pro_scores() -> dict[str, tuple[float, str]]:
 
 MMLU_PRO_NAME_TO_MODEL_ID: dict[str, str] = {
     "Gemini 3 Pro": "google/gemini-3.1-pro-preview",
-    "Claude Opus 4.5 Reasoning": "anthropic/claude-opus-4.5",
-    "DeepSeek V3.2-Speciale": "deepseek/deepseek-v3.2-exp",
     "Qwen 3.5": "qwen/qwen3.5-397b-a17b",
+    "Claude Opus 5": "anthropic/claude-opus-5",
+    "GPT-5.6 Sol": "openai/gpt-5.6-sol",
+    "Grok 4.5": "x-ai/grok-4.5",
+    "Kimi K3": "moonshotai/kimi-k3",
 }
 
 
@@ -632,22 +626,8 @@ def fetch_mmlu_pro_scores() -> dict[str, tuple[float, str]]:
 
 WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
     "Claude Opus 4 6": "anthropic/claude-opus-4.6",
-    "Claude Opus 4 5 20251101 Thinking 32k": "anthropic/claude-opus-4.5",
-    "Claude Opus 4 5 20251101": "anthropic/claude-opus-4.5",
-    "Claude Sonnet 4 5 20250929": "anthropic/claude-sonnet-4.5",
-    "Claude Sonnet 4 5 20250929 Thinking 32k": "anthropic/claude-sonnet-4.5",
-    "Claude Opus 4 1 20250805 Thinking 16k": "anthropic/claude-opus-4.1",
-    "Claude Opus 4 1 20250805": "anthropic/claude-opus-4.1",
     "Gpt 4.5 Preview 2025 02 27": "openai/gpt-4o",
-    "Gpt 5.1 High": "openai/gpt-5.1",
-    "Gpt 5.1": "openai/gpt-5.1",
     "Chatgpt 4o Latest 20250326": "openai/gpt-4o",
-    "Kimi K2.5 Thinking": "moonshotai/kimi-k2.5",
-    "Kimi K2.5 Instant": "moonshotai/kimi-k2.5",
-    "Deepseek V3.1 Terminus": "deepseek/deepseek-chat-v3.1",
-    "Deepseek V3.1 Thinking": "deepseek/deepseek-chat-v3.1",
-    "Deepseek V3.2 Exp": "deepseek/deepseek-v3.2-exp",
-    "Deepseek V3.2": "deepseek/deepseek-v3.2-exp",
     "Grok 4 1 Fast Reasoning": "x-ai/grok-4.20",
     "Grok 4.1 Thinking": "x-ai/grok-4.20",
     "Grok 4.1": "x-ai/grok-4.20",
@@ -656,8 +636,10 @@ WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
     "Gemini 3 Flash": "google/gemini-3-flash-preview",
     "Gemini 3 Flash (thinking Minimal)": "google/gemini-3-flash-preview",
     "Gpt 4.1 2025 04 14": "openai/gpt-4o",
-    "Glm 4.7": "z-ai/glm-4.7",
-    "Glm 4.6": "z-ai/glm-4.7",
+    "Claude Opus 5": "anthropic/claude-opus-5",
+    "Gpt 5.6 Sol": "openai/gpt-5.6-sol",
+    "Grok 4.5": "x-ai/grok-4.5",
+    "Kimi K3": "moonshotai/kimi-k3",
 }
 
 WRITING_MIN_ELO = 1390
@@ -672,18 +654,19 @@ VISION_ARENA_SLUG_TO_MODEL_ID: dict[str, str] = {
     "gpt-4o-mini": "openai/gpt-4o-mini",
     "gpt-4o-mini-2024-07-18": "openai/gpt-4o-mini",
     "gpt-5-chat-latest": "openai/gpt-5-chat",
-    "gpt-5.1-high": "openai/gpt-5.1",
     "gpt-5.2-chat-latest-20260210": "openai/gpt-5.2",
     "gpt-5.2-high": "openai/gpt-5.2",
     "gpt-5.5-high": "openai/gpt-5.5",
     "gpt-5.5-instant": "openai/gpt-5.5",
     "claude-opus-4-6": "anthropic/claude-opus-4.6",
     "claude-opus-4-6-thinking": "anthropic/claude-opus-4.6",
-    "claude-opus-4-1-20250805": "anthropic/claude-opus-4.1",
-    "claude-opus-4-1-20250805-thinking-16k": "anthropic/claude-opus-4.1",
+    "claude-opus-5": "anthropic/claude-opus-5",
+    "claude-opus-5-thinking": "anthropic/claude-opus-5",
     "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
-    "claude-sonnet-4-5-20250929": "anthropic/claude-sonnet-4.5",
-    "claude-3-5-sonnet-20241022": "anthropic/claude-sonnet-4.5",
+    "gpt-5.6-sol": "openai/gpt-5.6-sol",
+    "gpt-5.6-sol-high": "openai/gpt-5.6-sol",
+    "grok-4.5": "x-ai/grok-4.5",
+    "kimi-k3": "moonshotai/kimi-k3",
     "gemini-3-pro": "google/gemini-3.1-pro-preview",
     "gemini-3.1-pro-preview": "google/gemini-3.1-pro-preview",
     "gemini-3-flash": "google/gemini-3-flash-preview",
@@ -691,9 +674,6 @@ VISION_ARENA_SLUG_TO_MODEL_ID: dict[str, str] = {
     "gemini-2.5-pro": "google/gemini-2.5-pro",
     "gemini-2.5-flash": "google/gemini-2.5-flash",
     "gemini-2.5-flash-preview-09-2025": "google/gemini-2.5-flash",
-    "kimi-k2.5-thinking": "moonshotai/kimi-k2.5",
-    "kimi-k2.5-instant": "moonshotai/kimi-k2.5",
-    "kimi-k2-instruct": "moonshotai/kimi-k2.5",
     "grok-4.20-beta-0309-reasoning": "x-ai/grok-4.20",
     "grok-4.20-multi-agent-beta-0309": "x-ai/grok-4.20",
     "grok-4.1-thinking": "x-ai/grok-4.20",
@@ -783,14 +763,21 @@ def fetch_vision_arena_scores() -> dict[str, tuple[float, str]]:
 TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
     "gemini-2.5-flash-image-preview": "google/gemini-2.5-flash-image",
     "gemini-2.5-flash-image": "google/gemini-2.5-flash-image",
-    "gemini-3-pro-image-preview": "google/gemini-3-pro-image-preview",
-    "gemini-3-pro-image-preview-2k": "google/gemini-3-pro-image-preview",
-    "gemini-3.1-flash-image-preview": "google/gemini-3.1-flash-image-preview",
+    "gemini-3-pro-image-preview": "google/gemini-3-pro-image",
+    "gemini-3-pro-image-preview-2k": "google/gemini-3-pro-image",
+    "gemini-3.1-flash-image-preview": "google/gemini-3.1-flash-image",
     "flux-2-max": "black-forest-labs/flux.2-max",
     "flux-2-pro": "black-forest-labs/flux.2-pro",
     "flux-2-flex": "black-forest-labs/flux.2-flex",
     "flux-2-klein-4b": "black-forest-labs/flux.2-klein-4b",
     "seedream-4.5": "bytedance-seed/seedream-4.5",
+    "seedream-5.0-flash": "bytedance-seed/seedream-5-0-flash",
+    "flux-3-image": "black-forest-labs/flux-3-image",
+    "gpt-image-2.5-sunburst": "openai/gpt-image-2.5-sunburst",
+    "nano-banana-2.1": "google/gemini-nano-banana-2.1",
+    "gemini-nano-banana-2.1": "google/gemini-nano-banana-2.1",
+    "gemini-3-pro-image": "google/gemini-3-pro-image",
+    "gemini-3.1-flash-image": "google/gemini-3.1-flash-image",
     "riverflow-v2-standard-preview": "sourceful/riverflow-v2-standard-preview",
     "riverflow-v2-fast-preview": "sourceful/riverflow-v2-fast-preview",
     "riverflow-v2-pro": "sourceful/riverflow-v2-pro",
@@ -923,10 +910,12 @@ AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID: dict[str, str] = {
     "Claude Opus 4.6": "anthropic/claude-opus-4.6",
     "GPT-5.2": "openai/gpt-5.2",
     "Claude Sonnet 4.6": "anthropic/claude-sonnet-4.6",
-    "Grok 4 Fast": "x-ai/grok-4-fast",
     "Llama 4 Scout": "meta-llama/llama-4-scout",
+    "Claude Opus 5": "anthropic/claude-opus-5",
+    "GPT-5.6 Sol": "openai/gpt-5.6-sol",
+    "Grok 4.5": "x-ai/grok-4.5",
+    "Kimi K3": "moonshotai/kimi-k3",
     "GPT-4.1": "openai/gpt-4o",  # GPT-4.1 maps to gpt-4o in registry
-    "DeepSeek V3.2": "deepseek/deepseek-v3.2-exp",
 }
 
 

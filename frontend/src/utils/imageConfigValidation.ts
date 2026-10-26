@@ -31,12 +31,20 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
     image_aspect_ratios: ['9:16', '2:3', '3:4', '4:5', '1:1', '5:4', '4:3', '3:2', '21:9'],
     image_sizes: ['1K'],
   },
-  'google/gemini-3-pro-image-preview': { image_sizes: ['1K'] },
-  'google/gemini-3.1-flash-image-preview': { image_sizes: ['1K', '2K', '4K'] },
+  'google/gemini-3-pro-image': { image_sizes: ['1K'] },
+  'google/gemini-3.1-flash-image': { image_sizes: ['1K', '2K', '4K'] },
+  'google/gemini-nano-banana-2.1': { image_sizes: ['1K', '2K'] },
+
+  // Black Forest Labs - Flux 3
+  'black-forest-labs/flux-3-image': { image_sizes: ['1K', '2K'] },
+
+  // ByteDance Seed - Seedream 5.0 Flash
+  'bytedance-seed/seedream-5-0-flash': { image_sizes: ['1K', '2K'] },
 
   // OpenAI - 1:1 @ 1K only
   'openai/gpt-5-image': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
   'openai/gpt-5-image-mini': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
+  'openai/gpt-image-2.5-sunburst': { image_sizes: ['1K', '2K'] },
 
   // Sourceful - Riverflow V2
   'sourceful/riverflow-v2-fast': { image_sizes: ['1K', '2K'] },

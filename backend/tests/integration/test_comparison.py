@@ -38,7 +38,7 @@ class TestStreamingResponse:
             "/api/compare-stream",
             json={
                 "input_data": "Test prompt",
-                "models": ["deepseek/deepseek-chat-v3.1"],  # Free tier model
+                "models": ["deepseek/deepseek-v4.1-flash"],  # Free tier model
             },
         )
         # TestClient handles StreamingResponse automatically
@@ -65,7 +65,7 @@ class TestStreamingComparison:
             "/api/compare-stream",
             json={
                 "input_data": "Test prompt",
-                "models": ["deepseek/deepseek-chat-v3.1"],  # Free tier model
+                "models": ["deepseek/deepseek-v4.1-flash"],  # Free tier model
             },
         )
         assert response.status_code in [
@@ -87,7 +87,7 @@ class TestStreamingComparison:
             json={
                 "input_data": "Test prompt",
                 "models": [
-                    "deepseek/deepseek-chat-v3.1",
+                    "deepseek/deepseek-v4.1-flash",
                 ],  # Free tier models
             },
         )

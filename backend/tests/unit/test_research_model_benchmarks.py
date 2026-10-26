@@ -49,7 +49,7 @@ SAMPLE_TS_CONTENT = textwrap.dedent("""\
         label: 'Best for coding',
         description: 'Code generation, debugging, refactoring',
         models: [
-          { modelId: 'anthropic/claude-opus-4.5', evidence: 'SWE-Bench Pro public (Scale Labs): 45.89%.' },
+          { modelId: 'anthropic/claude-opus-5.5', evidence: 'SWE-Bench Pro public (Scale Labs): 45.89%.' },
         ],
       },
       {
@@ -143,16 +143,16 @@ class TestDetermineCategories:
     """Only models with fetched benchmark scores are added. Categories: coding (SWE-Bench Pro), legal (LegalBench)."""
 
     def test_model_in_swe_bench_pro_gets_coding(self):
-        model = make_registry_model("anthropic/claude-opus-4.5")
-        pro = {"anthropic/claude-opus-4.5": (45.89, "SWE-Bench Pro public (Scale Labs): 45.89%.")}
-        entries = determine_categories("anthropic/claude-opus-4.5", model, None, pro)
+        model = make_registry_model("anthropic/claude-opus-5.5")
+        pro = {"anthropic/claude-opus-5.5": (45.89, "SWE-Bench Pro public (Scale Labs): 45.89%.")}
+        entries = determine_categories("anthropic/claude-opus-5.5", model, None, pro)
         assert len(entries) == 1
         assert entries[0]["category_id"] == "coding"
         assert entries[0]["evidence"] == "SWE-Bench Pro public (Scale Labs): 45.89%."
 
     def test_model_not_in_swe_bench_pro_gets_no_coding(self):
         model = make_registry_model("test/unknown-model")
-        pro = {"anthropic/claude-opus-4.5": (45.89, "SWE-Bench Pro public (Scale Labs): 45.89%.")}
+        pro = {"anthropic/claude-opus-5.5": (45.89, "SWE-Bench Pro public (Scale Labs): 45.89%.")}
         entries = determine_categories("test/unknown-model", model, None, pro)
         assert len(entries) == 0
 
@@ -272,7 +272,7 @@ class TestParseRecommendationsTs:
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
         coding = cats[0]
         assert len(coding["models"]) == 1
-        assert coding["models"][0]["modelId"] == "anthropic/claude-opus-4.5"
+        assert coding["models"][0]["modelId"] == "anthropic/claude-opus-5.5"
 
     def test_parses_labels_and_descriptions(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
@@ -350,7 +350,7 @@ class TestParseRecommendationsTs:
 class TestModelExistsInCategory:
     def test_exists(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        assert model_exists_in_category(cats, "coding", "anthropic/claude-opus-4.5")
+        assert model_exists_in_category(cats, "coding", "anthropic/claude-opus-5.5")
 
     def test_not_exists(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
@@ -358,7 +358,7 @@ class TestModelExistsInCategory:
 
     def test_wrong_category(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        assert not model_exists_in_category(cats, "writing", "anthropic/claude-opus-4.5")
+        assert not model_exists_in_category(cats, "writing", "anthropic/claude-opus-5.5")
 
 
 # --- Tests for add_model_to_category ---
@@ -374,7 +374,7 @@ class TestAddModelToCategory:
 
     def test_does_not_add_duplicate(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        result = add_model_to_category(cats, "coding", "anthropic/claude-opus-4.5", "Dup.")
+        result = add_model_to_category(cats, "coding", "anthropic/claude-opus-5.5", "Dup.")
         assert result is False
         assert len(cats[0]["models"]) == 1
 
@@ -639,9 +639,9 @@ class TestResearchAndUpdateIntegration:
         ts_file.write_text(SAMPLE_TS_CONTENT, encoding="utf-8")
 
         registry_data = {
-            "models_by_provider": {"Anthropic": [make_registry_model("anthropic/claude-opus-4.5")]}
+            "models_by_provider": {"Anthropic": [make_registry_model("anthropic/claude-opus-5.5")]}
         }
-        pro = {"anthropic/claude-opus-4.5": (45.89, "SWE-Bench Pro public (Scale Labs): 45.89%.")}
+        pro = {"anthropic/claude-opus-5.5": (45.89, "SWE-Bench Pro public (Scale Labs): 45.89%.")}
 
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
@@ -655,7 +655,7 @@ class TestResearchAndUpdateIntegration:
             patch("scripts.research_model_benchmarks.fetch_lmspeed_scores", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_global_mmlu_scores", return_value={}),
         ):
-            result = research_and_update("anthropic/claude-opus-4.5")
+            result = research_and_update("anthropic/claude-opus-5.5")
 
         assert "coding" not in result["categories_added"]
 

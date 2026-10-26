@@ -46,7 +46,7 @@ Collects raw responses from all available models for each test prompt.
 python scripts/collect_model_responses.py
 
 # Collect from specific models
-python scripts/collect_model_responses.py --models anthropic/claude-sonnet-4.5 openai/gpt-4o
+python scripts/collect_model_responses.py --models anthropic/claude-sonnet-5.5 openai/gpt-4o
 
 # Collect with specific prompts only
 python scripts/collect_model_responses.py --prompts complex_math_display markdown_lists
@@ -332,7 +332,7 @@ See [Adding New Models Workflow](../../docs/development/ADDING_NEW_MODELS.md) fo
 
 1. **Start Small**: Test with a few models first before running full collection
    ```bash
-   python scripts/collect_model_responses.py --models anthropic/claude-sonnet-4.5 --prompts complex_math_display
+   python scripts/collect_model_responses.py --models anthropic/claude-sonnet-5.5 --prompts complex_math_display
    ```
 
 2. **Monitor Rate Limits**: Adjust `--delay` if you hit rate limits frequently
