@@ -45,8 +45,9 @@ export async function clickNavSignUpButton(
     }
   }
 
-  // Firefox often rejects Playwright clicks as "outside viewport" on the hero nav.
-  if (options?.browserName === 'firefox') {
+  // Firefox/WebKit often reject Playwright clicks as "outside viewport" or
+  // intercept them with the hero layer on the home nav.
+  if (options?.browserName === 'firefox' || options?.browserName === 'webkit') {
     await domClick()
   } else {
     await clickWithDomFallback()
