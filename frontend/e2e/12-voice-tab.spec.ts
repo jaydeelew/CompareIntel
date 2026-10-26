@@ -1,11 +1,44 @@
-import { expect, test } from './fixtures'
+import { expect, test, type Page } from './fixtures'
 import { installMockMicrophone, mockVoiceApis } from './helpers/mockVoice'
-import { selectSelectableTextModels, toggleModelCheckbox } from './helpers/modelCheckbox'
+import { toggleModelCheckbox } from './helpers/modelCheckbox'
 
 /**
  * Voice tab slice 1: spoken turn-taking with up to 2 models (issue #90).
  * Audio capture and OpenRouter STT/TTS are mocked.
  */
+
+async function expandFirstProvider(page: Page): Promise<void> {
+  const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
+  await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
+  if ((await providerHeaders.count()) > 0) {
+    const firstProvider = providerHeaders.first()
+    if ((await firstProvider.getAttribute('aria-expanded')) !== 'true') {
+      await firstProvider.click()
+    }
+  }
+}
+
+async function selectMockedModels(page: Page, count: number, projectName: string): Promise<number> {
+  await expandFirstProvider(page)
+  const modelCheckboxes = page.locator(
+    '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+  )
+  await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+
+  let selected = 0
+  const total = await modelCheckboxes.count()
+  for (let i = 0; i < total && selected < count; i++) {
+    const box = modelCheckboxes.nth(i)
+    if (await box.isEnabled().catch(() => false)) {
+      await toggleModelCheckbox(box, projectName)
+      await expect(box).toBeChecked()
+      selected++
+    }
+  }
+  return selected
+}
 
 test.describe('Voice tab', () => {
   test('selects up to 2 models, records a turn, and plays sequential replies', async ({
@@ -23,22 +56,28 @@ test.describe('Voice tab', () => {
     })
 
     await test.step('Select two models and block a third', async () => {
-      const projectName = test.info().project.name
-      const selected = await selectSelectableTextModels(page, 2, projectName)
-      expect(selected).toHaveLength(2)
+      const selected = await selectMockedModels(page, 2, test.info().project.name)
+      expect(selected).toBe(2)
 
-      const thirdId = 'openai/gpt-4.1-nano'
-      const third = page.getByTestId(`model-checkbox-${thirdId}`)
-      if (await third.isVisible().catch(() => false)) {
-        await toggleModelCheckbox(third, projectName)
-        await expect(third).not.toBeChecked()
+      const modelCheckboxes = page.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
+      const total = await modelCheckboxes.count()
+      let remainingEnabled = 0
+      for (let i = 0; i < total; i++) {
+        const box = modelCheckboxes.nth(i)
+        const checked = await box.isChecked().catch(() => false)
+        const enabled = await box.isEnabled().catch(() => false)
+        if (!checked && enabled) remainingEnabled++
       }
-      await expect(page.getByText(/limited to 2 models/i)).toBeVisible({ timeout: 8000 })
+      const checkedCount = await page.locator('input.model-checkbox:checked').count()
+      expect(checkedCount).toBe(2)
+      expect(remainingEnabled).toBe(0)
     })
 
     await test.step('Tap-to-talk records and shows the transcript', async () => {
       const talk = page.getByTestId('voice-ptt-button')
-      await expect(talk).toBeVisible()
+      await expect(talk).toBeEnabled({ timeout: 10000 })
       await talk.click()
       await expect(page.getByTestId('voice-status')).toContainText(/Listening/i, { timeout: 5000 })
       await talk.click()
@@ -65,7 +104,10 @@ test.describe('Voice tab', () => {
 
     await page.getByTestId('voice-tab-button').click()
     await expect(page.getByTestId('voice-composer')).toBeVisible()
-    await page.getByTestId('voice-ptt-button').click()
+    expect(await selectMockedModels(page, 1, test.info().project.name)).toBe(1)
+    const talk = page.getByTestId('voice-ptt-button')
+    await expect(talk).toBeEnabled({ timeout: 10000 })
+    await talk.click()
     await expect(page.getByTestId('voice-mic-error')).toContainText(/Microphone access denied/i, {
       timeout: 10000,
     })
@@ -83,11 +125,8 @@ test.describe('Voice tab', () => {
     })
     await page.reload({ waitUntil: 'domcontentloaded' })
     await page.getByTestId('voice-tab-button').click()
-    await expect(page.getByTestId('voice-mic-error')).toContainText(
-      /supported|secure|unavailable/i,
-      {
-        timeout: 10000,
-      }
-    )
+    await expect(page.getByTestId('voice-mic-error')).toContainText(/supported|secure|unavailable/i, {
+      timeout: 10000,
+    })
   })
 })
