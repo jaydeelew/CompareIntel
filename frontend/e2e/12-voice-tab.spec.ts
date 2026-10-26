@@ -87,11 +87,15 @@ test.describe('Voice tab', () => {
     })
 
     await test.step('Model replies appear in selection order', async () => {
-      const results = page.locator(
-        '.results-section .result-card, [data-testid^="result-card-"], .conversation-card'
-      )
+      const results = page.locator('.results-section .result-card.conversation-card')
       await expect(results.first()).toBeVisible({ timeout: 30000 })
-      await expect(results).toHaveCount(2)
+      const modelTabs = page.locator('.results-tab-button')
+      // Mobile uses a tabbed layout with a single card in the DOM.
+      if ((await modelTabs.count()) > 0) {
+        await expect(modelTabs).toHaveCount(2)
+      } else {
+        await expect(results).toHaveCount(2)
+      }
     })
   })
 
