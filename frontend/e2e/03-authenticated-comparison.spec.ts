@@ -12,7 +12,9 @@ import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
  */
 
 test.describe('Authenticated User Comparison Flow', () => {
-  test('User can perform a complete comparison', async ({ authenticatedPage }) => {
+  test('User can perform a complete comparison', async ({
+    mockedModelsAuthenticatedPage: authenticatedPage,
+  }) => {
     await test.step('Enter comparison prompt', async () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
       await expect(inputField).toBeVisible()
@@ -450,7 +452,9 @@ test.describe('Authenticated User Comparison Flow', () => {
     expect(indicatorCount).toBeGreaterThanOrEqual(0)
   })
 
-  test('User can select different model combinations', async ({ authenticatedPage }) => {
+  test('User can select different model combinations', async ({
+    mockedModelsAuthenticatedPage: authenticatedPage,
+  }) => {
     // Wait for models to load first
     const loadingMessage = authenticatedPage.locator(
       '.loading-message:has-text("Loading available models")'

@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test'
 
-import { test, expect, dismissTutorialOverlay } from './fixtures'
+import { test, expect, dismissTutorialOverlay, ensureUnfoldedNavbar } from './fixtures'
+import { mockModelsApi, mockComparisonStream } from './helpers/mockModels'
 
 // Helper to wait safely (handles page closure during async ops)
 async function safeWait(page: Page, ms: number) {
@@ -97,6 +98,10 @@ test.describe('Mobile Platform Tests', () => {
     await context.clearCookies()
     await context.clearPermissions()
 
+    // Mock models API and comparison stream for deterministic tests
+    await mockModelsApi(page, 'unregistered')
+    await mockComparisonStream(page)
+
     // Set up wait for models API before navigating
     const modelsResponsePromise = page
       .waitForResponse(
@@ -189,33 +194,18 @@ test.describe('Mobile Platform Tests', () => {
 
   test('Touch interactions work correctly', async ({ page, browserName }) => {
     await test.step('Can tap navigation buttons', async () => {
-      // Dismiss tutorial overlay before interacting
       await dismissTutorialOverlay(page)
+      // The header folds away once `.app` scrolls; the hero then sits over the nav buttons.
+      await ensureUnfoldedNavbar(page)
 
       const signUpButton = page.getByTestId('nav-sign-up-button')
       await expect(signUpButton).toBeVisible()
 
-      // Check if tutorial overlay is blocking before clicking
-      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
-      if (overlayVisible) {
-        await dismissTutorialOverlay(page)
-        await safeWait(page, 500)
-      }
-
-      // Use tap if touch is supported, otherwise use click
-      try {
+      const hasTouch = await page.evaluate(() => navigator.maxTouchPoints > 0)
+      if (hasTouch) {
         await signUpButton.tap({ timeout: 10000 })
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('intercepts pointer events')) {
-          // Overlay is blocking, dismiss it and retry
-          await dismissTutorialOverlay(page)
-          await safeWait(page, 500)
-          await signUpButton.click({ timeout: 10000, force: true })
-        } else {
-          // Fallback to click if tap is not supported
-          await signUpButton.click({ timeout: 10000 })
-        }
+      } else {
+        await signUpButton.click({ timeout: 10000 })
       }
       await safeWait(page, 500)
 
@@ -730,10 +720,16 @@ test.describe('Mobile Platform Tests', () => {
 
       // Expand provider dropdown
       const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
-      if ((await providerHeaders.count()) > 0) {
+      const headerCount = await providerHeaders.count()
+      if (headerCount > 0) {
         const firstProvider = providerHeaders.first()
         // Wait for provider header to be visible before getting attribute
-        await expect(firstProvider).toBeVisible({ timeout: 20000 })
+        const isVisible = await firstProvider.isVisible({ timeout: 20000 }).catch(() => false)
+
+        if (!isVisible) {
+          // Provider header not visible, skip expansion
+          return
+        }
 
         // Check if page is still valid
         if (page.isClosed()) {

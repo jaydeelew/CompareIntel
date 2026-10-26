@@ -7,6 +7,7 @@ import {
   waitForReactHydration,
   dismissTutorialOverlay,
 } from './fixtures'
+import { mockModelsApi, mockComparisonStream } from './helpers/mockModels'
 
 /**
  * E2E Tests: Unregistered User Journey
@@ -60,6 +61,10 @@ test.describe('Unregistered User Journey', () => {
     // Clear all authentication state
     await context.clearCookies()
     await context.clearPermissions()
+
+    // Mock models API and comparison stream for deterministic tests
+    await mockModelsApi(page, 'unregistered')
+    await mockComparisonStream(page)
 
     // Set up wait for models API before navigating (exclude CSS/static files)
     const modelsResponsePromise = page
@@ -857,56 +862,24 @@ test.describe('Unregistered User Journey', () => {
     await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
 
     const checkboxCount = await modelCheckboxes.count()
-    expect(checkboxCount).toBeGreaterThan(0)
-
-    if (checkboxCount > 3) {
-      // Select first 3 enabled models
-      let selectedCount = 0
-      for (let i = 0; i < checkboxCount && selectedCount < 3; i++) {
-        const checkbox = modelCheckboxes.nth(i)
-        await expect(checkbox).toBeVisible({ timeout: 5000 })
-        const isEnabled = await checkbox.isEnabled().catch(() => false)
-        if (isEnabled) {
-          await checkbox.check({ timeout: 10000 })
-          await expect(checkbox).toBeChecked()
-          selectedCount++
-        }
-      }
-
-      // Ensure we selected at least one model
-      expect(selectedCount).toBeGreaterThan(0)
-
-      // Try to select 4th model - should be disabled or show error
-      const fourthCheckbox = modelCheckboxes.nth(3)
-
-      if (await fourthCheckbox.isEnabled()) {
-        // If enabled, selecting it should either:
-        // 1. Uncheck one of the first 3
-        // 2. Show an error message
-        // 3. Be prevented
-
-        await fourthCheckbox.check()
-        await safeWait(page, 500)
-
-        // Check if error message appears
-        const errorMessage = page.getByText(/limit|maximum|3 models|select up to/i)
-        const hasError = await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)
-
-        // Or check if one of the first 3 was unchecked
-        const firstThreeChecked = await Promise.all([
-          modelCheckboxes.nth(0).isChecked(),
-          modelCheckboxes.nth(1).isChecked(),
-          modelCheckboxes.nth(2).isChecked(),
-        ])
-        const allThreeChecked = firstThreeChecked.every(Boolean)
-
-        // Either error message or automatic deselection should occur
-        expect(hasError || !allThreeChecked).toBe(true)
-      } else {
-        // Checkbox is disabled, which is expected
-        await expect(fourthCheckbox).toBeDisabled()
-      }
+    const enabledIndexes: number[] = []
+    for (let i = 0; i < checkboxCount; i++) {
+      if (await modelCheckboxes.nth(i).isEnabled()) enabledIndexes.push(i)
     }
+    // The mocked catalog gives unregistered users more selectable models than the limit.
+    expect(enabledIndexes.length).toBeGreaterThan(3)
+
+    for (const i of enabledIndexes.slice(0, 3)) {
+      await modelCheckboxes.nth(i).check({ timeout: 10000 })
+      await expect(modelCheckboxes.nth(i)).toBeChecked()
+    }
+
+    // At the limit, every model that is not selected is disabled, including tier-accessible ones.
+    for (const i of enabledIndexes.slice(3)) {
+      await expect(modelCheckboxes.nth(i)).not.toBeChecked()
+      await expect(modelCheckboxes.nth(i)).toBeDisabled()
+    }
+    await expect(page.locator('input.model-checkbox:checked')).toHaveCount(3)
   })
 
   test('Unregistered user can navigate to information pages', async ({ page, browserName }) => {

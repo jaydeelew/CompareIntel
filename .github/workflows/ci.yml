@@ -46,6 +46,8 @@ jobs:
             frontend:
               - 'frontend/**'
               - '.github/workflows/ci.yml'
+              - 'frontend/e2e/**'
+              - 'frontend/playwright.config.*'
             backend:
               - 'backend/**'
               - 'frontend/src/data/**'
@@ -488,6 +490,9 @@ jobs:
       
       - name: Run critical E2E tests (core user journeys)
         working-directory: frontend
+        env:
+          PLAYWRIGHT_TRACE: retain-on-failure
+          E2E_LOG_API_REQUESTS: '1'
         run: |
           # Run critical user journey tests on Chromium only for speed
           # These tests cover: registration, login, comparison, conversation management
@@ -611,6 +616,9 @@ jobs:
       
       - name: Run E2E tests on ${{ matrix.project }}
         working-directory: frontend
+        env:
+          PLAYWRIGHT_TRACE: retain-on-failure
+          E2E_LOG_API_REQUESTS: '1'
         run: |
           npm run test:e2e -- --project="${{ matrix.project }}" --timeout=90000
       

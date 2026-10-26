@@ -4,6 +4,8 @@
 
 import { test as base, expect, Page, BrowserContext } from '@playwright/test'
 
+import { mockComparisonStream, mockModelsApi } from './helpers/mockModels'
+
 /**
  * Comprehensive Test Fixtures for CompareIntel E2E Tests
  *
@@ -1122,6 +1124,7 @@ interface TestFixtures {
   adminPage: Page
   moderatorPage: Page
   authenticatedPage: Page // Generic authenticated user (free tier)
+  mockedModelsAuthenticatedPage: Page // Free tier with models and compare-stream mocked
 
   // Unregistered/Unauthenticated
   unregisteredPage: Page
@@ -1166,6 +1169,20 @@ export const test = base.extend<TestFixtures>({
       window.__PLAYWRIGHT__ = true
       window.__PW_INTERNAL__ = true
     })
+
+    if (process.env.E2E_LOG_API_REQUESTS) {
+      page.on('request', request => {
+        if (request.url().includes('/api/')) {
+          console.log(`[API REQUEST] ${request.method()} ${request.url()}`)
+        }
+      })
+      page.on('response', response => {
+        if (response.url().includes('/api/')) {
+          console.log(`[API RESPONSE] ${response.status()} ${response.url()}`)
+        }
+      })
+    }
+
     await use(page)
   },
 
@@ -1392,6 +1409,31 @@ export const test = base.extend<TestFixtures>({
   authenticatedPage: async ({ page, context }, use) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
     // Wait for load state with fallback
+    try {
+      await page.waitForLoadState('load', { timeout: 15000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
+    await waitForReactHydration(page)
+    await waitForAuthState(page)
+    await dismissTutorialOverlay(page)
+    await ensureAuthenticated(
+      page,
+      TEST_CREDENTIALS.free.email,
+      TEST_CREDENTIALS.free.password,
+      context
+    )
+    await use(page)
+  },
+
+  /**
+   * Free-tier authenticated page with /api/models and /api/compare-stream mocked.
+   * Routes are installed before the first navigation so the initial models fetch is intercepted.
+   */
+  mockedModelsAuthenticatedPage: async ({ page, context }, use) => {
+    await mockModelsApi(page, 'free')
+    await mockComparisonStream(page)
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
     try {
       await page.waitForLoadState('load', { timeout: 15000 })
     } catch {

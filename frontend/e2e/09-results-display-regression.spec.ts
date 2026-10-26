@@ -2,7 +2,11 @@ import type { Locator, Page } from '@playwright/test'
 
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
-import { isMobileE2eProject, toggleModelCheckbox } from './helpers/modelCheckbox'
+import {
+  isMobileE2eProject,
+  selectSelectableTextModels,
+  toggleModelCheckbox,
+} from './helpers/modelCheckbox'
 
 function firstResultCardVisibleTimeoutMs(projectName: string): number {
   return projectName === 'firefox' || projectName === 'webkit' ? 60000 : 30000
@@ -145,35 +149,7 @@ test.describe('Results Display Regression Tests', () => {
         )
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        // Expand first provider and select models
-        const providerHeaders = authenticatedPage.locator(
-          '.provider-header, button[class*="provider-header"]'
-        )
-        if ((await providerHeaders.count()) > 0) {
-          const firstProvider = providerHeaders.first()
-          const isExpanded = await firstProvider.getAttribute('aria-expanded')
-          if (isExpanded !== 'true') {
-            await firstProvider.click()
-            await authenticatedPage.waitForTimeout(500)
-          }
-        }
-
-        const modelCheckboxes = authenticatedPage.locator(
-          '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
-        )
-        await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-
-        // Select 2 models
-        let selectedCount = 0
-        const checkboxCount = await modelCheckboxes.count()
-        for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {
-          const checkbox = modelCheckboxes.nth(i)
-          const isEnabled = await checkbox.isEnabled().catch(() => false)
-          if (isEnabled) {
-            await checkbox.check({ timeout: 10000 })
-            selectedCount++
-          }
-        }
+        await selectSelectableTextModels(authenticatedPage, 2, testInfo.project.name)
       })
 
       await test.step('Submit and verify results grid', async () => {
@@ -409,24 +385,7 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        await ensureFirstProviderExpanded(authenticatedPage)
-
-        const modelCheckboxes = authenticatedPage.locator(
-          '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
-        )
-        await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-
-        // Select 2 models
-        let selectedCount = 0
-        const checkboxCount = await modelCheckboxes.count()
-        for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {
-          const checkbox = modelCheckboxes.nth(i)
-          const isEnabled = await checkbox.isEnabled().catch(() => false)
-          if (isEnabled) {
-            await toggleModelCheckbox(checkbox, projectName)
-            selectedCount++
-          }
-        }
+        await selectSelectableTextModels(authenticatedPage, 2, projectName)
 
         await submitAndAwaitCompareStream(authenticatedPage)
       })
@@ -477,24 +436,7 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        await ensureFirstProviderExpanded(authenticatedPage)
-
-        const modelCheckboxes = authenticatedPage.locator(
-          '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
-        )
-        await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-
-        // Select 2 models
-        let selectedCount = 0
-        const checkboxCount = await modelCheckboxes.count()
-        for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {
-          const checkbox = modelCheckboxes.nth(i)
-          const isEnabled = await checkbox.isEnabled().catch(() => false)
-          if (isEnabled) {
-            await toggleModelCheckbox(checkbox, projectName)
-            selectedCount++
-          }
-        }
+        await selectSelectableTextModels(authenticatedPage, 2, projectName)
 
         await submitAndAwaitCompareStream(authenticatedPage)
 
@@ -697,24 +639,7 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        await ensureFirstProviderExpanded(authenticatedPage)
-
-        const modelCheckboxes = authenticatedPage.locator(
-          '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
-        )
-        await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-
-        // Select 2 models for breakout to be available
-        let selectedCount = 0
-        const checkboxCount = await modelCheckboxes.count()
-        for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {
-          const checkbox = modelCheckboxes.nth(i)
-          const isEnabled = await checkbox.isEnabled().catch(() => false)
-          if (isEnabled) {
-            await toggleModelCheckbox(checkbox, projectName)
-            selectedCount++
-          }
-        }
+        await selectSelectableTextModels(authenticatedPage, 2, projectName)
 
         await submitAndAwaitCompareStream(authenticatedPage)
 
