@@ -62,8 +62,9 @@ test.describe('Unregistered User Journey', () => {
     await context.clearCookies()
     await context.clearPermissions()
 
-    // Mock models API for deterministic tests
+    // Mock models API and comparison stream for deterministic tests
     await mockModelsApi(page, 'unregistered')
+    await mockComparisonStream(page)
 
     // Set up wait for models API before navigating (exclude CSS/static files)
     const modelsResponsePromise = page

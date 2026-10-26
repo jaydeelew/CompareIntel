@@ -98,8 +98,9 @@ test.describe('Mobile Platform Tests', () => {
     await context.clearCookies()
     await context.clearPermissions()
 
-    // Mock models API for deterministic tests
+    // Mock models API and comparison stream for deterministic tests
     await mockModelsApi(page, 'unregistered')
+    await mockComparisonStream(page)
 
     // Set up wait for models API before navigating
     const modelsResponsePromise = page
