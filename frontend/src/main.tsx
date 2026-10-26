@@ -35,6 +35,7 @@ import { initializeRegistry } from './config/loadModelConfigs'
 import { isCancellationError } from './services/api/errors'
 import logger from './utils/logger'
 import { initWebVitals } from './utils/performance'
+import { removeStalePrerenderedPortals } from './utils/removeStalePrerenderedPortals'
 
 // Deduped/aborted API GETs reject with CancellationError; suppress console noise only (does not affect promise handling)
 window.addEventListener('unhandledrejection', event => {
@@ -82,6 +83,8 @@ initWebVitals(metric => {
   // In production, metrics are automatically sent to analytics endpoint if configured
   // via VITE_PERFORMANCE_ENDPOINT environment variable
 })
+
+removeStalePrerenderedPortals()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

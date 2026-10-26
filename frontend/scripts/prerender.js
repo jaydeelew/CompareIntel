@@ -126,6 +126,23 @@ async function prerenderPages() {
       // Wait for React to hydrate and content to be visible
       await page.waitForTimeout(1000)
 
+      // Portals (welcome modal, toasts, etc.) render as direct children of <body>, outside
+      // #root. createRoot() only replaces #root, so any portal markup saved here would stay
+      // in the page forever as an inert, listener-less copy. Keep only #root and assets.
+      const strippedPortals = await page.evaluate(() => {
+        const keepTags = new Set(['SCRIPT', 'NOSCRIPT', 'STYLE', 'LINK', 'TEMPLATE'])
+        const removed = []
+        for (const el of Array.from(document.body.children)) {
+          if (el.id === 'root' || keepTags.has(el.tagName)) continue
+          removed.push(el.className || el.tagName)
+          el.remove()
+        }
+        return removed
+      })
+      if (strippedPortals.length > 0) {
+        console.log(`   Stripped body-level portal nodes: ${strippedPortals.join(', ')}`)
+      }
+
       // Get the full HTML after React has rendered
       const html = await page.content()
 
