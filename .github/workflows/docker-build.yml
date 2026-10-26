@@ -73,7 +73,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build backend image (development)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./backend
           file: ./backend/Dockerfile
@@ -85,7 +85,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build backend image (production)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./backend
           file: ./backend/Dockerfile
@@ -142,7 +142,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build frontend image (build stage)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
@@ -209,7 +209,7 @@ jobs:
           rm -rf ./temp-dist
 
       - name: Build frontend image (dev stage)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
@@ -221,7 +221,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build frontend image (prod stage)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
