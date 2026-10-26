@@ -2,7 +2,6 @@ import type { Page, BrowserContext } from '@playwright/test'
 
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
-import { mockModelsApi, mockComparisonStream } from './helpers/mockModels'
 
 /**
  * E2E Tests: Authenticated User Comparison Flow
@@ -20,7 +19,8 @@ const TEST_FREE_PASSWORD = process.env.TEST_FREE_PASSWORD || 'Test12345678/'
 async function setupAuthenticatedPageWithMocks(page: Page, context: BrowserContext): Promise<Page> {
   // Set up mocks FIRST, before any navigation
   const { mockModelsApi, mockComparisonStream } = await import('./helpers/mockModels')
-  const { ensureAuthenticated, waitForAuthState, waitForReactHydration, dismissTutorialOverlay } = await import('./fixtures')
+  const { waitForAuthState, waitForReactHydration, dismissTutorialOverlay } = await import('./fixtures')
+  const { ensureAuthenticated } = await import('./helpers/auth')
   
   await mockModelsApi(page, 'free')
   await mockComparisonStream(page)
@@ -37,8 +37,7 @@ async function setupAuthenticatedPageWithMocks(page: Page, context: BrowserConte
   await dismissTutorialOverlay(page)
   
   // Authenticate  
-  const { ensureAuthenticated: ensureAuth } = await import('./helpers/auth')
-  await ensureAuth(page, TEST_FREE_EMAIL, TEST_FREE_PASSWORD, context)
+  await ensureAuthenticated(page, TEST_FREE_EMAIL, TEST_FREE_PASSWORD, context)
   
   return page
 }
