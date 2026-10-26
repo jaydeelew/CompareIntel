@@ -929,7 +929,7 @@ async function registerUser(
  * 3. Fall back to UI-based login only if API login fails
  * 4. As last resort, try UI-based registration
  */
-async function ensureAuthenticated(
+export async function ensureAuthenticated(
   page: Page,
   email: string,
   password: string,
