@@ -25,7 +25,9 @@ export function nextSpeakableSentences(
   spokenPrefix: string,
   flushRemainder: boolean
 ): { sentences: string[]; spokenPrefix: string } {
-  const incoming = fullText.startsWith(spokenPrefix) ? fullText.slice(spokenPrefix.length) : fullText
+  const incoming = fullText.startsWith(spokenPrefix)
+    ? fullText.slice(spokenPrefix.length)
+    : fullText
   const { complete, rest } = splitCompleteSentences(incoming)
   const sentences = [...complete]
   let prefix = spokenPrefix + complete.join(complete.length ? ' ' : '')

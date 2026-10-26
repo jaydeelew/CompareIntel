@@ -125,8 +125,11 @@ test.describe('Voice tab', () => {
     })
     await page.reload({ waitUntil: 'domcontentloaded' })
     await page.getByTestId('voice-tab-button').click()
-    await expect(page.getByTestId('voice-mic-error')).toContainText(/supported|secure|unavailable/i, {
-      timeout: 10000,
-    })
+    await expect(page.getByTestId('voice-mic-error')).toContainText(
+      /supported|secure|unavailable/i,
+      {
+        timeout: 10000,
+      }
+    )
   })
 })
