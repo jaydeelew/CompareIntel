@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
-import { mockModelsApi } from './helpers/mockModels'
+import { mockModelsApi, mockComparisonStream } from './helpers/mockModels'
 
 /**
  * E2E Tests: Authenticated User Comparison Flow

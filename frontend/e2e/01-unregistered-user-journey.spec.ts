@@ -7,7 +7,7 @@ import {
   waitForReactHydration,
   dismissTutorialOverlay,
 } from './fixtures'
-import { mockModelsApi } from './helpers/mockModels'
+import { mockModelsApi, mockComparisonStream } from './helpers/mockModels'
 
 /**
  * E2E Tests: Unregistered User Journey

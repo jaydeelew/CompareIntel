@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test'
 
 import { test, expect, dismissTutorialOverlay } from './fixtures'
-import { mockModelsApi } from './helpers/mockModels'
+import { mockModelsApi, mockComparisonStream } from './helpers/mockModels'
 
 // Helper to wait safely (handles page closure during async ops)
 async function safeWait(page: Page, ms: number) {
