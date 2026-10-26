@@ -184,8 +184,12 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
       
+      # Dependabot PRs use a read-only GITHUB_TOKEN, so createComment fails with
+      # "Resource not accessible by integration". Keep the job green; the artifacts
+      # above are the source of truth for bundle analysis.
       - name: Comment bundle size on PR
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         uses: actions/github-script@v9
         with:
           script: |
@@ -198,12 +202,16 @@ jobs:
             - \`frontend-dist\` - Production build
             `;
             
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              core.warning(`Skipping bundle-size PR comment: ${error.message}`);
+            }
 
   frontend-lighthouse:
     name: Lighthouse Performance
