@@ -413,7 +413,10 @@ jobs:
   e2e-test-critical:
     name: E2E Tests - Critical User Flows
     needs: [detect-changes, frontend-build, backend-test]
+    # !cancelled() is required: without a status function GitHub adds an implicit success(),
+    # which skips this job whenever frontend-build or backend-test was skipped.
     if: |
+      !cancelled() &&
       (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
       (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
@@ -515,7 +518,9 @@ jobs:
   e2e-test-browsers:
     name: E2E Tests - Cross-Browser & Mobile
     needs: [detect-changes, frontend-build, backend-test]
+    # See e2e-test-critical: !cancelled() keeps this from being skipped when a needed job is skipped.
     if: |
+      !cancelled() &&
       (github.event_name == 'pull_request' || github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch') &&
       (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
@@ -633,7 +638,10 @@ jobs:
   e2e-test-smoke:
     name: Smoke (Playwright)
     needs: [detect-changes, frontend-build, backend-test]
+    # !cancelled() is required: without a status function GitHub adds an implicit success(),
+    # which skips this job whenever frontend-build or backend-test was skipped.
     if: |
+      !cancelled() &&
       (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
       (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
@@ -722,7 +730,10 @@ jobs:
   e2e-test-accessibility:
     name: E2E Tests - Accessibility (WCAG 2.1 AA)
     needs: [detect-changes, frontend-build, backend-test]
+    # !cancelled() is required: without a status function GitHub adds an implicit success(),
+    # which skips this job whenever frontend-build or backend-test was skipped.
     if: |
+      !cancelled() &&
       (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
       (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
