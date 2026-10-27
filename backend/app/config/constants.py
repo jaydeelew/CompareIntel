@@ -101,8 +101,10 @@ IMAGE_CREDITS_PER_GENERATION: int = 5
 # Image generation: unregistered users are blocked in compare-stream. Registered free tier has no
 # separate daily image-run cap—only daily credits (DAILY_CREDIT_LIMITS) and model_limit apply.
 
-# Voice tab (slice 1): spoken turn-taking with up to 2 models.
+# Voice mode (inside Text models): spoken turn-taking with up to 2 models.
 VOICE_MAX_MODELS: int = 2
+# User-facing copy when STT returns no speech (silence or an undecodable clip).
+VOICE_EMPTY_TRANSCRIPT_MESSAGE: str = "We didn't catch that. Please try again."
 # Fallback OpenRouter list rates when the audio endpoints omit usage.cost.
 VOICE_STT_USD_PER_MINUTE: float = 0.006
 VOICE_TTS_USD_PER_MILLION_CHARS: float = 15.0

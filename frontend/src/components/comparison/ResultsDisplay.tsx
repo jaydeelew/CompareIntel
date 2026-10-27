@@ -161,6 +161,8 @@ export interface ResultsDisplayProps {
   capabilitySwipeHintNonce?: number
   /** True while a comparison is in flight (drives model-tab auto-focus). */
   isComparisonLoading?: boolean
+  /** Voice mode: strip markdown from assistant transcripts. */
+  plainSpeech?: boolean
 }
 
 type TabChangeSource = 'swipe-touch' | 'tab-click' | 'programmatic'
@@ -192,6 +194,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   tutorialSwipeHintNonce = 0,
   capabilitySwipeHintNonce = 0,
   isComparisonLoading = false,
+  plainSpeech = false,
 }) => {
   const visibleConversations = useMemo(
     () => conversations.filter(conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)),
@@ -701,6 +704,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                     activeConversation.modelId,
                     streamAnswerStartedByModel
                   )}
+                  plainSpeech={plainSpeech}
                 />
               </div>
             ) : null}
@@ -742,6 +746,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   conversation.modelId,
                   streamAnswerStartedByModel
                 )}
+                plainSpeech={plainSpeech}
               />
             )
           })}

@@ -1,4 +1,4 @@
-"""Voice tab API: config, STT, TTS, and audio-credit finalization."""
+"""Voice mode API: config, STT, TTS, and audio-credit finalization."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...config.constants import (
     DAILY_CREDIT_LIMITS,
+    VOICE_EMPTY_TRANSCRIPT_MESSAGE,
     VOICE_MAX_MODELS,
     VOICE_NATIVE_MODEL_IDS,
     VOICE_TTS_VOICES,
@@ -261,7 +262,7 @@ async def transcribe_voice(
 
     audio_bytes = await file.read()
     if not audio_bytes:
-        raise HTTPException(status_code=400, detail="Audio recording is empty.")
+        raise HTTPException(status_code=400, detail=VOICE_EMPTY_TRANSCRIPT_MESSAGE)
     if len(audio_bytes) > _MAX_AUDIO_BYTES:
         raise HTTPException(status_code=400, detail="Audio recording is too large.")
 

@@ -216,6 +216,7 @@ MAIL_FROM=your-email@gmail.com
 | `FRONTEND_URL` | ❌ No | `http://localhost:5173` | For email links |
 | `MAIL_*` | ❌ No | None | Email optional |
 | `RECAPTCHA_SECRET_KEY` | ❌ No | None | Bot protection (optional) |
+| `ENABLE_VOICE` | ❌ No | unset (off) | Voice APIs; production stays hidden |
 
 ### Frontend
 
@@ -224,6 +225,7 @@ MAIL_FROM=your-email@gmail.com
 | `VITE_API_URL` | ❌ No | `/api` | Works with proxy |
 | `VITE_RECAPTCHA_SITE_KEY` | ❌ No | None | Bot protection (optional) |
 | `VITE_PERFORMANCE_ENDPOINT` | ❌ No | None | Performance analytics (production only) |
+| `VITE_ENABLE_VOICE` | ❌ No | unset (off) | Text-tab Voice toggle; production stays hidden |
 
 ---
 

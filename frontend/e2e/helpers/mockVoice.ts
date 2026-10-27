@@ -1,8 +1,31 @@
 import type { Page } from '@playwright/test'
 
-import { buildMockComparisonStream } from './mockModels'
-
 const MOCK_MP3 = Buffer.from('fff348c40000000348000000004c414d45332e39362e3100', 'hex')
+
+/** Markdown leftover the client sanitizer must strip from spoken transcripts. */
+const VOICE_MOCK_REPLY =
+  '**Hello** from the model. See [docs](https://example.com). Photosynthesis turns light into energy.'
+
+function buildVoiceMockComparisonStream(models: string[]): string {
+  const events: object[] = []
+  for (const model of models) {
+    events.push({ model, type: 'start' })
+    events.push({ model, type: 'chunk', content: VOICE_MOCK_REPLY })
+    events.push({ model, type: 'done', error: false })
+  }
+  events.push({
+    type: 'complete',
+    metadata: {
+      input_length: 0,
+      models_requested: models.length,
+      models_successful: models.length,
+      models_failed: 0,
+      timestamp: new Date().toISOString(),
+      processing_time_ms: 10,
+    },
+  })
+  return events.map(e => `data: ${JSON.stringify(e)}\n\n`).join('')
+}
 
 export async function mockVoiceApis(page: Page): Promise<void> {
   await page.route('**/api/voice/config', async route => {
@@ -63,7 +86,7 @@ export async function mockVoiceApis(page: Page): Promise<void> {
       status: 200,
       contentType: 'text/event-stream',
       headers: { 'Cache-Control': 'no-cache' },
-      body: buildMockComparisonStream(models),
+      body: buildVoiceMockComparisonStream(models),
     })
   })
 }
@@ -76,19 +99,32 @@ export async function installMockMicrophone(
   await page.addInitScript(shouldDeny => {
     class FakeMediaRecorder {
       state = 'inactive'
-      mimeType = 'audio/webm'
+      mimeType = 'audio/webm;codecs=opus'
       ondataavailable: ((ev: { data: Blob }) => void) | null = null
       onstop: (() => void) | null = null
+      timer: ReturnType<typeof setInterval> | null = null
       constructor(public stream: MediaStream) {}
-      start() {
+      start(timeslice?: number) {
         this.state = 'recording'
+        if (typeof timeslice === 'number' && timeslice > 0) {
+          this.timer = setInterval(() => this.requestData(), timeslice)
+        }
+      }
+      requestData() {
+        this.ondataavailable?.({
+          data: new Blob([new Uint8Array(2048)], { type: 'audio/webm' }),
+        })
       }
       stop() {
+        if (this.timer) {
+          clearInterval(this.timer)
+          this.timer = null
+        }
+        if (this.state === 'inactive') return
         this.state = 'inactive'
-        this.ondataavailable?.({
-          data: new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/webm' }),
-        })
-        this.onstop?.()
+        this.requestData()
+        const ended = this.onstop
+        queueMicrotask(() => ended?.())
       }
       static isTypeSupported() {
         return true
@@ -120,8 +156,11 @@ export async function installMockMicrophone(
       },
     })
 
-    // @ts-expect-error test stub
-    window.MediaRecorder = FakeMediaRecorder
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder,
+    })
 
     const OriginalAudio = window.Audio
     window.Audio = function MockAudio() {

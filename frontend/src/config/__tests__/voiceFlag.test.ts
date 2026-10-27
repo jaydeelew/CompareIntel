@@ -7,6 +7,7 @@ describe('voiceFlag', () => {
     expect(parseVoiceFlag(undefined)).toBe(false)
     expect(parseVoiceFlag('')).toBe(false)
     expect(parseVoiceFlag('false')).toBe(false)
+    expect(parseVoiceFlag('yes')).toBe(false)
     expect(parseVoiceFlag('true')).toBe(true)
     expect(parseVoiceFlag('1')).toBe(true)
   })

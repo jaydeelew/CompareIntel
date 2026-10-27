@@ -27,6 +27,7 @@ from ..config.constants import OVERAGE_USD_PER_CREDIT
 from ..config.settings import settings
 from ..credit_manager import get_user_credits
 from ..database import SessionLocal
+from ..llm.voice_speech import sanitize_voice_speech
 from ..model_runner import (
     MODELS_BY_PROVIDER,
     call_openrouter_streaming,
@@ -262,6 +263,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             attached_images=attached_images_dicts,
                             is_image_generation=is_image_gen,
                             image_config=image_config if is_image_gen else None,
+                            voice_mode=voice_sequential,
                             _client=per_model_client,
                         )
 
@@ -348,6 +350,8 @@ async def generate_stream(ctx: StreamContext) -> Any:
 
                 if not is_error:
                     model_content = clean_model_response(full_content)
+                    if voice_sequential:
+                        model_content = sanitize_voice_speech(model_content)
                 else:
                     model_content = full_content
 

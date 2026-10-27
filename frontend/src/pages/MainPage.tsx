@@ -22,7 +22,7 @@ import {
   OVERAGE_USD_PER_CREDIT,
   VOICE_MAX_MODELS,
 } from '../config/constants'
-import { isVoiceEnabled } from '../config/voiceFlag'
+import { isVoiceFeatureEnabled } from '../config/voiceFlag'
 import { useAuth } from '../contexts/AuthContext'
 import {
   CAPABILITY_DEMO_PRESETS,
@@ -946,16 +946,43 @@ export function MainPage() {
 
   const allModels = Object.values(displayModelsByProvider).flat()
 
-  /** Text/image toggle only — marks default as session-overridden so empty selection does not re-apply default */
+  /** Text vs image catalog. Voice is a composer toggle on the Text models tab, not a third tab. */
   const handleModelModeChange = useCallback(
-    (newMode: 'text' | 'image' | 'voice') => {
-      if (newMode === 'voice' && !isVoiceEnabled()) return
-      if (newMode === modelMode) return
+    (newMode: 'text' | 'image') => {
+      if (newMode === 'image') {
+        if (modelMode === 'image') return
+        setDefaultSelectionOverridden(true)
+        setModelMode('image')
+        return
+      }
+      if (modelMode === 'text' || modelMode === 'voice') return
       setDefaultSelectionOverridden(true)
-      setModelMode(newMode)
+      setModelMode('text')
     },
     [modelMode]
   )
+
+  const handleVoiceModeChange = useCallback(
+    (enabled: boolean) => {
+      if (!isVoiceFeatureEnabled()) return
+      if (enabled) {
+        if (modelMode === 'voice') return
+        setDefaultSelectionOverridden(true)
+        setModelMode('voice')
+        return
+      }
+      if (modelMode !== 'voice') return
+      setDefaultSelectionOverridden(true)
+      setModelMode('text')
+    },
+    [modelMode]
+  )
+
+  useEffect(() => {
+    if (modelMode === 'voice' && !isVoiceFeatureEnabled()) {
+      setModelMode('text')
+    }
+  }, [modelMode])
 
   // Clear selected models when switching modes if they no longer match the filtered list
   useEffect(() => {
@@ -2399,7 +2426,7 @@ export function MainPage() {
   handleSubmitClickRef.current = handleSubmitClick
 
   const voiceSession = useVoiceSession({
-    enabled: isVoiceEnabled() && modelMode === 'voice',
+    enabled: isVoiceFeatureEnabled() && modelMode === 'voice',
     selectedModels,
     conversations,
     isLoading,
@@ -2804,7 +2831,8 @@ export function MainPage() {
           tutorialIsActive={tutorialState.isActive}
           modelsSectionRef={modelsSectionRef}
           modelMode={modelMode}
-          voiceSession={modelMode === 'voice' ? voiceSession : null}
+          voiceSession={isVoiceFeatureEnabled() && modelMode === 'voice' ? voiceSession : null}
+          onVoiceModeChange={isVoiceFeatureEnabled() ? handleVoiceModeChange : undefined}
           creditWarningMessage={creditWarningMessage}
           creditWarningMessageRef={creditWarningMessageRef}
           creditWarningDismissible={creditWarningDismissible}
@@ -3013,6 +3041,7 @@ export function MainPage() {
               dismissMobileCapabilityDemoModelTabsHighlight,
             tutorialSwipeHintNonce,
             capabilitySwipeHintNonce,
+            plainSpeech: isVoiceFeatureEnabled() && modelMode === 'voice',
           }}
         />
 

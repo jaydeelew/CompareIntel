@@ -12,7 +12,7 @@ import React, {
 import { createPortal } from 'react-dom'
 
 import { BREAKPOINT_MOBILE } from '../../config/constants'
-import { isVoiceEnabled } from '../../config/voiceFlag'
+import { isVoiceFeatureEnabled } from '../../config/voiceFlag'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { UseVoiceSessionReturn } from '../../hooks/useVoiceSession'
@@ -38,7 +38,7 @@ import { HistoryDropdown } from './HistoryDropdown'
 import { SavedSelectionsDropdown } from './SavedSelectionsDropdown'
 import { TokenUsageDisplay, type TokenUsageInfo } from './TokenUsageDisplay'
 import { getTooltipModalSuppressed } from './tooltipModalStorage'
-import { VoiceComposer } from './VoiceComposer'
+import { VoiceComposer, VoiceModeToggle } from './VoiceComposer'
 
 function submitIncompleteComposerTooltip(hasPrompt: boolean, hasModels: boolean): string {
   if (!hasPrompt && !hasModels) return 'Enter your input, and select models below'
@@ -99,6 +99,8 @@ interface ComparisonFormProps {
   composerDemoPauseHighlight?: boolean
   modelMode?: ModelMode
   voiceSession?: UseVoiceSessionReturn | null
+  /** Turn spoken turn-taking on or off from the Text models composer. */
+  onVoiceModeChange?: (enabled: boolean) => void
 }
 
 export const ComparisonForm = memo<ComparisonFormProps>(
@@ -138,6 +140,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     composerDemoPauseHighlight = false,
     modelMode = 'text',
     voiceSession = null,
+    onVoiceModeChange,
   }) => {
     const blockPromptStepForTutorial =
       tutorialIsActive && (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
@@ -691,6 +694,20 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       <div
         className={`composer ${isAnimatingTextarea && !mirror ? 'animate-pulse-border' : ''} ${composerDemoPauseHighlight && !mirror ? 'composer-demo-pause-highlight' : ''} ${composerFloating && !mirror ? 'composer-floating' : ''} ${modelMode === 'voice' ? 'composer-voice-mode' : ''}`}
       >
+        {modelMode !== 'image' && isVoiceFeatureEnabled() && onVoiceModeChange && !mirror && (
+          <div className="composer-voice-mode-bar">
+            <VoiceModeToggle
+              enabled={modelMode === 'voice'}
+              disabled={isLoading && modelMode !== 'voice'}
+              onChange={onVoiceModeChange}
+            />
+            {modelMode === 'voice' ? (
+              <p className="voice-mode-hint">Spoken replies, up to 2 models. Tap Talk to speak.</p>
+            ) : (
+              <p className="voice-mode-hint">Talk with 1 or 2 models instead of typing.</p>
+            )}
+          </div>
+        )}
         <div className="composer-input-wrapper">
           {attachedFiles.length > 0 && modelMode !== 'voice' && (
             <AttachmentChips
@@ -701,7 +718,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               imageTooltipUsePortal={showComposerStyledTooltips}
             />
           )}
-          {isVoiceEnabled() && modelMode === 'voice' && voiceSession ? (
+          {isVoiceFeatureEnabled() && modelMode === 'voice' && voiceSession ? (
             <VoiceComposer
               status={voiceSession.status}
               isSupported={voiceSession.isSupported}

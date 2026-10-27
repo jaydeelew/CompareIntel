@@ -161,10 +161,10 @@ class Settings(BaseSettings):
             return False
         return v
 
-    # Voice tab defaults (OpenRouter /audio/transcriptions and /audio/speech)
+    # Voice mode defaults (OpenRouter /audio/transcriptions and /audio/speech)
     default_stt_model: str = "openai/whisper-large-v3"
     default_tts_model: str = "openai/gpt-4o-mini-tts-2025-12-15"
-    # Feature flag: Voice tab / STT / TTS. Defaults off so production matches pre-#93.
+    # Feature flag: Voice mode / STT / TTS. Defaults off so production matches pre-#93.
     enable_voice: bool = False
 
     # Circuit breaker configuration

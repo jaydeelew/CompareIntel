@@ -20,6 +20,19 @@ describe('inferModelModeForLoadedModels', () => {
     expect(mode).toBe('voice')
   })
 
+  it('keeps composer_mode=voice even when text composer advanced settings exist', () => {
+    voiceFlag.enabled = true
+    const mode = inferModelModeForLoadedModels(
+      ['openai/gpt-4o-mini'],
+      {},
+      {
+        composerMode: 'voice',
+        textComposerAdvanced: { temperature: 0.4, topP: 0.9, maxTokens: 512 },
+      }
+    )
+    expect(mode).toBe('voice')
+  })
+
   it('does not restore voice mode when the voice flag is off', () => {
     voiceFlag.enabled = false
     const mode = inferModelModeForLoadedModels(

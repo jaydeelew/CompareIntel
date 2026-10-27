@@ -1,9 +1,10 @@
 /**
- * Voice tab session: tap-to-talk recording, OpenRouter STT, sequential TTS, VAD interrupt.
+ * Voice mode session: tap-to-talk recording, OpenRouter STT, sequential TTS, VAD interrupt.
  */
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 
+import { VOICE_EMPTY_TRANSCRIPT_MESSAGE } from '../config/constants'
 import { isCancellationError } from '../services/api/errors'
 import type { CreditBalance } from '../services/creditService'
 import {
@@ -24,6 +25,13 @@ import {
   startVoiceActivityMonitor,
   type VoiceMonitor,
 } from '../utils/voiceActivityDetection'
+import {
+  assembleRecordingBlob,
+  flushAndStopRecorder,
+  isRecordingTooShort,
+  startMediaRecorder,
+} from '../utils/voiceRecording'
+import { sanitizeVoiceSpeech } from '../utils/voiceSpeech'
 
 export type VoiceSessionStatus =
   | 'idle'
@@ -64,17 +72,11 @@ export interface UseVoiceSessionReturn {
   stopAll: () => void
 }
 
-function pickRecorderMimeType(): string {
-  if (typeof MediaRecorder === 'undefined') return ''
-  const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
-  return candidates.find(type => MediaRecorder.isTypeSupported(type)) || ''
-}
-
 function latestAssistantText(conversations: ModelConversation[], modelId: string): string {
   const conv = conversations.find(c => String(c.modelId) === String(modelId))
   if (!conv) return ''
   const assistants = conv.messages.filter(m => m.type === 'assistant')
-  return assistants[assistants.length - 1]?.content ?? ''
+  return sanitizeVoiceSpeech(assistants[assistants.length - 1]?.content ?? '')
 }
 
 function playAudioBlob(blob: Blob, signal: AbortSignal): Promise<void> {
@@ -188,7 +190,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions): UseVoiceSessio
     const recorder = mediaRecorderRef.current
     if (recorder && recorder.state !== 'inactive') {
       try {
-        recorder.stop()
+        flushAndStopRecorder(recorder)
       } catch {
         // ignore
       }
@@ -261,9 +263,8 @@ export function useVoiceSession(options: UseVoiceSessionOptions): UseVoiceSessio
         })
         const transcript = result.text.trim()
         if (!transcript) {
-          const message = 'No speech detected. Please try again.'
-          setLocalError(message)
-          setError(message)
+          setLocalError(VOICE_EMPTY_TRANSCRIPT_MESSAGE)
+          setError(VOICE_EMPTY_TRANSCRIPT_MESSAGE)
           setStatus('error')
           return
         }
@@ -284,10 +285,10 @@ export function useVoiceSession(options: UseVoiceSessionOptions): UseVoiceSessio
           setStatus('idle')
           return
         }
-        const message =
-          err instanceof Error
-            ? err.message
-            : 'Could not transcribe your recording. Please try again.'
+        const raw = err instanceof Error ? err.message : ''
+        const message = /didn't catch that|empty transcript|no speech detected/i.test(raw)
+          ? VOICE_EMPTY_TRANSCRIPT_MESSAGE
+          : raw || 'Could not transcribe your recording. Please try again.'
         setLocalError(message)
         setError(message)
         setStatus('error')
@@ -334,23 +335,25 @@ export function useVoiceSession(options: UseVoiceSessionOptions): UseVoiceSessio
       })
       mediaStreamRef.current = stream
       chunksRef.current = []
-      const mimeType = pickRecorderMimeType()
-      const recorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream)
-      mediaRecorderRef.current = recorder
-      recorder.ondataavailable = event => {
-        if (event.data.size > 0) chunksRef.current.push(event.data)
-      }
-      recorder.onstop = () => {
-        const type = recorder.mimeType || mimeType || 'audio/webm'
-        const blob = new Blob(chunksRef.current, { type })
-        const duration = (Date.now() - recordStartedAtRef.current) / 1000
-        stopMicTracks()
-        void finishRecordingAndSubmit(blob, duration)
-      }
       recordStartedAtRef.current = Date.now()
-      recorder.start()
+      const recorder = startMediaRecorder(stream, {
+        onData: chunk => {
+          chunksRef.current.push(chunk)
+        },
+        onStop: stopped => {
+          const blob = assembleRecordingBlob(chunksRef.current, stopped.mimeType)
+          const duration = (Date.now() - recordStartedAtRef.current) / 1000
+          stopMicTracks()
+          if (isRecordingTooShort(blob, duration)) {
+            setLocalError(VOICE_EMPTY_TRANSCRIPT_MESSAGE)
+            setError(VOICE_EMPTY_TRANSCRIPT_MESSAGE)
+            setStatus('error')
+            return
+          }
+          void finishRecordingAndSubmit(blob, duration)
+        },
+      })
+      mediaRecorderRef.current = recorder
       setLocalError(null)
       setError(null)
       setStatus('recording')
@@ -502,6 +505,14 @@ export function useVoiceSession(options: UseVoiceSessionOptions): UseVoiceSessio
       speakingIndexRef.current = 0
     }
   }, [isFollowUpMode])
+
+  useEffect(() => {
+    if (!enabled) {
+      stopAll()
+      return
+    }
+    interruptedRef.current = false
+  }, [enabled, stopAll])
 
   useEffect(() => {
     return () => {

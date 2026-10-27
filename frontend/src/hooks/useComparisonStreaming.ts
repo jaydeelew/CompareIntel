@@ -258,7 +258,9 @@ export function useComparisonStreaming(
           if (firstUserMessage) {
             const inputData = firstUserMessage.content
             const textComposerSnapshot =
-              modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
+              modelMode === 'text' || modelMode === 'voice'
+                ? { temperature, topP, maxTokens }
+                : undefined
             const imageComposerSnapshot =
               modelMode === 'image' ? { aspectRatio, imageSize } : undefined
             void helpers.saveConversationToLocalStorage(

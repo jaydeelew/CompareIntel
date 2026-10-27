@@ -1,5 +1,5 @@
 /**
- * Flag-off: Text/Image tabs stay, Voice tab is gone (pre-#93 layout).
+ * Voice is a Text-tab composer toggle, never a catalog tab (pre-#93 layout).
  */
 /// <reference types="@testing-library/jest-dom" />
 
@@ -8,10 +8,6 @@ import { createRef, type ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ModelsArea, type ModelsAreaProps } from '../ModelsArea'
-
-vi.mock('../../../config/voiceFlag', () => ({
-  isVoiceEnabled: () => false,
-}))
 
 vi.mock('../../comparison', () => ({
   AdvancedSettings: () => null,
@@ -77,8 +73,8 @@ function renderToggle(overrides?: Partial<ModelsAreaProps>) {
   return render(<ModelsArea {...props} />)
 }
 
-describe('ModelsArea with VITE_ENABLE_VOICE off', () => {
-  it('shows Text and Image tabs and no Voice entry', () => {
+describe('ModelsArea catalog tabs', () => {
+  it('shows Text and Image tabs and no Voice catalog tab', () => {
     renderToggle()
 
     expect(screen.getByTestId('text-tab-button')).toBeInTheDocument()

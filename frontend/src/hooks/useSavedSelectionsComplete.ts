@@ -371,7 +371,8 @@ export function useSavedSelectionsComplete(
 
   const handleSaveSelection = useCallback(
     (name: string) => {
-      const textSnap = modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
+      const textSnap =
+        modelMode === 'text' || modelMode === 'voice' ? { temperature, topP, maxTokens } : undefined
       const imageSnap = modelMode === 'image' ? { aspectRatio, imageSize } : undefined
       const result = saveSelection(name, selectedModels, textSnap, imageSnap)
       if (result.success) {

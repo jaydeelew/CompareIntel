@@ -13,7 +13,6 @@ import ImageIcon from 'lucide-react/dist/esm/icons/image'
 import X from 'lucide-react/dist/esm/icons/x'
 import { useMemo, useState } from 'react'
 
-import { isVoiceEnabled } from '../../config/voiceFlag'
 import { HELP_ME_CHOOSE_CATEGORY_IMAGES_ID } from '../../data/helpMeChooseRecommendations'
 import type { User, ModelsByProvider, CompareResponse, Model } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
@@ -38,10 +37,10 @@ export interface ModelsAreaProps {
   hasAttachedImages?: boolean
   /** When set, shows a persistent warning that selected model(s) cannot process images */
   nonVisionModelsWarning?: string | null
-  /** "text" = text models, "image" = image generation, "voice" = spoken turn-taking */
+  /** "text" (or voice-within-text) vs "image" generation. Voice is a composer toggle, not a tab. */
   modelMode?: 'text' | 'image' | 'voice'
-  /** Called when user switches between text, voice, and image model modes */
-  onModelModeChange?: (mode: 'text' | 'image' | 'voice') => void
+  /** Called when user switches between the Text models and Image generation catalogs */
+  onModelModeChange?: (mode: 'text' | 'image') => void
   modelsByProvider: ModelsByProvider
   /** Full models for Help Me Choose lookups (avoids greying text/image models when filtered by mode) */
   allModelsByProvider?: ModelsByProvider
@@ -325,30 +324,18 @@ export function ModelsArea({
                 className="models-section-mode-toggle"
                 role="group"
                 aria-label="Model type"
-                data-mode={modelMode === 'voice' && !isVoiceEnabled() ? 'text' : modelMode}
-                {...(isVoiceEnabled() ? { 'data-tabs': '3' } : {})}
+                data-mode={modelMode === 'voice' ? 'text' : modelMode}
               >
                 <span className="models-section-mode-slider" aria-hidden />
                 <button
                   type="button"
-                  className={`models-section-mode-btn ${modelMode === 'text' ? 'active' : ''}`}
+                  className={`models-section-mode-btn ${modelMode === 'text' || modelMode === 'voice' ? 'active' : ''}`}
                   onClick={() => onModelModeChange('text')}
-                  aria-pressed={modelMode === 'text'}
+                  aria-pressed={modelMode === 'text' || modelMode === 'voice'}
                   data-testid="text-tab-button"
                 >
                   Text models
                 </button>
-                {isVoiceEnabled() && (
-                  <button
-                    type="button"
-                    className={`models-section-mode-btn ${modelMode === 'voice' ? 'active' : ''}`}
-                    onClick={() => onModelModeChange('voice')}
-                    aria-pressed={modelMode === 'voice'}
-                    data-testid="voice-tab-button"
-                  >
-                    Voice
-                  </button>
-                )}
                 <button
                   type="button"
                   className={`models-section-mode-btn ${modelMode === 'image' ? 'active' : ''}`}

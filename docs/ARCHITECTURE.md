@@ -1,6 +1,6 @@
 # CompareIntel Architecture
 
-**Last Updated:** January 21, 2026
+**Last Updated:** October 27, 2026
 
 This document provides a comprehensive overview of the CompareIntel codebase architecture, designed to help developers quickly understand how the application is organized and how different parts interact.
 
@@ -38,6 +38,7 @@ CompareIntel is a full-stack web application that enables users to compare respo
 | Authentication | JWT-based auth with HTTP-only cookie storage |
 | Export | PDF, Markdown, JSON, and HTML export options |
 | Web Search | Optional web search integration for supported models |
+| Voice mode | Spoken turn-taking inside the Text models tab (1–2 models, STT/TTS). Off by default (`VITE_ENABLE_VOICE` / `ENABLE_VOICE`). |
 
 ---
 

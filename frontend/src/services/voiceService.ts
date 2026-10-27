@@ -1,8 +1,9 @@
 /**
- * Voice tab API: STT, TTS, config, and audio credit finalization.
+ * Voice mode API: STT, TTS, config, and audio credit finalization.
  */
 
 import { VOICE_MAX_MODELS, VOICE_TTS_VOICES } from '../config/constants'
+import { appendRecordingFile } from '../utils/voiceRecording'
 
 import { apiClient } from './api/client'
 import { ApiError } from './api/errors'
@@ -66,8 +67,7 @@ export async function transcribeRecording(
   } = {}
 ): Promise<TranscribeResult> {
   const form = new FormData()
-  const filename = blob.type.includes('mp4') ? 'turn.mp4' : 'turn.webm'
-  form.append('file', blob, filename)
+  appendRecordingFile(form, blob)
   if (options.durationSeconds != null) {
     form.append('duration_seconds', String(options.durationSeconds))
   }
