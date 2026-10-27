@@ -61,7 +61,7 @@ export interface UseSavedSelectionsCompleteConfig {
   conversations: ModelConversation[]
   /** Optional callback when selection is saved */
   onSelectionSaved?: () => void
-  modelMode: 'text' | 'image'
+  modelMode: 'text' | 'image' | 'voice'
   temperature: number
   topP: number
   maxTokens: number | null
@@ -76,7 +76,7 @@ export interface UseSavedSelectionsCompleteCallbacks {
   setConversations: (conversations: ModelConversation[]) => void
   setResponse: (response: CompareResponse | null) => void
   setDefaultSelectionOverridden: (overridden: boolean) => void
-  setModelMode: (mode: 'text' | 'image') => void
+  setModelMode: (mode: 'text' | 'image' | 'voice') => void
   setTemperature: (v: number) => void
   setTopP: (v: number) => void
   setMaxTokens: (v: number | null) => void

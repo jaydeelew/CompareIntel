@@ -10,8 +10,9 @@ import type { Dispatch, ReactNode, RefObject, SetStateAction } from 'react'
 
 import { useComposerFloat } from '../../hooks/useComposerFloat'
 import type { TutorialStep } from '../../hooks/useTutorial'
+import type { UseVoiceSessionReturn } from '../../hooks/useVoiceSession'
 import type { CreditBalance } from '../../services/creditService'
-import type { User, ModelsByProvider } from '../../types'
+import type { ModelMode, User, ModelsByProvider } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
 import {
   ComparisonForm,
@@ -97,6 +98,8 @@ export interface ComparisonPageContentProps {
   onCapabilityDemo?: (tileId: string) => void
   /** Mobile demo pause: pulse composer while prefilled prompt is shown before auto-submit. */
   composerDemoPauseHighlight?: boolean
+  modelMode?: ModelMode
+  voiceSession?: UseVoiceSessionReturn | null
 
   // Loading
   onCancel: () => void
@@ -154,6 +157,8 @@ export function ComparisonPageContent({
   capabilityDemoLabels,
   onCapabilityDemo,
   composerDemoPauseHighlight = false,
+  modelMode = 'text',
+  voiceSession = null,
   onCancel,
   showResults,
   showFloatingComposer = false,
@@ -236,6 +241,8 @@ export function ComparisonPageContent({
             composerFloating={composerFloating}
             afterResultsComposerSlotTarget={showResults ? afterResultsComposerSlotTarget : null}
             onOpenHelpMeChoose={onOpenHelpMeChoose}
+            modelMode={modelMode}
+            voiceSession={voiceSession}
             imageGenerationSubmitBlocked={imageGenerationSubmitBlocked}
             imageGenerationNoSharedImageOptions={imageGenerationNoSharedImageOptions}
             onImageGenerationSubmitBlockedTap={onImageGenerationSubmitBlockedTap}

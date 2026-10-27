@@ -188,10 +188,17 @@ export function useComparisonStreaming(
   } = refs
 
   const submitComparison = useCallback(async () => {
+    const inputOverride = refs.pendingInputOverrideRef?.current
+    if (refs.pendingInputOverrideRef) {
+      refs.pendingInputOverrideRef.current = null
+    }
+    const resolvedInput =
+      typeof inputOverride === 'string' && inputOverride.trim().length > 0 ? inputOverride : input
+
     const hasAttachedImages = attachedFiles.some(f => 'base64Data' in f && f.base64Data)
     const validation = validateComparisonInput({
       user: auth.user,
-      input,
+      input: resolvedInput,
       selectedModels,
       modelsByProvider,
       accurateInputTokens,
@@ -264,7 +271,8 @@ export function useComparisonStreaming(
               undefined,
               undefined,
               textComposerSnapshot,
-              imageComposerSnapshot
+              imageComposerSnapshot,
+              modelMode
             )
           }
         }
@@ -336,10 +344,10 @@ export function useComparisonStreaming(
           : null
 
       // Expand file contents before submission
-      let expandedInput = input
+      let expandedInput = resolvedInput
       if (attachedFiles.length > 0) {
         try {
-          expandedInput = await helpers.expandFiles(attachedFiles, input)
+          expandedInput = await helpers.expandFiles(attachedFiles, resolvedInput)
         } catch (error) {
           logger.error('Error expanding files:', error)
           stateCb.setError('Failed to process attached files. Please try again.')
@@ -390,6 +398,7 @@ export function useComparisonStreaming(
         top_p: topP !== 1 ? topP : undefined,
         max_tokens: maxTokens ?? undefined,
         image_config: imageConfig,
+        mode: modelMode,
       }
 
       let stream: ReadableStream<Uint8Array> | null = null
@@ -456,7 +465,7 @@ export function useComparisonStreaming(
         const emptyConversations: ModelConversation[] = selectedModels.map(modelId => ({
           modelId: createModelId(modelId),
           messages: [
-            createStreamingMessage('user', input, userTimestamp),
+            createStreamingMessage('user', resolvedInput, userTimestamp),
             createStreamingMessage('assistant', '', userTimestamp),
           ],
         }))
@@ -482,7 +491,7 @@ export function useComparisonStreaming(
       }
 
       streamResult = await processComparisonStream(reader, controller, {
-        input,
+        input: resolvedInput,
         selectedModels,
         isFollowUpMode,
         isAuthenticated: auth.isAuthenticated,

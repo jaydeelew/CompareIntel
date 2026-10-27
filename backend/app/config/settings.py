@@ -153,6 +153,10 @@ class Settings(BaseSettings):
             return None
         return v
 
+    # Voice tab defaults (OpenRouter /audio/transcriptions and /audio/speech)
+    default_stt_model: str = "openai/whisper-large-v3"
+    default_tts_model: str = "openai/gpt-4o-mini-tts-2025-12-15"
+
     # Circuit breaker configuration
     search_circuit_breaker_enabled: bool = True  # Enable circuit breaker for API failures
 

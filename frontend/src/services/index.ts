@@ -30,3 +30,4 @@ export * from './modelsService'
 
 // Config service
 export * from './configService'
+export * from './voiceService'

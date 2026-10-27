@@ -28,7 +28,7 @@ export interface UseStreamTimeoutConfig {
   browserFingerprint: string
   userCancelledRef: React.MutableRefObject<boolean>
   lastSubmittedInputRef: React.MutableRefObject<string>
-  modelMode: 'text' | 'image'
+  modelMode: 'text' | 'image' | 'voice'
   temperature: number
   topP: number
   maxTokens: number | null
@@ -57,7 +57,8 @@ export interface UseStreamTimeoutCallbacks {
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
     textComposerAdvanced?: import('../types').TextComposerAdvancedSettings,
-    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings
+    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings,
+    composerMode?: 'text' | 'image' | 'voice'
   ) => Promise<string | null>
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
@@ -250,7 +251,8 @@ export function useStreamTimeout(
                       undefined,
                       undefined,
                       textComposerSnapshot,
-                      imageComposerSnapshot
+                      imageComposerSnapshot,
+                      modelMode
                     )
                     if (savedId) {
                       setCurrentVisibleComparisonId(savedId)

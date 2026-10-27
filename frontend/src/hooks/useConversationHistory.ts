@@ -59,7 +59,8 @@ export interface UseConversationHistoryReturn {
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
     textComposerAdvanced?: TextComposerAdvancedSettings,
-    imageComposerAdvanced?: ImageComposerAdvancedSettings
+    imageComposerAdvanced?: ImageComposerAdvancedSettings,
+    composerMode?: 'text' | 'image' | 'voice'
   ) => Promise<string>
   deleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => Promise<void>
   loadConversationFromAPI: (conversationId: ConversationId) => Promise<ModelConversation[] | null>
@@ -129,7 +130,8 @@ export function useConversationHistory({
       parentConversationId?: string | null,
       breakoutModelId?: string | null,
       textComposerAdvanced?: TextComposerAdvancedSettings,
-      imageComposerAdvanced?: ImageComposerAdvancedSettings
+      imageComposerAdvanced?: ImageComposerAdvancedSettings,
+      composerMode?: 'text' | 'image' | 'voice'
     ): Promise<string> => {
       try {
         const history = loadHistoryFromLocalStorage()
@@ -234,6 +236,7 @@ export function useConversationHistory({
               created_at: new Date().toISOString(),
               message_count: totalMessages,
               saved: false,
+              composer_mode: composerMode,
             }
 
         // Update history list
@@ -362,6 +365,11 @@ export function useConversationHistory({
             file_contents: externalizedFileContents,
             ...(storedTextAdvanced != null ? { textComposerAdvanced: storedTextAdvanced } : {}),
             ...(storedImageAdvanced != null ? { imageComposerAdvanced: storedImageAdvanced } : {}),
+            ...(composerMode != null
+              ? { composer_mode: composerMode }
+              : existingData?.composer_mode
+                ? { composer_mode: existingData.composer_mode }
+                : {}),
           })
         )
 

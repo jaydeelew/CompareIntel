@@ -101,6 +101,16 @@ IMAGE_CREDITS_PER_GENERATION: int = 5
 # Image generation: unregistered users are blocked in compare-stream. Registered free tier has no
 # separate daily image-run cap—only daily credits (DAILY_CREDIT_LIMITS) and model_limit apply.
 
+# Voice tab (slice 1): spoken turn-taking with up to 2 models.
+VOICE_MAX_MODELS: int = 2
+# Fallback OpenRouter list rates when the audio endpoints omit usage.cost.
+VOICE_STT_USD_PER_MINUTE: float = 0.006
+VOICE_TTS_USD_PER_MILLION_CHARS: float = 15.0
+# Distinct TTS voices assigned in selection order (OpenAI GPT-4o Mini TTS).
+VOICE_TTS_VOICES: tuple[str, ...] = ("alloy", "nova")
+# Offered as conversation models in the same turn-based flow when present in the catalog.
+VOICE_NATIVE_MODEL_IDS: tuple[str, ...] = ("openai/gpt-audio", "openai/gpt-audio-mini")
+
 # Subscription pricing (monthly USD) — must match Stripe recurring Price amounts and frontend copy.
 # Tier/credit ladder 2026-04-01: pool $/credit strictly decreases at higher tiers; thin margin vs
 # full-burn COGS (MONTHLY_CREDIT_ALLOCATIONS / CREDITS_PER_DOLLAR). See docs/internal/PRICING_SHEET.md.

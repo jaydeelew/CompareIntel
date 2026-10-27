@@ -479,11 +479,20 @@ jobs:
         run: |
           cd frontend
           npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       
       - name: Install Playwright browsers
         run: |
           cd frontend
-          npx playwright install --with-deps chromium firefox webkit
+          # Critical flows run on Chromium only (see grep below).
+          npx playwright install --with-deps chromium
       
       - name: Initialize test database directory
         run: |
@@ -597,6 +606,14 @@ jobs:
         run: |
           cd frontend
           npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       
       - name: Install Playwright browsers
         run: |
@@ -654,7 +671,7 @@ jobs:
       (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
       (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     
     env:
       DATABASE_URL: sqlite:///./test-e2e.db
@@ -696,6 +713,14 @@ jobs:
         run: |
           cd frontend
           npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       
       - name: Install Playwright browsers
         run: |
@@ -802,6 +827,14 @@ jobs:
         run: |
           cd frontend
           npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       
       - name: Install Playwright browsers
         run: |
@@ -948,6 +981,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

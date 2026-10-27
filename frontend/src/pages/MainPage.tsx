@@ -20,6 +20,7 @@ import {
   getCreditAllocation,
   getDailyCreditLimit,
   OVERAGE_USD_PER_CREDIT,
+  VOICE_MAX_MODELS,
 } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -56,6 +57,7 @@ import {
   useTutorialComplete,
   useSavedSelectionsComplete,
   useMainPageEffects,
+  useVoiceSession,
 } from '../hooks'
 import { ApiError, isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
@@ -117,7 +119,7 @@ export function MainPage() {
     setSelectedModels,
     originalSelectedModels,
     setOriginalSelectedModels,
-    maxModelsLimit,
+    maxModelsLimit: tierMaxModelsLimit,
   } = modelSelectionHook
 
   // Note: Saved selections hook is called later (after useModelManagement)
@@ -131,7 +133,9 @@ export function MainPage() {
   const [maxTokens, setMaxTokens] = useState<number | null>(null) // cap on output length
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
   const [visionNoticeMessage, setVisionNoticeMessage] = useState<string | null>(null)
-  const [modelMode, setModelMode] = useState<'text' | 'image'>('text')
+  const [modelMode, setModelMode] = useState<'text' | 'image' | 'voice'>('text')
+  const maxModelsLimit =
+    modelMode === 'voice' ? Math.min(VOICE_MAX_MODELS, tierMaxModelsLimit) : tierMaxModelsLimit
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [imageSize, setImageSize] = useState('1K')
   const [imageConfigConflict, setImageConfigConflict] = useState<{
@@ -248,6 +252,7 @@ export function MainPage() {
   const scrolledToTopRef = useRef<Set<string>>(new Set())
   const shouldScrollToTopAfterFormattingRef = useRef<boolean>(false)
   const lastSubmittedInputRef = useRef<string>('')
+  const pendingInputOverrideRef = useRef<string | null>(null)
   const [modelsByProvider, setModelsByProvider] = useState<ModelsByProvider>({})
   const [isLoadingModels, setIsLoadingModels] = useState(true)
   // Track previous auth state to skip cache when auth changes (e.g., after login/registration)
@@ -381,6 +386,7 @@ export function MainPage() {
     accurateInputTokens,
     onDeselectToEmpty: () => setDefaultSelectionOverridden(true),
     hidePremiumModels,
+    modelMode,
   })
 
   const switchResultTab = useCallback(
@@ -941,7 +947,7 @@ export function MainPage() {
 
   /** Text/image toggle only — marks default as session-overridden so empty selection does not re-apply default */
   const handleModelModeChange = useCallback(
-    (newMode: 'text' | 'image') => {
+    (newMode: 'text' | 'image' | 'voice') => {
       if (newMode === modelMode) return
       setDefaultSelectionOverridden(true)
       setModelMode(newMode)
@@ -960,8 +966,9 @@ export function MainPage() {
         .flat()
         .map(m => String(m.id))
     )
-    setSelectedModels(prev => prev.filter(id => ids.has(id)))
-    setOriginalSelectedModels(prev => prev.filter(id => ids.has(id)))
+    const limit = modelMode === 'voice' ? VOICE_MAX_MODELS : Number.POSITIVE_INFINITY
+    setSelectedModels(prev => prev.filter(id => ids.has(id)).slice(0, limit))
+    setOriginalSelectedModels(prev => prev.filter(id => ids.has(id)).slice(0, limit))
   }, [modelMode, setSelectedModels, setOriginalSelectedModels, modelsByProvider])
 
   /**
@@ -2145,6 +2152,7 @@ export function MainPage() {
         isPageScrollingRef,
         scrollListenersRef,
         lastSubmittedInputRef,
+        pendingInputOverrideRef,
       },
       modelErrors,
       suppressResultsAutoScroll: tutorialState.isActive,
@@ -2284,7 +2292,10 @@ export function MainPage() {
     ]
   )
 
-  const { submitComparison } = useComparisonStreaming(streamingConfig, streamingCallbacks)
+  const { submitComparison, cancelComparison } = useComparisonStreaming(
+    streamingConfig,
+    streamingCallbacks
+  )
 
   const clearCapabilityDemoPendingSubmit = useCallback(() => {
     if (capabilityDemoSubmitTimeoutRef.current !== null) {
@@ -2384,6 +2395,27 @@ export function MainPage() {
 
   const handleSubmitClickRef = useRef(handleSubmitClick)
   handleSubmitClickRef.current = handleSubmitClick
+
+  const voiceSession = useVoiceSession({
+    enabled: modelMode === 'voice',
+    selectedModels,
+    conversations,
+    isLoading,
+    isFollowUpMode,
+    browserFingerprint,
+    creditsRemaining,
+    setInput,
+    setIsFollowUpMode,
+    setError,
+    setCreditBalance,
+    submitComparison: (inputOverride?: string) => {
+      if (inputOverride != null && inputOverride.trim()) {
+        pendingInputOverrideRef.current = inputOverride
+      }
+      handleSubmitClickRef.current()
+    },
+    cancelComparison,
+  })
 
   // --- Mobile capability-card demo handler ---
   const capabilityDemoLabels = useMemo(() => {
@@ -2769,6 +2801,8 @@ export function MainPage() {
           tutorialStep={tutorialState.currentStep}
           tutorialIsActive={tutorialState.isActive}
           modelsSectionRef={modelsSectionRef}
+          modelMode={modelMode}
+          voiceSession={modelMode === 'voice' ? voiceSession : null}
           creditWarningMessage={creditWarningMessage}
           creditWarningMessageRef={creditWarningMessageRef}
           creditWarningDismissible={creditWarningDismissible}
@@ -2859,7 +2893,7 @@ export function MainPage() {
                 }
               }
               handleModelToggle(modelId)
-              if (wouldAdd) {
+              if (wouldAdd && modelMode !== 'voice') {
                 const isImageGen = modelSupportsImageGeneration(modelId, modelsByProvider)
                 setModelMode(isImageGen ? 'image' : 'text')
               }
@@ -2886,9 +2920,13 @@ export function MainPage() {
               const allText = finalIds.every(
                 id => !modelSupportsImageGeneration(id, modelsByProvider)
               )
-              if (allImageGen) setModelMode('image')
-              else if (allText) setModelMode('text')
-              handleApplyRecommendation(finalIds)
+              if (modelMode !== 'voice') {
+                if (allImageGen) setModelMode('image')
+                else if (allText) setModelMode('text')
+              }
+              handleApplyRecommendation(
+                modelMode === 'voice' ? finalIds.slice(0, VOICE_MAX_MODELS) : finalIds
+              )
             },
             onToggleAllForProvider: toggleAllForProvider,
             onToggleModelsHidden: () => setIsModelsHidden(!isModelsHidden),
