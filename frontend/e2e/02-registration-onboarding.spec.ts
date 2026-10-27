@@ -200,7 +200,7 @@ test.describe('Registration and Onboarding', () => {
     await safeWait(page, 500)
   })
 
-  test('User can register a new account', async ({ page }) => {
+  test('User can register a new account', async ({ page, browserName }) => {
     // Increase timeout for registration test
     test.setTimeout(60000)
     const timestamp = Date.now()
@@ -223,13 +223,7 @@ test.describe('Registration and Onboarding', () => {
         // Continue anyway
       }
 
-      await ensureUnfoldedNavbar(page)
-      const signUpButton = page.getByTestId('nav-sign-up-button')
-      await expect(signUpButton).toBeVisible({ timeout: 20000 })
-      await signUpButton.click()
-
-      // Wait for auth modal to appear
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+      await clickNavSignUpButton(page, { browserName })
       const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
       await expect(authModal).toBeVisible()
     })
@@ -338,15 +332,13 @@ test.describe('Registration and Onboarding', () => {
     })
   })
 
-  test('User sees verification banner after registration', async ({ page }) => {
+  test('User sees verification banner after registration', async ({ page, browserName }) => {
     const timestamp = Date.now()
     const testEmail = `verify-${timestamp}@example.com`
     const testPassword = 'TestPassword123!'
 
     await test.step('Register new user', async () => {
-      await ensureUnfoldedNavbar(page)
-      await page.getByTestId('nav-sign-up-button').click()
-      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+      await clickNavSignUpButton(page, { browserName })
 
       await page.locator('input[type="email"]').first().fill(testEmail)
       await page.locator('input[type="password"]').first().fill(testPassword)
