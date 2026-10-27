@@ -6,7 +6,7 @@
 
 import { fireEvent, render, screen } from '@testing-library/react'
 import React, { createRef } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createModelId } from '../../../types'
 import { ComparisonForm } from '../ComparisonForm'
@@ -23,6 +23,11 @@ const desktopResponsive = () => ({
   isTouchDevice: false,
   prefersFinePointerHover: true,
 })
+
+const speechStub = vi.hoisted(() => ({
+  isSupported: false,
+  browserSupport: 'none' as 'native' | 'none',
+}))
 
 vi.mock('../ActionButtonTooltipModal', () => ({ ActionButtonTooltipModal: () => null }))
 vi.mock('../AttachmentChips', () => ({ AttachmentChips: () => null }))
@@ -48,11 +53,11 @@ vi.mock('../../../hooks', async importOriginal => {
     useResponsive: () => desktopResponsive(),
     useSpeechRecognition: () => ({
       isListening: false,
-      isSupported: false,
+      isSupported: speechStub.isSupported,
       startListening: vi.fn(),
       stopListening: vi.fn(),
       error: null,
-      browserSupport: 'none',
+      browserSupport: speechStub.browserSupport,
     }),
   }
 })
@@ -116,6 +121,11 @@ function renderComparisonForm(overrides: Partial<ComparisonFormProps> = {}) {
 }
 
 describe('ComparisonForm', () => {
+  beforeEach(() => {
+    speechStub.isSupported = false
+    speechStub.browserSupport = 'none'
+  })
+
   it('renders composer textarea', () => {
     renderComparisonForm()
     expect(screen.getByTestId('comparison-input-textarea')).toBeInTheDocument()
@@ -155,5 +165,14 @@ describe('ComparisonForm', () => {
     })
     expect(onContinueConversation).toHaveBeenCalledTimes(1)
     expect(onSubmitClick).not.toHaveBeenCalled()
+  })
+
+  it('keeps the pre-Voice dictation mic and does not show a Voice mode toggle', () => {
+    speechStub.isSupported = true
+    speechStub.browserSupport = 'native'
+    renderComparisonForm()
+    expect(screen.getByRole('button', { name: /start voice input/i })).toBeInTheDocument()
+    expect(screen.queryByTestId('voice-mode-toggle')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('voice-composer')).not.toBeInTheDocument()
   })
 })
