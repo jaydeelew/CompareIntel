@@ -38,10 +38,10 @@ describe('assembleRecordingBlob', () => {
 })
 
 describe('isRecordingTooShort', () => {
-  it('rejects header-only blobs and sub-timeslice taps', () => {
+  it('rejects header-only blobs and accepts flushed clusters even on a short tap', () => {
     expect(isRecordingTooShort(new Blob([new Uint8Array(10)], { type: 'audio/webm' }))).toBe(true)
     expect(isRecordingTooShort(new Blob([new Uint8Array(2048)], { type: 'audio/webm' }), 0.1)).toBe(
-      true
+      false
     )
     expect(isRecordingTooShort(new Blob([new Uint8Array(2048)], { type: 'audio/webm' }), 1.2)).toBe(
       false

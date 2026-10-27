@@ -91,6 +91,8 @@ test.describe('Voice mode', () => {
       await expect(talk).toBeEnabled({ timeout: 10000 })
       await talk.click()
       await expect(page.getByTestId('voice-status')).toContainText(/Listening/i, { timeout: 5000 })
+      // Hold long enough for a timeslice so stop is not a zero-length tap.
+      await page.waitForTimeout(400)
       await talk.click()
       await expect(page.getByTestId('voice-transcript')).toContainText('photosynthesis', {
         timeout: 15000,

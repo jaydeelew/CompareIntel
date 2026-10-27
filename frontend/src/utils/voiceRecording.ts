@@ -65,12 +65,11 @@ export function assembleRecordingBlob(chunks: Blob[], mimeType: string | undefin
   )
 }
 
-export function isRecordingTooShort(blob: Blob, durationSeconds?: number): boolean {
-  if (!blob || blob.size < MIN_RECORDING_BYTES) return true
-  if (typeof durationSeconds === 'number' && durationSeconds >= 0 && durationSeconds < 0.25) {
-    return true
-  }
-  return false
+export function isRecordingTooShort(blob: Blob, _durationSeconds?: number): boolean {
+  // Size is the reliable signal for header-only WebM. Wall-clock duration
+  // false-positives on fast tap-to-talk (and Playwright) even when clusters flushed.
+  // Silent-but-valid audio is handled by STT returning an empty transcript.
+  return !blob || blob.size < MIN_RECORDING_BYTES
 }
 
 export function appendRecordingFile(

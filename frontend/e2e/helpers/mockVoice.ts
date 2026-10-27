@@ -102,9 +102,13 @@ export async function installMockMicrophone(
       mimeType = 'audio/webm;codecs=opus'
       ondataavailable: ((ev: { data: Blob }) => void) | null = null
       onstop: (() => void) | null = null
+      timer: ReturnType<typeof setInterval> | null = null
       constructor(public stream: MediaStream) {}
-      start(_timeslice?: number) {
+      start(timeslice?: number) {
         this.state = 'recording'
+        if (typeof timeslice === 'number' && timeslice > 0) {
+          this.timer = setInterval(() => this.requestData(), timeslice)
+        }
       }
       requestData() {
         this.ondataavailable?.({
@@ -112,9 +116,15 @@ export async function installMockMicrophone(
         })
       }
       stop() {
+        if (this.timer) {
+          clearInterval(this.timer)
+          this.timer = null
+        }
+        if (this.state === 'inactive') return
         this.state = 'inactive'
         this.requestData()
-        this.onstop?.()
+        const ended = this.onstop
+        queueMicrotask(() => ended?.())
       }
       static isTypeSupported() {
         return true
@@ -146,8 +156,11 @@ export async function installMockMicrophone(
       },
     })
 
-    // @ts-expect-error test stub
-    window.MediaRecorder = FakeMediaRecorder
+    Object.defineProperty(window, 'MediaRecorder', {
+      configurable: true,
+      writable: true,
+      value: FakeMediaRecorder,
+    })
 
     const OriginalAudio = window.Audio
     window.Audio = function MockAudio() {
