@@ -59,7 +59,7 @@ export interface StreamingInputState {
   temperature: number // 0.0-2.0, controls response randomness
   topP: number // 0.0-1.0, nucleus sampling
   maxTokens: number | null // cap on output length, null = use model default
-  modelMode: 'text' | 'image' | 'voice'
+  modelMode: 'text' | 'image'
   aspectRatio?: string // for image generation
   imageSize?: string // for image generation
 }
@@ -98,8 +98,6 @@ export interface StreamingRefs {
     >
   >
   lastSubmittedInputRef: React.MutableRefObject<string>
-  /** Voice STT sets this so submit can run before React commits the transcript. */
-  pendingInputOverrideRef?: React.MutableRefObject<string | null>
 }
 
 export interface StreamingStateCallbacks {
@@ -154,8 +152,7 @@ export interface StreamingHelperCallbacks {
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
     textComposerAdvanced?: TextComposerAdvancedSettings,
-    imageComposerAdvanced?: ImageComposerAdvancedSettings,
-    composerMode?: 'text' | 'image' | 'voice'
+    imageComposerAdvanced?: ImageComposerAdvancedSettings
   ) => Promise<string | null>
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   loadHistoryFromAPI: () => Promise<void>

@@ -12,11 +12,9 @@ import React, {
 import { createPortal } from 'react-dom'
 
 import { BREAKPOINT_MOBILE } from '../../config/constants'
-import { isVoiceFeatureEnabled } from '../../config/voiceFlag'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
 import type { TutorialStep } from '../../hooks/useTutorial'
-import type { UseVoiceSessionReturn } from '../../hooks/useVoiceSession'
-import type { ModelMode, User, ModelConversation } from '../../types'
+import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { getFirstFileFromClipboard } from '../../utils/clipboardFiles'
 import { showNotification } from '../../utils/error'
@@ -38,7 +36,6 @@ import { HistoryDropdown } from './HistoryDropdown'
 import { SavedSelectionsDropdown } from './SavedSelectionsDropdown'
 import { TokenUsageDisplay, type TokenUsageInfo } from './TokenUsageDisplay'
 import { getTooltipModalSuppressed } from './tooltipModalStorage'
-import { VoiceComposer, VoiceModeToggle } from './VoiceComposer'
 
 function submitIncompleteComposerTooltip(hasPrompt: boolean, hasModels: boolean): string {
   if (!hasPrompt && !hasModels) return 'Enter your input, and select models below'
@@ -97,10 +94,6 @@ interface ComparisonFormProps {
   onImageGenerationSubmitBlockedTap?: () => void
   /** Mobile capability demo: pulse composer while prefilled prompt is visible before auto-submit */
   composerDemoPauseHighlight?: boolean
-  modelMode?: ModelMode
-  voiceSession?: UseVoiceSessionReturn | null
-  /** Turn spoken turn-taking on or off from the Text models composer. */
-  onVoiceModeChange?: (enabled: boolean) => void
 }
 
 export const ComparisonForm = memo<ComparisonFormProps>(
@@ -138,9 +131,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     imageGenerationNoSharedImageOptions = false,
     onImageGenerationSubmitBlockedTap,
     composerDemoPauseHighlight = false,
-    modelMode = 'text',
-    voiceSession = null,
-    onVoiceModeChange,
   }) => {
     const blockPromptStepForTutorial =
       tutorialIsActive && (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
@@ -692,24 +682,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const buildComposerContent = (mirror: boolean) => (
       <div
-        className={`composer ${isAnimatingTextarea && !mirror ? 'animate-pulse-border' : ''} ${composerDemoPauseHighlight && !mirror ? 'composer-demo-pause-highlight' : ''} ${composerFloating && !mirror ? 'composer-floating' : ''} ${modelMode === 'voice' ? 'composer-voice-mode' : ''}`}
+        className={`composer ${isAnimatingTextarea && !mirror ? 'animate-pulse-border' : ''} ${composerDemoPauseHighlight && !mirror ? 'composer-demo-pause-highlight' : ''} ${composerFloating && !mirror ? 'composer-floating' : ''}`}
       >
-        {modelMode !== 'image' && isVoiceFeatureEnabled() && onVoiceModeChange && !mirror && (
-          <div className="composer-voice-mode-bar">
-            <VoiceModeToggle
-              enabled={modelMode === 'voice'}
-              disabled={isLoading && modelMode !== 'voice'}
-              onChange={onVoiceModeChange}
-            />
-            {modelMode === 'voice' ? (
-              <p className="voice-mode-hint">Spoken replies, up to 2 models. Tap Talk to speak.</p>
-            ) : (
-              <p className="voice-mode-hint">Talk with 1 or 2 models instead of typing.</p>
-            )}
-          </div>
-        )}
         <div className="composer-input-wrapper">
-          {attachedFiles.length > 0 && modelMode !== 'voice' && (
+          {attachedFiles.length > 0 && (
             <AttachmentChips
               attachedFiles={attachedFiles}
               setAttachedFiles={setAttachedFiles}
@@ -718,63 +694,48 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               imageTooltipUsePortal={showComposerStyledTooltips}
             />
           )}
-          {isVoiceFeatureEnabled() && modelMode === 'voice' && voiceSession ? (
-            <VoiceComposer
-              status={voiceSession.status}
-              isSupported={voiceSession.isSupported}
-              unsupportedMessage={voiceSession.unsupportedMessage}
-              lastTranscript={voiceSession.lastTranscript || input}
-              error={voiceSession.error}
-              selectedModelCount={selectedModels.length}
-              disabled={isLoading && !voiceSession.isRecording && !voiceSession.isSpeaking}
-              onToggleTalk={voiceSession.toggleTalk}
-            />
-          ) : (
-            <textarea
-              id={mirror ? 'comparison-input-mirror' : 'comparison-input'}
-              name={mirror ? undefined : 'comparisonPrompt'}
-              ref={
-                mirror ? mirrorTextareaRef : (textareaRef as React.RefObject<HTMLTextAreaElement>)
-              }
-              value={input}
-              onChange={mirror ? undefined : e => setInput(e.target.value)}
-              readOnly={mirror}
-              tabIndex={mirror ? -1 : undefined}
-              onKeyDown={
-                mirror
-                  ? undefined
-                  : e => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        if (blockPromptStepForTutorial) return
-                        if (submitImageConfigBlocked && !hardSubmitDisabled) {
-                          onImageGenerationSubmitBlockedTap?.()
-                          return
-                        }
-                        if (hardSubmitDisabled) return
-                        if (isFollowUpMode) onContinueConversation()
-                        else onSubmitClick()
+          <textarea
+            id={mirror ? 'comparison-input-mirror' : 'comparison-input'}
+            name={mirror ? undefined : 'comparisonPrompt'}
+            ref={mirror ? mirrorTextareaRef : (textareaRef as React.RefObject<HTMLTextAreaElement>)}
+            value={input}
+            onChange={mirror ? undefined : e => setInput(e.target.value)}
+            readOnly={mirror}
+            tabIndex={mirror ? -1 : undefined}
+            onKeyDown={
+              mirror
+                ? undefined
+                : e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      if (blockPromptStepForTutorial) return
+                      if (submitImageConfigBlocked && !hardSubmitDisabled) {
+                        onImageGenerationSubmitBlockedTap?.()
+                        return
                       }
+                      if (hardSubmitDisabled) return
+                      if (isFollowUpMode) onContinueConversation()
+                      else onSubmitClick()
                     }
-              }
-              onDragEnter={mirror ? undefined : handleDragEnter}
-              onDragOver={mirror ? undefined : handleDragOver}
-              onDragLeave={mirror ? undefined : handleDragLeave}
-              onDrop={mirror ? undefined : handleDrop}
-              onPaste={undefined}
-              placeholder={
-                isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
-              }
-              aria-label={
-                isFollowUpMode
-                  ? 'Continue your conversation'
-                  : 'Enter your prompt to compare AI models'
-              }
-              className={`hero-input-textarea ${isDraggingOver && !mirror ? 'drag-over' : ''}`}
-              rows={1}
-              data-testid={mirror ? undefined : 'comparison-input-textarea'}
-            />
-          )}
+                  }
+            }
+            onDragEnter={mirror ? undefined : handleDragEnter}
+            onDragOver={mirror ? undefined : handleDragOver}
+            onDragLeave={mirror ? undefined : handleDragLeave}
+            onDrop={mirror ? undefined : handleDrop}
+            onPaste={undefined}
+            placeholder={
+              isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
+            }
+            aria-label={
+              isFollowUpMode
+                ? 'Continue your conversation'
+                : 'Enter your prompt to compare AI models'
+            }
+            className={`hero-input-textarea ${isDraggingOver && !mirror ? 'drag-over' : ''}`}
+            rows={1}
+            data-testid={mirror ? undefined : 'comparison-input-textarea'}
+          />
         </div>
 
         <div

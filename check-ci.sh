@@ -67,7 +67,7 @@ else
   
   echo ""
   echo "Running backend tests..."
-  if ENABLE_VOICE=true pytest tests/unit/ -v; then
+  if pytest tests/unit/ -v; then
     echo -e "${GREEN}✓ Backend unit tests passed${NC}"
   else
     echo -e "${RED}❌ Backend unit tests failed${NC}"
@@ -116,7 +116,7 @@ else
   
   echo ""
   echo "Running frontend tests..."
-  if VITE_ENABLE_VOICE=true npm run test:run; then
+  if npm run test:run; then
     echo -e "${GREEN}✓ Frontend tests passed${NC}"
   else
     echo -e "${RED}❌ Frontend tests failed${NC}"

@@ -1,7 +1,6 @@
 import { useCallback, useEffect } from 'react'
 
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison/FileUpload'
-import { isVoiceFeatureEnabled } from '../config/voiceFlag'
 import { apiClient } from '../services/api/client'
 import { getConversation } from '../services/conversationService'
 import type {
@@ -85,7 +84,7 @@ interface UseConversationManagerOptions {
   setCurrentVisibleComparisonId: (value: string | null) => void
   setModelErrors: (errors: { [key: string]: boolean }) => void
   modelsByProvider: ModelsByProvider
-  setModelMode: (mode: 'text' | 'image' | 'voice') => void
+  setModelMode: (mode: 'text' | 'image') => void
   allModels: Array<{ id: string; max_output_tokens?: number }>
   setTemperature: (v: number) => void
   setTopP: (v: number) => void
@@ -192,7 +191,6 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       composer_max_tokens?: number | null
       composer_aspect_ratio?: string | null
       composer_image_size?: string | null
-      composer_mode?: 'text' | 'image' | 'voice' | null
     } | null> => {
       if (!isAuthenticated) return null
 
@@ -210,7 +208,6 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           composer_max_tokens: data.composer_max_tokens,
           composer_aspect_ratio: data.composer_aspect_ratio,
           composer_image_size: data.composer_image_size,
-          composer_mode: data.composer_mode,
           messages: data.messages.map(msg => {
             const storedMessage: StoredMessage = {
               role: msg.role,
@@ -271,7 +268,6 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           composer_max_tokens?: number | null
           composer_aspect_ratio?: string | null
           composer_image_size?: string | null
-          composer_mode?: 'text' | 'image' | 'voice' | null
           imageComposerAdvanced?: ImageComposerAdvancedSettings
         } | null = null
 
@@ -453,12 +449,11 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         const textAdvanced = extractTextComposerAdvancedFromLoaded(conversationData)
         const imageAdvanced = extractImageComposerAdvancedFromLoaded(conversationData)
         const targetMode = inferModelModeForLoadedModels([...modelsUsed], modelsByProvider, {
-          composerMode: conversationData.composer_mode,
           textComposerAdvanced: textAdvanced,
           imageComposerAdvanced: imageAdvanced,
         })
-        setModelMode(targetMode === 'voice' && !isVoiceFeatureEnabled() ? 'text' : targetMode)
-        if ((targetMode === 'text' || targetMode === 'voice') && textAdvanced) {
+        setModelMode(targetMode)
+        if (targetMode === 'text' && textAdvanced) {
           applyTextComposerAdvancedSettings(
             textAdvanced,
             [...modelsUsed],

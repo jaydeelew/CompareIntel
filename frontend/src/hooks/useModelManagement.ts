@@ -95,8 +95,6 @@ export interface UseModelManagementOptions {
   onDeselectToEmpty?: () => void
   /** When true, only allow selecting models visible to free tier (hide premium) */
   hidePremiumModels?: boolean
-  /** Voice mode uses a 2-model cap and a dedicated limit message */
-  modelMode?: 'text' | 'image' | 'voice'
 }
 
 export interface UseModelManagementReturn {
@@ -151,7 +149,6 @@ export function useModelManagement({
   accurateInputTokens,
   onDeselectToEmpty,
   hidePremiumModels = false,
-  modelMode = 'text',
 }: UseModelManagementOptions): UseModelManagementReturn {
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
 
@@ -376,12 +373,6 @@ export function useModelManagement({
 
         // Check limit before adding (only in normal mode)
         if (selectedModels.length >= maxModelsLimit) {
-          if (modelMode === 'voice') {
-            setError(
-              'Voice comparisons are limited to 2 models. Deselect a model to choose a different one.'
-            )
-            return
-          }
           const tierName = !isAuthenticated ? 'Unregistered' : user?.subscription_tier || 'free'
           const upgradeMsg =
             tierName === 'Unregistered'
@@ -425,7 +416,6 @@ export function useModelManagement({
       setSelectedModels,
       setError,
       onDeselectToEmpty,
-      modelMode,
     ]
   )
 

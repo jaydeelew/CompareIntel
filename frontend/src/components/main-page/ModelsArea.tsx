@@ -37,9 +37,9 @@ export interface ModelsAreaProps {
   hasAttachedImages?: boolean
   /** When set, shows a persistent warning that selected model(s) cannot process images */
   nonVisionModelsWarning?: string | null
-  /** "text" (or voice-within-text) vs "image" generation. Voice is a composer toggle, not a tab. */
-  modelMode?: 'text' | 'image' | 'voice'
-  /** Called when user switches between the Text models and Image generation catalogs */
+  /** "text" = text models, "image" = image generation models */
+  modelMode?: 'text' | 'image'
+  /** Called when user switches between text and image model modes */
   onModelModeChange?: (mode: 'text' | 'image') => void
   modelsByProvider: ModelsByProvider
   /** Full models for Help Me Choose lookups (avoids greying text/image models when filtered by mode) */
@@ -324,15 +324,14 @@ export function ModelsArea({
                 className="models-section-mode-toggle"
                 role="group"
                 aria-label="Model type"
-                data-mode={modelMode === 'voice' ? 'text' : modelMode}
+                data-mode={modelMode}
               >
                 <span className="models-section-mode-slider" aria-hidden />
                 <button
                   type="button"
-                  className={`models-section-mode-btn ${modelMode === 'text' || modelMode === 'voice' ? 'active' : ''}`}
+                  className={`models-section-mode-btn ${modelMode === 'text' ? 'active' : ''}`}
                   onClick={() => onModelModeChange('text')}
-                  aria-pressed={modelMode === 'text' || modelMode === 'voice'}
-                  data-testid="text-tab-button"
+                  aria-pressed={modelMode === 'text'}
                 >
                   Text models
                 </button>
@@ -341,7 +340,6 @@ export function ModelsArea({
                   className={`models-section-mode-btn ${modelMode === 'image' ? 'active' : ''}`}
                   onClick={() => onModelModeChange('image')}
                   aria-pressed={modelMode === 'image'}
-                  data-testid="image-tab-button"
                 >
                   Image generation models
                 </button>

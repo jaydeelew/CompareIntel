@@ -63,8 +63,6 @@ export interface ResultsAreaProps {
   tutorialSwipeHintNonce?: number
   /** Bumps when a capability-demo comparison finishes with tabbed multi-model results (Try a comparison). */
   capabilitySwipeHintNonce?: number
-  /** Voice mode: strip markdown from assistant transcripts. */
-  plainSpeech?: boolean
 }
 
 export function ResultsArea({
@@ -107,7 +105,6 @@ export function ResultsArea({
   onDismissMobileCapabilityDemoModelTabsHighlight,
   tutorialSwipeHintNonce = 0,
   capabilitySwipeHintNonce = 0,
-  plainSpeech = false,
 }: ResultsAreaProps) {
   return (
     <ErrorBoundary>
@@ -146,7 +143,6 @@ export function ResultsArea({
             isTutorialActive={isTutorialActive}
             streamingReasoningByModel={streamingReasoningByModel}
             streamAnswerStartedByModel={streamAnswerStartedByModel}
-            plainSpeech={plainSpeech}
             highlightMobileCapabilityDemoModelTabs={highlightMobileCapabilityDemoModelTabs}
             onDismissMobileCapabilityDemoModelTabsHighlight={
               onDismissMobileCapabilityDemoModelTabsHighlight

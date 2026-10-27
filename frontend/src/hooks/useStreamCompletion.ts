@@ -29,7 +29,7 @@ export interface UseStreamCompletionConfig {
   browserFingerprint: string
   lastSubmittedInputRef: React.MutableRefObject<string>
   userCancelledRef: React.MutableRefObject<boolean>
-  modelMode: 'text' | 'image' | 'voice'
+  modelMode: 'text' | 'image'
   temperature: number
   topP: number
   maxTokens: number | null
@@ -58,8 +58,7 @@ export interface UseStreamCompletionCallbacks {
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
     textComposerAdvanced?: import('../types').TextComposerAdvancedSettings,
-    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings,
-    composerMode?: 'text' | 'image' | 'voice'
+    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings
   ) => Promise<string | null>
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
@@ -124,7 +123,7 @@ export function useStreamCompletion(
       } = streamResult
 
       const textComposerSnapshot =
-        modelMode === 'text' || modelMode === 'voice' ? { temperature, topP, maxTokens } : undefined
+        modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
       const imageComposerSnapshot = modelMode === 'image' ? { aspectRatio, imageSize } : undefined
 
       if (streamError) {
@@ -317,8 +316,7 @@ export function useStreamCompletion(
                       undefined,
                       undefined,
                       textComposerSnapshot,
-                      imageComposerSnapshot,
-                      modelMode
+                      imageComposerSnapshot
                     )
                     if (savedId) setCurrentVisibleComparisonId(savedId)
                   })()
@@ -372,8 +370,7 @@ export function useStreamCompletion(
                       undefined,
                       undefined,
                       textComposerSnapshot,
-                      imageComposerSnapshot,
-                      modelMode
+                      imageComposerSnapshot
                     )
                     if (savedId) setCurrentVisibleComparisonId(savedId)
                   })()

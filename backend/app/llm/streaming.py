@@ -32,7 +32,6 @@ from .registry import (
 )
 from .text_processing import clean_model_response, detect_repetition
 from .tokens import TokenUsage, get_model_max_tokens, token_usage_from_openrouter_usage
-from .voice_speech import apply_voice_speech_system_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -299,7 +298,6 @@ def call_openrouter_streaming(
     | None = None,  # Images for vision models [{mime_type, base64_data, filename?, placeholder?}]
     is_image_generation: bool = False,  # When True, add modalities for image output
     image_config: dict[str, str] | None = None,  # {aspect_ratio, image_size} for image models
-    voice_mode: bool = False,  # Spoken turn-taking: plain conversational speech
     _client: Any
     | None = None,  # Optional: use this OpenAI client instead of global (avoids connection contention in multi-model)
 ) -> Generator[Any, None, TokenUsage | dict | None]:
@@ -382,7 +380,6 @@ def call_openrouter_streaming(
             system_content += f"\n\nCurrent date and time: {current_date_str} at {current_time_str}. When referring to 'today' or 'now', use this date and time."
             system_content += "\n\nYou have access to web search tools. For questions about current information (weather, news, events, prices, scores, etc.), use the search_web tool. If search results need more detail, use fetch_url to get full webpage content.\n\nIMPORTANT RULES:\n1. Use search_web for any time-sensitive questions. Do not guess or make up current information.\n2. After getting search results or webpage content, ALWAYS provide a complete answer. Never stop mid-response.\n3. Keep your response natural and user-friendly. Don't mention technical details about how you searched."
 
-        system_content = apply_voice_speech_system_prompt(system_content, voice_mode=voice_mode)
         messages.append(
             {
                 "role": "system",
@@ -392,7 +389,6 @@ def call_openrouter_streaming(
     else:
         # For follow-up conversations, still include location/timezone context
         # This ensures models have access to this information even in follow-up messages
-        system_content = ""
         if user_timezone or user_location:
             system_content_parts = []
             if user_timezone:
@@ -415,14 +411,12 @@ def call_openrouter_streaming(
                 logger.debug(
                     f"[Model Runner] Adding system message for follow-up with location: user_location={user_location}, location_source={location_source}"
                 )
-        system_content = apply_voice_speech_system_prompt(system_content, voice_mode=voice_mode)
-        if system_content:
-            messages.append(
-                {
-                    "role": "system",
-                    "content": system_content,
-                }
-            )
+                messages.append(
+                    {
+                        "role": "system",
+                        "content": system_content,
+                    }
+                )
 
     if conversation_history:
         for msg in conversation_history:

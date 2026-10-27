@@ -121,7 +121,6 @@ export interface ConversationSummary {
   composer_max_tokens?: number | null
   composer_aspect_ratio?: string | null
   composer_image_size?: string | null
-  composer_mode?: 'text' | 'image' | 'voice' | null
 }
 
 /**

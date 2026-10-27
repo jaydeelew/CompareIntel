@@ -20,9 +20,7 @@ import {
   getCreditAllocation,
   getDailyCreditLimit,
   OVERAGE_USD_PER_CREDIT,
-  VOICE_MAX_MODELS,
 } from '../config/constants'
-import { isVoiceFeatureEnabled } from '../config/voiceFlag'
 import { useAuth } from '../contexts/AuthContext'
 import {
   CAPABILITY_DEMO_PRESETS,
@@ -58,7 +56,6 @@ import {
   useTutorialComplete,
   useSavedSelectionsComplete,
   useMainPageEffects,
-  useVoiceSession,
 } from '../hooks'
 import { ApiError, isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
@@ -120,7 +117,7 @@ export function MainPage() {
     setSelectedModels,
     originalSelectedModels,
     setOriginalSelectedModels,
-    maxModelsLimit: tierMaxModelsLimit,
+    maxModelsLimit,
   } = modelSelectionHook
 
   // Note: Saved selections hook is called later (after useModelManagement)
@@ -134,9 +131,7 @@ export function MainPage() {
   const [maxTokens, setMaxTokens] = useState<number | null>(null) // cap on output length
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
   const [visionNoticeMessage, setVisionNoticeMessage] = useState<string | null>(null)
-  const [modelMode, setModelMode] = useState<'text' | 'image' | 'voice'>('text')
-  const maxModelsLimit =
-    modelMode === 'voice' ? Math.min(VOICE_MAX_MODELS, tierMaxModelsLimit) : tierMaxModelsLimit
+  const [modelMode, setModelMode] = useState<'text' | 'image'>('text')
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [imageSize, setImageSize] = useState('1K')
   const [imageConfigConflict, setImageConfigConflict] = useState<{
@@ -253,7 +248,6 @@ export function MainPage() {
   const scrolledToTopRef = useRef<Set<string>>(new Set())
   const shouldScrollToTopAfterFormattingRef = useRef<boolean>(false)
   const lastSubmittedInputRef = useRef<string>('')
-  const pendingInputOverrideRef = useRef<string | null>(null)
   const [modelsByProvider, setModelsByProvider] = useState<ModelsByProvider>({})
   const [isLoadingModels, setIsLoadingModels] = useState(true)
   // Track previous auth state to skip cache when auth changes (e.g., after login/registration)
@@ -387,7 +381,6 @@ export function MainPage() {
     accurateInputTokens,
     onDeselectToEmpty: () => setDefaultSelectionOverridden(true),
     hidePremiumModels,
-    modelMode,
   })
 
   const switchResultTab = useCallback(
@@ -946,43 +939,15 @@ export function MainPage() {
 
   const allModels = Object.values(displayModelsByProvider).flat()
 
-  /** Text vs image catalog. Voice is a composer toggle on the Text models tab, not a third tab. */
+  /** Text/image toggle only — marks default as session-overridden so empty selection does not re-apply default */
   const handleModelModeChange = useCallback(
     (newMode: 'text' | 'image') => {
-      if (newMode === 'image') {
-        if (modelMode === 'image') return
-        setDefaultSelectionOverridden(true)
-        setModelMode('image')
-        return
-      }
-      if (modelMode === 'text' || modelMode === 'voice') return
+      if (newMode === modelMode) return
       setDefaultSelectionOverridden(true)
-      setModelMode('text')
+      setModelMode(newMode)
     },
     [modelMode]
   )
-
-  const handleVoiceModeChange = useCallback(
-    (enabled: boolean) => {
-      if (!isVoiceFeatureEnabled()) return
-      if (enabled) {
-        if (modelMode === 'voice') return
-        setDefaultSelectionOverridden(true)
-        setModelMode('voice')
-        return
-      }
-      if (modelMode !== 'voice') return
-      setDefaultSelectionOverridden(true)
-      setModelMode('text')
-    },
-    [modelMode]
-  )
-
-  useEffect(() => {
-    if (modelMode === 'voice' && !isVoiceFeatureEnabled()) {
-      setModelMode('text')
-    }
-  }, [modelMode])
 
   // Clear selected models when switching modes if they no longer match the filtered list
   useEffect(() => {
@@ -995,9 +960,8 @@ export function MainPage() {
         .flat()
         .map(m => String(m.id))
     )
-    const limit = modelMode === 'voice' ? VOICE_MAX_MODELS : Number.POSITIVE_INFINITY
-    setSelectedModels(prev => prev.filter(id => ids.has(id)).slice(0, limit))
-    setOriginalSelectedModels(prev => prev.filter(id => ids.has(id)).slice(0, limit))
+    setSelectedModels(prev => prev.filter(id => ids.has(id)))
+    setOriginalSelectedModels(prev => prev.filter(id => ids.has(id)))
   }, [modelMode, setSelectedModels, setOriginalSelectedModels, modelsByProvider])
 
   /**
@@ -2181,7 +2145,6 @@ export function MainPage() {
         isPageScrollingRef,
         scrollListenersRef,
         lastSubmittedInputRef,
-        pendingInputOverrideRef,
       },
       modelErrors,
       suppressResultsAutoScroll: tutorialState.isActive,
@@ -2321,10 +2284,7 @@ export function MainPage() {
     ]
   )
 
-  const { submitComparison, cancelComparison } = useComparisonStreaming(
-    streamingConfig,
-    streamingCallbacks
-  )
+  const { submitComparison } = useComparisonStreaming(streamingConfig, streamingCallbacks)
 
   const clearCapabilityDemoPendingSubmit = useCallback(() => {
     if (capabilityDemoSubmitTimeoutRef.current !== null) {
@@ -2424,27 +2384,6 @@ export function MainPage() {
 
   const handleSubmitClickRef = useRef(handleSubmitClick)
   handleSubmitClickRef.current = handleSubmitClick
-
-  const voiceSession = useVoiceSession({
-    enabled: isVoiceFeatureEnabled() && modelMode === 'voice',
-    selectedModels,
-    conversations,
-    isLoading,
-    isFollowUpMode,
-    browserFingerprint,
-    creditsRemaining,
-    setInput,
-    setIsFollowUpMode,
-    setError,
-    setCreditBalance,
-    submitComparison: (inputOverride?: string) => {
-      if (inputOverride != null && inputOverride.trim()) {
-        pendingInputOverrideRef.current = inputOverride
-      }
-      handleSubmitClickRef.current()
-    },
-    cancelComparison,
-  })
 
   // --- Mobile capability-card demo handler ---
   const capabilityDemoLabels = useMemo(() => {
@@ -2830,9 +2769,6 @@ export function MainPage() {
           tutorialStep={tutorialState.currentStep}
           tutorialIsActive={tutorialState.isActive}
           modelsSectionRef={modelsSectionRef}
-          modelMode={modelMode}
-          voiceSession={isVoiceFeatureEnabled() && modelMode === 'voice' ? voiceSession : null}
-          onVoiceModeChange={isVoiceFeatureEnabled() ? handleVoiceModeChange : undefined}
           creditWarningMessage={creditWarningMessage}
           creditWarningMessageRef={creditWarningMessageRef}
           creditWarningDismissible={creditWarningDismissible}
@@ -2923,7 +2859,7 @@ export function MainPage() {
                 }
               }
               handleModelToggle(modelId)
-              if (wouldAdd && modelMode !== 'voice') {
+              if (wouldAdd) {
                 const isImageGen = modelSupportsImageGeneration(modelId, modelsByProvider)
                 setModelMode(isImageGen ? 'image' : 'text')
               }
@@ -2950,13 +2886,9 @@ export function MainPage() {
               const allText = finalIds.every(
                 id => !modelSupportsImageGeneration(id, modelsByProvider)
               )
-              if (modelMode !== 'voice') {
-                if (allImageGen) setModelMode('image')
-                else if (allText) setModelMode('text')
-              }
-              handleApplyRecommendation(
-                modelMode === 'voice' ? finalIds.slice(0, VOICE_MAX_MODELS) : finalIds
-              )
+              if (allImageGen) setModelMode('image')
+              else if (allText) setModelMode('text')
+              handleApplyRecommendation(finalIds)
             },
             onToggleAllForProvider: toggleAllForProvider,
             onToggleModelsHidden: () => setIsModelsHidden(!isModelsHidden),
@@ -3041,7 +2973,6 @@ export function MainPage() {
               dismissMobileCapabilityDemoModelTabsHighlight,
             tutorialSwipeHintNonce,
             capabilitySwipeHintNonce,
-            plainSpeech: isVoiceFeatureEnabled() && modelMode === 'voice',
           }}
         />
 

@@ -42,9 +42,6 @@ export type {
 // Model types
 export type { Model, ModelsByProvider } from './models'
 
-export type { ModelMode } from './modelMode'
-export { MODEL_MODE } from './modelMode'
-
 // Composer Advanced (text + image models)
 export type {
   TextComposerAdvancedSettings,

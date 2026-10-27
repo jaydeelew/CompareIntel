@@ -27,7 +27,6 @@ from ..config.constants import OVERAGE_USD_PER_CREDIT
 from ..config.settings import settings
 from ..credit_manager import get_user_credits
 from ..database import SessionLocal
-from ..llm.voice_speech import sanitize_voice_speech
 from ..model_runner import (
     MODELS_BY_PROVIDER,
     call_openrouter_streaming,
@@ -165,10 +164,8 @@ async def generate_stream(ctx: StreamContext) -> Any:
             logger.info(f"Web search requested for comparison with models: {req.models}.")
 
         logger.info(f"[MultiModel] Starting comparison for {len(req.models)} models: {req.models}")
-        voice_sequential = getattr(req, "mode", None) == "voice"
-        if not voice_sequential:
-            for mid in req.models:
-                yield f"data: {json.dumps({'model': mid, 'type': 'start'})}\n\n"
+        for mid in req.models:
+            yield f"data: {json.dumps({'model': mid, 'type': 'start'})}\n\n"
 
         chunk_queue = asyncio.Queue()
         loop = asyncio.get_event_loop()
@@ -263,7 +260,6 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             attached_images=attached_images_dicts,
                             is_image_generation=is_image_gen,
                             image_config=image_config if is_image_gen else None,
-                            voice_mode=voice_sequential,
                             _client=per_model_client,
                         )
 
@@ -350,8 +346,6 @@ async def generate_stream(ctx: StreamContext) -> Any:
 
                 if not is_error:
                     model_content = clean_model_response(full_content)
-                    if voice_sequential:
-                        model_content = sanitize_voice_speech(model_content)
                 else:
                     model_content = full_content
 
@@ -406,22 +400,10 @@ async def generate_stream(ctx: StreamContext) -> Any:
                 return {"model": model_id, "content": error_msg, "error": True, "usage": None}
 
         try:
-            remaining_voice_models: list[str] = []
-            if voice_sequential:
-                remaining_voice_models = list(req.models)
-                first_voice = remaining_voice_models.pop(0) if remaining_voice_models else None
-                tasks = (
-                    [asyncio.create_task(stream_single_model(first_voice))] if first_voice else []
-                )
-                task_to_model = {tasks[0]: first_voice} if tasks else {}
-                model_last_activity = {first_voice: time.time()} if first_voice else {}
-                if first_voice:
-                    yield f"data: {json.dumps({'model': first_voice, 'type': 'start'})}\n\n"
-            else:
-                tasks = [asyncio.create_task(stream_single_model(mid)) for mid in req.models]
-                task_to_model = {task: mid for task, mid in zip(tasks, req.models)}
-                model_last_activity = {mid: time.time() for mid in req.models}
+            tasks = [asyncio.create_task(stream_single_model(mid)) for mid in req.models]
+            task_to_model = {task: mid for task, mid in zip(tasks, req.models)}
             pending_tasks = set(tasks)
+            model_last_activity = {mid: time.time() for mid in req.models}
 
             while pending_tasks or not chunk_queue.empty():
                 chunks_processed = False
@@ -623,14 +605,6 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         f"[MultiModel] {mid}: sending done event, error={result['error']}, content_len={len(result.get('content', ''))}"
                     )
                     yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': result['error']})}\n\n"
-
-                if voice_sequential and remaining_voice_models and not pending_tasks:
-                    next_mid = remaining_voice_models.pop(0)
-                    next_task = asyncio.create_task(stream_single_model(next_mid))
-                    pending_tasks.add(next_task)
-                    task_to_model[next_task] = next_mid
-                    model_last_activity[next_mid] = time.time()
-                    yield f"data: {json.dumps({'model': next_mid, 'type': 'start'})}\n\n"
 
                 if pending_tasks and not chunks_processed:
                     await asyncio.sleep(0.01)
@@ -905,14 +879,6 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         )
                         conv_db.add(conversation)
                         conv_db.flush()
-
-                    req_mode = getattr(req, "mode", None)
-                    if req_mode in ("text", "image", "voice"):
-                        conversation.composer_mode = req_mode
-                    elif req.image_config is not None:
-                        conversation.composer_mode = "image"
-                    else:
-                        conversation.composer_mode = conversation.composer_mode or "text"
 
                     if req.image_config is None:
                         conversation.composer_temperature = req.temperature

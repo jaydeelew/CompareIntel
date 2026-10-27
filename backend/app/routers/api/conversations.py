@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 
 from ...attachment_storage import parse_file_contents
 from ...config import get_history_entry_limit
-from ...config.settings import settings
 from ...database import get_db
 from ...dependencies import get_current_user
 from ...models import Conversation, User
@@ -70,8 +69,6 @@ async def get_conversations(
         except (json.JSONDecodeError, TypeError):
             models_used = []
 
-        if not settings.enable_voice and conv.composer_mode == "voice":
-            continue
         message_count = message_counts.get(conv.id, 0)
         summaries.append(
             ConversationSummary(
@@ -88,7 +85,6 @@ async def get_conversations(
                 composer_max_tokens=conv.composer_max_tokens,
                 composer_aspect_ratio=conv.composer_aspect_ratio,
                 composer_image_size=conv.composer_image_size,
-                composer_mode=conv.composer_mode,
                 client_source=conv.client_source or "web",
                 saved=bool(conv.saved),
             )
@@ -194,7 +190,6 @@ async def get_conversation(
         composer_max_tokens=conversation.composer_max_tokens,
         composer_aspect_ratio=conversation.composer_aspect_ratio,
         composer_image_size=conversation.composer_image_size,
-        composer_mode=conversation.composer_mode,
         client_source=conversation.client_source or "web",
         saved=bool(conversation.saved),
     )
@@ -250,7 +245,6 @@ async def update_conversation_saved(
         composer_max_tokens=conversation.composer_max_tokens,
         composer_aspect_ratio=conversation.composer_aspect_ratio,
         composer_image_size=conversation.composer_image_size,
-        composer_mode=conversation.composer_mode,
         client_source=conversation.client_source or "web",
         saved=bool(conversation.saved),
     )
@@ -410,7 +404,6 @@ async def create_breakout_conversation(
         composer_max_tokens=parent_conversation.composer_max_tokens,
         composer_aspect_ratio=parent_conversation.composer_aspect_ratio,
         composer_image_size=parent_conversation.composer_image_size,
-        composer_mode=parent_conversation.composer_mode,
         file_contents=parent_conversation.file_contents,
     )
     db.add(breakout_conversation)
@@ -489,5 +482,4 @@ async def create_breakout_conversation(
         composer_max_tokens=breakout_conversation.composer_max_tokens,
         composer_aspect_ratio=breakout_conversation.composer_aspect_ratio,
         composer_image_size=breakout_conversation.composer_image_size,
-        composer_mode=breakout_conversation.composer_mode,
     )

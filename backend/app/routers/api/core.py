@@ -3,7 +3,6 @@
 import logging
 import os
 from datetime import datetime
-from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -84,7 +83,6 @@ class CompareRequest(BaseModel):
         None  # {"aspect_ratio": "16:9", "image_size": "2K"} for image models
     )
     client_source: str | None = None  # e.g. "extension" for analytics
-    mode: Literal["text", "image", "voice"] | None = None
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -379,21 +377,6 @@ async def compare_stream(
         return get_model_supports_image_generation(mid)
 
     has_image_model = any(_model_supports_image_gen(mid) for mid in req.models)
-    if getattr(req, "mode", None) == "voice":
-        if not settings.enable_voice:
-            raise HTTPException(status_code=404, detail="Not found")
-        from ...config.constants import VOICE_MAX_MODELS
-
-        if len(req.models) > VOICE_MAX_MODELS:
-            raise HTTPException(
-                status_code=400,
-                detail="Voice comparisons are limited to 2 models.",
-            )
-        if has_image_model:
-            raise HTTPException(
-                status_code=400,
-                detail="Voice mode does not support image generation models.",
-            )
     if has_image_model and current_user is None:
         # Allow image models that are in the unregistered tier; block
         # only when the request includes image models outside that tier.

@@ -208,39 +208,6 @@ describe('MessageBubble', () => {
     })
   })
 
-  describe('plainSpeech', () => {
-    it('strips markdown from assistant transcripts in voice mode', () => {
-      render(
-        <MessageBubble
-          id="msg-voice"
-          type="assistant"
-          content="**Hello** and [docs](https://example.com)"
-          timestamp={new Date()}
-          activeTab={RESULT_TAB.RAW}
-          plainSpeech
-        />
-      )
-      const raw = document.querySelector('.raw-output')
-      expect(raw).toHaveTextContent('Hello and docs')
-      expect(raw).not.toHaveTextContent('**')
-      expect(raw).not.toHaveTextContent('https://example.com')
-    })
-
-    it('does not strip markdown from user messages', () => {
-      render(
-        <MessageBubble
-          id="msg-user"
-          type="user"
-          content="**keep** this"
-          timestamp={new Date()}
-          activeTab={RESULT_TAB.RAW}
-          plainSpeech
-        />
-      )
-      expect(document.querySelector('.raw-output')).toHaveTextContent('**keep** this')
-    })
-  })
-
   describe('Custom className', () => {
     it('should apply custom className', () => {
       const { container } = render(
