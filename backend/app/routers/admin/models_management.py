@@ -185,8 +185,10 @@ def _normalize_provider_key(name: str) -> str:
 def _display_provider_from_openrouter_slug(slug: str) -> str:
     """Map an OpenRouter provider slug to a registry provider display name."""
     slug_lower = slug.lower()
-    if slug_lower == "meta-llama":
+    if slug_lower in ("meta-llama", "meta"):
         return "Meta"
+    if slug_lower == "mistralai":
+        return "Mistral"
     if slug_lower == "x-ai":
         return "xAI"
     if slug_lower == "openai":

@@ -10,7 +10,7 @@ export const KNOWN_VISION_MODEL_IDS = new Set([
   'openai/gpt-4o',
   'openai/gpt-4o-mini',
   'anthropic/claude-sonnet-4.6',
-  'anthropic/claude-opus-4.1',
+  'anthropic/claude-opus-5',
   'google/gemini-2.5-flash',
   'google/gemini-2.5-pro',
   'google/gemini-3-flash-preview',

@@ -31,7 +31,7 @@ class TestSSEStreamFormat:
             "/api/compare-stream",
             json={
                 "input_data": "Hello",
-                "models": ["deepseek/deepseek-chat-v3.1"],
+                "models": ["deepseek/deepseek-v4.1-flash"],
             },
         )
         if response.status_code == status.HTTP_200_OK:
@@ -51,7 +51,7 @@ class TestMultiModelStreaming:
         user.mock_mode_enabled = True
         db_session.commit()
 
-        models = ["anthropic/claude-haiku-4.5", "deepseek/deepseek-chat-v3.1"]
+        models = ["anthropic/claude-haiku-4.5", "deepseek/deepseek-v4.1-flash"]
         response = client.post(
             "/api/compare-stream",
             json={
@@ -94,7 +94,7 @@ class TestMultiModelStreaming:
             "/api/compare-stream",
             json={
                 "input_data": "Test chunk model identification",
-                "models": ["anthropic/claude-haiku-4.5", "deepseek/deepseek-chat-v3.1"],
+                "models": ["anthropic/claude-haiku-4.5", "deepseek/deepseek-v4.1-flash"],
             },
         )
 

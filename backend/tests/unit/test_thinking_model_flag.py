@@ -17,8 +17,8 @@ from app.llm.registry import (
 
 
 def test_anthropic_opus_and_sonnet_flagged_when_in_snapshot() -> None:
-    assert get_openrouter_thinking_model_flag("anthropic/claude-opus-4.1") is True
-    assert get_openrouter_thinking_model_flag("anthropic/claude-sonnet-4.5") is True
+    assert get_openrouter_thinking_model_flag("anthropic/claude-opus-5.5") is True
+    assert get_openrouter_thinking_model_flag("anthropic/claude-sonnet-5.5") is True
 
 
 def test_unknown_model_id_returns_none() -> None:
@@ -34,24 +34,24 @@ def test_qwen_instruct_not_thinking_in_snapshot() -> None:
 
 
 def test_registry_file_value_includes_snapshot_overrides() -> None:
-    assert is_thinking_model_registry_file_value("anthropic/claude-opus-4.5") is True
+    assert is_thinking_model_registry_file_value("anthropic/claude-opus-5.5") is True
     assert is_thinking_model_registry_file_value("qwen/qwen3-next-80b-a3b-instruct") is False
 
 
-def test_kimi_k25_flagged_in_bundled_snapshot() -> None:
-    """Kimi K2.5 is in openrouter_models.json with reasoning params (no NOT_IN_SNAPSHOT override)."""
-    assert get_openrouter_thinking_model_flag("moonshotai/kimi-k2.5") is True
-    assert resolve_is_thinking_model_for_ui("moonshotai/kimi-k2.5", {}) is True
-    assert is_thinking_model_registry_file_value("moonshotai/kimi-k2.5") is True
-    assert should_request_openrouter_reasoning_traces("moonshotai/kimi-k2.5") is True
+def test_kimi_k3_flagged_in_bundled_snapshot() -> None:
+    """Kimi K3 is in openrouter_models.json with reasoning params (no NOT_IN_SNAPSHOT override)."""
+    assert get_openrouter_thinking_model_flag("moonshotai/kimi-k3") is True
+    assert resolve_is_thinking_model_for_ui("moonshotai/kimi-k3", {}) is True
+    assert is_thinking_model_registry_file_value("moonshotai/kimi-k3") is True
+    assert should_request_openrouter_reasoning_traces("moonshotai/kimi-k3") is True
 
 
 def test_openrouter_reasoning_body_moonshot_uses_enabled() -> None:
-    assert openrouter_reasoning_request_body("moonshotai/kimi-k2.5") == {"enabled": True}
+    assert openrouter_reasoning_request_body("moonshotai/kimi-k3") == {"enabled": True}
 
 
 def test_openrouter_reasoning_body_openai_o_series_uses_effort() -> None:
-    body = openrouter_reasoning_request_body("openai/o3-mini")
+    body = openrouter_reasoning_request_body("openai/o3")
     assert body == {"effort": "medium"}
 
 

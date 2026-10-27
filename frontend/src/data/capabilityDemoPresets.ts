@@ -25,7 +25,7 @@ export const CAPABILITY_DEMO_PRESETS: Record<string, CapabilityDemoPreset> = {
   'natural-language': {
     prompt:
       'What are three practical pros and three practical cons of working remotely full-time versus working in an office? Be concise and give real-world examples.',
-    preferredModelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-chat-v3.1'],
+    preferredModelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'],
     buttonLabel: 'Try a comparison',
   },
   'code-generation': {
@@ -37,7 +37,7 @@ export const CAPABILITY_DEMO_PRESETS: Record<string, CapabilityDemoPreset> = {
   'formatted-math': {
     prompt:
       'Prove the identity: the sum from k=1 to n of k² equals n(n+1)(2n+1)/6. Show each step clearly using formatted mathematical notation (LaTeX).',
-    preferredModelIds: ['deepseek/deepseek-chat-v3.1', 'google/gemini-2.5-flash'],
+    preferredModelIds: ['deepseek/deepseek-v4.1-flash', 'google/gemini-2.5-flash'],
     buttonLabel: 'Try a comparison',
   },
   'image-creation': {

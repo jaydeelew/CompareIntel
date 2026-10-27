@@ -20,7 +20,7 @@ describe('mapExtensionHandoff', () => {
       payload({
         selectedModels: [
           'deepseek/deepseek-chat',
-          'deepseek/deepseek-v3.2-exp',
+          'deepseek/deepseek-v4.1-flash',
           'cohere/command-r7b',
         ],
       })
@@ -28,7 +28,7 @@ describe('mapExtensionHandoff', () => {
 
     expect(hydration.selectedModels).toEqual([
       'deepseek/deepseek-chat',
-      'deepseek/deepseek-v3.2-exp',
+      'deepseek/deepseek-v4.1-flash',
       'cohere/command-r7b',
     ])
     expect(hydration.conversations).toEqual([])

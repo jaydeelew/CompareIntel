@@ -38,7 +38,7 @@ class TestWebSearchIntegration:
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "input_data": "Test query",
-                "models": ["deepseek/deepseek-chat-v3.1"],  # Free tier model
+                "models": ["deepseek/deepseek-v4.1-flash"],  # Free tier model
                 "enable_web_search": True,
             },
         )

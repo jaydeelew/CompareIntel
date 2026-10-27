@@ -23,7 +23,7 @@ from scripts.sync_help_me_choose_with_registry import (
 SAMPLE_TS = textwrap.dedent("""\
     export const HELP_ME_CHOOSE_CATEGORIES = [
       { id: 'cost-effective', label: 'Cost', description: 'D', models: [
-        { modelId: 'deepseek/deepseek-chat-v3.1', evidence: 'Ev1.' },
+        { modelId: 'deepseek/deepseek-v4.1-flash', evidence: 'Ev1.' },
         { modelId: 'google/gemini-2.5-flash', evidence: 'Ev2.' },
       ]},
       { id: 'fast', label: 'Fast', description: 'D', models: [
@@ -68,7 +68,7 @@ class TestRunSync:
             json.dumps(
                 {
                     "models_by_provider": {
-                        "DeepSeek": [{"id": "deepseek/deepseek-chat-v3.1"}],
+                        "DeepSeek": [{"id": "deepseek/deepseek-v4.1-flash"}],
                         "Google": [
                             {"id": "google/gemini-2.5-flash"},
                             {"id": "google/gemini-2.0-flash-001"},
@@ -92,7 +92,7 @@ class TestRunSync:
             json.dumps(
                 {
                     "models_by_provider": {
-                        "DeepSeek": [{"id": "deepseek/deepseek-chat-v3.1"}],
+                        "DeepSeek": [{"id": "deepseek/deepseek-v4.1-flash"}],
                         # missing google/gemini-2.5-flash and google/gemini-2.0-flash-001
                     },
                 }

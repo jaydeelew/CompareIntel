@@ -18,8 +18,8 @@ describe('isThinkingModel', () => {
     expect(
       isThinkingModel({
         ...base,
-        id: 'anthropic/claude-sonnet-4.5',
-        name: 'Claude Sonnet 4.5',
+        id: 'anthropic/claude-sonnet-5.5',
+        name: 'Claude Sonnet 5.5',
         category: 'Language',
         description: 'No magic phrases.',
         is_thinking_model: true,
@@ -48,8 +48,8 @@ describe('isThinkingModel', () => {
     expect(
       isThinkingModel({
         ...base,
-        id: 'openai/o3-mini',
-        name: 'OpenAI: o3-mini',
+        id: 'openai/o3',
+        name: 'OpenAI: o3',
         category: 'Reasoning',
       })
     ).toBe(false)

@@ -33,8 +33,8 @@ describe('modelSearchScore', () => {
 
   it('matches single letter on word-start in model name', () => {
     const claude = m({
-      id: 'anthropic/claude-sonnet-4.5',
-      name: 'Claude Sonnet 4.5',
+      id: 'anthropic/claude-sonnet-5.5',
+      name: 'Claude Sonnet 5.5',
       provider: 'Anthropic',
     })
     expect(modelSearchScore(claude, 'c')).toBeLessThan(MODEL_SEARCH_NO_MATCH)

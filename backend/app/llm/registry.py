@@ -37,6 +37,9 @@ _vision_probed_cache: dict[str, bool] | None = None
 # Cache for image generation support (model_id -> bool)
 _image_gen_support_cache: dict[str, bool] | None = None
 
+# Cache for image-only output models (model ids whose OpenRouter output_modalities lack "text")
+_image_only_output_cache: frozenset[str] | None = None
+
 # Cache for pricing.image (model_id -> float, dollars per image)
 _image_price_cache: dict[str, float] | None = None
 
@@ -51,6 +54,7 @@ KNOWN_NO_TEMPERATURE_MODEL_IDS: frozenset[str] = frozenset(
     {
         "openai/gpt-5-image",
         "openai/gpt-5-image-mini",
+        "openai/gpt-image-2.5-sunburst",
     }
 )
 
@@ -190,14 +194,7 @@ STREAMING_REASONING_MODEL_IDS_BLOCKED: frozenset[str] = frozenset()
 
 # Bundled ``openrouter_models.json`` can lag; these CompareIntel registry ids stream separable
 # reasoning via OpenRouter but are missing from the snapshot — keep in sync when refreshing data.
-STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT: frozenset[str] = frozenset(
-    {
-        "anthropic/claude-opus-4.5",
-        "anthropic/claude-sonnet-4.5",
-        "anthropic/claude-opus-4.6",
-        "anthropic/claude-sonnet-4.6",
-    }
-)
+STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT: frozenset[str] = frozenset()
 
 
 def _openrouter_description_denies_exposed_reasoning(description: str) -> bool:
@@ -314,7 +311,7 @@ def openrouter_reasoning_request_body(model_id: str) -> dict[str, Any]:
     if mid.startswith("anthropic/"):
         return {"max_tokens": 31999}
     # OpenAI o-series / GPT-5: effort-based
-    if mid.startswith("openai/") and ("/o" in mid or "gpt-5" in mid):
+    if mid.startswith("openai/") and ("/o" in mid or "gpt-5" in mid or "gpt-6" in mid):
         return {"effort": "medium"}
     if mid.startswith("x-ai/"):
         return {"effort": "medium"}
@@ -349,6 +346,36 @@ def _load_image_gen_support_map() -> dict[str, bool]:
 
 def get_model_supports_image_generation(model_id: str) -> bool:
     return _load_image_gen_support_map().get(model_id, False)
+
+
+def _load_image_only_output_ids() -> frozenset[str]:
+    """Ids whose OpenRouter ``output_modalities`` include ``image`` but not ``text``."""
+    global _image_only_output_cache
+    if _image_only_output_cache is not None:
+        return _image_only_output_cache
+    ids: set[str] = set()
+    try:
+        if _OPENROUTER_MODELS_PATH.exists():
+            with _OPENROUTER_MODELS_PATH.open() as f:
+                data = json.load(f)
+            for model in data.get("data", []):
+                model_id = model.get("id")
+                arch = model.get("architecture") or {}
+                out_mods = arch.get("output_modalities") if isinstance(arch, dict) else None
+                if not model_id or not isinstance(out_mods, (list, tuple)):
+                    continue
+                lowered = {str(m).lower() for m in out_mods}
+                if "image" in lowered and "text" not in lowered:
+                    ids.add(model_id)
+    except Exception:
+        pass
+    _image_only_output_cache = frozenset(ids)
+    return _image_only_output_cache
+
+
+def get_model_outputs_image_only(model_id: str) -> bool:
+    """True when the model returns images without text (request ``modalities`` must be ``["image"]``)."""
+    return model_id in _load_image_only_output_ids()
 
 
 def _load_image_price_map() -> dict[str, float]:
@@ -629,6 +656,7 @@ def invalidate_openrouter_models_json_caches() -> None:
         _vision_support_cache, \
         _vision_probed_cache, \
         _image_gen_support_cache, \
+        _image_only_output_cache, \
         _image_price_cache, \
         _text_token_price_cache
     _temperature_support_cache = None
@@ -637,6 +665,7 @@ def invalidate_openrouter_models_json_caches() -> None:
     _vision_support_cache = None
     _vision_probed_cache = None
     _image_gen_support_cache = None
+    _image_only_output_cache = None
     _image_price_cache = None
     _text_token_price_cache = None
     try:

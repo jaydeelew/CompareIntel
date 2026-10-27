@@ -117,7 +117,7 @@ export interface CodeBlockPreservationSettings {
  * Model-specific renderer configuration
  */
 export interface ModelRendererConfig {
-  /** Model identifier (e.g., "anthropic/claude-sonnet-4.5") */
+  /** Model identifier (e.g., "anthropic/claude-sonnet-5.5") */
   modelId: string
   /** Model version (optional, for tracking changes) */
   version?: string

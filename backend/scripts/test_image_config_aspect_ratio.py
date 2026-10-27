@@ -46,7 +46,7 @@ from app.llm.image_aspect_ratio_validation import (
     aspect_ratio_matches,
     resolution_matches,
 )
-from app.llm.registry import MODELS_BY_PROVIDER
+from app.llm.registry import MODELS_BY_PROVIDER, get_model_outputs_image_only
 
 # Standard aspect ratios (excludes extended 8:1, 1:8, 4:1, 1:4)
 ASPECT_RATIOS = ["9:16", "2:3", "3:4", "4:5", "1:1", "5:4", "4:3", "3:2", "16:9", "21:9"]
@@ -157,6 +157,7 @@ def get_modalities(model_id: str) -> list[str]:
         model_id.startswith("black-forest-labs/")
         or model_id.startswith("sourceful/")
         or model_id.startswith("bytedance-seed/")
+        or get_model_outputs_image_only(model_id)
     ):
         return ["image"]
     return ["image", "text"]
@@ -185,7 +186,7 @@ def test_model(
         "modalities": modalities,
         "image_config": dict(image_config),
     }
-    if model_id == "google/gemini-3-pro-image-preview":
+    if model_id == "google/gemini-3-pro-image":
         extra_body["image_config"]["number_of_images"] = 1
 
     # OpenRouter may not forward image_config.aspect_ratio to some backends.

@@ -12,37 +12,15 @@
         "supports_vision_probed": true
       },
       {
-        "id": "anthropic/claude-opus-4.1",
-        "name": "Claude Opus 4.1",
-        "description": "An updated flagship model with enhanced coding, reasoning, and multi-step agentic capabilities.",
-        "category": "Language/Code",
-        "provider": "Anthropic",
-        "supports_web_search": true,
-        "knowledge_cutoff": "March 2025",
-        "is_thinking_model": true,
-        "supports_vision_probed": true
-      },
-      {
-        "id": "anthropic/claude-opus-4.5",
-        "name": "Claude Opus 4.5",
-        "description": "Anthropic's most capable model for complex software engineering and long-horizon computer use tasks.",
+        "id": "anthropic/claude-haiku-5.5",
+        "name": "Claude Haiku 5.5",
+        "description": "Claude Haiku 5.5 is Anthropic's small, fast model for high-volume, cost-sensitive work such as summarization, subagents, and browser use.",
         "category": "Language",
         "provider": "Anthropic",
         "supports_web_search": true,
-        "knowledge_cutoff": "May 2025",
+        "supports_image_generation": false,
         "is_thinking_model": true,
-        "supports_vision_probed": true
-      },
-      {
-        "id": "anthropic/claude-sonnet-4.5",
-        "name": "Claude Sonnet 4.5",
-        "description": "Anthropic's most advanced Sonnet optimized for real-world agentic workflows and coding tasks.",
-        "category": "Language",
-        "provider": "Anthropic",
-        "supports_web_search": true,
-        "knowledge_cutoff": "May 2025",
-        "is_thinking_model": true,
-        "supports_vision_probed": true
+        "knowledge_cutoff": null
       },
       {
         "id": "anthropic/claude-opus-4.6",
@@ -110,6 +88,28 @@
         "supports_image_generation": false,
         "is_thinking_model": true,
         "supports_vision_probed": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "anthropic/claude-opus-5.5",
+        "name": "Claude Opus 5.5",
+        "description": "Claude Opus 5.5 is Anthropic's flagship model for demanding reasoning, coding, and long-horizon agentic work, succeeding Claude Opus 5.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "anthropic/claude-sonnet-5.5",
+        "name": "Claude Sonnet 5.5",
+        "description": "Claude Sonnet 5.5 is Anthropic's Sonnet-class model for well-scoped everyday work, succeeding Claude Sonnet 5 as a direct upgrade.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
         "knowledge_cutoff": null
       }
     ],
@@ -217,6 +217,32 @@
           "2K"
         ],
         "returns_multiple_images": false
+      },
+      {
+        "id": "black-forest-labs/flux-3-image",
+        "name": "Flux 3 Image",
+        "description": "FLUX.3 Image is Black Forest Labs' flagship image generation and editing model.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ]
       }
     ],
     "ByteDance Seed": [
@@ -244,6 +270,32 @@
           "4K"
         ],
         "returns_multiple_images": false
+      },
+      {
+        "id": "bytedance-seed/seedream-5-0-flash",
+        "name": "Seedream 5.0 Flash",
+        "description": "Seedream 5.0 Flash is an image generation and editing model from ByteDance Seed.",
+        "category": "Image",
+        "provider": "ByteDance Seed",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ]
       }
     ],
     "Cohere": [
@@ -258,16 +310,6 @@
         "supports_vision_probed": false
       },
       {
-        "id": "cohere/command-r-plus-08-2024",
-        "name": "Command R+",
-        "description": "An enterprise-grade model with 50% higher throughput for complex reasoning and generation tasks.",
-        "category": "Language/Reasoning",
-        "provider": "Cohere",
-        "supports_web_search": true,
-        "knowledge_cutoff": "August 2024",
-        "supports_vision_probed": false
-      },
-      {
         "id": "cohere/command-a",
         "name": "Command A",
         "description": "An open-weights 111B model with 256k context excelling in agentic, multilingual, and coding tasks.",
@@ -279,27 +321,6 @@
       }
     ],
     "DeepSeek": [
-      {
-        "id": "deepseek/deepseek-chat-v3.1",
-        "name": "DeepSeek Chat V3.1",
-        "description": "A 671B hybrid MoE model (37B active) supporting both thinking and non-thinking modes for versatile reasoning.",
-        "category": "Language/Reasoning",
-        "provider": "DeepSeek",
-        "supports_web_search": true,
-        "knowledge_cutoff": "July 2025",
-        "is_thinking_model": true,
-        "supports_vision_probed": false
-      },
-      {
-        "id": "deepseek/deepseek-v3.2-exp",
-        "name": "DeepSeek V3.2 Exp",
-        "description": "An experimental model with enhanced reasoning and coding capabilities bridging V3.1 and future architectures.",
-        "category": "Language/Reasoning",
-        "provider": "DeepSeek",
-        "supports_web_search": true,
-        "knowledge_cutoff": "October 2025",
-        "supports_vision_probed": false
-      },
       {
         "id": "deepseek/deepseek-v3.2",
         "name": "Deepseek V3.2",
@@ -322,6 +343,17 @@
         "supports_image_generation": false,
         "is_thinking_model": true,
         "supports_vision_probed": false,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "deepseek/deepseek-v4.1-flash",
+        "name": "Deepseek V4.1 Flash",
+        "description": "DeepSeek V4.1 Flash is a sparse mixture-of-experts model from DeepSeek, and the first built on the company's Causal Encoder-Decoder (CED) architecture.",
+        "category": "Language",
+        "provider": "DeepSeek",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
         "knowledge_cutoff": null
       },
       {
@@ -421,9 +453,9 @@
         "supports_vision_probed": true
       },
       {
-        "id": "google/gemini-3.1-flash-image-preview",
+        "id": "google/gemini-3.1-flash-image",
         "name": "Gemini 3.1 Flash Image",
-        "description": "Google's fast image generation model with text+image support and extended aspect ratios.",
+        "description": "Gemini 3.1 Flash Image (Nano Banana 2) is Google's state of the art image generation and editing model, delivering Pro-level visual quality at Flash speed.",
         "category": "Image",
         "provider": "Google",
         "supports_image_generation": true,
@@ -461,6 +493,43 @@
         "knowledge_cutoff": null
       },
       {
+        "id": "google/gemini-3.8-flash",
+        "name": "Gemini 3.8 Flash",
+        "description": "Gemini 3.8 Flash is Google's most intelligent Flash model with significant gains from 3.7 Flash across software engineering, agentic tasks, and multi-step reasoning.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "google/gemini-nano-banana-2.1",
+        "name": "Gemini Nano Banana 2.1",
+        "description": "Nano Banana 2.1 (Gemini Nano Banana 2.1) is Google's image generation and editing model on the Flash tier, succeeding Nano Banana 2 and Nano Banana Pro.",
+        "category": "Image",
+        "provider": "Google",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ]
+      },
+      {
         "id": "google/gemini-2.5-pro",
         "name": "Gemini 2.5 Pro",
         "description": "Google's most capable model excelling in complex reasoning, coding, mathematics, and scientific analysis.",
@@ -482,9 +551,9 @@
         "supports_vision_probed": true
       },
       {
-        "id": "google/gemini-3-pro-image-preview",
-        "name": "Gemini 3 Pro Image (Nano Banana Pro)",
-        "description": "Google's most advanced image-generation and editing model, built on Gemini 3 Pro.",
+        "id": "google/gemini-3-pro-image",
+        "name": "Gemini 3 Pro Image",
+        "description": "Nano Banana Pro is Google’s most advanced image-generation and editing model, built on Gemini 3 Pro.",
         "category": "Image",
         "provider": "Google",
         "supports_image_generation": true,
@@ -516,10 +585,32 @@
         "supports_web_search": true,
         "knowledge_cutoff": "January 2025",
         "supports_vision_probed": false
+      },
+      {
+        "id": "google/gemini-4-argon",
+        "name": "Gemini 4 Argon",
+        "description": "Gemini 4 Argon is Google's flagship reasoning model, built for complex software engineering, deep mathematical and scientific problem solving, and autonomous multi-step agents.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
       }
     ],
     "Kwaipilot": [],
     "Meta": [
+      {
+        "id": "meta/muse-spark-1.3",
+        "name": "Muse Spark 1.3",
+        "description": "Muse Spark 1.3 is a multimodal reasoning model from Meta for long-running agentic, multi-agent, and coding workflows.",
+        "category": "Language",
+        "provider": "Meta",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
       {
         "id": "meta-llama/llama-4-maverick",
         "name": "Llama 4 Maverick",
@@ -575,14 +666,15 @@
         "supports_vision_probed": false
       },
       {
-        "id": "minimax/minimax-m2",
-        "name": "Minimax M2",
-        "description": "A compact, high-efficiency model optimized for end-to-end coding and agentic workflow automation.",
+        "id": "minimax/minimax-m3.1-flash",
+        "name": "Minimax M3.1 Flash",
+        "description": "MiniMax-M3.1-Flash is a multimodal model from MiniMax.",
         "category": "Language",
         "provider": "Minimax",
         "supports_web_search": true,
-        "knowledge_cutoff": "June 2025",
-        "supports_vision_probed": false
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
       }
     ],
     "Mistral": [
@@ -607,14 +699,15 @@
         "supports_vision_probed": true
       },
       {
-        "id": "mistralai/mistral-large",
-        "name": "Mistral Large",
-        "description": "Mistral's flagship model with strong multilingual, coding, reasoning, and function-calling capabilities.",
-        "category": "Language/Reasoning",
+        "id": "mistralai/mistral-large-4-0",
+        "name": "Mistral Large 4",
+        "description": "Mistral Large 4 is a frontier multimodal (text and image input) model from Mistral AI built for reasoning, coding, and agentic workloads.",
+        "category": "Language",
         "provider": "Mistral",
         "supports_web_search": true,
-        "knowledge_cutoff": "July 2024",
-        "supports_vision_probed": false
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
       },
       {
         "id": "mistralai/codestral-2508",
@@ -628,17 +721,6 @@
       }
     ],
     "Moonshot AI": [
-      {
-        "id": "moonshotai/kimi-k2.5",
-        "name": "Kimi K2.5",
-        "description": "Moonshot AI's large MoE model with strong agentic coding, long-context, and tool-use performance.",
-        "category": "Language",
-        "provider": "Moonshot AI",
-        "supports_web_search": true,
-        "knowledge_cutoff": null,
-        "is_thinking_model": true,
-        "supports_vision_probed": false
-      },
       {
         "id": "moonshotai/kimi-k2.6",
         "name": "Kimi K2.6",
@@ -661,6 +743,17 @@
         "supports_image_generation": false,
         "is_thinking_model": true,
         "supports_vision_probed": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "moonshotai/kimi-k3.1-pro",
+        "name": "Kimi K3.1 Pro",
+        "description": "Kimi K3.1 Pro is Moonshot AI's flagship open-weight multimodal reasoning model and a post-trained successor to Kimi K3, with a 1M-token context window.",
+        "category": "Language",
+        "provider": "Moonshot AI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
         "knowledge_cutoff": null
       }
     ],
@@ -708,16 +801,6 @@
         "supports_vision_probed": false
       },
       {
-        "id": "openai/o3-mini",
-        "name": "o3 Mini",
-        "description": "A cost-efficient reasoning model optimized for STEM tasks, excelling in science, mathematics, and coding.",
-        "category": "Reasoning",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "knowledge_cutoff": "October 2023",
-        "supports_vision_probed": false
-      },
-      {
         "id": "openai/gpt-5-mini",
         "name": "GPT-5 Mini",
         "description": "A compact GPT-5 variant designed for efficient, lighter-weight reasoning and general tasks.",
@@ -759,6 +842,43 @@
         "is_thinking_model": true,
         "supports_vision_probed": true,
         "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-6-luna",
+        "name": "Gpt 6 Luna",
+        "description": "GPT-6 Luna is the fast, cost-efficient model in OpenAI's GPT-6 series, positioned below GPT-6 Sol.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-image-2.5-sunburst",
+        "name": "Gpt Image 2.5 Sunburst",
+        "description": "GPT Image 2.5 Sunburst is an image generation and editing model from OpenAI, positioned as the precision-oriented tier of the GPT Image 2.5 series.",
+        "category": "Image",
+        "provider": "OpenAI",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ]
       },
       {
         "id": "openai/o3",
@@ -820,26 +940,6 @@
         "returns_multiple_images": false
       },
       {
-        "id": "openai/gpt-5.1",
-        "name": "GPT-5.1",
-        "description": "The latest frontier model with stronger reasoning, improved instruction adherence, and natural conversation.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "knowledge_cutoff": "June 2025",
-        "supports_vision_probed": true
-      },
-      {
-        "id": "openai/gpt-5.1-codex",
-        "name": "GPT-5.1-Codex",
-        "description": "The most capable GPT-5.1 variant specialized for advanced software engineering and coding workflows.",
-        "category": "Code",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "knowledge_cutoff": "June 2025",
-        "supports_vision_probed": true
-      },
-      {
         "id": "openai/gpt-5.1-codex-max",
         "name": "Gpt 5.1 Codex Max",
         "description": "GPT-5.1-Codex-Max is OpenAI's latest agentic coding model, designed for long-running, high-context software development tasks.",
@@ -857,27 +957,6 @@
         "provider": "OpenAI",
         "supports_web_search": true,
         "knowledge_cutoff": "August 2025",
-        "supports_vision_probed": true
-      },
-      {
-        "id": "openai/gpt-5.2-chat",
-        "name": "Gpt 5.2 Chat",
-        "description": "GPT-5.2 Chat (AKA Instant) is the fast, lightweight member of the 5.2 family, optimized for low-latency chat while retaining strong general intelligence.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "knowledge_cutoff": "August 2025",
-        "supports_vision_probed": true
-      },
-      {
-        "id": "openai/gpt-5.2-codex",
-        "name": "Gpt 5.2 Codex",
-        "description": "GPT-5.2-Codex is an upgraded version of GPT-5.1-Codex optimized for software engineering and coding workflows.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "knowledge_cutoff": null,
         "supports_vision_probed": true
       },
       {
@@ -954,6 +1033,17 @@
         "supports_image_generation": false,
         "supports_vision_probed": true,
         "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-6.1-sol",
+        "name": "Gpt 6.1 Sol",
+        "description": "GPT-6.1 Sol is an upgrade to GPT-6 Sol from OpenAI, positioned below the flagship GPT-6 Astra in the GPT-6 series.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
       }
     ],
     "Qwen": [
@@ -1008,16 +1098,6 @@
         "supports_vision_probed": false
       },
       {
-        "id": "qwen/qwen3.5-plus-02-15",
-        "name": "Qwen3.5 Plus 02 15",
-        "description": "The Qwen3.5 native vision-language series Plus models are built on a hybrid architecture that integrates linear attention mechanisms with sparse mixture-of-experts models, achieving higher inference efficiency.",
-        "category": "Language",
-        "provider": "Qwen",
-        "supports_web_search": true,
-        "knowledge_cutoff": null,
-        "supports_vision_probed": true
-      },
-      {
         "id": "qwen/qwen3-coder",
         "name": "Qwen3 Coder 480B A35B",
         "description": "A 480B MoE model (35B active) achieving state-of-the-art code generation and agentic coding performance.",
@@ -1037,6 +1117,17 @@
         "knowledge_cutoff": "September 2025",
         "is_thinking_model": true,
         "supports_vision_probed": false
+      },
+      {
+        "id": "qwen/qwen3.8-max-0902",
+        "name": "Qwen3.8 Max 0902",
+        "description": "Qwen3.8 Max 0902 is an updated snapshot of Qwen3.8 Max from Alibaba's Qwen team.",
+        "category": "Language",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
       }
     ],
     "Sourceful": [
@@ -1096,6 +1187,32 @@
         "returns_multiple_images": false
       }
     ],
+    "Stepfun": [
+      {
+        "id": "stepfun/step-5-preview",
+        "name": "Step 5 Preview",
+        "description": "Step 5 Preview is StepFun's flagship model for agentic work, built on a sparse Mixture-of-Experts architecture (27B active / 600B total parameters).",
+        "category": "Language",
+        "provider": "Stepfun",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      }
+    ],
+    "Tencent": [
+      {
+        "id": "tencent/hy4-preview",
+        "name": "Hy4 Preview",
+        "description": "Hy4 Preview is a mixture-of-experts model from Tencent, with 49B active parameters out of 770B total.",
+        "category": "Language",
+        "provider": "Tencent",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      }
+    ],
     "xAI": [
       {
         "id": "x-ai/grok-4.3",
@@ -1122,6 +1239,17 @@
         "knowledge_cutoff": null
       },
       {
+        "id": "x-ai/grok-4.7",
+        "name": "Grok 4.7",
+        "description": "Grok 4.7 is SpaceXAI's flagship model for coding, agentic tasks, and knowledge work, succeeding Grok 4.6.",
+        "category": "Language",
+        "provider": "xAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "x-ai/grok-4.20",
         "name": "Grok 4.20",
         "description": "xAI reasoning tuned for speed with a 2M context (long inputs, agents).",
@@ -1132,15 +1260,6 @@
         "is_thinking_model": true,
         "knowledge_cutoff": null,
         "supports_vision_probed": true
-      },
-      {
-        "id": "x-ai/grok-5",
-        "name": "Grok 5 (Coming Soon)",
-        "description": "xAI's upcoming next-generation model expected by end of 2025 (not yet available).",
-        "category": "Language",
-        "provider": "xAI",
-        "available": false,
-        "knowledge_cutoff": null
       }
     ],
     "Xiaomi": [
@@ -1148,6 +1267,17 @@
         "id": "xiaomi/mimo-v2.5",
         "name": "Mimo V2.5",
         "description": "MiMo-V2.5 is a native omnimodal model by Xiaomi.",
+        "category": "Language",
+        "provider": "Xiaomi",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "xiaomi/mimo-v2.6-flash",
+        "name": "Mimo V2.6 Flash",
+        "description": "MiMo-V2.6-Flash is an open-source foundation model developed by Xiaomi.",
         "category": "Language",
         "provider": "Xiaomi",
         "supports_web_search": true,
@@ -1203,23 +1333,34 @@
         "knowledge_cutoff": null
       },
       {
-        "id": "z-ai/glm-4.7",
-        "name": "Glm 4.7",
-        "description": "GLM-4.7 is Z.AI's latest flagship model, featuring upgrades in two key areas: enhanced programming capabilities and more stable multi-step reasoning/execution.",
+        "id": "z-ai/glm-5.3",
+        "name": "Glm 5.3",
+        "description": "GLM-5.3 is a large-scale reasoning model from Z.ai, built for complex software engineering and long-horizon agent tasks.",
         "category": "Language",
         "provider": "ZAi",
         "supports_web_search": true,
-        "knowledge_cutoff": "June 2025",
-        "supports_vision_probed": false
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "z-ai/glm-5.3-flash",
+        "name": "Glm 5.3 Flash",
+        "description": "GLM-5.3-Flash is a native multimodal model from Z.ai.",
+        "category": "Language",
+        "provider": "ZAi",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
       }
     ]
   },
   "unregistered_tier_models": [
     "cohere/command-r7b-12-2024",
-    "deepseek/deepseek-chat-v3.1",
     "deepseek/deepseek-v3.2",
-    "deepseek/deepseek-v3.2-exp",
     "deepseek/deepseek-v4-flash",
+    "deepseek/deepseek-v4.1-flash",
     "google/gemini-2.5-flash",
     "google/gemini-2.5-flash-image",
     "google/gemini-3.1-flash-lite-preview",
@@ -1231,7 +1372,8 @@
     "openai/gpt-5-image-mini",
     "openai/gpt-oss-120b",
     "qwen/qwen3-coder-next",
-    "xiaomi/mimo-v2.5"
+    "xiaomi/mimo-v2.5",
+    "xiaomi/mimo-v2.6-flash"
   ],
   "image_unregistered_tier_models": [
     "google/gemini-2.5-flash-image",
@@ -1239,8 +1381,6 @@
   ],
   "image_free_tier_additional_models": [
     "google/gemini-2.5-flash-image",
-    "google/gemini-3.1-flash-image-preview",
-    "google/gemini-3-pro-image-preview",
     "black-forest-labs/flux.2-max",
     "black-forest-labs/flux.2-pro",
     "black-forest-labs/flux.2-flex",
@@ -1249,40 +1389,51 @@
     "sourceful/riverflow-v2-pro",
     "bytedance-seed/seedream-4.5",
     "openai/gpt-5-image",
-    "openai/gpt-5-image-mini"
+    "openai/gpt-5-image-mini",
+    "black-forest-labs/flux-3-image",
+    "bytedance-seed/seedream-5-0-flash",
+    "google/gemini-3-pro-image",
+    "google/gemini-3.1-flash-image",
+    "google/gemini-nano-banana-2.1",
+    "openai/gpt-image-2.5-sunburst"
   ],
   "free_tier_additional_models": [
     "anthropic/claude-haiku-4.5",
+    "anthropic/claude-haiku-5.5",
     "black-forest-labs/flux.2-flex",
     "black-forest-labs/flux.2-pro",
     "bytedance-seed/seedream-4.5",
-    "cohere/command-r-plus-08-2024",
+    "bytedance-seed/seedream-5-0-flash",
     "deepseek/deepseek-v4-pro",
     "google/gemini-2.5-flash-image",
-    "google/gemini-3.1-flash-image-preview",
+    "google/gemini-3.1-flash-image",
     "google/gemini-3.6-flash",
+    "google/gemini-3.8-flash",
     "meta-llama/llama-4-maverick",
     "meta-llama/llama-4-scout",
-    "microsoft/phi-4-reasoning-plus",
+    "meta/muse-spark-1.3",
     "minimax/minimax-m2.5",
+    "minimax/minimax-m3.1-flash",
     "mistralai/mistral-medium-3.1",
     "mistralai/mistral-small-3.2-24b-instruct",
-    "moonshotai/kimi-k2.5",
     "moonshotai/kimi-k2.6",
     "openai/gpt-5-mini",
     "openai/gpt-5-nano",
     "openai/gpt-5.1-codex-mini",
     "openai/gpt-5.6-luna",
-    "openai/o3-mini",
+    "openai/gpt-6-luna",
     "qwen/qwen3-30b-a3b-instruct-2507",
     "qwen/qwen3-coder-flash",
     "qwen/qwen3-next-80b-a3b-instruct",
     "qwen/qwen3.5-397b-a17b",
-    "qwen/qwen3.5-plus-02-15",
+    "stepfun/step-5-preview",
+    "tencent/hy4-preview",
     "x-ai/grok-4.3",
     "xiaomi/mimo-v2.5-pro",
     "z-ai/glm-5",
     "z-ai/glm-5-turbo",
-    "z-ai/glm-5.2"
+    "z-ai/glm-5.2",
+    "z-ai/glm-5.3",
+    "z-ai/glm-5.3-flash"
   ]
 }

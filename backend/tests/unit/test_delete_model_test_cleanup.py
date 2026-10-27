@@ -29,7 +29,7 @@ def test_strip_removes_test_that_only_references_deleted_model(tmp_path: Path) -
         textwrap.dedent(
             f'''
             def test_keeps_other():
-                assert "deepseek/deepseek-chat-v3.1"
+                assert "deepseek/deepseek-v4.1-flash"
 
             def test_only_deleted():
                 x = "{mid}"
@@ -52,7 +52,7 @@ def test_strip_removes_test_that_only_references_deleted_model(tmp_path: Path) -
 def test_strip_parametrize_entry_without_removing_whole_test(tmp_path: Path) -> None:
     project_root = tmp_path / "repo"
     tests = _layout_backend_tests(project_root)
-    keep = "deepseek/deepseek-chat-v3.1"
+    keep = "deepseek/deepseek-v4.1-flash"
     drop = "openai/z-param-drop-model"
     (tests / "sample_param.py").write_text(
         textwrap.dedent(

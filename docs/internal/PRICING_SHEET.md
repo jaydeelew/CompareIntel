@@ -18,7 +18,6 @@
 - `sourceful/riverflow-v2-fast-preview`
 - `sourceful/riverflow-v2-fast`
 - `sourceful/riverflow-v2-pro`
-- `x-ai/grok-5`
 
 To refresh this sheet, pull a fresh OpenRouter `/api/v1/models` JSON snapshot and re-check the registry IDs and pricing totals against `backend/data/models_registry.json`.
 

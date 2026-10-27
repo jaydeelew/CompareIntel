@@ -23,6 +23,7 @@ from ..utils.error_handling import (
 from .registry import (
     client,
     client_with_tool_headers,
+    get_model_outputs_image_only,
     get_model_returns_multiple_images,
     get_model_supports_temperature,
     get_model_supports_vision,
@@ -480,11 +481,13 @@ def call_openrouter_streaming(
             if top_p is not None:
                 api_params["top_p"] = max(0.0, min(1.0, top_p))
             if is_image_generation:
-                # Flux, Sourceful, Seedream output only images; Gemini outputs text+image
+                # Flux, Sourceful, Seedream (and any model whose OpenRouter metadata lists image-only
+                # output, e.g. GPT Image) output only images; Gemini outputs text+image
                 if (
                     model_id.startswith("black-forest-labs/")
                     or model_id.startswith("sourceful/")
                     or model_id.startswith("bytedance-seed/")
+                    or get_model_outputs_image_only(model_id)
                 ):
                     api_params["modalities"] = ["image"]
                 else:
@@ -509,7 +512,7 @@ def call_openrouter_streaming(
                         ic["aspect_ratio"] = image_config["aspect_ratio"]
                     if image_config.get("image_size"):
                         ic["image_size"] = image_config["image_size"]
-                if model_id == "google/gemini-3-pro-image-preview":
+                if model_id == "google/gemini-3-pro-image":
                     ic["number_of_images"] = 1
                 if ic:
                     extra_body["image_config"] = ic

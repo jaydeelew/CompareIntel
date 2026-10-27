@@ -23,7 +23,7 @@ def test_includes_images_when_prompt_has_no_placeholders(_mock_vision: object) -
     ]
     content = _build_user_message_content(
         "What is in this image?",
-        "anthropic/claude-opus-4.5",
+        "anthropic/claude-opus-5.5",
         attached,
     )
     assert isinstance(content, list)
@@ -45,7 +45,7 @@ def test_image_only_prompt_gets_default_instruction_and_image(_mock_vision: obje
             "placeholder": "[image: pasted-image.jpg]",
         }
     ]
-    content = _build_user_message_content("", "anthropic/claude-opus-4.5", attached)
+    content = _build_user_message_content("", "anthropic/claude-opus-5.5", attached)
     assert isinstance(content, list)
     assert any(p.get("type") == "text" for p in content)
     assert any(p.get("type") == "image_url" for p in content)
@@ -63,7 +63,7 @@ def test_interleaves_when_placeholder_present_in_prompt(_mock_vision: object) ->
     ]
     content = _build_user_message_content(
         "Before [image: a.png] after",
-        "anthropic/claude-opus-4.5",
+        "anthropic/claude-opus-5.5",
         attached,
     )
     assert isinstance(content, list)

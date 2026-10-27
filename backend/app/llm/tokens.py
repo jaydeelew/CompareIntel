@@ -192,24 +192,34 @@ def _get_huggingface_model_name(model_id: str) -> str | None:
         "meta-llama/llama-3.3-70b-instruct": "meta-llama/Llama-3.3-70B-Instruct",
         "meta-llama/llama-4-scout": "meta-llama/Llama-4-Scout-17B-Instruct",
         "meta-llama/llama-4-maverick": "meta-llama/Llama-4-Maverick-17B-Instruct",
-        "mistralai/mistral-small-3.2-24b-instruct": "mistralai/Mistral-Small-3.2-24B-Instruct",
+        "mistralai/mistral-small-3.2-24b-instruct": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
         "mistralai/mistral-medium-3.1": "mistralai/Mistral-Medium-3.1",
-        "mistralai/mistral-large": "mistralai/Mistral-Large-2407",
-        "mistralai/devstral-small": "mistralai/Devstral-Small-1.1",
-        "mistralai/devstral-medium": "mistralai/Devstral-Medium",
         "mistralai/codestral-2508": "mistralai/Codestral-2508",
-        "deepseek/deepseek-r1": "deepseek-ai/DeepSeek-R1",
-        "deepseek/deepseek-v3.2-exp": "deepseek-ai/DeepSeek-V3.2-Exp",
-        "deepseek/deepseek-chat-v3.1": "deepseek-ai/DeepSeek-V3.1",
+        "deepseek/deepseek-v3.2": "deepseek-ai/DeepSeek-V3.2",
+        "deepseek/deepseek-v4-flash": "deepseek-ai/DeepSeek-V4-Flash",
+        "deepseek/deepseek-v4.1-flash": "deepseek-ai/DeepSeek-V4.1-Flash",
+        "deepseek/deepseek-v4-pro": "deepseek-ai/DeepSeek-V4-Pro",
         "qwen/qwen3-30b-a3b-instruct-2507": "Qwen/Qwen3-30B-A3B-Instruct-2507",
         "qwen/qwen3-next-80b-a3b-instruct": "Qwen/Qwen3-Next-80B-A3B-Instruct",
-        "qwen/qwen3-max": "Qwen/Qwen3-Max",
+        "qwen/qwen3-next-80b-a3b-thinking": "Qwen/Qwen3-Next-80B-A3B-Thinking",
         "qwen/qwen3-coder-flash": "Qwen/Qwen3-Coder-Flash",
-        "qwen/qwen3-coder-plus": "Qwen/Qwen3-Coder-Plus",
-        "qwen/qwen3-coder": "Qwen/Qwen3-Coder-480B-A35B",
-        "microsoft/phi-4": "microsoft/Phi-4",
-        "microsoft/phi-4-reasoning-plus": "microsoft/Phi-4-Reasoning-Plus",
-        "microsoft/wizardlm-2-8x22b": "microsoft/WizardLM-2-8x22B",
+        "qwen/qwen3-coder-next": "Qwen/Qwen3-Coder-Next",
+        "qwen/qwen3-coder": "Qwen/Qwen3-Coder-480B-A35B-Instruct",
+        "qwen/qwen3.5-397b-a17b": "Qwen/Qwen3.5-397B-A17B",
+        "microsoft/phi-4": "microsoft/phi-4",
+        "minimax/minimax-m2.5": "MiniMaxAI/MiniMax-M2.5",
+        "minimax/minimax-m3.1-flash": "MiniMaxAI/MiniMax-M3.1-Flash",
+        "moonshotai/kimi-k2.6": "moonshotai/Kimi-K2.6",
+        "moonshotai/kimi-k3": "moonshotai/Kimi-K3",
+        "xiaomi/mimo-v2.5": "XiaomiMiMo/MiMo-V2.5",
+        "xiaomi/mimo-v2.6-flash": "XiaomiMiMo/MiMo-V2.6-Flash-RL",
+        "xiaomi/mimo-v2.5-pro": "XiaomiMiMo/MiMo-V2.5-Pro",
+        "z-ai/glm-5": "zai-org/GLM-5",
+        "z-ai/glm-5.2": "zai-org/GLM-5.2",
+        "z-ai/glm-5.3": "zai-org/GLM-5.3",
+        "z-ai/glm-5.3-flash": "zai-org/GLM-5.3-Flash",
+        "tencent/hy4-preview": "tencent/Hy4-preview",
+        "stepfun/step-5-preview": "stepfun-ai/Step-5-Preview",
     }
     return hf_model_map.get(base_id) or hf_model_map.get(model_id)
 
@@ -263,11 +273,6 @@ def get_model_max_tokens(model_id: str) -> int:
         max_output = limits.get("max_output", 8192)
     else:
         max_output = 8192
-    model_limits = {
-        "anthropic/claude-opus-4.1": 4096,
-    }
-    if model_id in model_limits:
-        return min(model_limits[model_id], max_output)
     return max_output
 
 
@@ -283,7 +288,19 @@ def estimate_token_count(text: str, model_id: str | None = None) -> int:
                     return client.count_tokens(text)
             except Exception as e:
                 logger.debug(f"Anthropic tokenizer failed: {e}, falling back to tiktoken")
-        elif provider in ["meta-llama", "mistralai", "deepseek", "qwen", "microsoft"]:
+        elif provider in [
+            "meta-llama",
+            "mistralai",
+            "deepseek",
+            "qwen",
+            "microsoft",
+            "minimax",
+            "moonshotai",
+            "xiaomi",
+            "z-ai",
+            "tencent",
+            "stepfun",
+        ]:
             try:
                 tokenizer = _get_huggingface_tokenizer(model_id)
                 if tokenizer:
