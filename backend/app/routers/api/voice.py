@@ -44,7 +44,14 @@ from ...utils.request import get_client_ip
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-router = APIRouter(tags=["API - Voice"])
+
+def require_voice_enabled() -> None:
+    """404 Voice API routes when ENABLE_VOICE is off."""
+    if not settings.enable_voice:
+        raise HTTPException(status_code=404, detail="Not found")
+
+
+router = APIRouter(tags=["API - Voice"], dependencies=[Depends(require_voice_enabled)])
 logger = logging.getLogger(__name__)
 
 _MAX_AUDIO_BYTES = 25 * 1024 * 1024

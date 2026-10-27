@@ -1,10 +1,17 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { createModelId } from '../../types'
 import { inferModelModeForLoadedModels } from '../modelModeInference'
 
+const voiceFlag = vi.hoisted(() => ({ enabled: false }))
+
+vi.mock('../../config/voiceFlag', () => ({
+  isVoiceEnabled: () => voiceFlag.enabled,
+}))
+
 describe('inferModelModeForLoadedModels', () => {
-  it('honors a saved voice composer_mode', () => {
+  it('honors a saved voice composer_mode when voice is enabled', () => {
+    voiceFlag.enabled = true
     const mode = inferModelModeForLoadedModels(
       ['openai/gpt-4o-mini'],
       {},
@@ -14,6 +21,7 @@ describe('inferModelModeForLoadedModels', () => {
   })
 
   it('keeps composer_mode=voice even when text composer advanced settings exist', () => {
+    voiceFlag.enabled = true
     const mode = inferModelModeForLoadedModels(
       ['openai/gpt-4o-mini'],
       {},
@@ -23,6 +31,16 @@ describe('inferModelModeForLoadedModels', () => {
       }
     )
     expect(mode).toBe('voice')
+  })
+
+  it('does not restore voice mode when the voice flag is off', () => {
+    voiceFlag.enabled = false
+    const mode = inferModelModeForLoadedModels(
+      ['openai/gpt-4o-mini'],
+      {},
+      { composerMode: 'voice' }
+    )
+    expect(mode).toBe('text')
   })
 
   it('falls back to text when models are not image generators', () => {

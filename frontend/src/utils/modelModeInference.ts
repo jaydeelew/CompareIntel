@@ -1,3 +1,4 @@
+import { isVoiceEnabled } from '../config/voiceFlag'
 import type {
   ImageComposerAdvancedSettings,
   TextComposerAdvancedSettings,
@@ -21,7 +22,10 @@ export function inferModelModeForLoadedModels(
   }
 ): ModelMode {
   const { composerMode, textComposerAdvanced, imageComposerAdvanced } = opts ?? {}
-  if (composerMode === 'voice' || composerMode === 'image' || composerMode === 'text') {
+  if (composerMode === 'voice') {
+    return isVoiceEnabled() ? 'voice' : 'text'
+  }
+  if (composerMode === 'image' || composerMode === 'text') {
     return composerMode
   }
   const hasText = textComposerAdvanced != null

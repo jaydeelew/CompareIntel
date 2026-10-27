@@ -49,7 +49,12 @@ async function enableVoiceMode(page: Page): Promise<void> {
   await expect(page.getByTestId('voice-composer')).toBeVisible()
 }
 
+const voiceEnabled =
+  process.env.VITE_ENABLE_VOICE === 'true' || process.env.VITE_ENABLE_VOICE === '1'
+
 test.describe('Voice mode', () => {
+  test.skip(!voiceEnabled, 'Voice E2E runs with VITE_ENABLE_VOICE=true')
+
   test('lives on the Text models tab, records a turn, and plays sequential replies', async ({
     mockedModelsAuthenticatedPage: page,
   }) => {

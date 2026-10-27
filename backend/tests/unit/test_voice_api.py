@@ -1,5 +1,6 @@
 """API tests for voice config, STT, TTS, and compare-stream voice limits."""
 
+import os
 from decimal import Decimal
 from io import BytesIO
 from unittest.mock import patch
@@ -7,11 +8,23 @@ from unittest.mock import patch
 import pytest
 from fastapi import status
 
-pytestmark = pytest.mark.unit
-
 from app.config.constants import VOICE_EMPTY_TRANSCRIPT_MESSAGE
+from app.config.settings import settings
 from app.llm.audio import MINIMAL_MP3, EmptyTranscriptError, TranscriptionResult
 from app.services.voice_billing import reset_pending_audio_credits
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.skipif(
+        os.getenv("ENABLE_VOICE", "").lower() not in {"1", "true", "yes"},
+        reason="Voice API tests run with ENABLE_VOICE on",
+    ),
+]
+
+
+@pytest.fixture(autouse=True)
+def _enable_voice(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "enable_voice", True)
 
 
 @pytest.fixture(autouse=True)

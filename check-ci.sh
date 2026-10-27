@@ -15,6 +15,18 @@ NC='\033[0m' # No Color
 
 FAILED=0
 
+# Cheap repo-level checks (no extra deps)
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔒 CSP header sync"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if node scripts/check-csp-sync.js; then
+  echo -e "${GREEN}✓ nginx and index.html CSP definitions match${NC}"
+else
+  echo -e "${RED}❌ CSP definitions drifted${NC}"
+  FAILED=1
+fi
+echo ""
+
 # Backend checks
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🐍 Backend checks"
@@ -55,7 +67,7 @@ else
   
   echo ""
   echo "Running backend tests..."
-  if pytest tests/unit/ -v; then
+  if ENABLE_VOICE=true pytest tests/unit/ -v; then
     echo -e "${GREEN}✓ Backend unit tests passed${NC}"
   else
     echo -e "${RED}❌ Backend unit tests failed${NC}"
@@ -104,7 +116,7 @@ else
   
   echo ""
   echo "Running frontend tests..."
-  if npm run test:run; then
+  if VITE_ENABLE_VOICE=true npm run test:run; then
     echo -e "${GREEN}✓ Frontend tests passed${NC}"
   else
     echo -e "${RED}❌ Frontend tests failed${NC}"

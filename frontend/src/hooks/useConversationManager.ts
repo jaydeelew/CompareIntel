@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react'
 
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison/FileUpload'
-import { isVoiceFeatureEnabled } from '../config/voiceFeature'
+import { isVoiceFeatureEnabled } from '../config/voiceFlag'
 import { apiClient } from '../services/api/client'
 import { getConversation } from '../services/conversationService'
 import type {

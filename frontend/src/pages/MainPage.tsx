@@ -22,7 +22,7 @@ import {
   OVERAGE_USD_PER_CREDIT,
   VOICE_MAX_MODELS,
 } from '../config/constants'
-import { isVoiceFeatureEnabled } from '../config/voiceFeature'
+import { isVoiceFeatureEnabled } from '../config/voiceFlag'
 import { useAuth } from '../contexts/AuthContext'
 import {
   CAPABILITY_DEMO_PRESETS,

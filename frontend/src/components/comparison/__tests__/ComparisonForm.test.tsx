@@ -8,12 +8,12 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import React, { createRef } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { isVoiceFeatureEnabled } from '../../../config/voiceFeature'
+import { isVoiceFeatureEnabled } from '../../../config/voiceFlag'
 import { createModelId } from '../../../types'
 import { ComparisonForm } from '../ComparisonForm'
 import type { HistoryProps, SelectionProps } from '../ComparisonFormTypes'
 
-vi.mock('../../../config/voiceFeature', () => ({
+vi.mock('../../../config/voiceFlag', () => ({
   isVoiceFeatureEnabled: vi.fn(() => true),
 }))
 

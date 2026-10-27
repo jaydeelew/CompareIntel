@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from ...attachment_storage import parse_file_contents
 from ...config import get_history_entry_limit
+from ...config.settings import settings
 from ...database import get_db
 from ...dependencies import get_current_user
 from ...models import Conversation, User
@@ -69,6 +70,8 @@ async def get_conversations(
         except (json.JSONDecodeError, TypeError):
             models_used = []
 
+        if not settings.enable_voice and conv.composer_mode == "voice":
+            continue
         message_count = message_counts.get(conv.id, 0)
         summaries.append(
             ConversationSummary(

@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { VOICE_EMPTY_TRANSCRIPT_MESSAGE } from '../../config/constants'
+import { isVoiceEnabled } from '../../config/voiceFlag'
 import { ApiError } from '../../services/api/errors'
 import {
   DEFAULT_VOICE_CONFIG,
@@ -11,7 +12,7 @@ import {
 import { apiPathGlob } from '../msw/paths'
 import { server } from '../msw/server'
 
-describe('voiceForModelIndex', () => {
+describe.skipIf(!isVoiceEnabled())('voiceForModelIndex', () => {
   it('assigns a distinct voice to each of the first two models', () => {
     const first = voiceForModelIndex(0, DEFAULT_VOICE_CONFIG.voices)
     const second = voiceForModelIndex(1, DEFAULT_VOICE_CONFIG.voices)
