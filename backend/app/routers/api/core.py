@@ -380,6 +380,8 @@ async def compare_stream(
 
     has_image_model = any(_model_supports_image_gen(mid) for mid in req.models)
     if getattr(req, "mode", None) == "voice":
+        if not settings.enable_voice:
+            raise HTTPException(status_code=404, detail="Not found")
         from ...config.constants import VOICE_MAX_MODELS
 
         if len(req.models) > VOICE_MAX_MODELS:

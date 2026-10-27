@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 
 import { getHistoryEntryLimit } from '../config/constants'
+import { visibleHistoryEntries } from '../config/voiceFlag'
 import { apiClient } from '../services/api/client'
 import { ApiError } from '../services/api/errors'
 import {
@@ -780,8 +781,13 @@ export function useConversationHistory({
     [historyLimit, isAuthenticated, loadHistoryFromLocalStorage]
   )
 
+  const visibleConversationHistory = useMemo(
+    () => visibleHistoryEntries(conversationHistory),
+    [conversationHistory]
+  )
+
   return {
-    conversationHistory,
+    conversationHistory: visibleConversationHistory,
     setConversationHistory,
     isLoadingHistory,
     setIsLoadingHistory,

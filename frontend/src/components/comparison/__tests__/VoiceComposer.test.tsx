@@ -3,9 +3,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
+import { isVoiceEnabled } from '../../../config/voiceFlag'
 import { VoiceComposer } from '../VoiceComposer'
 
-describe('VoiceComposer', () => {
+describe.skipIf(!isVoiceEnabled())('VoiceComposer', () => {
   it('shows tap-to-talk and the transcript', () => {
     const onToggleTalk = vi.fn()
     render(

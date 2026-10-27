@@ -153,9 +153,19 @@ class Settings(BaseSettings):
             return None
         return v
 
+    @field_validator("enable_voice", mode="before")
+    @classmethod
+    def parse_enable_voice(cls, v):
+        """Treat empty env strings as off."""
+        if v == "" or v is None:
+            return False
+        return v
+
     # Voice tab defaults (OpenRouter /audio/transcriptions and /audio/speech)
     default_stt_model: str = "openai/whisper-large-v3"
     default_tts_model: str = "openai/gpt-4o-mini-tts-2025-12-15"
+    # Feature flag: Voice tab / STT / TTS. Defaults off so production matches pre-#93.
+    enable_voice: bool = False
 
     # Circuit breaker configuration
     search_circuit_breaker_enabled: bool = True  # Enable circuit breaker for API failures

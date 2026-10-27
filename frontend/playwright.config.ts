@@ -155,6 +155,7 @@ export default defineConfig({
       env: {
         // Disable reCAPTCHA in test environment
         VITE_RECAPTCHA_SITE_KEY: '',
+        VITE_ENABLE_VOICE: process.env.VITE_ENABLE_VOICE || '',
       },
     },
     {
@@ -177,6 +178,7 @@ export default defineConfig({
         recaptcha_secret_key: '',
         // Also ensure VITE_RECAPTCHA_SITE_KEY is empty for frontend
         VITE_RECAPTCHA_SITE_KEY: '',
+        ENABLE_VOICE: process.env.ENABLE_VOICE || '',
       },
     },
   ],

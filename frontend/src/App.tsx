@@ -9,8 +9,11 @@ import './styles/components.css'
 import './styles/navigation.css'
 import './styles/layout.css'
 import './styles/responsive.css'
-import './styles/voice.css'
 import './App.css'
+
+if (import.meta.env.VITE_ENABLE_VOICE === 'true') {
+  void import('./styles/voice.css')
+}
 
 import { Layout, ThemeSync } from './components'
 import { ErrorBoundary, LoadingSpinner } from './components/shared'
