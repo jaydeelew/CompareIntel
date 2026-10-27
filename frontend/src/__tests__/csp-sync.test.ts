@@ -27,9 +27,9 @@ describe('CSP sync', () => {
 
   it('ignores nginx-only frame-ancestors when comparing', () => {
     const html =
-      '  <meta http-equiv="Content-Security-Policy"\n    content="default-src \'self\'; connect-src \'self\' https://*.ingest.us.sentry.io; base-uri \'self\';" />'
+      "  <meta http-equiv=\"Content-Security-Policy\"\n    content=\"default-src 'self'; connect-src 'self' https://*.ingest.us.sentry.io; base-uri 'self';\" />"
     const nginx =
-      'add_header Content-Security-Policy "default-src \'self\'; connect-src \'self\' https://*.ingest.us.sentry.io; frame-ancestors \'none\'; base-uri \'self\';" always;'
+      "add_header Content-Security-Policy \"default-src 'self'; connect-src 'self' https://*.ingest.us.sentry.io; frame-ancestors 'none'; base-uri 'self';\" always;"
     expect(checkCspSync({ nginxContent: nginx, htmlContent: html }).comparable).toContain(
       SENTRY_CONNECT_SRC
     )
@@ -47,7 +47,7 @@ describe('CSP sync', () => {
     const html =
       '  <meta http-equiv="Content-Security-Policy" content="default-src \'self\'; connect-src \'self\' https://*.ingest.us.sentry.io;" />'
     const nginx =
-      'add_header Content-Security-Policy "default-src \'self\'; connect-src \'self\' https://*.ingest.us.sentry.io https://example.com; frame-ancestors \'none\';" always;'
+      "add_header Content-Security-Policy \"default-src 'self'; connect-src 'self' https://*.ingest.us.sentry.io https://example.com; frame-ancestors 'none';\" always;"
     expect(() => checkCspSync({ nginxContent: nginx, htmlContent: html })).toThrow(/CSP mismatch/)
   })
 })
