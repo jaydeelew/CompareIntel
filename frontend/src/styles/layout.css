@@ -31,6 +31,14 @@
   isolation: isolate;
 }
 
+/* Beat `.app > * { z-index: 1 }` (same idea as `.app > .app-header-shell`). WebKit
+   otherwise lets this later sibling stack over the sticky navbar and the hero
+   layer intercepts Sign Up / Sign In clicks (#97). */
+.app > .app-main {
+  z-index: 0;
+  isolation: isolate;
+}
+
 /* Hero is the first flex item; keep it from shrinking when siblings (e.g. models section) gain height. */
 .app-main > .hero-section {
   flex-shrink: 0;

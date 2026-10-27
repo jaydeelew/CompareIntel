@@ -24,6 +24,10 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
+  /* Force a stacking context WebKit honors for sticky + later isolated siblings
+     (.app-main / .hero-section). Without this, the hero layer can paint and
+     hit-test over Sign Up even when this z-index is 100 (#97). */
+  isolation: isolate;
 }
 
 .app-header-shell--folded {

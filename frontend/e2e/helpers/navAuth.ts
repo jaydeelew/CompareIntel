@@ -12,7 +12,9 @@ function isRecoverableClickError(message: string): boolean {
 
 /**
  * Opens the sign-up auth modal from the navbar. Uses a DOM click when Playwright
- * cannot hit the button (common in Firefox when the hero layer affects viewport checks).
+ * cannot hit the button (Firefox can treat the hero nav as outside the viewport).
+ * WebKit hero intercepts were an app stacking bug (#97) — do not special-case
+ * WebKit here; tests must use a real pointer click on that browser.
  */
 export async function clickNavSignUpButton(
   page: Page,
