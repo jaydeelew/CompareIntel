@@ -12,6 +12,7 @@ import React, {
 import { createPortal } from 'react-dom'
 
 import { BREAKPOINT_MOBILE } from '../../config/constants'
+import { isVoiceEnabled } from '../../config/voiceFlag'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { UseVoiceSessionReturn } from '../../hooks/useVoiceSession'
@@ -700,7 +701,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               imageTooltipUsePortal={showComposerStyledTooltips}
             />
           )}
-          {modelMode === 'voice' && voiceSession ? (
+          {isVoiceEnabled() && modelMode === 'voice' && voiceSession ? (
             <VoiceComposer
               status={voiceSession.status}
               isSupported={voiceSession.isSupported}

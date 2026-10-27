@@ -119,6 +119,8 @@ jobs:
         run: mkdir -p coverage/.tmp
       
       - name: Run unit tests with coverage (Vitest enforces thresholds in vite.config.ts)
+        env:
+          VITE_ENABLE_VOICE: 'true'
         run: npm run test:coverage
       
       - name: Upload coverage to Codecov
@@ -335,6 +337,7 @@ jobs:
       SKIP_CONFIG_VALIDATION: true
       TEST_REDIS_URL: redis://localhost:6379/15
       TEST_POSTGRES_URL: postgresql://testuser:testpass@localhost:5432/testdb
+      ENABLE_VOICE: 'true'
     
     steps:
       - name: Checkout code
@@ -558,6 +561,8 @@ jobs:
       CI: true
       PLAYWRIGHT_BASE_URL: http://localhost:5173
       BACKEND_URL: http://localhost:8000
+      VITE_ENABLE_VOICE: 'true'
+      ENABLE_VOICE: 'true'
     
     strategy:
       fail-fast: false

@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from ...config.settings import settings
 from ..billing import router as billing_router
 from .conversations import router as conversations_router
 from .core import router as core_router
@@ -20,7 +21,8 @@ router.include_router(billing_router, tags=["Billing"])
 router.include_router(conversations_router, tags=["API"])
 router.include_router(credits_router, tags=["API"])
 router.include_router(preferences_router, tags=["API"])
-router.include_router(voice_router, tags=["API"])
+if settings.enable_voice:
+    router.include_router(voice_router, tags=["API"])
 router.include_router(dev_router, tags=["API"])
 
 __all__ = ["router", "model_stats"]

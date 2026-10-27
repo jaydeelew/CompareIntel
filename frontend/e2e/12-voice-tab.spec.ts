@@ -40,7 +40,12 @@ async function selectMockedModels(page: Page, count: number, projectName: string
   return selected
 }
 
+const voiceEnabled =
+  process.env.VITE_ENABLE_VOICE === 'true' || process.env.VITE_ENABLE_VOICE === '1'
+
 test.describe('Voice tab', () => {
+  test.skip(!voiceEnabled, 'Voice E2E runs with VITE_ENABLE_VOICE=true')
+
   test('selects up to 2 models, records a turn, and plays sequential replies', async ({
     mockedModelsAuthenticatedPage: page,
   }) => {

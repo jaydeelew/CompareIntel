@@ -13,6 +13,7 @@ import ImageIcon from 'lucide-react/dist/esm/icons/image'
 import X from 'lucide-react/dist/esm/icons/x'
 import { useMemo, useState } from 'react'
 
+import { isVoiceEnabled } from '../../config/voiceFlag'
 import { HELP_ME_CHOOSE_CATEGORY_IMAGES_ID } from '../../data/helpMeChooseRecommendations'
 import type { User, ModelsByProvider, CompareResponse, Model } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
@@ -324,8 +325,8 @@ export function ModelsArea({
                 className="models-section-mode-toggle"
                 role="group"
                 aria-label="Model type"
-                data-mode={modelMode}
-                data-tabs="3"
+                data-mode={modelMode === 'voice' && !isVoiceEnabled() ? 'text' : modelMode}
+                {...(isVoiceEnabled() ? { 'data-tabs': '3' } : {})}
               >
                 <span className="models-section-mode-slider" aria-hidden />
                 <button
@@ -337,15 +338,17 @@ export function ModelsArea({
                 >
                   Text models
                 </button>
-                <button
-                  type="button"
-                  className={`models-section-mode-btn ${modelMode === 'voice' ? 'active' : ''}`}
-                  onClick={() => onModelModeChange('voice')}
-                  aria-pressed={modelMode === 'voice'}
-                  data-testid="voice-tab-button"
-                >
-                  Voice
-                </button>
+                {isVoiceEnabled() && (
+                  <button
+                    type="button"
+                    className={`models-section-mode-btn ${modelMode === 'voice' ? 'active' : ''}`}
+                    onClick={() => onModelModeChange('voice')}
+                    aria-pressed={modelMode === 'voice'}
+                    data-testid="voice-tab-button"
+                  >
+                    Voice
+                  </button>
+                )}
                 <button
                   type="button"
                   className={`models-section-mode-btn ${modelMode === 'image' ? 'active' : ''}`}

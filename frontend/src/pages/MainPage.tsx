@@ -22,6 +22,7 @@ import {
   OVERAGE_USD_PER_CREDIT,
   VOICE_MAX_MODELS,
 } from '../config/constants'
+import { isVoiceEnabled } from '../config/voiceFlag'
 import { useAuth } from '../contexts/AuthContext'
 import {
   CAPABILITY_DEMO_PRESETS,
@@ -948,6 +949,7 @@ export function MainPage() {
   /** Text/image toggle only — marks default as session-overridden so empty selection does not re-apply default */
   const handleModelModeChange = useCallback(
     (newMode: 'text' | 'image' | 'voice') => {
+      if (newMode === 'voice' && !isVoiceEnabled()) return
       if (newMode === modelMode) return
       setDefaultSelectionOverridden(true)
       setModelMode(newMode)
@@ -2397,7 +2399,7 @@ export function MainPage() {
   handleSubmitClickRef.current = handleSubmitClick
 
   const voiceSession = useVoiceSession({
-    enabled: modelMode === 'voice',
+    enabled: isVoiceEnabled() && modelMode === 'voice',
     selectedModels,
     conversations,
     isLoading,

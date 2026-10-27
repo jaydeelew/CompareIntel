@@ -56,6 +56,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_VERSION?: string
   readonly VITE_PERFORMANCE_ENDPOINT?: string
   readonly VITE_EXTENSION_ID?: string
+  readonly VITE_ENABLE_VOICE?: string
 }
 
 interface ImportMeta {
