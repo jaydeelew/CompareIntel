@@ -100,6 +100,7 @@ export interface ComparisonPageContentProps {
   composerDemoPauseHighlight?: boolean
   modelMode?: ModelMode
   voiceSession?: UseVoiceSessionReturn | null
+  onVoiceModeChange?: (enabled: boolean) => void
 
   // Loading
   onCancel: () => void
@@ -159,6 +160,7 @@ export function ComparisonPageContent({
   composerDemoPauseHighlight = false,
   modelMode = 'text',
   voiceSession = null,
+  onVoiceModeChange,
   onCancel,
   showResults,
   showFloatingComposer = false,
@@ -243,6 +245,7 @@ export function ComparisonPageContent({
             onOpenHelpMeChoose={onOpenHelpMeChoose}
             modelMode={modelMode}
             voiceSession={voiceSession}
+            onVoiceModeChange={onVoiceModeChange}
             imageGenerationSubmitBlocked={imageGenerationSubmitBlocked}
             imageGenerationNoSharedImageOptions={imageGenerationNoSharedImageOptions}
             onImageGenerationSubmitBlockedTap={onImageGenerationSubmitBlockedTap}

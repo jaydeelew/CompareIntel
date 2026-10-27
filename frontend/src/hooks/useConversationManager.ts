@@ -457,7 +457,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           imageComposerAdvanced: imageAdvanced,
         })
         setModelMode(targetMode)
-        if (targetMode === 'text' && textAdvanced) {
+        if ((targetMode === 'text' || targetMode === 'voice') && textAdvanced) {
           applyTextComposerAdvancedSettings(
             textAdvanced,
             [...modelsUsed],

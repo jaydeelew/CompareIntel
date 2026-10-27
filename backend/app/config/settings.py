@@ -153,7 +153,7 @@ class Settings(BaseSettings):
             return None
         return v
 
-    # Voice tab defaults (OpenRouter /audio/transcriptions and /audio/speech)
+    # Voice mode defaults (OpenRouter /audio/transcriptions and /audio/speech)
     default_stt_model: str = "openai/whisper-large-v3"
     default_tts_model: str = "openai/gpt-4o-mini-tts-2025-12-15"
 

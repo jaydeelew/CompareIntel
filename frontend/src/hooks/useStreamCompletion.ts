@@ -124,7 +124,7 @@ export function useStreamCompletion(
       } = streamResult
 
       const textComposerSnapshot =
-        modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
+        modelMode === 'text' || modelMode === 'voice' ? { temperature, topP, maxTokens } : undefined
       const imageComposerSnapshot = modelMode === 'image' ? { aspectRatio, imageSize } : undefined
 
       if (streamError) {

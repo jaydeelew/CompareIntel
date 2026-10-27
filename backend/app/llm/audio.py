@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
@@ -9,9 +10,14 @@ from typing import Any
 
 import httpx
 
-from ..config.constants import VOICE_STT_USD_PER_MINUTE, VOICE_TTS_USD_PER_MILLION_CHARS
+from ..config.constants import (
+    VOICE_EMPTY_TRANSCRIPT_MESSAGE,
+    VOICE_STT_USD_PER_MINUTE,
+    VOICE_TTS_USD_PER_MILLION_CHARS,
+)
 from ..config.settings import settings
 from .tokens import extract_usage_cost_usd
+from .voice_speech import sanitize_voice_speech
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +31,43 @@ MINIMAL_MP3 = (
 )
 
 MOCK_TRANSCRIPT = "Hello, this is a voice comparison."
+
+# OpenRouter STT allow-list (https://openrouter.ai/docs/guides/overview/multimodal/stt).
+_EXT_TO_FORMAT = {
+    ".wav": "wav",
+    ".mp3": "mp3",
+    ".mpeg": "mp3",
+    ".mpga": "mp3",
+    ".flac": "flac",
+    ".ogg": "ogg",
+    ".oga": "ogg",
+    ".opus": "ogg",
+    ".webm": "webm",
+    ".mp4": "m4a",
+    ".m4a": "m4a",
+    ".aac": "aac",
+}
+_MIME_TO_FORMAT = {
+    "audio/wav": "wav",
+    "audio/x-wav": "wav",
+    "audio/wave": "wav",
+    "audio/mpeg": "mp3",
+    "audio/mp3": "mp3",
+    "audio/flac": "flac",
+    "audio/ogg": "ogg",
+    "audio/opus": "ogg",
+    "audio/webm": "webm",
+    "video/webm": "webm",
+    "audio/mp4": "m4a",
+    "audio/m4a": "m4a",
+    "audio/x-m4a": "m4a",
+    "audio/aac": "aac",
+    "video/mp4": "m4a",
+}
+
+
+class EmptyTranscriptError(ValueError):
+    """STT HTTP succeeded but no speech text was returned (silence or undecodable audio)."""
 
 
 @dataclass
@@ -106,20 +149,117 @@ def estimate_tts_usd(text: str) -> Decimal:
     return Decimal(str(VOICE_TTS_USD_PER_MILLION_CHARS)) * chars / Decimal("1000000")
 
 
-def _audio_format_from_filename(filename: str | None, content_type: str | None) -> str:
+def audio_format_for_openrouter(filename: str | None, content_type: str | None) -> str:
+    """Map a browser recording to OpenRouter's ``input_audio.format`` allow-list.
+
+    Chrome MediaRecorder uses ``audio/webm;codecs=opus``. Matching the MIME with
+    ``\"mpeg\" in ctype``-style substrings, or sending ``mp4`` instead of ``m4a``,
+    makes Whisper decode the bytes as the wrong container and return empty text.
+    """
     name = (filename or "").lower()
-    ctype = (content_type or "").lower()
-    if name.endswith(".wav") or "wav" in ctype:
-        return "wav"
-    if name.endswith(".mp3") or "mpeg" in ctype or "mp3" in ctype:
-        return "mp3"
-    if name.endswith(".flac") or "flac" in ctype:
-        return "flac"
-    if name.endswith(".ogg") or "ogg" in ctype:
-        return "ogg"
-    if name.endswith(".mp4") or name.endswith(".m4a") or "mp4" in ctype:
-        return "mp4"
+    for ext, fmt in _EXT_TO_FORMAT.items():
+        if name.endswith(ext):
+            return fmt
+    mime = (content_type or "").split(";")[0].strip().lower()
+    if mime in _MIME_TO_FORMAT:
+        return _MIME_TO_FORMAT[mime]
+    full = (content_type or "").lower()
+    if "webm" in full:
+        return "webm"
+    if "opus" in full:
+        return "webm"
     return "webm"
+
+
+def extract_transcript_text(payload: Any) -> str:
+    """Read speech text from OpenRouter STT JSON (and a few provider wrappers)."""
+    if isinstance(payload, str):
+        return payload.strip()
+    if not isinstance(payload, dict):
+        return ""
+    for key in ("text", "transcript"):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    nested = payload.get("data")
+    if isinstance(nested, dict):
+        nested_text = extract_transcript_text(nested)
+        if nested_text:
+            return nested_text
+    segments = payload.get("segments")
+    if isinstance(segments, list):
+        parts: list[str] = []
+        for seg in segments:
+            if not isinstance(seg, dict):
+                continue
+            part = seg.get("text") or seg.get("transcript")
+            if isinstance(part, str) and part.strip():
+                parts.append(part.strip())
+        if parts:
+            return " ".join(parts)
+    choices = payload.get("choices")
+    if isinstance(choices, list) and choices:
+        first = choices[0]
+        if isinstance(first, dict):
+            choice_text = extract_transcript_text(first)
+            if choice_text:
+                return choice_text
+            message = first.get("message")
+            if isinstance(message, dict):
+                nested_choice = extract_transcript_text(message)
+                if nested_choice:
+                    return nested_choice
+                content = message.get("content")
+                if isinstance(content, str) and content.strip():
+                    return content.strip()
+    return ""
+
+
+def openrouter_stt_error_message(payload: Any) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+    err = payload.get("error")
+    if isinstance(err, dict):
+        msg = err.get("message") or err.get("msg")
+        if isinstance(msg, str) and msg.strip():
+            return msg.strip()
+        return str(err)[:200] if err else None
+    if isinstance(err, str) and err.strip():
+        return err.strip()
+    return None
+
+
+def _log_empty_transcript(
+    *,
+    audio_bytes: int,
+    content_type: str | None,
+    audio_format: str,
+    model: str,
+    status_code: int | None,
+    payload: Any,
+    generation_id: str | None,
+) -> None:
+    keys: str
+    usage_seconds: Any = None
+    if isinstance(payload, dict):
+        keys = ",".join(sorted(str(k) for k in payload.keys()))
+        usage = payload.get("usage")
+        if isinstance(usage, dict):
+            usage_seconds = usage.get("seconds")
+    else:
+        keys = type(payload).__name__
+    logger.warning(
+        "OpenRouter STT empty transcript: audio_bytes=%s mime=%s format=%s model=%s "
+        "http_status=%s generation_id=%s response_keys=%s usage_seconds=%s",
+        audio_bytes,
+        (content_type or "")[:80],
+        audio_format,
+        model,
+        status_code,
+        generation_id or "",
+        keys,
+        usage_seconds,
+    )
 
 
 def transcribe_audio(
@@ -131,7 +271,15 @@ def transcribe_audio(
     duration_seconds: float | None = None,
     use_mock: bool = False,
 ) -> TranscriptionResult:
-    """Send a whole recording to OpenRouter /audio/transcriptions."""
+    """Send a whole recording to OpenRouter /audio/transcriptions.
+
+    OpenRouter's documented contract is JSON with base64 ``input_audio``
+    (https://openrouter.ai/docs/guides/overview/multimodal/stt), not OpenAI's
+    multipart ``file`` field. Multipart is a compatibility shim whose format is
+    inferred from filename/Content-Type; browser recordings send
+    ``audio/webm;codecs=opus``, which that inference often mis-labels, and
+    Whisper then returns HTTP 200 with empty ``text``.
+    """
     if use_mock:
         return TranscriptionResult(
             text=MOCK_TRANSCRIPT,
@@ -139,20 +287,25 @@ def transcribe_audio(
             duration_seconds=duration_seconds,
         )
     if not audio_bytes:
-        raise ValueError("Audio recording is empty")
+        raise EmptyTranscriptError(VOICE_EMPTY_TRANSCRIPT_MESSAGE)
 
     stt_model = model or settings.default_stt_model
-    audio_format = _audio_format_from_filename(filename, content_type)
-    upload_name = filename or f"recording.{audio_format}"
-    upload_type = content_type or f"audio/{audio_format}"
+    audio_format = audio_format_for_openrouter(filename, content_type)
+    payload = {
+        "model": stt_model,
+        "input_audio": {
+            "data": base64.b64encode(audio_bytes).decode("ascii"),
+            "format": audio_format,
+        },
+    }
 
+    response: httpx.Response | None = None
     try:
         with httpx.Client(timeout=60.0) as client:
             response = client.post(
                 f"{OPENROUTER_BASE_URL}/audio/transcriptions",
-                headers=_openrouter_headers(),
-                data={"model": stt_model},
-                files={"file": (upload_name, audio_bytes, upload_type)},
+                headers={**_openrouter_headers(), "Content-Type": "application/json"},
+                json=payload,
             )
             response.raise_for_status()
             data = response.json()
@@ -164,11 +317,30 @@ def transcribe_audio(
         logger.error("OpenRouter STT error: %s", exc)
         raise RuntimeError("Speech-to-text failed") from exc
 
-    text = ""
-    if isinstance(data, dict):
-        text = str(data.get("text") or data.get("transcript") or "")
-    if not text.strip():
-        raise RuntimeError("Speech-to-text returned an empty transcript")
+    error_message = openrouter_stt_error_message(data)
+    if error_message:
+        logger.error("OpenRouter STT error body: %s", error_message[:300])
+        raise RuntimeError(f"Speech-to-text failed: {error_message[:200]}")
+
+    text = extract_transcript_text(data)
+    if not text:
+        generation_id = None
+        status_code = None
+        if response is not None:
+            status_code = response.status_code
+            generation_id = response.headers.get("x-generation-id") or response.headers.get(
+                "X-Generation-Id"
+            )
+        _log_empty_transcript(
+            audio_bytes=len(audio_bytes),
+            content_type=content_type,
+            audio_format=audio_format,
+            model=stt_model,
+            status_code=status_code,
+            payload=data,
+            generation_id=generation_id,
+        )
+        raise EmptyTranscriptError(VOICE_EMPTY_TRANSCRIPT_MESSAGE)
 
     cost = None
     if isinstance(data, dict):
@@ -176,7 +348,7 @@ def transcribe_audio(
     if cost is None:
         cost = estimate_stt_usd(duration_seconds, len(audio_bytes))
 
-    return TranscriptionResult(text=text.strip(), cost_usd=cost, duration_seconds=duration_seconds)
+    return TranscriptionResult(text=text, cost_usd=cost, duration_seconds=duration_seconds)
 
 
 def synthesize_speech(
@@ -187,7 +359,7 @@ def synthesize_speech(
     use_mock: bool = False,
 ) -> SpeechResult:
     """Synthesize one sentence via OpenRouter /audio/speech."""
-    cleaned = text.strip()
+    cleaned = sanitize_voice_speech(text)
     if not cleaned:
         raise ValueError("Speech text is empty")
 

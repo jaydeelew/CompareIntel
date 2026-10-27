@@ -342,7 +342,7 @@ export function HelpMeChoose({
         ? cat.id === HELP_ME_CHOOSE_CATEGORY_IMAGE_GENERATION_ID
         : cat.id !== HELP_ME_CHOOSE_CATEGORY_IMAGE_GENERATION_ID
     )
-    if (hasAttachedImages && modelMode === 'text') {
+    if (hasAttachedImages && (modelMode === 'text' || modelMode === 'voice')) {
       cats = cats
         .filter(cat => cat.id === HELP_ME_CHOOSE_CATEGORY_IMAGES_ID)
         .map(cat => ({

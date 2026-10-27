@@ -3,6 +3,29 @@ import Square from 'lucide-react/dist/esm/icons/square'
 
 import type { VoiceSessionStatus } from '../../hooks/useVoiceSession'
 
+export interface VoiceModeToggleProps {
+  enabled: boolean
+  disabled?: boolean
+  onChange: (enabled: boolean) => void
+}
+
+export function VoiceModeToggle({ enabled, disabled = false, onChange }: VoiceModeToggleProps) {
+  return (
+    <button
+      type="button"
+      className={`voice-mode-toggle ${enabled ? 'active' : ''}`}
+      onClick={() => onChange(!enabled)}
+      disabled={disabled}
+      aria-pressed={enabled}
+      aria-label={enabled ? 'Turn off voice mode' : 'Turn on voice mode'}
+      data-testid="voice-mode-toggle"
+    >
+      <Mic size={16} aria-hidden />
+      <span>Voice</span>
+    </button>
+  )
+}
+
 export interface VoiceComposerProps {
   status: VoiceSessionStatus
   isSupported: boolean

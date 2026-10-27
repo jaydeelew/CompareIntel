@@ -3,7 +3,7 @@ import { installMockMicrophone, mockVoiceApis } from './helpers/mockVoice'
 import { toggleModelCheckbox } from './helpers/modelCheckbox'
 
 /**
- * Voice tab slice 1: spoken turn-taking with up to 2 models (issue #90).
+ * Voice mode (inside Text models): spoken turn-taking with up to 2 models (issue #90).
  * Audio capture and OpenRouter STT/TTS are mocked.
  */
 
@@ -40,19 +40,30 @@ async function selectMockedModels(page: Page, count: number, projectName: string
   return selected
 }
 
-test.describe('Voice tab', () => {
-  test('selects up to 2 models, records a turn, and plays sequential replies', async ({
+async function enableVoiceMode(page: Page): Promise<void> {
+  const toggle = page.getByTestId('voice-mode-toggle')
+  await expect(toggle).toBeVisible({ timeout: 20000 })
+  if ((await toggle.getAttribute('aria-pressed')) !== 'true') {
+    await toggle.click()
+  }
+  await expect(page.getByTestId('voice-composer')).toBeVisible()
+}
+
+test.describe('Voice mode', () => {
+  test('lives on the Text models tab, records a turn, and plays sequential replies', async ({
     mockedModelsAuthenticatedPage: page,
   }) => {
     await installMockMicrophone(page)
     await mockVoiceApis(page)
     await page.reload({ waitUntil: 'domcontentloaded' })
 
-    await test.step('Open the Voice tab', async () => {
-      const voiceTab = page.getByTestId('voice-tab-button')
-      await expect(voiceTab).toBeVisible({ timeout: 20000 })
-      await voiceTab.click()
-      await expect(page.getByTestId('voice-composer')).toBeVisible()
+    await test.step('Voice is a composer toggle, not a catalog tab', async () => {
+      await expect(page.getByTestId('text-tab-button')).toBeVisible({ timeout: 20000 })
+      await expect(page.getByTestId('image-tab-button')).toBeVisible()
+      await expect(page.getByTestId('voice-tab-button')).toHaveCount(0)
+      await enableVoiceMode(page)
+      await expect(page.getByTestId('text-tab-button')).toHaveAttribute('aria-pressed', 'true')
+      await expect(page.getByTestId('voice-mode-toggle')).toHaveAttribute('aria-pressed', 'true')
     })
 
     await test.step('Select two models and block a third', async () => {
@@ -90,12 +101,21 @@ test.describe('Voice tab', () => {
       const results = page.locator('.results-section .result-card.conversation-card')
       await expect(results.first()).toBeVisible({ timeout: 30000 })
       const modelTabs = page.locator('.results-tab-button')
-      // Mobile uses a tabbed layout with a single card in the DOM.
       if ((await modelTabs.count()) > 0) {
         await expect(modelTabs).toHaveCount(2)
       } else {
         await expect(results).toHaveCount(2)
       }
+      await expect(page.locator('.results-section')).toContainText(/Hello from the model/i)
+      await expect(page.locator('.results-section')).not.toContainText('**')
+      await expect(page.locator('.results-section')).not.toContainText('https://example.com')
+    })
+
+    await test.step('Turning Voice off restores the text composer', async () => {
+      await page.getByTestId('voice-mode-toggle').click()
+      await expect(page.getByTestId('voice-mode-toggle')).toHaveAttribute('aria-pressed', 'false')
+      await expect(page.getByTestId('voice-composer')).toHaveCount(0)
+      await expect(page.getByTestId('comparison-input-textarea')).toBeVisible()
     })
   })
 
@@ -106,8 +126,7 @@ test.describe('Voice tab', () => {
     await mockVoiceApis(page)
     await page.reload({ waitUntil: 'domcontentloaded' })
 
-    await page.getByTestId('voice-tab-button').click()
-    await expect(page.getByTestId('voice-composer')).toBeVisible()
+    await enableVoiceMode(page)
     expect(await selectMockedModels(page, 1, test.info().project.name)).toBe(1)
     const talk = page.getByTestId('voice-ptt-button')
     await expect(talk).toBeEnabled({ timeout: 10000 })
@@ -128,7 +147,7 @@ test.describe('Voice tab', () => {
       })
     })
     await page.reload({ waitUntil: 'domcontentloaded' })
-    await page.getByTestId('voice-tab-button').click()
+    await enableVoiceMode(page)
     await expect(page.getByTestId('voice-mic-error')).toContainText(
       /supported|secure|unavailable/i,
       {

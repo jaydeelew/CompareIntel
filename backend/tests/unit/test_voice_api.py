@@ -9,7 +9,8 @@ from fastapi import status
 
 pytestmark = pytest.mark.unit
 
-from app.llm.audio import MINIMAL_MP3, TranscriptionResult
+from app.config.constants import VOICE_EMPTY_TRANSCRIPT_MESSAGE
+from app.llm.audio import MINIMAL_MP3, EmptyTranscriptError, TranscriptionResult
 from app.services.voice_billing import reset_pending_audio_credits
 
 
@@ -39,6 +40,22 @@ class TestVoiceTranscribe:
             files={"file": ("clip.webm", BytesIO(b""), "audio/webm")},
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "didn't catch that" in response.json()["detail"].lower()
+
+    def test_empty_transcript_returns_friendly_400(self, client) -> None:
+        with (
+            patch("app.routers.api.voice.should_use_mock_audio", return_value=False),
+            patch(
+                "app.routers.api.voice.transcribe_audio",
+                side_effect=EmptyTranscriptError(VOICE_EMPTY_TRANSCRIPT_MESSAGE),
+            ),
+        ):
+            response = client.post(
+                "/api/voice/transcribe",
+                files={"file": ("clip.webm", BytesIO(b"fake-audio"), "audio/webm")},
+            )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()["detail"] == VOICE_EMPTY_TRANSCRIPT_MESSAGE
 
     def test_mock_transcribe_returns_text(self, client) -> None:
         result = TranscriptionResult(text="Spoken hello", cost_usd=Decimal("0.01"))

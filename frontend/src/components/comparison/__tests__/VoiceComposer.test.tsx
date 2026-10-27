@@ -3,7 +3,8 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { VoiceComposer } from '../VoiceComposer'
+import { VOICE_EMPTY_TRANSCRIPT_MESSAGE } from '../../../config/constants'
+import { VoiceComposer, VoiceModeToggle } from '../VoiceComposer'
 
 describe('VoiceComposer', () => {
   it('shows tap-to-talk and the transcript', () => {
@@ -52,5 +53,35 @@ describe('VoiceComposer', () => {
       />
     )
     expect(screen.getByTestId('voice-mic-error')).toHaveTextContent("isn't supported")
+  })
+
+  it('shows a clear message when speech was not caught', () => {
+    render(
+      <VoiceComposer
+        status="error"
+        isSupported
+        unsupportedMessage={null}
+        lastTranscript=""
+        error={VOICE_EMPTY_TRANSCRIPT_MESSAGE}
+        selectedModelCount={1}
+        onToggleTalk={vi.fn()}
+      />
+    )
+    expect(screen.getByTestId('voice-mic-error')).toHaveTextContent("didn't catch that")
+  })
+
+  it('toggles voice mode from the composer control', () => {
+    const onChange = vi.fn()
+    render(<VoiceModeToggle enabled={false} onChange={onChange} />)
+    fireEvent.click(screen.getByTestId('voice-mode-toggle'))
+    expect(onChange).toHaveBeenCalledWith(true)
+  })
+
+  it('turns voice mode off from the composer control', () => {
+    const onChange = vi.fn()
+    render(<VoiceModeToggle enabled onChange={onChange} />)
+    expect(screen.getByTestId('voice-mode-toggle')).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(screen.getByTestId('voice-mode-toggle'))
+    expect(onChange).toHaveBeenCalledWith(false)
   })
 })

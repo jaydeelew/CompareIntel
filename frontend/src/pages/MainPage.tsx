@@ -945,12 +945,33 @@ export function MainPage() {
 
   const allModels = Object.values(displayModelsByProvider).flat()
 
-  /** Text/image toggle only — marks default as session-overridden so empty selection does not re-apply default */
+  /** Text vs image catalog. Voice is a composer toggle on the Text models tab, not a third tab. */
   const handleModelModeChange = useCallback(
-    (newMode: 'text' | 'image' | 'voice') => {
-      if (newMode === modelMode) return
+    (newMode: 'text' | 'image') => {
+      if (newMode === 'image') {
+        if (modelMode === 'image') return
+        setDefaultSelectionOverridden(true)
+        setModelMode('image')
+        return
+      }
+      if (modelMode === 'text' || modelMode === 'voice') return
       setDefaultSelectionOverridden(true)
-      setModelMode(newMode)
+      setModelMode('text')
+    },
+    [modelMode]
+  )
+
+  const handleVoiceModeChange = useCallback(
+    (enabled: boolean) => {
+      if (enabled) {
+        if (modelMode === 'voice') return
+        setDefaultSelectionOverridden(true)
+        setModelMode('voice')
+        return
+      }
+      if (modelMode !== 'voice') return
+      setDefaultSelectionOverridden(true)
+      setModelMode('text')
     },
     [modelMode]
   )
@@ -2803,6 +2824,7 @@ export function MainPage() {
           modelsSectionRef={modelsSectionRef}
           modelMode={modelMode}
           voiceSession={modelMode === 'voice' ? voiceSession : null}
+          onVoiceModeChange={handleVoiceModeChange}
           creditWarningMessage={creditWarningMessage}
           creditWarningMessageRef={creditWarningMessageRef}
           creditWarningDismissible={creditWarningDismissible}
@@ -3011,6 +3033,7 @@ export function MainPage() {
               dismissMobileCapabilityDemoModelTabsHighlight,
             tutorialSwipeHintNonce,
             capabilitySwipeHintNonce,
+            plainSpeech: modelMode === 'voice',
           }}
         />
 
