@@ -108,6 +108,19 @@
      behind .hero-content (z-index: 4). Without this, some browsers intermittently
      fail to paint child backgrounds above the gradient overlays. */
   isolation: isolate;
+
+  /* The section box can cover the sticky navbar: full-bleed 100vw + negative
+     margins, the 769–1200px margin-top pull-up, and WebKit fold/scroll where
+     the hero sits at y=0 while Sign Up still reports a box inside the header.
+     Disable hits on the section itself so clicks fall through to the header.
+     WebKit does not hit-test descendants through a `none` ancestor — re-enable
+     direct children. Composer-focused mode then disables .hero-content and
+     re-enables only the controls that must stay live. */
+  pointer-events: none;
+}
+
+.hero-section > * {
+  pointer-events: auto;
 }
 
 /* Desktop (non-mobile breakpoint): hero fills viewport below navbar so first paint at scroll-top
