@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react'
 
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison/FileUpload'
+import { isVoiceFeatureEnabled } from '../config/voiceFeature'
 import { apiClient } from '../services/api/client'
 import { getConversation } from '../services/conversationService'
 import type {
@@ -456,7 +457,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           textComposerAdvanced: textAdvanced,
           imageComposerAdvanced: imageAdvanced,
         })
-        setModelMode(targetMode)
+        setModelMode(targetMode === 'voice' && !isVoiceFeatureEnabled() ? 'text' : targetMode)
         if ((targetMode === 'text' || targetMode === 'voice') && textAdvanced) {
           applyTextComposerAdvancedSettings(
             textAdvanced,

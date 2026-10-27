@@ -4,7 +4,8 @@
  */
 
 const EMOJI_RE =
-  /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{2700}-\u{27BF}\u{2600}-\u{26FF}\u{FE00}-\u{FE0F}\u{1F1E6}-\u{1F1FF}]/gu
+  /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{2700}-\u{27BF}\u{2600}-\u{26FF}\u{1F1E6}-\u{1F1FF}]/gu
+const VARIATION_SELECTOR_RE = /[\uFE00-\uFE0F]/g
 
 export function sanitizeVoiceSpeech(text: string): string {
   if (!text) return ''
@@ -29,6 +30,7 @@ export function sanitizeVoiceSpeech(text: string): string {
   s = s.replace(/(?<!\w)\*(.+?)\*(?!\w)/g, '$1')
   s = s.replace(/~~(.+?)~~/g, '$1')
   s = s.replace(/\*\*/g, '').replace(/__/g, '')
+  s = s.replace(VARIATION_SELECTOR_RE, '')
   s = s.replace(EMOJI_RE, '')
   s = s.replace(/[ \t]+/g, ' ')
   s = s.replace(/\s+/g, ' ')

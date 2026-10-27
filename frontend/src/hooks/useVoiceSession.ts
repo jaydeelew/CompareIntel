@@ -19,19 +19,19 @@ import {
 import type { ModelConversation } from '../types'
 import logger from '../utils/logger'
 import { nextSpeakableSentences } from '../utils/sentenceSplitter'
-import { sanitizeVoiceSpeech } from '../utils/voiceSpeech'
-import {
-  assembleRecordingBlob,
-  flushAndStopRecorder,
-  isRecordingTooShort,
-  startMediaRecorder,
-} from '../utils/voiceRecording'
 import {
   getMicrophoneUnsupportedMessage,
   microphonePermissionErrorMessage,
   startVoiceActivityMonitor,
   type VoiceMonitor,
 } from '../utils/voiceActivityDetection'
+import {
+  assembleRecordingBlob,
+  flushAndStopRecorder,
+  isRecordingTooShort,
+  startMediaRecorder,
+} from '../utils/voiceRecording'
+import { sanitizeVoiceSpeech } from '../utils/voiceSpeech'
 
 export type VoiceSessionStatus =
   | 'idle'

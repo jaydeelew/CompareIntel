@@ -12,6 +12,7 @@ import React, {
 import { createPortal } from 'react-dom'
 
 import { BREAKPOINT_MOBILE } from '../../config/constants'
+import { isVoiceFeatureEnabled } from '../../config/voiceFeature'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { UseVoiceSessionReturn } from '../../hooks/useVoiceSession'
@@ -693,7 +694,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       <div
         className={`composer ${isAnimatingTextarea && !mirror ? 'animate-pulse-border' : ''} ${composerDemoPauseHighlight && !mirror ? 'composer-demo-pause-highlight' : ''} ${composerFloating && !mirror ? 'composer-floating' : ''} ${modelMode === 'voice' ? 'composer-voice-mode' : ''}`}
       >
-        {modelMode !== 'image' && onVoiceModeChange && !mirror && (
+        {modelMode !== 'image' && isVoiceFeatureEnabled() && onVoiceModeChange && !mirror && (
           <div className="composer-voice-mode-bar">
             <VoiceModeToggle
               enabled={modelMode === 'voice'}
@@ -717,7 +718,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               imageTooltipUsePortal={showComposerStyledTooltips}
             />
           )}
-          {modelMode === 'voice' && voiceSession ? (
+          {modelMode === 'voice' && isVoiceFeatureEnabled() && voiceSession ? (
             <VoiceComposer
               status={voiceSession.status}
               isSupported={voiceSession.isSupported}

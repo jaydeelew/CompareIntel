@@ -155,6 +155,8 @@ export default defineConfig({
       env: {
         // Disable reCAPTCHA in test environment
         VITE_RECAPTCHA_SITE_KEY: '',
+        // Voice is off-by-default in production; e2e exercises the Text-tab toggle.
+        VITE_ENABLE_VOICE: 'true',
       },
     },
     {
@@ -177,6 +179,8 @@ export default defineConfig({
         recaptcha_secret_key: '',
         // Also ensure VITE_RECAPTCHA_SITE_KEY is empty for frontend
         VITE_RECAPTCHA_SITE_KEY: '',
+        // Forward-compatible with the ENABLE_VOICE backend flag (ignored until that setting lands).
+        ENABLE_VOICE: 'true',
       },
     },
   ],

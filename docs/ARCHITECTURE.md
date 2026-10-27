@@ -38,7 +38,7 @@ CompareIntel is a full-stack web application that enables users to compare respo
 | Authentication | JWT-based auth with HTTP-only cookie storage |
 | Export | PDF, Markdown, JSON, and HTML export options |
 | Web Search | Optional web search integration for supported models |
-| Voice mode | Spoken turn-taking inside the Text models tab (1–2 models, STT/TTS) |
+| Voice mode | Spoken turn-taking inside the Text models tab (1–2 models, STT/TTS). Off by default (`VITE_ENABLE_VOICE` / `ENABLE_VOICE`). |
 
 ---
 

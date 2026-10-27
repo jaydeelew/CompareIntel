@@ -6,11 +6,16 @@
 
 import { fireEvent, render, screen } from '@testing-library/react'
 import React, { createRef } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { isVoiceFeatureEnabled } from '../../../config/voiceFeature'
 import { createModelId } from '../../../types'
 import { ComparisonForm } from '../ComparisonForm'
 import type { HistoryProps, SelectionProps } from '../ComparisonFormTypes'
+
+vi.mock('../../../config/voiceFeature', () => ({
+  isVoiceFeatureEnabled: vi.fn(() => true),
+}))
 
 const desktopResponsive = () => ({
   isSmallLayout: false,
@@ -116,6 +121,10 @@ function renderComparisonForm(overrides: Partial<ComparisonFormProps> = {}) {
 }
 
 describe('ComparisonForm', () => {
+  afterEach(() => {
+    vi.mocked(isVoiceFeatureEnabled).mockReturnValue(true)
+  })
+
   it('renders composer textarea', () => {
     renderComparisonForm()
     expect(screen.getByTestId('comparison-input-textarea')).toBeInTheDocument()
@@ -174,6 +183,12 @@ describe('ComparisonForm', () => {
 
   it('hides the Voice mode toggle on the image composer', () => {
     renderComparisonForm({ modelMode: 'image', onVoiceModeChange: vi.fn() })
+    expect(screen.queryByTestId('voice-mode-toggle')).not.toBeInTheDocument()
+  })
+
+  it('hides the Voice mode toggle when the voice feature flag is off', () => {
+    vi.mocked(isVoiceFeatureEnabled).mockReturnValue(false)
+    renderComparisonForm({ modelMode: 'text', onVoiceModeChange: vi.fn() })
     expect(screen.queryByTestId('voice-mode-toggle')).not.toBeInTheDocument()
   })
 

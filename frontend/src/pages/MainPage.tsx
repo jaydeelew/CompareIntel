@@ -22,6 +22,7 @@ import {
   OVERAGE_USD_PER_CREDIT,
   VOICE_MAX_MODELS,
 } from '../config/constants'
+import { isVoiceFeatureEnabled } from '../config/voiceFeature'
 import { useAuth } from '../contexts/AuthContext'
 import {
   CAPABILITY_DEMO_PRESETS,
@@ -963,6 +964,7 @@ export function MainPage() {
 
   const handleVoiceModeChange = useCallback(
     (enabled: boolean) => {
+      if (!isVoiceFeatureEnabled()) return
       if (enabled) {
         if (modelMode === 'voice') return
         setDefaultSelectionOverridden(true)
@@ -975,6 +977,12 @@ export function MainPage() {
     },
     [modelMode]
   )
+
+  useEffect(() => {
+    if (modelMode === 'voice' && !isVoiceFeatureEnabled()) {
+      setModelMode('text')
+    }
+  }, [modelMode])
 
   // Clear selected models when switching modes if they no longer match the filtered list
   useEffect(() => {
@@ -2418,7 +2426,7 @@ export function MainPage() {
   handleSubmitClickRef.current = handleSubmitClick
 
   const voiceSession = useVoiceSession({
-    enabled: modelMode === 'voice',
+    enabled: isVoiceFeatureEnabled() && modelMode === 'voice',
     selectedModels,
     conversations,
     isLoading,
@@ -2823,8 +2831,8 @@ export function MainPage() {
           tutorialIsActive={tutorialState.isActive}
           modelsSectionRef={modelsSectionRef}
           modelMode={modelMode}
-          voiceSession={modelMode === 'voice' ? voiceSession : null}
-          onVoiceModeChange={handleVoiceModeChange}
+          voiceSession={isVoiceFeatureEnabled() && modelMode === 'voice' ? voiceSession : null}
+          onVoiceModeChange={isVoiceFeatureEnabled() ? handleVoiceModeChange : undefined}
           creditWarningMessage={creditWarningMessage}
           creditWarningMessageRef={creditWarningMessageRef}
           creditWarningDismissible={creditWarningDismissible}
@@ -3033,7 +3041,7 @@ export function MainPage() {
               dismissMobileCapabilityDemoModelTabsHighlight,
             tutorialSwipeHintNonce,
             capabilitySwipeHintNonce,
-            plainSpeech: modelMode === 'voice',
+            plainSpeech: isVoiceFeatureEnabled() && modelMode === 'voice',
           }}
         />
 
