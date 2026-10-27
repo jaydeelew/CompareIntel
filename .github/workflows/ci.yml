@@ -58,6 +58,9 @@ jobs:
               - 'frontend/public/robots.txt'
               - 'frontend/src/utils/pageMeta.ts'
 
+      - name: Check CSP header sync
+        run: node scripts/check-csp-sync.js
+
   frontend-lint:
     name: Frontend Lint & Type Check
     needs: detect-changes
