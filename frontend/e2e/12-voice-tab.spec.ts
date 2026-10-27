@@ -106,9 +106,11 @@ test.describe('Voice mode', () => {
       } else {
         await expect(results).toHaveCount(2)
       }
-      await expect(page.locator('.results-section')).toContainText(/Hello from the model/i)
-      await expect(page.locator('.results-section')).not.toContainText('**')
-      await expect(page.locator('.results-section')).not.toContainText('https://example.com')
+      // ResultsArea wraps ResultsDisplay; both use .results-section. Target cards.
+      const spoken = results.first()
+      await expect(spoken).toContainText(/Hello from the model/i)
+      await expect(spoken).not.toContainText('**')
+      await expect(spoken).not.toContainText('https://example.com')
     })
 
     await test.step('Turning Voice off restores the text composer', async () => {
