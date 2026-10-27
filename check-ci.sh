@@ -15,6 +15,18 @@ NC='\033[0m' # No Color
 
 FAILED=0
 
+# Cheap repo-level checks (no extra deps)
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔒 CSP header sync"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if node scripts/check-csp-sync.js; then
+  echo -e "${GREEN}✓ nginx and index.html CSP definitions match${NC}"
+else
+  echo -e "${RED}❌ CSP definitions drifted${NC}"
+  FAILED=1
+fi
+echo ""
+
 # Backend checks
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🐍 Backend checks"
