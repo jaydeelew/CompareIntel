@@ -125,6 +125,25 @@ def validate_config() -> None:
     if "unregistered" not in HISTORY_ENTRY_LIMITS:
         warnings.append("HISTORY_ENTRY_LIMITS missing 'unregistered' tier")
 
+    for cap_name in (
+        "openrouter_daily_spend_cap_usd",
+        "openrouter_monthly_spend_cap_usd",
+        "openrouter_paid_daily_spend_cap_usd",
+        "openrouter_paid_monthly_spend_cap_usd",
+    ):
+        cap_val = getattr(settings, cap_name)
+        if cap_val < 0:
+            errors.append(f"{cap_name} must be >= 0, got {cap_val}")
+
+    if settings.openrouter_max_output_tokens < 256:
+        errors.append("openrouter_max_output_tokens must be at least 256")
+    elif settings.openrouter_max_output_tokens > 65536:
+        warnings.append(
+            f"openrouter_max_output_tokens is very high "
+            f"({settings.openrouter_max_output_tokens}). "
+            "This increases OpenRouter spend per request."
+        )
+
     if settings.individual_model_timeout < 1:
         errors.append("individual_model_timeout must be at least 1 second")
     elif settings.individual_model_timeout > 600:
@@ -218,5 +237,7 @@ def log_configuration() -> None:
         f"frontend={settings.frontend_url} | "
         f"db={db_display} | "
         f"openrouter={'ok' if settings.openrouter_api_key else 'missing'} | "
-        f"email={email_status}"
+        f"email={email_status} | "
+        f"spend_cap_daily=${settings.openrouter_daily_spend_cap_usd:g} | "
+        f"max_output_tokens={settings.openrouter_max_output_tokens}"
     )

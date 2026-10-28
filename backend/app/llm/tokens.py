@@ -267,13 +267,21 @@ def _get_huggingface_tokenizer(model_id: str) -> Any | None:
         return _tokenizer_cache.get(hf_model_name)
 
 
+def cap_max_output_tokens(max_output: int) -> int:
+    """Apply the global OPENROUTER_MAX_OUTPUT_TOKENS spend-protection cap."""
+    cap = int(getattr(settings, "openrouter_max_output_tokens", 8192) or 0)
+    if cap > 0:
+        return min(max_output, cap)
+    return max_output
+
+
 def get_model_max_tokens(model_id: str) -> int:
     limits = get_model_token_limits_from_openrouter(model_id)
     if limits:
         max_output = limits.get("max_output", 8192)
     else:
         max_output = 8192
-    return max_output
+    return cap_max_output_tokens(max_output)
 
 
 def estimate_token_count(text: str, model_id: str | None = None) -> int:

@@ -799,6 +799,19 @@ async def generate_stream(ctx: StreamContext) -> Any:
             credits_used=total_credits_used,
             actual_cost=total_usd_for_log if total_usd_for_log > 0 else None,
         )
+        if not use_mock:
+            spend_usd = total_usd_for_log
+            if spend_usd <= 0 and total_credits_used > 0:
+                from ..spend_cap import implied_usd_from_credits
+
+                spend_usd = implied_usd_from_credits(total_credits_used)
+            if spend_usd > 0:
+                try:
+                    from ..spend_cap import record_openrouter_spend
+
+                    record_openrouter_spend(spend_usd)
+                except Exception as spend_err:
+                    logger.error("Failed to record OpenRouter spend: %s", spend_err)
         log_db = SessionLocal()
         try:
             log_db.add(usage_log)

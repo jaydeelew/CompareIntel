@@ -22,6 +22,8 @@ class ClassifiedError:
     provider_error: str | None
     provider_name: str | None
     original_exception: Exception
+    is_402_insufficient_credits: bool = False
+    retry_after_seconds: int | None = None
 
 
 def classify_api_error(exception: Exception) -> ClassifiedError:
@@ -84,12 +86,27 @@ def classify_api_error(exception: Exception) -> ClassifiedError:
                 parsed_message = str(exception)
 
     error_str = parsed_message.lower()
-    is_402_max_tokens = (
+    mentions_max_tokens = "max_tokens" in error_str
+    looks_like_402 = (
         status_code == 402
         or "402" in parsed_message
         or "payment required" in error_str
-        or ("requires more credits" in error_str and "max_tokens" in error_str)
+        or "insufficient credits" in error_str
+        or "requires more credits" in error_str
     )
+    is_402_max_tokens = looks_like_402 and mentions_max_tokens
+    is_402_insufficient_credits = looks_like_402 and not mentions_max_tokens
+
+    retry_after_seconds: int | None = None
+    response = getattr(exception, "response", None)
+    headers = getattr(response, "headers", None) if response is not None else None
+    if headers:
+        raw_retry = headers.get("Retry-After") or headers.get("retry-after")
+        if raw_retry is not None:
+            try:
+                retry_after_seconds = max(1, int(float(str(raw_retry).strip())))
+            except (TypeError, ValueError):
+                retry_after_seconds = None
 
     if provider_error is None and (
         "not configured in the Gateway" in parsed_message or "No matching route" in parsed_message
@@ -103,6 +120,8 @@ def classify_api_error(exception: Exception) -> ClassifiedError:
         provider_error=provider_error,
         provider_name=provider_name or None,
         original_exception=exception,
+        is_402_insufficient_credits=is_402_insufficient_credits,
+        retry_after_seconds=retry_after_seconds,
     )
 
 
@@ -158,7 +177,12 @@ def format_streaming_error_message(
         return "Error: Model not available"
 
     if sc == 429 or "rate limit" in err_lower or "429" in err_lower:
-        return "Error: Rate limited"
+        if err.retry_after_seconds:
+            return (
+                "Error: The model is busy right now. "
+                f"Please try again in {err.retry_after_seconds} seconds."
+            )
+        return "Error: The model is busy right now. Please try again in a moment."
 
     # 502/5xx or provider internal errors (e.g. DB "Failed query" from Sourceful)
     is_provider_502 = (
@@ -183,6 +207,9 @@ def format_streaming_error_message(
             "Error: This request requires more credits or fewer max_tokens. "
             "Please try with a shorter prompt or reduce the number of models."
         )
+
+    if err.is_402_insufficient_credits or sc == 402:
+        return "Error: This model is temporarily unavailable. Please try again later."
 
     clean = msg[:200] if len(msg) > 200 else msg
     return f"Error: {clean}"

@@ -216,6 +216,12 @@ MAIL_FROM=your-email@gmail.com
 | `FRONTEND_URL` | ❌ No | `http://localhost:5173` | For email links |
 | `MAIL_*` | ❌ No | None | Email optional |
 | `RECAPTCHA_SECRET_KEY` | ❌ No | None | Bot protection (optional) |
+| `OPENROUTER_DAILY_SPEND_CAP_USD` | ❌ No | `0` | Free/anonymous daily OpenRouter USD cap (`0` = off). See [OPENROUTER_SPEND_CAP.md](../ops/OPENROUTER_SPEND_CAP.md) |
+| `OPENROUTER_MONTHLY_SPEND_CAP_USD` | ❌ No | `0` | Free/anonymous monthly OpenRouter USD cap |
+| `OPENROUTER_PAID_DAILY_SPEND_CAP_USD` | ❌ No | `0` | Optional paid-user daily USD cap |
+| `OPENROUTER_MAX_OUTPUT_TOKENS` | ❌ No | `8192` | Per-request completion-token ceiling |
+| `SPEND_ALERT_EMAIL` | ❌ No | None | 50%/80% cap alerts; falls back to `NEW_USER_NOTIFICATION_EMAIL` |
+| `REDIS_ENABLED` / `REDIS_URL` | ❌ No | unset | Required in production for a global spend cap |
 
 ### Frontend
 
