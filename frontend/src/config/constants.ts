@@ -13,15 +13,6 @@
 /** Maximum models per comparison for unregistered users */
 export const ANONYMOUS_MODEL_LIMIT = 3
 
-/** Voice mode (inside Text models): spoken turn-taking is capped at 2 models (issue #90 / #91 3-way is later). */
-export const VOICE_MAX_MODELS = 2
-
-/** Shown when STT returns no speech or the recording is too short/silent. */
-export const VOICE_EMPTY_TRANSCRIPT_MESSAGE = "We didn't catch that. Please try again."
-
-/** Fallback TTS voices when /api/voice/config is unavailable (must stay distinct). */
-export const VOICE_TTS_VOICES = ['alloy', 'nova'] as const
-
 // Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
 
 // Model Limits per Subscription Tier

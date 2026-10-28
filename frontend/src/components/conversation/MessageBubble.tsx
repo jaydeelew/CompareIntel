@@ -2,7 +2,6 @@ import React, { useLayoutEffect, useRef, useState } from 'react'
 
 import { RESULT_TAB, type ResultTab } from '../../types'
 import { formatTime, getSafeId } from '../../utils'
-import { sanitizeVoiceSpeech } from '../../utils/voiceSpeech'
 import LatexRenderer from '../LatexRenderer'
 import { StyledTooltip } from '../shared'
 
@@ -104,8 +103,6 @@ export interface MessageBubbleProps {
    * (Once URLs exist, {@link GeneratedImageSlot} covers decode/network loading.)
    */
   pendingGeneratedImage?: boolean
-  /** Voice mode: strip markdown/emoji so the transcript matches spoken replies. */
-  plainSpeech?: boolean
 }
 
 // Displays a single message in a conversation with formatted/raw rendering
@@ -122,7 +119,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onCopyMessage,
   copyButtonDisabled = false,
   pendingGeneratedImage = false,
-  plainSpeech = false,
 }) => {
   const [failedImageIndices, setFailedImageIndices] = useState<Set<number>>(new Set())
 
@@ -144,9 +140,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   // Ensure content is always a string and trim leading/trailing whitespace
   // This prevents horizontal scrollbars caused by leading spaces
   let safeContent = (content || '').trim()
-  if (plainSpeech && type === 'assistant') {
-    safeContent = sanitizeVoiceSpeech(safeContent)
-  }
 
   // When we have structured images (from image-generation models), strip embedded image syntax
   // from content to avoid duplicate display - Gemini etc. often embed the same image in both

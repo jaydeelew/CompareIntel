@@ -6,16 +6,11 @@
 
 import { fireEvent, render, screen } from '@testing-library/react'
 import React, { createRef } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { isVoiceFeatureEnabled } from '../../../config/voiceFlag'
 import { createModelId } from '../../../types'
 import { ComparisonForm } from '../ComparisonForm'
 import type { HistoryProps, SelectionProps } from '../ComparisonFormTypes'
-
-vi.mock('../../../config/voiceFlag', () => ({
-  isVoiceFeatureEnabled: vi.fn(() => true),
-}))
 
 const desktopResponsive = () => ({
   isSmallLayout: false,
@@ -28,6 +23,11 @@ const desktopResponsive = () => ({
   isTouchDevice: false,
   prefersFinePointerHover: true,
 })
+
+const speechStub = vi.hoisted(() => ({
+  isSupported: false,
+  browserSupport: 'none' as 'native' | 'none',
+}))
 
 vi.mock('../ActionButtonTooltipModal', () => ({ ActionButtonTooltipModal: () => null }))
 vi.mock('../AttachmentChips', () => ({ AttachmentChips: () => null }))
@@ -53,11 +53,11 @@ vi.mock('../../../hooks', async importOriginal => {
     useResponsive: () => desktopResponsive(),
     useSpeechRecognition: () => ({
       isListening: false,
-      isSupported: false,
+      isSupported: speechStub.isSupported,
       startListening: vi.fn(),
       stopListening: vi.fn(),
       error: null,
-      browserSupport: 'none',
+      browserSupport: speechStub.browserSupport,
     }),
   }
 })
@@ -121,8 +121,9 @@ function renderComparisonForm(overrides: Partial<ComparisonFormProps> = {}) {
 }
 
 describe('ComparisonForm', () => {
-  afterEach(() => {
-    vi.mocked(isVoiceFeatureEnabled).mockReturnValue(true)
+  beforeEach(() => {
+    speechStub.isSupported = false
+    speechStub.browserSupport = 'none'
   })
 
   it('renders composer textarea', () => {
@@ -146,52 +147,6 @@ describe('ComparisonForm', () => {
     expect(onSubmitClick).toHaveBeenCalledTimes(1)
   })
 
-  it('shows a Voice mode toggle on the text composer', () => {
-    const onVoiceModeChange = vi.fn()
-    renderComparisonForm({ modelMode: 'text', onVoiceModeChange })
-    expect(screen.getByTestId('voice-mode-toggle')).toBeInTheDocument()
-    fireEvent.click(screen.getByTestId('voice-mode-toggle'))
-    expect(onVoiceModeChange).toHaveBeenCalledWith(true)
-  })
-
-  it('shows the spoken composer when voice mode is on', () => {
-    const onVoiceModeChange = vi.fn()
-    renderComparisonForm({
-      modelMode: 'voice',
-      onVoiceModeChange,
-      voiceSession: {
-        status: 'idle',
-        isSupported: true,
-        unsupportedMessage: null,
-        isRecording: false,
-        isTranscribing: false,
-        isSpeaking: false,
-        lastTranscript: 'Hello there',
-        error: null,
-        voices: ['alloy', 'nova'],
-        toggleTalk: vi.fn(),
-        interruptPlayback: vi.fn(),
-        stopAll: vi.fn(),
-      },
-    })
-    expect(screen.getByTestId('voice-composer')).toBeInTheDocument()
-    expect(screen.getByTestId('voice-mode-toggle')).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.queryByTestId('comparison-input-textarea')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByTestId('voice-mode-toggle'))
-    expect(onVoiceModeChange).toHaveBeenCalledWith(false)
-  })
-
-  it('hides the Voice mode toggle on the image composer', () => {
-    renderComparisonForm({ modelMode: 'image', onVoiceModeChange: vi.fn() })
-    expect(screen.queryByTestId('voice-mode-toggle')).not.toBeInTheDocument()
-  })
-
-  it('hides the Voice mode toggle when the voice feature flag is off', () => {
-    vi.mocked(isVoiceFeatureEnabled).mockReturnValue(false)
-    renderComparisonForm({ modelMode: 'text', onVoiceModeChange: vi.fn() })
-    expect(screen.queryByTestId('voice-mode-toggle')).not.toBeInTheDocument()
-  })
-
   it('continues conversation on Enter when in follow-up mode', () => {
     const onSubmitClick = vi.fn()
     const onContinueConversation = vi.fn()
@@ -210,5 +165,14 @@ describe('ComparisonForm', () => {
     })
     expect(onContinueConversation).toHaveBeenCalledTimes(1)
     expect(onSubmitClick).not.toHaveBeenCalled()
+  })
+
+  it('keeps the pre-Voice dictation mic and does not show a Voice mode toggle', () => {
+    speechStub.isSupported = true
+    speechStub.browserSupport = 'native'
+    renderComparisonForm()
+    expect(screen.getByRole('button', { name: /start voice input/i })).toBeInTheDocument()
+    expect(screen.queryByTestId('voice-mode-toggle')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('voice-composer')).not.toBeInTheDocument()
   })
 })

@@ -70,3 +70,5 @@ sentry-sdk[fastapi]>=2.0.0
 # Image dimension validation (for aspect-ratio tests)
 Pillow>=13.0.0
 certifi>=2026.10.19
+# email-validator transitive; 2.8.0 is CVE-2026-114605
+dnspython>=2.9.0

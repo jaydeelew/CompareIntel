@@ -15,7 +15,6 @@ export interface LocalConversationRecord {
   created_at?: string
   textComposerAdvanced?: TextComposerAdvancedSettings
   imageComposerAdvanced?: ImageComposerAdvancedSettings
-  composer_mode?: 'text' | 'image' | 'voice' | null
   already_broken_out_models?: string[]
 }
 

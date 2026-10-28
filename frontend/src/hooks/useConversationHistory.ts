@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 
 import { getHistoryEntryLimit } from '../config/constants'
-import { visibleHistoryEntries } from '../config/voiceFlag'
 import { apiClient } from '../services/api/client'
 import { ApiError } from '../services/api/errors'
 import {
@@ -60,8 +59,7 @@ export interface UseConversationHistoryReturn {
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
     textComposerAdvanced?: TextComposerAdvancedSettings,
-    imageComposerAdvanced?: ImageComposerAdvancedSettings,
-    composerMode?: 'text' | 'image' | 'voice'
+    imageComposerAdvanced?: ImageComposerAdvancedSettings
   ) => Promise<string>
   deleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => Promise<void>
   loadConversationFromAPI: (conversationId: ConversationId) => Promise<ModelConversation[] | null>
@@ -131,8 +129,7 @@ export function useConversationHistory({
       parentConversationId?: string | null,
       breakoutModelId?: string | null,
       textComposerAdvanced?: TextComposerAdvancedSettings,
-      imageComposerAdvanced?: ImageComposerAdvancedSettings,
-      composerMode?: 'text' | 'image' | 'voice'
+      imageComposerAdvanced?: ImageComposerAdvancedSettings
     ): Promise<string> => {
       try {
         const history = loadHistoryFromLocalStorage()
@@ -237,7 +234,6 @@ export function useConversationHistory({
               created_at: new Date().toISOString(),
               message_count: totalMessages,
               saved: false,
-              composer_mode: composerMode,
             }
 
         // Update history list
@@ -366,11 +362,6 @@ export function useConversationHistory({
             file_contents: externalizedFileContents,
             ...(storedTextAdvanced != null ? { textComposerAdvanced: storedTextAdvanced } : {}),
             ...(storedImageAdvanced != null ? { imageComposerAdvanced: storedImageAdvanced } : {}),
-            ...(composerMode != null
-              ? { composer_mode: composerMode }
-              : existingData?.composer_mode
-                ? { composer_mode: existingData.composer_mode }
-                : {}),
           })
         )
 
@@ -781,13 +772,8 @@ export function useConversationHistory({
     [historyLimit, isAuthenticated, loadHistoryFromLocalStorage]
   )
 
-  const visibleConversationHistory = useMemo(
-    () => visibleHistoryEntries(conversationHistory),
-    [conversationHistory]
-  )
-
   return {
-    conversationHistory: visibleConversationHistory,
+    conversationHistory,
     setConversationHistory,
     isLoadingHistory,
     setIsLoadingHistory,

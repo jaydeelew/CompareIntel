@@ -43,8 +43,6 @@ export interface ResultCardProps {
   streamingReasoning?: string
   /** True once visible answer tokens have arrived for this model in the current stream. */
   streamAnswerStarted?: boolean
-  /** Voice mode: show assistant replies as spoken plain text. */
-  plainSpeech?: boolean
 }
 
 // Single model result card with formatted/raw toggle
@@ -69,7 +67,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   isTutorialActive = false,
   streamingReasoning = '',
   streamAnswerStarted = false,
-  plainSpeech = false,
 }) => {
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const lastAssistantIndex = safeMessages.reduce(
@@ -322,7 +319,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                   onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
                 }
                 copyButtonDisabled={isTutorialActive}
-                plainSpeech={plainSpeech}
               />
             </React.Fragment>
           )

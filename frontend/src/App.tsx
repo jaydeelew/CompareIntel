@@ -11,10 +11,6 @@ import './styles/layout.css'
 import './styles/responsive.css'
 import './App.css'
 
-if (import.meta.env.VITE_ENABLE_VOICE === 'true') {
-  void import('./styles/voice.css')
-}
-
 import { Layout, ThemeSync } from './components'
 import { ErrorBoundary, LoadingSpinner } from './components/shared'
 import { AuthProvider } from './contexts/AuthContext'
