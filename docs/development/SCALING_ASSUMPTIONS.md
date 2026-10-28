@@ -25,7 +25,7 @@ Load, concurrency, and retention expectations for CompareIntel infrastructure an
 
 | Component | Current Setting | Notes |
 |-----------|-----------------|-------|
-| **Gunicorn workers** | 4 (configurable via `GUNICORN_WORKERS`) | `entrypoint.sh`; one process per worker |
+| **Gunicorn workers** | 2 (configurable via `WEB_CONCURRENCY` or `GUNICORN_WORKERS`) | `entrypoint.sh`; production compose default is 2 on the 2 GB host |
 | **SSE connections per worker** | Many | async; each comparison holds one long-lived connection |
 | **Models per comparison** | 3–12 (tier-dependent) | run in parallel via `ThreadPoolExecutor` |
 | **ThreadPoolExecutor** | `max(len(models), 1)` | one thread per model per comparison |
@@ -48,7 +48,7 @@ Load, concurrency, and retention expectations for CompareIntel infrastructure an
 | **UsageLog (aggregates)** | Indefinite | monthly summaries in `usage_log_monthly_aggregates` |
 | **Conversations** | Never deleted | user-owned; tier-based limits on count displayed/stored |
 | **Conversation messages** | Never deleted | cascade with conversation |
-| **Redis** | Ephemeral | rate limit state; 256MB max, `allkeys-lru` |
+| **Redis** | Ephemeral | rate limit + cache; 64MB max, `volatile-lru` |
 
 ### Per-Tier Conversation Limits
 
@@ -94,7 +94,7 @@ workers × (pool_size + max_overflow) × replicas ≤ database connection limit
 | **Pool pre-ping** | true | `DB_POOL_PRE_PING` | Verify connections before use |
 
 **Total connections with defaults:**
-- 4 workers × (5 + 10) = **60 connections** per replica
+- 2 workers × (5 + 10) = **30 connections** per replica
 - Safe for free-tier Postgres (typically 20-100 connection limit)
 
 ### Scaling Examples
@@ -103,7 +103,7 @@ workers × (pool_size + max_overflow) × replicas ≤ database connection limit
 ```bash
 DB_POOL_SIZE=10
 DB_MAX_OVERFLOW=15
-GUNICORN_WORKERS=4
+WEB_CONCURRENCY=4
 # Total: 4 × (10 + 15) = 100 connections
 ```
 
@@ -111,7 +111,7 @@ GUNICORN_WORKERS=4
 ```bash
 DB_POOL_SIZE=15
 DB_MAX_OVERFLOW=20
-GUNICORN_WORKERS=6
+WEB_CONCURRENCY=6
 # Total: 6 × (15 + 20) = 210 connections
 ```
 
@@ -119,7 +119,7 @@ GUNICORN_WORKERS=6
 ```bash
 DB_POOL_SIZE=5
 DB_MAX_OVERFLOW=5
-GUNICORN_WORKERS=6
+WEB_CONCURRENCY=6
 # Total per replica: 6 × (5 + 5) = 60 connections
 # Total across replicas: 60 × 3 = 180 connections
 ```
@@ -132,7 +132,7 @@ SQLite uses `NullPool` (no connection pooling) to avoid locking issues. Pool set
 
 ## Scaling Considerations
 
-1. **Horizontal scaling** — Add Gunicorn workers (`GUNICORN_WORKERS`) or run multiple backend replicas behind a load balancer. When scaling workers or replicas, adjust database pool settings to stay under the connection limit. Redis is used for distributed anonymous rate limiting and shared caching to maintain consistency across workers/replicas.
+1. **Horizontal scaling** — Add Gunicorn workers (`WEB_CONCURRENCY`) or run multiple backend replicas behind a load balancer. When scaling workers or replicas, adjust database pool settings to stay under the connection limit. Redis is used for distributed anonymous rate limiting and shared caching to maintain consistency across workers/replicas.
 2. **Database** — Tune connection pool settings based on your Postgres instance's connection limit and replica count. Monitor connection usage with `SELECT count(*) FROM pg_stat_activity;`. Run data retention job monthly (see `DATA_RETENTION_IMPLEMENTATION.md`).
 3. **Redis** — Enable for production; coordinates search rate limits AND anonymous user rate limits across workers. Also provides shared cache for AppSettings, models, and user data. See Redis section below.
 4. **OpenRouter** — No control; design for graceful degradation when external API is slow or rate-limited.
@@ -177,7 +177,7 @@ Dev/test environments work without Redis; production should enable it for consis
 - **Anonymous rate limits:** ~200 bytes/user × active users (48h retention)
 - **Cache entries:** ~1–10 KB each (AppSettings, models, user records)
 - **Expected total:** <10 MB for typical load (hundreds of active users/day)
-- **Redis configured:** 256 MB max with `allkeys-lru` eviction (see `docker-compose.prod.yml`)
+- **Redis configured:** 64 MB max with `volatile-lru` eviction (see `docker-compose.prod.yml` / `docker-compose.ssl.yml`). Cache and rate-limit keys have TTLs so they can be evicted; concurrent-slot counters have no TTL and are preserved.
 
 ### Rollout Notes
 

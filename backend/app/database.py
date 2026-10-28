@@ -112,7 +112,7 @@ is_sqlite = "sqlite" in DATABASE_URL
 if is_postgresql:
     # PostgreSQL: Use connection pooling for better performance
     # Pool settings are configurable via environment variables (see backend/.env.example)
-    # Defaults are sized for production: 4 workers × (5 + 10) = 60 total connections per replica
+    # Defaults are sized for production: 2 workers × (5 + 10) = 30 total connections per replica
     engine = create_engine(
         DATABASE_URL,
         pool_size=settings.db_pool_size,  # Number of connections to maintain

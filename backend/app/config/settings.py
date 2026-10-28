@@ -8,7 +8,7 @@ All settings are loaded from environment variables with sensible defaults.
 from pathlib import Path
 
 from dotenv import load_dotenv
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 env_path = Path(__file__).parent.parent.parent / ".env"
@@ -30,9 +30,9 @@ class Settings(BaseSettings):
 
     # Database Connection Pooling (PostgreSQL only)
     # These settings are ignored for SQLite, which uses NullPool.
-    # Defaults are sized for production with 4 Gunicorn workers and free-tier Postgres (20-100 connections).
+    # Defaults are sized for production with 2 Gunicorn workers and free-tier Postgres (20-100 connections).
     # Formula: workers × (pool_size + max_overflow) × replicas ≤ database connection limit
-    # With defaults: 4 workers × (5 + 10) × 1 replica = 60 total connections (safe for free-tier)
+    # With defaults: 2 workers × (5 + 10) × 1 replica = 30 total connections (safe for free-tier)
     db_pool_size: int = 5
     db_max_overflow: int = 10
     db_pool_timeout: int = 30
@@ -89,8 +89,12 @@ class Settings(BaseSettings):
 
     # Gunicorn worker count (production mode only)
     # Development mode uses uvicorn with --reload instead.
+    # Prefer WEB_CONCURRENCY (standard); GUNICORN_WORKERS is an alias.
     # Consider database pool sizing when changing this: workers × (pool_size + max_overflow) × replicas
-    gunicorn_workers: int = 4
+    gunicorn_workers: int = Field(
+        default=2,
+        validation_alias=AliasChoices("WEB_CONCURRENCY", "GUNICORN_WORKERS", "gunicorn_workers"),
+    )
 
     # Backend per-model inactivity timeout (in seconds)
     # If a model doesn't send any chunks within this time, it's marked as timed out.
@@ -104,8 +108,8 @@ class Settings(BaseSettings):
 
     # Default rate limits (applied to all providers unless provider-specific limits are set)
     # With Redis disabled, each Gunicorn worker has its own rate limiter instance.
-    # With 4 workers, total capacity = 4 * search_rate_limit_per_minute
-    # Set conservatively to account for multiple workers (default: 3 req/min per worker = 12 total with 4 workers)
+    # With 2 workers, total capacity = 2 * search_rate_limit_per_minute
+    # Set conservatively to account for multiple workers (default: 3 req/min per worker = 6 total with 2 workers)
     # With Redis enabled, these limits apply globally across all workers
     search_rate_limit_per_minute: int = 3  # Per-worker limit (or global if Redis enabled)
     search_max_concurrent: int = 2  # Reduced to prevent bursts

@@ -14,6 +14,7 @@ check_system_requirements() {
     [ "$AVAILABLE_SPACE" -lt 2097152 ] 2>/dev/null && warn "Low disk space (2GB+ recommended)" || ok "Disk space OK"
     TOTAL_MEM=$(free -m | awk 'NR==2{print $2}')
     [ "$TOTAL_MEM" -lt 1024 ] && warn "Low memory (1GB+ recommended)" || ok "Memory: ${TOTAL_MEM}MB"
+    check_host_resources
     [ ! -d "$PROJECT_DIR" ] && { err "Project directory not found: $PROJECT_DIR"; exit 1; }
     ok "Project directory: $PROJECT_DIR"
     [ ! -f "$ENV_FILE" ] && { err "Environment file not found: $ENV_FILE"; exit 1; }

@@ -33,17 +33,25 @@ Check that `docker-compose.prod.yml` includes the Redis service:
 ```yaml
 redis:
   image: redis:7-alpine
-  container_name: compareintel-redis
   restart: unless-stopped
+  mem_limit: 96m
+  mem_reservation: 32m
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
   volumes:
     - redis_data:/data
-  command: redis-server --appendonly yes
+  command: redis-server --appendonly yes --maxmemory 64mb --maxmemory-policy volatile-lru
   healthcheck:
     test: ["CMD", "redis-cli", "ping"]
     interval: 10s
     timeout: 5s
     retries: 5
 ```
+
+`volatile-lru` is the safe eviction policy for this workload: search cache, anonymous credit keys, and per-minute rate-limit keys all have TTLs (so they can be evicted under pressure), while the tiny concurrent-slot counters have no TTL and must not disappear (a Redis `DECR` on a missing key would go negative). Expected usage is well under 10 MB; 64 MB leaves headroom on the 2 GB host.
 
 ### 4. Deploy Services
 
@@ -111,10 +119,11 @@ docker logs compareintel-redis --tail 100
 
 ### High Memory Usage
 
-Redis stores rate limit state in memory. If memory usage is high:
+Redis stores rate limit state and cache entries in memory. If memory usage is high:
 
 1. Check TTL on keys: `docker exec compareintel-redis redis-cli ttl <key>`
 2. View memory usage: `docker exec compareintel-redis redis-cli info memory`
+3. Confirm `maxmemory-policy` is `volatile-lru` so only expiring keys are evicted`
 
 ## Rollback
 
