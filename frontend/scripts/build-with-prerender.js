@@ -47,8 +47,17 @@ function runCommand(command, args, description) {
   })
 }
 
+function isPreviewDeploy() {
+  const explicit = (process.env.VITE_DEPLOY_ENV || '').trim().toLowerCase()
+  if (explicit === 'production') return false
+  if (explicit === 'preview') return true
+  const cf = (process.env.CF_PAGES || '').trim().toLowerCase()
+  return cf === '1' || cf === 'true'
+}
+
 async function build() {
-  const skipPrerender = process.env.SKIP_PRERENDER === 'true'
+  const skipPrerender =
+    process.env.SKIP_PRERENDER === 'true' || isPreviewDeploy()
   
   try {
     // Step 1: Generate sitemap

@@ -45,6 +45,7 @@ jobs:
           filters: |
             frontend:
               - 'frontend/**'
+              - 'packages/compare-core/**'
               - '.github/workflows/ci.yml'
               - 'frontend/e2e/**'
               - 'frontend/playwright.config.*'

@@ -282,6 +282,8 @@ npm run test src/__tests__/components/MyComponent.test.tsx
 npm run test MyComponent
 ```
 
+Preview-build guards (noindex, no analytics, mock API) live in `src/config/__tests__/deployEnv.test.ts` and `src/preview/__tests__/`. After `npm run build:preview`, `npm run check:preview-dist` asserts `dist/` is preview-safe.
+
 ### E2E Tests (Playwright)
 
 ```bash

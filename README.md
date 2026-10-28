@@ -412,6 +412,8 @@ npm run test:e2e:headed
 
 ## Deployment
 
+Frontend pull-request previews (noindex, mock API) are documented in [docs/deployment/CLOUDFLARE_PAGES_PREVIEWS.md](docs/deployment/CLOUDFLARE_PAGES_PREVIEWS.md). Production remains on EC2.
+
 ### Production Deployment
 
 The project includes a comprehensive deployment script for Ubuntu/PostgreSQL servers:

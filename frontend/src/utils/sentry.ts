@@ -11,6 +11,8 @@
 
 import * as Sentry from '@sentry/react'
 
+import { isPreviewDeploy } from '../config/deployEnv'
+
 import logger from './logger'
 
 /**
@@ -20,6 +22,12 @@ import logger from './logger'
  * Only initializes in production or when VITE_SENTRY_DSN is set.
  */
 export function initSentry(): void {
+  // Never send preview-traffic errors (and never bake a DSN into preview builds).
+  if (isPreviewDeploy()) {
+    logger.debug('[Sentry] Skipping initialization on preview deploy')
+    return
+  }
+
   const dsn = import.meta.env.VITE_SENTRY_DSN
   const environment = import.meta.env.VITE_SENTRY_ENVIRONMENT || 'production'
 

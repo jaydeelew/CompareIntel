@@ -28,6 +28,7 @@ describe('Sentry Integration', () => {
   })
 
   afterEach(() => {
+    vi.unstubAllEnvs()
     vi.resetModules()
   })
 
@@ -39,6 +40,18 @@ describe('Sentry Integration', () => {
       const { initSentry } = await import('../../utils/sentry')
 
       expect(() => initSentry()).not.toThrow()
+    })
+
+    it('should skip initialization on preview deploys even if a DSN is set', async () => {
+      vi.stubEnv('VITE_DEPLOY_ENV', 'preview')
+      vi.stubEnv('VITE_SENTRY_DSN', 'https://test@sentry.io/123')
+
+      const Sentry = await import('@sentry/react')
+      const { initSentry } = await import('../../utils/sentry')
+
+      initSentry()
+
+      expect(Sentry.init).not.toHaveBeenCalled()
     })
 
     it('should initialize Sentry when DSN is configured', async () => {

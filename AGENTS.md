@@ -81,6 +81,8 @@ All checks must pass before requesting review. See [CONTRIBUTING.md](CONTRIBUTIN
 - **Advisory only:** Grok Bot visual testing on PR previews
 - Run locally: `cd frontend && npm run test:e2e`
 
+Frontend PR preview hosting: [docs/deployment/CLOUDFLARE_PAGES_PREVIEWS.md](docs/deployment/CLOUDFLARE_PAGES_PREVIEWS.md) (Jack connects Cloudflare; agents do not create accounts or tokens).
+
 ## Bot Ownership (from workflow plan)
 
 | Bot | Responsibilities |

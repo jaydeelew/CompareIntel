@@ -32,7 +32,17 @@ cd frontend && npm run build && npm run preview
 **Access:** http://localhost:4173  
 Use before deploy and for Lighthouse/PWA testing.
 
-### 4. AWS Production
+### 4. Cloudflare Pages PR previews (frontend only)
+
+PR preview URLs are hosted on Cloudflare Pages (free plan). Jack connects the project in the dashboard. Repo-side preview safety (noindex, mock API, no analytics) is documented in [CLOUDFLARE_PAGES_PREVIEWS.md](../deployment/CLOUDFLARE_PAGES_PREVIEWS.md).
+
+```bash
+cd frontend && npm run build:preview && npm run check:preview-dist
+```
+
+Do not point previews at production. Live production remains on EC2 (below).
+
+### 5. AWS Production
 
 ```bash
 ssh -i CompareIntel.pem ubuntu@<ec2-ip>

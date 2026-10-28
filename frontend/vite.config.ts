@@ -9,7 +9,11 @@ import { imagetools } from 'vite-imagetools'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
+import { preparePreviewBuildEnv, previewDeployPlugin } from './vite-plugin-preview-deploy'
 import { securityHeadersPlugin } from './vite-plugin-security-headers'
+
+// Preview builds (CF_PAGES or VITE_DEPLOY_ENV=preview): mock API, no secrets.
+preparePreviewBuildEnv()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
@@ -39,11 +43,14 @@ function socialImageVersionPlugin(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   logLevel: 'warn',
+  // Expose CF_PAGES* so the client can detect Pages preview builds.
+  envPrefix: ['VITE_', 'CF_PAGES'],
   // Pin cache inside this app so dev never mixes prebundles with other projects or old /tmp caches.
   cacheDir: path.resolve(__dirname, 'node_modules/.vite'),
   resolve: {
     // Force single copies (fixes invalid hook call when lazy chunks resolve a different optimized graph)
     alias: {
+      // Monorepo: Cloudflare Pages must clone the repo root so this alias resolves.
       '@compareintel/core': path.resolve(__dirname, '../packages/compare-core/src'),
       react: resolvePackageRoot('react'),
       'react-dom': resolvePackageRoot('react-dom'),
@@ -79,6 +86,8 @@ export default defineConfig({
     },
     // Add security headers to dev server responses (for ZAP compliance)
     securityHeadersPlugin(),
+    // Cloudflare Pages / VITE_DEPLOY_ENV=preview: noindex, mock API artifacts
+    previewDeployPlugin(),
     // Auto-version social sharing images on every build (cache busting for OG/Twitter images)
     socialImageVersionPlugin(),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
