@@ -8,6 +8,7 @@
  * Now uses the centralized pageMetadata config.
  */
 
+import { isPreviewDeploy } from '../config/deployEnv'
 import { getPageMetadata } from '../config/pageMetadata'
 
 const BASE_URL = 'https://compareintel.com'
@@ -127,6 +128,12 @@ export function updatePageMeta(pathname: string): void {
 
   // Update meta description
   updateMetaTag('meta', 'name', 'description', meta.description)
+
+  // Preview deploys must stay noindex even after client-side route updates.
+  if (isPreviewDeploy()) {
+    updateMetaTag('meta', 'name', 'robots', 'noindex, nofollow')
+    updateMetaTag('meta', 'name', 'googlebot', 'noindex, nofollow')
+  }
 
   // Update Open Graph tags
   updateMetaTag('meta', 'property', 'og:url', meta.canonical)

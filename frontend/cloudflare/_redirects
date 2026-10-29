@@ -1,0 +1,17 @@
+# Cloudflare Pages redirects for frontend PR previews.
+# Copied into dist/ only for preview builds (VITE_DEPLOY_ENV=preview or CF_PAGES).
+#
+# Static JSON under /preview-api is a read-only mock. POST/PUT/PATCH/DELETE are
+# not rewritten and return 404/405 from Pages, so previews cannot write to the
+# production database or call Stripe live mode.
+#
+# SPA fallback is last. Specific API rewrites must stay above it.
+
+/preview-api/models /preview-api/models.json 200
+/preview-api/credits/balance /preview-api/credits-balance.json 200
+/preview-api/rate-limit-status /preview-api/rate-limit-status.json 200
+/api/models /preview-api/models.json 200
+/api/credits/balance /preview-api/credits-balance.json 200
+/api/rate-limit-status /preview-api/rate-limit-status.json 200
+
+/*    /index.html   200

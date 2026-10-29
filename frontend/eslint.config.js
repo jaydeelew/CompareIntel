@@ -8,7 +8,13 @@ import importPlugin from 'eslint-plugin-import'
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js'],
+    ignores: ['dist/**', 'coverage/**', 'node_modules/**', '*.config.js'],
+  },
+  {
+    files: ['vite-plugin-*.ts', 'src/preview/checkPreviewDist.ts'],
+    languageOptions: {
+      globals: globals.node,
+    },
   },
   {
     files: ['**/*.{ts,tsx}'],

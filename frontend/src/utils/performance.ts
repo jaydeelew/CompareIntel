@@ -8,6 +8,8 @@
 import { onCLS, onFCP, onLCP, onTTFB, onINP } from 'web-vitals'
 import type { Metric } from 'web-vitals'
 
+import { isAnalyticsEnabled, isPreviewDeploy } from '../config/deployEnv'
+
 import logger from './logger'
 
 /**
@@ -84,8 +86,8 @@ function reportMetric(
     callback(enhancedMetric)
   }
 
-  // Send to analytics endpoint (if configured)
-  if (import.meta.env.PROD && import.meta.env.VITE_PERFORMANCE_ENDPOINT) {
+  // Send to analytics endpoint (production only; disabled on PR previews)
+  if (isAnalyticsEnabled() && !isPreviewDeploy()) {
     sendToAnalytics(enhancedMetric).catch(err => {
       logger.error('Failed to send performance metric:', err)
     })
@@ -96,6 +98,7 @@ function reportMetric(
  * Send performance metric to analytics endpoint
  */
 async function sendToAnalytics(metric: PerformanceMetric): Promise<void> {
+  if (isPreviewDeploy() || !isAnalyticsEnabled()) return
   const endpoint = import.meta.env.VITE_PERFORMANCE_ENDPOINT
   if (!endpoint) return
 

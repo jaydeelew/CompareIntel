@@ -181,7 +181,15 @@ MAIL_FROM=your-email@gmail.com
 - Metrics include LCP, CLS, FCP, TTFB, INP with ratings and timestamps
 - Endpoint should accept POST requests and return 200 status
 
-**Note:** Only active in production builds. The endpoint receives performance data automatically - no frontend code changes needed.
+**Note:** Only active in production builds. The endpoint receives performance data automatically - no frontend code changes needed. Preview builds (`VITE_DEPLOY_ENV=preview` or `CF_PAGES=1`) strip this variable and never send the beacon.
+
+#### Cloudflare Pages previews
+
+**`VITE_DEPLOY_ENV`**
+- **Purpose:** Mark a frontend build as a PR preview
+- **Values:** `preview` (Pages / local `npm run build:preview`) or `production` (opts out of preview guards even if `CF_PAGES=1`)
+- **Effect:** noindex, mock `/preview-api`, no analytics, production secrets stripped
+- **Guide:** [CLOUDFLARE_PAGES_PREVIEWS.md](../deployment/CLOUDFLARE_PAGES_PREVIEWS.md)
 
 ### Frontend Setup Steps
 
@@ -229,7 +237,8 @@ MAIL_FROM=your-email@gmail.com
 |----------|----------|---------|-------|
 | `VITE_API_URL` | ❌ No | `/api` | Works with proxy |
 | `VITE_RECAPTCHA_SITE_KEY` | ❌ No | None | Bot protection (optional) |
-| `VITE_PERFORMANCE_ENDPOINT` | ❌ No | None | Performance analytics (production only) |
+| `VITE_PERFORMANCE_ENDPOINT` | ❌ No | None | Performance analytics (production only; stripped on previews) |
+| `VITE_DEPLOY_ENV` | ❌ No | unset | `preview` for Cloudflare Pages PR builds |
 
 ---
 
@@ -414,5 +423,5 @@ VITE_API_URL=/api
 ---
 
 **Last Updated:** January 2025  
-**Related:** [Quick Start Guide](QUICKSTART.md) | [Development Workflow](WORKFLOW.md)
+**Related:** [Quick Start Guide](QUICKSTART.md) | [Development Workflow](WORKFLOW.md) | [Cloudflare Pages PR previews](../deployment/CLOUDFLARE_PAGES_PREVIEWS.md)
 

@@ -31,7 +31,9 @@ import './index.css'
 // KaTeX CSS loaded asynchronously to prevent render-blocking
 // It will be loaded when LatexRenderer component is first used
 import App from './App.tsx'
+import { isPreviewDeploy } from './config/deployEnv'
 import { initializeRegistry } from './config/loadModelConfigs'
+import { installPreviewApiGuard } from './preview/apiGuard'
 import { isCancellationError } from './services/api/errors'
 import logger from './utils/logger'
 import { initWebVitals } from './utils/performance'
@@ -43,6 +45,11 @@ window.addEventListener('unhandledrejection', event => {
     event.preventDefault()
   }
 })
+
+// Preview deploys: mock API + block writes to prod / Stripe live.
+if (isPreviewDeploy()) {
+  installPreviewApiGuard()
+}
 
 // Defer Sentry so @sentry/react is not on the critical path (Lighthouse / main-thread parse).
 const scheduleSentryInit = () => {

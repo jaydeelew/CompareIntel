@@ -1,0 +1,15 @@
+{
+  "daily_usage": 0,
+  "daily_limit": 10,
+  "remaining_usage": 10,
+  "subscription_tier": "unregistered",
+  "model_limit": 3,
+  "overage_allowed": false,
+  "overage_price": null,
+  "monthly_overage_count": 0,
+  "reset_time": "2099-01-01T00:00:00.000Z",
+  "user_type": "anonymous",
+  "fingerprint_usage": 0,
+  "fingerprint_remaining": 10,
+  "ip_usage": 0
+}

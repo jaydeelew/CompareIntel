@@ -10,6 +10,7 @@
  * - Type-safe error handling
  */
 
+import { getApiBaseUrl } from '../../config/deployEnv'
 import { PerformanceMarker } from '../../utils/performance'
 
 import { ApiError, NetworkError, TimeoutError, CancellationError } from './errors'
@@ -656,8 +657,7 @@ export class ApiClient {
  * Create default API client instance
  */
 export function createApiClient(config?: Partial<ApiClientConfig>): ApiClient {
-  const baseURL =
-    config?.baseURL || import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api'
+  const baseURL = config?.baseURL || getApiBaseUrl()
 
   return new ApiClient({
     baseURL,

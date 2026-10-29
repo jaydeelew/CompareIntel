@@ -1,0 +1,102 @@
+{
+  "models": [
+    {
+      "id": "openai/gpt-4o-mini",
+      "name": "GPT-4o Mini",
+      "description": "Preview fixture — not a live model.",
+      "category": "gpt",
+      "provider": "OpenAI",
+      "available": true,
+      "tier_access": "unregistered",
+      "supports_temperature": true,
+      "supports_vision": false,
+      "supports_image_generation": false,
+      "max_input_tokens": 128000,
+      "max_output_tokens": 16384,
+      "is_thinking_model": false
+    },
+    {
+      "id": "openai/gpt-4.1-nano",
+      "name": "GPT-4.1 Nano",
+      "description": "Preview fixture — not a live model.",
+      "category": "gpt",
+      "provider": "OpenAI",
+      "available": true,
+      "tier_access": "unregistered",
+      "supports_temperature": true,
+      "supports_vision": false,
+      "supports_image_generation": false,
+      "max_input_tokens": 128000,
+      "max_output_tokens": 16384,
+      "is_thinking_model": false
+    },
+    {
+      "id": "anthropic/claude-3.5-haiku",
+      "name": "Claude 3.5 Haiku",
+      "description": "Preview fixture — not a live model.",
+      "category": "claude",
+      "provider": "Anthropic",
+      "available": true,
+      "tier_access": "unregistered",
+      "supports_temperature": true,
+      "supports_vision": false,
+      "supports_image_generation": false,
+      "max_input_tokens": 200000,
+      "max_output_tokens": 8192,
+      "is_thinking_model": false
+    }
+  ],
+  "models_by_provider": {
+    "OpenAI": [
+      {
+        "id": "openai/gpt-4o-mini",
+        "name": "GPT-4o Mini",
+        "description": "Preview fixture — not a live model.",
+        "category": "gpt",
+        "provider": "OpenAI",
+        "available": true,
+        "tier_access": "unregistered",
+        "supports_temperature": true,
+        "supports_vision": false,
+        "supports_image_generation": false,
+        "max_input_tokens": 128000,
+        "max_output_tokens": 16384,
+        "is_thinking_model": false
+      },
+      {
+        "id": "openai/gpt-4.1-nano",
+        "name": "GPT-4.1 Nano",
+        "description": "Preview fixture — not a live model.",
+        "category": "gpt",
+        "provider": "OpenAI",
+        "available": true,
+        "tier_access": "unregistered",
+        "supports_temperature": true,
+        "supports_vision": false,
+        "supports_image_generation": false,
+        "max_input_tokens": 128000,
+        "max_output_tokens": 16384,
+        "is_thinking_model": false
+      }
+    ],
+    "Anthropic": [
+      {
+        "id": "anthropic/claude-3.5-haiku",
+        "name": "Claude 3.5 Haiku",
+        "description": "Preview fixture — not a live model.",
+        "category": "claude",
+        "provider": "Anthropic",
+        "available": true,
+        "tier_access": "unregistered",
+        "supports_temperature": true,
+        "supports_vision": false,
+        "supports_image_generation": false,
+        "max_input_tokens": 200000,
+        "max_output_tokens": 8192,
+        "is_thinking_model": false
+      }
+    ]
+  },
+  "user_tier": "unregistered",
+  "is_trial_active": false
+}

@@ -1,0 +1,9 @@
+# Cloudflare Pages headers for frontend PR previews.
+# Copied into dist/ only for preview builds (VITE_DEPLOY_ENV=preview or CF_PAGES).
+# Production nginx on EC2 does not use this file.
+
+/*
+  X-Robots-Tag: noindex, nofollow
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: DENY

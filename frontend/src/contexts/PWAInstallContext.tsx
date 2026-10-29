@@ -10,6 +10,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
+import { isAnalyticsEnabled } from '../config/deployEnv'
 import logger from '../utils/logger'
 
 import {
@@ -131,12 +132,14 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
       setDeferredPrompt(null)
       setIsDismissed(true)
       localStorage.setItem(DISMISSED_KEY, Date.now().toString())
-      const gtag = (window as WindowGtag).gtag
-      if (typeof gtag === 'function') {
-        gtag('event', 'pwa_installed', {
-          event_category: 'PWA',
-          event_label: 'appinstalled',
-        })
+      if (isAnalyticsEnabled()) {
+        const gtag = (window as WindowGtag).gtag
+        if (typeof gtag === 'function') {
+          gtag('event', 'pwa_installed', {
+            event_category: 'PWA',
+            event_label: 'appinstalled',
+          })
+        }
       }
     }
 

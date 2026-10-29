@@ -40,12 +40,17 @@ declare module 'lucide-react/dist/esm/icons/hand' {
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string
   readonly VITE_API_BASE_URL?: string
+  readonly VITE_DEPLOY_ENV?: string
   readonly VITE_RECAPTCHA_SITE_KEY?: string
   readonly VITE_SENTRY_DSN?: string
   readonly VITE_SENTRY_ENVIRONMENT?: string
   readonly VITE_APP_VERSION?: string
   readonly VITE_PERFORMANCE_ENDPOINT?: string
   readonly VITE_EXTENSION_ID?: string
+  readonly CF_PAGES?: string
+  readonly CF_PAGES_BRANCH?: string
+  readonly CF_PAGES_COMMIT_SHA?: string
+  readonly CF_PAGES_URL?: string
 }
 
 interface ImportMeta {
