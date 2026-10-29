@@ -268,6 +268,44 @@ async def send_model_availability_report(check_results: dict[str, Any]) -> None:
         raise
 
 
+async def send_spend_cap_alert_email(
+    recipient_email: str,
+    period: str,
+    threshold: int,
+    spent_usd: float,
+    cap_usd: float,
+) -> None:
+    if not EMAIL_CONFIGURED:
+        print(
+            f"Email service not configured - skipping OpenRouter spend cap alert "
+            f"({period} {threshold}% ${spent_usd:.2f}/${cap_usd:.2f})"
+        )
+        return
+
+    if not recipient_email or "@" not in recipient_email:
+        print("SPEND_ALERT_EMAIL not configured - skipping OpenRouter spend cap alert")
+        return
+
+    percentage_used = 0 if cap_usd <= 0 else min(100, (spent_usd / cap_usd) * 100)
+    html = _load_template("spend_cap_alert.html").substitute(
+        period=period,
+        threshold=threshold,
+        spent_usd=f"{spent_usd:.2f}",
+        cap_usd=f"{cap_usd:.2f}",
+        percentage_used=f"{percentage_used:.1f}",
+    )
+    message = MessageSchema(
+        subject=f"[CompareIntel] OpenRouter {period} spend at {threshold}% of cap",
+        recipients=[recipient_email],
+        body=html,
+        subtype="html",
+    )
+    try:
+        await fm.send_message(message)
+    except Exception as e:
+        print(f"Failed to send spend cap alert to {recipient_email}: {str(e)}")
+
+
 async def send_new_user_signup_notification(
     recipient_email: str, user_email: str, user_id: int, created_at: datetime
 ) -> None:

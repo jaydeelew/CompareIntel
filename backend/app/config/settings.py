@@ -127,6 +127,27 @@ class Settings(BaseSettings):
     redis_url: str | None = None  # e.g., "redis://localhost:6379/0"
     redis_enabled: bool = False  # Set to True to enable Redis-based distributed rate limiting
 
+    # OpenRouter spend protection (issue #39). 0 disables a cap.
+    # Daily/monthly USD tracked in Redis; free/anonymous compares fail closed at the cap.
+    openrouter_daily_spend_cap_usd: float = 0.0
+    openrouter_monthly_spend_cap_usd: float = 0.0
+    openrouter_paid_daily_spend_cap_usd: float = 0.0
+    openrouter_paid_monthly_spend_cap_usd: float = 0.0
+    # Hard cap on completion tokens sent to OpenRouter (also advertised on /api/models).
+    openrouter_max_output_tokens: int = 8192
+    # If Redis is down in production, block free compares rather than tracking per-worker.
+    openrouter_spend_fail_closed: bool = True
+    # Allow in-memory counters (dev/tests, or emergency production fallback).
+    openrouter_spend_memory_fallback: bool = False
+    spend_alert_email: str | None = None
+
+    @field_validator("spend_alert_email", mode="before")
+    @classmethod
+    def parse_spend_alert_email(cls, v):
+        if v == "" or v is None:
+            return None
+        return v
+
     # Stripe (optional until billing is live)
     stripe_secret_key: str | None = None
     stripe_webhook_secret: str | None = None

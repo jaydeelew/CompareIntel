@@ -37,7 +37,15 @@ class TestClassifyApiError:
         assert result.status_code is None
         assert result.parsed_message == "some error"
         assert result.is_402_max_tokens is False
+        assert result.is_402_insufficient_credits is False
         assert result.original_exception is exc
+
+    def test_402_insufficient_credits_not_treated_as_max_tokens(self):
+        exc = _make_api_error(status_code=402, message="Payment required, insufficient credits")
+        result = classify_api_error(exc)
+        assert result.status_code == 402
+        assert result.is_402_max_tokens is False
+        assert result.is_402_insufficient_credits is True
 
     def test_402_max_tokens_detection_from_message(self):
         exc = Exception("payment required for max_tokens")
@@ -109,6 +117,13 @@ class TestClassifyApiError:
         result = classify_api_error(exc)
         assert result.parsed_message == "provider error"
 
+    def test_429_parses_retry_after_header(self):
+        exc = _make_api_error(status_code=429, message="Rate limited")
+        exc.response = MagicMock()
+        exc.response.headers = {"Retry-After": "7"}
+        result = classify_api_error(exc)
+        assert result.retry_after_seconds == 7
+
 
 class TestFormatStreamingErrorMessage:
     def test_400_returns_error_prefix(self):
@@ -148,7 +163,7 @@ class TestFormatStreamingErrorMessage:
         msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
         assert "Authentication failed" in msg
 
-    def test_429_returns_rate_limited(self):
+    def test_429_returns_friendly_retry_message(self):
         err = ClassifiedError(
             status_code=429,
             parsed_message="Rate limited",
@@ -158,7 +173,34 @@ class TestFormatStreamingErrorMessage:
             original_exception=Exception("Rate limited"),
         )
         msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
-        assert "Rate limited" in msg
+        assert "try again" in msg.lower()
+        assert "busy" in msg.lower()
+
+    def test_429_includes_retry_after_seconds(self):
+        err = ClassifiedError(
+            status_code=429,
+            parsed_message="Rate limited",
+            is_402_max_tokens=False,
+            provider_error=None,
+            provider_name=None,
+            original_exception=Exception("Rate limited"),
+            retry_after_seconds=12,
+        )
+        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        assert "12 seconds" in msg
+
+    def test_402_insufficient_credits_returns_try_again_later(self):
+        err = ClassifiedError(
+            status_code=402,
+            parsed_message="Payment required",
+            is_402_max_tokens=False,
+            provider_error=None,
+            provider_name=None,
+            original_exception=Exception("Payment required"),
+            is_402_insufficient_credits=True,
+        )
+        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        assert "try again later" in msg.lower()
 
     def test_402_max_tokens_returns_credits_message(self):
         err = ClassifiedError(

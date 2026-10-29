@@ -29,6 +29,8 @@ The credit system manages user quotas for AI model comparisons. **Credits are ti
 
 On the free tier, image generation is limited by **daily credits** and by **up to 3 image models per comparison**; there is no separate daily cap on how many Compare runs you can start in image mode. See [IMAGE_GENERATION.md](./IMAGE_GENERATION.md#tier-limits).
 
+**Global OpenRouter spend cap:** free and anonymous compares are also blocked when the Redis-tracked daily/monthly USD budget is exhausted (HTTP 429, “try again later”). Paid users are unaffected unless a separate paid cap is set. See [OPENROUTER_SPEND_CAP.md](../ops/OPENROUTER_SPEND_CAP.md).
+
 ## Credit Allocations
 
 | Tier | Price | Credits | Period | Model Access |

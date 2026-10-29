@@ -126,6 +126,7 @@ async def get_available_models(
     """Get list of all AI models with tier_access field."""
     from ...model_runner import (
         filter_models_by_tier,
+        get_model_max_tokens,
         get_model_supports_image_generation,
         get_model_supports_temperature,
         get_model_supports_vision,
@@ -175,10 +176,9 @@ async def get_available_models(
             limits = get_model_token_limits_from_openrouter(model["id"])
             if limits:
                 model["max_input_tokens"] = limits["max_input"]
-                model["max_output_tokens"] = limits["max_output"]
             else:
                 model["max_input_tokens"] = 8192
-                model["max_output_tokens"] = 8192
+            model["max_output_tokens"] = get_model_max_tokens(model["id"])
             model["is_thinking_model"] = resolve_is_thinking_model_for_ui(model["id"], model)
 
         from ...model_runner import sort_models_by_tier_and_version
@@ -218,10 +218,9 @@ async def get_available_models(
                     limits = get_model_token_limits_from_openrouter(model["id"])
                     if limits:
                         model["max_input_tokens"] = limits["max_input"]
-                        model["max_output_tokens"] = limits["max_output"]
                     else:
                         model["max_input_tokens"] = 8192
-                        model["max_output_tokens"] = 8192
+                    model["max_output_tokens"] = get_model_max_tokens(model["id"])
                     model["is_thinking_model"] = resolve_is_thinking_model_for_ui(
                         model["id"], model
                     )
@@ -396,8 +395,12 @@ async def compare_stream(
     if req.top_p is not None and (req.top_p < 0.0 or req.top_p > 1.0):
         raise HTTPException(status_code=400, detail="top_p must be between 0.0 and 1.0")
 
-    if req.max_tokens is not None and (req.max_tokens < 256 or req.max_tokens > 65536):
-        raise HTTPException(status_code=400, detail="max_tokens must be between 256 and 65536")
+    max_output_allowed = max(256, int(settings.openrouter_max_output_tokens))
+    if req.max_tokens is not None and (req.max_tokens < 256 or req.max_tokens > max_output_allowed):
+        raise HTTPException(
+            status_code=400,
+            detail=f"max_tokens must be between 256 and {max_output_allowed}",
+        )
 
     min_max_input_tokens = get_min_max_input_tokens(req.models)
 
@@ -691,6 +694,23 @@ async def compare_stream(
                 detail="Not enough credits for this comparison. Credits reset to 50 tomorrow, "
                 "or sign up for a free account to get more credits!",
             )
+
+    from ...spend_cap import check_openrouter_spend_allowed
+
+    spend_check = check_openrouter_spend_allowed(current_user)
+    if not spend_check.allowed:
+        logger.warning(
+            "OpenRouter spend cap blocked compare (user_id=%s blocked_by=%s daily=$%.4f monthly=$%.4f)",
+            current_user.id if current_user else None,
+            spend_check.blocked_by,
+            spend_check.spent_daily_usd,
+            spend_check.spent_monthly_usd,
+        )
+        raise HTTPException(
+            status_code=429,
+            detail=spend_check.message,
+            headers={"Retry-After": str(spend_check.retry_after_seconds)},
+        )
 
     credits_remaining_ref = [credits_remaining]
     start_time = datetime.now()
