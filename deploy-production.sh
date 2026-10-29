@@ -36,6 +36,7 @@ main() {
             backup_database
             build_and_deploy
             verify_deployment
+            prune_dangling_docker_artifacts
             notify_new_models_if_added
             show_status
             echo ""
@@ -59,6 +60,7 @@ main() {
                 msg "Code changed. Full deployment..."
                 build_and_deploy
                 verify_deployment
+                prune_dangling_docker_artifacts
                 notify_new_models_if_added
                 show_status
                 ok "Deployment completed"
@@ -72,6 +74,7 @@ main() {
             backup_database
             build_and_deploy
             verify_deployment
+            prune_dangling_docker_artifacts
             notify_new_models_if_added
             show_status
             ok "Quick deployment completed"

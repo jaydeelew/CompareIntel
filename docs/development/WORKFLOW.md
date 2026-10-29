@@ -34,12 +34,16 @@ Use before deploy and for Lighthouse/PWA testing.
 
 ### 4. AWS Production
 
+Prefer `./deploy-production.sh deploy` (backup, build, health check, then prune dangling images/build cache). Manual equivalent:
+
 ```bash
 ssh -i CompareIntel.pem ubuntu@<ec2-ip>
 cd CompareIntel && git pull origin master
 docker compose -f docker-compose.ssl.yml down
 docker compose -f docker-compose.ssl.yml up -d --build
 ```
+
+The 2 GB production host runs 2 Gunicorn workers by default (`WEB_CONCURRENCY`, overridable; `GUNICORN_WORKERS` still works). Compose sets container memory limits/reservations, Redis `maxmemory 64mb` with `volatile-lru`, and json-file log rotation (`max-size` 10m × 3 files) so logs and Redis cannot starve the host. `./deploy-production.sh check` and `status` warn above 80% disk use or when swap is heavily used.
 
 SSL via Let's Encrypt; initial setup: `./setup-compareintel-ssl.sh` from home dir.
 

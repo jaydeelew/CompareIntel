@@ -360,7 +360,7 @@ def get_rate_limiter():
                     default_delay_between_requests=settings.search_delay_between_requests,
                     provider_configs=provider_configs,
                 )
-                worker_count = os.getenv("GUNICORN_WORKERS", "4")
+                worker_count = os.getenv("WEB_CONCURRENCY") or os.getenv("GUNICORN_WORKERS", "2")
                 total_capacity = settings.search_rate_limit_per_minute * int(worker_count)
                 logger.info(
                     f"Search rate limiter: in-memory ({settings.search_rate_limit_per_minute} req/min, "

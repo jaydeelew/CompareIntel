@@ -27,4 +27,6 @@ show_status() {
     echo ""
     echo "Memory:"
     free -h
+    echo ""
+    check_host_resources
 }
