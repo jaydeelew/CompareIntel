@@ -158,13 +158,13 @@ class TestPoolSizingFormula:
 
     def test_default_settings_for_free_tier(self):
         """Default settings should be safe for free-tier Postgres (20-100 connections)."""
-        workers = 4
+        workers = 2
         pool_size = 5
         max_overflow = 10
 
         total_connections = workers * (pool_size + max_overflow)
 
-        assert total_connections == 60
+        assert total_connections == 30
         # Should be under typical free-tier limits (20-100)
         assert total_connections <= 100
 
@@ -243,17 +243,58 @@ class TestSettingsConfiguration:
             assert settings.db_pool_recycle == 3600
             assert settings.db_pool_pre_ping is True
 
-    @patch.dict(os.environ, {"GUNICORN_WORKERS": "8"})
     def test_gunicorn_workers_from_environment(self):
-        """Test that Gunicorn worker count is loaded from environment."""
-        workers = int(os.environ.get("GUNICORN_WORKERS", "4"))
-        assert workers == 8
+        """GUNICORN_WORKERS is still accepted as a fallback env name."""
+        from app.config.settings import Settings
+
+        with patch.dict(
+            os.environ,
+            {"GUNICORN_WORKERS": "8", "SECRET_KEY": "test_key", "OPENROUTER_API_KEY": "test_key"},
+            clear=True,
+        ):
+            settings = Settings(_env_file=None)
+            assert settings.gunicorn_workers == 8
+
+    def test_gunicorn_workers_from_web_concurrency(self):
+        """WEB_CONCURRENCY is the preferred env name for worker count."""
+        from app.config.settings import Settings
+
+        with patch.dict(
+            os.environ,
+            {"WEB_CONCURRENCY": "3", "SECRET_KEY": "test_key", "OPENROUTER_API_KEY": "test_key"},
+            clear=True,
+        ):
+            settings = Settings(_env_file=None)
+            assert settings.gunicorn_workers == 3
+
+    def test_web_concurrency_wins_over_gunicorn_workers(self):
+        """WEB_CONCURRENCY takes precedence when both env vars are set."""
+        from app.config.settings import Settings
+
+        with patch.dict(
+            os.environ,
+            {
+                "WEB_CONCURRENCY": "2",
+                "GUNICORN_WORKERS": "8",
+                "SECRET_KEY": "test_key",
+                "OPENROUTER_API_KEY": "test_key",
+            },
+            clear=True,
+        ):
+            settings = Settings(_env_file=None)
+            assert settings.gunicorn_workers == 2
 
     def test_gunicorn_workers_default(self):
-        """Test that Gunicorn worker count defaults to 4."""
-        with patch.dict(os.environ, {}, clear=True):
-            workers = int(os.environ.get("GUNICORN_WORKERS", "4"))
-            assert workers == 4
+        """Gunicorn worker count defaults to 2 for the 2 GB production host."""
+        from app.config.settings import Settings
+
+        with patch.dict(
+            os.environ,
+            {"SECRET_KEY": "test_key", "OPENROUTER_API_KEY": "test_key"},
+            clear=True,
+        ):
+            settings = Settings(_env_file=None)
+            assert settings.gunicorn_workers == 2
 
 
 class TestNormalizePostgresUrl:

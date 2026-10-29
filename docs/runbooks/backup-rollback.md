@@ -27,10 +27,10 @@ This runbook documents CompareIntel's backup, restore, and rollback procedures f
 
 ### Production Environment
 
-- **Single Docker host** running docker-compose
-- **Services:** nginx (frontend), backend (FastAPI + Gunicorn), redis
+- **Single Docker host** running docker-compose (2 GB RAM; compose sets per-service memory limits)
+- **Services:** nginx (frontend), backend (FastAPI + Gunicorn, `WEB_CONCURRENCY=2` by default), redis (`maxmemory 64mb`, `volatile-lru`)
 - **Database:** PostgreSQL (external, configured via `DATABASE_URL` in `backend/.env`)
-- **Deployment:** Blue-green style using `docker-compose.ssl.yml`
+- **Deployment:** Blue-green style using `docker-compose.ssl.yml`. After a successful deploy, `deploy-production.sh` prunes dangling images and build cache (not running containers or volumes). `check` / `status` warn above 80% disk use or heavy swap.
 
 ### Backup Strategy
 
