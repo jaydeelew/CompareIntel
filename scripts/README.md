@@ -52,10 +52,17 @@ bash scripts/restore/postgres-restore.sh test
 ### Rollback
 
 ```bash
-# Check status and available restore points
+# Check status, image tags, and available restore points
 bash scripts/rollback/rollback.sh status
 
-# Quick app rollback (code only)
+# One-command rollback to :previous images (no rebuild, no Alembic)
+bash scripts/rollback/rollback.sh previous
+# same: ./deploy-production.sh rollback
+
+# Same, then prompt to confirm alembic downgrade -1
+bash scripts/rollback/rollback.sh previous --with-migrations
+
+# Quick app rollback (git checkout + rebuild)
 bash scripts/rollback/rollback.sh quick
 
 # Full rollback (app + database)
@@ -64,7 +71,7 @@ bash scripts/rollback/rollback.sh full
 # Database only
 bash scripts/rollback/rollback.sh database
 
-# Migrations only
+# Migrations only (interactive)
 bash scripts/rollback/rollback.sh migrations
 ```
 
@@ -145,10 +152,11 @@ This runs:
 
 ### CI Testing
 
-The GitHub Actions CI pipeline automatically tests:
-- Alembic upgrade/downgrade cycle
+The GitHub Actions CI pipeline tests:
+- Alembic upgrade / downgrade-1 / re-upgrade against throwaway Postgres 15
 - Migration integrity
-- Database backup and restore (on PRs affecting backend)
+
+**CI does not run backup or restore.** Those are covered by `scripts/backup/test-backup-restore.sh` and the drills in [docs/runbooks/backup-rollback.md](../docs/runbooks/backup-rollback.md).
 
 See: `.github/workflows/ci.yml`
 
@@ -177,10 +185,13 @@ This backup is stored in the daily backup directory and follows the same retenti
 
 The build script saves deployment state before each deploy to `/home/ubuntu/.compareintel-rollback-state`:
 - Git commit and branch
+- `IMAGE_TAG` (git short SHA)
 - Docker image IDs
 - Timestamp
 
-This state file is used by the rollback script to restore previous versions.
+Release images are tagged `compareintel-{backend,nginx}:<sha>`, `:current`, and `:previous`. `scripts/deploy/build.sh` no longer runs `docker image prune -f` before the build (that deleted the previous release once compose untagged it). Dangling-only prune still runs after a successful deploy; the last 3 SHA tags are kept.
+
+`scripts/rollback/rollback.sh previous` (and `./deploy-production.sh rollback`) redeploys `:previous` without rebuilding. `alembic downgrade` is opt-in (`--with-migrations`) and requires typing `DOWNGRADE`.
 
 ### Safety Features
 

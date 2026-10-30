@@ -27,6 +27,7 @@ services:
     restart: unless-stopped
 
   backend:
+    image: compareintel-backend:${IMAGE_TAG:-current}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -71,6 +72,7 @@ services:
       - compareintel-network
 
   nginx:
+    image: compareintel-nginx:${IMAGE_TAG:-current}
     build:
       context: ./frontend
       dockerfile: Dockerfile

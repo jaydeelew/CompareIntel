@@ -3,6 +3,7 @@
 # Supports 7 daily + 4 weekly retention and provider-agnostic remote storage
 
 set -e
+set -o pipefail
 
 # Configuration
 BACKUP_DIR="${BACKUP_DIR:-/home/ubuntu/backups}"

@@ -81,7 +81,7 @@ main() {
             echo ""
             ;;
         rollback)
-            rollback_deployment
+            rollback_deployment "${2:-previous}" "${3:-}"
             ;;
         status)
             show_status
@@ -101,7 +101,8 @@ main() {
         *)
             echo "Usage: $0 {check|backup|build|deploy|quick-deploy|rollback|restart|status|logs}"
             echo ""
-            echo "Commands: check, backup, build, deploy, quick-deploy, rollback, restart, status, logs"
+            echo "Commands: check, backup, build, deploy, quick-deploy,"
+            echo "          rollback [previous] [--with-migrations], restart, status, logs"
             exit 1
             ;;
     esac

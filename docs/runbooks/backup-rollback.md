@@ -1,7 +1,7 @@
 # Backup and Rollback Runbook
 
-**Version:** 1.0  
-**Last Updated:** 2026-10-25  
+**Version:** 1.1  
+**Last Updated:** 2026-10-30  
 **Owner:** Platform Team  
 **Status:** Active
 
@@ -30,7 +30,7 @@ This runbook documents CompareIntel's backup, restore, and rollback procedures f
 - **Single Docker host** running docker-compose (2 GB RAM; compose sets per-service memory limits)
 - **Services:** nginx (frontend), backend (FastAPI + Gunicorn, `WEB_CONCURRENCY=2` by default), redis (`maxmemory 64mb`, `volatile-lru`)
 - **Database:** PostgreSQL (external, configured via `DATABASE_URL` in `backend/.env`)
-- **Deployment:** Blue-green style using `docker-compose.ssl.yml`. After a successful deploy, `deploy-production.sh` prunes dangling images and build cache (not running containers or volumes). `check` / `status` warn above 80% disk use or heavy swap.
+- **Deployment:** `docker-compose.ssl.yml` (or `docker-compose.prod.yml`). Backend and nginx images are tagged per release as `compareintel-{backend,nginx}:<git-short-sha>`, plus `:current` and `:previous`. After a successful deploy, `deploy-production.sh` prunes dangling (untagged) images and build cache only — tagged release images are kept (last 3 SHA tags). `check` / `status` warn above 80% disk use or heavy swap.
 
 ### Backup Strategy
 
@@ -243,29 +243,63 @@ alembic current
 
 ### Rollback Types
 
-1. **Quick rollback** - Revert code to previous commit
-2. **Full rollback** - Revert code AND database
-3. **Database-only rollback** - Restore database from backup
-4. **Migration rollback** - Revert database migrations only
+1. **Previous-tag rollback (preferred)** - Redeploy the `:previous` Docker images with no rebuild
+2. **Quick git rollback** - Revert code to previous commit and rebuild
+3. **Full rollback** - Revert code AND database
+4. **Database-only rollback** - Restore database from backup
+5. **Migration rollback** - Revert database migrations only (`alembic downgrade`, opt-in)
 
 ### Before You Begin
 
-Check rollback state and available restore points:
+Check rollback state, image tags, and available restore points:
 
 ```bash
 cd /home/ubuntu/CompareIntel
 bash scripts/rollback/rollback.sh status
 ```
 
-### Quick Application Rollback
+### One-command previous-tag rollback
 
-Rolls back code to previous git commit and redeploys (keeps database):
+Redeploys the previous release's backend and nginx images **without rebuilding**. Does **not** run `alembic downgrade` unless you pass `--with-migrations` and type `DOWNGRADE`.
+
+```bash
+bash scripts/rollback/rollback.sh previous
+# or
+./deploy-production.sh rollback
+```
+
+**When to use:**
+- Bad deploy of application code (frontend or backend)
+- Health checks failing after a release
+- Need the fastest path back to the last known-good images
+
+**What it does:**
+1. Checks that `compareintel-backend:previous` and `compareintel-nginx:previous` exist
+2. Swaps `:current` / `:previous` so the prior release is `:current`
+3. Runs `docker compose up -d` (no `--build`) with `IMAGE_TAG=current`
+4. Checks `/health`
+5. Skips Alembic unless `--with-migrations` was passed
+
+**Alembic (opt-in only):**
+
+```bash
+bash scripts/rollback/rollback.sh previous --with-migrations
+# or
+./deploy-production.sh rollback previous --with-migrations
+```
+
+You must type `DOWNGRADE` at the prompt. A missing TTY skips the downgrade rather than running it.
+
+### Quick Application Rollback (git + rebuild)
+
+Rolls back code to previous git commit and rebuilds (keeps database):
 
 ```bash
 bash scripts/rollback/rollback.sh quick
 ```
 
 **When to use:**
+- No `:previous` image tag is available
 - Frontend bugs that don't affect data
 - Backend bugs introduced after successful migration
 - API changes that are backward compatible
@@ -328,13 +362,12 @@ bash scripts/rollback/rollback.sh migrations
 
 ### Using the Deployment Script
 
-The deployment script also supports rollback:
-
 ```bash
 ./deploy-production.sh rollback
+# same as: bash scripts/rollback/rollback.sh previous
 ```
 
-This invokes the comprehensive rollback tool interactively.
+This is the one-command previous-tag rollback (no rebuild, no Alembic). Pass `--with-migrations` only when you intend to confirm an `alembic downgrade -1`.
 
 ### Manual Rollback Steps
 
@@ -357,8 +390,10 @@ If automation fails, manual rollback:
    bash scripts/restore/postgres-restore.sh interactive
    ```
 
-4. **Rebuild services:**
+4. **Start previous images (no rebuild) or rebuild:**
    ```bash
+   IMAGE_TAG=previous docker compose -f docker-compose.ssl.yml up -d
+   # or, if tags are missing:
    docker compose -f docker-compose.ssl.yml up -d --build
    ```
 
@@ -466,13 +501,18 @@ Adjust retention if needed:
    ```bash
    docker compose -f docker-compose.ssl.yml logs --tail=50
    ```
-3. If migration failed, rollback:
+3. If only code issue, previous-tag rollback (no rebuild):
    ```bash
-   bash scripts/rollback/rollback.sh full
+   bash scripts/rollback/rollback.sh previous
    ```
-4. If only code issue, quick rollback:
+4. If a migration needs reversing, previous-tag rollback then opt-in downgrade:
+   ```bash
+   bash scripts/rollback/rollback.sh previous --with-migrations
+   ```
+5. If images are missing, git + rebuild (`quick`) or full app+DB rollback:
    ```bash
    bash scripts/rollback/rollback.sh quick
+   bash scripts/rollback/rollback.sh full
    ```
 
 **RTO:** ~5-10 minutes  
@@ -554,12 +594,11 @@ Adjust retention if needed:
 
 #### In CI (GitHub Actions)
 
-The CI pipeline automatically tests:
-- Alembic upgrade/downgrade cycle
-- Backup creation
-- Restore to scratch database
+The CI pipeline tests the Alembic upgrade / downgrade-1 / re-upgrade cycle against a throwaway Postgres 15 service. **CI does not run backup or restore scripts.**
 
-See: `.github/workflows/ci.yml`
+See: `.github/workflows/ci.yml` (job step "Test Alembic migrations").
+
+Backup and restore are verified by the manual/VM drills below (`scripts/backup/postgres-backup.sh` and `scripts/restore/postgres-restore.sh test`).
 
 #### Manual Test
 
@@ -611,29 +650,24 @@ This test:
 
 **Frequency:** Quarterly
 
-**Environment:** Local development or staging (NOT production)
+**Environment:** Local development compose stack (NOT production)
 
 **Steps:**
-1. Deploy current code to test environment
-2. Make a test change and deploy again
-3. Execute quick rollback:
+1. Deploy tag A (`IMAGE_TAG=<sha-a>` via `scripts/deploy/build.sh` / `./deploy-production.sh build`)
+2. Deploy tag B the same way (this promotes A to `:previous`)
+3. Execute one-command rollback:
    ```bash
-   bash scripts/rollback/rollback.sh quick
+   bash scripts/rollback/rollback.sh previous
    ```
-4. Verify previous version is running
-5. Execute full rollback (if test database available):
-   ```bash
-   bash scripts/rollback/rollback.sh full
-   ```
-6. Document any issues or improvements needed
+4. Confirm tag A is serving: `curl` `/health` and check `docker compose images` / image IDs
+5. Document results in the log below
 
 ### Drill Results Log
 
 | Date | Type | Result | Notes | Conducted By |
 |------|------|--------|-------|--------------|
-| 2026-10-25 | Restore | ✓ Pass | Initial implementation test | Atlas |
-| | | | |
-| | | | |
+| 2026-10-30 | Restore | Pass | Cloud Agent VM (not production). Host Postgres 16. Seeded 3 users, 1 preference, 1 conversation, 2 messages, 1 app_settings, 1 alembic_version. `scripts/backup/postgres-backup.sh` then `scripts/restore/postgres-restore.sh test`. Per-table COUNT(*) source = scratch: `admin_action_logs` 0=0, `alembic_version` 1=1, `app_settings` 1=1, `conversation_messages` 2=2, `conversations` 1=1, `credit_transactions` 0=0, `payment_transactions` 0=0, `processed_stripe_webhooks` 0=0, `subscription_history` 0=0, `usage_log_monthly_aggregates` 0=0, `usage_logs` 0=0, `user_preferences` 1=1, `users` 3=3. Scratch DB dropped after verify. | Atlas (Cloud Agent) |
+| 2026-10-30 | Rollback | Pass | Same VM, `docker-compose.prod.yml` (not production). Tag A backend `c1d3d41253bf` / nginx `8ac38497a041`; tag B backend `4c25474db565` / nginx `43277da6a6ef`. `scripts/rollback/rollback.sh previous` (no rebuild). After rollback, `:current` was A (`c1d3d41253bf`) and `/health` returned `{"status":"healthy","db_connected":true,"duration_ms":1}`. Alembic not run (opt-in skipped). `docker image prune -f` did not delete `:current`/`:previous`/SHA tags. Nginx in this prod compose crash-loops on a pre-existing `access_log` at the top of `nginx.prod.conf` (out of scope); backend `/health` was checked via `compose exec`. Docker was not preinstalled in the VM; `docker.io` + PostgreSQL were installed locally for the drill. | Atlas (Cloud Agent) |
 
 ---
 
@@ -691,6 +725,7 @@ This test:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.1 | 2026-10-30 | Atlas | Per-release image tags, one-command `:previous` rollback, CI backup/restore claim corrected, drills (#31) |
 | 1.0 | 2026-10-25 | Atlas | Initial version - GitHub issue #31 |
 
 ---

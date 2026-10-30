@@ -1,7 +1,8 @@
 #!/bin/bash
 # Shared utilities for deploy scripts.
 
-PROJECT_DIR="${PROJECT_DIR:-/home/ubuntu/CompareIntel}"
+_UTILS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="${PROJECT_DIR:-$(cd "$_UTILS_DIR/../.." && pwd)}"
 BACKUP_DIR="${BACKUP_DIR:-/home/ubuntu/backups}"
 LOG_FILE="${LOG_FILE:-/home/ubuntu/compareintel-deploy.log}"
 ENV_FILE="${ENV_FILE:-$PROJECT_DIR/backend/.env}"
@@ -56,8 +57,9 @@ check_host_resources() {
 }
 
 # After a successful deploy, reclaim disk without touching running containers or volumes.
+# Only dangling (untagged) images are removed — :current, :previous, and SHA tags stay.
 prune_dangling_docker_artifacts() {
-    msg "Pruning dangling Docker images and build cache (not containers or volumes)..."
+    msg "Pruning dangling Docker images and build cache (not containers, volumes, or tagged releases)..."
     docker image prune -f || warn "Dangling image prune failed"
     docker builder prune -f || warn "Build cache prune failed"
     ok "Docker dangling images and build cache pruned"

@@ -5,9 +5,12 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="${PROJECT_DIR:-/home/ubuntu/CompareIntel}"
+PROJECT_DIR="${PROJECT_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 BACKUP_DIR="${BACKUP_DIR:-/home/ubuntu/backups}"
 ROLLBACK_STATE_FILE="${ROLLBACK_STATE_FILE:-/home/ubuntu/.compareintel-rollback-state}"
+
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/../deploy/image-tags.sh"
 
 # Colors for output
 RED='\033[0;31m'
@@ -32,9 +35,10 @@ TIMESTAMP=$(date +%s)
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 GIT_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
 GIT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-BACKEND_IMAGE=$(docker compose -f docker-compose.ssl.yml images backend -q 2>/dev/null || echo "unknown")
-NGINX_IMAGE=$(docker compose -f docker-compose.ssl.yml images nginx -q 2>/dev/null || echo "unknown")
-REDIS_IMAGE=$(docker compose -f docker-compose.ssl.yml images redis -q 2>/dev/null || echo "unknown")
+IMAGE_TAG=${IMAGE_TAG:-current}
+BACKEND_IMAGE=$(compose images backend -q 2>/dev/null || echo "unknown")
+NGINX_IMAGE=$(compose images nginx -q 2>/dev/null || echo "unknown")
+REDIS_IMAGE=$(compose images redis -q 2>/dev/null || echo "unknown")
 EOF
 )
     
@@ -120,10 +124,10 @@ rollback_app_docker() {
     fi
     
     log "Stopping services..."
-    docker compose -f docker-compose.ssl.yml down
+    compose down
     
     log "Starting services with rolled back images..."
-    docker compose -f docker-compose.ssl.yml up -d || {
+    compose up -d || {
         err "Failed to start services"
         return 1
     }
@@ -231,7 +235,7 @@ full_rollback() {
     # Step 2: Stop services
     log "Stopping services..."
     cd "$PROJECT_DIR"
-    docker compose -f docker-compose.ssl.yml down
+    compose down
     
     # Step 3: Rollback git
     rollback_app_git || warn "Git rollback failed or skipped"
@@ -241,7 +245,7 @@ full_rollback() {
     
     # Step 5: Rebuild and start services
     log "Rebuilding services..."
-    docker compose -f docker-compose.ssl.yml up -d --build || {
+    compose up -d --build || {
         err "Failed to restart services"
         exit 1
     }
@@ -252,7 +256,7 @@ full_rollback() {
     
     # Step 7: Verify
     log "Verifying services..."
-    docker compose -f docker-compose.ssl.yml ps
+    compose ps
     
     ok "=== FULL ROLLBACK COMPLETED ==="
 }
@@ -265,17 +269,129 @@ quick_rollback() {
     save_deployment_state
     
     cd "$PROJECT_DIR"
-    docker compose -f docker-compose.ssl.yml down
+    compose down
     
     rollback_app_git || exit 1
     
     log "Rebuilding services..."
-    docker compose -f docker-compose.ssl.yml up -d --build || {
+    compose up -d --build || {
         err "Failed to restart services"
         exit 1
     }
     
     ok "Quick rollback completed"
+}
+
+# One-command rollback: redeploy :previous images without rebuilding.
+# Alembic downgrade is opt-in only (--with-migrations) and requires typing DOWNGRADE.
+rollback_previous_tag() {
+    local with_migrations=false
+    local arg
+    for arg in "$@"; do
+        if [ "$arg" = "--with-migrations" ]; then
+            with_migrations=true
+        fi
+    done
+
+    warn "=== ROLLBACK TO PREVIOUS IMAGE TAG (no rebuild) ==="
+    cd "$PROJECT_DIR"
+
+    local repo missing=0
+    for repo in $(release_image_repos); do
+        if ! image_exists "${repo}:previous"; then
+            err "No ${repo}:previous image. Deploy at least two tagged releases first."
+            missing=1
+        fi
+    done
+    [ "$missing" -eq 0 ] || return 1
+
+    local prev_backend_id
+    prev_backend_id=$(docker images -q "${IMAGE_BACKEND}:previous")
+    info "Images before rollback:"
+    docker images --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}' \
+        | grep -E "compareintel-(backend|nginx)|REPOSITORY" || true
+    echo ""
+
+    # Swap first so :current is the previous release. Then `up -d` (no --build)
+    # uses the compose default IMAGE_TAG=current and will not roll forward on restart.
+    log "Swapping :current and :previous tags..."
+    swap_current_and_previous_tags
+    export IMAGE_TAG=current
+    log "Starting services from :current (was :previous) without rebuild..."
+    compose up -d || {
+        err "Failed to start services from previous image tags"
+        return 1
+    }
+
+    local running_id prev_short running_short
+    running_id=$(compose images backend -q 2>/dev/null || true)
+    prev_short="${prev_backend_id#sha256:}"
+    prev_short="${prev_short:0:12}"
+    running_short="${running_id#sha256:}"
+    running_short="${running_short:0:12}"
+    if [ -n "$prev_short" ] && [ -n "$running_short" ] && [ "$running_short" != "$prev_short" ]; then
+        warn "Running backend image $running_id does not match previous id $prev_backend_id"
+    else
+        info "Backend image id ${running_short:-$prev_backend_id} is serving (was :previous)"
+    fi
+
+    log "Waiting for health checks..."
+    sleep 8
+    compose ps
+    verify_backend_health || warn "Health check inconclusive; inspect logs"
+
+    if [ "$with_migrations" = true ]; then
+        offer_alembic_downgrade
+    else
+        info "Alembic downgrade skipped (opt-in only). Re-run with --with-migrations to consider it."
+    fi
+
+    ok "Previous-tag rollback completed"
+}
+
+verify_backend_health() {
+    local body=""
+    body=$(compose exec -T backend \
+        python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health', timeout=5).read().decode())" \
+        2>/dev/null || true)
+    if echo "$body" | grep -q "healthy"; then
+        ok "Backend /health: $body"
+        return 0
+    fi
+    if curl -fsS http://localhost:8080/api/health 2>/dev/null | grep -q "healthy"; then
+        ok "Backend /health via nginx :8080"
+        return 0
+    fi
+    if curl -fsSk https://localhost/api/health 2>/dev/null | grep -q "healthy"; then
+        ok "Backend /health via nginx :443"
+        return 0
+    fi
+    return 1
+}
+
+offer_alembic_downgrade() {
+    warn "Alembic downgrade is destructive and is NOT run unless you type DOWNGRADE."
+    if [ ! -t 0 ]; then
+        err "No TTY: refusing alembic downgrade. Re-run interactively with --with-migrations."
+        return 1
+    fi
+    echo ""
+    read -r -p "Type 'DOWNGRADE' to run 'alembic downgrade -1' (anything else skips): " confirm
+    if [ "$confirm" != "DOWNGRADE" ]; then
+        info "Alembic downgrade skipped"
+        return 0
+    fi
+    cd "$PROJECT_DIR"
+    if [ -f "backend/.env" ]; then
+        set -a
+        source <(grep -v '^\s*#' backend/.env | grep -v '^\s*$')
+        set +a
+    fi
+    (cd backend && alembic downgrade -1) || {
+        err "alembic downgrade -1 failed"
+        return 1
+    }
+    ok "alembic downgrade -1 completed"
 }
 
 # Show rollback status
@@ -299,7 +415,12 @@ show_status() {
     echo ""
     
     info "Running services:"
-    docker compose -f docker-compose.ssl.yml ps
+    compose ps
+    echo ""
+    
+    info "Release image tags:"
+    docker images --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}' \
+        | grep -E "compareintel-(backend|nginx)|REPOSITORY" || true
     echo ""
     
     info "Available backups:"
@@ -338,16 +459,23 @@ main() {
         save-state)
             save_deployment_state
             ;;
+        previous)
+            shift
+            rollback_previous_tag "$@"
+            ;;
         menu|*)
             echo "CompareIntel Rollback Tool"
             echo ""
             echo "Usage: $0 {command}"
             echo ""
             echo "Commands:"
+            echo "  previous       - Redeploy :previous image tags (no rebuild)"
+            echo "  previous --with-migrations"
+            echo "                 - Same, then prompt to confirm alembic downgrade -1"
             echo "  full           - Full rollback (app + database)"
-            echo "  quick          - Quick app rollback (last git commit)"
+            echo "  quick          - Quick app rollback (last git commit + rebuild)"
             echo "  app-git        - Rollback app to previous git commit"
-            echo "  app-docker     - Rollback using Docker image tags"
+            echo "  app-docker     - Rollback using Docker image tags (interactive)"
             echo "  database       - Rollback database from backup"
             echo "  migrations     - Rollback database migrations"
             echo "  status         - Show current status and available rollback points"

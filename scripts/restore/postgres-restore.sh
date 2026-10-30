@@ -72,13 +72,20 @@ list_backups() {
 get_row_counts() {
     local db_name="$1"
     log "Getting row counts from database: $db_name"
-    
-    PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$db_name" -t -c "
-        SELECT 
-            schemaname || '.' || tablename AS table_name,
-            n_live_tup AS row_count
-        FROM pg_stat_user_tables
-        ORDER BY schemaname, tablename;
+
+    # ANALYZE so pg_stat_user_tables.n_live_tup is populated after a restore.
+    PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$db_name" \
+        -c "ANALYZE;" >/dev/null 2>&1 || true
+
+    PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$db_name" -c "
+        SELECT n.nspname || '.' || c.relname AS table_name,
+               (xpath('/row/cnt/text()',
+                      query_to_xml(format('SELECT COUNT(*) AS cnt FROM %I.%I', n.nspname, c.relname), false, true, '')
+               ))[1]::text::bigint AS row_count
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'public' AND c.relkind = 'r'
+        ORDER BY 1;
     " 2>/dev/null || echo "Could not retrieve row counts"
 }
 
