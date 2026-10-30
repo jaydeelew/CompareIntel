@@ -146,7 +146,9 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          build-contexts: core=./packages/compare-core
+          build-contexts: |
+            core=./packages/compare-core
+            registry=./backend/data
           push: false
           load: true
           tags: compareintel-frontend:build-test
@@ -189,13 +191,32 @@ jobs:
           fi
           
           # Check a few more pages
-          for page in about how-it-works faq; do
+          for page in about how-it-works faq models; do
             if [ ! -f "./temp-dist/$page/index.html" ]; then
               echo "❌ Page /$page not prerendered!"
               exit 1
             fi
             echo "✅ /$page prerendered successfully"
           done
+
+          MODEL_PAGE="./temp-dist/models/claude-opus-5/index.html"
+          if [ ! -f "$MODEL_PAGE" ]; then
+            echo "❌ Model page not prerendered at models/claude-opus-5/index.html!"
+            exit 1
+          fi
+          if ! grep -q '<title>Claude Opus 5 by Anthropic - CompareIntel</title>' "$MODEL_PAGE"; then
+            echo "❌ Model page does not contain the correct title!"
+            exit 1
+          fi
+          if ! grep -q 'rel="canonical" href="https://compareintel.com/models/claude-opus-5"' "$MODEL_PAGE"; then
+            echo "❌ Model page is missing the canonical URL!"
+            exit 1
+          fi
+          if ! grep -q 'Context window' "$MODEL_PAGE" || ! grep -q '1M tokens' "$MODEL_PAGE"; then
+            echo "❌ Model page is missing visible spec content!"
+            exit 1
+          fi
+          echo "✅ /models/claude-opus-5 prerendered successfully"
           
           # Check 404.html exists
           if [ ! -f "./temp-dist/404.html" ]; then
@@ -213,7 +234,9 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          build-contexts: core=./packages/compare-core
+          build-contexts: |
+            core=./packages/compare-core
+            registry=./backend/data
           push: false
           tags: compareintel-frontend:dev-test
           target: dev
@@ -225,7 +248,9 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          build-contexts: core=./packages/compare-core
+          build-contexts: |
+            core=./packages/compare-core
+            registry=./backend/data
           push: false
           load: true
           tags: compareintel-frontend:prod-test

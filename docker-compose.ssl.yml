@@ -54,6 +54,7 @@ services:
       dockerfile: Dockerfile
       additional_contexts:
         core: ./packages/compare-core
+        registry: ./backend/data
       target: build
       args:
         - VITE_API_URL=/api
@@ -78,6 +79,7 @@ services:
       dockerfile: Dockerfile
       additional_contexts:
         core: ./packages/compare-core
+        registry: ./backend/data
       target: prod
       args:
         - VITE_API_URL=/api

@@ -19,9 +19,15 @@ This guide covers the SEO implementation for CompareIntel and the steps needed t
 - ✅ References sitemap location
 
 ### 3. sitemap.xml (`frontend/public/sitemap.xml`)
-- ✅ Lists all public pages (including `/image-generation` for AI image model comparison)
+- ✅ Lists all public pages (including `/image-generation` and `/models/<slug>` pages)
+- ✅ Generated at build time from `frontend/src/config/staticPublicPages.json` plus the SEO catalog
 - ✅ Includes priority and change frequency
 - ✅ Proper XML schema
+
+### 3b. Model pages (`/models` and `/models/<slug>`)
+- ✅ Featured models are generated at build time from `backend/data/models_registry.json` plus `frontend/src/data/seo/modelDataSnapshot.json`
+- ✅ Routes are added to the shared public-page list so prerender, sitemap, and `pageMetadata.ts` stay in sync
+- ✅ Unknown `/models/<slug>` URLs return HTTP 404 (nginx does not treat `/models/*` as a catch-all SPA route)
 
 ### 4. Nginx Configuration
 - ✅ Explicit handling for `robots.txt` and `sitemap.xml`

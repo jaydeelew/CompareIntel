@@ -60,7 +60,13 @@ async function build() {
     process.env.SKIP_PRERENDER === 'true' || isPreviewDeploy()
   
   try {
-    // Step 1: Generate sitemap
+    // Step 1: Generate SEO catalog (model pages) then sitemap from the shared list
+    await runCommand(
+      'node',
+      [join(__dirname, 'generate-seo-catalog.js')],
+      'Generating SEO model catalog'
+    )
+
     await runCommand(
       'node',
       [join(__dirname, 'generate-sitemap.js')],

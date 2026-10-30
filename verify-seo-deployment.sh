@@ -135,8 +135,8 @@ if [[ "$SITEMAP_STATUS" == *"200"* ]]; then
     SITEMAP_URLS=$(curl -s "$BASE_URL/sitemap.xml" | grep -c "<loc>")
     echo "Sitemap contains $SITEMAP_URLS URLs"
     
-    if [[ "$SITEMAP_URLS" -ge 9 ]]; then
-        pass "Sitemap has expected number of URLs (9+)"
+    if [[ "$SITEMAP_URLS" -ge 18 ]]; then
+        pass "Sitemap has expected number of URLs (18+)"
     else
         warn "Sitemap has fewer URLs than expected"
     fi
@@ -164,11 +164,47 @@ else
 fi
 echo ""
 
+# Test 7b: Model page title, canonical, and specs without JS
+echo "🤖 Test 7b: Model page SEO (no JS)"
+echo "========================================"
+
+MODEL_HTML=$(curl -sL "$BASE_URL/models/claude-opus-5")
+MODEL_TITLE=$(echo "$MODEL_HTML" | grep -o '<title>[^<]*</title>' | head -1)
+MODEL_CANONICAL=$(echo "$MODEL_HTML" | grep -o '<link rel="canonical" href="[^"]*"' | head -1)
+
+echo "Model title: $MODEL_TITLE"
+echo "Model canonical: $MODEL_CANONICAL"
+
+if [[ "$MODEL_TITLE" == *"Claude Opus 5 by Anthropic"* ]]; then
+    pass "Model page has the correct title"
+else
+    fail "Model page title is incorrect: $MODEL_TITLE"
+fi
+
+if [[ "$MODEL_CANONICAL" == *'href="https://compareintel.com/models/claude-opus-5"'* ]]; then
+    pass "Model page canonical URL is correct"
+else
+    fail "Model page canonical URL is incorrect: $MODEL_CANONICAL"
+fi
+
+if echo "$MODEL_HTML" | grep -q "Context window" && echo "$MODEL_HTML" | grep -q "1M tokens"; then
+    pass "Model page has visible spec content without JS"
+else
+    fail "Model page spec content not found!"
+fi
+
+if echo "$MODEL_HTML" | grep -q "Compare Claude Opus 5 side by side"; then
+    pass "Model page has compare CTA"
+else
+    fail "Model page compare CTA not found!"
+fi
+echo ""
+
 # Test 8: Test all prerendered routes
 echo "🌐 Test 8: All prerendered routes"
 echo "========================================"
 
-ROUTES=("/" "/about" "/features" "/how-it-works" "/faq" "/image-generation" "/help-me-choose-methodology" "/privacy-policy" "/terms-of-service")
+ROUTES=("/" "/about" "/features" "/how-it-works" "/faq" "/image-generation" "/help-me-choose-methodology" "/privacy-policy" "/terms-of-service" "/models" "/models/claude-opus-5")
 
 for route in "${ROUTES[@]}"; do
     STATUS=$(curl -sI "$BASE_URL$route" | grep -i "^HTTP" | head -1)

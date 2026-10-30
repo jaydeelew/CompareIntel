@@ -175,6 +175,54 @@
   color: #1d4ed8;
 }
 
+.seo-model-spec-table th {
+  width: 40%;
+}
+
+.seo-model-cta-wrap {
+  margin: 1.5rem 0 0;
+}
+
+.seo-model-cta {
+  font-size: 1.125rem;
+}
+
+.seo-model-index-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+
+.seo-model-index-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.seo-model-index-list a {
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.seo-model-index-list a:hover {
+  text-decoration: underline;
+}
+
+.seo-model-index-category {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.seo-source-line {
+  margin-top: 2rem;
+}
+
 /* Features grid (About page) */
 .features-grid {
   display: grid;

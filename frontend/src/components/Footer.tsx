@@ -52,6 +52,9 @@ export const Footer: React.FC = () => {
         <Link to="/help-me-choose-methodology" style={linkStyle} onClick={scrollToTop}>
           Help me choose
         </Link>
+        <Link to="/models" style={linkStyle} onClick={scrollToTop}>
+          Models
+        </Link>
         <Link to="/image-generation" style={linkStyle} onClick={scrollToTop}>
           Image Generation
         </Link>
