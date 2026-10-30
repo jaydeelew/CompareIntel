@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test'
+import type { Locator, Page, Response } from '@playwright/test'
 
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
@@ -39,6 +39,16 @@ function allResultCards(page: Page): Locator {
   )
 }
 
+function isConversationsHistoryGet(res: Response): boolean {
+  if (res.request().method() !== 'GET' || !res.ok()) return false
+  try {
+    const { pathname } = new URL(res.url())
+    return pathname.endsWith('/conversations') || pathname.endsWith('/api/conversations')
+  } catch {
+    return false
+  }
+}
+
 async function triggerBreakoutAndWaitForResponse(
   page: Page,
   breakoutBtn: Locator,
@@ -48,6 +58,10 @@ async function triggerBreakoutAndWaitForResponse(
   const isMobile = isMobileE2eProject(projectName)
   const breakoutUrlMatch = (res: { url: () => string }) =>
     res.url().includes('/conversations/breakout')
+  // WebKit CI often clicks before history sync sets currentVisibleComparisonId, so
+  // retry faster/more often instead of spending 30s waiting for a POST that never starts.
+  const maxAttempts = browserName === 'webkit' ? 6 : 3
+  const responseTimeoutMs = browserName === 'webkit' ? 10000 : 30000
 
   async function triggerBreakout() {
     await breakoutBtn.scrollIntoViewIfNeeded().catch(() => {})
@@ -69,8 +83,8 @@ async function triggerBreakoutAndWaitForResponse(
 
   // The breakout button can render before history sync sets currentVisibleComparisonId.
   // In that case the first handler call returns without a POST; retry after the state settles.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const responsePromise = page.waitForResponse(breakoutUrlMatch, { timeout: 30000 })
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const responsePromise = page.waitForResponse(breakoutUrlMatch, { timeout: responseTimeoutMs })
     await triggerBreakout()
     const response = await responsePromise.catch(() => null)
     if (response) return response
@@ -79,7 +93,7 @@ async function triggerBreakoutAndWaitForResponse(
       '.error-message:has-text("No active conversation to break out from"), [role="alert"]:has-text("No active conversation to break out from")'
     )
     await noActiveConversationError.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
-    await page.waitForTimeout(isMobile ? 1500 : 750)
+    await page.waitForTimeout(isMobile ? 1500 : browserName === 'webkit' ? 1500 : 750)
   }
 
   throw new Error('Timed out waiting for breakout API response after retries')
@@ -641,7 +655,12 @@ test.describe('Results Display Regression Tests', () => {
 
         await selectSelectableTextModels(authenticatedPage, 2, projectName)
 
+        // History GET is scheduled ~1s after stream end and is required before breakout POSTs.
+        const historyGet = authenticatedPage.waitForResponse(isConversationsHistoryGet, {
+          timeout: 120000,
+        })
         await submitAndAwaitCompareStream(authenticatedPage)
+        await historyGet.catch(() => {})
 
         await expect(firstResultCard(authenticatedPage)).toBeVisible({ timeout: cardWait })
       })
