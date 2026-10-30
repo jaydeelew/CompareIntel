@@ -2,24 +2,15 @@
 
 ## Snapshot: 2026-04-01
 
-**Source of list prices:** [OpenRouter `/api/v1/models`](https://openrouter.ai/api/v1/models) (full JSON dump, same fields as `pricing.prompt`, `pricing.completion`, `pricing.image` in the bundled `openrouter_models.json` format).
+**Source of list prices:** OpenRouter [`GET /api/v1/models?output_modalities=all`](https://openrouter.ai/api/v1/models?output_modalities=all) (full JSON dump, same fields as `pricing.prompt`, `pricing.completion`, `pricing.image` in the bundled `openrouter_models.json` format).
+
+The default [`/api/v1/models`](https://openrouter.ai/api/v1/models) response **omits image-output models**. Always pass `output_modalities=all` when syncing or validating the CompareIntel catalog against OpenRouter.
 
 **CompareIntel catalog:** `backend/data/models_registry.json` (all models shown to paid tiers).
 
-**Match rate:** 91 of 102 registry model IDs found in the OpenRouter API response. **11 IDs missing** (not in API response at snapshot time — confirm before relying on billing for these):
+**Match rate (2026-10-30):** With `output_modalities=all`, Flux / Seedream / Riverflow / GPT Image catalog IDs are present. `qwen/qwen3-next-80b-a3b-thinking` is absent from OpenRouter (instruct variant remains) and was removed from CompareIntel.
 
-- `black-forest-labs/flux.2-max`
-- `black-forest-labs/flux.2-pro`
-- `black-forest-labs/flux.2-flex`
-- `black-forest-labs/flux.2-klein-4b`
-- `bytedance-seed/seedream-4.5`
-- `sourceful/riverflow-v2-max-preview`
-- `sourceful/riverflow-v2-standard-preview`
-- `sourceful/riverflow-v2-fast-preview`
-- `sourceful/riverflow-v2-fast`
-- `sourceful/riverflow-v2-pro`
-
-To refresh this sheet, pull a fresh OpenRouter `/api/v1/models` JSON snapshot and re-check the registry IDs and pricing totals against `backend/data/models_registry.json`.
+To refresh this sheet, pull a fresh OpenRouter `/api/v1/models?output_modalities=all` JSON snapshot and re-check the registry IDs and pricing totals against `backend/data/models_registry.json`.
 
 ---
 

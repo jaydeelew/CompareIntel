@@ -32,6 +32,7 @@ from ...llm.registry import (
     sort_models_by_tier_and_version,
     streams_separable_reasoning_from_openrouter_entry,
 )
+from ...llm.tokens import OPENROUTER_MODELS_LIST_PARAMS
 from ...llm.vision_probe import VisionProbeResult, probe_supports_vision_input
 from ...model_runner import (
     client,
@@ -66,6 +67,7 @@ async def fetch_model_data_from_openrouter(model_id: str) -> dict[str, Any] | No
         async with httpx.AsyncClient(timeout=10.0) as http_client:
             response = await http_client.get(
                 "https://openrouter.ai/api/v1/models",
+                params=OPENROUTER_MODELS_LIST_PARAMS,
                 headers={
                     "Authorization": f"Bearer {settings.openrouter_api_key}",
                     "HTTP-Referer": "https://compareintel.com",

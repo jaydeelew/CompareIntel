@@ -159,7 +159,7 @@ bash scripts/setup_weekly_model_discovery.sh
 **What it does:**
 1. Loads model IDs from `backend/data/models_registry.json`
 2. Downloads `https://openrouter.ai/rankings` and parses the main weekly Top Models `ys` block (latest week, network-scale chart)
-3. Fetches `GET https://openrouter.ai/api/v1/models` to resolve chart slugs to API `id` / `canonical_slug`
+3. Fetches `GET https://openrouter.ai/api/v1/models?output_modalities=all` to resolve chart slugs to API `id` / `canonical_slug`
 4. **Only** leaderboard rows are considered: reports rows missing from the registry (matched by id or `canonical_slug`); skips non-text models when an API entry exists
 5. **Email** (when configured): styled HTML report plus a plain-text checklist — missing models with rank/volume, and ids already in the registry
 6. **Terminal (stdout):** only what is still missing from CompareIntel — one OpenRouter model `id` per chart row (or a single line: `No new leaderboard models missing from CompareIntel.`). Errors print to stderr.
@@ -177,7 +177,7 @@ bash scripts/setup_weekly_model_discovery.sh
 
 ### `refresh_openrouter_models_json.py`
 
-Refreshes `backend/openrouter_models.json` from the live OpenRouter `/api/v1/models` catalog for all ids in `models_registry.json`. Admin add-model upserts a single row automatically; use this script for a full realign or after bulk registry edits.
+Refreshes `backend/openrouter_models.json` from the live OpenRouter `/api/v1/models?output_modalities=all` catalog for all ids in `models_registry.json` (the default list omits image-output models). Admin add-model upserts a single row automatically; use this script for a full realign or after bulk registry edits.
 
 **Usage:**
 ```bash

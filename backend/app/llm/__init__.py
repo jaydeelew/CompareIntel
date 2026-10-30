@@ -38,6 +38,7 @@ from .streaming import (
 )
 from .text_processing import clean_model_response, detect_repetition
 from .tokens import (
+    OPENROUTER_MODELS_LIST_PARAMS,
     TokenUsage,
     calculate_credits,
     calculate_token_usage,
@@ -66,6 +67,7 @@ __all__ = [
     "FETCH_URL_TOOL",
     "MODELS_BY_PROVIDER",
     "OPENROUTER_MODELS",
+    "OPENROUTER_MODELS_LIST_PARAMS",
     "TokenUsage",
     "WEB_SEARCH_TOOL",
     "UNREGISTERED_TIER_MODELS",

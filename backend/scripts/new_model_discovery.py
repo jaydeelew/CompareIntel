@@ -41,6 +41,7 @@ for env_path in env_paths:
 
 from app.config import settings
 from app.email_service import EMAIL_CONFIGURED
+from app.llm.tokens import OPENROUTER_MODELS_LIST_PARAMS
 
 REGISTRY_PATH = backend_dir / "data" / "models_registry.json"
 RANKINGS_URL = "https://openrouter.ai/rankings"
@@ -145,12 +146,14 @@ def build_admin_tail_summary_plain(
     Tail output for terminal/email: actionable OpenRouter ids only for models not in the
     registry, plus a compact list of ids already registered.
 
-    Admin validate/add expects the exact `id` from GET /api/v1/models (not dated chart keys).
+    Admin validate/add expects the exact `id` from GET /api/v1/models?output_modalities=all
+    (not dated chart keys). The default /api/v1/models list omits image-output models.
     """
     covered = build_leaderboard_slugs_covered_by_registry(registry_ids, by_id)
     lines: list[str] = []
     lines.append(
-        "OpenRouter model id = exact `id` from GET /api/v1/models (same string admin validate uses)."
+        "OpenRouter model id = exact `id` from GET /api/v1/models?output_modalities=all "
+        "(same string admin validate uses)."
     )
     lines.append("")
 
@@ -195,7 +198,7 @@ def fetch_openrouter_models() -> list[dict[str, Any]] | None:
         with httpx.Client(timeout=30.0) as client:
             response = client.get(
                 "https://openrouter.ai/api/v1/models",
-                params={"output_modalities": "all"},
+                params=OPENROUTER_MODELS_LIST_PARAMS,
                 headers={
                     "Authorization": f"Bearer {settings.openrouter_api_key}",
                     "HTTP-Referer": "https://compareintel.com",
@@ -289,7 +292,7 @@ def discover_new_models(
                     "id": slug,
                     "name": slug,
                     "description": (
-                        "Leaderboard slug not found in GET /api/v1/models; "
+                        "Leaderboard slug not found in GET /api/v1/models?output_modalities=all; "
                         "verify the id on OpenRouter or wait for catalog sync."
                     ),
                     "context_length": "N/A",

@@ -74,6 +74,8 @@ LMARENA_URL = "https://lmarena.ai/"
 VALS_LEGAL_BENCH_URL = "https://www.vals.ai/benchmarks/legal_bench"
 LMSPEED_URL = "https://lmspeed.net/leaderboard/best-throughput-models-weekly"
 OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
+# Default GET /api/v1/models omits image-output models; always request the full catalog.
+OPENROUTER_MODELS_LIST_PARAMS = {"output_modalities": "all"}
 GLOBAL_MMLU_URL = "https://llmdb.com/benchmarks/global-mmlu"
 MMLU_PRO_URL = "https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/"
 CREATIVE_WRITING_URL = "https://kearai.com/leaderboard/creative-writing"
@@ -236,6 +238,7 @@ def fetch_openrouter_pricing() -> dict[str, tuple[float, str]]:
     try:
         resp = httpx.get(
             OPENROUTER_MODELS_URL,
+            params=OPENROUTER_MODELS_LIST_PARAMS,
             headers={"HTTP-Referer": "https://compareintel.com"},
             timeout=20.0,
         )
@@ -1091,7 +1094,8 @@ def get_model_from_registry(model_id: str) -> dict | None:
 def fetch_openrouter_model(model_id: str) -> dict | None:
     try:
         resp = httpx.get(
-            "https://openrouter.ai/api/v1/models",
+            OPENROUTER_MODELS_URL,
+            params=OPENROUTER_MODELS_LIST_PARAMS,
             headers={"HTTP-Referer": "https://compareintel.com"},
             timeout=15.0,
         )

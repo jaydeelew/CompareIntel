@@ -1108,17 +1108,6 @@
         "supports_vision_probed": false
       },
       {
-        "id": "qwen/qwen3-next-80b-a3b-thinking",
-        "name": "Qwen3 Next 80B A3B Thinking",
-        "description": "A reasoning-first model with structured chain-of-thought traces for complex problem-solving.",
-        "category": "Language/Reasoning",
-        "provider": "Qwen",
-        "supports_web_search": true,
-        "knowledge_cutoff": "September 2025",
-        "is_thinking_model": true,
-        "supports_vision_probed": false
-      },
-      {
         "id": "qwen/qwen3.8-max-0902",
         "name": "Qwen3.8 Max 0902",
         "description": "Qwen3.8 Max 0902 is an updated snapshot of Qwen3.8 Max from Alibaba's Qwen team.",

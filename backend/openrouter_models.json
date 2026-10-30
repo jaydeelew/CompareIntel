@@ -6258,66 +6258,6 @@
       }
     },
     {
-      "id": "qwen/qwen3-next-80b-a3b-thinking",
-      "canonical_slug": "qwen/qwen3-next-80b-a3b-thinking-2509",
-      "hugging_face_id": "Qwen/Qwen3-Next-80B-A3B-Thinking",
-      "name": "Qwen: Qwen3 Next 80B A3B Thinking",
-      "created": 1757612284,
-      "description": "Qwen3-Next-80B-A3B-Thinking is a reasoning-first chat model in the Qwen3-Next line that outputs structured “thinking” traces by default. It’s designed for hard multi-step problems; math proofs, code synthesis/debugging, logic, and agentic...",
-      "context_length": 262144,
-      "architecture": {
-        "modality": "text->text",
-        "input_modalities": [
-          "text"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "Qwen3",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.0000000975",
-        "completion": "0.00000078"
-      },
-      "top_provider": {
-        "context_length": 131072,
-        "max_completion_tokens": 32768,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "frequency_penalty",
-        "include_reasoning",
-        "logit_bias",
-        "max_tokens",
-        "min_p",
-        "presence_penalty",
-        "reasoning",
-        "repetition_penalty",
-        "response_format",
-        "seed",
-        "stop",
-        "structured_outputs",
-        "temperature",
-        "tool_choice",
-        "tools",
-        "top_k",
-        "top_p"
-      ],
-      "default_parameters": {
-        "temperature": null,
-        "top_p": null,
-        "frequency_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": "2025-09-30",
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/qwen/qwen3-next-80b-a3b-thinking-2509/endpoints"
-      }
-    },
-    {
       "id": "qwen/qwen3.5-397b-a17b",
       "canonical_slug": "qwen/qwen3.5-397b-a17b-20260216",
       "hugging_face_id": "Qwen/Qwen3.5-397B-A17B",

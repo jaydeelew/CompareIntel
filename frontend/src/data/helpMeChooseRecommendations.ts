@@ -66,7 +66,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'openai/gpt-4o-mini', evidence: 'Avg. $0.38/1M tokens.' },
       { modelId: 'meta-llama/llama-4-maverick', evidence: 'Avg. $0.38/1M tokens.' },
       { modelId: 'minimax/minimax-m3.1-flash', evidence: 'Avg. $0.38/1M tokens.' },
-      { modelId: 'qwen/qwen3-next-80b-a3b-thinking', evidence: 'Avg. $0.44/1M tokens.' },
       { modelId: 'qwen/qwen3-coder-next', evidence: 'Avg. $0.45/1M tokens.' },
       { modelId: 'qwen/qwen3-coder-flash', evidence: 'Avg. $0.58/1M tokens.' },
       { modelId: 'qwen/qwen3-next-80b-a3b-instruct', evidence: 'Avg. $0.60/1M tokens.' },

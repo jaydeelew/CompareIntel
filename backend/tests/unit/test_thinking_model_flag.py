@@ -26,7 +26,7 @@ def test_unknown_model_id_returns_none() -> None:
 
 
 def test_qwen_thinking_variant_in_snapshot() -> None:
-    assert get_openrouter_thinking_model_flag("qwen/qwen3-next-80b-a3b-thinking") is True
+    assert get_openrouter_thinking_model_flag("qwen/qwen3.8-max-0902") is True
 
 
 def test_qwen_instruct_not_thinking_in_snapshot() -> None:
