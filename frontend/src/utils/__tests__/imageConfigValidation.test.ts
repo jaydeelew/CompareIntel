@@ -1,6 +1,6 @@
 /**
  * Tests for image config validation - aspect ratio and image size vs model capabilities.
- * Ensures that models like Flux 2 Flex (which only support 2K) correctly disable 1K and 4K.
+ * Uses remaining catalog models plus a 2K-only fixture for intersection edge cases.
  */
 
 import type { ModelsByProvider } from '../../types'
@@ -13,22 +13,22 @@ import {
   orderImageSizesLikeAdvanced,
 } from '../imageConfigValidation'
 
-function createFlux2FlexModel() {
+function create2KOnlyModel() {
   return {
-    id: 'black-forest-labs/flux.2-flex',
-    name: 'Flux 2 Flex',
-    description: 'Flexible image generation model',
+    id: 'test/2k-only-image',
+    name: '2K Only Image',
+    description: 'Fixture model that only supports 2K output',
     category: 'Image',
-    provider: 'Black Forest Labs',
+    provider: 'Test',
     supports_image_generation: true,
     image_aspect_ratios: ['9:16', '2:3', '3:4', '4:5', '1:1', '5:4', '4:3', '3:2', '16:9', '21:9'],
-    image_sizes: ['2K'], // Only 2K passes validation per test results (RES_MISMATCH for 1K, 4K)
+    image_sizes: ['2K'],
   }
 }
 
 function createModelsByProvider(models: unknown[]): ModelsByProvider {
   return {
-    'Black Forest Labs': models as ModelsByProvider['Black Forest Labs'],
+    Test: models as ModelsByProvider['Test'],
   }
 }
 
@@ -51,23 +51,17 @@ describe('imageConfigValidation', () => {
   })
 
   describe('getSupportedImageSizesForModels', () => {
-    it('returns only 2K for Flux 2 Flex when it is the only selected model', () => {
-      const fluxModel = createFlux2FlexModel()
-      const modelsByProvider = createModelsByProvider([fluxModel])
-      const supported = getSupportedImageSizesForModels(
-        ['black-forest-labs/flux.2-flex'],
-        modelsByProvider
-      )
+    it('returns only 2K for a 2K-only model when it is the only selected model', () => {
+      const model = create2KOnlyModel()
+      const modelsByProvider = createModelsByProvider([model])
+      const supported = getSupportedImageSizesForModels(['test/2k-only-image'], modelsByProvider)
       expect(supported).toEqual(['2K'])
     })
 
-    it('disables 1K and 4K when Flux 2 Flex is selected', () => {
-      const fluxModel = createFlux2FlexModel()
-      const modelsByProvider = createModelsByProvider([fluxModel])
-      const supported = getSupportedImageSizesForModels(
-        ['black-forest-labs/flux.2-flex'],
-        modelsByProvider
-      )
+    it('disables 1K and 4K when a 2K-only model is selected', () => {
+      const model = create2KOnlyModel()
+      const modelsByProvider = createModelsByProvider([model])
+      const supported = getSupportedImageSizesForModels(['test/2k-only-image'], modelsByProvider)
       expect(supported).not.toContain('1K')
       expect(supported).not.toContain('4K')
       expect(supported).toContain('2K')
@@ -75,13 +69,10 @@ describe('imageConfigValidation', () => {
   })
 
   describe('getSupportedAspectRatiosForModels', () => {
-    it('returns all aspect ratios for Flux 2 Flex (all pass at 2K)', () => {
-      const fluxModel = createFlux2FlexModel()
-      const modelsByProvider = createModelsByProvider([fluxModel])
-      const supported = getSupportedAspectRatiosForModels(
-        ['black-forest-labs/flux.2-flex'],
-        modelsByProvider
-      )
+    it('returns all aspect ratios for a 2K-only model with the default ratio set', () => {
+      const model = create2KOnlyModel()
+      const modelsByProvider = createModelsByProvider([model])
+      const supported = getSupportedAspectRatiosForModels(['test/2k-only-image'], modelsByProvider)
       expect(supported).toContain('1:1')
       expect(supported).toContain('16:9')
       expect(supported).toContain('9:16')
@@ -89,47 +80,28 @@ describe('imageConfigValidation', () => {
   })
 
   describe('isModelCompatibleWithConfig', () => {
-    it('returns false for Flux 2 Flex with 1K (RES_MISMATCH)', () => {
-      const fluxModel = createFlux2FlexModel()
-      const modelsByProvider = createModelsByProvider([fluxModel])
-      expect(
-        isModelCompatibleWithConfig('black-forest-labs/flux.2-flex', '1:1', '1K', modelsByProvider)
-      ).toBe(false)
-    })
-
-    it('returns false for Flux 2 Flex with 4K (RES_MISMATCH)', () => {
-      const fluxModel = createFlux2FlexModel()
-      const modelsByProvider = createModelsByProvider([fluxModel])
-      expect(
-        isModelCompatibleWithConfig('black-forest-labs/flux.2-flex', '1:1', '4K', modelsByProvider)
-      ).toBe(false)
-    })
-
-    it('returns true for Flux 2 Flex with 2K', () => {
-      const fluxModel = createFlux2FlexModel()
-      const modelsByProvider = createModelsByProvider([fluxModel])
-      expect(
-        isModelCompatibleWithConfig('black-forest-labs/flux.2-flex', '1:1', '2K', modelsByProvider)
-      ).toBe(true)
-    })
-
-    it('returns only 2K and 4K for Seedream 4.5 (1K has RES_MISMATCH per test results)', () => {
-      const supported = getSupportedImageSizesForModels(
-        ['bytedance-seed/seedream-4.5'],
-        {} as ModelsByProvider
+    it('returns false for a 2K-only model with 1K', () => {
+      const model = create2KOnlyModel()
+      const modelsByProvider = createModelsByProvider([model])
+      expect(isModelCompatibleWithConfig('test/2k-only-image', '1:1', '1K', modelsByProvider)).toBe(
+        false
       )
-      expect(supported).toEqual(['2K', '4K'])
-      expect(supported).not.toContain('1K')
     })
 
-    it('excludes 4:5 and 5:4 for Seedream 4.5 (AR_MISMATCH at 1K per test results)', () => {
-      const supported = getSupportedAspectRatiosForModels(
-        ['bytedance-seed/seedream-4.5'],
-        {} as ModelsByProvider
+    it('returns false for a 2K-only model with 4K', () => {
+      const model = create2KOnlyModel()
+      const modelsByProvider = createModelsByProvider([model])
+      expect(isModelCompatibleWithConfig('test/2k-only-image', '1:1', '4K', modelsByProvider)).toBe(
+        false
       )
-      expect(supported).not.toContain('4:5')
-      expect(supported).not.toContain('5:4')
-      expect(supported).toContain('1:1')
+    })
+
+    it('returns true for a 2K-only model with 2K', () => {
+      const model = create2KOnlyModel()
+      const modelsByProvider = createModelsByProvider([model])
+      expect(isModelCompatibleWithConfig('test/2k-only-image', '1:1', '2K', modelsByProvider)).toBe(
+        true
+      )
     })
 
     it('returns only 1:1 for OpenAI GPT-5 image models (1:1 @ 1K only per test results)', () => {
@@ -158,18 +130,12 @@ describe('imageConfigValidation', () => {
       expect(supported).not.toContain('2K')
     })
 
-    it('returns no shared image size for Gemini 2.5 Flash (1K only) + Flux 2 Flex (2K only)', () => {
-      const supported = getSupportedImageSizesForModels(
-        ['google/gemini-2.5-flash-image', 'black-forest-labs/flux.2-flex'],
-        {} as ModelsByProvider
-      )
+    it('returns no shared image size for Gemini 2.5 Flash (1K only) + 2K-only model', () => {
+      const modelsByProvider = createModelsByProvider([create2KOnlyModel()])
+      const selected = ['google/gemini-2.5-flash-image', 'test/2k-only-image']
+      const supported = getSupportedImageSizesForModels(selected, modelsByProvider)
       expect(supported).toEqual([])
-      expect(
-        hasCommonImageConfig(
-          ['google/gemini-2.5-flash-image', 'black-forest-labs/flux.2-flex'],
-          {} as ModelsByProvider
-        )
-      ).toBe(false)
+      expect(hasCommonImageConfig(selected, modelsByProvider)).toBe(false)
     })
   })
 })

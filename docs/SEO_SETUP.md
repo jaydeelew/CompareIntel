@@ -37,7 +37,7 @@ Run this checklist after each SEO deploy to prompt search engines to recrawl and
    ```bash
    curl -s https://compareintel.com/ | grep -E "og:title|description|twitter:title"
    ```
-   Confirm output includes expected keywords (e.g. "AI & Image Models", "image generation", "FLUX", "DALL-E").
+   Confirm output includes expected keywords (e.g. "AI & Image Models", "image generation", "GPT-5 Image").
 
 2. **Request indexing for priority URLs** (in order):
    - `https://compareintel.com/` (homepage)
@@ -191,7 +191,7 @@ For effective SEO, place keywords naturally in these locations (in order of impo
    - Contains key terms: "Compare", "AI Models", "Image Models", "Side-by-Side"
 
 2. **Meta Description** - ✅ Already optimized
-   - Your current description includes: "AI language and image models", providers (OpenAI, Anthropic, Google, Meta, xAI), image models (FLUX, DALL-E), "image generation comparison"
+   - Your current description includes: "AI language and image models", providers (OpenAI, Anthropic, Google, Meta, xAI), image models (GPT-5 Image, Gemini), "image generation comparison"
    - Keep it under 160 characters for best display
 
 3. **H1/H2 Headings** - ✅ Already optimized
@@ -203,7 +203,7 @@ For effective SEO, place keywords naturally in these locations (in order of impo
    - Ensure keywords appear in the first 100-200 words of visible content
 
 5. **Structured Data (JSON-LD)** - ✅ Already optimized
-   - Your structured data includes: "AI language and image models", provider names (OpenAI, Anthropic, Google, Meta, xAI, Black Forest Labs), image model comparison (FLUX, Imagen, GPT-5 Image, Riverflow)
+   - Your structured data includes: "AI language and image models", provider names (OpenAI, Anthropic, Google, Meta, xAI), image model comparison (Gemini image models, GPT-5 Image)
    - This helps search engines understand your content
 
 6. **Alt Text for Images** - ⚠️ Verify
@@ -226,7 +226,7 @@ For effective SEO, place keywords naturally in these locations (in order of impo
 2. **Long-tail Keywords** to consider:
    - "compare multiple AI models side by side"
    - "test AI models simultaneously"
-   - "compare AI image models" / "FLUX vs DALL-E vs Imagen"
+   - "compare AI image models" / "GPT-5 Image vs Gemini image models"
    - "AI model comparison tool"
    - "best AI model for [use case]"
 

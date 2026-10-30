@@ -182,15 +182,13 @@ describe('pickTwoDemoModels', () => {
 
   it('excludes thinking models for faster demos', () => {
     const withThinking: ModelsByProvider = {
-      Qwen: [
-        m('qwen/qwen3-next-80b-a3b-thinking', 'Qwen', 'unregistered', { is_thinking_model: true }),
-      ],
+      Qwen: [m('qwen/qwen3.8-max-0902', 'Qwen', 'unregistered', { is_thinking_model: true })],
       DeepSeek: [m('deepseek/deepseek-v4.1-flash', 'DeepSeek')],
       Google: [m('google/gemini-2.5-flash', 'Google')],
     }
     const result = pickTwoDemoModels('natural-language', withThinking, false, null)
     expect(result).not.toBeNull()
-    expect(result).not.toContain('qwen/qwen3-next-80b-a3b-thinking')
+    expect(result).not.toContain('qwen/qwen3.8-max-0902')
   })
 
   it('falls back to same-provider pair when only one provider available', () => {

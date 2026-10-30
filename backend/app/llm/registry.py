@@ -54,7 +54,6 @@ KNOWN_NO_TEMPERATURE_MODEL_IDS: frozenset[str] = frozenset(
     {
         "openai/gpt-5-image",
         "openai/gpt-5-image-mini",
-        "openai/gpt-image-2.5-sunburst",
     }
 )
 

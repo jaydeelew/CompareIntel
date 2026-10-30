@@ -201,7 +201,6 @@ def _get_huggingface_model_name(model_id: str) -> str | None:
         "deepseek/deepseek-v4-pro": "deepseek-ai/DeepSeek-V4-Pro",
         "qwen/qwen3-30b-a3b-instruct-2507": "Qwen/Qwen3-30B-A3B-Instruct-2507",
         "qwen/qwen3-next-80b-a3b-instruct": "Qwen/Qwen3-Next-80B-A3B-Instruct",
-        "qwen/qwen3-next-80b-a3b-thinking": "Qwen/Qwen3-Next-80B-A3B-Thinking",
         "qwen/qwen3-coder-flash": "Qwen/Qwen3-Coder-Flash",
         "qwen/qwen3-coder-next": "Qwen/Qwen3-Coder-Next",
         "qwen/qwen3-coder": "Qwen/Qwen3-Coder-480B-A35B-Instruct",

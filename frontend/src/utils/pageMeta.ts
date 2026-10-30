@@ -62,7 +62,7 @@ export function getPageMeta(pathname: string): PageMeta {
     canonical: `${BASE_URL}${normalizedPath}`,
     ogTitle: 'CompareIntel - AI & Image Model Comparison Side-by-Side | Free',
     ogDescription:
-      'Compare AI language and image models side-by-side. Test GPT-5.4, Claude 4.6, Gemini 3, FLUX from OpenAI, Anthropic, Google, Meta, xAI. Free tier.',
+      'Compare AI language and image models side-by-side. Test GPT-5.4, Claude 4.6, Gemini 3, and GPT-5 Image from OpenAI, Anthropic, Google, Meta, xAI. Free tier.',
     ogImage: DEFAULT_OG_IMAGE,
   }
 }

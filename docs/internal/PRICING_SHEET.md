@@ -6,18 +6,7 @@
 
 **CompareIntel catalog:** `backend/data/models_registry.json` (all models shown to paid tiers).
 
-**Match rate:** 91 of 102 registry model IDs found in the OpenRouter API response. **11 IDs missing** (not in API response at snapshot time — confirm before relying on billing for these):
-
-- `black-forest-labs/flux.2-max`
-- `black-forest-labs/flux.2-pro`
-- `black-forest-labs/flux.2-flex`
-- `black-forest-labs/flux.2-klein-4b`
-- `bytedance-seed/seedream-4.5`
-- `sourceful/riverflow-v2-max-preview`
-- `sourceful/riverflow-v2-standard-preview`
-- `sourceful/riverflow-v2-fast-preview`
-- `sourceful/riverflow-v2-fast`
-- `sourceful/riverflow-v2-pro`
+**Match rate (2026-10-30):** 89 of 89 registry model IDs found in the live OpenRouter `/api/v1/models` response after removing IDs that OpenRouter no longer lists.
 
 To refresh this sheet, pull a fresh OpenRouter `/api/v1/models` JSON snapshot and re-check the registry IDs and pricing totals against `backend/data/models_registry.json`.
 
