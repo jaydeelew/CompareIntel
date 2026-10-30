@@ -25,6 +25,7 @@ from app.database import Base, normalize_postgres_url
 from app.models import (  # noqa: F401
     Conversation,
     ConversationMessage,
+    SharedComparison,
     UsageLog,
     User,
     UserPreference,

@@ -48,6 +48,11 @@ const ImageGeneration = lazy(() =>
 const NotFound = lazy(() =>
   import('./components/pages/NotFound').then(module => ({ default: module.NotFound }))
 )
+const SharedComparison = lazy(() =>
+  import('./components/pages/SharedComparison').then(module => ({
+    default: module.SharedComparison,
+  }))
+)
 
 function App() {
   return (
@@ -124,6 +129,14 @@ function App() {
                 />
                 {/* MainPage is eager-loaded: lazy route + Vite dev can load a second `react` copy and break hooks (Invalid hook call / useRef null). */}
                 <Route path="/" element={<MainPage />} />
+                <Route
+                  path="/c/:shareSlug"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SharedComparison />
+                    </Suspense>
+                  }
+                />
                 <Route path="/admin" element={<AdminPage />} />
                 <Route
                   path="*"

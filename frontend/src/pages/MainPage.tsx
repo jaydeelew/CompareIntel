@@ -41,6 +41,7 @@ import {
   useComparisonStreaming,
   useScrollManagement,
   useExport,
+  useShareComparison,
   useModelManagement,
   useScreenshotCopy,
   useDoneSelectingCard,
@@ -357,6 +358,14 @@ export function MainPage() {
     responseMetadata: response?.metadata,
     input,
     getFirstUserMessage,
+  })
+
+  const { isSharing, canShare, handleShare } = useShareComparison({
+    conversations,
+    modelsByProvider,
+    input,
+    getFirstUserMessage,
+    isComparisonLoading: isLoading,
   })
 
   const {
@@ -2957,6 +2966,9 @@ export function MainPage() {
             onToggleScrollLock: () => setIsScrollLocked(!isScrollLocked),
             onToggleExportMenu: () => setShowExportMenu(!showExportMenu),
             onExport: handleExport,
+            onShare: handleShare,
+            isSharing,
+            canShare,
             onShowAllResults: showAllResults,
             onScreenshot: handleScreenshot,
             onCopyResponse: handleCopyResponse,

@@ -148,6 +148,7 @@ class TestMigrationEnv:
             "UserPreference",
             "Conversation",
             "ConversationMessage",
+            "SharedComparison",
             "UsageLog",
         ]
 

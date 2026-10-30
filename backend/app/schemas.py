@@ -653,3 +653,59 @@ class VisitorAnalyticsResponse(BaseModel):
     comparisons_today: int
     comparisons_this_week: int
     comparisons_this_month: int
+
+
+class ShareModelInfo(BaseModel):
+    """Public model identity stored on a shared comparison snapshot."""
+
+    id: str = Field(..., min_length=1, max_length=200)
+    name: str = Field(..., min_length=1, max_length=120)
+
+
+class ShareResponseItem(BaseModel):
+    """One model's response text in a shared snapshot."""
+
+    model_id: str = Field(..., min_length=1, max_length=200)
+    model_name: str = Field(..., min_length=1, max_length=120)
+    content: str = Field(..., min_length=1, max_length=64_000)
+
+
+class CreateShareRequest(BaseModel):
+    """Client-supplied comparison snapshot. Extra fields (email, user ids) are ignored."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    prompt: str = Field(..., min_length=1, max_length=32_000)
+    models: list[ShareModelInfo] = Field(..., min_length=1, max_length=12)
+    responses: list[ShareResponseItem] = Field(..., min_length=1, max_length=12)
+
+
+class CreateShareResponse(BaseModel):
+    """Permalink returned after creating a public snapshot."""
+
+    slug: str
+    url: str
+    revoke_token: str
+
+
+class PublicShareResponse(BaseModel):
+    """Public snapshot payload. Never includes account or owner fields."""
+
+    slug: str
+    prompt: str
+    models: list[ShareModelInfo]
+    responses: list[ShareResponseItem]
+    created_at: datetime
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, value: datetime) -> str:
+        """Serialize created_at as ISO-8601 with UTC."""
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        return value.isoformat().replace("+00:00", "Z")
+
+
+class UnshareRequest(BaseModel):
+    """Revoke a previously created share link."""
+
+    revoke_token: str | None = None

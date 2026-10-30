@@ -39,6 +39,12 @@ interface ResultsSectionHeaderProps {
   isMobileLayout: boolean
   /** When true, disables all header buttons (tutorial mode) */
   isTutorialActive?: boolean
+  /** Create a public permalink and copy it */
+  onShare?: () => void
+  /** True while a share request is in flight */
+  isSharing?: boolean
+  /** False until at least one model has a completed response */
+  canShare?: boolean
 }
 
 export function ResultsSectionHeader({
@@ -53,8 +59,12 @@ export function ResultsSectionHeader({
   onShowAllResults,
   isMobileLayout,
   isTutorialActive = false,
+  onShare,
+  isSharing = false,
+  canShare = true,
 }: ResultsSectionHeaderProps) {
   const buttonsDisabled = isTutorialActive
+  const shareDisabled = buttonsDisabled || isSharing || !canShare
   const showDesktopStyledTooltips = !isTutorialActive
   const scrollTooltipText = isScrollLocked
     ? 'Unlock scrolling - results scrolls independently'
@@ -166,6 +176,16 @@ export function ResultsSectionHeader({
                 scrollLockButton
               ))}
 
+            {onShare && (
+              <ShareButton
+                onShare={onShare}
+                disabled={shareDisabled}
+                isSharing={isSharing}
+                isMobileLayout={false}
+                showStyledTooltip={showDesktopStyledTooltips}
+              />
+            )}
+
             {/* Export Dropdown for desktop */}
             <ExportDropdown
               showExportMenu={showExportMenu}
@@ -217,6 +237,16 @@ export function ResultsSectionHeader({
         {/* Mobile: Icon-only buttons on same line */}
         {isMobileLayout && (
           <>
+            {onShare && (
+              <ShareButton
+                onShare={onShare}
+                disabled={shareDisabled}
+                isSharing={isSharing}
+                isMobileLayout={true}
+                showStyledTooltip={false}
+              />
+            )}
+
             {/* Export Dropdown - icon only */}
             <ExportDropdown
               showExportMenu={showExportMenu}
@@ -280,6 +310,69 @@ export function ResultsSectionHeader({
       </div>
     </div>
   )
+}
+
+const SHARE_TRIGGER_TOOLTIP = 'Copy a public link to this comparison'
+
+function ShareButton({
+  onShare,
+  disabled,
+  isSharing,
+  isMobileLayout,
+  showStyledTooltip,
+}: {
+  onShare: () => void
+  disabled: boolean
+  isSharing: boolean
+  isMobileLayout: boolean
+  showStyledTooltip: boolean
+}) {
+  const shareTriggerButton = (
+    <button
+      type="button"
+      onClick={onShare}
+      className="follow-up-button export-dropdown-trigger"
+      title={showStyledTooltip || !isMobileLayout ? undefined : SHARE_TRIGGER_TOOLTIP}
+      disabled={disabled}
+      aria-label={isSharing ? 'Creating share link' : SHARE_TRIGGER_TOOLTIP}
+      data-testid="share-comparison-button"
+      style={
+        isMobileLayout
+          ? {
+              padding: '0.5rem',
+              minWidth: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }
+          : undefined
+      }
+    >
+      <svg
+        width={isMobileLayout ? '18' : '16'}
+        height={isMobileLayout ? '18' : '16'}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="18" cy="5" r="3" />
+        <circle cx="6" cy="12" r="3" />
+        <circle cx="18" cy="19" r="3" />
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+      </svg>
+      {!isMobileLayout && <span>{isSharing ? 'Sharing…' : 'Share'}</span>}
+    </button>
+  )
+
+  if (showStyledTooltip) {
+    return <StyledTooltip text={SHARE_TRIGGER_TOOLTIP}>{shareTriggerButton}</StyledTooltip>
+  }
+  return shareTriggerButton
 }
 
 /**

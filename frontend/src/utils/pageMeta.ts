@@ -10,6 +10,7 @@
 
 import { isPreviewDeploy } from '../config/deployEnv'
 import { getPageMetadata } from '../config/pageMetadata'
+import type { PublicShareSnapshot } from '../services/shareService'
 
 const BASE_URL = 'https://compareintel.com'
 const DEFAULT_OG_IMAGE = 'https://compareintel.com/brand/CompareIntel-social.png'
@@ -45,6 +46,16 @@ export function getPageMeta(pathname: string): PageMeta {
 
   // Check if it's an admin route
   const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '')
+  if (normalizedPath.startsWith('/c/')) {
+    return {
+      title: 'Shared comparison - CompareIntel',
+      description: 'A shared AI model comparison on CompareIntel.',
+      canonical: `${BASE_URL}${normalizedPath}`,
+      ogTitle: 'Shared comparison - CompareIntel',
+      ogDescription: 'A shared AI model comparison on CompareIntel.',
+      ogImage: DEFAULT_OG_IMAGE,
+    }
+  }
   if (normalizedPath.startsWith('/admin')) {
     return {
       title: 'Admin Panel - CompareIntel',
@@ -130,7 +141,8 @@ export function updatePageMeta(pathname: string): void {
   updateMetaTag('meta', 'name', 'description', meta.description)
 
   // Preview deploys must stay noindex even after client-side route updates.
-  if (isPreviewDeploy()) {
+  // Shared comparison permalinks are noindex by default (opt-in share, not a landing page).
+  if (isPreviewDeploy() || pathname.startsWith('/c/')) {
     updateMetaTag('meta', 'name', 'robots', 'noindex, nofollow')
     updateMetaTag('meta', 'name', 'googlebot', 'noindex, nofollow')
   }
@@ -150,4 +162,41 @@ export function updatePageMeta(pathname: string): void {
   if (meta.ogImage) {
     updateMetaTag('meta', 'name', 'twitter:image', meta.ogImage)
   }
+}
+
+function snippet(text: string, limit: number): string {
+  const collapsed = text.split(/\s+/).join(' ')
+  if (collapsed.length <= limit) return collapsed
+  return `${collapsed.slice(0, Math.max(0, limit - 1))}…`
+}
+
+/**
+ * Apply title/description/OG tags for a loaded (or missing) shared comparison.
+ * Share pages stay noindex by default.
+ */
+export function applySharePageMeta(snapshot: PublicShareSnapshot | null, pathname: string): void {
+  const canonicalPath = pathname.startsWith('/') ? pathname : `/${pathname}`
+  const canonical = `${BASE_URL}${canonicalPath}`
+  const names = snapshot?.models.map(model => model.name).join(', ') || 'AI models'
+  const title = snapshot
+    ? `CompareIntel comparison: ${snippet(snapshot.prompt, 80)}`
+    : 'Shared comparison not found - CompareIntel'
+  const description = snapshot
+    ? `Side-by-side comparison of ${names}. Prompt: ${snippet(snapshot.prompt, 140)}`
+    : 'This shared comparison is invalid or is no longer public.'
+
+  document.title = title
+  updateLinkTag('canonical', canonical)
+  updateMetaTag('meta', 'name', 'description', description)
+  updateMetaTag('meta', 'name', 'robots', 'noindex, nofollow')
+  updateMetaTag('meta', 'name', 'googlebot', 'noindex, nofollow')
+  updateMetaTag('meta', 'property', 'og:url', canonical)
+  updateMetaTag('meta', 'property', 'og:title', title)
+  updateMetaTag('meta', 'property', 'og:description', description)
+  updateMetaTag('meta', 'property', 'og:image', DEFAULT_OG_IMAGE)
+  updateMetaTag('meta', 'name', 'twitter:card', 'summary_large_image')
+  updateMetaTag('meta', 'name', 'twitter:url', canonical)
+  updateMetaTag('meta', 'name', 'twitter:title', title)
+  updateMetaTag('meta', 'name', 'twitter:description', description)
+  updateMetaTag('meta', 'name', 'twitter:image', DEFAULT_OG_IMAGE)
 }
