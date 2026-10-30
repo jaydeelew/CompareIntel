@@ -66,6 +66,7 @@
 
 .form-group input::placeholder {
   color: var(--text-secondary);
+  -webkit-text-fill-color: var(--text-secondary);
   opacity: 1;
 }
 
@@ -411,7 +412,6 @@ input:-webkit-autofill:active {
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -419,8 +419,21 @@ input:-webkit-autofill:active {
   padding: 1rem;
 }
 
+/* Keep blur on a sibling layer so the dialog is not a WebKit backdrop-filter
+   descendant — axe otherwise reports false color-contrast on empty inputs. */
+.auth-modal-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .auth-modal {
   position: relative;
+  z-index: 1;
   max-width: 500px;
   width: 100%;
   max-height: 90vh;

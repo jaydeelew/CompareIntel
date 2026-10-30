@@ -513,3 +513,20 @@ class AppSettings(Base):
     # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class SharedComparison(Base):
+    """Opt-in public snapshot of a completed comparison (no account PII)."""
+
+    __tablename__ = "shared_comparisons"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(16), unique=True, nullable=False, index=True)
+    prompt = Column(Text, nullable=False)
+    snapshot_json = Column(Text, nullable=False)
+    is_public = Column(Boolean, default=True, nullable=False, index=True)
+    owner_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    revoke_token_hash = Column(String(64), nullable=False)
+    created_at = Column(DateTime, default=func.now(), index=True)

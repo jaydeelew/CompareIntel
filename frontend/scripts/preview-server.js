@@ -84,7 +84,8 @@ app.get('*', (req, res) => {
     const path = req.path
     
     // Check if this is a known public route or /admin
-    const isKnownRoute = PUBLIC_ROUTES.includes(path) || path.startsWith('/admin')
+    const isKnownRoute =
+      PUBLIC_ROUTES.includes(path) || path.startsWith('/admin') || /^\/c\/[A-Za-z0-9]+$/.test(path)
     
     if (isKnownRoute) {
       // Serve the appropriate prerendered HTML or index.html

@@ -25,6 +25,9 @@ export * from './adminService'
 // Conversation service
 export * from './conversationService'
 
+// Public share snapshots
+export * from './shareService'
+
 // Models service
 export * from './modelsService'
 

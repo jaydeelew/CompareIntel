@@ -37,6 +37,7 @@ from .config import (
 from .database import Base, engine, get_db
 from .models import UsageLog
 from .routers import admin, api, auth, internal
+from .routers.share_pages import router as share_pages_router
 
 # Import model_stats from api router to share the same storage
 
@@ -382,6 +383,9 @@ app.include_router(api.router, prefix="/api/v1", tags=["v1"])
 app.include_router(auth.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(api.router, prefix="/api")
+
+# Public comparison permalinks (server-rendered HTML for OG crawlers)
+app.include_router(share_pages_router)
 
 # Maximum number of models allowed per request
 # Use the maximum model limit from configuration (pro_plus tier)

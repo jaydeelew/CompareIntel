@@ -46,6 +46,9 @@ export interface ResultsAreaProps {
   onToggleScrollLock: () => void
   onToggleExportMenu: () => void
   onExport: (format: ExportFormat) => Promise<void>
+  onShare?: () => void
+  isSharing?: boolean
+  canShare?: boolean
   onShowAllResults: () => void
   onScreenshot: (modelId: string) => void
   onCopyResponse: (modelId: string) => void
@@ -91,6 +94,9 @@ export function ResultsArea({
   onToggleScrollLock,
   onToggleExportMenu,
   onExport,
+  onShare,
+  isSharing = false,
+  canShare = true,
   onShowAllResults,
   onScreenshot,
   onCopyResponse,
@@ -117,6 +123,9 @@ export function ResultsArea({
           onToggleExportMenu={onToggleExportMenu}
           exportMenuRef={exportMenuRef}
           onExport={onExport}
+          onShare={onShare}
+          isSharing={isSharing}
+          canShare={canShare}
           closedCardsCount={closedCards.size}
           onShowAllResults={onShowAllResults}
           isMobileLayout={isMobileLayout}

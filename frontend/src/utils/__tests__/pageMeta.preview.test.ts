@@ -31,4 +31,18 @@ describe('updatePageMeta preview noindex', () => {
     expect(robots?.getAttribute('content')).toBe('index, follow')
     expect(document.querySelector('meta[name="googlebot"]')).toBeNull()
   })
+
+  it('sets noindex on shared comparison permalinks even in production', async () => {
+    vi.stubEnv('VITE_DEPLOY_ENV', 'production')
+    document.head.innerHTML = '<meta name="robots" content="index, follow" />'
+
+    const { updatePageMeta } = await import('../pageMeta')
+    updatePageMeta('/c/abc123xyz9')
+
+    const robots = document.querySelector('meta[name="robots"]')
+    const googlebot = document.querySelector('meta[name="googlebot"]')
+    expect(robots?.getAttribute('content')).toBe('noindex, nofollow')
+    expect(googlebot?.getAttribute('content')).toBe('noindex, nofollow')
+    expect(document.title).toContain('Shared comparison')
+  })
 })
