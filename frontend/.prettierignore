@@ -6,6 +6,8 @@ build/
 # Generated files
 *.min.js
 *.min.css
+src/data/generated/
+src/data/seo/modelDataSnapshot.json
 
 # Logs
 *.log

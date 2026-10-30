@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { readFileSync, existsSync } from 'fs'
 
+import { getPublicPaths } from './loadPublicPages.js'
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
@@ -65,18 +67,8 @@ app.use(compression({
 const distPath = join(__dirname, '..', 'dist')
 app.use(express.static(distPath))
 
-// Known public routes that should serve their prerendered HTML
-const PUBLIC_ROUTES = [
-  '/',
-  '/about',
-  '/features',
-  '/how-it-works',
-  '/faq',
-  '/image-generation',
-  '/help-me-choose-methodology',
-  '/privacy-policy',
-  '/terms-of-service',
-]
+// Known public routes from the shared page list (static + generated model pages)
+const PUBLIC_ROUTES = getPublicPaths()
 
 // SPA fallback with 404 handling
 app.get('*', (req, res) => {

@@ -58,6 +58,7 @@ services:
       dockerfile: Dockerfile
       additional_contexts:
         core: ./packages/compare-core
+        registry: ./backend/data
       target: dev
     ports:
       - "5173:5173"

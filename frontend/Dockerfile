@@ -17,6 +17,9 @@ COPY . .
 
 # Shared package lives one level above the frontend context (see additional_contexts / build-contexts).
 COPY --from=core . /packages/compare-core
+# Model registry for SEO catalog generation (optional at source, required for fresh model pages).
+COPY --from=registry models_registry.json /data/models_registry.json
+ENV SEO_REGISTRY_PATH=/data/models_registry.json
 # Peer deps (react) live in the frontend install; let core files resolve them.
 RUN ln -sfn /app/node_modules /packages/node_modules
 

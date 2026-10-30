@@ -48,6 +48,9 @@ export const NotFound: React.FC = () => {
                   marginTop: '1rem',
                 }}
               >
+                <Link to="/models" className="text-link">
+                  Models
+                </Link>
                 <Link to="/about" className="text-link">
                   About
                 </Link>

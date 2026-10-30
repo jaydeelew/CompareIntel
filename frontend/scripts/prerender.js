@@ -17,74 +17,11 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
+import { getPublicPages } from './loadPublicPages.js'
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-// Page metadata - must match frontend/src/config/pageMetadata.ts
-const PUBLIC_PAGES = [
-  {
-    path: '/',
-    title: 'CompareIntel - Compare AI & Image Models Side-by-Side | Free',
-    description:
-      'Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, FLUX, DALL-E from OpenAI, Anthropic, Google, Meta, xAI. Image generation comparison included. Free tier.',
-    h1: 'Compare AI Language and Image Models Side by Side',
-  },
-  {
-    path: '/about',
-    title: 'About - CompareIntel',
-    description:
-      'Learn about CompareIntel, the AI model comparison platform that helps you test and compare language and image models from OpenAI, Anthropic, Google, Meta, and more.',
-    h1: 'About CompareIntel',
-  },
-  {
-    path: '/features',
-    title: 'Features - CompareIntel',
-    description:
-      'Discover CompareIntel features: side-by-side AI comparison, latest models from OpenAI, Anthropic, Google, Meta, xAI, LaTeX rendering, syntax highlighting, and more.',
-    h1: 'CompareIntel Features',
-  },
-  {
-    path: '/how-it-works',
-    title: 'How It Works - CompareIntel',
-    description:
-      'Learn how CompareIntel works: compare AI models side-by-side, test prompts across multiple models, view streaming responses, and find the best AI for your needs.',
-    h1: 'How It Works',
-  },
-  {
-    path: '/faq',
-    title: 'FAQ - CompareIntel',
-    description:
-      'Frequently asked questions about CompareIntel: supported AI models, pricing, credits, image generation, data privacy, and how to get started.',
-    h1: 'Frequently Asked Questions',
-  },
-  {
-    path: '/image-generation',
-    title: 'Image Generation - CompareIntel',
-    description:
-      'Compare AI image generation models side-by-side: FLUX, Imagen, GPT-5 Image, DALL-E, Riverflow. Test prompts and find the best image AI for your creative projects.',
-    h1: 'AI Image Generation Comparison',
-  },
-  {
-    path: '/help-me-choose-methodology',
-    title: 'Help Me Choose Methodology - CompareIntel',
-    description:
-      'Learn about the CompareIntel methodology for choosing the right AI model: evaluation criteria, comparison framework, and best practices for testing AI models.',
-    h1: 'Help Me Choose Methodology',
-  },
-  {
-    path: '/privacy-policy',
-    title: 'Privacy Policy - CompareIntel',
-    description:
-      'CompareIntel Privacy Policy: how we collect, use, and protect your data. Learn about our commitment to user privacy and data security.',
-    h1: 'Privacy Policy',
-  },
-  {
-    path: '/terms-of-service',
-    title: 'Terms of Service - CompareIntel',
-    description:
-      'CompareIntel Terms of Service: user agreement, acceptable use policy, intellectual property rights, and terms governing use of our AI comparison platform.',
-    h1: 'Terms of Service',
-  },
-]
+const PUBLIC_PAGES = getPublicPages()
 
 async function prerenderPages() {
   const distPath = process.argv[2] || join(__dirname, '..', 'dist')

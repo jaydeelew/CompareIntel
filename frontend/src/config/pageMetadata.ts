@@ -1,8 +1,17 @@
 /**
  * Page Metadata Configuration
  * Central source of truth for page titles, descriptions, and metadata
- * Used for both client-side SEO and static prerendering
+ * Used for both client-side SEO and static prerendering.
+ *
+ * Static marketing pages live in staticPublicPages.json. Model pages are
+ * generated at build time into src/data/generated/seoCatalog.json. Sitemap,
+ * prerender, and the preview server read the same two files via
+ * scripts/loadPublicPages.js — do not hard-code a third copy of this list.
  */
+
+import seoCatalogJson from '../data/generated/seoCatalog.json'
+
+import staticPublicPagesJson from './staticPublicPages.json'
 
 export interface PageMetadata {
   path: string
@@ -13,93 +22,21 @@ export interface PageMetadata {
   changefreq: 'daily' | 'weekly' | 'monthly' | 'yearly'
 }
 
+const staticPublicPages = staticPublicPagesJson as PageMetadata[]
+const seoCatalog = seoCatalogJson as {
+  index: PageMetadata
+  models: Array<{ page: PageMetadata }>
+}
+
 /**
  * Public pages that should be prerendered for SEO
  * These pages will have static HTML generated at build time
  */
 export const PUBLIC_PAGES: readonly PageMetadata[] = [
-  {
-    path: '/',
-    title: 'CompareIntel - Compare AI & Image Models Side-by-Side | Free',
-    description:
-      'Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, FLUX, DALL-E from OpenAI, Anthropic, Google, Meta, xAI. Image generation comparison included. Free tier.',
-    h1: 'Compare AI Language and Image Models Side by Side',
-    priority: 1.0,
-    changefreq: 'weekly',
-  },
-  {
-    path: '/about',
-    title: 'About - CompareIntel',
-    description:
-      'Learn about CompareIntel, the AI model comparison platform that helps you test and compare language and image models from OpenAI, Anthropic, Google, Meta, and more.',
-    h1: 'About CompareIntel',
-    priority: 0.8,
-    changefreq: 'monthly',
-  },
-  {
-    path: '/features',
-    title: 'Features - CompareIntel',
-    description:
-      'Discover CompareIntel features: side-by-side AI comparison, latest models from OpenAI, Anthropic, Google, Meta, xAI, LaTeX rendering, syntax highlighting, and more.',
-    h1: 'CompareIntel Features',
-    priority: 0.8,
-    changefreq: 'monthly',
-  },
-  {
-    path: '/how-it-works',
-    title: 'How It Works - CompareIntel',
-    description:
-      'Learn how CompareIntel works: compare AI models side-by-side, test prompts across multiple models, view streaming responses, and find the best AI for your needs.',
-    h1: 'How It Works',
-    priority: 0.8,
-    changefreq: 'monthly',
-  },
-  {
-    path: '/faq',
-    title: 'FAQ - CompareIntel',
-    description:
-      'Frequently asked questions about CompareIntel: supported AI models, pricing, credits, image generation, data privacy, and how to get started.',
-    h1: 'Frequently Asked Questions',
-    priority: 0.7,
-    changefreq: 'monthly',
-  },
-  {
-    path: '/image-generation',
-    title: 'Image Generation - CompareIntel',
-    description:
-      'Compare AI image generation models side-by-side: FLUX, Imagen, GPT-5 Image, DALL-E, Riverflow. Test prompts and find the best image AI for your creative projects.',
-    h1: 'AI Image Generation Comparison',
-    priority: 0.8,
-    changefreq: 'monthly',
-  },
-  {
-    path: '/help-me-choose-methodology',
-    title: 'Help Me Choose Methodology - CompareIntel',
-    description:
-      'Learn about the CompareIntel methodology for choosing the right AI model: evaluation criteria, comparison framework, and best practices for testing AI models.',
-    h1: 'Help Me Choose Methodology',
-    priority: 0.7,
-    changefreq: 'monthly',
-  },
-  {
-    path: '/privacy-policy',
-    title: 'Privacy Policy - CompareIntel',
-    description:
-      'CompareIntel Privacy Policy: how we collect, use, and protect your data. Learn about our commitment to user privacy and data security.',
-    h1: 'Privacy Policy',
-    priority: 0.5,
-    changefreq: 'yearly',
-  },
-  {
-    path: '/terms-of-service',
-    title: 'Terms of Service - CompareIntel',
-    description:
-      'CompareIntel Terms of Service: user agreement, acceptable use policy, intellectual property rights, and terms governing use of our AI comparison platform.',
-    h1: 'Terms of Service',
-    priority: 0.5,
-    changefreq: 'yearly',
-  },
-] as const
+  ...staticPublicPages,
+  seoCatalog.index,
+  ...seoCatalog.models.map(model => model.page),
+]
 
 /**
  * Get metadata for a specific path

@@ -53,6 +53,12 @@ const SharedComparison = lazy(() =>
     default: module.SharedComparison,
   }))
 )
+const ModelsIndex = lazy(() =>
+  import('./components/pages/ModelsIndex').then(module => ({ default: module.ModelsIndex }))
+)
+const ModelPage = lazy(() =>
+  import('./components/pages/ModelPage').then(module => ({ default: module.ModelPage }))
+)
 
 function App() {
   return (
@@ -124,6 +130,22 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <ImageGeneration />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/models"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ModelsIndex />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/models/:slug"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ModelPage />
                     </Suspense>
                   }
                 />

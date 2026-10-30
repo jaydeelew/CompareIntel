@@ -86,6 +86,7 @@ import {
 import logger from '../utils/logger'
 import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
 import { isModelIdSelectableForUser } from '../utils/modelTierAccess'
+import { filterKnownModelIds, parseModelsQueryParam } from '../utils/preselectModelsFromQuery'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 import {
@@ -290,6 +291,29 @@ export function MainPage() {
   )
   const fetchModelsRef = useRef(refetchModels)
   fetchModelsRef.current = refetchModels
+
+  const appliedModelsQueryRef = useRef(false)
+  useEffect(() => {
+    if (appliedModelsQueryRef.current) return
+    const requested = parseModelsQueryParam(location.search)
+    if (requested.length === 0) {
+      appliedModelsQueryRef.current = true
+      return
+    }
+    if (Object.keys(modelsByProvider).length === 0) return
+    const known = filterKnownModelIds(requested, modelsByProvider).slice(0, maxModelsLimit)
+    if (known.length > 0) {
+      setSelectedModels(known)
+      setOriginalSelectedModels(known)
+    }
+    appliedModelsQueryRef.current = true
+  }, [
+    location.search,
+    maxModelsLimit,
+    modelsByProvider,
+    setOriginalSelectedModels,
+    setSelectedModels,
+  ])
   const [, setUserMessageTimestamp] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { isTouchDevice, isWideLayout, isMobileLayout, isCapabilityIconRowLayout } = useResponsive()
