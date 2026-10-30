@@ -36,7 +36,7 @@ from .config import (
 )
 from .database import Base, engine, get_db
 from .models import UsageLog
-from .routers import admin, api, auth
+from .routers import admin, api, auth, internal
 
 # Import model_stats from api router to share the same storage
 
@@ -368,6 +368,9 @@ async def global_exception_handler(request: Request, exc: Exception):
 # API versioning: Support both /api/ (backwards compatible) and /api/v1/ (versioned)
 # New clients should use /api/v1/, existing clients can continue using /api/
 # Both prefixes route to the same handlers for v1
+
+# Internal ops endpoints (hidden from OpenAPI; auth is per-route)
+app.include_router(internal.router)
 
 # Versioned API endpoints (/api/v1/) - recommended for new integrations
 app.include_router(auth.router, prefix="/api/v1", tags=["v1"])
