@@ -27,6 +27,7 @@ services:
     restart: unless-stopped
 
   backend:
+    image: compareintel-backend:${IMAGE_TAG:-current}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -58,6 +59,7 @@ services:
   # No separate frontend container needed—nginx builds and serves static files.
 
   nginx:
+    image: compareintel-nginx:${IMAGE_TAG:-current}
     build:
       context: ./frontend
       dockerfile: Dockerfile
