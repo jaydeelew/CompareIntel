@@ -199,9 +199,18 @@ test.describe('Accessibility Tests', () => {
 
       // Open login modal
       if (await clickLoginButton(page)) {
-        await page.waitForTimeout(500) // Wait for modal animation
+        const modal = page.getByTestId('auth-modal')
+        await expect(modal).toBeVisible({ timeout: 10000 })
+        await modal.evaluate(async (el: HTMLElement) => {
+          await Promise.all(
+            el.getAnimations().map(animation => animation.finished.catch(() => undefined))
+          )
+        })
 
-        const results = await runAccessibilityAudit(page)
+        const results = await new AxeBuilder({ page })
+          .include('[data-testid="auth-modal"]')
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+          .analyze()
 
         // Check for modal-specific accessibility issues
         const criticalViolations = results.violations.filter(
