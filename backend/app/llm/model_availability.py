@@ -3,7 +3,7 @@ OpenRouter availability checks for registry models.
 
 The models catalog can list ids that no longer have routable provider endpoints
 (for example, retired Bedrock versions). The daily report must catch those cases,
-not only ids missing from GET /api/v1/models.
+not only ids missing from GET /api/v1/models?output_modalities=all.
 """
 
 from __future__ import annotations

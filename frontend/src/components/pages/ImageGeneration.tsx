@@ -95,7 +95,7 @@ export const ImageGeneration: React.FC = () => {
             <h2>Supported Models</h2>
             <p>
               We support top image generation models from leading providers, including Google Gemini
-              image models, OpenAI GPT-5 Image, and others. Visit the main comparison page and
+              image models, Black Forest Labs Flux, and others. Visit the main comparison page and
               toggle to &quot;Image generation models&quot; to see the full list of available
               models.
             </p>

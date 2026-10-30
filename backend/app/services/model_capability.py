@@ -10,6 +10,7 @@ from typing import Any
 
 import httpx
 
+from ..llm.tokens import OPENROUTER_MODELS_LIST_PARAMS
 from ..model_runner import MODELS_BY_PROVIDER
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,10 @@ class ModelCapabilityService:
 
         try:
             client = self._get_client()
-            response = await client.get(self.OPENROUTER_MODELS_API)
+            response = await client.get(
+                self.OPENROUTER_MODELS_API,
+                params=OPENROUTER_MODELS_LIST_PARAMS,
+            )
             response.raise_for_status()
 
             data = response.json()

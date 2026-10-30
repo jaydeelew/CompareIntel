@@ -95,6 +95,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'google/gemini-3-flash-preview', evidence: 'LMSpeed (lmspeed.net): 160 t/s.' },
       { modelId: 'qwen/qwen3-coder-next', evidence: 'LMSpeed (lmspeed.net): 147 t/s.' },
       { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'LMSpeed (lmspeed.net): 138 t/s.' },
+      { modelId: 'sourceful/riverflow-v2-fast', evidence: 'LMSpeed (lmspeed.net): 133 t/s.' },
       { modelId: 'qwen/qwen3-next-80b-a3b-instruct', evidence: 'LMSpeed (lmspeed.net): 116 t/s.' },
       { modelId: 'qwen/qwen3-coder-flash', evidence: 'LMSpeed (lmspeed.net): 110 t/s.' },
       { modelId: 'google/gemini-2.5-pro', evidence: 'LMSpeed (lmspeed.net): 97 t/s.' },
@@ -225,10 +226,30 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Text-to-Image Arena (kearai.com): 1227.',
       },
       {
+        modelId: 'black-forest-labs/flux.2-max',
+        evidence: 'Text-to-Image Arena (kearai.com): 1168.',
+      },
+      {
+        modelId: 'black-forest-labs/flux.2-flex',
+        evidence: 'Text-to-Image Arena (kearai.com): 1156.',
+      },
+      {
         modelId: 'google/gemini-2.5-flash-image',
         evidence: 'Text-to-Image Arena (kearai.com): 1154.',
       },
+      {
+        modelId: 'black-forest-labs/flux.2-pro',
+        evidence: 'Text-to-Image Arena (kearai.com): 1153.',
+      },
+      {
+        modelId: 'bytedance-seed/seedream-4.5',
+        evidence: 'Text-to-Image Arena (kearai.com): 1140.',
+      },
       { modelId: 'openai/gpt-5-image-mini', evidence: 'Text-to-Image Arena (kearai.com): 1103.' },
+      {
+        modelId: 'black-forest-labs/flux.2-klein-4b',
+        evidence: 'Text-to-Image Arena (kearai.com): 1026.',
+      },
     ],
   },
   {

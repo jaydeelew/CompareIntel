@@ -46,6 +46,33 @@ class TestSaveRegistry:
         assert set(loaded["unregistered_tier_models"]) == set(original["unregistered_tier_models"])
 
 
+class TestCatalogLineup:
+    """OpenRouter's default /api/v1/models omits image-output models; keep them in registry."""
+
+    IMAGE_OUTPUT_MODEL_IDS = (
+        "black-forest-labs/flux.2-flex",
+        "black-forest-labs/flux.2-pro",
+        "black-forest-labs/flux.2-klein-4b",
+        "black-forest-labs/flux.2-max",
+        "black-forest-labs/flux-3-image",
+        "bytedance-seed/seedream-4.5",
+        "bytedance-seed/seedream-5-0-flash",
+        "openai/gpt-image-2.5-sunburst",
+        "sourceful/riverflow-v2-fast",
+        "sourceful/riverflow-v2-pro",
+    )
+
+    def test_image_output_models_remain_in_registry(self):
+        ids = registry.get_registry_model_ids()
+        missing = [mid for mid in self.IMAGE_OUTPUT_MODEL_IDS if mid not in ids]
+        assert missing == []
+
+    def test_retired_qwen_thinking_removed_instruct_kept(self):
+        ids = registry.get_registry_model_ids()
+        assert "qwen/qwen3-next-80b-a3b-thinking" not in ids
+        assert "qwen/qwen3-next-80b-a3b-instruct" in ids
+
+
 class TestTierFiltering:
     def test_is_model_available_paid_tier_always_true(self):
         model_id = "openai/gpt-4o"

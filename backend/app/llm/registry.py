@@ -54,6 +54,7 @@ KNOWN_NO_TEMPERATURE_MODEL_IDS: frozenset[str] = frozenset(
     {
         "openai/gpt-5-image",
         "openai/gpt-5-image-mini",
+        "openai/gpt-image-2.5-sunburst",
     }
 )
 
@@ -558,7 +559,8 @@ def refresh_openrouter_snapshot_from_live_api(
 ) -> OpenRouterSnapshotRefreshResult:
     """Replace bundled snapshot rows with live OpenRouter metadata for registry models.
 
-    Fetches ``GET /api/v1/models`` and writes one row per registry id found in the response.
+    Fetches ``GET /api/v1/models?output_modalities=all`` and writes one row per registry
+    id found in the response. The default ``/api/v1/models`` list omits image-output models.
     Rows for registry ids absent from the API are omitted; ids missing from the API are
     reported in :attr:`OpenRouterSnapshotRefreshResult.missing_from_api`.
     """

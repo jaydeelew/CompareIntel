@@ -113,6 +113,191 @@
         "knowledge_cutoff": null
       }
     ],
+    "Black Forest Labs": [
+      {
+        "id": "black-forest-labs/flux.2-flex",
+        "name": "Flux 2 Flex",
+        "description": "Flexible image generation model for balanced quality and speed.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "black-forest-labs/flux.2-pro",
+        "name": "Flux 2 Pro",
+        "description": "Frontier-level visual quality with text-to-image and editing up to 4MP resolution.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "black-forest-labs/flux.2-klein-4b",
+        "name": "Flux 2 Klein 4B",
+        "description": "Fastest and most cost-effective model in the FLUX.2 family, optimized for high-throughput use cases.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "black-forest-labs/flux.2-max",
+        "name": "Flux 2 Max",
+        "description": "Top-tier image model from Black Forest Labs with best image quality, prompt understanding, and editing capabilities.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "black-forest-labs/flux-3-image",
+        "name": "Flux 3 Image",
+        "description": "FLUX.3 Image is Black Forest Labs' flagship image generation and editing model.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ]
+      }
+    ],
+    "ByteDance Seed": [
+      {
+        "id": "bytedance-seed/seedream-4.5",
+        "name": "Seedream 4.5",
+        "description": "ByteDance's image model with improved editing consistency, portrait refinement, and text rendering. Per-image pricing.",
+        "category": "Image",
+        "provider": "ByteDance Seed",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K",
+          "4K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "bytedance-seed/seedream-5-0-flash",
+        "name": "Seedream 5.0 Flash",
+        "description": "Seedream 5.0 Flash is an image generation and editing model from ByteDance Seed.",
+        "category": "Image",
+        "provider": "ByteDance Seed",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ]
+      }
+    ],
     "Cohere": [
       {
         "id": "cohere/command-r7b-12-2024",
@@ -670,6 +855,32 @@
         "knowledge_cutoff": null
       },
       {
+        "id": "openai/gpt-image-2.5-sunburst",
+        "name": "Gpt Image 2.5 Sunburst",
+        "description": "GPT Image 2.5 Sunburst is an image generation and editing model from OpenAI, positioned as the precision-oriented tier of the GPT Image 2.5 series.",
+        "category": "Image",
+        "provider": "OpenAI",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ]
+      },
+      {
         "id": "openai/o3",
         "name": "o3",
         "description": "OpenAI's advanced reasoning model with state-of-the-art performance across math, science, and coding benchmarks.",
@@ -908,6 +1119,63 @@
         "knowledge_cutoff": null
       }
     ],
+    "Sourceful": [
+      {
+        "id": "sourceful/riverflow-v2-fast",
+        "name": "Riverflow V2 Fast",
+        "description": "Fastest variant of Sourceful's Riverflow 2.0 lineup for production deployments and low latency.",
+        "category": "Image",
+        "provider": "Sourceful",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "sourceful/riverflow-v2-pro",
+        "name": "Riverflow V2 Pro",
+        "description": "The most powerful Riverflow 2.0 variant for top-tier control and perfect text rendering in images.",
+        "category": "Image",
+        "provider": "Sourceful",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K",
+          "4K"
+        ],
+        "returns_multiple_images": false
+      }
+    ],
     "Stepfun": [
       {
         "id": "stepfun/step-5-preview",
@@ -1102,15 +1370,29 @@
   ],
   "image_free_tier_additional_models": [
     "google/gemini-2.5-flash-image",
+    "black-forest-labs/flux.2-max",
+    "black-forest-labs/flux.2-pro",
+    "black-forest-labs/flux.2-flex",
+    "black-forest-labs/flux.2-klein-4b",
+    "sourceful/riverflow-v2-fast",
+    "sourceful/riverflow-v2-pro",
+    "bytedance-seed/seedream-4.5",
     "openai/gpt-5-image",
     "openai/gpt-5-image-mini",
+    "black-forest-labs/flux-3-image",
+    "bytedance-seed/seedream-5-0-flash",
     "google/gemini-3-pro-image",
     "google/gemini-3.1-flash-image",
-    "google/gemini-nano-banana-2.1"
+    "google/gemini-nano-banana-2.1",
+    "openai/gpt-image-2.5-sunburst"
   ],
   "free_tier_additional_models": [
     "anthropic/claude-haiku-4.5",
     "anthropic/claude-haiku-5.5",
+    "black-forest-labs/flux.2-flex",
+    "black-forest-labs/flux.2-pro",
+    "bytedance-seed/seedream-4.5",
+    "bytedance-seed/seedream-5-0-flash",
     "deepseek/deepseek-v4-pro",
     "google/gemini-2.5-flash-image",
     "google/gemini-3.1-flash-image",

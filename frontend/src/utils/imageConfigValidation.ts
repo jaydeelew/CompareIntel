@@ -14,6 +14,18 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
   string,
   { image_aspect_ratios?: string[]; image_sizes?: string[] }
 > = {
+  // Black Forest Labs - Flux 2 family: 2K only (1K/4K RES_MISMATCH)
+  'black-forest-labs/flux.2-flex': { image_sizes: ['2K'] },
+  'black-forest-labs/flux.2-pro': { image_sizes: ['2K'] },
+  'black-forest-labs/flux.2-klein-4b': { image_sizes: ['2K'] },
+  'black-forest-labs/flux.2-max': { image_sizes: ['2K'] },
+
+  // ByteDance Seed - 2K/4K only; excludes 4:5, 5:4
+  'bytedance-seed/seedream-4.5': {
+    image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
+    image_sizes: ['2K', '4K'],
+  },
+
   // Google - Gemini image models
   'google/gemini-2.5-flash-image': {
     image_aspect_ratios: ['9:16', '2:3', '3:4', '4:5', '1:1', '5:4', '4:3', '3:2', '21:9'],
@@ -23,9 +35,32 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
   'google/gemini-3.1-flash-image': { image_sizes: ['1K', '2K', '4K'] },
   'google/gemini-nano-banana-2.1': { image_sizes: ['1K', '2K'] },
 
+  // Black Forest Labs - Flux 3
+  'black-forest-labs/flux-3-image': { image_sizes: ['1K', '2K'] },
+
+  // ByteDance Seed - Seedream 5.0 Flash
+  'bytedance-seed/seedream-5-0-flash': { image_sizes: ['1K', '2K'] },
+
   // OpenAI - 1:1 @ 1K only
   'openai/gpt-5-image': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
   'openai/gpt-5-image-mini': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
+  'openai/gpt-image-2.5-sunburst': { image_sizes: ['1K', '2K'] },
+
+  // Sourceful - Riverflow V2
+  'sourceful/riverflow-v2-fast': { image_sizes: ['1K', '2K'] },
+  'sourceful/riverflow-v2-fast-preview': {
+    image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
+    image_sizes: ['1K'],
+  },
+  'sourceful/riverflow-v2-max-preview': {
+    image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
+    image_sizes: ['1K'],
+  },
+  'sourceful/riverflow-v2-pro': { image_sizes: ['1K', '2K', '4K'] },
+  'sourceful/riverflow-v2-standard-preview': {
+    image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
+    image_sizes: ['1K'],
+  },
 }
 
 /** Ordered by width/height ascending (portrait to landscape) */

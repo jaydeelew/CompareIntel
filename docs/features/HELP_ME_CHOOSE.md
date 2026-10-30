@@ -51,7 +51,7 @@ Every ranking is labeled by its source type: **Public benchmark**, **CompareInte
 | **Math** | MATH, GSM8K (llmdb) | https://llmdb.com/benchmarks/math, https://llmdb.com/benchmarks/gsm8k | % (0–100) | Yes |
 | **Reasoning** | MMLU-Pro | https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/ | Overall % | Yes |
 | **Long context** | MRCR 1M (llmdb) | https://llmdb.com/benchmarks/mrcr-1m | Score /100 | Yes (sparse) |
-| **Best value** | OpenRouter pricing API | https://openrouter.ai/api/v1/models | Avg $/1M tokens | Yes |
+| **Best value** | OpenRouter pricing API | https://openrouter.ai/api/v1/models?output_modalities=all | Avg $/1M tokens | Yes |
 | **Fastest responses** | LMSpeed | https://lmspeed.net/leaderboard/best-throughput-models-weekly | Tokens/second | Yes |
 | **Multilingual** | Global-MMLU (llmdb) | https://llmdb.com/benchmarks/global-mmlu | 42-language score | Yes (sparse) |
 | **Legal** | LegalBench (VALS.ai) | https://www.vals.ai/benchmarks/legal_bench | % across 161 tasks | Yes |

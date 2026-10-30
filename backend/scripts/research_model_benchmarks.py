@@ -74,6 +74,8 @@ LMARENA_URL = "https://lmarena.ai/"
 VALS_LEGAL_BENCH_URL = "https://www.vals.ai/benchmarks/legal_bench"
 LMSPEED_URL = "https://lmspeed.net/leaderboard/best-throughput-models-weekly"
 OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
+# Default GET /api/v1/models omits image-output models; always request the full catalog.
+OPENROUTER_MODELS_LIST_PARAMS = {"output_modalities": "all"}
 GLOBAL_MMLU_URL = "https://llmdb.com/benchmarks/global-mmlu"
 MMLU_PRO_URL = "https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/"
 CREATIVE_WRITING_URL = "https://kearai.com/leaderboard/creative-writing"
@@ -236,6 +238,7 @@ def fetch_openrouter_pricing() -> dict[str, tuple[float, str]]:
     try:
         resp = httpx.get(
             OPENROUTER_MODELS_URL,
+            params=OPENROUTER_MODELS_LIST_PARAMS,
             headers={"HTTP-Referer": "https://compareintel.com"},
             timeout=20.0,
         )
@@ -766,10 +769,21 @@ TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
     "gemini-3-pro-image-preview": "google/gemini-3-pro-image",
     "gemini-3-pro-image-preview-2k": "google/gemini-3-pro-image",
     "gemini-3.1-flash-image-preview": "google/gemini-3.1-flash-image",
+    "flux-2-max": "black-forest-labs/flux.2-max",
+    "flux-2-pro": "black-forest-labs/flux.2-pro",
+    "flux-2-flex": "black-forest-labs/flux.2-flex",
+    "flux-2-klein-4b": "black-forest-labs/flux.2-klein-4b",
+    "seedream-4.5": "bytedance-seed/seedream-4.5",
+    "seedream-5.0-flash": "bytedance-seed/seedream-5-0-flash",
+    "flux-3-image": "black-forest-labs/flux-3-image",
+    "gpt-image-2.5-sunburst": "openai/gpt-image-2.5-sunburst",
     "nano-banana-2.1": "google/gemini-nano-banana-2.1",
     "gemini-nano-banana-2.1": "google/gemini-nano-banana-2.1",
     "gemini-3-pro-image": "google/gemini-3-pro-image",
     "gemini-3.1-flash-image": "google/gemini-3.1-flash-image",
+    "riverflow-v2-standard-preview": "sourceful/riverflow-v2-standard-preview",
+    "riverflow-v2-fast-preview": "sourceful/riverflow-v2-fast-preview",
+    "riverflow-v2-pro": "sourceful/riverflow-v2-pro",
     "gpt-image-1.5-high-fidelity": "openai/gpt-5-image",
     "gpt-image-1": "openai/gpt-5-image",
     "gpt-image-1-mini": "openai/gpt-5-image-mini",
@@ -1080,7 +1094,8 @@ def get_model_from_registry(model_id: str) -> dict | None:
 def fetch_openrouter_model(model_id: str) -> dict | None:
     try:
         resp = httpx.get(
-            "https://openrouter.ai/api/v1/models",
+            OPENROUTER_MODELS_URL,
+            params=OPENROUTER_MODELS_LIST_PARAMS,
             headers={"HTTP-Referer": "https://compareintel.com"},
             timeout=15.0,
         )

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Refresh backend/openrouter_models.json from the live OpenRouter /api/v1/models catalog.
+Refresh backend/openrouter_models.json from the live OpenRouter /api/v1/models catalog
+(``?output_modalities=all`` so image-output models are included).
 
 Writes one snapshot row per model id in models_registry.json that OpenRouter returns.
 Requires ``OPENROUTER_API_KEY`` (via ``app.config.settings``).

@@ -22,7 +22,7 @@ export const PUBLIC_PAGES: readonly PageMetadata[] = [
     path: '/',
     title: 'CompareIntel - Compare AI & Image Models Side-by-Side | Free',
     description:
-      'Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, and GPT-5 Image from OpenAI, Anthropic, Google, Meta, xAI. Image generation comparison included. Free tier.',
+      'Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, FLUX, DALL-E from OpenAI, Anthropic, Google, Meta, xAI. Image generation comparison included. Free tier.',
     h1: 'Compare AI Language and Image Models Side by Side',
     priority: 1.0,
     changefreq: 'weekly',
@@ -67,7 +67,7 @@ export const PUBLIC_PAGES: readonly PageMetadata[] = [
     path: '/image-generation',
     title: 'Image Generation - CompareIntel',
     description:
-      'Compare AI image generation models side-by-side: Gemini image models and GPT-5 Image. Test prompts and find the best image AI for your creative projects.',
+      'Compare AI image generation models side-by-side: FLUX, Imagen, GPT-5 Image, DALL-E, Riverflow. Test prompts and find the best image AI for your creative projects.',
     h1: 'AI Image Generation Comparison',
     priority: 0.8,
     changefreq: 'monthly',

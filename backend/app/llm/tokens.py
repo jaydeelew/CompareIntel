@@ -112,12 +112,16 @@ def refresh_model_token_limits(model_id: str | None = None) -> bool:
         return False
 
 
+# Default GET /api/v1/models omits image-output models; always request the full catalog.
+OPENROUTER_MODELS_LIST_PARAMS = {"output_modalities": "all"}
+
+
 def fetch_all_models_from_openrouter() -> dict[str, dict[str, Any]] | None:
     try:
         with httpx.Client(timeout=30.0) as http_client:
             response = http_client.get(
                 "https://openrouter.ai/api/v1/models",
-                params={"output_modalities": "all"},
+                params=OPENROUTER_MODELS_LIST_PARAMS,
                 headers={
                     "Authorization": f"Bearer {settings.openrouter_api_key}",
                     "HTTP-Referer": "https://compareintel.com",
