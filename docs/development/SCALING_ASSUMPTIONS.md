@@ -130,6 +130,29 @@ SQLite uses `NullPool` (no connection pooling) to avoid locking issues. Pool set
 
 ---
 
+## When a 4 GB instance is worth it
+
+Stay on the current 2 GB box while worker, memory-limit, and log-cap fixes hold. Propose upgrading to 4 GB (Jack's call) when any of these happen after those fixes land:
+
+- Available memory sits below 15%, or swap stays above 50%, for most of a typical day across a week.
+- Stalls or OOM kills come back with 2 workers, so traffic would need more workers than memory allows.
+- Sustained concurrency goes past what 2 workers handle, meaning requests queue or latency at the 95th percentile climbs at peak.
+
+Trimming memory (worker count, cache sizes, image pruning) is the first step; the upgrade is the fallback once real usage outgrows those. Compare the monthly cost delta against current usage in the monthly capacity report before proposing it.
+
+### Host metrics Pulse can poll
+
+`GET /internal/metrics/host` (Bearer `METRICS_TOKEN`; returns 404 when the token is unset, 401 when it is wrong). Not in public API docs. Cheap `/proc` + `statvfs` snapshot, safe to poll about once a minute.
+
+Thresholds encoded on the response as `ok` / `warn` / `critical` per metric:
+
+| Signal | Warn | Critical |
+|--------|------|----------|
+| Memory | available < 15%, or swap used > 50% | available < 5%, swap used > 80%, or `oom_kill` from `/proc/vmstat` has increased from 0 |
+| Disk (`/` and the Docker data dir if it is a distinct volume) | used > 80% | used > 90% |
+
+---
+
 ## Scaling Considerations
 
 1. **Horizontal scaling** — Add Gunicorn workers (`WEB_CONCURRENCY`) or run multiple backend replicas behind a load balancer. When scaling workers or replicas, adjust database pool settings to stay under the connection limit. Redis is used for distributed anonymous rate limiting and shared caching to maintain consistency across workers/replicas.

@@ -42,6 +42,17 @@ class Settings(BaseSettings):
     # Security
     secret_key: str
 
+    # Bearer token for GET /internal/metrics/host (Pulse). Unset/empty disables the endpoint (404).
+    metrics_token: str | None = None
+
+    @field_validator("metrics_token", mode="before")
+    @classmethod
+    def parse_metrics_token(cls, v):
+        """Treat empty env strings as unset so the metrics endpoint stays disabled."""
+        if v == "" or v is None:
+            return None
+        return v
+
     # API Keys
     # Optional in test environments (when SKIP_CONFIG_VALIDATION is set)
     # Validation function will check this in non-test environments
