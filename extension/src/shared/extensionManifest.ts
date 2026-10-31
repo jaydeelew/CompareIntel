@@ -24,6 +24,8 @@ export const DEV_HOST_PERMISSIONS = [
 /** Chrome production API permissions. `tabs` and optional all-http hosts are intentionally omitted. */
 export const CHROME_PERMISSIONS = ['sidePanel', 'storage', 'scripting', 'activeTab'] as const
 
+export const EXTENSION_PAGES_CSP = "script-src 'self'; object-src 'none'"
+
 /** Firefox has sidebar_action instead of sidePanel. */
 export const FIREFOX_PERMISSIONS = ['storage', 'scripting', 'activeTab'] as const
 
@@ -74,7 +76,7 @@ export function createChromeManifest(env: ManifestBuildEnv) {
     },
     content_scripts: [webAppBridgeContentScript(webAppMatches)],
     content_security_policy: {
-      extension_pages: "script-src 'self'; object-src 'self'",
+      extension_pages: EXTENSION_PAGES_CSP,
     },
     permissions: [...CHROME_PERMISSIONS],
     host_permissions: hostPermissions,
@@ -122,7 +124,7 @@ export function createFirefoxManifest(env: ManifestBuildEnv) {
       type: 'module',
     },
     content_security_policy: {
-      extension_pages: "script-src 'self'; object-src 'self'",
+      extension_pages: EXTENSION_PAGES_CSP,
     },
     permissions: [...FIREFOX_PERMISSIONS],
     host_permissions: isDev

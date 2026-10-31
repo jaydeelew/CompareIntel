@@ -8,8 +8,8 @@ import {
   parseCiClaimHandoffNonce,
   senderWebOrigin,
 } from '../shared/externalAuth'
-import { authorizeTabContextMessage } from '../shared/extensionSender'
-import { claimHandoffTokens, consumeHandoff, storeHandoff } from '../shared/handoff'
+import { acceptHandoffTokensFromSender, authorizeRuntimeMessage } from '../shared/extensionSender'
+import { bindHandoffTab, claimHandoffTokens, consumeHandoff, storeHandoff } from '../shared/handoff'
 import type { CiExternalMessage } from '../shared/messages'
 import { isAllowedWebAppOrigin } from '../shared/webAppOrigins'
 import {
@@ -33,7 +33,7 @@ type BackgroundMessage =
   | { type: 'STORE_HANDOFF'; payload: Parameters<typeof storeHandoff>[0]; tokens?: Parameters<typeof storeHandoff>[1] }
   | { type: 'BROADCAST_LOGOUT' }
   | { type: 'WEB_APP_BRIDGE_READY' }
-  | { type: 'OPEN_TAB_WITHOUT_PANEL'; url: string; windowId?: number }
+  | { type: 'OPEN_TAB_WITHOUT_PANEL'; url: string; windowId?: number; bindHandoff?: boolean }
 
 type BackgroundResponse =
   | TabContextResponse
@@ -120,7 +120,7 @@ browser.runtime.onMessageExternal.addListener(
 
     const nonce = parseCiClaimHandoffNonce(message)
     if (nonce) {
-      void claimHandoffTokens(nonce)
+      void claimHandoffTokens(nonce, sender.tab?.id)
         .then((tokens) => sendResponse({ ok: Boolean(tokens), tokens }))
         .catch(() => sendResponse({ ok: false }))
       return true
@@ -139,7 +139,7 @@ browser.runtime.onMessage.addListener(
   ) => {
     const typedMessage = message as BackgroundMessage
 
-    if (!authorizeTabContextMessage(typedMessage.type, sender)) {
+    if (!authorizeRuntimeMessage(typedMessage.type, sender)) {
       sendResponse({ type: 'ERROR', message: 'Unauthorized' })
       return true
     }
@@ -170,14 +170,15 @@ browser.runtime.onMessage.addListener(
     }
 
     if (typedMessage.type === 'GET_HANDOFF') {
-      void consumeHandoff()
+      void consumeHandoff(sender.tab?.id)
         .then((payload) => sendResponse({ type: 'HANDOFF', payload }))
         .catch(() => sendResponse({ type: 'HANDOFF', payload: null }))
       return true
     }
 
     if (typedMessage.type === 'STORE_HANDOFF') {
-      void storeHandoff(typedMessage.payload, typedMessage.tokens)
+      const tokens = acceptHandoffTokensFromSender(sender, typedMessage.tokens)
+      void storeHandoff(typedMessage.payload, tokens)
         .then(() => sendResponse({ type: 'OK' }))
         .catch((err: unknown) => {
           sendResponse({
@@ -190,6 +191,11 @@ browser.runtime.onMessage.addListener(
 
     if (typedMessage.type === 'BROADCAST_LOGOUT') {
       void notifyWebAppTabsLogout().then(() => sendResponse({ type: 'OK' }))
+      return true
+    }
+
+    if (typedMessage.type === 'WEB_APP_BRIDGE_READY') {
+      sendResponse({ type: 'OK' })
       return true
     }
 
@@ -206,7 +212,12 @@ browser.runtime.onMessage.addListener(
       }
 
       void openUrlWithoutSidePanel(typedMessage.url, typedMessage.windowId)
-        .then(() => sendResponse({ type: 'OK' }))
+        .then(async (tabId) => {
+          if (typedMessage.bindHandoff && tabId != null) {
+            await bindHandoffTab(tabId)
+          }
+          sendResponse({ type: 'OK' })
+        })
         .catch((err: unknown) => {
           sendResponse({
             type: 'ERROR',

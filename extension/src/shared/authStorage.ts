@@ -70,7 +70,9 @@ export async function lockRefreshTokenToTrustedContexts(): Promise<void> {
   try {
     await chrome.storage?.local?.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' })
   } catch {
-    // Firefox and older Chrome do not support setAccessLevel.
+    // Firefox: storage.local.setAccessLevel is a no-op (API not implemented).
+    // Older Chrome also lacks it. Content-script reads are still denied by the
+    // runtime message allowlist.
   }
 }
 

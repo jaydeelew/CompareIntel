@@ -202,10 +202,11 @@ Page content is read when you **submit with page context on**, not when the pane
 
 ### Auth and handoff (security)
 
-- Access tokens live in `chrome.storage.session`. Refresh tokens live in `chrome.storage.local` with `setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })` so content scripts cannot read them. A 401 from `/auth/refresh` clears both.
+- Access tokens live in `chrome.storage.session`. Refresh tokens live in `chrome.storage.local` with `setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })` so content scripts cannot read them. **Firefox: `setAccessLevel` is a no-op** (API not implemented). A 401 from `/auth/refresh` clears both.
+- Runtime messages from content scripts (any `sender.tab` or non-extension-page origin) are **allowlisted**: only `GET_HANDOFF`, `BROADCAST_LOGOUT`, and `WEB_APP_BRIDGE_READY`. Every other type requires an extension-page sender. Default is deny. `STORE_HANDOFF` never accepts page-supplied tokens.
 - The web app already sends tokens to the extension with `chrome.runtime.sendMessage(extensionId)` (`CI_AUTH`, `externally_connectable`).
-- The content-script bridge **must not** put access or refresh tokens on `window.postMessage`. Handoff responses include conversation state plus a one-time `handoffNonce` only.
-- **Follow-up (web app):** on `?handoff=1`, call `chrome.runtime.sendMessage(extensionId, { type: 'CI_CLAIM_HANDOFF', nonce })` and use the returned tokens to establish the cookie session. Until that ships, opening the web app from the extension hydrates prompt/results without transferring the session.
+- The content-script bridge **must not** put access or refresh tokens on `window.postMessage`. Handoff responses include conversation state plus a one-time `handoffNonce` bound to the opened tab. `crypto.randomUUID` is the only nonce source.
+- **Follow-up (web app):** on `?handoff=1`, call `chrome.runtime.sendMessage(extensionId, { type: 'CI_CLAIM_HANDOFF', nonce })` from that tab and use the returned tokens to establish the cookie session. Until that ships, opening the web app from the extension hydrates prompt/results without transferring the session.
 
 ---
 
@@ -221,7 +222,7 @@ Page content is read when you **submit with page context on**, not when the pane
    ```
    Produces `extension/compareintel-extension.zip`.
 
-`npm run extension:build` is a one-shot production build: it must write `extension/dist/manifest.json` and exit. The production manifest omits localhost from `host_permissions`, `externally_connectable`, and the web-app content-script matches (those stay in `vite` / `extension:dev` only). It must not register content scripts on `<all_urls>`. The side panel is not listed in `web_accessible_resources`.
+`npm run extension:build` is a one-shot production build: it must write `extension/dist/manifest.json` and exit. The production manifest omits localhost from `host_permissions`, `externally_connectable`, and the web-app content-script matches (those stay in `vite` / `extension:dev` only). It must not register content scripts on `<all_urls>`. The side panel is not listed in `web_accessible_resources`. `content_security_policy.extension_pages` is `script-src 'self'; object-src 'none'`.
 
 ### Backend
 
