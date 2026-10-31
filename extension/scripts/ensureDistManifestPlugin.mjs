@@ -2,6 +2,8 @@ import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
+const NESTED_BUILD_ENV = 'COMPAREINTEL_EXTENSION_BUILDING'
+
 function isValidManifest(manifestPath) {
   try {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
@@ -25,10 +27,14 @@ async function waitForValidManifest(manifestPath, { timeoutMs = 30000, intervalM
 }
 
 export function runExtensionBuild(extensionRoot, reason) {
+  if (process.env[NESTED_BUILD_ENV] === '1') {
+    throw new Error(`Refusing nested extension build (${reason})`)
+  }
   console.warn(`[compareintel] dist/manifest.json missing or invalid (${reason}) — running extension build...`)
   const result = spawnSync('npm', ['run', 'build'], {
     cwd: extensionRoot,
     stdio: 'inherit',
+    env: { ...process.env, [NESTED_BUILD_ENV]: '1' },
   })
   if (result.status !== 0) {
     throw new Error('Failed to restore dist/manifest.json')
@@ -37,25 +43,10 @@ export function runExtensionBuild(extensionRoot, reason) {
 
 export function ensureDistManifestPlugin(extensionRoot) {
   const manifestPath = path.join(extensionRoot, 'dist', 'manifest.json')
-  let restoring = false
-  let devMode = false
-
-  function restoreManifest(reason) {
-    if (restoring || isValidManifest(manifestPath)) return
-    // Production build wipes dist (emptyOutDir) and races with CRXJS during dev/HMR.
-    if (devMode) return
-    restoring = true
-    try {
-      runExtensionBuild(extensionRoot, reason)
-    } finally {
-      restoring = false
-    }
-  }
 
   return {
     name: 'ensure-dist-manifest',
     configureServer(server) {
-      devMode = true
       server.httpServer?.once('listening', () => {
         void (async () => {
           const ready = await waitForValidManifest(manifestPath)
@@ -64,16 +55,15 @@ export function ensureDistManifestPlugin(extensionRoot) {
           } else {
             console.error(
               '[compareintel] dist/manifest.json is still missing.\n' +
-                'Stop the dev server and run: npm run build -w @compareintel/extension'
+                'Stop the dev server and run: npm run build -w @compareintel/extension',
             )
           }
         })()
       })
     },
-    closeBundle() {
-      // Dev HMR also triggers closeBundle; only validate full build output.
-      if (!process.argv.includes('build')) return
-      restoreManifest('build finished without manifest')
-    },
+    // CRXJS fires closeBundle on intermediate Rollup jobs before it writes
+    // dist/manifest.json. Respawning `vite build` from that hook emptied dist
+    // and looped until timeout. Production validation lives in
+    // scripts/assert-dist-manifest.mjs instead.
   }
 }
