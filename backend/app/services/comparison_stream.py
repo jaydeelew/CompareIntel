@@ -27,6 +27,7 @@ from ..config.constants import OVERAGE_USD_PER_CREDIT
 from ..config.settings import settings
 from ..credit_manager import get_user_credits
 from ..database import SessionLocal
+from ..llm.registry import openrouter_api_key_for_client
 from ..model_runner import (
     MODELS_BY_PROVIDER,
     call_openrouter_streaming,
@@ -228,7 +229,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             None
                             if use_mock
                             else OpenAI(
-                                api_key=settings.openrouter_api_key,
+                                api_key=openrouter_api_key_for_client(),
                                 base_url="https://openrouter.ai/api/v1",
                                 default_headers={
                                     "HTTP-Referer": "https://compareintel.com",

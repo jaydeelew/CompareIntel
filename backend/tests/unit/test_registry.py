@@ -73,6 +73,18 @@ class TestCatalogLineup:
         assert "qwen/qwen3-next-80b-a3b-instruct" in ids
 
 
+class TestOpenRouterClientKey:
+    def test_empty_api_key_is_accepted_by_openai_client(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(registry.settings, "openrouter_api_key", "")
+        key = registry.openrouter_api_key_for_client()
+        assert key
+        from openai import OpenAI
+
+        OpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
+
+
 class TestTierFiltering:
     def test_is_model_available_paid_tier_always_true(self):
         model_id = "openai/gpt-4o"

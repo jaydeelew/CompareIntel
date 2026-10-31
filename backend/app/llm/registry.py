@@ -802,9 +802,19 @@ def filter_models_by_tier(
     return result
 
 
-client = OpenAI(api_key=settings.openrouter_api_key, base_url="https://openrouter.ai/api/v1")
+# openai 2.54+ raises OpenAIError when api_key is empty. API-contract CI and
+# local/dev boots often start with OPENROUTER_API_KEY unset or "".
+_MISSING_OPENROUTER_API_KEY = "missing-openrouter-api-key"
+
+
+def openrouter_api_key_for_client() -> str:
+    """Return an api_key the OpenAI client will accept at construction time."""
+    return settings.openrouter_api_key or _MISSING_OPENROUTER_API_KEY
+
+
+client = OpenAI(api_key=openrouter_api_key_for_client(), base_url="https://openrouter.ai/api/v1")
 client_with_tool_headers = OpenAI(
-    api_key=settings.openrouter_api_key,
+    api_key=openrouter_api_key_for_client(),
     base_url="https://openrouter.ai/api/v1",
     default_headers={
         "HTTP-Referer": "https://compareintel.com",
