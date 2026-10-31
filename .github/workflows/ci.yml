@@ -62,6 +62,9 @@ jobs:
       - name: Check CSP header sync
         run: node scripts/check-csp-sync.js
 
+      - name: Check nginx host-metrics proxy
+        run: node scripts/check-nginx-metrics-proxy.js
+
   frontend-lint:
     name: Frontend Lint & Type Check
     needs: detect-changes

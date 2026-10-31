@@ -144,6 +144,16 @@ Trimming memory (worker count, cache sizes, image pruning) is the first step; th
 
 `GET /internal/metrics/host` (Bearer `METRICS_TOKEN`; returns 404 when the token is unset, 401 when it is wrong). Not in public API docs. Cheap `/proc` + `statvfs` snapshot, safe to poll about once a minute.
 
+Production nginx (`nginx/nginx.ssl.conf` via `docker-compose.ssl.yml`, and `nginx/nginx.prod.conf`) exact-match proxies **only** this path to the backend. Other `/internal/*` paths are not proxied. Nginx does not authenticate; the backend token check is the only auth. Header: `Authorization: Bearer <token>` (same as the FastAPI `Header()` on that route).
+
+```bash
+# Valid token → JSON snapshot (memory/swap/disk/load/oom).
+curl -H "Authorization: Bearer $METRICS_TOKEN" https://compareintel.com/internal/metrics/host
+
+# Missing or wrong token → 401, never metrics data.
+curl -i https://compareintel.com/internal/metrics/host
+```
+
 Thresholds encoded on the response as `ok` / `warn` / `critical` per metric:
 
 | Signal | Warn | Critical |
