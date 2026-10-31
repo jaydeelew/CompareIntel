@@ -9,12 +9,18 @@ updates:
       time: "09:00"
       timezone: "America/New_York"
     groups:
-      security-updates:
+      # Majors stay ungrouped so they can be reviewed one at a time.
+      minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
-          - "patch"
           - "minor"
+          - "patch"
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
     # Ignore rules apply to grouped version updates. Version ranges
     # also apply to Dependabot security updates (update-types alone do not).
     ignore:
@@ -23,12 +29,18 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "bcrypt"
         versions: [">=5.0.0"]
+      # Also hold 4.1+; 4.0.1 is the last release known-good with passlib 1.7.4.
+      - dependency-name: "bcrypt"
+        versions: [">=4.1.0"]
       # openai 3+ needs a client migration (backend is on openai 2.x).
       - dependency-name: "openai"
         update-types: ["version-update:semver-major"]
       - dependency-name: "openai"
         versions: [">=3.0.0"]
-    open-pull-requests-limit: 5
+      # Stripe 16+ is a major client rewrite; keep majors ungrouped and ignored.
+      - dependency-name: "stripe"
+        update-types: ["version-update:semver-major"]
+    open-pull-requests-limit: 3
     # No repo labels exist for Dependabot; [] disables default labels too.
     labels: []
     commit-message:
@@ -37,21 +49,44 @@ updates:
     reviewers:
       - "jaydeelew"
 
-  # Frontend npm dependencies
+  # npm workspace (root lockfile). frontend/ is a workspace member, so
+  # `cd frontend && npm ci` validates against the root package-lock.json,
+  # not frontend/package-lock.json. Pointing Dependabot at /frontend made
+  # every npm PR fail npm ci (package.json bumped, root lockfile stale).
+  #
+  # A previous comment omitted directory: "/" because extension depends on
+  # @compareintel/core via file:../compare-core (that path does not exist
+  # from extension/; the real package is packages/compare-core). That used
+  # to fail Dependabot with path_dependencies_not_reachable.
+  #
+  # We still use "/" because it is the only YAML-only fix that updates the
+  # lockfile CI actually reads. npm workspaces already resolve
+  # @compareintel/core via packages/* (root lockfile links
+  # node_modules/@compareintel/core -> packages/compare-core). Dependabot
+  # treats workspace packages by name, so the stale file: path should not
+  # block the graph. We are not rewriting the file: path here: that would
+  # require lockfile edits, which another PR is handling. If the root npm
+  # job still errors, the follow-up is to change the extension dep to
+  # file:../packages/compare-core (or "*") in that lockfile PR.
   - package-ecosystem: "npm"
-    directory: "/frontend"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
       timezone: "America/New_York"
     groups:
-      security-updates:
+      minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
-          - "patch"
           - "minor"
+          - "patch"
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
     # Ignore rules apply to grouped version updates. Version ranges
     # also apply to Dependabot security updates (update-types alone do not).
     ignore:
@@ -70,37 +105,54 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "vite"
         versions: [">=8.0.0"]
-    open-pull-requests-limit: 5
+      # frontend is on typescript ~5.3.0; 5.4+ is a separate migration.
+      - dependency-name: "typescript"
+        versions: [">=5.4.0"]
+      # jszip 3.10.2+ is held for the GPL license constraint (stay on 3.10.1).
+      - dependency-name: "jszip"
+        versions: [">=3.10.2"]
+      # React 19 / plugin-react 5 / Vitest 5 / imagetools 10+ need dedicated PRs.
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitejs/plugin-react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vite-imagetools"
+        update-types: ["version-update:semver-major"]
+    open-pull-requests-limit: 3
     # No repo labels exist for Dependabot; [] disables default labels too.
     labels: []
     commit-message:
-      prefix: "build(frontend)"
+      prefix: "build"
       include: "scope"
     reviewers:
       - "jaydeelew"
 
-  # Root npm is intentionally omitted. The workspace root lists
-  # packages/*, extension, and frontend, and extension depends on
-  # @compareintel/core via file:../compare-core (a path that does not
-  # exist from extension/). Dependabot's "npm_and_yarn in /." job
-  # therefore fails with path_dependencies_not_reachable. Frontend
-  # already has its own npm entry below; keep that as the npm source.
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
       time: "09:00"
       timezone: "America/New_York"
     groups:
-      security-updates:
+      minor-and-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
-          - "patch"
           - "minor"
-    open-pull-requests-limit: 5
+          - "patch"
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    open-pull-requests-limit: 3
     # No repo labels exist for Dependabot; [] disables default labels too.
     # (ci was also not a defined label.)
     labels: []
