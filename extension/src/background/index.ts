@@ -21,7 +21,6 @@ const tabContextManager = new TabContextManager()
 
 type BackgroundMessage =
   | TabContextMessage
-  | { type: 'SELECTION_CAPTURED'; text: string }
   | { type: 'GET_PANEL_SCOPE' }
   | { type: 'SET_PANEL_SCOPE'; scope: PanelScope }
   | { type: 'GET_HANDOFF' }
@@ -75,6 +74,7 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 
 browser.action.onClicked.addListener(async (tab) => {
   if (tab.id) {
+    await tabContextManager.captureTab(tab)
     await openPanelForTab(tab.id)
   }
 })
@@ -114,16 +114,10 @@ browser.runtime.onMessageExternal.addListener(
 browser.runtime.onMessage.addListener(
   (
     message: unknown,
-    sender,
+    _sender,
     sendResponse: (response: BackgroundResponse) => void
   ) => {
     const typedMessage = message as BackgroundMessage
-
-    if (typedMessage.type === 'SELECTION_CAPTURED' && sender.tab?.id) {
-      tabContextManager.setSelection(sender.tab.id, typedMessage.text)
-      sendResponse({ type: 'OK' })
-      return true
-    }
 
     if (typedMessage.type === 'GET_PANEL_SCOPE') {
       void getPanelScope()

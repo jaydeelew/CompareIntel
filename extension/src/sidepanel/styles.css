@@ -718,6 +718,13 @@ textarea {
   flex-wrap: wrap;
 }
 
+.context-restriction-note {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
 .tab-icons {
   display: flex;
   align-items: center;

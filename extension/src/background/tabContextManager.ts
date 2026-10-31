@@ -1,6 +1,8 @@
 import {
   buildTabContextBundle,
   DEFAULT_TAB_CONTEXT_SETTINGS,
+  type ActiveTabInfo,
+  type TabAccessRestriction,
   type TabContextBundle,
   type TabContextEntry,
   type TabContextMessage,
@@ -9,33 +11,30 @@ import {
 } from '@compareintel/core'
 
 import {
-  extractPageContent,
   MAX_PAGE_TEXT_CHARS,
   MAX_SELECTION_CHARS,
   type ExtractedPageContent,
 } from '../shared/extractPageContent'
-import { canExtractTab } from '../shared/urlPolicy'
+import { executeExtractPageContent } from '../shared/pageInjection'
+import { canExtractTab, isRestrictedPage, pageAccessMessage } from '../shared/urlPolicy'
 
 interface CachedEntry {
   entry: TabContextEntry
   contentHash: string
 }
 
-type PageContentResponse = { type: 'PAGE_CONTENT'; content: ExtractedPageContent }
-
-const CONTENT_SCRIPT_RETRY_MS = [0, 50, 100, 200, 400, 800]
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 const MAX_CACHED_TABS = 20
+
+function tabTitle(tab: { title?: string; url?: string }, fallback = 'This tab'): string {
+  return tab.title || tab.url || fallback
+}
 
 export class TabContextManager {
   private cache = new Map<number, CachedEntry>()
   private pinnedTabIds = new Set<number>()
   private settings: TabContextSettings = { ...DEFAULT_TAB_CONTEXT_SETTINGS }
   private selectionByTab = new Map<number, string>()
+  private lastInvoked: ActiveTabInfo | null = null
 
   constructor() {
     chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
@@ -47,6 +46,7 @@ export class TabContextManager {
       this.cache.delete(tabId)
       this.pinnedTabIds.delete(tabId)
       this.selectionByTab.delete(tabId)
+      if (this.lastInvoked?.tabId === tabId) this.lastInvoked = null
     })
   }
 
@@ -84,42 +84,60 @@ export class TabContextManager {
     this.selectionByTab.clear()
   }
 
+  rememberInvokedTab(tab: { id?: number; url?: string; title?: string; favIconUrl?: string }): void {
+    if (tab.id == null) return
+    this.lastInvoked = {
+      tabId: tab.id,
+      url: tab.url ?? '',
+      title: tabTitle(tab),
+      favIconUrl: tab.favIconUrl,
+    }
+  }
+
+  /** Snapshot selection + page text after a user gesture (action, panel open, submit). */
+  async captureTab(tab: {
+    id?: number
+    url?: string
+    title?: string
+    favIconUrl?: string
+  }): Promise<void> {
+    this.rememberInvokedTab(tab)
+    if (tab.id == null) return
+    if (tab.url && !canExtractTab(tab.url)) return
+    const content = await executeExtractPageContent(tab.id)
+    if (!content) return
+    if (content.selection) this.setSelection(tab.id, content.selection)
+    await this.extractTab(tab.id, true, content)
+  }
+
   async handleMessage(message: TabContextMessage): Promise<TabContextResponse> {
     try {
       switch (message.type) {
         case 'GET_ACTIVE_TAB': {
-          const window = await chrome.windows.getLastFocused().catch(() => null)
-          let tab = window?.id
-            ? (await chrome.tabs.query({ active: true, windowId: window.id }))[0]
-            : undefined
-          if (!tab?.id || !tab.url) {
-            tab = (await chrome.tabs.query({ active: true, lastFocusedWindow: true }))[0]
+          if (message.capture) {
+            const live = await this.queryActiveTab()
+            if (live) await this.captureTab(live)
           }
-          if (!tab?.id || !tab.url) return { type: 'ACTIVE_TAB', tab: null }
-          return {
-            type: 'ACTIVE_TAB',
-            tab: {
-              tabId: tab.id,
-              url: tab.url,
-              title: tab.title ?? tab.url,
-              favIconUrl: tab.favIconUrl,
-            },
-          }
+          return this.buildActiveTabResponse()
         }
         case 'LIST_TABS': {
           const tabs = await chrome.tabs.query(message.allWindows ? {} : { currentWindow: true })
-          return {
-            type: 'TABS_LIST',
-            tabs: tabs
-              .filter((t) => t.id && t.url && canExtractTab(t.url))
-              .map((t) => ({
-                tabId: t.id!,
-                url: t.url!,
-                title: t.title ?? t.url!,
-                favIconUrl: t.favIconUrl,
-                pinned: this.pinnedTabIds.has(t.id!),
-              })),
+          const listed = new Map<number, ActiveTabInfo & { pinned: boolean }>()
+          for (const tab of tabs) {
+            if (!tab.id || !tab.url || !canExtractTab(tab.url)) continue
+            listed.set(tab.id, {
+              tabId: tab.id,
+              url: tab.url,
+              title: tabTitle(tab, tab.url),
+              favIconUrl: tab.favIconUrl,
+              pinned: this.pinnedTabIds.has(tab.id),
+            })
           }
+          const invoked = this.lastInvoked
+          if (invoked && canExtractTab(invoked.url) && !listed.has(invoked.tabId)) {
+            listed.set(invoked.tabId, { ...invoked, pinned: this.pinnedTabIds.has(invoked.tabId) })
+          }
+          return { type: 'TABS_LIST', tabs: [...listed.values()] }
         }
         case 'PIN_TAB':
           await this.pinTab(message.tabId)
@@ -132,11 +150,14 @@ export class TabContextManager {
           return { type: 'OK' }
         case 'GET_PINNED_TABS':
           return { type: 'PINNED_TABS', tabIds: this.getPinnedTabIds() }
-        case 'GET_SELECTION':
-          return {
-            type: 'SELECTION',
-            text: this.selectionByTab.get(message.tabId) ?? '',
-          }
+        case 'GET_SELECTION': {
+          const cached = this.selectionByTab.get(message.tabId) ?? ''
+          if (cached) return { type: 'SELECTION', text: cached }
+          const content = await executeExtractPageContent(message.tabId)
+          const text = content?.selection ?? ''
+          if (text) this.setSelection(message.tabId, text)
+          return { type: 'SELECTION', text }
+        }
         case 'CLEAR_CONTEXT_CACHE':
           this.clearPageContext()
           return { type: 'OK' }
@@ -144,7 +165,7 @@ export class TabContextManager {
           const bundle = await this.buildContext(
             message.tabIds,
             message.includeSelection ?? true,
-            message.preloaded
+            message.preloaded,
           )
           return { type: 'TAB_CONTEXT', bundle }
         }
@@ -167,24 +188,69 @@ export class TabContextManager {
     return this.buildContext([...tabIds], true)
   }
 
+  private async queryActiveTab(): Promise<chrome.tabs.Tab | null> {
+    const window = await chrome.windows.getLastFocused().catch(() => null)
+    let tab = window?.id
+      ? (await chrome.tabs.query({ active: true, windowId: window.id }))[0]
+      : undefined
+    if (!tab?.id) {
+      tab = (await chrome.tabs.query({ active: true, lastFocusedWindow: true }))[0]
+    }
+    return tab?.id ? tab : null
+  }
+
+  private resolveTabInfo(tab: chrome.tabs.Tab): ActiveTabInfo {
+    const invoked = this.lastInvoked?.tabId === tab.id ? this.lastInvoked : null
+    return {
+      tabId: tab.id!,
+      url: tab.url || invoked?.url || '',
+      title: tabTitle(tab, invoked?.title || 'This tab'),
+      favIconUrl: tab.favIconUrl || invoked?.favIconUrl,
+    }
+  }
+
+  private async buildActiveTabResponse(): Promise<TabContextResponse> {
+    const tab = await this.queryActiveTab()
+    if (!tab?.id) return { type: 'ACTIVE_TAB', tab: null }
+
+    const info = this.resolveTabInfo(tab)
+    const message = pageAccessMessage(info.url)
+    if (message) {
+      const restriction: TabAccessRestriction = { tabId: tab.id, message }
+      return { type: 'ACTIVE_TAB', tab: canExtractTab(info.url) ? info : null, restriction }
+    }
+
+    return { type: 'ACTIVE_TAB', tab: info }
+  }
+
   private async buildContext(
     tabIds: number[],
     includeSelection: boolean,
-    preloaded?: Record<number, ExtractedPageContent>
+    preloaded?: Record<number, ExtractedPageContent>,
   ): Promise<TabContextBundle> {
     const entries: TabContextEntry[] = []
     const extractionFailures: TabContextBundle['extractionFailures'] = []
 
     for (const tabId of tabIds) {
       const tab = await chrome.tabs.get(tabId).catch(() => null)
+      const knownUrl = tab?.url || this.cache.get(tabId)?.entry.url || ''
+      if (knownUrl && isRestrictedPage(knownUrl)) {
+        extractionFailures.push({
+          tabId,
+          url: knownUrl,
+          title: tabTitle(tab ?? {}, knownUrl),
+        })
+        continue
+      }
+
       const entry = await this.extractTab(tabId, includeSelection, preloaded?.[tabId])
       if (entry) {
         entries.push(entry)
-      } else if (tab?.url && canExtractTab(tab.url)) {
+      } else {
         extractionFailures.push({
           tabId,
-          url: tab.url,
-          title: tab.title ?? tab.url,
+          url: knownUrl || `tab:${tabId}`,
+          title: tabTitle(tab ?? {}, knownUrl || 'This tab'),
         })
       }
     }
@@ -198,25 +264,31 @@ export class TabContextManager {
   private async extractTab(
     tabId: number,
     includeSelection: boolean,
-    preloaded?: ExtractedPageContent
+    preloaded?: ExtractedPageContent,
   ): Promise<TabContextEntry | null> {
-    const tab = await chrome.tabs.get(tabId)
-    if (!tab.url || !canExtractTab(tab.url)) return null
+    const tab = await chrome.tabs.get(tabId).catch(() => null)
+    if (!tab) return null
+    if (tab.url && !canExtractTab(tab.url)) return null
 
     const cached = this.cache.get(tabId)
     const selection = includeSelection ? (this.selectionByTab.get(tabId) ?? '') : ''
 
     if (cached && !selection && !preloaded) return cached.entry
 
-    const result = preloaded ?? (await this.readTabContent(tabId))
-    if (!result) return null
+    const extracted = preloaded ?? (await executeExtractPageContent(tabId))
+    if (!extracted) {
+      if (!cached) return null
+      return includeSelection
+        ? { ...cached.entry, selection: selection.slice(0, MAX_SELECTION_CHARS) }
+        : cached.entry
+    }
 
     const entry: TabContextEntry = {
       tabId,
-      url: result.url,
-      title: result.title || tab.title || result.url,
-      text: result.text.slice(0, MAX_PAGE_TEXT_CHARS),
-      selection: (selection || result.selection).slice(0, MAX_SELECTION_CHARS),
+      url: extracted.url,
+      title: extracted.title || tab.title || extracted.url,
+      text: extracted.text.slice(0, MAX_PAGE_TEXT_CHARS),
+      selection: (selection || extracted.selection).slice(0, MAX_SELECTION_CHARS),
       extractedAt: Date.now(),
       favIconUrl: tab.favIconUrl,
     }
@@ -226,16 +298,6 @@ export class TabContextManager {
     return entry
   }
 
-  private async readTabContent(tabId: number): Promise<ExtractedPageContent | null> {
-    const fromContentScript = await this.extractViaContentScript(tabId)
-    if (fromContentScript) return fromContentScript
-
-    const fromScript = await this.extractViaExecuteScript(tabId)
-    if (fromScript) return fromScript
-
-    return null
-  }
-
   private rememberCache(tabId: number, value: CachedEntry): void {
     this.cache.delete(tabId)
     this.cache.set(tabId, value)
@@ -243,54 +305,6 @@ export class TabContextManager {
       const oldest = this.cache.keys().next().value
       if (oldest == null) break
       this.cache.delete(oldest)
-    }
-  }
-
-  private async extractViaContentScript(tabId: number): Promise<ExtractedPageContent | null> {
-    let injected = false
-    for (const delayMs of CONTENT_SCRIPT_RETRY_MS) {
-      try {
-        const response = (await chrome.tabs.sendMessage(tabId, {
-          type: 'EXTRACT_PAGE_CONTENT',
-        })) as PageContentResponse | undefined
-        if (response?.type === 'PAGE_CONTENT' && response.content) {
-          return response.content
-        }
-      } catch {
-        if (!injected) {
-          await this.injectBundledContentScript(tabId)
-          injected = true
-        }
-      }
-      if (delayMs > 0) await sleep(delayMs)
-    }
-    return null
-  }
-
-  /** Re-inject the bundled content script when a tab predates the extension (requires activeTab). */
-  private async injectBundledContentScript(tabId: number): Promise<void> {
-    const manifest = chrome.runtime.getManifest()
-    const scripts = manifest.content_scripts?.[0]?.js ?? []
-    if (!scripts.length) return
-
-    for (const file of scripts) {
-      try {
-        await chrome.scripting.executeScript({ target: { tabId }, files: [file] })
-      } catch {
-        // activeTab not granted or page blocks injection
-      }
-    }
-  }
-
-  private async extractViaExecuteScript(tabId: number): Promise<ExtractedPageContent | null> {
-    try {
-      const [{ result }] = await chrome.scripting.executeScript({
-        target: { tabId },
-        func: extractPageContent,
-      })
-      return (result as ExtractedPageContent) ?? null
-    } catch {
-      return null
     }
   }
 }

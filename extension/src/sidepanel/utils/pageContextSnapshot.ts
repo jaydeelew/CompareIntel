@@ -5,6 +5,7 @@ export interface SavedPageContext {
   title: string
   favIconUrl?: string
   source: 'active' | 'pinned'
+  tabId?: number
 }
 
 export const MAX_PINNED_TABS = DEFAULT_TAB_CONTEXT_SETTINGS.maxPinnedTabs
@@ -45,7 +46,7 @@ function pinnedContexts(saved: SavedPageContext[]): SavedPageContext[] {
 /** Keep user pins; replace the ephemeral active-tab chip. Never adds pins from live browser state. */
 export function replaceActiveContext(
   saved: SavedPageContext[],
-  activeTab: { url: string; title: string; favIconUrl?: string } | null,
+  activeTab: { url: string; title: string; favIconUrl?: string; tabId?: number } | null,
   sharePageContext: boolean
 ): SavedPageContext[] {
   const pinned = pinnedContexts(saved)
@@ -70,6 +71,7 @@ export function replaceActiveContext(
       title: activeTab.title,
       favIconUrl: activeTab.favIconUrl,
       source: 'active',
+      tabId: activeTab.tabId,
     },
     ...pinned,
   ]
@@ -90,7 +92,7 @@ export function promoteActiveContextsToPinned(saved: SavedPageContext[]): SavedP
 
 export function addPinnedContext(
   saved: SavedPageContext[],
-  tab: { url: string; title: string; favIconUrl?: string }
+  tab: { url: string; title: string; favIconUrl?: string; tabId?: number }
 ): SavedPageContext[] {
   const key = normalizePageUrl(tab.url)
   const pinnedEntry: SavedPageContext = {
@@ -98,6 +100,7 @@ export function addPinnedContext(
     title: tab.title,
     favIconUrl: tab.favIconUrl,
     source: 'pinned',
+    tabId: tab.tabId,
   }
   const alreadyPinned = saved.some(
     (context) => context.source === 'pinned' && normalizePageUrl(context.url) === key
@@ -132,7 +135,7 @@ export function matchOpenTabsToContexts(
   const seen = new Set<number>()
   for (const context of contexts) {
     if (context.source !== 'pinned') continue
-    const tabId = byUrl.get(normalizePageUrl(context.url))
+    const tabId = context.tabId ?? byUrl.get(normalizePageUrl(context.url))
     if (tabId == null || seen.has(tabId)) continue
     seen.add(tabId)
     tabIds.push(tabId)
