@@ -1,0 +1,110 @@
+name: Configure E2E credentials
+description: >
+  Resolve E2E test credentials. Dependabot pull_request workflows (and any run
+  with empty Actions secrets) do not receive repository secrets; fall back to
+  the existing mock/placeholder credentials instead of failing OpenRouter calls.
+  Does not use pull_request_target and does not expose repository secrets to
+  Dependabot-triggered runs.
+
+inputs:
+  openrouter_api_key:
+    description: TEST_OPENROUTER_API_KEY from Actions secrets (empty for Dependabot)
+    required: false
+    default: ""
+  test_free_email:
+    description: TEST_FREE_EMAIL from Actions secrets
+    required: false
+    default: ""
+  test_free_password:
+    description: TEST_FREE_PASSWORD from Actions secrets
+    required: false
+    default: ""
+  admin_email:
+    description: TEST_ADMIN_EMAIL from Actions secrets
+    required: false
+    default: ""
+  admin_password:
+    description: TEST_ADMIN_PASSWORD from Actions secrets
+    required: false
+    default: ""
+
+outputs:
+  mock_mode:
+    description: "1 when mock/placeholder mode is active, otherwise 0"
+    value: ${{ steps.resolve.outputs.mock_mode }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve E2E credentials
+      id: resolve
+      shell: bash
+      env:
+        OPENROUTER_API_KEY: ${{ inputs.openrouter_api_key }}
+        TEST_FREE_EMAIL: ${{ inputs.test_free_email }}
+        TEST_FREE_PASSWORD: ${{ inputs.test_free_password }}
+        ADMIN_EMAIL: ${{ inputs.admin_email }}
+        ADMIN_PASSWORD: ${{ inputs.admin_password }}
+      run: |
+        set -euo pipefail
+
+        # Placeholders already used by Playwright / global-setup when secrets are unset.
+        # Smoke tests use a dummy OpenRouter key the same way.
+        PLACEHOLDER_OPENROUTER_KEY='test-api-key-for-e2e-testing-only'
+        PLACEHOLDER_FREE_EMAIL='free@test.com'
+        PLACEHOLDER_FREE_PASSWORD='Test12345678/'
+        PLACEHOLDER_ADMIN_EMAIL='admin@example.com'
+        PLACEHOLDER_ADMIN_PASSWORD='AdminPassword123!'
+
+        use_mock=0
+        if [ "${GITHUB_ACTOR}" = "dependabot[bot]" ]; then
+          use_mock=1
+          echo "github.actor is dependabot[bot]; repository Actions secrets are not available on Dependabot pull_request runs."
+        elif [ -z "${OPENROUTER_API_KEY}" ]; then
+          use_mock=1
+          echo "TEST_OPENROUTER_API_KEY is empty; falling back to mock/placeholder E2E mode."
+        fi
+
+        if [ "$use_mock" = "1" ]; then
+          OPENROUTER_API_KEY="$PLACEHOLDER_OPENROUTER_KEY"
+          TEST_FREE_EMAIL="${TEST_FREE_EMAIL:-$PLACEHOLDER_FREE_EMAIL}"
+          TEST_FREE_PASSWORD="${TEST_FREE_PASSWORD:-$PLACEHOLDER_FREE_PASSWORD}"
+          ADMIN_EMAIL="${ADMIN_EMAIL:-$PLACEHOLDER_ADMIN_EMAIL}"
+          ADMIN_PASSWORD="${ADMIN_PASSWORD:-$PLACEHOLDER_ADMIN_PASSWORD}"
+          E2E_MOCK_MODE=1
+          echo "::notice::E2E using mock/placeholder mode (no OpenRouter spend). Backend mock mode will be enabled."
+        else
+          E2E_MOCK_MODE=0
+          echo "::notice::E2E using repository Actions secrets."
+        fi
+
+        {
+          echo "OPENROUTER_API_KEY<<EOF"
+          printf '%s\n' "$OPENROUTER_API_KEY"
+          echo "EOF"
+          echo "TEST_FREE_EMAIL<<EOF"
+          printf '%s\n' "$TEST_FREE_EMAIL"
+          echo "EOF"
+          echo "TEST_FREE_PASSWORD<<EOF"
+          printf '%s\n' "$TEST_FREE_PASSWORD"
+          echo "EOF"
+          echo "ADMIN_EMAIL<<EOF"
+          printf '%s\n' "$ADMIN_EMAIL"
+          echo "EOF"
+          echo "ADMIN_PASSWORD<<EOF"
+          printf '%s\n' "$ADMIN_PASSWORD"
+          echo "EOF"
+          echo "E2E_MOCK_MODE=$E2E_MOCK_MODE"
+        } >> "$GITHUB_ENV"
+
+        echo "mock_mode=$use_mock" >> "$GITHUB_OUTPUT"
+
+    - name: Enable backend mock mode for secretless runs
+      if: ${{ steps.resolve.outputs.mock_mode == '1' }}
+      shell: bash
+      env:
+        # Job-level DATABASE_URL / SECRET_KEY / ENVIRONMENT are inherited.
+        SKIP_CONFIG_VALIDATION: "true"
+      run: |
+        set -euo pipefail
+        python3 "${{ github.action_path }}/seed_mock_db.py"
