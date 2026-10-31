@@ -2,6 +2,9 @@ import type { TabContextBundle, TabContextEntry } from './types'
 
 const ZERO_WIDTH_RE = /[\u200B-\u200D\uFEFF]/g
 
+/** Client cap for compare payloads. Must stay below backend INPUT_DATA_MAX_LENGTH (300_000). */
+export const MAX_COMPARE_INPUT_CHARS = 280_000
+
 export function sanitizePageText(text: string): string {
   return text.replace(ZERO_WIDTH_RE, '').replace(/\s+/g, ' ').trim()
 }
@@ -32,7 +35,7 @@ export function buildPromptWithPageContext(
     })
     .join('\n\n')
 
-  return [
+  const prompt = [
     'The user is asking a question about content from their open browser tab(s). Answer the USER QUESTION using the WEBPAGE DATA below as your primary source.',
     'The webpage data is text extracted from the user\'s browser tabs — use it to answer even if it looks like a chat transcript, forum thread, or UI labels.',
     'Do not claim you cannot see the page or refuse to answer because the content resembles a chatbot interface.',
@@ -43,6 +46,11 @@ export function buildPromptWithPageContext(
     'WEBPAGE DATA:',
     tabSections,
   ].join('\n')
+  if (prompt.length <= MAX_COMPARE_INPUT_CHARS) {
+    return prompt
+  }
+  const suffix = `\n\n[Content truncated at ${MAX_COMPARE_INPUT_CHARS} characters]`
+  return `${prompt.slice(0, MAX_COMPARE_INPUT_CHARS - suffix.length)}${suffix}`
 }
 
 export function buildTabContextBundle(

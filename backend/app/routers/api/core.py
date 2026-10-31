@@ -6,7 +6,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from ...config import ANONYMOUS_MODEL_LIMIT, get_model_limit
@@ -25,6 +25,7 @@ from ...model_runner import (
 )
 from ...models import AppSettings, User
 from ...rate_limiting import check_anonymous_credits, check_user_credits
+from ...schemas import INPUT_DATA_MAX_LENGTH
 from ...utils.cookies import get_token_from_cookies
 from ...utils.geo import get_location_from_ip, get_timezone_from_request
 from ...utils.request import get_client_ip
@@ -64,7 +65,7 @@ class AttachedImage(BaseModel):
 
 
 class CompareRequest(BaseModel):
-    input_data: str
+    input_data: str = Field(..., max_length=INPUT_DATA_MAX_LENGTH)
     models: list[str]
     conversation_history: list[ConversationMessage] = []
     attached_images: list[
@@ -97,7 +98,7 @@ class CompareRequest(BaseModel):
 
 
 class EstimateTokensRequest(BaseModel):
-    input_data: str
+    input_data: str = Field(..., max_length=INPUT_DATA_MAX_LENGTH)
     model_id: str | None = None
     conversation_history: list[ConversationMessage] = []
 

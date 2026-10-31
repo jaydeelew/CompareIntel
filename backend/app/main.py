@@ -41,9 +41,19 @@ from .routers.share_pages import router as share_pages_router
 
 # Import model_stats from api router to share the same storage
 
+
+def default_log_level(environment: str) -> int:
+    """Process-wide log level: INFO in development, WARNING otherwise.
+
+    Production is WARNING (INFO or higher) so DEBUG records — including any
+    residual prompt/page-content traces — are never emitted.
+    """
+    return logging.INFO if environment == "development" else logging.WARNING
+
+
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO if settings.environment == "development" else logging.WARNING,
+    level=default_log_level(settings.environment),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
@@ -83,9 +93,7 @@ logging.getLogger().addFilter(SQLStyleWarningFilter())
 
 # Set INFO level for search-related modules even in production (critical for rate limiting debugging)
 logging.getLogger("app.search").setLevel(logging.INFO)
-logging.getLogger("app.llm").setLevel(
-    logging.INFO if settings.environment == "development" else logging.WARNING
-)
+logging.getLogger("app.llm").setLevel(default_log_level(settings.environment))
 
 # Suppress SQLAlchemy INFO/WARNING logs that are just query details (not errors)
 # Only show SQLAlchemy errors and critical issues
