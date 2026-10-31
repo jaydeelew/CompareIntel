@@ -2,8 +2,9 @@
 Sync Help Me Choose recommendations with the models registry.
 
 Validates that all model IDs in helpMeChooseRecommendations.ts exist in the
-models registry. Optionally removes stale/deprecated models and optionally
-applies model ID aliases for renamed models.
+active lineup (models_registry.json models_by_provider). Optionally removes
+stale/deprecated models and optionally applies model ID aliases for renamed
+models. Lineup models with no rankings are reported but are not an error.
 
 Usage:
     python scripts/sync_help_me_choose_with_registry.py [--fix] [--dry-run]
@@ -70,6 +71,7 @@ def run_sync(check_only: bool = True, fix: bool = False, dry_run: bool = False) 
     """
     from scripts.research_model_benchmarks import (
         parse_recommendations_ts,
+        report_lineup_models_without_rankings,
         update_recommendations_file,
     )
 
@@ -131,6 +133,8 @@ def run_sync(check_only: bool = True, fix: bool = False, dry_run: bool = False) 
             return 1
         if not issues:
             print("All Help Me Choose model IDs exist in the registry.")
+        # Lineup models with no rankings are informational only (never fail CI).
+        report_lineup_models_without_rankings(registry_ids, categories)
         return 0
 
     if fix:

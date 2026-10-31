@@ -117,13 +117,8 @@ export class TabContextManager {
   async handleMessage(message: TabContextMessage): Promise<TabContextResponse> {
     try {
       switch (message.type) {
-        case 'GET_ACTIVE_TAB': {
-          if (message.capture) {
-            const live = await this.queryActiveTab()
-            if (live) this.rememberInvokedTab(live)
-          }
+        case 'GET_ACTIVE_TAB':
           return this.buildActiveTabResponse()
-        }
         case 'LIST_TABS': {
           const tabs = await chrome.tabs.query(message.allWindows ? {} : { currentWindow: true })
           const listed = new Map<number, ActiveTabInfo & { pinned: boolean }>()
