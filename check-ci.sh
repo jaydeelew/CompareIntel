@@ -27,6 +27,17 @@ else
 fi
 echo ""
 
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📈 Nginx host-metrics proxy"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if node scripts/check-nginx-metrics-proxy.js; then
+  echo -e "${GREEN}✓ production nginx exact-match proxies /internal/metrics/host${NC}"
+else
+  echo -e "${RED}❌ production nginx is missing the /internal/metrics/host proxy${NC}"
+  FAILED=1
+fi
+echo ""
+
 # Backend checks
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🐍 Backend checks"
