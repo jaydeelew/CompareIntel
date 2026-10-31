@@ -33,7 +33,7 @@ types-PyYAML>=6.0.12.20260906      # Type stubs for PyYAML
 # Testing Framework & Tools
 # ============================================================================
 pytest>=9.1.1            # Testing framework
-pytest-asyncio>=0.23.0   # Async test support
+pytest-asyncio>=1.4.1   # Async test support
 pytest-cov>=5.0.0        # Coverage reporting
 pytest-mock>=3.14.0      # Mocking utilities
 pytest-timeout>=2.4.0    # Test timeout management
