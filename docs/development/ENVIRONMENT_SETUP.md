@@ -108,10 +108,17 @@ MAIL_FROM=your-email@gmail.com
 **`ENVIRONMENT`**
 - **Options:** `development`, `staging`, `production`
 - **Effects:**
-  - CORS settings (development allows all origins)
   - Error handling (more verbose in development)
   - Email sending behavior (synchronous in development for debugging)
 - **Default:** `development`
+
+**`EXTENSION_CORS_ORIGINS`**
+- **Purpose:** Allowlist of exact browser-extension origins that may make credentialed CORS requests to the API
+- **Format:** Comma-separated `chrome-extension://<id>` and/or `moz-extension://<id>` (id required; no wildcards, paths, or other schemes)
+- **Default:** unset / empty — **no** extension origins are allowed
+- **Development (unpacked extension):** copy the ID from `chrome://extensions` (or Firefox `about:debugging`)
+- **Production:** set the Chrome Web Store / AMO extension ID after publish
+- **Example:** `EXTENSION_CORS_ORIGINS=chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef`
 
 ### Backend Setup Steps
 
@@ -220,7 +227,8 @@ MAIL_FROM=your-email@gmail.com
 | `SECRET_KEY` | ✅ Yes | None | Must be set |
 | `OPENROUTER_API_KEY` | ✅ Yes | None | Must be set |
 | `DATABASE_URL` | ❌ No | `sqlite:///./data/compareintel.db` | SQLite for dev (stored in `backend/data/`) |
-| `ENVIRONMENT` | ❌ No | `development` | Affects CORS/errors |
+| `ENVIRONMENT` | ❌ No | `development` | Affects errors/email |
+| `EXTENSION_CORS_ORIGINS` | ❌ No | empty | Exact `chrome-extension://<id>` / `moz-extension://<id>` allowlist; empty = none |
 | `FRONTEND_URL` | ❌ No | `http://localhost:5173` | For email links |
 | `MAIL_*` | ❌ No | None | Email optional |
 | `RECAPTCHA_SECRET_KEY` | ❌ No | None | Bot protection (optional) |
@@ -364,6 +372,8 @@ VITE_API_URL=/api
 **API calls failing with CORS errors**
 - ✅ Make sure `VITE_API_URL=/api` (uses proxy)
 - ✅ Or set to full backend URL with CORS configured
+- ✅ Browser extension: set `EXTENSION_CORS_ORIGINS` to the exact `chrome-extension://<id>` or `moz-extension://<id>` (empty allows no extensions)
+- ✅ Restart the backend after changing `EXTENSION_CORS_ORIGINS`
 - ✅ Restart dev server after changing `.env`
 
 **API calls going to wrong URL**

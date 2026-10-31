@@ -91,6 +91,19 @@ class Settings(BaseSettings):
     # Frontend
     frontend_url: str = "http://localhost:5173"
 
+    # Exact browser-extension origins allowed for credentialed CORS.
+    # Comma-separated chrome-extension://<id> and/or moz-extension://<id>.
+    # Empty/unset allows no extension origins (no wildcards).
+    extension_cors_origins: str = ""
+
+    @field_validator("extension_cors_origins", mode="before")
+    @classmethod
+    def parse_extension_cors_origins_setting(cls, v):
+        """Treat missing/blank env as empty (no extension origins)."""
+        if v is None:
+            return ""
+        return str(v).strip()
+
     # Environment
     environment: str = "development"
 

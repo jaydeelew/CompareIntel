@@ -36,7 +36,7 @@ npm install
 ### 2. Configure local backend (for local API)
 
 1. Copy `backend/.env.example` → `backend/.env` if needed.
-2. Set `ENVIRONMENT=development` — enables permissive CORS so the unpacked extension can call the API without a fixed extension ID.
+2. Set `EXTENSION_CORS_ORIGINS=chrome-extension://YOUR_UNPACKED_ID` using the ID from `chrome://extensions`. Unset/empty allows **no** extension origins (there is no `chrome-extension://` wildcard).
 3. Set required keys (e.g. `OPENROUTER_API_KEY`).
 4. Start the backend:
 
