@@ -33,6 +33,10 @@ if (sidePanelExposed) {
   fail('production manifest must not expose the side panel via web_accessible_resources')
 }
 
+if (Object.hasOwn(manifest, 'key') || manifest.key) {
+  fail('production manifest must not include key (Chrome Web Store rejects uploads that contain it)')
+}
+
 console.log(
-  `[compareintel] production manifest ok (version ${manifest.version}, no localhost, side panel not web-accessible)`,
+  `[compareintel] production manifest ok (version ${manifest.version}, no localhost, no key, side panel not web-accessible)`,
 )

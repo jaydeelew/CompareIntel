@@ -63,8 +63,10 @@ See [`extension/.env.example`](../../extension/.env.example) for reference.
 ### 4. Build and load in Chrome
 
 ```bash
-npm run extension:build
+npm run extension:dev
 ```
+
+DEV/watch builds write the Chrome Web Store public `key` so unpacked loads use `iaeeeakmomhbakmjhgcifakpdkbenojj`. Production `npm run extension:build` omits `key`.
 
 1. Open `chrome://extensions`
 2. Enable **Developer mode**
@@ -109,13 +111,13 @@ Without `.env`, the extension defaults to `https://compareintel.com/api` (see [`
 
 1. **Remove or rename** `extension/.env` (never ship a store build with localhost).
 2. Rebuild: `npm run extension:build`
-3. **CORS (required):** copy the extension ID from `chrome://extensions` and set on the production server:
+3. **CORS (required):** set the Chrome Web Store draft ID on the production server:
    ```bash
-   EXTENSION_CORS_ORIGINS=chrome-extension://YOUR_EXTENSION_ID
+   EXTENSION_CORS_ORIGINS=chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj
    ```
-   See [`backend/.env.example`](../../backend/.env.example) and [`backend/app/main.py`](../../backend/app/main.py). Redeploy/restart the backend.
+   See [`backend/.env.example`](../../backend/.env.example). Redeploy/restart the backend.
 
-   Unpacked extension IDs change unless you use a fixed `.pem` key. After Chrome Web Store publish, use the **stable store extension ID** once.
+   DEV/watch unpacked loads use the same ID: the Chrome manifest `key` is injected only for those builds. The production/store zip must **not** include `key` (the Web Store rejects uploads that contain it).
 
 4. Reload extension and test sign-in + compare.
 
@@ -200,14 +202,14 @@ Page content is read **on submit only**, not continuously.
    ```
    Produces `extension/compareintel-extension.zip`.
 
-`npm run extension:build` is a one-shot production build: it must write `extension/dist/manifest.json` and exit. The production manifest omits localhost from `host_permissions`, `externally_connectable`, and the web-app content-script matches (those stay in `vite` / `extension:dev` only). The side panel is not listed in `web_accessible_resources`.
+`npm run extension:build` is a one-shot production build: it must write `extension/dist/manifest.json` and exit. The production manifest omits localhost from `host_permissions`, `externally_connectable`, and the web-app content-script matches (those stay in `vite` / `extension:dev` only). It also omits `key` (DEV/watch only). The side panel is not listed in `web_accessible_resources`.
 
 ### Backend
 
 On production (`ENVIRONMENT=production`):
 
 ```bash
-EXTENSION_CORS_ORIGINS=chrome-extension://PUBLISHED_EXTENSION_ID
+EXTENSION_CORS_ORIGINS=chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj
 ```
 
 Redeploy via your normal process ([`deploy-production.sh`](../../deploy-production.sh), Docker, etc.).
@@ -266,8 +268,8 @@ Answer consistently with the privacy policy:
 
 ### Post-publish (critical)
 
-1. Note the **store extension ID** from the listing or `chrome://extensions`
-2. Set `EXTENSION_CORS_ORIGINS=chrome-extension://STORE_EXTENSION_ID` on production
+1. Confirm the **store extension ID** is `iaeeeakmomhbakmjhgcifakpdkbenojj`
+2. Set `EXTENSION_CORS_ORIGINS=chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj` on production
 3. Redeploy backend
 4. Install from store and smoke-test login, compare, page context
 
