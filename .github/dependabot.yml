@@ -15,11 +15,22 @@ updates:
         update-types:
           - "patch"
           - "minor"
+    # Ignore rules apply to grouped version updates. Version ranges
+    # also apply to Dependabot security updates (update-types alone do not).
+    ignore:
+      # bcrypt 5+ breaks passlib 1.7.4 (backend is pinned at bcrypt==4.0.1).
+      - dependency-name: "bcrypt"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "bcrypt"
+        versions: [">=5.0.0"]
+      # openai 3+ needs a client migration (backend is on openai 2.x).
+      - dependency-name: "openai"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "openai"
+        versions: [">=3.0.0"]
     open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "security"
-      - "backend"
+    # No repo labels exist for Dependabot; [] disables default labels too.
+    labels: []
     commit-message:
       prefix: "build(backend)"
       include: "scope"
@@ -41,11 +52,27 @@ updates:
         update-types:
           - "patch"
           - "minor"
+    # Ignore rules apply to grouped version updates. Version ranges
+    # also apply to Dependabot security updates (update-types alone do not).
+    ignore:
+      # Pin Playwright to 1.60.x to match Docker image
+      # mcr.microsoft.com/playwright:v1.60.0-noble. 1.64 is a minor bump,
+      # so ignore versions rather than semver-major.
+      - dependency-name: "@playwright/test"
+        versions: [">=1.61.0"]
+      - dependency-name: "playwright"
+        versions: [">=1.61.0"]
+      - dependency-name: "playwright-core"
+        versions: [">=1.61.0"]
+      # Hold vite 8+ (current range is ^6). Semver-major covers 7+
+      # version updates; the version range also covers security updates.
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vite"
+        versions: [">=8.0.0"]
     open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "security"
-      - "frontend"
+    # No repo labels exist for Dependabot; [] disables default labels too.
+    labels: []
     commit-message:
       prefix: "build(frontend)"
       include: "scope"
@@ -74,10 +101,9 @@ updates:
           - "patch"
           - "minor"
     open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "security"
-      - "ci"
+    # No repo labels exist for Dependabot; [] disables default labels too.
+    # (ci was also not a defined label.)
+    labels: []
     commit-message:
       prefix: "ci"
       include: "scope"
