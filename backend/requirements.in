@@ -40,7 +40,7 @@ anthropic>=0.18.0
 # app/llm/tokens.py (falls back to tiktoken); no PyPI release fixes PYSEC-2025-211–218 yet.
 requests>=2.33.0
 urllib3>=2.8.0
-stripe>=11.0.0
+stripe>=16.0.1
 
 # Auth & security
 PyJWT>=2.15.0
