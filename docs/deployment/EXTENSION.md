@@ -109,13 +109,13 @@ Without `.env`, the extension defaults to `https://compareintel.com/api` (see [`
 
 1. **Remove or rename** `extension/.env` (never ship a store build with localhost).
 2. Rebuild: `npm run extension:build`
-3. **CORS (required):** copy the extension ID from `chrome://extensions` and set on the production server:
+3. **CORS (required):** set the published Chrome Web Store ID on the production server (put the real value in the prod `.env` at deploy):
    ```bash
-   EXTENSION_CORS_ORIGINS=chrome-extension://YOUR_EXTENSION_ID
+   EXTENSION_CORS_ORIGINS=chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj
    ```
-   See [`backend/.env.example`](../../backend/.env.example) and [`backend/app/main.py`](../../backend/app/main.py). Redeploy/restart the backend.
+   See [`backend/.env.example`](../../backend/.env.example). Redeploy/restart the backend.
 
-   Unpacked extension IDs change unless you use a fixed `.pem` key. After Chrome Web Store publish, use the **stable store extension ID** once.
+   Unpacked extension IDs change unless you use a fixed `.pem` key. After Chrome Web Store publish, use this **stable store extension ID**.
 
 4. Reload extension and test sign-in + compare.
 
@@ -203,13 +203,13 @@ Page content is read **on submit only**, not continuously.
 
 ### Backend
 
-On production (`ENVIRONMENT=production`):
+On production (`ENVIRONMENT=production`), put the real value in the prod `.env` at deploy:
 
 ```bash
-EXTENSION_CORS_ORIGINS=chrome-extension://PUBLISHED_EXTENSION_ID
+EXTENSION_CORS_ORIGINS=chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj
 ```
 
-Redeploy via your normal process ([`deploy-production.sh`](../../deploy-production.sh), Docker, etc.).
+Redeploy via your normal process ([`deploy-production.sh`](../../deploy-production.sh), Docker, etc.). The code default is empty (no extension origins).
 
 ### Privacy
 
@@ -265,8 +265,8 @@ Answer consistently with the privacy policy:
 
 ### Post-publish (critical)
 
-1. Note the **store extension ID** from the listing or `chrome://extensions`
-2. Set `EXTENSION_CORS_ORIGINS=chrome-extension://STORE_EXTENSION_ID` on production
+1. Confirm the **store extension ID** is `iaeeeakmomhbakmjhgcifakpdkbenojj`
+2. Set `EXTENSION_CORS_ORIGINS=chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj` in the prod `.env` at deploy
 3. Redeploy backend
 4. Install from store and smoke-test login, compare, page context
 

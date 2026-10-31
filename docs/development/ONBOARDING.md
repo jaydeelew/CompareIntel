@@ -78,7 +78,7 @@ A first-day guide for new developers: key files, common tasks, and orientation. 
 ## Known Gotchas
 
 - **SQLite vs PostgreSQL:** Dev uses SQLite by default; production uses PostgreSQL. `DATABASE_URL` in `.env` controls this.
-- **CORS:** Web origins are an explicit list (`backend/app/cors.py`). Browser extensions need `EXTENSION_CORS_ORIGINS=chrome-extension://<id>` (or `moz-extension://<id>`); empty allows none. `FRONTEND_URL` is for email links, not CORS.
+- **CORS:** Web origins are an explicit list (`backend/app/cors.py`). Browser extensions need `EXTENSION_CORS_ORIGINS` (empty allows none). Production value: `EXTENSION_CORS_ORIGINS=chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj` — put the real value in the prod `.env` at deploy. `FRONTEND_URL` is for email links, not CORS.
 - **OpenRouter key:** Required for comparisons. Get one at [openrouter.ai/keys](https://openrouter.ai/keys).
 - **Pre-commit:** Backend Python runs ruff + mypy; frontend runs ESLint + Prettier. Fix issues before pushing.
 

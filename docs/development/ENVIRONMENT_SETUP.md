@@ -117,8 +117,8 @@ MAIL_FROM=your-email@gmail.com
 - **Format:** Comma-separated `chrome-extension://<id>` and/or `moz-extension://<id>` (id required; no wildcards, paths, or other schemes)
 - **Default:** unset / empty — **no** extension origins are allowed
 - **Development (unpacked extension):** copy the ID from `chrome://extensions` (or Firefox `about:debugging`)
-- **Production:** set the Chrome Web Store / AMO extension ID after publish
-- **Example:** `EXTENSION_CORS_ORIGINS=chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef`
+- **Production:** put the real value in the prod `.env` at deploy
+- **Production value:** `EXTENSION_CORS_ORIGINS=chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj`
 
 ### Backend Setup Steps
 
@@ -228,7 +228,7 @@ MAIL_FROM=your-email@gmail.com
 | `OPENROUTER_API_KEY` | ✅ Yes | None | Must be set |
 | `DATABASE_URL` | ❌ No | `sqlite:///./data/compareintel.db` | SQLite for dev (stored in `backend/data/`) |
 | `ENVIRONMENT` | ❌ No | `development` | Affects errors/email |
-| `EXTENSION_CORS_ORIGINS` | ❌ No | empty | Exact `chrome-extension://<id>` / `moz-extension://<id>` allowlist; empty = none |
+| `EXTENSION_CORS_ORIGINS` | ❌ No | empty | Prod: `chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj` (set in prod `.env` at deploy); empty = none |
 | `FRONTEND_URL` | ❌ No | `http://localhost:5173` | For email links |
 | `MAIL_*` | ❌ No | None | Email optional |
 | `RECAPTCHA_SECRET_KEY` | ❌ No | None | Bot protection (optional) |

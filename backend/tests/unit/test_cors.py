@@ -19,6 +19,8 @@ from app.main import app as fastapi_app
 pytestmark = pytest.mark.unit
 
 LISTED_CHROME_ORIGIN = "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef"
+# Published Chrome Web Store ID (docs / prod .env). Code default stays empty.
+PUBLISHED_CHROME_ORIGIN = "chrome-extension://iaeeeakmomhbakmjhgcifakpdkbenojj"
 UNLISTED_CHROME_ORIGIN = "chrome-extension://zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
 LISTED_MOZ_ORIGIN = "moz-extension://12345678-1234-1234-1234-123456789abc"
 WEB_ORIGIN = "https://compareintel.com"
@@ -108,6 +110,13 @@ class TestGetCorsAllowOrigins:
         for web_origin in WEB_CORS_ORIGINS:
             assert web_origin in origins
 
+    def test_published_chrome_extension_origin_accepted_when_configured(self):
+        assert PUBLISHED_CHROME_ORIGIN not in get_cors_allow_origins("")
+        origins = get_cors_allow_origins(PUBLISHED_CHROME_ORIGIN)
+        assert PUBLISHED_CHROME_ORIGIN in origins
+        assert is_valid_extension_origin(PUBLISHED_CHROME_ORIGIN)
+        assert parse_extension_cors_origins(PUBLISHED_CHROME_ORIGIN) == [PUBLISHED_CHROME_ORIGIN]
+
 
 class TestExtensionCorsMiddleware:
     def test_listed_extension_origin_allowed_with_credentials(self):
@@ -120,6 +129,20 @@ class TestExtensionCorsMiddleware:
         preflight = _preflight(client, LISTED_CHROME_ORIGIN)
         assert preflight.headers.get("access-control-allow-origin") == LISTED_CHROME_ORIGIN
         assert preflight.headers.get("access-control-allow-credentials") == "true"
+
+    def test_published_chrome_extension_origin_allowed_with_credentials(self):
+        client = _cors_client(PUBLISHED_CHROME_ORIGIN)
+
+        simple = _simple(client, PUBLISHED_CHROME_ORIGIN)
+        assert simple.headers.get("access-control-allow-origin") == PUBLISHED_CHROME_ORIGIN
+        assert simple.headers.get("access-control-allow-credentials") == "true"
+
+        preflight = _preflight(client, PUBLISHED_CHROME_ORIGIN)
+        assert preflight.headers.get("access-control-allow-origin") == PUBLISHED_CHROME_ORIGIN
+        assert preflight.headers.get("access-control-allow-credentials") == "true"
+
+        unlisted = _simple(client, UNLISTED_CHROME_ORIGIN)
+        assert "access-control-allow-origin" not in unlisted.headers
 
     def test_unlisted_chrome_extension_origin_rejected(self):
         client = _cors_client(LISTED_CHROME_ORIGIN)
