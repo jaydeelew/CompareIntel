@@ -19,7 +19,7 @@ watchfiles>=0.18.0    # Development auto-reload for uvicorn
 ruff>=0.6.0              # Fast Python linter (replaces flake8, isort, etc.)
 black>=24.0.0            # Code formatter
 mypy>=2.4.0             # Static type checker
-pre-commit>=3.7.0        # Git hooks framework
+pre-commit>=4.7.0        # Git hooks framework
 
 # ============================================================================
 # Type Stubs (for mypy)
