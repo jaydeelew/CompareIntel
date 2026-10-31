@@ -806,10 +806,45 @@ def filter_models_by_tier(
 # local/dev boots often start with OPENROUTER_API_KEY unset or "".
 _MISSING_OPENROUTER_API_KEY = "missing-openrouter-api-key"
 
+_OPENROUTER_KEY_NOT_CONFIGURED = (
+    "OPENROUTER_API_KEY is not configured. Set OPENROUTER_API_KEY before making "
+    "model requests. Get a key from https://openrouter.ai/keys"
+)
+_OPENROUTER_KEY_REQUIRED_IN_PRODUCTION = (
+    "OPENROUTER_API_KEY is not set. Configure it before starting the production "
+    "API. Get a key from https://openrouter.ai/keys"
+)
+
+
+class OpenRouterConfigError(RuntimeError):
+    """Raised when OPENROUTER_API_KEY is missing or is the construction-only placeholder."""
+
+
+def _configured_openrouter_api_key() -> str:
+    return (settings.openrouter_api_key or "").strip()
+
 
 def openrouter_api_key_for_client() -> str:
-    """Return an api_key the OpenAI client will accept at construction time."""
-    return settings.openrouter_api_key or _MISSING_OPENROUTER_API_KEY
+    """Return an api_key the OpenAI client will accept at construction time.
+
+    Production fails immediately so an empty key cannot boot with a placeholder
+    (which would later surface as an opaque OpenRouter 401). Development and
+    test keep the placeholder so imports, unit tests, and API-contract CI work.
+    """
+    key = _configured_openrouter_api_key()
+    if key:
+        return key
+    if settings.environment == "production":
+        raise OpenRouterConfigError(_OPENROUTER_KEY_REQUIRED_IN_PRODUCTION)
+    return _MISSING_OPENROUTER_API_KEY
+
+
+def require_configured_openrouter_api_key() -> str:
+    """Return the real OpenRouter key, or raise if only the placeholder would be used."""
+    key = _configured_openrouter_api_key()
+    if not key or key == _MISSING_OPENROUTER_API_KEY:
+        raise OpenRouterConfigError(_OPENROUTER_KEY_NOT_CONFIGURED)
+    return key
 
 
 client = OpenAI(api_key=openrouter_api_key_for_client(), base_url="https://openrouter.ai/api/v1")
