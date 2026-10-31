@@ -3,11 +3,45 @@
  *
  * Ensures benchmark-based ordering is correct: within each category, models
  * with comparable numeric scores must appear in descending order (best first).
+ * Also fails CI if any ranked model is missing from the active lineup.
  */
+
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { describe, it, expect } from 'vitest'
 
 import { HELP_ME_CHOOSE_CATEGORIES } from '../helpMeChooseRecommendations'
+
+/** Active lineup: models_registry.json models_by_provider (same catalog as GET /models). */
+function loadActiveLineupIds(): Set<string> {
+  const here = dirname(fileURLToPath(import.meta.url))
+  const candidates = [
+    join(here, '../../../../backend/data/models_registry.json'),
+    '/data/models_registry.json',
+  ]
+  const registryPath = candidates.find(candidate => existsSync(candidate))
+  if (!registryPath) {
+    throw new Error(
+      'models_registry.json not found. Help Me Choose must stay in sync with ' +
+        'backend/data/models_registry.json models_by_provider.'
+    )
+  }
+  const registry = JSON.parse(readFileSync(registryPath, 'utf-8')) as {
+    models_by_provider?: Record<string, Array<{ id?: string }>>
+  }
+  const ids = new Set<string>()
+  for (const models of Object.values(registry.models_by_provider ?? {})) {
+    for (const model of models) {
+      if (model.id) ids.add(model.id)
+    }
+  }
+  if (ids.size === 0) {
+    throw new Error('Active model lineup is empty (models_by_provider has no ids).')
+  }
+  return ids
+}
 
 /** Extract primary numeric score from evidence for ordering checks. Returns null if no comparable score. */
 function extractPrimaryScore(categoryId: string, evidence: string): number | null {
@@ -141,6 +175,23 @@ describe('helpMeChooseRecommendations', () => {
           ).toBe(true)
         }
       }
+    })
+
+    it('only ranks models that are in the active CompareIntel lineup', () => {
+      const lineup = loadActiveLineupIds()
+      const notInLineup: string[] = []
+      for (const cat of HELP_ME_CHOOSE_CATEGORIES) {
+        for (const model of cat.models) {
+          if (!lineup.has(model.modelId)) {
+            notInLineup.push(`${model.modelId} (category: ${cat.id})`)
+          }
+        }
+      }
+      expect(
+        notInLineup,
+        'Help Me Choose ranks models that are not in the active lineup ' +
+          `(backend/data/models_registry.json models_by_provider): ${notInLineup.join(', ')}`
+      ).toEqual([])
     })
   })
 })

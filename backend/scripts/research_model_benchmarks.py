@@ -6,6 +6,7 @@ It can also be run standalone:
 
     python scripts/research_model_benchmarks.py <model_id> [--dry-run]
     python scripts/research_model_benchmarks.py --refresh-all [--dry-run]
+    python scripts/research_model_benchmarks.py --sync-lineup [--dry-run]
 
 Single-model mode:
 1. Fetches the model's OpenRouter data (description, pricing, capabilities)
@@ -24,6 +25,15 @@ Refresh-all mode (--refresh-all):
   Source-health guard: if a source returns 0 rows, or far fewer than the existing
   category, keep the previous entries, mark them stale, and log loudly. Do not
   drop a category because a scraper broke or a leaderboard went empty.
+
+  Lineup sync: drop (or, with --dry-run, flag) rankings whose model is not in
+  the active CompareIntel lineup (models_registry.json models_by_provider).
+  Lineup models with no rankings are printed as a report only — not an error.
+
+Sync-lineup mode (--sync-lineup):
+  Local files only (no network / no paid API calls). Drops Help Me Choose
+  rankings for models not in the lineup and reports lineup models that have
+  no rankings.
 
 Only models with verifiable, publicly available benchmark data are added.
 """
@@ -1396,6 +1406,113 @@ def get_model_from_registry(model_id: str) -> dict | None:
     return None
 
 
+def get_lineup_model_ids(registry: dict | None = None) -> set[str]:
+    """Active CompareIntel lineup: IDs in models_registry.json models_by_provider.
+
+    The frontend loads this same catalog via GET /models. Tier allow-lists
+    (unregistered_tier_models, free_tier_additional_models) are subsets, not
+    a second lineup.
+    """
+    data = registry if registry is not None else load_registry()
+    ids: set[str] = set()
+    for models in data.get("models_by_provider", {}).values():
+        if not isinstance(models, list):
+            continue
+        for m in models:
+            if isinstance(m, dict) and (mid := m.get("id")):
+                ids.add(str(mid))
+    return ids
+
+
+def collect_ranked_model_ids(categories: list[dict]) -> set[str]:
+    """Unique model IDs currently ranked in Help Me Choose."""
+    ids: set[str] = set()
+    for cat in categories:
+        for m in cat.get("models", []):
+            if mid := m.get("modelId"):
+                ids.add(str(mid))
+    return ids
+
+
+def drop_rankings_not_in_lineup(
+    categories: list[dict],
+    lineup_ids: set[str],
+) -> dict[str, list[str]]:
+    """Remove Help Me Choose rows whose model is not in the active lineup.
+
+    Returns category_id -> removed model IDs.
+    """
+    removed: dict[str, list[str]] = {}
+    for cat in categories:
+        kept: list[dict] = []
+        for m in cat["models"]:
+            mid = m["modelId"]
+            if mid in lineup_ids:
+                kept.append(m)
+            else:
+                removed.setdefault(cat["id"], []).append(mid)
+                print(
+                    f"  - {mid} [{cat['id']}]: dropped (not in active model lineup)",
+                    file=sys.stderr,
+                )
+        cat["models"] = kept
+    return removed
+
+
+def report_lineup_models_without_rankings(
+    lineup_ids: set[str],
+    categories: list[dict],
+) -> list[str]:
+    """Print lineup models that have no Help Me Choose ranking. Not an error."""
+    missing = sorted(lineup_ids - collect_ranked_model_ids(categories))
+    if missing:
+        print(
+            f"Lineup models with no Help Me Choose rankings "
+            f"({len(missing)} of {len(lineup_ids)}; report only):"
+        )
+        for mid in missing:
+            print(f"  - {mid}")
+    else:
+        print("Every lineup model has at least one Help Me Choose ranking.")
+    return missing
+
+
+def sync_rankings_with_lineup(dry_run: bool = False) -> dict:
+    """Drop rankings not in the lineup and report unranked lineup models.
+
+    Local files only — no network or paid API calls.
+    Unranked lineup models are reported and never treated as an error.
+    """
+    if not RECOMMENDATIONS_PATH.exists():
+        print(f"Error: {RECOMMENDATIONS_PATH} not found", file=sys.stderr)
+        return {"removed": {}, "unranked": [], "total_changes": 0, "error": "file_not_found"}
+
+    if not REGISTRY_PATH.exists():
+        print(f"Error: {REGISTRY_PATH} not found", file=sys.stderr)
+        return {"removed": {}, "unranked": [], "total_changes": 0, "error": "registry_not_found"}
+
+    content = RECOMMENDATIONS_PATH.read_text(encoding="utf-8")
+    categories = parse_recommendations_ts(content)
+    if not categories:
+        print("Error: could not parse categories", file=sys.stderr)
+        return {"removed": {}, "unranked": [], "total_changes": 0, "error": "parse_error"}
+
+    lineup_ids = get_lineup_model_ids()
+    removed = drop_rankings_not_in_lineup(categories, lineup_ids)
+    unranked = report_lineup_models_without_rankings(lineup_ids, categories)
+    total = sum(len(v) for v in removed.values())
+
+    if total > 0 and not dry_run:
+        update_recommendations_file(categories)
+        print(f"Wrote lineup sync: {total} ranking(s) dropped (not in active lineup).")
+    elif total > 0:
+        print(f"(Dry run) Would drop {total} ranking(s) for models not in the lineup.")
+    else:
+        print("All Help Me Choose rankings are in the active model lineup.")
+
+    return {"removed": removed, "unranked": unranked, "total_changes": total}
+
+
 def fetch_openrouter_model(model_id: str) -> dict | None:
     try:
         resp = httpx.get(
@@ -1982,19 +2099,18 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     """Re-evaluate ALL registry models for data-driven categories.
 
     Fetches current benchmark data from all sources and:
-    1. Adds missing models that now qualify
-    2. Updates stale evidence (e.g. outdated prices) on existing models
-    3. Removes models that no longer meet category thresholds
-    4. Re-sorts all data-driven categories
+    1. Drops rankings whose model is not in the active lineup
+    2. Adds missing models that now qualify
+    3. Updates stale evidence (e.g. outdated prices) on existing models
+    4. Removes models that no longer meet category thresholds
+    5. Re-sorts all data-driven categories
+    6. Reports lineup models that have no rankings (not an error)
 
     Returns {"added": {...}, "updated": {...}, "removed": {...}, "total_changes": int}.
     """
     registry = load_registry()
-    all_model_ids: list[str] = []
-    for provider_models in registry.get("models_by_provider", {}).values():
-        for m in provider_models:
-            if mid := m.get("id"):
-                all_model_ids.append(mid)
+    lineup_ids = get_lineup_model_ids(registry)
+    all_model_ids = sorted(lineup_ids)
 
     print(f"Refreshing categories for {len(all_model_ids)} registry models...")
     print("Fetching benchmark data from all sources...")
@@ -2035,6 +2151,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     if not categories:
         print("Error: could not parse categories", file=sys.stderr)
         return {"added": {}, "updated": {}, "removed": {}, "stale": {}, "total_changes": 0}
+
+    lineup_removed = drop_rankings_not_in_lineup(categories, lineup_ids)
 
     raw_fetched: dict[str, dict[str, tuple[float, str]]] = {
         "coding": swe_bench_pro_scores,
@@ -2088,6 +2206,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     for cat_id, mids in ev_removed.items():
         for mid in mids:
             print(f"  - {mid} [{cat_id}]: removed (no current score or below category threshold)")
+    for cat_id, mids in lineup_removed.items():
+        ev_removed.setdefault(cat_id, []).extend(mids)
 
     # Step 2: Add missing models
     added: dict[str, list[str]] = {}
@@ -2143,11 +2263,14 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     if not dry_run:
         update_methodology_last_updated()
 
+    unranked = report_lineup_models_without_rankings(lineup_ids, categories)
+
     return {
         "added": added,
         "updated": ev_updated,
         "removed": ev_removed,
         "stale": stale_marked,
+        "unranked": unranked,
         "total_changes": total,
     }
 
@@ -2157,10 +2280,16 @@ if __name__ == "__main__":
         dry = "--dry-run" in sys.argv
         result = refresh_all_categories(dry_run=dry)
         print(json.dumps(result, indent=2))
+    elif "--sync-lineup" in sys.argv:
+        dry = "--dry-run" in sys.argv
+        result = sync_rankings_with_lineup(dry_run=dry)
+        print(json.dumps(result, indent=2))
+        sys.exit(1 if result.get("error") else 0)
     elif len(sys.argv) < 2:
         print(
             f"Usage: {sys.argv[0]} <model_id> [--dry-run]\n"
-            f"       {sys.argv[0]} --refresh-all [--dry-run]",
+            f"       {sys.argv[0]} --refresh-all [--dry-run]\n"
+            f"       {sys.argv[0]} --sync-lineup [--dry-run]",
             file=sys.stderr,
         )
         sys.exit(1)
