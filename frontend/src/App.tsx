@@ -110,6 +110,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/privacy"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <PrivacyPolicy />
+                    </Suspense>
+                  }
+                />
+                <Route
                   path="/terms-of-service"
                   element={
                     <Suspense fallback={<LoadingSpinner />}>

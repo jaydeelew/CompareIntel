@@ -235,7 +235,7 @@ Redeploy via your normal process ([`deploy-production.sh`](../../deploy-producti
 
 ### Privacy
 
-Deploy frontend so [`compareintel.com/privacy`](https://compareintel.com/privacy) includes the browser extension section ([`frontend/src/components/pages/PrivacyPolicy.tsx`](../../frontend/src/components/pages/PrivacyPolicy.tsx)).
+Deploy frontend so [`compareintel.com/privacy`](https://compareintel.com/privacy) includes the browser extension section ([`frontend/src/components/pages/PrivacyPolicy.tsx`](../../frontend/src/components/pages/PrivacyPolicy.tsx)). Store-dashboard answers: [`chrome-web-store-disclosure.md`](chrome-web-store-disclosure.md).
 
 ---
 
@@ -276,9 +276,9 @@ Paste the table from [Permissions](#permissions) into the store listing. Short f
 
 ### Privacy questionnaire
 
-Answer consistently with the privacy policy:
+Use [`chrome-web-store-disclosure.md`](chrome-web-store-disclosure.md). Short form:
 
-- Collects page content: **Yes**, only when the user enables Page context and opens CompareIntel or submits — not via a script on every website
+- Collects page content: **Yes**, only when the user enables Page context and submits — not via a script on every website
 - Purpose: AI comparison service
 - Shared with: AI providers via backend (OpenRouter)
 - Not sold

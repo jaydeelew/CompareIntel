@@ -89,38 +89,92 @@ export const PrivacyPolicy: React.FC = () => {
               </li>
             </ul>
 
-            <h3>CompareIntel Browser Extension</h3>
             <p>
-              If you use the CompareIntel browser extension, additional data may be processed when
-              you enable <strong>Page context</strong> and submit a comparison:
+              If you use the CompareIntel browser extension, see{' '}
+              <a href="#browser-extension">Browser extension</a> for what it stores, when it reads a
+              page, and where that text goes.
             </p>
+          </section>
+
+          <section className="seo-section" id="browser-extension">
+            <h2>Browser extension</h2>
+            <p>
+              This section describes the CompareIntel Chrome extension. It uses the same
+              CompareIntel account and backend as the website.
+            </p>
+
+            <h3>What the extension stores on your device</h3>
+            <p>
+              Sign-in tokens are stored in Chrome extension storage: the access token in{' '}
+              <code>chrome.storage.session</code>, and the refresh token in{' '}
+              <code>chrome.storage.local</code> (limited so a regular web page cannot read it).
+            </p>
+            <p>The extension also keeps a few things on your device in local extension storage:</p>
             <ul className="seo-list">
+              <li>Side-panel and font-size preferences</li>
+              <li>Whether you have dismissed the page-context explanation</li>
               <li>
-                <strong>Page content:</strong> Text extracted from tabs you explicitly include
-                (current tab and/or pinned tabs) is sent to our servers only when you submit a
-                comparison with page context enabled. We do not run a content script on every
-                website, and we do not read page content continuously or in the background.
-              </li>
-              <li>
-                <strong>Tab metadata:</strong> Page titles and URLs for tabs you include in context
-                may be sent with your comparison request.
-              </li>
-              <li>
-                <strong>Selections:</strong> Text you highlight on a page may be included when page
-                context is enabled and you submit a comparison.
-              </li>
-              <li>
-                <strong>Extension authentication:</strong> If you sign in through the extension,
-                access tokens are stored in your browser&apos;s extension session storage (not in
-                page localStorage).
+                A recent-comparisons list (prompt, answers, and the title and URL of a tab you used
+                as context, when that applies)
               </li>
             </ul>
             <p>
-              You can disable page context at any time using the Page context toggle in the
-              extension sidebar. Page content is handled under the same pass-through principles
-              described above — we send it to AI providers to generate responses and do not use it
-              for training or unrelated purposes.
+              Those items stay on your computer unless you are signed in. When you sign in, recent
+              local comparisons can be copied to your CompareIntel account so they show up in
+              history.
             </p>
+
+            <h3>When it reads a web page</h3>
+            <p>
+              The extension reads selected text or visible page text only when you submit a
+              comparison with page context turned on. That snapshot can include the current tab and
+              any tabs you pinned for context, plus each tab&apos;s title and URL. It does not read
+              page text when the side panel opens, and it does not read pages in the background.
+            </p>
+            <p>
+              You can turn page context off with the toggle above the prompt. A content script runs
+              only on compareintel.com, so the website can pass a sign-in session to the extension.
+              The extension does not inject a content script into every website.
+            </p>
+
+            <h3>Where the prompt and page text go</h3>
+            <p>
+              Your prompt, and any selected text or page text included as context, is sent to the
+              CompareIntel backend. CompareIntel forwards that text to third-party AI model
+              providers through OpenRouter so those models can generate answers. Those providers
+              have their own privacy policies. CompareIntel uses this to show the comparison in the
+              side panel.
+            </p>
+            <p>
+              The extension also sends a hashed browser fingerprint to CompareIntel so we can apply
+              rate limits and show credit balance. That is not an advertising identifier.
+            </p>
+
+            <h3>What the extension does not do</h3>
+            <ul className="seo-list">
+              <li>It does not include analytics or tracking software.</li>
+              <li>It does not include ads.</li>
+              <li>CompareIntel does not sell the data described in this policy.</li>
+            </ul>
+
+            <h3>How to delete your data</h3>
+            <ul className="seo-list">
+              <li>
+                Uninstall the extension to remove tokens, preferences, and recent comparisons stored
+                in Chrome on that browser.
+              </li>
+              <li>
+                On compareintel.com, open Settings and use{' '}
+                <strong>Delete all comparison history</strong> to permanently delete saved
+                conversations on our servers.
+              </li>
+              <li>
+                To delete your CompareIntel account, email{' '}
+                <a href="mailto:support@compareintel.com">support@compareintel.com</a>. Settings can
+                delete comparison history, but there is not currently a delete-account button in the
+                app.
+              </li>
+            </ul>
           </section>
 
           <section className="seo-section">

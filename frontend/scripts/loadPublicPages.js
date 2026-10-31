@@ -27,8 +27,21 @@ export function loadSeoCatalog() {
   return readJson(SEO_CATALOG_PATH)
 }
 
+function expandStaticPages(staticPages) {
+  const expanded = []
+  for (const page of staticPages) {
+    const { aliases, ...canonical } = page
+    expanded.push(canonical)
+    if (!Array.isArray(aliases)) continue
+    for (const alias of aliases) {
+      expanded.push({ ...canonical, path: alias })
+    }
+  }
+  return expanded
+}
+
 export function getPublicPages() {
-  const staticPages = readJson(STATIC_PAGES_PATH)
+  const staticPages = expandStaticPages(readJson(STATIC_PAGES_PATH))
   const catalog = loadSeoCatalog()
   return [...staticPages, catalog.index, ...catalog.models.map(model => model.page)]
 }
