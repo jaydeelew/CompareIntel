@@ -16,7 +16,7 @@ When `VITE_DEPLOY_ENV=preview` or Cloudflare’s `CF_PAGES=1` is set at build ti
 | --- | --- |
 | **noindex** | `index.html` robots/googlebot meta + Pages `_headers` `X-Robots-Tag: noindex, nofollow` + `robots.txt` `Disallow: /` |
 | **No analytics beacon** | `isAnalyticsEnabled()` is false; Sentry is not initialized; `VITE_PERFORMANCE_ENDPOINT` is stripped |
-| **No production secrets** | `VITE_SENTRY_DSN`, `VITE_PERFORMANCE_ENDPOINT`, and `VITE_RECAPTCHA_SITE_KEY` are cleared before Vite inlines env |
+| **No production secrets** | `VITE_SENTRY_DSN`, `VITE_PERFORMANCE_ENDPOINT`, `VITE_RECAPTCHA_SITE_KEY`, and `VITE_CF_BEACON_TOKEN` are cleared before Vite inlines env |
 | **No prod DB / Stripe live** | `VITE_API_URL` is forced to `/preview-api`. GETs are served from static fixtures. POST/PUT/PATCH/DELETE (including billing) return 403 |
 
 `@compareintel/core` is resolved from `packages/compare-core` via the Vite alias in `frontend/vite.config.ts`. Pages must clone the **repository root** (not an isolated `frontend/` upload) so that alias still works.
@@ -80,6 +80,7 @@ Set these on **both** Production and Preview in **Settings → Environment varia
 - `VITE_SENTRY_DSN`
 - `VITE_PERFORMANCE_ENDPOINT`
 - `VITE_RECAPTCHA_SITE_KEY`
+- `VITE_CF_BEACON_TOKEN`
 - Production `VITE_API_URL` (`https://compareintel.com/api` or the EC2 IP)
 - Stripe keys, OpenRouter keys, `SECRET_KEY`, database URLs (none of these are Vite vars, but they must not be pasted into Pages)
 
