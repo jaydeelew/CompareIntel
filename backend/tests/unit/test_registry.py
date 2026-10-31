@@ -73,6 +73,62 @@ class TestCatalogLineup:
         assert "qwen/qwen3-next-80b-a3b-instruct" in ids
 
 
+class TestOpenRouterClientKey:
+    def test_empty_api_key_is_accepted_by_openai_client(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(registry.settings, "openrouter_api_key", "")
+        monkeypatch.setattr(registry.settings, "environment", "development")
+        key = registry.openrouter_api_key_for_client()
+        assert key
+        assert key == registry._MISSING_OPENROUTER_API_KEY
+        from openai import OpenAI
+
+        OpenAI(api_key=key, base_url="https://openrouter.ai/api/v1")
+
+    def test_production_empty_key_raises_at_client_construction(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(registry.settings, "openrouter_api_key", "")
+        monkeypatch.setattr(registry.settings, "environment", "production")
+        with pytest.raises(registry.OpenRouterConfigError, match="OPENROUTER_API_KEY is not set"):
+            registry.openrouter_api_key_for_client()
+
+    def test_placeholder_is_rejected_on_request_path(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(registry.settings, "openrouter_api_key", "")
+        monkeypatch.setattr(registry.settings, "environment", "development")
+        with pytest.raises(
+            registry.OpenRouterConfigError, match="OPENROUTER_API_KEY is not configured"
+        ):
+            registry.require_configured_openrouter_api_key()
+
+        monkeypatch.setattr(
+            registry.settings, "openrouter_api_key", registry._MISSING_OPENROUTER_API_KEY
+        )
+        with pytest.raises(
+            registry.OpenRouterConfigError, match="OPENROUTER_API_KEY is not configured"
+        ):
+            registry.require_configured_openrouter_api_key()
+
+    def test_configured_key_is_returned(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(registry.settings, "openrouter_api_key", "sk-or-v1-real")
+        monkeypatch.setattr(registry.settings, "environment", "production")
+        assert registry.openrouter_api_key_for_client() == "sk-or-v1-real"
+        assert registry.require_configured_openrouter_api_key() == "sk-or-v1-real"
+
+    def test_streaming_request_raises_clear_config_error(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(registry.settings, "openrouter_api_key", "")
+        monkeypatch.setattr(registry.settings, "environment", "development")
+        from app.llm.streaming import call_openrouter_streaming
+
+        with pytest.raises(
+            registry.OpenRouterConfigError, match="OPENROUTER_API_KEY is not configured"
+        ):
+            next(call_openrouter_streaming(prompt="hi", model_id="openai/gpt-4o", use_mock=False))
+
+
 class TestTierFiltering:
     def test_is_model_available_paid_tier_always_true(self):
         model_id = "openai/gpt-4o"

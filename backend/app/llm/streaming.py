@@ -28,6 +28,7 @@ from .registry import (
     get_model_supports_temperature,
     get_model_supports_vision,
     openrouter_reasoning_request_body,
+    require_configured_openrouter_api_key,
     should_request_openrouter_reasoning_traces,
 )
 from .text_processing import clean_model_response, detect_repetition
@@ -343,6 +344,10 @@ def call_openrouter_streaming(
         for chunk in stream_mock_response(chunk_size=50):
             yield chunk
         return None
+
+    # Refuse the construction-only placeholder so callers get a config error,
+    # not an opaque OpenRouter 401.
+    require_configured_openrouter_api_key()
 
     messages: list[dict[str, Any]] = []
 

@@ -357,15 +357,25 @@ async function ensureUnfoldedNavbar(page: Page): Promise<void> {
       .catch(() => {})
   }
 
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < 6; attempt++) {
     folded = await shell
       .evaluate((el: HTMLElement) => el.classList.contains('app-header-shell--folded'))
       .catch(() => false)
     if (!folded) return
 
     await page.mouse.wheel(0, -200).catch(() => {})
-    await safeWait(page, 220)
+    // WebKit sometimes drops Playwright mouse.wheel; fire the window listener the navbar uses.
+    await page
+      .evaluate(() => {
+        window.dispatchEvent(
+          new WheelEvent('wheel', { deltaY: -200, bubbles: true, cancelable: true })
+        )
+      })
+      .catch(() => {})
+    await safeWait(page, 250)
   }
+
+  await expect(shell).not.toHaveClass(/app-header-shell--folded/, { timeout: 5000 })
 }
 
 /**
