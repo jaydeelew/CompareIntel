@@ -7,9 +7,11 @@ type ChromeRuntime = {
   lastError?: { message?: string }
 }
 
+const DEFAULT_EXTENSION_ID = 'iaeeeakmomhbakmjhgcifakpdkbenojj'
+
 function getExtensionId(): string | null {
   const id = import.meta.env.VITE_EXTENSION_ID
-  return id && id.trim() ? id.trim() : null
+  return id && id.trim() ? id.trim() : DEFAULT_EXTENSION_ID
 }
 
 function getChromeRuntime(): ChromeRuntime | null {

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 
 import type { ConfigEnv } from 'vite'
@@ -6,6 +7,28 @@ const require = createRequire(import.meta.url)
 const { version } = require('../../package.json') as { version: string }
 
 export const EXTENSION_VERSION = version
+
+/** Chrome Web Store draft item ID. Public, not a secret. */
+export const CHROME_STORE_EXTENSION_ID = 'iaeeeakmomhbakmjhgcifakpdkbenojj'
+
+/**
+ * Chrome Web Store public key (SPKI, base64). Used only in DEV/watch manifests
+ * so unpacked loads share this ID. Never include in the production/store zip.
+ */
+export const CHROME_STORE_PUBLIC_KEY =
+  'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArBN+4XPxgwq4fJ4YHWHFq3BZfKFt6G5QkBWoZYacaMZqCze2q7Yrvc8syjB4UNnkvN3NvFF94k7xhIdPAcQJHsusIig2SQjYNGDUdAf/x5JlTD1XMJmtgXwf86QpX4ToWX9GOsVfV87HrMCHNdDfPi2jIptgZWxPl689X0fw2jdaMs06inEJGXE1enmHtfpk6bruTHDvo0n/B1DtYil+14SuD5e7RX+1U8viELN0IZ0QRFrZwPWnw8Xn5XTMNvuH6qGiINkFHubWLebsj2zX12a+93zcJ6WnFQqh7gd6iCHrVRsHWLgj6K9Dbn1Pb/F2+PxBY58AD3Rf12a1bf0LYwIDAQAB'
+
+/**
+ * Chrome extension IDs are the first 32 hex chars of SHA-256(DER public key),
+ * with 0-f mapped to a-p.
+ */
+export function chromeExtensionIdFromPublicKey(publicKeyBase64: string): string {
+  const der = Buffer.from(publicKeyBase64, 'base64')
+  const digest = createHash('sha256').update(der).digest('hex')
+  return digest
+    .slice(0, 32)
+    .replace(/[0-9a-f]/g, (hex) => String.fromCharCode('a'.charCodeAt(0) + Number.parseInt(hex, 16)))
+}
 
 export const PRODUCTION_WEB_APP_MATCHES = ['https://compareintel.com/*'] as const
 export const DEV_WEB_APP_MATCHES = [
@@ -76,6 +99,7 @@ export function createChromeManifest(env: ManifestBuildEnv) {
     externally_connectable: {
       matches: webAppMatches,
     },
+    ...(isDev ? { key: CHROME_STORE_PUBLIC_KEY } : {}),
   }
 }
 
