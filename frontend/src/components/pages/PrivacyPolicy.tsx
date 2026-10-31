@@ -113,15 +113,21 @@ export const PrivacyPolicy: React.FC = () => {
             <ul className="seo-list">
               <li>Side-panel and font-size preferences</li>
               <li>Whether you have dismissed the page-context explanation</li>
+              <li>Named model-selection defaults (which models you chose to compare)</li>
               <li>
                 A recent-comparisons list (prompt, answers, and the title and URL of a tab you used
                 as context, when that applies)
               </li>
             </ul>
             <p>
-              Those items stay on your computer unless you are signed in. When you sign in, recent
-              local comparisons can be copied to your CompareIntel account so they show up in
-              history.
+              Page text the extension reads for context is held in memory only while you use the
+              side panel. It is never written to Chrome storage.
+            </p>
+            <p>
+              If you are signed in, your prompt, including any page text or selection you included,
+              and the model answers are saved to your CompareIntel conversation history until you
+              delete them. The extension can also copy recent local comparisons into that account
+              history after you sign in.
             </p>
 
             <h3>When it reads a web page</h3>
@@ -146,16 +152,33 @@ export const PrivacyPolicy: React.FC = () => {
               side panel.
             </p>
             <p>
-              The extension also sends a hashed browser fingerprint to CompareIntel so we can apply
-              rate limits and show credit balance. That is not an advertising identifier.
+              The extension also sends a browser fingerprint to CompareIntel so we can apply rate
+              limits and show credit balance. That fingerprint is a SHA-256 hash of your browser
+              user agent, language, screen size, timezone, and a small canvas drawing. CompareIntel
+              stores it in usage logs together with your IP address, your user ID if you are signed
+              in, and usage details such as which models ran. That is not an advertising identifier.
+            </p>
+            <p>
+              Those usage logs stay in the database until an administrator runs a cleanup. There is
+              an admin tool that can aggregate and delete detailed logs older than a chosen number
+              of days (the tool&apos;s default is 90 days), but that cleanup is not run
+              automatically. This policy does not promise that logs are deleted after 90 days.
             </p>
 
             <h3>What the extension does not do</h3>
             <ul className="seo-list">
-              <li>It does not include analytics or tracking software.</li>
-              <li>It does not include ads.</li>
+              <li>
+                The extension itself does not include analytics or tracking software. The
+                CompareIntel website uses Sentry, including Session Replay, for error monitoring.
+              </li>
+              <li>The extension does not include ads.</li>
               <li>CompareIntel does not sell the data described in this policy.</li>
             </ul>
+            <p>
+              Payments through Stripe and approximate location from your IP address are website
+              practices. See the rest of this Privacy Policy for how the CompareIntel site handles
+              account, log, and payment data.
+            </p>
 
             <h3>How to delete your data</h3>
             <ul className="seo-list">

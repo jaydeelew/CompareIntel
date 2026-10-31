@@ -783,8 +783,9 @@ export const faqData: FAQItemData[] = [
           our control.
         </p>
         <p>
-          To delete your account, go to Account Settings and scroll to the bottom to find the
-          account deletion option.
+          To delete your account, email{' '}
+          <a href="mailto:support@compareintel.com">support@compareintel.com</a>. Settings can
+          delete comparison history, but there is not currently a delete-account button in the app.
         </p>
       </>
     ),
