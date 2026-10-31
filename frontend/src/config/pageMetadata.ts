@@ -20,9 +20,19 @@ export interface PageMetadata {
   h1: string
   priority: number
   changefreq: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  aliases?: string[]
 }
 
-const staticPublicPages = staticPublicPagesJson as PageMetadata[]
+const staticPagesWithAliases = staticPublicPagesJson as PageMetadata[]
+const staticPublicPages: PageMetadata[] = staticPagesWithAliases.map(
+  ({ aliases: _aliases, ...page }) => page
+)
+const pathAliases = new Map<string, string>()
+for (const page of staticPagesWithAliases) {
+  for (const alias of page.aliases ?? []) {
+    pathAliases.set(alias, page.path)
+  }
+}
 const seoCatalog = seoCatalogJson as {
   index: PageMetadata
   models: Array<{ page: PageMetadata }>
@@ -43,7 +53,8 @@ export const PUBLIC_PAGES: readonly PageMetadata[] = [
  */
 export function getPageMetadata(pathname: string): PageMetadata | undefined {
   const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '')
-  return PUBLIC_PAGES.find(page => page.path === normalizedPath)
+  const canonicalPath = pathAliases.get(normalizedPath) ?? normalizedPath
+  return PUBLIC_PAGES.find(page => page.path === canonicalPath)
 }
 
 /**

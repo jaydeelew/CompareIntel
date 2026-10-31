@@ -32,17 +32,6 @@ export function classicContentScriptsPlugin(extensionRoot) {
 
         await esbuild.build({
           absWorkingDir: extensionRoot,
-          entryPoints: [path.join(extensionRoot, 'src/content/selection.ts')],
-          bundle: true,
-          format: 'iife',
-          outfile: path.join(contentDir, 'selection.js'),
-          platform: 'browser',
-          target: 'chrome109',
-          legalComments: 'none',
-        })
-
-        await esbuild.build({
-          absWorkingDir: extensionRoot,
           entryPoints: [path.join(extensionRoot, 'src/content/webAppBridge.ts')],
           bundle: true,
           format: 'iife',
@@ -57,8 +46,11 @@ export function classicContentScriptsPlugin(extensionRoot) {
 
         const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
         const scripts = manifest.content_scripts
-        if (scripts?.[0]) scripts[0].js = ['content/selection.js']
-        if (scripts?.[1]) scripts[1].js = ['content/webAppBridge.js']
+        for (const script of scripts ?? []) {
+          script.js = (script.js ?? []).map((file) =>
+            String(file).includes('webAppBridge') ? 'content/webAppBridge.js' : file,
+          )
+        }
 
         if (Array.isArray(manifest.web_accessible_resources)) {
           manifest.web_accessible_resources = manifest.web_accessible_resources

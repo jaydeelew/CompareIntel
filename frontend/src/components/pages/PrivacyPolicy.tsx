@@ -39,7 +39,8 @@ export const PrivacyPolicy: React.FC = () => {
               safeguard your information when you use our AI model comparison platform at
               compareintel.com (the "Service"). CompareIntel acts as a pass-through: we send your
               prompts to AI providers and display responses, but we do not access, analyze, train
-              on, or use your prompt or response content for any other purpose.
+              on, or use your prompt or response content for any other purpose, except to store it
+              in your history when you&apos;re signed in.
             </p>
             <p>
               By using CompareIntel, you agree to the collection and use of information in
@@ -87,40 +88,129 @@ export const PrivacyPolicy: React.FC = () => {
                 <strong>Cookies and Similar Technologies:</strong> We use cookies and similar
                 tracking technologies to maintain your session and preferences.
               </li>
+              <li>
+                <strong>Error monitoring (Sentry Session Replay):</strong> On the website (not in
+                the browser extension), Sentry may record a reconstruction of your visit — page
+                layout, clicks, and navigation — so we can debug errors. In production we record
+                about 1% of sessions and about 10% of sessions where an error occurs. Our Sentry
+                config masks all text and blocks images, video, and audio. We do not set a Replay
+                retention period in our config. See{' '}
+                <a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer">
+                  Sentry&apos;s privacy policy
+                </a>
+                .
+              </li>
             </ul>
 
-            <h3>CompareIntel Browser Extension</h3>
             <p>
-              If you use the CompareIntel browser extension, additional data may be processed when
-              you enable <strong>Page context</strong> and submit a comparison:
+              If you use the CompareIntel browser extension, see{' '}
+              <a href="#browser-extension">Browser extension</a> for what it stores, when it reads a
+              page, and where that text goes.
             </p>
+          </section>
+
+          <section className="seo-section" id="browser-extension">
+            <h2>Browser extension</h2>
+            <p>
+              This section describes the CompareIntel Chrome extension. It uses the same
+              CompareIntel account and backend as the website.
+            </p>
+
+            <h3>What the extension stores on your device</h3>
+            <p>
+              Sign-in tokens are stored in Chrome extension storage: the access token in{' '}
+              <code>chrome.storage.session</code>, and the refresh token in{' '}
+              <code>chrome.storage.local</code> (limited so a regular web page cannot read it).
+            </p>
+            <p>The extension also keeps a few things on your device in local extension storage:</p>
             <ul className="seo-list">
+              <li>Side-panel and font-size preferences</li>
+              <li>Whether you have dismissed the page-context explanation</li>
+              <li>Named model-selection defaults (which models you chose to compare)</li>
               <li>
-                <strong>Page content:</strong> Text extracted from tabs you explicitly include
-                (current tab and/or pinned tabs) is sent to our servers only when you submit a
-                comparison with page context enabled. We do not read page content continuously or in
-                the background.
-              </li>
-              <li>
-                <strong>Tab metadata:</strong> Page titles and URLs for tabs you include in context
-                may be sent with your comparison request.
-              </li>
-              <li>
-                <strong>Selections:</strong> Text you highlight on a page may be included when page
-                context is enabled and you submit a comparison.
-              </li>
-              <li>
-                <strong>Extension authentication:</strong> If you sign in through the extension,
-                access tokens are stored in your browser&apos;s extension session storage (not in
-                page localStorage).
+                A recent-comparisons list (prompt, answers, and the title and URL of a tab you used
+                as context, when that applies)
               </li>
             </ul>
             <p>
-              You can disable page context at any time using the Page context toggle in the
-              extension sidebar. Page content is handled under the same pass-through principles
-              described above — we send it to AI providers to generate responses and do not use it
-              for training or unrelated purposes.
+              Page text the extension reads for context is held only in the extension&apos;s memory
+              and discarded when the tab closes or navigates; never written to Chrome storage.
             </p>
+            <p>
+              If you are signed in, your prompt, including any page text or selection you included,
+              and the model answers are saved to your CompareIntel conversation history until you
+              delete them. The extension can also copy recent local comparisons into that account
+              history after you sign in.
+            </p>
+
+            <h3>When it reads a web page</h3>
+            <p>
+              The extension reads selected text or visible page text only when you submit a
+              comparison with page context turned on. That snapshot can include the current tab and
+              any tabs you pinned for context, plus each tab&apos;s title and URL. It does not read
+              page text when the side panel opens, and it does not read pages in the background.
+            </p>
+            <p>
+              You can turn page context off with the toggle above the prompt. A content script runs
+              only on compareintel.com, so the website can pass a sign-in session to the extension.
+              The extension does not inject a content script into every website.
+            </p>
+
+            <h3>Where the prompt and page text go</h3>
+            <p>
+              Your prompt, and any selected text or page text included as context, is sent to the
+              CompareIntel backend. CompareIntel forwards that text to third-party AI model
+              providers through OpenRouter so those models can generate answers. Those providers
+              have their own privacy policies. CompareIntel uses this to show the comparison in the
+              side panel.
+            </p>
+            <p>
+              The extension also sends a browser fingerprint to CompareIntel so we can apply rate
+              limits and show credit balance. That fingerprint is a SHA-256 hash of your browser
+              user agent, language, screen size, timezone, and a small canvas drawing. CompareIntel
+              stores it in usage logs together with your IP address, your user ID if you are signed
+              in, and usage details such as which models ran. That is not an advertising identifier.
+            </p>
+            <p>
+              Those usage logs stay in the database until an administrator runs a cleanup. There is
+              an admin tool that can aggregate and delete detailed logs older than a chosen number
+              of days (the tool&apos;s default is 90 days), but that cleanup is not run
+              automatically. This policy does not promise that logs are deleted after 90 days.
+            </p>
+
+            <h3>What the extension does not do</h3>
+            <ul className="seo-list">
+              <li>
+                The extension itself does not include analytics or tracking software. The
+                CompareIntel website uses Sentry, including Session Replay, for error monitoring.
+              </li>
+              <li>The extension does not include ads.</li>
+              <li>CompareIntel does not sell the data described in this policy.</li>
+            </ul>
+            <p>
+              Payments through Stripe and approximate location from your IP address are website
+              practices. See the rest of this Privacy Policy for how the CompareIntel site handles
+              account, log, and payment data.
+            </p>
+
+            <h3>How to delete your data</h3>
+            <ul className="seo-list">
+              <li>
+                Uninstall the extension to remove tokens, preferences, and recent comparisons stored
+                in Chrome on that browser.
+              </li>
+              <li>
+                On compareintel.com, open Settings and use{' '}
+                <strong>Delete all comparison history</strong> to permanently delete saved
+                conversations on our servers.
+              </li>
+              <li>
+                To delete your CompareIntel account, email{' '}
+                <a href="mailto:support@compareintel.com">support@compareintel.com</a>. Settings can
+                delete comparison history, but there is not currently a delete-account button in the
+                app.
+              </li>
+            </ul>
           </section>
 
           <section className="seo-section">
@@ -193,8 +283,11 @@ export const PrivacyPolicy: React.FC = () => {
                 for your use. Only you can access it. Delete anytime from your history.
               </li>
               <li>
-                <strong>Usage Data:</strong> Aggregated and anonymized usage data may be retained
-                indefinitely for analytics purposes.
+                <strong>Usage logs:</strong> Detailed usage-log rows (IP address, browser
+                fingerprint, user ID when you are signed in, and comparison metadata such as models
+                run) are kept until an administrator runs a cleanup. That cleanup is not scheduled
+                automatically. After a cleanup, aggregated monthly summaries without those
+                identifiers may remain.
               </li>
             </ul>
           </section>
@@ -283,6 +376,16 @@ export const PrivacyPolicy: React.FC = () => {
             <p>
               Each provider has its own privacy policy and data handling practices. We encourage you
               to review their privacy policies to understand how they process your data.
+            </p>
+            <p>
+              The website also uses Sentry for error monitoring and Session Replay. Replay can
+              capture a reconstruction of your visit (page layout, clicks, and navigation). Our
+              config masks all text and blocks all media; we do not set a Replay retention period in
+              our config. Sentry&apos;s practices are described in{' '}
+              <a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer">
+                Sentry&apos;s privacy policy
+              </a>
+              .
             </p>
           </section>
 
