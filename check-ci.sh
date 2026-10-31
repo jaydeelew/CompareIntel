@@ -49,6 +49,28 @@ else
 fi
 echo ""
 
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔀 Nginx www → apex redirect"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if node scripts/check-nginx-www-redirect.js; then
+  echo -e "${GREEN}✓ nginx.ssl.conf 301s www.compareintel.com to the apex${NC}"
+else
+  echo -e "${RED}❌ nginx.ssl.conf is missing the www → apex 301${NC}"
+  FAILED=1
+fi
+echo ""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🧾 Nginx SSL syntax (nginx -t)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if bash scripts/check-nginx-ssl-syntax.sh; then
+  echo -e "${GREEN}✓ nginx.ssl.conf syntax check finished${NC}"
+else
+  echo -e "${RED}❌ nginx.ssl.conf failed nginx -t${NC}"
+  FAILED=1
+fi
+echo ""
+
 # Backend checks
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🐍 Backend checks"

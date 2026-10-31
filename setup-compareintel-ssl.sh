@@ -8,6 +8,7 @@
 set -e
 
 DOMAIN="compareintel.com"
+# www must stay on the certificate so HTTPS www→apex 301 can complete the TLS handshake.
 WWW_DOMAIN="www.compareintel.com"
 EMAIL="${LETSENCRYPT_EMAIL:-}"
 WEBROOT_PATH="/var/www/certbot"
