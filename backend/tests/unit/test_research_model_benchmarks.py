@@ -35,9 +35,12 @@ from scripts.research_model_benchmarks import (
     apply_source_health_guard,
     attach_fetch_dates,
     calculate_avg_cost,
+    collect_ranked_model_ids,
     determine_categories,
+    drop_rankings_not_in_lineup,
     evaluate_source_health,
     extract_primary_score,
+    get_lineup_model_ids,
     get_model_id_to_name_map,
     is_plausible_score,
     mark_category_stale,
@@ -45,7 +48,9 @@ from scripts.research_model_benchmarks import (
     model_exists_in_category,
     parse_recommendations_ts,
     rebuild_categories_ts,
+    report_lineup_models_without_rankings,
     sort_category_by_scores,
+    sync_rankings_with_lineup,
     with_fetch_date,
 )
 
@@ -768,7 +773,7 @@ class TestActualRecommendationsFile:
                 assert "/" in m["modelId"], f"Invalid model ID format: {m['modelId']}"
 
     def test_model_ids_exist_in_registry(self, real_ts_content):
-        """All model IDs in Help Me Choose must exist in the models registry."""
+        """All ranked Help Me Choose IDs must be in the active lineup (registry)."""
         registry_path = (
             Path(__file__).resolve().parent.parent.parent / "data" / "models_registry.json"
         )
@@ -778,16 +783,15 @@ class TestActualRecommendationsFile:
         with open(registry_path, encoding="utf-8") as f:
             registry = json.load(f)
 
-        all_registry_ids = set()
-        for provider_models in registry["models_by_provider"].values():
-            for m in provider_models:
-                all_registry_ids.add(m["id"])
+        lineup_ids = get_lineup_model_ids(registry)
+        assert lineup_ids, "Active model lineup (models_by_provider) is empty"
 
         cats = parse_recommendations_ts(real_ts_content)
         for cat in cats:
             for m in cat["models"]:
-                assert m["modelId"] in all_registry_ids, (
-                    f"Model {m['modelId']} in category '{cat['id']}' not found in models registry"
+                assert m["modelId"] in lineup_ids, (
+                    f"Model {m['modelId']} in category '{cat['id']}' is not in the "
+                    "active model lineup (models_registry.json models_by_provider)"
                 )
 
     def test_each_model_has_benchmark_score(self, real_ts_content):
@@ -973,3 +977,170 @@ class TestLlmdbScoreCell:
         )
         cell = BeautifulSoup(html, "html.parser").find("td")
         assert _score_from_llmdb_score_cell(cell) == 91.8
+
+
+class TestLineupSync:
+    def test_get_lineup_model_ids_reads_models_by_provider_only(self):
+        registry = {
+            "models_by_provider": {
+                "OpenAI": [{"id": "openai/gpt-5"}, {"id": "openai/gpt-4o"}],
+                "Google": [{"id": "google/gemini-2.5-flash"}],
+            },
+            "unregistered_tier_models": ["openai/gpt-5"],
+            "free_tier_additional_models": ["not-a-lineup/model"],
+        }
+        assert get_lineup_model_ids(registry) == {
+            "openai/gpt-5",
+            "openai/gpt-4o",
+            "google/gemini-2.5-flash",
+        }
+
+    def test_drop_rankings_not_in_lineup_removes_stale_rows(self):
+        categories = [
+            {
+                "id": "coding",
+                "models": [
+                    {"modelId": "openai/gpt-5", "evidence": "SWE-Bench: 40%."},
+                    {"modelId": "retired/old-model", "evidence": "SWE-Bench: 10%."},
+                ],
+            },
+            {
+                "id": "writing",
+                "models": [
+                    {"modelId": "retired/old-model", "evidence": "Elo: 1400."},
+                    {"modelId": "openai/gpt-4o", "evidence": "Elo: 1438."},
+                ],
+            },
+        ]
+        removed = drop_rankings_not_in_lineup(categories, {"openai/gpt-5", "openai/gpt-4o"})
+        assert removed == {
+            "coding": ["retired/old-model"],
+            "writing": ["retired/old-model"],
+        }
+        assert [m["modelId"] for m in categories[0]["models"]] == ["openai/gpt-5"]
+        assert [m["modelId"] for m in categories[1]["models"]] == ["openai/gpt-4o"]
+
+    def test_report_unranked_lineup_models_is_not_an_error(self, capsys):
+        categories = [
+            {
+                "id": "coding",
+                "models": [{"modelId": "openai/gpt-5", "evidence": "SWE-Bench: 40%."}],
+            }
+        ]
+        missing = report_lineup_models_without_rankings(
+            {"openai/gpt-5", "anthropic/claude-opus-4.6"}, categories
+        )
+        assert missing == ["anthropic/claude-opus-4.6"]
+        captured = capsys.readouterr()
+        assert "report only" in captured.out
+        assert "anthropic/claude-opus-4.6" in captured.out
+
+    def test_collect_ranked_model_ids_is_unique(self):
+        categories = [
+            {"id": "a", "models": [{"modelId": "openai/gpt-5"}, {"modelId": "openai/gpt-4o"}]},
+            {"id": "b", "models": [{"modelId": "openai/gpt-5"}]},
+        ]
+        assert collect_ranked_model_ids(categories) == {"openai/gpt-5", "openai/gpt-4o"}
+
+    def test_sync_rankings_with_lineup_drops_and_reports(self, tmp_path, capsys):
+        ts_file = tmp_path / "helpMeChooseRecommendations.ts"
+        ts_file.write_text(
+            textwrap.dedent(
+                """\
+                export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
+                  {
+                    id: 'coding',
+                    label: 'Coding',
+                    description: 'D',
+                    models: [
+                      { modelId: 'openai/gpt-5', evidence: 'SWE-Bench Pro public (Scale Labs): 40%.' },
+                      { modelId: 'retired/old-model', evidence: 'SWE-Bench Pro public (Scale Labs): 10%.' },
+                    ],
+                  },
+                  {
+                    id: 'writing',
+                    label: 'Writing',
+                    description: 'D',
+                    models: [
+                      { modelId: 'openai/gpt-4o', evidence: 'Creative Writing Arena (kearai.com): 1438 Elo.' },
+                    ],
+                  },
+                ]
+                """
+            ),
+            encoding="utf-8",
+        )
+        reg_file = tmp_path / "models_registry.json"
+        reg_file.write_text(
+            json.dumps(
+                {
+                    "models_by_provider": {
+                        "OpenAI": [{"id": "openai/gpt-5"}, {"id": "openai/gpt-4o"}],
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with (
+            patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
+            patch("scripts.research_model_benchmarks.REGISTRY_PATH", reg_file),
+        ):
+            result = sync_rankings_with_lineup(dry_run=False)
+
+        assert result["removed"] == {"coding": ["retired/old-model"]}
+        assert result["total_changes"] == 1
+        assert result["unranked"] == []
+        updated = parse_recommendations_ts(ts_file.read_text(encoding="utf-8"))
+        coding = next(c for c in updated if c["id"] == "coding")
+        assert [m["modelId"] for m in coding["models"]] == ["openai/gpt-5"]
+        captured = capsys.readouterr()
+        assert "retired/old-model" in captured.err
+        assert "Every lineup model has at least one Help Me Choose ranking." in captured.out
+
+    def test_sync_rankings_with_lineup_dry_run_does_not_write(self, tmp_path):
+        original = textwrap.dedent(
+            """\
+            export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
+              {
+                id: 'coding',
+                label: 'Coding',
+                description: 'D',
+                models: [
+                  { modelId: 'openai/gpt-5', evidence: 'SWE-Bench Pro public (Scale Labs): 40%.' },
+                  { modelId: 'retired/old-model', evidence: 'SWE-Bench Pro public (Scale Labs): 10%.' },
+                ],
+              },
+              {
+                id: 'writing',
+                label: 'Writing',
+                description: 'D',
+                models: [
+                  { modelId: 'openai/gpt-4o', evidence: 'Creative Writing Arena (kearai.com): 1438 Elo.' },
+                ],
+              },
+            ]
+            """
+        )
+        ts_file = tmp_path / "helpMeChooseRecommendations.ts"
+        ts_file.write_text(original, encoding="utf-8")
+        reg_file = tmp_path / "models_registry.json"
+        reg_file.write_text(
+            json.dumps(
+                {
+                    "models_by_provider": {
+                        "OpenAI": [{"id": "openai/gpt-5"}, {"id": "openai/gpt-4o"}],
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with (
+            patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
+            patch("scripts.research_model_benchmarks.REGISTRY_PATH", reg_file),
+        ):
+            result = sync_rankings_with_lineup(dry_run=True)
+
+        assert result["total_changes"] == 1
+        assert ts_file.read_text(encoding="utf-8") == original
