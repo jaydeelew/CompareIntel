@@ -69,11 +69,16 @@ export async function openWebAppWithHandoff(
     conversationHistory: shellState?.conversationHistory ?? [],
     conversationId: shellState?.conversationId ?? null,
     browserFingerprint,
-    accessToken: tokens.accessToken ?? undefined,
-    refreshToken: tokens.refreshToken ?? undefined,
   }
 
-  await browser.runtime.sendMessage({ type: 'STORE_HANDOFF', payload })
+  await browser.runtime.sendMessage({
+    type: 'STORE_HANDOFF',
+    payload,
+    tokens: {
+      accessToken: tokens.accessToken ?? undefined,
+      refreshToken: tokens.refreshToken ?? undefined,
+    },
+  })
   await openWebAppTab(buildWebAppHandoffUrl())
 }
 

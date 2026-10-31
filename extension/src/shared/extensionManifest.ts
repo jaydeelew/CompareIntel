@@ -73,6 +73,9 @@ export function createChromeManifest(env: ManifestBuildEnv) {
       type: 'module',
     },
     content_scripts: [webAppBridgeContentScript(webAppMatches)],
+    content_security_policy: {
+      extension_pages: "script-src 'self'; object-src 'self'",
+    },
     permissions: [...CHROME_PERMISSIONS],
     host_permissions: hostPermissions,
     externally_connectable: {
@@ -117,6 +120,9 @@ export function createFirefoxManifest(env: ManifestBuildEnv) {
     background: {
       scripts: ['src/background/index.ts'],
       type: 'module',
+    },
+    content_security_policy: {
+      extension_pages: "script-src 'self'; object-src 'self'",
     },
     permissions: [...FIREFOX_PERMISSIONS],
     host_permissions: isDev

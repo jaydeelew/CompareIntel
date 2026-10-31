@@ -176,7 +176,7 @@ E2E tests: [`extension/e2e/`](../../extension/e2e/) (require a built extension).
 - **`extension/src/content/webAppBridge.ts`** — auth/handoff bridge, injected only on compareintel.com
 - **`packages/compare-core`** — shared hooks, API client, prompt builder
 
-Page text and the current selection are read **on demand** with `chrome.scripting.executeScript` when the user opens the side panel, clicks the toolbar icon, or submits a comparison (`activeTab` grant). There is no `<all_urls>` content script.
+Page text and the current selection are read **on submit only** (and only when page context is on) with `chrome.scripting.executeScript` and the `activeTab` grant. Opening the side panel does not read the page. There is no `<all_urls>` content script.
 
 ## Permissions
 
@@ -198,7 +198,14 @@ Production Chrome permissions (also the Chrome Web Store justification table):
 | **`optional_host_permissions` for `http://*/*` and `https://*/*`** | No feature injects into a site the user has not invoked the extension on. Cached text from a previously invoked pinned tab is reused until that tab navigates. |
 | **`<all_urls>` content scripts** | Replaced by on-demand `executeScript`. The only remaining content script is the compareintel.com web-app bridge. |
 
-Page content is read when you **open CompareIntel or submit**, not continuously and not on chrome:// or Chrome Web Store pages.
+Page content is read when you **submit with page context on**, not when the panel opens, not continuously, and not on chrome:// or Chrome Web Store pages.
+
+### Auth and handoff (security)
+
+- Access tokens live in `chrome.storage.session`. Refresh tokens live in `chrome.storage.local` with `setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })` so content scripts cannot read them. A 401 from `/auth/refresh` clears both.
+- The web app already sends tokens to the extension with `chrome.runtime.sendMessage(extensionId)` (`CI_AUTH`, `externally_connectable`).
+- The content-script bridge **must not** put access or refresh tokens on `window.postMessage`. Handoff responses include conversation state plus a one-time `handoffNonce` only.
+- **Follow-up (web app):** on `?handoff=1`, call `chrome.runtime.sendMessage(extensionId, { type: 'CI_CLAIM_HANDOFF', nonce })` and use the returned tokens to establish the cookie session. Until that ships, opening the web app from the extension hydrates prompt/results without transferring the session.
 
 ---
 

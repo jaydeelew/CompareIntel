@@ -38,14 +38,13 @@ export class TabContextManager {
 
   constructor() {
     chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-      if (changeInfo.url || changeInfo.status === 'complete') {
-        this.cache.delete(tabId)
+      if (changeInfo.url || changeInfo.status === 'loading') {
+        this.evictTabCache(tabId)
       }
     })
     chrome.tabs.onRemoved.addListener((tabId) => {
-      this.cache.delete(tabId)
+      this.evictTabCache(tabId)
       this.pinnedTabIds.delete(tabId)
-      this.selectionByTab.delete(tabId)
       if (this.lastInvoked?.tabId === tabId) this.lastInvoked = null
     })
   }
@@ -94,7 +93,12 @@ export class TabContextManager {
     }
   }
 
-  /** Snapshot selection + page text after a user gesture (action, panel open, submit). */
+  evictTabCache(tabId: number): void {
+    this.cache.delete(tabId)
+    this.selectionByTab.delete(tabId)
+  }
+
+  /** Snapshot page text after an explicit user submit (not on panel open). */
   async captureTab(tab: {
     id?: number
     url?: string
@@ -116,7 +120,7 @@ export class TabContextManager {
         case 'GET_ACTIVE_TAB': {
           if (message.capture) {
             const live = await this.queryActiveTab()
-            if (live) await this.captureTab(live)
+            if (live) this.rememberInvokedTab(live)
           }
           return this.buildActiveTabResponse()
         }

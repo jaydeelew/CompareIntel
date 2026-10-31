@@ -13,8 +13,9 @@ export function PageContextIntroModal({ onAcknowledge }: PageContextIntroModalPr
         </p>
         <ul className="page-context-intro-list">
           <li>
-            Page text and your current selection are read when you open CompareIntel or submit a
-            comparison — not in the background on every website.
+            Page text and your current selection are read only when you submit a comparison with
+            page context on — not when the side panel opens, and not in the background on every
+            website.
           </li>
           <li>Extracted text is included in your prompt and sent to the AI providers you choose.</li>
           <li>You can turn page context off anytime with the toggle above the prompt.</li>

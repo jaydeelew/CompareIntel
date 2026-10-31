@@ -117,6 +117,74 @@ describe('TabContextManager', () => {
     })
   })
 
+  it('does not read page text when GET_ACTIVE_TAB only captures metadata', async () => {
+    tabsQuery.mockResolvedValue([
+      { id: 12, url: 'https://example.com/docs', title: 'Docs' },
+    ])
+    await manager.handleMessage({ type: 'GET_ACTIVE_TAB', capture: true })
+    expect(executeScript).not.toHaveBeenCalled()
+  })
+
+  it('evicts cached page text on navigation and tab close', async () => {
+    executeScript.mockResolvedValue([
+      {
+        result: {
+          url: 'https://example.com/docs',
+          title: 'Docs',
+          text: 'page text',
+          selection: 'chosen',
+        },
+      },
+    ])
+    tabsGet.mockResolvedValue({
+      id: 12,
+      url: 'https://example.com/docs',
+      title: 'Docs',
+    })
+    await manager.captureTab({
+      id: 12,
+      url: 'https://example.com/docs',
+      title: 'Docs',
+    })
+    expect(await manager.handleMessage({ type: 'GET_SELECTION', tabId: 12 })).toEqual({
+      type: 'SELECTION',
+      text: 'chosen',
+    })
+
+    const onUpdatedCb = onUpdated.addListener.mock.calls.at(-1)?.[0] as (
+      tabId: number,
+      changeInfo: chrome.tabs.TabChangeInfo,
+    ) => void
+    onUpdatedCb(12, { url: 'https://example.com/other' })
+    executeScript.mockClear()
+    executeScript.mockResolvedValue([{ result: { selection: '' } }])
+    await manager.handleMessage({ type: 'GET_SELECTION', tabId: 12 })
+    expect(executeScript).toHaveBeenCalled()
+
+    executeScript.mockClear()
+    executeScript.mockResolvedValue([
+      {
+        result: {
+          url: 'https://example.com/docs',
+          title: 'Docs',
+          text: 'page text',
+          selection: 'chosen',
+        },
+      },
+    ])
+    const onRemovedCb = onRemoved.addListener.mock.calls.at(-1)?.[0] as (tabId: number) => void
+    await manager.captureTab({
+      id: 12,
+      url: 'https://example.com/docs',
+      title: 'Docs',
+    })
+    onRemovedCb(12)
+    executeScript.mockClear()
+    executeScript.mockResolvedValue([{ result: { selection: 'fresh' } }])
+    await manager.handleMessage({ type: 'GET_SELECTION', tabId: 12 })
+    expect(executeScript).toHaveBeenCalled()
+  })
+
   it('records an extraction failure for restricted pages instead of injecting', async () => {
     tabsGet.mockResolvedValue({ id: 8, url: 'https://chromewebstore.google.com/detail/x', title: 'Store' })
 

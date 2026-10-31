@@ -2,8 +2,14 @@ import type { TabContextMessage, TabContextResponse } from '@compareintel/core'
 import { getPanelScope, setPanelScope, type PanelScope } from '../shared/extensionSettings'
 import browser from 'webextension-polyfill'
 
-import { authStorage } from '../shared/authStorage'
-import { consumeHandoff, storeHandoff } from '../shared/handoff'
+import { authStorage, lockRefreshTokenToTrustedContexts } from '../shared/authStorage'
+import {
+  parseCiAuthTokens,
+  parseCiClaimHandoffNonce,
+  senderWebOrigin,
+} from '../shared/externalAuth'
+import { authorizeTabContextMessage } from '../shared/extensionSender'
+import { claimHandoffTokens, consumeHandoff, storeHandoff } from '../shared/handoff'
 import type { CiExternalMessage } from '../shared/messages'
 import { isAllowedWebAppOrigin } from '../shared/webAppOrigins'
 import {
@@ -24,7 +30,7 @@ type BackgroundMessage =
   | { type: 'GET_PANEL_SCOPE' }
   | { type: 'SET_PANEL_SCOPE'; scope: PanelScope }
   | { type: 'GET_HANDOFF' }
-  | { type: 'STORE_HANDOFF'; payload: Parameters<typeof storeHandoff>[0] }
+  | { type: 'STORE_HANDOFF'; payload: Parameters<typeof storeHandoff>[0]; tokens?: Parameters<typeof storeHandoff>[1] }
   | { type: 'BROADCAST_LOGOUT' }
   | { type: 'WEB_APP_BRIDGE_READY' }
   | { type: 'OPEN_TAB_WITHOUT_PANEL'; url: string; windowId?: number }
@@ -35,6 +41,7 @@ type BackgroundResponse =
   | { type: 'PANEL_SCOPE'; scope: PanelScope }
   | { type: 'ERROR'; message: string }
   | { type: 'HANDOFF'; payload: Awaited<ReturnType<typeof consumeHandoff>> }
+  | { type: 'HANDOFF_TOKENS'; tokens: Awaited<ReturnType<typeof claimHandoffTokens>> }
 
 async function notifyWebAppTabsLogout(): Promise<void> {
   const tabs = await browser.tabs.query({})
@@ -51,10 +58,12 @@ async function notifyWebAppTabsLogout(): Promise<void> {
 }
 
 browser.runtime.onInstalled.addListener(() => {
+  void lockRefreshTokenToTrustedContexts()
   void initializeSidePanel()
 })
 
 browser.runtime.onStartup.addListener(() => {
+  void lockRefreshTokenToTrustedContexts()
   void initializeSidePanel()
 })
 
@@ -74,25 +83,28 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 
 browser.action.onClicked.addListener(async (tab) => {
   if (tab.id) {
-    await tabContextManager.captureTab(tab)
+    tabContextManager.rememberInvokedTab(tab)
     await openPanelForTab(tab.id)
   }
 })
 
 browser.runtime.onMessageExternal.addListener(
-  (message: unknown, sender, sendResponse: (response?: { ok: boolean }) => void) => {
-    if (!isAllowedWebAppOrigin(sender.url ? new URL(sender.url).origin : sender.origin)) {
+  (
+    message: unknown,
+    sender,
+    sendResponse: (response?: { ok: boolean; tokens?: { accessToken?: string; refreshToken?: string } | null }) => void,
+  ) => {
+    const origin = senderWebOrigin(sender)
+    if (!isAllowedWebAppOrigin(origin)) {
       sendResponse({ ok: false })
       return true
     }
 
     const typed = message as CiExternalMessage
-    if (typed.type === 'CI_AUTH') {
+    const authTokens = parseCiAuthTokens(message)
+    if (authTokens) {
       void authStorage
-        .setTokens({
-          accessToken: typed.access_token,
-          refreshToken: typed.refresh_token,
-        })
+        .setTokens(authTokens)
         .then(() => sendResponse({ ok: true }))
         .catch(() => sendResponse({ ok: false }))
       return true
@@ -106,6 +118,14 @@ browser.runtime.onMessageExternal.addListener(
       return true
     }
 
+    const nonce = parseCiClaimHandoffNonce(message)
+    if (nonce) {
+      void claimHandoffTokens(nonce)
+        .then((tokens) => sendResponse({ ok: Boolean(tokens), tokens }))
+        .catch(() => sendResponse({ ok: false }))
+      return true
+    }
+
     sendResponse({ ok: false })
     return true
   }
@@ -114,10 +134,15 @@ browser.runtime.onMessageExternal.addListener(
 browser.runtime.onMessage.addListener(
   (
     message: unknown,
-    _sender,
+    sender,
     sendResponse: (response: BackgroundResponse) => void
   ) => {
     const typedMessage = message as BackgroundMessage
+
+    if (!authorizeTabContextMessage(typedMessage.type, sender)) {
+      sendResponse({ type: 'ERROR', message: 'Unauthorized' })
+      return true
+    }
 
     if (typedMessage.type === 'GET_PANEL_SCOPE') {
       void getPanelScope()
@@ -152,7 +177,7 @@ browser.runtime.onMessage.addListener(
     }
 
     if (typedMessage.type === 'STORE_HANDOFF') {
-      void storeHandoff(typedMessage.payload)
+      void storeHandoff(typedMessage.payload, typedMessage.tokens)
         .then(() => sendResponse({ type: 'OK' }))
         .catch((err: unknown) => {
           sendResponse({

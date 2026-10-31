@@ -72,6 +72,7 @@ describe('extensionManifest', () => {
     expect(prod.permissions).toEqual(['sidePanel', 'storage', 'scripting', 'activeTab'])
     expect(prod.permissions).not.toContain('tabs')
     expect(prod).not.toHaveProperty('optional_host_permissions')
+    expect(prod.content_security_policy.extension_pages).toBe("script-src 'self'; object-src 'self'")
   })
 
   it('strips localhost from the production Firefox overlay', () => {
@@ -82,6 +83,7 @@ describe('extensionManifest', () => {
     expect(prod.permissions).not.toContain('tabs')
     expect(prod).not.toHaveProperty('optional_host_permissions')
     expect(prod).not.toHaveProperty('content_scripts')
+    expect(prod.content_security_policy.extension_pages).toBe("script-src 'self'; object-src 'self'")
 
     const dev = createFirefoxManifest({ mode: 'development', command: 'serve' })
     expect(dev.host_permissions).toContain('http://localhost:8000/*')

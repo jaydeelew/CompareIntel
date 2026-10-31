@@ -90,10 +90,6 @@ export function App() {
   }, [fontSizes])
 
   useEffect(() => {
-    void sendTabContextMessage({ type: 'GET_ACTIVE_TAB', capture: true }).catch(() => undefined)
-  }, [])
-
-  useEffect(() => {
     if (panelScope !== 'always_open') {
       setActiveTabId(null)
       return
