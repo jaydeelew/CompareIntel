@@ -27,7 +27,7 @@ This guide covers the SEO implementation for CompareIntel and the steps needed t
 ### 3b. Model pages (`/models` and `/models/<slug>`)
 - ✅ Featured models are generated at build time from `backend/data/models_registry.json` plus `frontend/src/data/seo/modelDataSnapshot.json`
 - ✅ Routes are added to the shared public-page list so prerender, sitemap, and `pageMetadata.ts` stay in sync
-- ✅ Unknown `/models/<slug>` URLs return HTTP 404 (nginx does not treat `/models/*` as a catch-all SPA route)
+- ✅ Unknown `/models/<slug>` URLs return HTTP 404 (`nginx/nginx.ssl.conf` and `nginx/nginx.prod.conf` treat `/models` as exact-only; missing prerendered files fall through to `404.html`)
 
 ### 4. Nginx Configuration
 - ✅ Explicit handling for `robots.txt` and `sitemap.xml`
