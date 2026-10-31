@@ -57,7 +57,9 @@ distro==1.9.0
     #   anthropic
     #   openai
 dnspython==2.9.0
-    # via email-validator
+    # via
+    #   -r requirements.in
+    #   email-validator
 docstring-parser==0.17.0
     # via anthropic
 email-validator==2.3.0
@@ -72,7 +74,7 @@ fastapi-mail==1.6.8
     # via -r requirements.in
 greenlet==3.3.1
     # via sqlalchemy
-gunicorn==25.1.0
+gunicorn==26.2.0
     # via -r requirements.in
 h11==0.16.0
     # via
@@ -112,8 +114,6 @@ openai==2.21.0
     # via -r requirements.in
 opentelemetry-api==1.45.1
     # via fastapi
-packaging==26.0
-    # via gunicorn
 passlib[bcrypt]==1.7.4
     # via -r requirements.in
 pillow==13.0.0
