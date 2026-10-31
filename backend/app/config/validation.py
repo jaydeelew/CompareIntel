@@ -8,6 +8,7 @@ and required settings are present on startup.
 import logging
 import os
 
+from ..cors import parse_extension_cors_origins
 from .constants import (
     ANONYMOUS_MODEL_LIMIT,
     HISTORY_ENTRY_LIMITS,
@@ -175,6 +176,11 @@ def validate_config() -> None:
             f"FRONTEND_URL should start with http:// or https://. Got: {settings.frontend_url}"
         )
 
+    try:
+        parse_extension_cors_origins(settings.extension_cors_origins)
+    except ValueError as exc:
+        errors.append(str(exc))
+
     if warnings:
         for warning in warnings:
             logger.warning(f"Configuration warning: {warning}")
@@ -232,12 +238,18 @@ def log_configuration() -> None:
         else "not configured"
     )
 
+    try:
+        extension_origin_count = len(parse_extension_cors_origins(settings.extension_cors_origins))
+    except ValueError:
+        extension_origin_count = 0
+
     logger.info(
         f"Config: env={settings.environment} | "
         f"frontend={settings.frontend_url} | "
         f"db={db_display} | "
         f"openrouter={'ok' if settings.openrouter_api_key else 'missing'} | "
         f"email={email_status} | "
+        f"extension_cors={extension_origin_count} | "
         f"spend_cap_daily=${settings.openrouter_daily_spend_cap_usd:g} | "
         f"max_output_tokens={settings.openrouter_max_output_tokens}"
     )
