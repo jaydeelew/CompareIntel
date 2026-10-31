@@ -120,6 +120,14 @@
   color: #1d4ed8;
 }
 
+/* Global `code` uses --primary-light on --bg-elevated. In light theme that is
+   #3b82f6 on #ffffff (~3.68:1), below WCAG AA. SEO/legal pages are always a
+   light surface, so give inline code a darker chip that meets 4.5:1. */
+.seo-page code {
+  color: #1e40af;
+  background: #f1f5f9;
+}
+
 /* Lists */
 .seo-list {
   margin: 1rem 0;
