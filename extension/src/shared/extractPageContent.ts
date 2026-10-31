@@ -5,7 +5,9 @@ export interface ExtractedPageContent {
   selection: string
 }
 
-/** Keep in sync with DEFAULT_TAB_CONTEXT_SETTINGS.maxCharsPerTab */
+/** Keep in sync with DEFAULT_TAB_CONTEXT_SETTINGS.maxCharsPerTab.
+ * Per-tab cap; combined prompts are also truncated in compare-core below
+ * the backend CompareRequest.input_data max_length (300_000). */
 export const MAX_PAGE_TEXT_CHARS = 50_000
 export const MAX_SELECTION_CHARS = 2_000
 

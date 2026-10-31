@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildPromptWithPageContext, sanitizePageText, truncateText } from '../promptBuilder'
+import {
+  buildPromptWithPageContext,
+  MAX_COMPARE_INPUT_CHARS,
+  sanitizePageText,
+  truncateText,
+} from '../promptBuilder'
 import type { TabContextBundle } from '../types'
 
 describe('promptBuilder', () => {
@@ -38,5 +43,26 @@ describe('promptBuilder', () => {
     const long = 'a'.repeat(100)
     expect(truncateText(long, 50).length).toBeGreaterThan(50)
     expect(truncateText(long, 50)).toContain('truncated')
+  })
+
+  it('caps combined page-context prompts below the backend input_data max_length', () => {
+    expect(MAX_COMPARE_INPUT_CHARS).toBeLessThan(300_000)
+    const bundle: TabContextBundle = {
+      tabs: [
+        {
+          tabId: 1,
+          url: 'https://example.com',
+          title: 'Huge page',
+          text: 'p'.repeat(MAX_COMPARE_INPUT_CHARS),
+          selection: '',
+          extractedAt: Date.now(),
+        },
+      ],
+      tokenEstimate: 10,
+    }
+    const result = buildPromptWithPageContext('Summarize this', bundle)
+    expect(result.length).toBe(MAX_COMPARE_INPUT_CHARS)
+    expect(result).toContain('truncated')
+    expect(result.length).toBeLessThan(300_000)
   })
 })
