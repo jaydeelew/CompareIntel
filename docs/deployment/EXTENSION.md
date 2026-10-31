@@ -6,7 +6,7 @@ Chrome MV3 side-panel extension for multi-model AI comparison with page context 
 
 | Package | Role |
 |---------|------|
-| [`extension/`](../../extension/) | MV3 extension (side panel, service worker, content script) |
+| [`extension/`](../../extension/) | MV3 extension (side panel, service worker, compareintel.com web-app bridge) |
 | [`packages/compare-core/`](../../packages/compare-core/) | Shared auth adapters, API client, tab context, `useComparisonPage` hook |
 
 **API strategy:** use the **local backend** for day-to-day development and the **production API** for pre-release validation and Chrome Web Store builds. Switch via [`extension/.env`](../../extension/.env) and rebuild.
@@ -162,7 +162,7 @@ E2E tests: [`extension/e2e/`](../../extension/e2e/) (require a built extension).
 | CORS / network errors in service worker | Production API without `EXTENSION_CORS_ORIGINS` | Add extension ID to server env |
 | Models never load | Backend down or wrong `VITE_API_URL` | Start backend; rebuild after `.env` change |
 | Auth works on web but not extension | Extension uses Bearer tokens, not cookies | Sign in via extension modal |
-| Page context fails | Non-HTTP(S) tab | Test on a normal `https://` page |
+| Page context fails | Restricted tab (`chrome://`, Chrome Web Store) or the toolbar icon was not used on this tab | Open a normal `https://` page and click the CompareIntel icon |
 | Changes not appearing | Forgot reload after watch build | Reload on `chrome://extensions` |
 | “Manifest file is missing or unreadable” | Watch/dev write raced `dist/` | Run `npm run extension:build` (one-shot; fails if `dist/manifest.json` is missing), reload unpacked extension; restart `extension:dev` |
 | `extension:build` hangs or reprints `vite build` forever | Nested restore from CRXJS `closeBundle` | Fixed: production builds no longer respawn Vite; they exit non-zero if the manifest is missing |
@@ -173,18 +173,40 @@ E2E tests: [`extension/e2e/`](../../extension/e2e/) (require a built extension).
 
 - **`extension/src/background`** — service worker, `TabContextManager`
 - **`extension/src/sidepanel`** — React side panel UI
-- **`extension/src/content`** — selection capture content script
+- **`extension/src/content/webAppBridge.ts`** — auth/handoff bridge, injected only on compareintel.com
 - **`packages/compare-core`** — shared hooks, API client, prompt builder
+
+Page text and the current selection are read **on submit only** (and only when page context is on) with `chrome.scripting.executeScript` and the `activeTab` grant. Opening the side panel does not read the page. There is no `<all_urls>` content script.
 
 ## Permissions
 
-- **`sidePanel`** — main UI
-- **`scripting` + `activeTab` + `tabs`** — on-demand page extraction when user submits with context enabled
-- **`storage`** — auth tokens (session storage)
-- **`host_permissions: https://compareintel.com/*`** — production API (localhost hosts are added only in development builds)
-- **`optional_host_permissions: <all_urls>`** — future opt-in for broader context
+Production Chrome permissions (also the Chrome Web Store justification table):
 
-Page content is read **on submit only**, not continuously.
+| Permission | Why we need it |
+|------------|----------------|
+| **`sidePanel`** | Opens the comparison UI in Chrome's side panel. |
+| **`storage`** | Stores sign-in tokens and extension settings on the device. |
+| **`scripting`** | Injects a one-shot reader into the current tab to copy visible text and the current selection. |
+| **`activeTab`** | Lets that injection run only after the user opens CompareIntel (toolbar icon / side panel / submit), not on every page visit. |
+| **`host_permissions: https://compareintel.com/*`** | Calls the CompareIntel API and runs the web-app auth bridge on compareintel.com. Localhost hosts are added only in development builds. |
+
+**Not requested (and why):**
+
+| Dropped | Why it is not needed |
+|---------|----------------------|
+| **`tabs`** | Would show Chrome's “Read your browsing history” warning. The invoked tab's URL is available through `activeTab`. Pinning another page means opening CompareIntel on that tab; we do not scan every open tab. |
+| **`optional_host_permissions` for `http://*/*` and `https://*/*`** | No feature injects into a site the user has not invoked the extension on. Cached text from a previously invoked pinned tab is reused until that tab navigates. |
+| **`<all_urls>` content scripts** | Replaced by on-demand `executeScript`. The only remaining content script is the compareintel.com web-app bridge. |
+
+Page content is read when you **submit with page context on**, not when the panel opens, not continuously, and not on chrome:// or Chrome Web Store pages.
+
+### Auth and handoff (security)
+
+- Access tokens live in `chrome.storage.session`. Refresh tokens live in `chrome.storage.local` with `setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })` so content scripts cannot read them. **Firefox: `setAccessLevel` is a no-op** (API not implemented). A 401 from `/auth/refresh` clears both.
+- Runtime messages from content scripts (any `sender.tab` or non-extension-page origin) are **allowlisted**: only `GET_HANDOFF`, `BROADCAST_LOGOUT`, and `WEB_APP_BRIDGE_READY`. Every other type requires an extension-page sender. Default is deny. `STORE_HANDOFF` never accepts page-supplied tokens.
+- The web app already sends tokens to the extension with `chrome.runtime.sendMessage(extensionId)` (`CI_AUTH`, `externally_connectable`).
+- The content-script bridge **must not** put access or refresh tokens on `window.postMessage`. Handoff responses include conversation state plus a one-time `handoffNonce` bound to the opened tab. `crypto.randomUUID` is the only nonce source.
+- **Follow-up (web app):** on `?handoff=1`, call `chrome.runtime.sendMessage(extensionId, { type: 'CI_CLAIM_HANDOFF', nonce })` from that tab and use the returned tokens to establish the cookie session. Until that ships, opening the web app from the extension hydrates prompt/results without transferring the session.
 
 ---
 
@@ -200,7 +222,7 @@ Page content is read **on submit only**, not continuously.
    ```
    Produces `extension/compareintel-extension.zip`.
 
-`npm run extension:build` is a one-shot production build: it must write `extension/dist/manifest.json` and exit. The production manifest omits localhost from `host_permissions`, `externally_connectable`, and the web-app content-script matches (those stay in `vite` / `extension:dev` only). The side panel is not listed in `web_accessible_resources`.
+`npm run extension:build` is a one-shot production build: it must write `extension/dist/manifest.json` and exit. The production manifest omits localhost from `host_permissions`, `externally_connectable`, and the web-app content-script matches (those stay in `vite` / `extension:dev` only). It must not register content scripts on `<all_urls>`. The side panel is not listed in `web_accessible_resources`. `content_security_policy.extension_pages` is `script-src 'self'; object-src 'none'`.
 
 ### Backend
 
@@ -243,17 +265,21 @@ Deploy frontend so [`compareintel.com/privacy`](https://compareintel.com/privacy
 
 ### Permissions justification (for review)
 
-- **`sidePanel`** — comparison UI
-- **`scripting` / `activeTab` / `tabs`** — page text only when user submits with context on
-- **`storage`** — session auth tokens
-- **`host_permissions: https://compareintel.com/*`** — API calls
-- **`content_scripts` on `<all_urls>`** — text selection capture only
+Paste the table from [Permissions](#permissions) into the store listing. Short form:
+
+| Permission | Single-sentence justification |
+|------------|-------------------------------|
+| `sidePanel` | Show the CompareIntel comparison UI beside the current page. |
+| `storage` | Remember sign-in tokens and the user's extension settings. |
+| `scripting` | Read visible page text and the current selection when the user asks for page context. |
+| `activeTab` | Limit that read to the tab the user invoked CompareIntel on. |
+| Host: `https://compareintel.com/*` | Talk to the CompareIntel API and sign the user in on compareintel.com. |
 
 ### Privacy questionnaire
 
 Answer consistently with the privacy policy:
 
-- Collects page content: **Yes**, only when user enables Page context and submits
+- Collects page content: **Yes**, only when the user enables Page context and opens CompareIntel or submits — not via a script on every website
 - Purpose: AI comparison service
 - Shared with: AI providers via backend (OpenRouter)
 - Not sold
@@ -287,7 +313,7 @@ Answer consistently with the privacy policy:
 
 ## Firefox (future)
 
-Firefox uses `sidebar_action` instead of `side_panel`. See [`extension/manifest.firefox.ts`](../../extension/manifest.firefox.ts) for a manifest overlay that shares `version` with `extension/package.json`; a conditional build flag can be added in CI.
+Firefox uses `sidebar_action` instead of `side_panel`. See [`extension/manifest.firefox.ts`](../../extension/manifest.firefox.ts) for a manifest overlay that shares `version` with `extension/package.json` and the same least-privilege model (`storage`, `scripting`, `activeTab`, compareintel.com host permission; no `<all_urls>` content script). A conditional build flag can be added in CI.
 
 ---
 

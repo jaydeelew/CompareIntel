@@ -78,6 +78,10 @@ export class CompareIntelApiClient {
         body: JSON.stringify({ refresh_token: refresh }),
         credentials: 'omit',
       })
+      if (res.status === 401) {
+        await this.config.authStorage.clearTokens()
+        return false
+      }
       if (!res.ok) return false
       const data = (await res.json()) as {
         access_token: string

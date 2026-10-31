@@ -12,13 +12,17 @@ export function PageContextIntroModal({ onAcknowledge }: PageContextIntroModalPr
           about what you&apos;re viewing.
         </p>
         <ul className="page-context-intro-list">
-          <li>Page text is read only when you submit a comparison — not continuously.</li>
+          <li>
+            Page text and your current selection are read only when you submit a comparison with
+            page context on — not when the side panel opens, and not in the background on every
+            website.
+          </li>
           <li>Extracted text is included in your prompt and sent to the AI providers you choose.</li>
           <li>You can turn page context off anytime with the toggle above the prompt.</li>
         </ul>
         <p className="page-context-intro-note">
-          After installing or updating the extension, refresh open pages. If reading fails, Chrome
-          may ask to allow access to that specific site (not all websites).
+          Chrome cannot inject into chrome:// pages or the Chrome Web Store. On a normal website,
+          click the CompareIntel toolbar icon if reading fails.
         </p>
         <button type="button" onClick={onAcknowledge}>
           Got it

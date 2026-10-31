@@ -36,6 +36,18 @@ export interface PreloadedTabContent {
   selection: string
 }
 
+export interface ActiveTabInfo {
+  tabId: number
+  url: string
+  title: string
+  favIconUrl?: string
+}
+
+export interface TabAccessRestriction {
+  tabId: number
+  message: string
+}
+
 export type TabContextMessage =
   | {
       type: 'GET_TAB_CONTEXT'
@@ -43,7 +55,7 @@ export type TabContextMessage =
       includeSelection?: boolean
       preloaded?: Record<number, PreloadedTabContent>
     }
-  | { type: 'GET_ACTIVE_TAB' }
+  | { type: 'GET_ACTIVE_TAB'; capture?: boolean }
   | { type: 'LIST_TABS'; allWindows?: boolean }
   | { type: 'PIN_TAB'; tabId: number }
   | { type: 'UNPIN_TAB'; tabId: number }
@@ -54,8 +66,12 @@ export type TabContextMessage =
 
 export type TabContextResponse =
   | { type: 'TAB_CONTEXT'; bundle: TabContextBundle }
-  | { type: 'ACTIVE_TAB'; tab: { tabId: number; url: string; title: string; favIconUrl?: string } | null }
-  | { type: 'TABS_LIST'; tabs: Array<{ tabId: number; url: string; title: string; favIconUrl?: string; pinned: boolean }> }
+  | {
+      type: 'ACTIVE_TAB'
+      tab: ActiveTabInfo | null
+      restriction?: TabAccessRestriction
+    }
+  | { type: 'TABS_LIST'; tabs: Array<ActiveTabInfo & { pinned: boolean }> }
   | { type: 'PINNED_TABS'; tabIds: number[] }
   | { type: 'SELECTION'; text: string }
   | { type: 'ERROR'; message: string }
