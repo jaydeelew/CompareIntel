@@ -47,12 +47,14 @@ jobs:
               - 'frontend/**'
               - 'packages/compare-core/**'
               - '.github/workflows/ci.yml'
+              - '.github/actions/**'
               - 'frontend/e2e/**'
               - 'frontend/playwright.config.*'
             backend:
               - 'backend/**'
               - 'frontend/src/data/**'
               - '.github/workflows/ci.yml'
+              - '.github/actions/**'
             seo:
               - 'frontend/public/sitemap.xml'
               - 'frontend/index.html'
@@ -435,6 +437,9 @@ jobs:
     needs: [detect-changes, frontend-build, backend-test]
     # !cancelled() is required: without a status function GitHub adds an implicit success(),
     # which skips this job whenever frontend-build or backend-test was skipped.
+    # Dependabot pull_request runs do not receive Actions secrets (GitHub treats them like
+    # forks). Do not use pull_request_target to work around that. configure-e2e-env falls
+    # back to placeholder credentials + backend mock mode instead.
     if: |
       !cancelled() &&
       (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
@@ -455,20 +460,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      
-      - name: Set test secrets as environment variables
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.TEST_OPENROUTER_API_KEY }}
-          TEST_FREE_EMAIL: ${{ secrets.TEST_FREE_EMAIL }}
-          TEST_FREE_PASSWORD: ${{ secrets.TEST_FREE_PASSWORD }}
-          ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
-        run: |
-          echo "OPENROUTER_API_KEY=$OPENROUTER_API_KEY" >> $GITHUB_ENV
-          echo "TEST_FREE_EMAIL=$TEST_FREE_EMAIL" >> $GITHUB_ENV
-          echo "TEST_FREE_PASSWORD=$TEST_FREE_PASSWORD" >> $GITHUB_ENV
-          echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> $GITHUB_ENV
-          echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> $GITHUB_ENV
       
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -492,6 +483,16 @@ jobs:
           if [ -f requirements-dev.txt ]; then
             pip install -r requirements-dev.txt
           fi
+
+      # After backend deps: seed SQLite mock mode when secrets are unavailable.
+      - name: Configure E2E credentials
+        uses: ./.github/actions/configure-e2e-env
+        with:
+          openrouter_api_key: ${{ secrets.TEST_OPENROUTER_API_KEY }}
+          test_free_email: ${{ secrets.TEST_FREE_EMAIL }}
+          test_free_password: ${{ secrets.TEST_FREE_PASSWORD }}
+          admin_email: ${{ secrets.TEST_ADMIN_EMAIL }}
+          admin_password: ${{ secrets.TEST_ADMIN_PASSWORD }}
       
       - name: Install frontend dependencies
         run: |
@@ -583,20 +584,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       
-      - name: Set test secrets as environment variables
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.TEST_OPENROUTER_API_KEY }}
-          TEST_FREE_EMAIL: ${{ secrets.TEST_FREE_EMAIL }}
-          TEST_FREE_PASSWORD: ${{ secrets.TEST_FREE_PASSWORD }}
-          ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
-        run: |
-          echo "OPENROUTER_API_KEY=$OPENROUTER_API_KEY" >> $GITHUB_ENV
-          echo "TEST_FREE_EMAIL=$TEST_FREE_EMAIL" >> $GITHUB_ENV
-          echo "TEST_FREE_PASSWORD=$TEST_FREE_PASSWORD" >> $GITHUB_ENV
-          echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> $GITHUB_ENV
-          echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> $GITHUB_ENV
-      
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -619,6 +606,16 @@ jobs:
           if [ -f requirements-dev.txt ]; then
             pip install -r requirements-dev.txt
           fi
+
+      # After backend deps: seed SQLite mock mode when secrets are unavailable.
+      - name: Configure E2E credentials
+        uses: ./.github/actions/configure-e2e-env
+        with:
+          openrouter_api_key: ${{ secrets.TEST_OPENROUTER_API_KEY }}
+          test_free_email: ${{ secrets.TEST_FREE_EMAIL }}
+          test_free_password: ${{ secrets.TEST_FREE_PASSWORD }}
+          admin_email: ${{ secrets.TEST_ADMIN_EMAIL }}
+          admin_password: ${{ secrets.TEST_ADMIN_PASSWORD }}
       
       - name: Install frontend dependencies
         run: |
@@ -804,20 +801,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       
-      - name: Set test secrets as environment variables
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.TEST_OPENROUTER_API_KEY }}
-          TEST_FREE_EMAIL: ${{ secrets.TEST_FREE_EMAIL }}
-          TEST_FREE_PASSWORD: ${{ secrets.TEST_FREE_PASSWORD }}
-          ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
-        run: |
-          echo "OPENROUTER_API_KEY=$OPENROUTER_API_KEY" >> $GITHUB_ENV
-          echo "TEST_FREE_EMAIL=$TEST_FREE_EMAIL" >> $GITHUB_ENV
-          echo "TEST_FREE_PASSWORD=$TEST_FREE_PASSWORD" >> $GITHUB_ENV
-          echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> $GITHUB_ENV
-          echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> $GITHUB_ENV
-      
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -840,6 +823,16 @@ jobs:
           if [ -f requirements-dev.txt ]; then
             pip install -r requirements-dev.txt
           fi
+
+      # After backend deps: seed SQLite mock mode when secrets are unavailable.
+      - name: Configure E2E credentials
+        uses: ./.github/actions/configure-e2e-env
+        with:
+          openrouter_api_key: ${{ secrets.TEST_OPENROUTER_API_KEY }}
+          test_free_email: ${{ secrets.TEST_FREE_EMAIL }}
+          test_free_password: ${{ secrets.TEST_FREE_PASSWORD }}
+          admin_email: ${{ secrets.TEST_ADMIN_EMAIL }}
+          admin_password: ${{ secrets.TEST_ADMIN_PASSWORD }}
       
       - name: Install frontend dependencies
         run: |
@@ -1078,6 +1071,8 @@ jobs:
           check_job() {
             local name="$1"
             local result="$2"
+            # success and skipped both keep the gate green (path filters, optional jobs).
+            # failure is the only result that must fail CI Success.
             if [[ "$result" == "failure" ]]; then
               FAILED_JOBS+=("$name")
               echo "::error title=CI job failed::$name ($result)"
