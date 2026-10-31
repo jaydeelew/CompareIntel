@@ -178,4 +178,13 @@ describe('matchOpenTabsToContexts', () => {
       )
     ).toEqual([3])
   })
+
+  it('prefers a stored tabId when the open-tab list does not include the URL', () => {
+    expect(
+      matchOpenTabsToContexts(
+        [{ url: 'https://pinned.test/a', title: 'Pinned', source: 'pinned', tabId: 42 }],
+        [{ tabId: 9, url: 'https://compareintel.com/' }]
+      )
+    ).toEqual([42])
+  })
 })

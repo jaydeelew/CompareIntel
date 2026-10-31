@@ -148,7 +148,7 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
         const requestedTabs = bundle?.tabs.length ?? 0
         const failures = bundle?.extractionFailures ?? []
         if (failures.length > 0 && requestedTabs === 0) {
-          contextWarning = `Could not read page content from ${failures.map((t) => t.title).join(', ')}. Refresh the page, reopen CompareIntel from the extension icon on that tab, or allow site access if Chrome prompts you.`
+          contextWarning = `Could not read page content from ${failures.map((t) => t.title).join(', ')}. Chrome blocks chrome:// pages and the Chrome Web Store. On a normal website, click the CompareIntel icon on that tab and try again.`
         } else if (failures.length > 0) {
           contextWarning = `Could not read content from: ${failures.map((t) => t.title).join(', ')}.`
         }
