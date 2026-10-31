@@ -30,6 +30,7 @@ export interface DeployEnvVars {
   VITE_SENTRY_DSN?: string
   VITE_PERFORMANCE_ENDPOINT?: string
   VITE_RECAPTCHA_SITE_KEY?: string
+  VITE_CF_BEACON_TOKEN?: string
   CF_PAGES?: string
   MODE?: string
   DEV?: boolean | string
@@ -125,6 +126,7 @@ const SECRET_ENV_KEYS = [
   'VITE_SENTRY_DSN',
   'VITE_PERFORMANCE_ENDPOINT',
   'VITE_RECAPTCHA_SITE_KEY',
+  'VITE_CF_BEACON_TOKEN',
 ] as const
 
 /**

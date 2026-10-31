@@ -247,6 +247,17 @@ export const PrivacyPolicy: React.FC = () => {
           </section>
 
           <section className="seo-section">
+            <h2>Analytics</h2>
+            <p>
+              CompareIntel uses Cloudflare Web Analytics on the production website
+              (compareintel.com) to measure aggregate traffic. Cloudflare Web Analytics is
+              cookieless: it does not set cookies, does not use client storage for advertising, and
+              reports only aggregated page-view statistics collected by Cloudflare. It does not run
+              on local development, preview deployments, or the CompareIntel browser extension.
+            </p>
+          </section>
+
+          <section className="seo-section">
             <h2>Cookies and Tracking Technologies</h2>
             <p>
               We use cookies and similar technologies to enhance your experience on our Service.
@@ -279,6 +290,7 @@ export const PrivacyPolicy: React.FC = () => {
               <li>xAI (Grok models)</li>
               <li>Mistral AI</li>
               <li>DeepSeek</li>
+              <li>Cloudflare (cookieless Web Analytics; hosting and CDN when used)</li>
             </ul>
             <p>
               Each provider has its own privacy policy and data handling practices. We encourage you

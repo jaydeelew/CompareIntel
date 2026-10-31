@@ -183,6 +183,12 @@ MAIL_FROM=your-email@gmail.com
 
 **Note:** Only active in production builds. The endpoint receives performance data automatically - no frontend code changes needed. Preview builds (`VITE_DEPLOY_ENV=preview` or `CF_PAGES=1`) strip this variable and never send the beacon.
 
+**`VITE_CF_BEACON_TOKEN`**
+- **Purpose:** Cloudflare Web Analytics public beacon token (safe to commit)
+- **Default:** production builds use the CompareIntel token; other modes leave it unset
+- **Runtime:** the HTML loader only injects `beacon.min.js` when `location.hostname === 'compareintel.com'`
+- **Preview:** stripped (`''`) so Pages HTML never includes the beacon script
+
 #### Cloudflare Pages previews
 
 **`VITE_DEPLOY_ENV`**
@@ -238,6 +244,7 @@ MAIL_FROM=your-email@gmail.com
 | `VITE_API_URL` | ❌ No | `/api` | Works with proxy |
 | `VITE_RECAPTCHA_SITE_KEY` | ❌ No | None | Bot protection (optional) |
 | `VITE_PERFORMANCE_ENDPOINT` | ❌ No | None | Performance analytics (production only; stripped on previews) |
+| `VITE_CF_BEACON_TOKEN` | ❌ No | production default | Cloudflare Web Analytics (compareintel.com only; stripped on previews) |
 | `VITE_DEPLOY_ENV` | ❌ No | unset | `preview` for Cloudflare Pages PR builds |
 
 ---

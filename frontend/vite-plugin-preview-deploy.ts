@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 import type { Plugin } from 'vite'
 
+import { stripCfBeaconLoader } from './src/config/cfBeacon'
 import { applyPreviewDeployEnv, isPreviewDeployFromEnv } from './src/config/deployEnv'
 import { applyPreviewNoIndex, PREVIEW_ROBOTS_CONTENT } from './src/preview/artifacts'
 
@@ -46,7 +47,7 @@ export function previewDeployPlugin(): Plugin {
       order: 'post',
       handler(html) {
         if (!preview) return html
-        return applyPreviewNoIndex(html)
+        return stripCfBeaconLoader(applyPreviewNoIndex(html))
       },
     },
     closeBundle() {

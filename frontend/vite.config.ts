@@ -9,8 +9,18 @@ import { imagetools } from 'vite-imagetools'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
+import { applyCfBeaconBuildEnv } from './src/config/cfBeacon'
 import { preparePreviewBuildEnv, previewDeployPlugin } from './vite-plugin-preview-deploy'
 import { securityHeadersPlugin } from './vite-plugin-security-headers'
+
+function cfBeaconEnvPlugin(): Plugin {
+  return {
+    name: 'cf-beacon-env',
+    config(_userConfig, { mode }) {
+      applyCfBeaconBuildEnv(process.env, mode)
+    },
+  }
+}
 
 // Preview builds (CF_PAGES or VITE_DEPLOY_ENV=preview): mock API, no secrets.
 preparePreviewBuildEnv()
@@ -84,6 +94,8 @@ export default defineConfig({
         server.httpServer?.once('listening', printUrl)
       },
     },
+    // Production default for VITE_CF_BEACON_TOKEN; preview/dev leave it empty
+    cfBeaconEnvPlugin(),
     // Add security headers to dev server responses (for ZAP compliance)
     securityHeadersPlugin(),
     // Cloudflare Pages / VITE_DEPLOY_ENV=preview: noindex, mock API artifacts

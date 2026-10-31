@@ -26,11 +26,12 @@
   <!-- Note: frame-ancestors is set via HTTP header (nginx) as meta tags don't support it -->
   <!-- Keep this policy in sync with nginx/nginx.ssl.conf (scripts/check-csp-sync.js) -->
   <!-- img-src: 'self', data:, and compareintel.com for social images -->
-  <!-- connect-src: Sentry US ingest (*.ingest.us.sentry.io) for envelope/replay uploads -->
+  <!-- connect-src: Sentry US ingest (*.ingest.us.sentry.io) for envelope/replay uploads + Cloudflare Web Analytics -->
   <!-- worker-src: blob: required for heic2any HEIC→JPEG conversion (WASM web worker) and Sentry Replay -->
   <!-- script-src unsafe-eval: required by heic2any/libheif Emscripten runtime (new Function) -->
+  <!-- script-src static.cloudflareinsights.com: Cloudflare Web Analytics beacon (production compareintel.com only) -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://cdnjs.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://compareintel.com; connect-src 'self' https://*.ingest.us.sentry.io https://www.google.com https://photon.komoot.io https://api.bigdatacloud.net https://api.zippopotam.us https://fonts.googleapis.com https://fonts.gstatic.com; frame-src https://www.google.com; base-uri 'self'; form-action 'self';" />
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://compareintel.com; connect-src 'self' https://*.ingest.us.sentry.io https://www.google.com https://photon.komoot.io https://api.bigdatacloud.net https://api.zippopotam.us https://fonts.googleapis.com https://fonts.gstatic.com https://cloudflareinsights.com; frame-src https://www.google.com; base-uri 'self'; form-action 'self';" />
 
   <!-- Preconnect to Google Fonts for faster font loading - MUST be before font stylesheet -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
@@ -196,6 +197,22 @@
       CompareIntel - Compare AI Language and Image Models Side by Side</h1>
   </div>
   <script type="module" src="/src/main.tsx"></script>
+  <!--cf-beacon-start-->
+  <!-- Cloudflare Web Analytics: %VITE_CF_BEACON_TOKEN% is inlined in production builds.
+       Loader is a no-op unless location.hostname is exactly compareintel.com. -->
+  <script id="cf-beacon-loader">
+    (function () {
+      var token = '%VITE_CF_BEACON_TOKEN%';
+      if (!token || token.indexOf('%VITE_') === 0) return;
+      if (location.hostname !== 'compareintel.com') return;
+      var s = document.createElement('script');
+      s.defer = true;
+      s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+      s.setAttribute('data-cf-beacon', JSON.stringify({ token: token }));
+      document.head.appendChild(s);
+    })();
+  </script>
+  <!--cf-beacon-end-->
 </body>
 
 </html>
