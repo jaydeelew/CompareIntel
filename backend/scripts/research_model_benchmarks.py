@@ -21,6 +21,10 @@ Refresh-all mode (--refresh-all):
   without a Pro leaderboard row are dropped from Best for coding. Vision uses LMArena
   Vision Arena scores. Run periodically to keep categories current as leaderboards update.
 
+  Source-health guard: if a source returns 0 rows, or far fewer than the existing
+  category, keep the previous entries, mark them stale, and log loudly. Do not
+  drop a category because a scraper broke or a leaderboard went empty.
+
 Only models with verifiable, publicly available benchmark data are added.
 """
 
@@ -63,8 +67,13 @@ SORT_ASCENDING_CATEGORIES = {"cost-effective"}
 VISION_ARENA_LEADERBOARD_URL = "https://lmarena.ai/leaderboard/vision"
 VISION_ARENA_DATASET_ROWS_URL = "https://datasets-server.huggingface.co/rows"
 
-# Image generation: KEAR AI Text-to-Image Arena (Arena Rating, higher = better)
-TEXT_TO_IMAGE_ARENA_URL = "https://kearai.com/leaderboard/text-to-image"
+# Image generation: kearai.com/leaderboard/text-to-image 404'd (moved to blog.kearai.com).
+# Primary live source is the official LMArena Hugging Face dataset (same pattern as vision).
+TEXT_TO_IMAGE_ARENA_URL = "https://blog.kearai.com/leaderboard/text-to-image"
+TEXT_TO_IMAGE_ARENA_URLS = (
+    "https://blog.kearai.com/leaderboard/text-to-image",
+    "https://kearai.com/leaderboard/text-to-image",
+)
 
 # SWE-Bench Pro public leaderboard (Scale Labs; RSC payload includes entry JSON)
 SWE_BENCH_PRO_URL = "https://labs.scale.com/leaderboard/swe_bench_pro_public"
@@ -72,19 +81,197 @@ SWE_BENCH_PRO_URL = "https://labs.scale.com/leaderboard/swe_bench_pro_public"
 SWE_BENCH_PRO_FALLBACK_URL = "https://scaleapi.github.io/SWE-bench_Pro-os/"
 LMARENA_URL = "https://lmarena.ai/"
 VALS_LEGAL_BENCH_URL = "https://www.vals.ai/benchmarks/legal_bench"
-LMSPEED_URL = "https://lmspeed.net/leaderboard/best-throughput-models-weekly"
+# Weekly/monthly endpoint leaderboards are often empty ("No leaderboard data yet")
+# and mix unofficial proxy endpoints (implausible 10k+ t/s). Prefer model-speed.
+LMSPEED_URL = "https://lmspeed.net/leaderboard/model-speed"
+LMSPEED_WEEKLY_URL = "https://lmspeed.net/leaderboard/best-throughput-models-weekly"
+LMSPEED_MONTHLY_URL = "https://lmspeed.net/leaderboard/best-throughput-models-monthly"
 OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
 # Default GET /api/v1/models omits image-output models; always request the full catalog.
 OPENROUTER_MODELS_LIST_PARAMS = {"output_modalities": "all"}
 GLOBAL_MMLU_URL = "https://llmdb.com/benchmarks/global-mmlu"
 MMLU_PRO_URL = "https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/"
-CREATIVE_WRITING_URL = "https://kearai.com/leaderboard/creative-writing"
+# kearai.com/leaderboard/creative-writing 404'd; content moved to the blog snapshot.
+CREATIVE_WRITING_URL = "https://blog.kearai.com/leaderboard/creative-writing"
+CREATIVE_WRITING_URLS = (
+    "https://blog.kearai.com/leaderboard/creative-writing",
+    "https://kearai.com/leaderboard/creative-writing",
+)
+# Live LMArena Creative Writing (JS-rendered; documented as the current public equivalent).
+CREATIVE_WRITING_ARENA_URL = "https://arena.ai/leaderboard/chat/text/creative-writing"
 MRCR_URL = "https://llmdb.com/benchmarks/mrcr-1m"
 MATH_URL = "https://llmdb.com/benchmarks/math"
 GSM8K_URL = "https://llmdb.com/benchmarks/gsm8k"
+AIME_2025_URL = "https://llmdb.com/benchmarks/aime-2025"
 AWESOME_AGENTS_LONG_CONTEXT_URL = (
     "https://awesomeagents.ai/leaderboards/long-context-benchmarks-leaderboard/"
 )
+
+# Browser-like headers: several leaderboards (LMSpeed) Cloudflare-challenge bare clients.
+_HTTP_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+# Treat a fetch as collapsed when it returns fewer than this fraction of existing rows.
+SOURCE_COLLAPSE_RATIO = 0.5
+STALE_MARKER_RE = re.compile(r"\s*\[stale as of \d{4}-\d{2}-\d{2}\]")
+FETCHED_MARKER_RE = re.compile(r"\s*Fetched \d{4}-\d{2}-\d{2}\.")
+
+
+def _today_iso() -> str:
+    return datetime.now().strftime("%Y-%m-%d")
+
+
+def _http_get(url: str, timeout: float = 20.0, **kwargs) -> httpx.Response:
+    """GET with browser-like headers and redirects. Callers still mock httpx.get."""
+    headers = {**_HTTP_HEADERS, **kwargs.pop("headers", {})}
+    return httpx.get(url, timeout=timeout, follow_redirects=True, headers=headers, **kwargs)
+
+
+def with_fetch_date(evidence: str, fetched_on: str | None = None) -> str:
+    """Append a fetch date to an evidence string (idempotent)."""
+    fetched_on = fetched_on or _today_iso()
+    cleaned = FETCHED_MARKER_RE.sub("", evidence).rstrip()
+    if cleaned.endswith("."):
+        return f"{cleaned} Fetched {fetched_on}."
+    return f"{cleaned}. Fetched {fetched_on}."
+
+
+def mark_evidence_stale(evidence: str, as_of: str | None = None) -> str:
+    """Mark evidence stale without dropping the previous score (idempotent)."""
+    as_of = as_of or _today_iso()
+    cleaned = STALE_MARKER_RE.sub("", evidence).rstrip()
+    return f"{cleaned} [stale as of {as_of}]"
+
+
+def mark_category_stale(category: dict, as_of: str | None = None) -> list[str]:
+    """Append a stale marker to every model in a category. Returns changed model ids."""
+    changed: list[str] = []
+    cat_id = category.get("id", "")
+    for model in category.get("models", []):
+        old = model.get("evidence", "")
+        existing = extract_primary_score(cat_id, old)
+        if existing is not None and not is_plausible_score(cat_id, existing):
+            continue
+        new = mark_evidence_stale(old, as_of=as_of)
+        if new != old:
+            model["evidence"] = new
+            changed.append(model["modelId"])
+    return changed
+
+
+def evaluate_source_health(
+    category_id: str,
+    fetched_count: int,
+    existing_count: int,
+    *,
+    collapse_ratio: float = SOURCE_COLLAPSE_RATIO,
+) -> tuple[bool, str]:
+    """Return (healthy, reason). Empty or far-fewer-than-before fetches are unhealthy."""
+    if fetched_count == 0:
+        return False, (
+            f"SOURCE UNHEALTHY [{category_id}]: fetch returned 0 models "
+            f"(existing category has {existing_count}). "
+            "Keeping previous data and marking it stale."
+        )
+    if existing_count > 0 and fetched_count < existing_count * collapse_ratio:
+        return False, (
+            f"SOURCE UNHEALTHY [{category_id}]: fetch returned {fetched_count} models, "
+            f"far fewer than the existing {existing_count} "
+            f"(collapse threshold {collapse_ratio:.0%}). "
+            "Keeping previous data and marking it stale."
+        )
+    return True, ""
+
+
+def apply_source_health_guard(
+    categories: list[dict],
+    fetched_by_cat: dict[str, dict[str, tuple[float, str]]],
+    *,
+    collapse_ratio: float = SOURCE_COLLAPSE_RATIO,
+    as_of: str | None = None,
+) -> tuple[dict[str, dict[str, tuple[float, str]]], dict[str, list[str]], list[str]]:
+    """Drop collapsed fetches, keep existing rows, mark them stale, and log loudly.
+
+    Returns (healthy_fetched, stale_model_ids_by_cat, warning_messages).
+    """
+    existing_counts = {cat["id"]: len(cat.get("models", [])) for cat in categories}
+    cats_by_id = {cat["id"]: cat for cat in categories}
+    healthy: dict[str, dict[str, tuple[float, str]]] = {}
+    stale: dict[str, list[str]] = {}
+    warnings: list[str] = []
+
+    for cat_id, scores in fetched_by_cat.items():
+        ok, reason = evaluate_source_health(
+            cat_id,
+            len(scores),
+            existing_counts.get(cat_id, 0),
+            collapse_ratio=collapse_ratio,
+        )
+        if ok:
+            healthy[cat_id] = scores
+            continue
+        warnings.append(reason)
+        print(f"ERROR: {reason}", file=sys.stderr)
+        cat = cats_by_id.get(cat_id)
+        if cat is not None:
+            changed = mark_category_stale(cat, as_of=as_of)
+            if changed:
+                stale[cat_id] = changed
+                print(
+                    f"ERROR: [{cat_id}] marked {len(changed)} existing model(s) stale.",
+                    file=sys.stderr,
+                )
+    return healthy, stale, warnings
+
+
+def is_plausible_score(category_id: str, score: float) -> bool:
+    """Reject scrape artifacts (e.g. unofficial 13,496 t/s for a frontier chat model)."""
+    if score != score:  # NaN
+        return False
+    if category_id == "fast":
+        return 0 < score <= FAST_MAX_THROUGHPUT
+    if category_id == "cost-effective":
+        return score > 0
+    if category_id in {"coding", "math", "reasoning", "multilingual", "legal", "medical"}:
+        return 0 <= score <= 100
+    if category_id == "writing":
+        # Mazur ~0–10 or Arena Elo ~1000–2000
+        return (0 < score <= 10) or (500 <= score <= 2500)
+    if category_id in {"images", "image-generation"}:
+        return 500 <= score <= 2500
+    if category_id == "long-context":
+        return 0 <= score <= 100
+    return True
+
+
+def attach_fetch_dates(
+    scores: dict[str, tuple[float, str]], fetched_on: str | None = None
+) -> dict[str, tuple[float, str]]:
+    dated: dict[str, tuple[float, str]] = {}
+    for mid, (score, evidence) in scores.items():
+        dated[mid] = (score, with_fetch_date(evidence, fetched_on))
+    return dated
+
+
+def filter_plausible_scores(
+    category_id: str, scores: dict[str, tuple[float, str]]
+) -> dict[str, tuple[float, str]]:
+    kept: dict[str, tuple[float, str]] = {}
+    for mid, (score, evidence) in scores.items():
+        if is_plausible_score(category_id, score):
+            kept[mid] = (score, evidence)
+        else:
+            print(
+                f"ERROR: [{category_id}] rejected implausible score for {mid}: {score} ({evidence})",
+                file=sys.stderr,
+            )
+    return kept
 
 
 def extract_primary_score(category_id: str, evidence: str) -> float | None:
@@ -173,14 +360,15 @@ def get_model_id_to_name_map() -> dict[str, str]:
     return result
 
 
-# llmdb MATH/GSM8K slug -> registry model_id (llmdb uses different naming)
+# llmdb slug -> registry model_id. Only same-generation aliases — never map
+# Gemini 2.0 → 2.5 or o1 → o3 (that produced fake 2.0% MATH scores).
 MATH_SLUG_TO_MODEL_ID: dict[str, str] = {
-    "o1": "openai/o3",
-    "gemini-2-0-pro": "google/gemini-2.5-pro",
-    "gemini-2-0-flash": "google/gemini-2.5-flash",
-    "gemini-2-0-flash-lite": "google/gemini-2.5-flash",
     "gpt-4o": "openai/gpt-4o",
-    "claude-3-haiku": "anthropic/claude-haiku-4.5",
+    "o3": "openai/o3",
+    "gpt-oss-120b": "openai/gpt-oss-120b",
+    "gemini-2-5-pro": "google/gemini-2.5-pro",
+    "gemini-2-5-flash": "google/gemini-2.5-flash",
+    "deepseek-v3": "deepseek/deepseek-v3.2",
 }
 
 # VALS model slug (e.g. google_gemini-3-pro-preview) -> our registry model_id
@@ -256,108 +444,81 @@ def fetch_openrouter_pricing() -> dict[str, tuple[float, str]]:
     return result
 
 
-def fetch_global_mmlu_scores() -> dict[str, tuple[float, str]]:
-    """Fetch Global-MMLU scores from llmdb.com. Returns model_id -> (score, evidence).
-    Best-effort: page structure may change; models not in registry are skipped."""
+def _llmdb_slug_maps(
+    extra_slug_map: dict[str, str] | None = None,
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Return (slug_to_model_id, name_to_model_id) for llmdb leaderboard rows."""
     model_id_to_name = get_model_id_to_name_map()
     name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
-    # Build slug -> model_id from registry: gemini-2-5-pro -> google/gemini-2.5-pro
     slug_to_model_id: dict[str, str] = {}
     for mid in model_id_to_name:
         parts = mid.split("/")
         if len(parts) == 2:
-            slug = parts[1].replace(".", "-")
-            slug_to_model_id[slug] = mid
+            slug_to_model_id[parts[1].replace(".", "-")] = mid
+    if extra_slug_map:
+        slug_to_model_id.update(extra_slug_map)
+    return slug_to_model_id, name_to_model_id
 
-    result: dict[str, tuple[float, str]] = {}
+
+def _score_from_llmdb_score_cell(score_cell) -> float | None:
+    """Read the Score column only. Do not regex the whole row (matches '2.0' in 'Gemini 2.0')."""
+    score_span = score_cell.find("span")
+    raw = (score_span.get_text(strip=True) if score_span else score_cell.get_text(strip=True)) or ""
+    raw = raw.replace(",", "").split()[0] if raw else ""
     try:
-        resp = httpx.get(GLOBAL_MMLU_URL, timeout=15.0)
-        if resp.status_code != 200:
-            return result
-        soup = BeautifulSoup(resp.text, "html.parser")
-        for link in soup.find_all("a", href=True):
-            href = link.get("href", "")
-            if "/models/" not in href:
-                continue
-            slug = href.split("/models/")[-1].rstrip("/").strip()
-            if not slug:
-                continue
-            display_name = link.get_text(strip=True) or ""
-            parent_row = link.find_parent("tr")
-            if not parent_row:
-                continue
-            row_text = parent_row.get_text()
-            score_match = re.search(r"\b(\d{1,2}\.\d)\b", row_text)
-            if not score_match:
-                continue
-            try:
-                score = float(score_match.group(1))
-            except ValueError:
-                continue
-            if score < 0 or score > 100:
-                continue
-            mid = slug_to_model_id.get(slug)
-            if not mid:
-                norm = _normalize_name_for_match(display_name.split("(")[0].strip())
-                mid = name_to_model_id.get(norm)
-            if mid:
-                result[mid] = (score, f"Global-MMLU (llmdb.com): {score}%.")
-    except Exception as e:
-        print(f"Warning: Could not fetch Global-MMLU scores: {e}", file=sys.stderr)
-    return result
+        score = float(raw)
+    except ValueError:
+        return None
+    if score < 0 or score > 100:
+        return None
+    return score
 
 
-def _fetch_llmdb_math_benchmark(
-    url: str, benchmark_name: str, evidence_template: str
+def _fetch_llmdb_leaderboard(
+    url: str,
+    benchmark_name: str,
+    evidence_template: str,
+    extra_slug_map: dict[str, str] | None = None,
+    extra_name_map: dict[str, str] | None = None,
 ) -> dict[str, tuple[float, str]]:
-    """Fetch MATH or GSM8K scores from llmdb.com. Returns model_id -> (score, evidence).
+    """Parse an llmdb Rank|Model|Provider|Score table by column.
 
-    Table structure: Rank | Model | Provider | Score | Parameters | Released | Type.
-    Score is in 0-100 scale. Uses MATH_SLUG_TO_MODEL_ID for llmdb slug -> registry mapping.
+    Previously used a row-wide regex that captured version numbers (Gemini 2.0 → 2.0%).
     """
-    model_id_to_name = get_model_id_to_name_map()
-    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
-    slug_to_model_id: dict[str, str] = {}
-    for mid in model_id_to_name:
-        parts = mid.split("/")
-        if len(parts) == 2:
-            slug = parts[1].replace(".", "-")
-            slug_to_model_id[slug] = mid
-    for slug, mid in MATH_SLUG_TO_MODEL_ID.items():
-        slug_to_model_id[slug] = mid
-
+    slug_to_model_id, name_to_model_id = _llmdb_slug_maps(extra_slug_map)
+    if extra_name_map:
+        name_to_model_id.update(
+            {_normalize_name_for_match(k): v for k, v in extra_name_map.items()}
+        )
     result: dict[str, tuple[float, str]] = {}
     try:
-        resp = httpx.get(url, timeout=15.0, follow_redirects=True)
+        resp = _http_get(url, timeout=15.0)
         if resp.status_code != 200:
             return result
         soup = BeautifulSoup(resp.text, "html.parser")
-        for link in soup.find_all("a", href=True):
+        table = soup.find("table")
+        if not table:
+            return result
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
+            if len(cells) < 4:
+                continue
+            link = cells[1].find("a", href=True)
+            if not link:
+                continue
             href = link.get("href", "")
             if "/models/" not in href:
                 continue
             slug = href.split("/models/")[-1].rstrip("/").strip()
-            if not slug:
-                continue
             display_name = link.get_text(strip=True) or ""
-            parent_row = link.find_parent("tr")
-            if not parent_row:
-                continue
-            row_text = parent_row.get_text()
-            # Score is 0-100 with decimal (e.g. 97.4, 82.88); avoid matching Rank, year, param count
-            score_match = re.search(r"\b(\d{1,2}\.\d{1,2})\b", row_text)
-            if not score_match:
-                continue
-            try:
-                score = float(score_match.group(1))
-            except ValueError:
-                continue
-            if score < 0 or score > 100:
+            score = _score_from_llmdb_score_cell(cells[3])
+            if score is None:
                 continue
             mid = slug_to_model_id.get(slug)
             if not mid:
-                norm = _normalize_name_for_match(display_name.split("(")[0].strip())
-                mid = name_to_model_id.get(norm)
+                mid = extra_name_map.get(display_name) if extra_name_map else None
+            if not mid:
+                mid = name_to_model_id.get(_normalize_name_for_match(display_name.split("(")[0]))
             if mid:
                 evidence = evidence_template.format(score=score)
                 if mid not in result or score > result[mid][0]:
@@ -367,16 +528,39 @@ def _fetch_llmdb_math_benchmark(
     return result
 
 
-def fetch_math_scores() -> dict[str, tuple[float, str]]:
-    """Fetch math benchmark scores. Merges MATH (primary) and GSM8K (fallback).
+def fetch_global_mmlu_scores() -> dict[str, tuple[float, str]]:
+    """Fetch Global-MMLU scores from llmdb.com. Coverage is genuinely sparse (~2 models)."""
+    return _fetch_llmdb_leaderboard(
+        GLOBAL_MMLU_URL,
+        "Global-MMLU",
+        "Global-MMLU (llmdb.com): {score}%.",
+        extra_slug_map={"gemma-3": "google/gemma-3-27b-it"},
+    )
 
-    MATH: 12.5K competition mathematics problems (llmdb.com).
-    GSM8K: 8.5K grade school math problems (llmdb.com).
-    Prefers MATH when both exist for a model; higher score = better.
+
+def _fetch_llmdb_math_benchmark(
+    url: str, benchmark_name: str, evidence_template: str
+) -> dict[str, tuple[float, str]]:
+    """Fetch MATH, GSM8K, or AIME scores from llmdb.com. Returns model_id -> (score, evidence)."""
+    return _fetch_llmdb_leaderboard(
+        url, benchmark_name, evidence_template, extra_slug_map=MATH_SLUG_TO_MODEL_ID
+    )
+
+
+def fetch_math_scores() -> dict[str, tuple[float, str]]:
+    """Fetch math benchmark scores. MATH first, then AIME-2025, then GSM8K.
+
+    MATH/GSM8K on llmdb list older generations; AIME-2025 adds current registry models.
     """
     math_scores = _fetch_llmdb_math_benchmark(MATH_URL, "MATH", "MATH (llmdb.com): {score}%.")
+    aime_scores = _fetch_llmdb_math_benchmark(
+        AIME_2025_URL, "AIME-2025", "AIME-2025 (llmdb.com): {score}%."
+    )
     gsm8k_scores = _fetch_llmdb_math_benchmark(GSM8K_URL, "GSM8K", "GSM8K (llmdb.com): {score}%.")
     merged: dict[str, tuple[float, str]] = dict(math_scores)
+    for mid, (score, evidence) in aime_scores.items():
+        if mid not in merged:
+            merged[mid] = (score, evidence)
     for mid, (score, evidence) in gsm8k_scores.items():
         if mid not in merged and score >= MATH_MIN_GSM8K:
             merged[mid] = (score, evidence)
@@ -407,15 +591,86 @@ LMSPEED_NAME_TO_MODEL_ID: dict[str, str] = {
 }
 
 
+def _match_lmspeed_name(
+    model_name: str,
+    model_id_to_name: dict[str, str],
+    name_to_model_id: dict[str, str],
+    slug_to_model_id: dict[str, str],
+) -> str | None:
+    mid = LMSPEED_NAME_TO_MODEL_ID.get(model_name)
+    if mid:
+        return mid
+    norm = _normalize_lmspeed_name(model_name)
+    mid = name_to_model_id.get(norm) or slug_to_model_id.get(norm)
+    if mid:
+        return mid
+    for pid, n in model_id_to_name.items():
+        if _normalize_name_for_match(n) == norm:
+            return pid
+    return None
+
+
+def _parse_lmspeed_html_table(html: str) -> dict[str, float]:
+    """Parse the model-speed HTML table (Rank | Model | Output Speed)."""
+    soup = BeautifulSoup(html, "html.parser")
+    best_by_name: dict[str, float] = {}
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells = row.find_all(["td", "th"])
+            if len(cells) < 3:
+                continue
+            texts = [c.get_text(" ", strip=True) for c in cells]
+            joined = " ".join(texts)
+            tps_match = re.search(r"(\d+\.?\d*)\s*(?:t/s|tok/s|tokens?/s)", joined, re.I)
+            if not tps_match:
+                continue
+            try:
+                tps = float(tps_match.group(1))
+            except ValueError:
+                continue
+            model_name = texts[1].strip()
+            # Cell sometimes concatenates display name + slug (gpt-oss-120bgpt-oss-120b)
+            slug_el = cells[1].find("span") or cells[1].find("code")
+            if slug_el:
+                model_name = slug_el.get_text(strip=True) or model_name
+            if not model_name or model_name.lower() in {"model", "rank"}:
+                continue
+            if model_name not in best_by_name or tps > best_by_name[model_name]:
+                best_by_name[model_name] = tps
+    return best_by_name
+
+
+def _parse_lmspeed_rsc(text: str) -> dict[str, float]:
+    """Parse the legacy weekly RSC stream (unofficial per-endpoint throughputs)."""
+    unesc = text.replace('\\"', '"')
+    row_pattern = re.compile(
+        r'"tr","([^"]+?)-https?://[^"]+?".*?'
+        r'font-mono text-concrete-600[^"]*"[^}]*"children":"([^"]+)".*?'
+        r'font-mono text-concrete-900"[^}]*"children":\["(\d+\.?\d*)"',
+        re.DOTALL,
+    )
+    best_by_name: dict[str, float] = {}
+    for m in row_pattern.finditer(unesc):
+        model_name = m.group(2).strip()
+        try:
+            tps = float(m.group(3))
+        except ValueError:
+            continue
+        if model_name not in best_by_name or tps > best_by_name[model_name]:
+            best_by_name[model_name] = tps
+    return best_by_name
+
+
 def fetch_lmspeed_scores() -> dict[str, tuple[float, str]]:
     """Fetch LMSpeed throughput (tokens/sec). Returns model_id -> (tps, evidence).
 
-    LMSpeed renders as a Next.js React Server Components stream. Throughput
-    values are embedded in RSC JSX structures rather than plain HTML tables.
+    The weekly/monthly endpoint leaderboards are frequently empty and previously
+    produced implausible values (Sonnet 4.6 at 13,496 t/s from unofficial proxies).
+    Prefer /leaderboard/model-speed (one Benchize/AA row per model). Cloudflare
+    may still 403 datacenter IPs; the source-health guard keeps prior data then.
     """
     model_id_to_name = get_model_id_to_name_map()
     name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
-    # Also map the slug part of model_id (e.g. 'gpt-oss-120b') -> model_id
     slug_to_model_id: dict[str, str] = {}
     for mid in model_id_to_name:
         parts = mid.split("/")
@@ -424,45 +679,38 @@ def fetch_lmspeed_scores() -> dict[str, tuple[float, str]]:
 
     result: dict[str, tuple[float, str]] = {}
     try:
-        resp = httpx.get(LMSPEED_URL, timeout=15.0)
-        if resp.status_code != 200:
-            return result
-        text = resp.text
-
-        # Unescape RSC-encoded JSON strings
-        unesc = text.replace('\\"', '"')
-
-        # Parse row key (model name) + throughput from RSC stream.
-        # Row pattern: "tr","MODEL-ENDPOINT-RANK" ... font-mono...children:"MODEL"
-        #              ... font-mono text-concrete-900 ... children:["THROUGHPUT"
-        row_pattern = re.compile(
-            r'"tr","([^"]+?)-https?://[^"]+?".*?'
-            r'font-mono text-concrete-600[^"]*"[^}]*"children":"([^"]+)".*?'
-            r'font-mono text-concrete-900"[^}]*"children":\["(\d+\.?\d*)"',
-            re.DOTALL,
-        )
-
-        # Collect best throughput per model name
         best_by_name: dict[str, float] = {}
-        for m in row_pattern.finditer(unesc):
-            model_name = m.group(2).strip()
+        for url in (LMSPEED_URL, LMSPEED_MONTHLY_URL, LMSPEED_WEEKLY_URL):
             try:
-                tps = float(m.group(3))
-            except ValueError:
+                resp = _http_get(url, timeout=15.0)
+            except Exception as e:
+                print(f"Warning: LMSpeed request failed for {url}: {e}", file=sys.stderr)
                 continue
-            if model_name not in best_by_name or tps > best_by_name[model_name]:
-                best_by_name[model_name] = tps
+            if resp.status_code != 200:
+                print(
+                    f"Warning: LMSpeed {url} returned HTTP {resp.status_code}.",
+                    file=sys.stderr,
+                )
+                continue
+            parsed = _parse_lmspeed_html_table(resp.text)
+            if not parsed:
+                parsed = _parse_lmspeed_rsc(resp.text)
+            for name, tps in parsed.items():
+                if name not in best_by_name or tps > best_by_name[name]:
+                    best_by_name[name] = tps
+            if best_by_name:
+                break
 
         for model_name, tps in best_by_name.items():
-            mid = LMSPEED_NAME_TO_MODEL_ID.get(model_name)
-            if not mid:
-                norm = _normalize_lmspeed_name(model_name)
-                mid = name_to_model_id.get(norm) or slug_to_model_id.get(norm)
-            if not mid:
-                for pid, n in model_id_to_name.items():
-                    if _normalize_name_for_match(n) == _normalize_lmspeed_name(model_name):
-                        mid = pid
-                        break
+            if not is_plausible_score("fast", tps):
+                print(
+                    f"ERROR: [fast] rejected implausible LMSpeed t/s {tps} for {model_name}",
+                    file=sys.stderr,
+                )
+                continue
+            mid = _match_lmspeed_name(
+                model_name, model_id_to_name, name_to_model_id, slug_to_model_id
+            )
             if mid:
                 result[mid] = (tps, f"LMSpeed (lmspeed.net): {tps:.0f} t/s.")
     except Exception as e:
@@ -787,117 +1035,208 @@ TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
     "gpt-image-1.5-high-fidelity": "openai/gpt-5-image",
     "gpt-image-1": "openai/gpt-5-image",
     "gpt-image-1-mini": "openai/gpt-5-image-mini",
+    "gpt-image-2.5 sunburst": "openai/gpt-image-2.5-sunburst",
+    "gemini nano banana 2.1": "google/gemini-nano-banana-2.1",
+    "gemini 3.1 flash image": "google/gemini-3.1-flash-image",
+    "gemini 3 pro image": "google/gemini-3-pro-image",
+    "gpt-image-1.5 (high fidelity)": "openai/gpt-5-image",
+    "flux.2 [max]": "black-forest-labs/flux.2-max",
+    "flux.2 [flex]": "black-forest-labs/flux.2-flex",
+    "flux.2 [pro]": "black-forest-labs/flux.2-pro",
+    "flux.2 [klein-4b]": "black-forest-labs/flux.2-klein-4b",
+    "seedream 4.5": "bytedance-seed/seedream-4.5",
+    "gemini 2.5 flash image preview": "google/gemini-2.5-flash-image",
 }
 
 
-def fetch_text_to_image_arena_scores() -> dict[str, tuple[float, str]]:
-    """Fetch Text-to-Image Arena scores from kearai.com. Returns model_id -> (arena_rating, evidence).
+def _match_text_to_image_name(model_name: str, name_to_model_id: dict[str, str]) -> str | None:
+    raw = model_name.strip()
+    slug = re.sub(r"\s+\([^)]+\)\s*$", "", raw).strip().lower().replace(" ", "-")
+    mid = TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(slug) or TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(
+        raw.lower()
+    )
+    if mid:
+        return mid
+    norm = _normalize_name_for_match(re.sub(r"\s+\([^)]+\)", "", raw))
+    mid = name_to_model_id.get(norm) or TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(norm)
+    if mid:
+        return mid
+    # HF display names like "FLUX.2 [max]" / "Gemini 3 Pro Image (nano-banana-pro, 2K)"
+    compact = _normalize_name_for_match(re.sub(r"[\[\](),]", " ", raw))
+    return TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(compact) or name_to_model_id.get(compact)
 
-    KEAR AI Text-to-Image Arena uses human preference votes; higher Arena Rating = better.
-    """
+
+def _fetch_text_to_image_from_html(html: str) -> dict[str, tuple[float, str]]:
     model_id_to_name = get_model_id_to_name_map()
     name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
-
     result: dict[str, tuple[float, str]] = {}
-    try:
-        resp = httpx.get(TEXT_TO_IMAGE_ARENA_URL, timeout=15.0, follow_redirects=True)
-        if resp.status_code != 200:
-            return result
-        soup = BeautifulSoup(resp.text, "html.parser")
-        table = soup.find("table")
-        if not table:
-            # Fallback: parse markdown-style table in raw text
-            for m in re.finditer(
-                r"\[([a-zA-Z0-9.-]+)(?:\s+\([^)]+\))?\]\([^)]+\)\s*\|\s*(\d+)",
-                resp.text,
-            ):
-                model_slug = m.group(1).strip().lower()
-                try:
-                    rating = int(m.group(2))
-                except ValueError:
-                    continue
-                if rating < 900:
-                    continue
-                mid = TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(model_slug)
-                if not mid:
-                    norm = _normalize_name_for_match(model_slug.replace("-", " "))
-                    mid = name_to_model_id.get(norm)
-                if mid and (mid not in result or rating > result[mid][0]):
-                    result[mid] = (
-                        float(rating),
-                        f"Text-to-Image Arena (kearai.com): {rating}.",
-                    )
-            return result
-        for row in table.find_all("tr"):
-            cells = row.find_all("td")
-            if len(cells) < 3:
-                continue
-            # cells[0]=Rank, cells[1]=Model, cells[2]=Arena Rating
-            model_cell = cells[1]
-            link = model_cell.find("a")
-            model_slug = link.get_text(strip=True) if link else model_cell.get_text(strip=True)
-            model_slug = (
-                re.sub(r"\s+\([^)]+\)\s*$", "", model_slug).strip().lower().replace(" ", "-")
-            )
+    soup = BeautifulSoup(html, "html.parser")
+    table = soup.find("table")
+    if not table:
+        for m in re.finditer(
+            r"\[([a-zA-Z0-9.-]+)(?:\s+\([^)]+\))?\]\([^)]+\)\s*\|\s*(\d+)",
+            html,
+        ):
+            model_slug = m.group(1).strip().lower()
             try:
-                rating = float(cells[2].get_text(strip=True).replace(",", ""))
+                rating = int(m.group(2))
             except ValueError:
                 continue
             if rating < 900:
                 continue
-            mid = TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(model_slug)
-            if not mid:
-                norm = _normalize_name_for_match(model_slug.replace("-", " "))
-                mid = name_to_model_id.get(norm)
+            mid = _match_text_to_image_name(model_slug, name_to_model_id)
             if mid and (mid not in result or rating > result[mid][0]):
                 result[mid] = (
                     float(rating),
-                    f"Text-to-Image Arena (kearai.com): {int(rating)}.",
+                    f"Text-to-Image Arena (kearai.com): {rating}.",
                 )
+        return result
+    for row in table.find_all("tr"):
+        cells = row.find_all("td")
+        if len(cells) < 3:
+            continue
+        model_cell = cells[1]
+        link = model_cell.find("a")
+        model_slug = link.get_text(strip=True) if link else model_cell.get_text(strip=True)
+        score_el = cells[2].find(class_="score-val") or cells[2]
+        try:
+            rating = float(score_el.get_text(strip=True).replace(",", ""))
+        except ValueError:
+            continue
+        if rating < 900:
+            continue
+        mid = _match_text_to_image_name(model_slug, name_to_model_id)
+        if mid and (mid not in result or rating > result[mid][0]):
+            result[mid] = (
+                float(rating),
+                f"Text-to-Image Arena (kearai.com): {int(rating)}.",
+            )
+    return result
+
+
+def _fetch_text_to_image_from_hf() -> dict[str, tuple[float, str]]:
+    """Official LMArena text-to-image leaderboard (Hugging Face dataset)."""
+    model_id_to_name = get_model_id_to_name_map()
+    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
+    registry_ids = set(model_id_to_name)
+    result: dict[str, tuple[float, str]] = {}
+    offset = 0
+    page_size = 100
+    while True:
+        resp = _http_get(
+            VISION_ARENA_DATASET_ROWS_URL,
+            params={
+                "dataset": "lmarena-ai/leaderboard-dataset",
+                "config": "text_to_image",
+                "split": "latest",
+                "offset": offset,
+                "length": page_size,
+            },
+            timeout=20.0,
+        )
+        if resp.status_code != 200:
+            break
+        data = resp.json()
+        rows = data.get("rows") or []
+        for item in rows:
+            row = item.get("row") or {}
+            if row.get("category") not in (None, "overall", "text_to_image"):
+                continue
+            name = row.get("model_name") or ""
+            try:
+                rating = float(row.get("rating", 0))
+            except (ValueError, TypeError):
+                continue
+            if rating < 900:
+                continue
+            mid = _match_text_to_image_name(name, name_to_model_id)
+            if mid and mid in registry_ids:
+                evidence = f"Text-to-Image Arena (lmarena.ai): {int(round(rating))}."
+                if mid not in result or rating > result[mid][0]:
+                    result[mid] = (rating, evidence)
+        total = data.get("num_rows_total", 0)
+        offset += len(rows)
+        if offset >= total or not rows:
+            break
+    return result
+
+
+def fetch_text_to_image_arena_scores() -> dict[str, tuple[float, str]]:
+    """Fetch Text-to-Image Arena scores. kearai.com 404'd; prefer LMArena HF, then blog.kearai.com."""
+    result: dict[str, tuple[float, str]] = {}
+    try:
+        result = _fetch_text_to_image_from_hf()
+        if result:
+            return result
     except Exception as e:
-        print(f"Warning: Could not fetch Text-to-Image Arena scores: {e}", file=sys.stderr)
+        print(
+            f"Warning: Could not fetch Text-to-Image Arena from Hugging Face: {e}", file=sys.stderr
+        )
+
+    for url in TEXT_TO_IMAGE_ARENA_URLS:
+        try:
+            resp = _http_get(url, timeout=15.0)
+            if resp.status_code != 200:
+                print(
+                    f"Warning: Text-to-Image Arena {url} returned HTTP {resp.status_code}.",
+                    file=sys.stderr,
+                )
+                continue
+            result = _fetch_text_to_image_from_html(resp.text)
+            if result:
+                return result
+        except Exception as e:
+            print(f"Warning: Could not fetch Text-to-Image Arena from {url}: {e}", file=sys.stderr)
     return result
 
 
 def fetch_creative_writing_scores() -> dict[str, tuple[float, str]]:
-    """Fetch Creative Writing Arena Elo from kearai.com. Returns model_id -> (elo, evidence).
+    """Fetch Creative Writing Arena Elo. kearai.com 404'd; use blog.kearai.com snapshot.
 
-    Takes the best Elo for each registry model when multiple variants exist
-    (e.g. thinking vs non-thinking).
+    The live equivalent is arena.ai/leaderboard/chat/text/creative-writing (JS-rendered).
+    Takes the best Elo for each registry model when multiple variants exist.
     """
     model_id_to_name = get_model_id_to_name_map()
     name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
 
     result: dict[str, tuple[float, str]] = {}
-    try:
-        resp = httpx.get(CREATIVE_WRITING_URL, timeout=15.0, follow_redirects=True)
-        if resp.status_code != 200:
-            return result
-        soup = BeautifulSoup(resp.text, "html.parser")
-        table = soup.find("table")
-        if not table:
-            return result
-        for row in table.find_all("tr"):
-            cells = row.find_all("td")
-            if len(cells) < 3:
+    for url in CREATIVE_WRITING_URLS:
+        try:
+            resp = _http_get(url, timeout=15.0)
+            if resp.status_code != 200:
+                print(
+                    f"Warning: Creative Writing Arena {url} returned HTTP {resp.status_code}.",
+                    file=sys.stderr,
+                )
                 continue
-            model_name = cells[1].get_text(strip=True)
-            score_text = cells[2].get_text(strip=True).replace(",", "")
-            try:
-                elo = float(score_text)
-            except ValueError:
+            soup = BeautifulSoup(resp.text, "html.parser")
+            table = soup.find("table")
+            if not table:
                 continue
-            if elo < 1000:
-                continue
-            mid = WRITING_NAME_TO_MODEL_ID.get(model_name)
-            if not mid:
-                norm = _normalize_name_for_match(model_name)
-                mid = name_to_model_id.get(norm)
-            if mid:
-                if mid not in result or elo > result[mid][0]:
+            for row in table.find_all("tr"):
+                cells = row.find_all("td")
+                if len(cells) < 3:
+                    continue
+                model_name = cells[1].get_text(strip=True)
+                score_el = cells[2].find(class_="score-val") or cells[2]
+                score_text = score_el.get_text(strip=True).replace(",", "")
+                try:
+                    elo = float(score_text)
+                except ValueError:
+                    continue
+                if elo < 1000:
+                    continue
+                mid = WRITING_NAME_TO_MODEL_ID.get(model_name)
+                if not mid:
+                    mid = name_to_model_id.get(_normalize_name_for_match(model_name))
+                if mid and (mid not in result or elo > result[mid][0]):
                     result[mid] = (elo, f"Creative Writing Arena (kearai.com): {elo:.0f} Elo.")
-    except Exception as e:
-        print(f"Warning: Could not fetch Creative Writing scores: {e}", file=sys.stderr)
+            if result:
+                return result
+        except Exception as e:
+            print(
+                f"Warning: Could not fetch Creative Writing scores from {url}: {e}", file=sys.stderr
+            )
     return result
 
 
@@ -1009,47 +1348,13 @@ def merge_long_context_scores(
 
 
 def fetch_mrcr_scores() -> dict[str, tuple[float, str]]:
-    """Fetch MRCR 1M scores from llmdb.com. Returns model_id -> (score, evidence).
-
-    Table columns: Rank | Model | Provider | Score | ...
-    """
-    model_id_to_name = get_model_id_to_name_map()
-    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
-
-    result: dict[str, tuple[float, str]] = {}
-    try:
-        resp = httpx.get(MRCR_URL, timeout=15.0, follow_redirects=True)
-        if resp.status_code != 200:
-            return result
-        soup = BeautifulSoup(resp.text, "html.parser")
-        for link in soup.find_all("a", href=True):
-            href = link.get("href", "")
-            if "/models/" not in href:
-                continue
-            display_name = link.get_text(strip=True) or ""
-            parent_row = link.find_parent("tr")
-            if not parent_row:
-                continue
-            cells = parent_row.find_all("td")
-            if len(cells) < 4:
-                continue
-            score_text = cells[3].get_text(strip=True)
-            try:
-                score = float(score_text)
-            except ValueError:
-                continue
-            if score < 0 or score > 100:
-                continue
-            mid = MRCR_NAME_TO_MODEL_ID.get(display_name)
-            if not mid:
-                norm = _normalize_name_for_match(display_name)
-                mid = name_to_model_id.get(norm)
-            if mid:
-                if mid not in result or score > result[mid][0]:
-                    result[mid] = (score, f"MRCR 1M (llmdb.com): {score}/100.")
-    except Exception as e:
-        print(f"Warning: Could not fetch MRCR scores: {e}", file=sys.stderr)
-    return result
+    """Fetch MRCR 1M scores from llmdb.com. Coverage is genuinely sparse (~7 models)."""
+    return _fetch_llmdb_leaderboard(
+        MRCR_URL,
+        "MRCR 1M",
+        "MRCR 1M (llmdb.com): {score}/100.",
+        extra_name_map=MRCR_NAME_TO_MODEL_ID,
+    )
 
 
 def sort_category_by_scores(
@@ -1129,6 +1434,9 @@ def calculate_avg_cost(model_data: dict) -> float | None:
 # Category qualification thresholds.  Models must meet these to be included.
 COST_EFFECTIVE_MAX_PRICE = 1.00  # max avg $/1M tokens (exclusive: under $1)
 FAST_MIN_THROUGHPUT = 50.0  # min tokens/sec
+# Cerebras/Groq-class hosted inference tops out around 1–2k t/s. Values like
+# 13,496 t/s for Sonnet 4.6 came from unofficial weekly proxy endpoints.
+FAST_MAX_THROUGHPUT = 2500.0
 # SWE-Bench Pro public scores are much lower than SWE-Bench Verified (typical range ~2–46%).
 CODING_MIN_SWE_BENCH_PRO = (
     1.0  # min % resolved on public split; include all mapped leaderboard rows
@@ -1528,6 +1836,7 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
             evidence = math_scores[model_id][1]
         if cat_id == "images" and vision_arena_scores and model_id in vision_arena_scores:
             evidence = vision_arena_scores[model_id][1]
+        evidence = with_fetch_date(evidence)
         if add_model_to_category(categories, cat_id, model_id, evidence):
             added.append(cat_id)
             print(f"  Added to '{cat_id}': {evidence}")
@@ -1611,13 +1920,23 @@ def _sync_evidence_and_prune(
     for cat in categories:
         cat_id = cat["id"]
         fetched = fetched_by_cat.get(cat_id)
-        if not fetched:
-            continue
         threshold = thresholds.get(cat_id)
         to_remove: list[int] = []
 
         for i, m in enumerate(cat["models"]):
             mid = m["modelId"]
+            existing_score = extract_primary_score(cat_id, m.get("evidence", ""))
+            if existing_score is not None and not is_plausible_score(cat_id, existing_score):
+                to_remove.append(i)
+                removed.setdefault(cat_id, []).append(mid)
+                print(
+                    f"ERROR: [{cat_id}] dropping {mid} with implausible stored score "
+                    f"{existing_score} ({m.get('evidence')})",
+                    file=sys.stderr,
+                )
+                continue
+            if not fetched:
+                continue
             # Best for coding tracks SWE-Bench Pro only; drop entries without a Pro score.
             if cat_id == "coding" and mid not in fetched:
                 to_remove.append(i)
@@ -1631,6 +1950,12 @@ def _sync_evidence_and_prune(
             if mid not in fetched:
                 continue
             score, new_evidence = fetched[mid]
+            if not is_plausible_score(cat_id, score):
+                print(
+                    f"ERROR: [{cat_id}] not applying implausible fetched score {score} for {mid}",
+                    file=sys.stderr,
+                )
+                continue
 
             if threshold:
                 kind, limit = threshold
@@ -1703,44 +2028,62 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
 
     if not RECOMMENDATIONS_PATH.exists():
         print(f"Error: {RECOMMENDATIONS_PATH} not found", file=sys.stderr)
-        return {"added": {}, "updated": {}, "removed": {}, "total_changes": 0}
+        return {"added": {}, "updated": {}, "removed": {}, "stale": {}, "total_changes": 0}
 
     content = RECOMMENDATIONS_PATH.read_text(encoding="utf-8")
     categories = parse_recommendations_ts(content)
     if not categories:
         print("Error: could not parse categories", file=sys.stderr)
-        return {"added": {}, "updated": {}, "removed": {}, "total_changes": 0}
+        return {"added": {}, "updated": {}, "removed": {}, "stale": {}, "total_changes": 0}
 
-    fetched_by_cat: dict[str, dict] = {}
-    if swe_bench_pro_scores:
-        fetched_by_cat["coding"] = swe_bench_pro_scores
-    if legalbench_scores:
-        fetched_by_cat["legal"] = legalbench_scores
-    if openrouter_pricing:
-        fetched_by_cat["cost-effective"] = openrouter_pricing
-    if lmspeed_scores:
-        fetched_by_cat["fast"] = lmspeed_scores
-    if global_mmlu_scores:
-        fetched_by_cat["multilingual"] = global_mmlu_scores
-    if mmlu_pro_scores:
-        fetched_by_cat["reasoning"] = mmlu_pro_scores
-    if creative_writing_scores:
-        fetched_by_cat["writing"] = creative_writing_scores
-    if text_to_image_scores:
-        fetched_by_cat["image-generation"] = text_to_image_scores
-    if math_scores:
-        fetched_by_cat["math"] = math_scores
-    if vision_arena_scores:
-        fetched_by_cat["images"] = vision_arena_scores
-    awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
-    long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
-    if long_context_scores:
-        fetched_by_cat["long-context"] = long_context_scores
+    raw_fetched: dict[str, dict[str, tuple[float, str]]] = {
+        "coding": swe_bench_pro_scores,
+        "legal": legalbench_scores,
+        "cost-effective": openrouter_pricing,
+        "fast": lmspeed_scores,
+        "multilingual": global_mmlu_scores,
+        "reasoning": mmlu_pro_scores,
+        "writing": creative_writing_scores,
+        "image-generation": text_to_image_scores,
+        "math": math_scores,
+        "images": vision_arena_scores,
+        "long-context": long_context_scores,
+    }
+    # Always register every source (including 0-row fetches) so the guard can fire.
+    dated_fetched = {
+        cat_id: attach_fetch_dates(filter_plausible_scores(cat_id, scores))
+        for cat_id, scores in raw_fetched.items()
+    }
+    fetched_by_cat, stale_marked, _health_warnings = apply_source_health_guard(
+        categories, dated_fetched
+    )
+
+    # Unhealthy sources stay out of fetched_by_cat so we do not add/prune from them.
+    swe_bench_pro_scores = fetched_by_cat.get("coding", {})
+    legalbench_scores = fetched_by_cat.get("legal", {})
+    openrouter_pricing = fetched_by_cat.get("cost-effective", {})
+    lmspeed_scores = fetched_by_cat.get("fast", {})
+    global_mmlu_scores = fetched_by_cat.get("multilingual", {})
+    mmlu_pro_scores = fetched_by_cat.get("reasoning", {})
+    creative_writing_scores = fetched_by_cat.get("writing", {})
+    text_to_image_scores = fetched_by_cat.get("image-generation", {})
+    math_scores = fetched_by_cat.get("math", {})
+    vision_arena_scores = fetched_by_cat.get("images", {})
+    long_context_scores = fetched_by_cat.get("long-context", {})
 
     # Step 1: Sync evidence and prune models that no longer qualify
     ev_updated, ev_removed = _sync_evidence_and_prune(categories, fetched_by_cat)
+    stale_pairs = {(cat_id, mid) for cat_id, mids in stale_marked.items() for mid in mids}
+    for cat_id, mids in stale_marked.items():
+        ev_updated.setdefault(cat_id, [])
+        for mid in mids:
+            if mid not in ev_updated[cat_id]:
+                ev_updated[cat_id].append(mid)
+            print(f"  ~ {mid} [{cat_id}]: marked stale (source collapsed)")
     for cat_id, mids in ev_updated.items():
         for mid in mids:
+            if (cat_id, mid) in stale_pairs:
+                continue
             print(f"  ~ {mid} [{cat_id}]: evidence updated")
     for cat_id, mids in ev_removed.items():
         for mid in mids:
@@ -1770,7 +2113,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
         )
         for entry in entries:
             cat_id = entry["category_id"]
-            evidence = entry["evidence"]
+            evidence = with_fetch_date(entry["evidence"])
             if add_model_to_category(categories, cat_id, model_id, evidence):
                 added.setdefault(cat_id, []).append(model_id)
                 print(f"  + {model_id} -> {cat_id}: {evidence}")
@@ -1800,7 +2143,13 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     if not dry_run:
         update_methodology_last_updated()
 
-    return {"added": added, "updated": ev_updated, "removed": ev_removed, "total_changes": total}
+    return {
+        "added": added,
+        "updated": ev_updated,
+        "removed": ev_removed,
+        "stale": stale_marked,
+        "total_changes": total,
+    }
 
 
 if __name__ == "__main__":

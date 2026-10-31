@@ -27,17 +27,26 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(BACKEND_DIR))
 
 from scripts.research_model_benchmarks import (
+    FAST_MAX_THROUGHPUT,
     _expand_hyphenated_minor_versions,
     _merge_swe_bench_pro_row,
+    _score_from_llmdb_score_cell,
     add_model_to_category,
+    apply_source_health_guard,
+    attach_fetch_dates,
     calculate_avg_cost,
     determine_categories,
+    evaluate_source_health,
     extract_primary_score,
     get_model_id_to_name_map,
+    is_plausible_score,
+    mark_category_stale,
+    mark_evidence_stale,
     model_exists_in_category,
     parse_recommendations_ts,
     rebuild_categories_ts,
     sort_category_by_scores,
+    with_fetch_date,
 )
 
 # --- Fixtures ---
@@ -793,3 +802,174 @@ class TestActualRecommendationsFile:
                     f"Category '{cat['id']}', model '{m['modelId']}': "
                     "must have numeric benchmark score in evidence"
                 )
+
+
+# --- Source-health guard, stale marking, sanity checks ---
+
+
+class TestSourceHealthGuard:
+    def test_zero_rows_is_unhealthy(self):
+        ok, reason = evaluate_source_health("fast", fetched_count=0, existing_count=18)
+        assert ok is False
+        assert "0 models" in reason
+        assert "SOURCE UNHEALTHY [fast]" in reason
+
+    def test_far_fewer_than_existing_is_unhealthy(self):
+        ok, reason = evaluate_source_health("math", fetched_count=1, existing_count=4)
+        assert ok is False
+        assert "far fewer" in reason
+
+    def test_healthy_when_comparable_coverage(self):
+        ok, reason = evaluate_source_health("writing", fetched_count=8, existing_count=8)
+        assert ok is True
+        assert reason == ""
+
+    def test_healthy_when_existing_is_empty(self):
+        ok, _reason = evaluate_source_health("legal", fetched_count=3, existing_count=0)
+        assert ok is True
+
+    def test_exactly_half_is_healthy(self):
+        # 2 == 4 * 0.5, so not strictly fewer
+        ok, _reason = evaluate_source_health("math", fetched_count=2, existing_count=4)
+        assert ok is True
+
+    def test_guard_keeps_existing_and_marks_stale_on_empty_fetch(self):
+        categories = [
+            {
+                "id": "fast",
+                "label": "Fastest",
+                "description": "D",
+                "models": [
+                    {"modelId": "openai/gpt-5", "evidence": "LMSpeed (lmspeed.net): 490 t/s."},
+                    {"modelId": "openai/gpt-5.2", "evidence": "LMSpeed (lmspeed.net): 171 t/s."},
+                ],
+            }
+        ]
+        healthy, stale, warnings = apply_source_health_guard(
+            categories, {"fast": {}}, as_of="2026-10-31"
+        )
+        assert healthy == {}
+        assert stale["fast"] == ["openai/gpt-5", "openai/gpt-5.2"]
+        assert any("0 models" in w for w in warnings)
+        assert "[stale as of 2026-10-31]" in categories[0]["models"][0]["evidence"]
+        assert extract_primary_score("fast", categories[0]["models"][0]["evidence"]) == 490.0
+
+    def test_guard_keeps_existing_on_sparse_fetch(self):
+        categories = [
+            {
+                "id": "multilingual",
+                "label": "Multilingual",
+                "description": "D",
+                "models": [
+                    {"modelId": "a/one", "evidence": "Global-MMLU (llmdb.com): 88.6%."},
+                    {"modelId": "a/two", "evidence": "Global-MMLU (llmdb.com): 75.4%."},
+                    {"modelId": "a/three", "evidence": "Global-MMLU (llmdb.com): 72.1%."},
+                    {"modelId": "a/four", "evidence": "Global-MMLU (llmdb.com): 70.8%."},
+                    {"modelId": "a/five", "evidence": "Global-MMLU (llmdb.com): 68.0%."},
+                ],
+            }
+        ]
+        sparse = {"a/one": (88.6, "Global-MMLU (llmdb.com): 88.6%.")}
+        healthy, stale, warnings = apply_source_health_guard(
+            categories, {"multilingual": sparse}, as_of="2026-10-31"
+        )
+        assert "multilingual" not in healthy
+        assert len(stale["multilingual"]) == 5
+        assert any("far fewer" in w for w in warnings)
+        assert len(categories[0]["models"]) == 5
+
+    def test_guard_passes_through_healthy_fetch(self):
+        categories = [
+            {
+                "id": "writing",
+                "label": "Writing",
+                "description": "D",
+                "models": [
+                    {
+                        "modelId": "a/one",
+                        "evidence": "Creative Writing Arena (kearai.com): 1490 Elo.",
+                    },
+                    {
+                        "modelId": "a/two",
+                        "evidence": "Creative Writing Arena (kearai.com): 1478 Elo.",
+                    },
+                ],
+            }
+        ]
+        fetched = {
+            "a/one": (1490.0, "Creative Writing Arena (kearai.com): 1490 Elo."),
+            "a/two": (1478.0, "Creative Writing Arena (kearai.com): 1478 Elo."),
+            "a/three": (1450.0, "Creative Writing Arena (kearai.com): 1450 Elo."),
+        }
+        healthy, stale, warnings = apply_source_health_guard(categories, {"writing": fetched})
+        assert healthy["writing"] == fetched
+        assert stale == {}
+        assert warnings == []
+        assert "[stale" not in categories[0]["models"][0]["evidence"]
+
+
+class TestPlausibleScores:
+    def test_rejects_sonnet_13496_tokens_per_sec(self):
+        assert is_plausible_score("fast", 13496.0) is False
+        assert 13496.0 > FAST_MAX_THROUGHPUT
+
+    def test_accepts_typical_hosted_throughput(self):
+        assert is_plausible_score("fast", 236.0) is True
+        assert is_plausible_score("fast", 409.8) is True
+
+    def test_rejects_zero_and_negative_throughput(self):
+        assert is_plausible_score("fast", 0.0) is False
+        assert is_plausible_score("fast", -10.0) is False
+
+    def test_writing_accepts_elo_and_mazur(self):
+        assert is_plausible_score("writing", 1490.0) is True
+        assert is_plausible_score("writing", 8.561) is True
+        assert is_plausible_score("writing", 50.0) is False
+
+
+class TestFetchDateAndStaleMarkers:
+    def test_with_fetch_date_appends_once(self):
+        evidence = with_fetch_date("LMSpeed (lmspeed.net): 236 t/s.", fetched_on="2026-10-31")
+        assert evidence == "LMSpeed (lmspeed.net): 236 t/s. Fetched 2026-10-31."
+        again = with_fetch_date(evidence, fetched_on="2026-11-01")
+        assert again == "LMSpeed (lmspeed.net): 236 t/s. Fetched 2026-11-01."
+        assert extract_primary_score("fast", again) == 236.0
+
+    def test_mark_evidence_stale_is_idempotent(self):
+        evidence = mark_evidence_stale("MATH (llmdb.com): 76.6%.", as_of="2026-10-31")
+        assert evidence.endswith("[stale as of 2026-10-31]")
+        again = mark_evidence_stale(evidence, as_of="2026-11-01")
+        assert again.count("[stale") == 1
+        assert "2026-11-01" in again
+        assert extract_primary_score("math", again) == 76.6
+
+    def test_attach_fetch_dates_preserves_score(self):
+        dated = attach_fetch_dates(
+            {"openai/gpt-4o": (76.6, "MATH (llmdb.com): 76.6%.")}, fetched_on="2026-10-31"
+        )
+        assert dated["openai/gpt-4o"][0] == 76.6
+        assert "Fetched 2026-10-31" in dated["openai/gpt-4o"][1]
+
+    def test_mark_category_skips_implausible_rows(self):
+        cat = {
+            "id": "fast",
+            "models": [
+                {"modelId": "anthropic/claude-sonnet-4.6", "evidence": "LMSpeed: 13496 t/s."},
+                {"modelId": "openai/gpt-5", "evidence": "LMSpeed: 490 t/s."},
+            ],
+        }
+        changed = mark_category_stale(cat, as_of="2026-10-31")
+        assert changed == ["openai/gpt-5"]
+        assert "[stale" not in cat["models"][0]["evidence"]
+
+
+class TestLlmdbScoreCell:
+    def test_reads_score_span_not_version_number(self):
+        from bs4 import BeautifulSoup
+
+        html = (
+            "<td><div><span class='text-sm font-medium text-gray-900'>91.8</span>"
+            "<div>width:91.8%</div></div></td>"
+        )
+        cell = BeautifulSoup(html, "html.parser").find("td")
+        assert _score_from_llmdb_score_cell(cell) == 91.8

@@ -47,16 +47,16 @@ Every ranking is labeled by its source type: **Public benchmark**, **CompareInte
 | Category | Primary source | URL | Key metric | Automated? |
 |----------|---------------|-----|------------|------------|
 | **Coding** | SWE-Bench Pro public (Scale Labs) | https://labs.scale.com/leaderboard/swe_bench_pro_public | % Resolved (public split) | Yes |
-| **Writing** | Creative Writing Arena | https://kearai.com/leaderboard/creative-writing | Elo rating | Yes |
-| **Math** | MATH, GSM8K (llmdb) | https://llmdb.com/benchmarks/math, https://llmdb.com/benchmarks/gsm8k | % (0–100) | Yes |
+| **Writing** | Creative Writing Arena (KEAR blog snapshot) | https://blog.kearai.com/leaderboard/creative-writing | Elo rating | Yes |
+| **Math** | MATH, AIME-2025, GSM8K (llmdb) | https://llmdb.com/benchmarks/math, https://llmdb.com/benchmarks/aime-2025, https://llmdb.com/benchmarks/gsm8k | % (0–100) | Yes (sparse) |
 | **Reasoning** | MMLU-Pro | https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/ | Overall % | Yes |
 | **Long context** | MRCR 1M (llmdb) | https://llmdb.com/benchmarks/mrcr-1m | Score /100 | Yes (sparse) |
 | **Best value** | OpenRouter pricing API | https://openrouter.ai/api/v1/models?output_modalities=all | Avg $/1M tokens | Yes |
-| **Fastest responses** | LMSpeed | https://lmspeed.net/leaderboard/best-throughput-models-weekly | Tokens/second | Yes |
+| **Fastest responses** | LMSpeed model-speed | https://lmspeed.net/leaderboard/model-speed | Tokens/second | Yes |
 | **Multilingual** | Global-MMLU (llmdb) | https://llmdb.com/benchmarks/global-mmlu | 42-language score | Yes (sparse) |
 | **Legal** | LegalBench (VALS.ai) | https://www.vals.ai/benchmarks/legal_bench | % across 161 tasks | Yes |
 | **Best for vision** | Vision Arena (LMArena) | https://lmarena.ai/leaderboard/vision | Arena Score | Yes |
-| **Image generation** | Text-to-Image Arena (KEAR AI) | https://kearai.com/leaderboard/text-to-image | Arena Rating | Yes |
+| **Image generation** | Text-to-Image Arena (LMArena HF) | https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset | Arena Rating | Yes |
 | **Medical** | HealthBench (OpenAI) | https://openai.com/index/healthbench | Physician-rated % | **Manual only** |
 
 **Long context note:** MRCR 1M has sparse coverage (~7 models). See "Long context (MRCR 1M and alternatives)" in Manual Curation Guide for secondary sources: Awesome Agents (MRCR v2, LongBench v2), model announcements, LongBench v2, RULER.
@@ -84,11 +84,12 @@ python scripts/research_model_benchmarks.py --refresh-all [--dry-run]
 
 This command re-evaluates ALL registry models against ALL data-driven categories:
 
-1. **Fetches** current data from 11 external sources (SWE-Bench Pro public, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MATH/GSM8K, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU, Vision Arena)
-2. **Syncs evidence** — updates stale evidence strings on existing models (e.g. price changes, new throughput data)
-3. **Prunes** models that no longer meet category thresholds
-4. **Adds** missing models that now qualify
-5. **Re-sorts** all data-driven categories by score
+1. **Fetches** current data from public sources (SWE-Bench Pro public, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MATH/AIME-2025/GSM8K, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU, Vision Arena, Text-to-Image Arena)
+2. **Guards collapsed sources** — if a source returns 0 rows, or far fewer than the existing category (`SOURCE_COLLAPSE_RATIO`, default 50%), keep the previous entries, mark them `[stale as of YYYY-MM-DD]`, and log `SOURCE UNHEALTHY` to stderr. Do not empty a category because a scraper broke.
+3. **Syncs evidence** — updates evidence strings on existing models (e.g. price changes, new throughput data) and appends `Fetched YYYY-MM-DD.`
+4. **Prunes** models that no longer meet category thresholds, or whose stored score fails the sanity check (e.g. tokens/sec above `FAST_MAX_THROUGHPUT`)
+5. **Adds** missing models that now qualify
+6. **Re-sorts** all data-driven categories by score
 
 Use `--dry-run` to preview changes without writing. Run periodically (e.g. weekly) to keep categories current.
 
@@ -109,7 +110,7 @@ Data-driven categories apply qualification thresholds to maintain quality:
 | Category | Threshold | Constant |
 |----------|-----------|----------|
 | Best value | &lt; $1.00/1M tokens avg | `COST_EFFECTIVE_MAX_PRICE` |
-| Fastest responses | ≥ 50 tokens/sec | `FAST_MIN_THROUGHPUT` |
+| Fastest responses | ≥ 50 and ≤ 2500 tokens/sec | `FAST_MIN_THROUGHPUT`, `FAST_MAX_THROUGHPUT` |
 | Coding | ≥ 1% SWE-Bench Pro public (% resolved; scores are much lower than SWE-Bench Verified) | `CODING_MIN_SWE_BENCH_PRO` |
 | Math | MATH or GSM8K ≥ 85% (when MATH not available) | `MATH_MIN_GSM8K` |
 | Reasoning | ≥ 80% MMLU-Pro | `REASONING_MIN_MMLU_PRO` |
@@ -122,10 +123,14 @@ Data-driven categories apply qualification thresholds to maintain quality:
 
 ### Scraper notes
 
-- **LMSpeed** renders as a Next.js React Server Components stream. The scraper parses RSC-encoded JSX rather than static HTML tables.
+- **Source-health guard:** `--refresh-all` never wipes a category when the live fetch is empty or collapses to far fewer rows than the current list. Existing rows stay, evidence is marked `[stale as of YYYY-MM-DD]`, and the script prints `ERROR: SOURCE UNHEALTHY [...]` on stderr.
+- **Sanity check:** `is_plausible_score` rejects scrape artifacts. Fastest-responses drops values above `FAST_MAX_THROUGHPUT` (2500 t/s). The old weekly LMSpeed board mixed unofficial proxy endpoints and produced Sonnet 4.6 at 13,496 t/s.
+- **Fetch date:** successful evidence updates append `Fetched YYYY-MM-DD.` The date lives on the evidence string so we do not need a new TypeScript field.
+- **LMSpeed:** `lmspeed.net/leaderboard/best-throughput-models-weekly` (and monthly) currently render "No leaderboard data yet" and are Cloudflare-protected (bare clients often get 403). The current public equivalent is [`/leaderboard/model-speed`](https://lmspeed.net/leaderboard/model-speed) (Benchize / Artificial Analysis, one row per model, sane t/s). A free LMSpeed JSON API exists but requires an API key we do not ship. When the HTML fetch 403s, the guard keeps the previous Fastest list and marks it stale.
+- **Creative Writing Arena:** `kearai.com/leaderboard/creative-writing` **404s**. Content moved to [blog.kearai.com/leaderboard/creative-writing](https://blog.kearai.com/leaderboard/creative-writing) (February 2026 snapshot, parseable HTML table). The live equivalent is [arena.ai/leaderboard/chat/text/creative-writing](https://arena.ai/leaderboard/chat/text/creative-writing) (JS-rendered; not scraped).
+- **Text-to-Image Arena:** `kearai.com/leaderboard/text-to-image` **404s**. The blog snapshot remains at [blog.kearai.com/leaderboard/text-to-image](https://blog.kearai.com/leaderboard/text-to-image). The scraper prefers the official LMArena Hugging Face dataset (`lmarena-ai/leaderboard-dataset`, `text_to_image` / `latest`) and falls back to the blog table.
+- **MATH / GSM8K / Global-MMLU / MRCR:** still on llmdb.com, but coverage is sparse and the old row-wide regex captured version numbers (`Gemini 2.0 Pro` → `2.0%`). The parser now reads the Score column only and does not map Gemini 2.0 → 2.5 or o1 → o3. Math also merges [AIME-2025](https://llmdb.com/benchmarks/aime-2025) for current registry models. When the mapped set is still far smaller than the curated list, the guard keeps the existing rows.
 - **LegalBench** URL changed from `/legal_bench-01-30-2025` to `/legal_bench` (no date suffix). The scraper follows redirects.
-- **Global-MMLU** and **MRCR 1M** leaderboards on llmdb.com have sparse coverage (few models listed).
-- **Creative Writing Arena** lists many model variants (thinking, non-thinking, dated snapshots). The scraper takes the best score per registry model.
 - **Vision Arena** scores are fetched from the official `lmarena-ai/leaderboard-dataset` on Hugging Face (vision subset, latest split). Model slugs on the arena often differ from OpenRouter IDs; update `VISION_ARENA_SLUG_TO_MODEL_ID` when adding models.
 - **Name mapping dicts** (`SWE_BENCH_PRO_SLUG_TO_MODEL_ID`, `LMSPEED_NAME_TO_MODEL_ID`, `WRITING_NAME_TO_MODEL_ID`, `MMLU_PRO_NAME_TO_MODEL_ID`, `VISION_ARENA_SLUG_TO_MODEL_ID`, `AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID`, etc.) resolve leaderboard display names that don't match registry names. Update these when adding new models or when leaderboard names change.
 - **SWE-Bench Pro** leaderboard data is parsed from the Scale Labs Next.js page (RSC-embedded JSON); a static HTML fallback uses [scaleapi.github.io/SWE-bench_Pro-os](https://scaleapi.github.io/SWE-bench_Pro-os/) (subset of models).
@@ -214,4 +219,4 @@ Some categories cannot be fully automated because their data sources don't expos
 
 ## Image Generation Category
 
-The "Best for image generation" category uses the KEAR AI Text-to-Image Arena (human preference votes). When a user selects from this category, the model mode toggle automatically switches to "Image generation models". Text-only and image generation models cannot be mixed; a modal guides users to deselect one type before selecting the other.
+The "Best for image generation" category uses the LMArena Text-to-Image Arena (official Hugging Face dataset; human preference votes). The previous KEAR AI page at kearai.com/leaderboard/text-to-image 404s; a February 2026 blog snapshot remains as a fallback. When a user selects from this category, the model mode toggle automatically switches to "Image generation models". Text-only and image generation models cannot be mixed; a modal guides users to deselect one type before selecting the other.
