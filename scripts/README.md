@@ -193,6 +193,8 @@ Release images are tagged `compareintel-{backend,nginx}:<sha>`, `:current`, and 
 
 `scripts/rollback/rollback.sh previous` (and `./deploy-production.sh rollback`) redeploys `:previous` without rebuilding. `alembic downgrade` is opt-in (`--with-migrations`) and requires typing `DOWNGRADE`.
 
+If `build.sh` brings the new stack up and verify fails (`/health` never becomes healthy, or backend is restarting/unhealthy), `deploy-production.sh` automatically runs that same previous-tag rollback and exits non-zero. It does **not** auto-downgrade migrations. Pre-deploy checks also require a non-empty `OPENROUTER_API_KEY` in `backend/.env` (production raises `OpenRouterConfigError` and crash-loops otherwise) and run `nginx -t` before applying `nginx/nginx.ssl.conf`.
+
 ### Safety Features
 
 All scripts include:

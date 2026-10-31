@@ -120,5 +120,9 @@ class TestDeployResourceChecks:
     def test_successful_deploy_prunes_dangling_images(self):
         text = DEPLOY_SH.read_text()
         assert "prune_dangling_docker_artifacts" in text
-        # Every rebuild path should prune after verify, not before.
-        assert text.count("prune_dangling_docker_artifacts") >= 3
+        # Rebuilds share deploy_with_rebuild, which prunes only after verify.
+        assert "deploy_with_rebuild" in text
+        rebuild = text.split("deploy_with_rebuild()")[1].split("apply_runtime_config_changes")[0]
+        assert "verify_or_rollback" in rebuild
+        assert "prune_dangling_docker_artifacts" in rebuild
+        assert rebuild.find("verify_or_rollback") < rebuild.find("prune_dangling_docker_artifacts")

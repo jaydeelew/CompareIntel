@@ -86,6 +86,8 @@ tmp/
 temp/
 *.tgz
 .last_deployed_commit
+.last_deployed_env_hash
+.last_deployed_nginx_hash
 
 # AI/ML & Database
 *.pkl

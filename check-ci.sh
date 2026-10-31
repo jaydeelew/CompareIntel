@@ -38,6 +38,17 @@ else
 fi
 echo ""
 
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🧭 Nginx SSL model-page 404 routing"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if node scripts/check-nginx-ssl-spa.js; then
+  echo -e "${GREEN}✓ nginx.ssl.conf 404s unknown /models/<slug>${NC}"
+else
+  echo -e "${RED}❌ nginx.ssl.conf is missing @spa_or_404 model-page routing${NC}"
+  FAILED=1
+fi
+echo ""
+
 # Backend checks
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🐍 Backend checks"

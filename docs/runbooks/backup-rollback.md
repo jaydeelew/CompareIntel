@@ -268,6 +268,8 @@ bash scripts/rollback/rollback.sh previous
 ./deploy-production.sh rollback
 ```
 
+**Automatic on failed verify:** After a rebuild (`build`, `deploy` with code changes, `quick-deploy`), if `/health` does not pass or backend is restarting/unhealthy, `deploy-production.sh` runs this previous-tag rollback itself and exits non-zero. Migrations are never auto-downgraded. Use the manual command if automatic rollback fails.
+
 **When to use:**
 - Bad deploy of application code (frontend or backend)
 - Health checks failing after a release

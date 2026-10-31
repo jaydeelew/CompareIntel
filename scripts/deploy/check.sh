@@ -19,6 +19,7 @@ check_system_requirements() {
     ok "Project directory: $PROJECT_DIR"
     [ ! -f "$ENV_FILE" ] && { err "Environment file not found: $ENV_FILE"; exit 1; }
     ok "Environment file exists"
+    check_backend_env || exit 1
     ok "System check completed"
 }
 

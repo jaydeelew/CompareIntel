@@ -65,6 +65,9 @@ jobs:
       - name: Check nginx host-metrics proxy
         run: node scripts/check-nginx-metrics-proxy.js
 
+      - name: Check nginx SSL model-page 404 routing
+        run: node scripts/check-nginx-ssl-spa.js
+
   frontend-lint:
     name: Frontend Lint & Type Check
     needs: detect-changes
