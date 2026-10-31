@@ -39,7 +39,8 @@ export const PrivacyPolicy: React.FC = () => {
               safeguard your information when you use our AI model comparison platform at
               compareintel.com (the "Service"). CompareIntel acts as a pass-through: we send your
               prompts to AI providers and display responses, but we do not access, analyze, train
-              on, or use your prompt or response content for any other purpose.
+              on, or use your prompt or response content for any other purpose, except to store it
+              in your history when you&apos;re signed in.
             </p>
             <p>
               By using CompareIntel, you agree to the collection and use of information in
@@ -87,6 +88,18 @@ export const PrivacyPolicy: React.FC = () => {
                 <strong>Cookies and Similar Technologies:</strong> We use cookies and similar
                 tracking technologies to maintain your session and preferences.
               </li>
+              <li>
+                <strong>Error monitoring (Sentry Session Replay):</strong> On the website (not in
+                the browser extension), Sentry may record a reconstruction of your visit — page
+                layout, clicks, and navigation — so we can debug errors. In production we record
+                about 1% of sessions and about 10% of sessions where an error occurs. Our Sentry
+                config masks all text and blocks images, video, and audio. We do not set a Replay
+                retention period in our config. See{' '}
+                <a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer">
+                  Sentry&apos;s privacy policy
+                </a>
+                .
+              </li>
             </ul>
 
             <p>
@@ -120,8 +133,8 @@ export const PrivacyPolicy: React.FC = () => {
               </li>
             </ul>
             <p>
-              Page text the extension reads for context is held in memory only while you use the
-              side panel. It is never written to Chrome storage.
+              Page text the extension reads for context is held only in the extension&apos;s memory
+              and discarded when the tab closes or navigates; never written to Chrome storage.
             </p>
             <p>
               If you are signed in, your prompt, including any page text or selection you included,
@@ -270,8 +283,11 @@ export const PrivacyPolicy: React.FC = () => {
                 for your use. Only you can access it. Delete anytime from your history.
               </li>
               <li>
-                <strong>Usage Data:</strong> Aggregated and anonymized usage data may be retained
-                indefinitely for analytics purposes.
+                <strong>Usage logs:</strong> Detailed usage-log rows (IP address, browser
+                fingerprint, user ID when you are signed in, and comparison metadata such as models
+                run) are kept until an administrator runs a cleanup. That cleanup is not scheduled
+                automatically. After a cleanup, aggregated monthly summaries without those
+                identifiers may remain.
               </li>
             </ul>
           </section>
@@ -360,6 +376,16 @@ export const PrivacyPolicy: React.FC = () => {
             <p>
               Each provider has its own privacy policy and data handling practices. We encourage you
               to review their privacy policies to understand how they process your data.
+            </p>
+            <p>
+              The website also uses Sentry for error monitoring and Session Replay. Replay can
+              capture a reconstruction of your visit (page layout, clicks, and navigation). Our
+              config masks all text and blocks all media; we do not set a Replay retention period in
+              our config. Sentry&apos;s practices are described in{' '}
+              <a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer">
+                Sentry&apos;s privacy policy
+              </a>
+              .
             </p>
           </section>
 

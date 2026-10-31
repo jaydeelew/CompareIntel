@@ -30,12 +30,26 @@ describe('PrivacyPolicy', () => {
     ).toBeInTheDocument()
     expect(screen.getByText(/SHA-256 hash of your browser/i)).toBeInTheDocument()
     expect(screen.getByText(/named model-selection defaults/i)).toBeInTheDocument()
-    expect(screen.getByText(/held in memory only/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        /held only in the extension's memory and discarded when the tab closes or navigates/i
+      )
+    ).toBeInTheDocument()
     expect(
       screen.getByText(/The extension itself does not include analytics or tracking software/i)
     ).toBeInTheDocument()
     expect(screen.getByText(/Sentry, including Session Replay/i)).toBeInTheDocument()
     expect(screen.getByText(/cleanup is not run automatically/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/except to store it in your history when you're signed in/i)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/masks all text and blocks images, video, and audio/i)
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Detailed usage-log rows/i)).toBeInTheDocument()
+    const sentryLinks = screen.getAllByRole('link', { name: "Sentry's privacy policy" })
+    expect(sentryLinks.length).toBeGreaterThanOrEqual(2)
+    expect(sentryLinks[0]).toHaveAttribute('href', 'https://sentry.io/privacy/')
     const supportLinks = screen.getAllByRole('link', { name: 'support@compareintel.com' })
     expect(supportLinks.length).toBeGreaterThan(0)
     expect(supportLinks[0]).toHaveAttribute('href', 'mailto:support@compareintel.com')
