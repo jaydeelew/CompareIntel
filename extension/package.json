@@ -2,6 +2,7 @@
   "name": "@compareintel/extension",
   "version": "0.1.3",
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "predev": "node scripts/ensure-dist-manifest.mjs",
