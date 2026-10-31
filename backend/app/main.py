@@ -188,7 +188,15 @@ async def lifespan(app: FastAPI):
             _blocking_executor.shutdown(wait=True, cancel_futures=True)
 
 
-app = FastAPI(title="CompareIntel API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(
+    title="CompareIntel API",
+    version="1.0.0",
+    lifespan=lifespan,
+    license_info={
+        "name": "AGPL-3.0-or-later",
+        "url": "https://www.gnu.org/licenses/agpl-3.0.html",
+    },
+)
 
 
 # Add CORS middleware BEFORE including routers

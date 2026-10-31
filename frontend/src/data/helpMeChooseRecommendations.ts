@@ -7,7 +7,8 @@
  *
  * Inclusion rule: Only models with numeric benchmark scores from well-respected,
  * publicly available sources (SWE-Bench Pro public, MMLU-Pro, Vision Arena, etc.)
- * are included. Models without benchmark scores are not added.
+ * are included. Models without benchmark scores are not added. Ranked model IDs
+ * must exist in the active lineup (models_registry.json models_by_provider).
  *
  * Evidence format: Each entry includes the source (benchmark/reference) and
  * score. See /help-me-choose-methodology for full methodology.

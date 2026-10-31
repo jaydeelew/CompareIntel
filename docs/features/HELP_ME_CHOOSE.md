@@ -8,7 +8,7 @@ A "Help me choose" button sits next to the Advanced button in the model selectio
 
 **Categories:** Best for coding, Best for writing, Best for math, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for vision, Best for image generation, Best for medical.
 
-**Inclusion rule:** Only models with numeric benchmark scores from well-respected, publicly available sources are included. Models without benchmark scores are not added. Each category has at least two models. Model IDs must exist in `models_registry.json`.
+**Inclusion rule:** Only models with numeric benchmark scores from well-respected, publicly available sources are included. Models without benchmark scores are not added. Each category has at least two models. Model IDs must exist in the active CompareIntel lineup: `models_by_provider` in `backend/data/models_registry.json` (the same catalog the frontend loads via `GET /models`). Tier allow-lists are subsets of that lineup, not a second catalog.
 
 ## Key Behaviors
 
@@ -70,8 +70,10 @@ Every ranking is labeled by its source type: **Public benchmark**, **CompareInte
 | Styles | `frontend/src/styles/models.css` (`.help-me-choose*`, `.models-section-buttons-row`) |
 | Hook logic | `frontend/src/hooks/useModelManagement.ts` (`handleModelToggle`, `handleApplyRecommendation`) |
 | Methodology page | `frontend/src/components/pages/HelpMeChooseMethodology.tsx` (route: `/help-me-choose-methodology`) |
-| Benchmark research script | `backend/scripts/research_model_benchmarks.py` |
-| Registry sync script | `backend/scripts/sync_help_me_choose_with_registry.py` |
+| Benchmark research script | `backend/scripts/research_model_benchmarks.py` (`--refresh-all`, `--sync-lineup`) |
+| Registry / lineup sync script | `backend/scripts/sync_help_me_choose_with_registry.py` |
+| Lineup source of truth | `backend/data/models_registry.json` → `models_by_provider` |
+| Lineup membership test | `frontend/src/data/__tests__/helpMeChooseRecommendations.test.ts` (fails CI if a ranked model is not in the lineup) |
 | Admin integration | `backend/app/routers/admin/models_management.py` |
 
 ## Automation
@@ -136,9 +138,11 @@ Data-driven categories apply qualification thresholds to maintain quality:
 - **SWE-Bench Pro** leaderboard data is parsed from the Scale Labs Next.js page (RSC-embedded JSON); a static HTML fallback uses [scaleapi.github.io/SWE-bench_Pro-os](https://scaleapi.github.io/SWE-bench_Pro-os/) (subset of models).
 - **Long context** merges MRCR 1M (llmdb) with Awesome Agents (MRCR v2, LongBench v2). MRCR 1M is primary; Awesome Agents adds models not on the llmdb leaderboard. Threshold ≥ 30 applies to both sources.
 
-### Registry sync
+### Registry / lineup sync
 
-CI runs `sync_help_me_choose_with_registry.py` to validate model IDs against `models_registry.json`. Use `--fix` to remove missing models or apply `MODEL_ID_ALIASES` for renames.
+The active lineup is `models_by_provider` in `backend/data/models_registry.json`. CI fails if Help Me Choose ranks a model that is not in that lineup (frontend unit test plus this script). Use `--fix` to remove missing models or apply `MODEL_ID_ALIASES` for renames.
+
+`research_model_benchmarks.py --refresh-all` and `--sync-lineup` drop rankings for models that left the lineup. Lineup models that have no rankings are printed as a report only (not an error — they still need public benchmark scores before they can be added). `--sync-lineup` is local files only and makes no API calls.
 
 ## Manual Curation Guide
 
