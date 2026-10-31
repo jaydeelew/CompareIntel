@@ -25,7 +25,7 @@ anyio==4.15.1
     #   httpx
     #   openai
     #   starlette
-bcrypt==4.0.1
+bcrypt==4.3.0
     # via
     #   -r requirements.in
     #   passlib
@@ -57,7 +57,9 @@ distro==1.9.0
     #   anthropic
     #   openai
 dnspython==2.9.0
-    # via email-validator
+    # via
+    #   -r requirements.in
+    #   email-validator
 docstring-parser==0.17.0
     # via anthropic
 email-validator==2.3.0
@@ -108,7 +110,7 @@ markupsafe==3.0.3
     # via
     #   jinja2
     #   mako
-openai==2.21.0
+openai==2.54.0
     # via -r requirements.in
 opentelemetry-api==1.45.1
     # via fastapi
