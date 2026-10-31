@@ -6,8 +6,8 @@
   "scripts": {
     "predev": "node scripts/ensure-dist-manifest.mjs",
     "dev": "vite",
-    "dev:watch": "vite build --watch",
-    "build": "vite build",
+    "dev:watch": "vite build --watch --mode development",
+    "build": "vite build && node scripts/assert-dist-manifest.mjs",
     "type-check": "tsc -b --noEmit",
     "test": "vitest run",
     "generate:icons": "node scripts/generate-icons.mjs",

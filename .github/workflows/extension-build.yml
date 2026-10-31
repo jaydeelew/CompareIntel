@@ -22,6 +22,7 @@ jobs:
       - run: npm ci
       - run: npm run core:test
       - run: npm run extension:build
+      - run: node extension/scripts/assert-dist-manifest.mjs
       - run: npm run test -w @compareintel/extension
       - uses: actions/upload-artifact@v7
         with:
