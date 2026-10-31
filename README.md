@@ -423,21 +423,26 @@ Frontend pull-request previews (noindex, mock API) are documented in [docs/deplo
 The project includes a comprehensive deployment script for Ubuntu/PostgreSQL servers:
 
 ```bash
-# Full deployment (git pull, build, restart — DB migrations run on backend start)
+# Full deployment (git pull, build, health check with auto-rollback to :previous)
 ./deploy-production.sh deploy
 
 # Quick deploy (no git pull, for hotfixes)
 ./deploy-production.sh quick-deploy
 
-# Check system status
+# Check system + backend/.env keys (values are never printed)
+./deploy-production.sh check
+
+# Check running services
 ./deploy-production.sh status
 
 # View logs
 ./deploy-production.sh logs
 
-# Rollback to previous version
+# Rollback to previous image tags (no migration downgrade unless you pass --with-migrations)
 ./deploy-production.sh rollback
 ```
+
+`./deploy-production.sh deploy` uses `docker-compose.ssl.yml` and `nginx/nginx.ssl.conf`. Before taking the stack down it validates `backend/.env` (`OPENROUTER_API_KEY` required; spend-cap / metrics keys warned) and runs `nginx -t`. After `compose up`, `/health` is retried for ~75s; a restarting/unhealthy backend fails the deploy. If verify fails after a rebuild, the script redeploys `:previous` images and exits non-zero (migrations are left as-is). A `.env` or `nginx.ssl.conf` change still applies on a no-code-change deploy (recreate backend / reload nginx).
 
 ### Docker Compose Files
 

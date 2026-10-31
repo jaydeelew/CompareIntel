@@ -6,6 +6,8 @@ PROJECT_DIR="${PROJECT_DIR:-$(cd "$_UTILS_DIR/../.." && pwd)}"
 BACKUP_DIR="${BACKUP_DIR:-/home/ubuntu/backups}"
 LOG_FILE="${LOG_FILE:-/home/ubuntu/compareintel-deploy.log}"
 ENV_FILE="${ENV_FILE:-$PROJECT_DIR/backend/.env}"
+# Used by pull.sh / deploy-production.sh (sourced together).
+# shellcheck disable=SC2034
 CODE_CHANGED=false
 
 msg() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"; }
@@ -65,13 +67,46 @@ prune_dangling_docker_artifacts() {
     ok "Docker dangling images and build cache pruned"
 }
 
+# Container ID for a compose service, or empty if none.
+service_container_id() {
+    cd "$PROJECT_DIR" || return 1
+    docker compose -f docker-compose.ssl.yml ps -q "$1" 2>/dev/null | head -n1
+}
+
+# Docker State.Status for a compose service (running, restarting, exited, ...).
+service_status() {
+    local cid
+    cid=$(service_container_id "$1") || true
+    [ -n "$cid" ] || return 1
+    docker inspect --format '{{.State.Status}}' "$cid" 2>/dev/null
+}
+
+# True only when the container is actually running (not restarting/exited).
 service_running() {
-    cd "$PROJECT_DIR"
-    docker compose -f docker-compose.ssl.yml ps --services --filter "status=running" 2>/dev/null | grep -q "$1"
+    local status restarting
+    status=$(service_status "$1") || return 1
+    [ "$status" = "running" ] || return 1
+    restarting=$(docker inspect --format '{{.State.Restarting}}' "$(service_container_id "$1")" 2>/dev/null || echo "false")
+    [ "$restarting" != "true" ]
+}
+
+# True when backend is crash-looping or marked unhealthy.
+# Missing/starting containers return false so /health can keep retrying.
+backend_is_restarting_or_unhealthy() {
+    local cid status restarting health
+    cid=$(service_container_id backend) || return 1
+    [ -n "$cid" ] || return 1
+    status=$(docker inspect --format '{{.State.Status}}' "$cid" 2>/dev/null || echo "unknown")
+    restarting=$(docker inspect --format '{{.State.Restarting}}' "$cid" 2>/dev/null || echo "false")
+    health=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$cid" 2>/dev/null || true)
+    [ "$status" = "restarting" ] && return 0
+    [ "$restarting" = "true" ] && return 0
+    [ "$health" = "unhealthy" ] && return 0
+    return 1
 }
 
 service_completed() {
-    cd "$PROJECT_DIR"
+    cd "$PROJECT_DIR" || return 1
     CONTAINERS=$(docker compose -f docker-compose.ssl.yml ps -a --format "{{.Name}}" 2>/dev/null | grep -i "$1" || true)
     [ -z "$CONTAINERS" ] && return 1
     for container in $CONTAINERS; do
@@ -85,6 +120,7 @@ load_env() {
     if [ -f "$ENV_FILE" ]; then
         msg "Loading environment from $ENV_FILE"
         set -a
+        # shellcheck disable=SC1090
         source <(grep -v '^\s*#' "$ENV_FILE" | grep -v '^\s*$')
         set +a
         ok "Environment loaded"

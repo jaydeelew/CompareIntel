@@ -44,7 +44,7 @@ Do not point previews at production. Live production remains on EC2 (below).
 
 ### 5. AWS Production
 
-Prefer `./deploy-production.sh deploy` (backup, build, health check, then prune dangling images/build cache). Manual equivalent:
+Prefer `./deploy-production.sh deploy` (backup, `.env` key check, `nginx -t`, build, `/health` retry, auto-rollback to `:previous` on verify failure, then prune dangling images/build cache). Manual equivalent:
 
 ```bash
 ssh -i CompareIntel.pem ubuntu@<ec2-ip>
