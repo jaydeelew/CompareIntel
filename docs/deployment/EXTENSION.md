@@ -254,12 +254,10 @@ Deploy frontend so [`compareintel.com/privacy`](https://compareintel.com/privacy
 
 | Asset | Notes |
 |-------|-------|
-| Name | CompareIntel |
-| Short description | ~132 chars — multi-model compare with optional page context |
-| Detailed description | Side-by-side models, page context toggle, pin tabs, sign-in |
-| Category | Productivity or Developer Tools |
+| Name / copy | Draft in [`extension/store/listing.md`](../../extension/store/listing.md) |
 | Icon | 128×128 — [`extension/public/icons/`](../../extension/public/icons/) |
-| Screenshots | At least one (1280×800 or 640×400) — side panel on a sample page |
+| Screenshots | 1280×800 PNGs in [`extension/store/screenshots/`](../../extension/store/screenshots/) — Jack should review and may replace with live-account captures |
+| Promo tiles | 440×280 and 1400×560 in [`extension/store/`](../../extension/store/) |
 | Privacy policy | `https://compareintel.com/privacy` |
 
 ### Permissions justification (for review)
