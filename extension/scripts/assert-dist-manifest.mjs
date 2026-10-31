@@ -44,9 +44,9 @@ const extensionPagesCsp = manifest.content_security_policy?.extension_pages
 if (
   typeof extensionPagesCsp !== 'string' ||
   !extensionPagesCsp.includes("script-src 'self'") ||
-  !extensionPagesCsp.includes("object-src 'self'")
+  !extensionPagesCsp.includes("object-src 'none'")
 ) {
-  fail("production manifest must set content_security_policy.extension_pages to script-src 'self'; object-src 'self'")
+  fail("production manifest must set content_security_policy.extension_pages to script-src 'self'; object-src 'none'")
 }
 
 console.log(

@@ -117,11 +117,11 @@ describe('TabContextManager', () => {
     })
   })
 
-  it('does not read page text when GET_ACTIVE_TAB only captures metadata', async () => {
+  it('does not read page text on GET_ACTIVE_TAB', async () => {
     tabsQuery.mockResolvedValue([
       { id: 12, url: 'https://example.com/docs', title: 'Docs' },
     ])
-    await manager.handleMessage({ type: 'GET_ACTIVE_TAB', capture: true })
+    await manager.handleMessage({ type: 'GET_ACTIVE_TAB' })
     expect(executeScript).not.toHaveBeenCalled()
   })
 
