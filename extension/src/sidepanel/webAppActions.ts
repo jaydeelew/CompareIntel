@@ -34,13 +34,14 @@ async function closeSidePanelInCurrentWindow(): Promise<void> {
   await sidePanel.close({ windowId: currentWindow.id }).catch(() => undefined)
 }
 
-async function openWebAppTab(url: string): Promise<void> {
+async function openWebAppTab(url: string, options?: { bindHandoff?: boolean }): Promise<void> {
   const currentWindow = await browser.windows.getCurrent().catch(() => undefined)
   try {
     const response = (await browser.runtime.sendMessage({
       type: 'OPEN_TAB_WITHOUT_PANEL',
       url,
       windowId: currentWindow?.id,
+      bindHandoff: options?.bindHandoff,
     })) as { type?: string } | undefined
     if (response?.type === 'OK') {
       await closeSidePanelInCurrentWindow()
@@ -69,12 +70,17 @@ export async function openWebAppWithHandoff(
     conversationHistory: shellState?.conversationHistory ?? [],
     conversationId: shellState?.conversationId ?? null,
     browserFingerprint,
-    accessToken: tokens.accessToken ?? undefined,
-    refreshToken: tokens.refreshToken ?? undefined,
   }
 
-  await browser.runtime.sendMessage({ type: 'STORE_HANDOFF', payload })
-  await openWebAppTab(buildWebAppHandoffUrl())
+  await browser.runtime.sendMessage({
+    type: 'STORE_HANDOFF',
+    payload,
+    tokens: {
+      accessToken: tokens.accessToken ?? undefined,
+      refreshToken: tokens.refreshToken ?? undefined,
+    },
+  })
+  await openWebAppTab(buildWebAppHandoffUrl(), { bindHandoff: true })
 }
 
 export async function signOutFromExtension(): Promise<void> {
