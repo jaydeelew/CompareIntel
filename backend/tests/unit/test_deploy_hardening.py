@@ -180,6 +180,17 @@ class TestNginxSslSpaRouting:
         assert "test_nginx_config_before_apply" in text
         assert "reload_nginx_if_conf_changed" in text
 
+    def test_ssl_conf_redirects_www_to_apex(self):
+        text = SSL_CONF.read_text()
+        assert "server_name www.compareintel.com;" in text
+        assert "return 301 https://compareintel.com$request_uri;" in text
+        assert "server_name compareintel.com www.compareintel.com;" in text
+        assert "server_name compareintel.com;" in text
+        assert (
+            "server_name compareintel.com www.compareintel.com;"
+            not in text.split("listen 443 ssl;")[-1]
+        )
+
 
 class TestDeployWiring:
     def test_pre_deploy_env_check_is_in_system_check(self):

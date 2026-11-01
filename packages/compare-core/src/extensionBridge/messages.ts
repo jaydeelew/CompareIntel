@@ -22,7 +22,11 @@ export interface ExtensionHandoffPayload {
   conversationHistory: Array<{ role: string; content: string; model_id?: string }>
   conversationId: number | null
   browserFingerprint?: string
+  /** One-time nonce to claim tokens via chrome.runtime.sendMessage. Never a secret by itself. */
+  handoffNonce?: string
+  /** @deprecated Do not send over window.postMessage. Use CI_CLAIM_HANDOFF. */
   accessToken?: string
+  /** @deprecated Do not send over window.postMessage. Use CI_CLAIM_HANDOFF. */
   refreshToken?: string
 }
 
@@ -31,6 +35,8 @@ export interface CiHandoffResponsePageMessage {
   type: typeof CI_PAGE_MESSAGE.HANDOFF_RESPONSE
   payload: ExtensionHandoffPayload | null
 }
+
+const CI_PAGE_MESSAGE_TYPES = new Set<string>(Object.values(CI_PAGE_MESSAGE))
 
 export type CiPageMessage =
   | {
@@ -46,9 +52,17 @@ export type CiPageMessage =
       source: typeof CI_BRIDGE_SOURCE
       type: typeof CI_PAGE_MESSAGE.EXTENSION_LOGOUT
     }
+  | {
+      source: typeof CI_BRIDGE_SOURCE
+      type: typeof CI_PAGE_MESSAGE.LOGOUT
+    }
 
 export function isCiPageMessage(data: unknown): data is CiPageMessage {
   if (!data || typeof data !== 'object') return false
   const message = data as { source?: unknown; type?: unknown }
-  return message.source === CI_BRIDGE_SOURCE && typeof message.type === 'string'
+  return (
+    message.source === CI_BRIDGE_SOURCE &&
+    typeof message.type === 'string' &&
+    CI_PAGE_MESSAGE_TYPES.has(message.type)
+  )
 }

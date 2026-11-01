@@ -70,6 +70,14 @@ jobs:
       - name: Check nginx SSL model-page 404 routing
         run: node scripts/check-nginx-ssl-spa.js
 
+      - name: Check nginx www → apex redirect
+        run: node scripts/check-nginx-www-redirect.js
+
+      - name: Validate nginx.ssl.conf syntax (nginx -t)
+        env:
+          NGINX_T_REQUIRE: "1"
+        run: bash scripts/check-nginx-ssl-syntax.sh
+
   frontend-lint:
     name: Frontend Lint & Type Check
     needs: detect-changes

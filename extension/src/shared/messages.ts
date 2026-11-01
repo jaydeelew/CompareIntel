@@ -16,6 +16,11 @@ export interface CiLogoutExternalMessage {
   type: 'CI_LOGOUT'
 }
 
+export interface CiClaimHandoffExternalMessage {
+  type: 'CI_CLAIM_HANDOFF'
+  nonce: string
+}
+
 export interface CiGetHandoffMessage {
   type: 'GET_HANDOFF'
 }
@@ -29,7 +34,10 @@ export interface CiBroadcastLogoutMessage {
   type: 'BROADCAST_LOGOUT'
 }
 
-export type CiExternalMessage = CiAuthExternalMessage | CiLogoutExternalMessage
+export type CiExternalMessage =
+  | CiAuthExternalMessage
+  | CiLogoutExternalMessage
+  | CiClaimHandoffExternalMessage
 
 export type CiBackgroundMessage =
   | CiGetHandoffMessage
