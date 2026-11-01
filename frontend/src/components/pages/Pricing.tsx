@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useCallback, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 import {
   TIER_PRICING,
@@ -6,6 +7,11 @@ import {
   DAILY_CREDIT_LIMITS,
   MODEL_LIMITS,
 } from '../../config/constants'
+import { useAuth } from '../../contexts/AuthContext'
+import {
+  createSubscriptionCheckoutSession,
+  type PaidSubscriptionTier,
+} from '../../services/billingService'
 
 import './Pricing.css'
 
@@ -13,6 +19,38 @@ import './Pricing.css'
  * Pricing - Displays subscription tiers and pricing information
  */
 export function Pricing() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [subscribingTier, setSubscribingTier] = useState<string | null>(null)
+  const [subscribeError, setSubscribeError] = useState<string | null>(null)
+
+  const handleSubscribe = useCallback(
+    async (tier: PaidSubscriptionTier) => {
+      if (!user) {
+        navigate('/?showAuthModal=signup')
+        return
+      }
+      setSubscribeError(null)
+      setSubscribingTier(tier)
+      try {
+        const url = await createSubscriptionCheckoutSession(tier)
+        window.location.href = url
+      } catch (error) {
+        const msg =
+          error instanceof Error
+            ? error.message
+            : 'Checkout could not start. Please try again.'
+        setSubscribeError(msg)
+        setSubscribingTier(null)
+      }
+    },
+    [user, navigate]
+  )
+
+  const handleFreeSignup = useCallback(() => {
+    navigate('/?showAuthModal=signup')
+  }, [navigate])
+
   // Define tier display order and metadata
   const tiers = [
     {
@@ -138,18 +176,33 @@ export function Pricing() {
 
               <div className="pricing-tier-cta">
                 {tier.key === 'free' ? (
-                  <Link to="/" className="pricing-tier-button pricing-tier-button-free">
+                  <button
+                    type="button"
+                    className="pricing-tier-button pricing-tier-button-free"
+                    onClick={handleFreeSignup}
+                  >
                     Get Started Free
-                  </Link>
+                  </button>
                 ) : (
-                  <Link to="/" className="pricing-tier-button pricing-tier-button-paid">
-                    Subscribe
-                  </Link>
+                  <button
+                    type="button"
+                    className="pricing-tier-button pricing-tier-button-paid"
+                    onClick={() => handleSubscribe(tier.key as PaidSubscriptionTier)}
+                    disabled={subscribingTier !== null}
+                  >
+                    {subscribingTier === tier.key ? 'Redirecting…' : 'Subscribe'}
+                  </button>
                 )}
               </div>
             </div>
           ))}
         </div>
+
+        {subscribeError && (
+          <div className="pricing-error">
+            <p>{subscribeError}</p>
+          </div>
+        )}
 
         <div className="pricing-notes">
           <h3>About Credits</h3>

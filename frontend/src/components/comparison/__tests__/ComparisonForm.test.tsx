@@ -45,7 +45,6 @@ vi.mock('../FileUpload', () => ({
 vi.mock('../HistoryDropdown', () => ({ HistoryDropdown: () => null }))
 vi.mock('../SavedSelectionsDropdown', () => ({ SavedSelectionsDropdown: () => null }))
 vi.mock('../TokenUsageDisplay', () => ({ TokenUsageDisplay: () => null }))
-vi.mock('../../layout/PricingTeaser', () => ({ PricingTeaser: () => null }))
 
 vi.mock('../../../hooks', async importOriginal => {
   const actual = await importOriginal<typeof import('../../../hooks')>()

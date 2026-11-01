@@ -1123,12 +1123,12 @@ test.describe('Unregistered User Journey', () => {
 
   test('Unregistered user sees clear value proposition', async ({ page }) => {
     // Check for key messaging about the platform
-    // Hero: "Choose the right AI model with evidence, not guesswork"
+    // Hero: "Built for humans to find the best AI models for their needs"
     const valueProps = [
       /compare.*models/i,
       /ai.*comparison/i,
-      /evidence/i, // New hero: "with evidence, not guesswork"
-      /(choose|find).*right.*model/i, // New hero: "Choose the right AI model" / "find the best AI models"
+      /side.*side/i,
+      /(built for humans|find.*best.*models)/i,
     ]
 
     const pageContent = await page.textContent('body')

@@ -10,15 +10,15 @@ import React, {
   type SetStateAction,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 
-import { BREAKPOINT_MOBILE } from '../../config/constants'
+import { BREAKPOINT_MOBILE, DAILY_CREDIT_LIMITS, TIER_PRICING } from '../../config/constants'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { getFirstFileFromClipboard } from '../../utils/clipboardFiles'
 import { showNotification } from '../../utils/error'
-import { PricingTeaser } from '../layout/PricingTeaser'
 import { StyledTooltip } from '../shared'
 
 import { ActionButtonTooltipModal, type ComposerTooltipButtonId } from './ActionButtonTooltipModal'
@@ -1225,7 +1225,21 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         {isFollowUpMode && conversations.length > 0 && (
           <ContextWarning tokenUsageInfo={tokenUsageInfo} renderUsagePreview={renderUsagePreview} />
         )}
-        {!isFollowUpMode && !isAuthenticated && <PricingTeaser />}
+        {!isFollowUpMode && !isAuthenticated && (
+          <div className="hero-pricing-line">
+            <span className="hero-pricing-free">
+              {DAILY_CREDIT_LIMITS.unregistered} free credits/day, {DAILY_CREDIT_LIMITS.free} with a free account
+            </span>
+            <span className="hero-pricing-separator"> • </span>
+            <span className="hero-pricing-paid">
+              Paid plans from ${Math.min(...Object.entries(TIER_PRICING).filter(([tier]) => tier !== 'free' && tier !== 'unregistered').map(([, price]) => price))}/month
+            </span>
+            <span className="hero-pricing-separator"> • </span>
+            <Link to="/pricing" className="hero-pricing-link">
+              See plans
+            </Link>
+          </div>
+        )}
       </>
     )
 

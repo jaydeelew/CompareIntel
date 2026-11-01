@@ -2065,6 +2065,52 @@ video.capability-tile-image-lightbox-img {
   color: #e0f2fe;
 }
 
+/* Hero pricing line - shown below CTA for unauthenticated users */
+.hero-pricing-line {
+  text-align: center;
+  margin-top: -1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.hero-pricing-free,
+.hero-pricing-paid {
+  font-weight: 500;
+}
+
+/* Dark mode - ensure WCAG AA contrast (4.5:1) against dark background */
+:root[data-theme='dark'] .hero-pricing-line {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Light mode - ensure WCAG AA contrast (4.5:1) against light background */
+:root[data-theme='light'] .hero-pricing-line {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.hero-pricing-separator {
+  opacity: 0.6;
+}
+
+.hero-pricing-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.hero-pricing-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .hero-pricing-line {
+    font-size: 0.8125rem;
+  }
+}
+
 /* Credits remaining – wrapper, link, and info trigger */
 .credits-remaining-wrapper {
   display: inline-flex;
