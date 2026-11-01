@@ -164,7 +164,8 @@ E2E tests: [`extension/e2e/`](../../extension/e2e/) (require a built extension).
 | Auth works on web but not extension | Extension uses Bearer tokens, not cookies | Sign in via extension modal |
 | Page context fails | Non-HTTP(S) tab | Test on a normal `https://` page |
 | Changes not appearing | Forgot reload after watch build | Reload on `chrome://extensions` |
-| “Manifest file is missing or unreadable” | Watch build failed and wiped `dist/` | Run `npm run extension:build`, reload unpacked extension; restart `extension:dev` |
+| “Manifest file is missing or unreadable” | Watch/dev write raced `dist/` | Run `npm run extension:build` (one-shot; fails if `dist/manifest.json` is missing), reload unpacked extension; restart `extension:dev` |
+| `extension:build` hangs or reprints `vite build` forever | Nested restore from CRXJS `closeBundle` | Fixed: production builds no longer respawn Vite; they exit non-zero if the manifest is missing |
 
 ---
 
@@ -180,7 +181,7 @@ E2E tests: [`extension/e2e/`](../../extension/e2e/) (require a built extension).
 - **`sidePanel`** — main UI
 - **`scripting` + `activeTab` + `tabs`** — on-demand page extraction when user submits with context enabled
 - **`storage`** — auth tokens (session storage)
-- **`host_permissions: https://compareintel.com/*`** — production API
+- **`host_permissions: https://compareintel.com/*`** — production API (localhost hosts are added only in development builds)
 - **`optional_host_permissions: <all_urls>`** — future opt-in for broader context
 
 Page content is read **on submit only**, not continuously.
@@ -192,14 +193,14 @@ Page content is read **on submit only**, not continuously.
 ### Extension build
 
 1. Remove `extension/.env` (production API only).
-2. Bump `version` in [`extension/manifest.config.ts`](../../extension/manifest.config.ts).
+2. Bump `version` in [`extension/package.json`](../../extension/package.json) — Chrome and Firefox manifests both read this value.
 3. Build and package:
    ```bash
    npm run package -w @compareintel/extension
    ```
    Produces `extension/compareintel-extension.zip`.
 
-4. **Optional before store:** remove `http://localhost:*` from `host_permissions` in the store manifest if reviewers flag dev-only entries.
+`npm run extension:build` is a one-shot production build: it must write `extension/dist/manifest.json` and exit. The production manifest omits localhost from `host_permissions`, `externally_connectable`, and the web-app content-script matches (those stay in `vite` / `extension:dev` only). The side panel is not listed in `web_accessible_resources`.
 
 ### Backend
 
@@ -276,7 +277,7 @@ Answer consistently with the privacy policy:
 
 | Task | When |
 |------|------|
-| Bump version in `extension/manifest.config.ts` | Every store update |
+| Bump version in `extension/package.json` | Every store update |
 | `npm run package -w @compareintel/extension` | Each release |
 | Upload zip to Developer Dashboard | Each release |
 | Local + production smoke tests | Before each upload |
@@ -286,7 +287,7 @@ Answer consistently with the privacy policy:
 
 ## Firefox (future)
 
-Firefox uses `sidebar_action` instead of `side_panel`. See [`extension/manifest.firefox.ts`](../../extension/manifest.firefox.ts) for a manifest overlay; a conditional build flag can be added in CI.
+Firefox uses `sidebar_action` instead of `side_panel`. See [`extension/manifest.firefox.ts`](../../extension/manifest.firefox.ts) for a manifest overlay that shares `version` with `extension/package.json`; a conditional build flag can be added in CI.
 
 ---
 
