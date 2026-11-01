@@ -12,6 +12,7 @@ import { ensureDistManifestPlugin } from './scripts/ensureDistManifestPlugin.mjs
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Watch/incremental builds can fail mid-run; don't wipe dist or Chrome loses manifest.json.
+// Production `vite build` is one-shot (no --watch). Never respawn Vite from plugin hooks.
 const isCleanProductionBuild =
   process.argv.includes('build') && !process.argv.includes('--watch')
 

@@ -25,7 +25,7 @@ export function useAuth() {
       changes: Record<string, { oldValue?: unknown; newValue?: unknown }>,
       areaName: string
     ) => {
-      if (areaName !== 'local') return
+      if (areaName !== 'local' && areaName !== 'session') return
       const tokenChanged = AUTH_TOKEN_KEYS.some((key) => key in changes)
       if (!tokenChanged) return
       void refreshUser()

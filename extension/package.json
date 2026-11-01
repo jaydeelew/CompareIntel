@@ -2,16 +2,19 @@
   "name": "@compareintel/extension",
   "version": "0.1.3",
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "predev": "node scripts/ensure-dist-manifest.mjs",
     "dev": "vite",
-    "dev:watch": "vite build --watch",
-    "build": "vite build",
+    "dev:watch": "vite build --watch --mode development",
+    "build": "vite build && node scripts/assert-dist-manifest.mjs",
     "type-check": "tsc -b --noEmit",
     "test": "vitest run",
     "generate:icons": "node scripts/generate-icons.mjs",
-    "package": "npm run build && node scripts/package.mjs"
+    "package": "npm run build && node scripts/package.mjs",
+    "store:promo": "node store/generate-promo.mjs",
+    "store:screenshots": "playwright test --config=store/playwright.config.ts"
   },
   "dependencies": {
     "@compareintel/core": "file:../compare-core",
@@ -27,7 +30,9 @@
     "@types/webextension-polyfill": "^0.12.1",
     "@vitejs/plugin-react": "^4.3.4",
     "archiver": "^7.0.1",
+    "@playwright/test": "1.60.0",
     "jsdom": "^24.0.0",
+    "sharp": "^0.35.5",
     "typescript": "~5.7.2",
     "vite": "^6.0.5",
     "vitest": "^3.0.5"

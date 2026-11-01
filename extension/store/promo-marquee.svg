@@ -1,0 +1,40 @@
+<svg width="1400" height="560" viewBox="0 0 1400 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="560" fill="#0B1220"/>
+  <rect width="16" height="560" fill="#0171FE"/>
+  <circle cx="1280" cy="-40" r="220" fill="#0171FE" fill-opacity="0.08"/>
+  <circle cx="160" cy="620" r="180" fill="#014498" fill-opacity="0.12"/>
+  <image href="{{LOGO}}" x="64" y="72" width="88" height="88"/>
+  <text x="168" y="128" fill="#F1F5F9" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="48" font-weight="700">CompareIntel</text>
+  <text x="64" y="210" fill="#F1F5F9" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="36" font-weight="600">Compare AI models side by side</text>
+  <text x="64" y="256" fill="#94A3B8" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="20">One prompt. Several answers. Right next to the page.</text>
+  <g>
+    <rect x="64" y="300" width="400" height="200" rx="16" fill="#1E293B" stroke="#334155"/>
+    <rect x="64" y="300" width="400" height="44" rx="16" fill="#0171FE"/>
+    <rect x="64" y="328" width="400" height="16" fill="#0171FE"/>
+    <text x="84" y="330" fill="#FFFFFF" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700">Model A</text>
+    <rect x="84" y="368" width="320" height="10" rx="5" fill="#64748B"/>
+    <rect x="84" y="392" width="280" height="10" rx="5" fill="#475569"/>
+    <rect x="84" y="416" width="300" height="10" rx="5" fill="#64748B"/>
+    <rect x="84" y="440" width="220" height="10" rx="5" fill="#475569"/>
+  </g>
+  <g>
+    <rect x="500" y="300" width="400" height="200" rx="16" fill="#1E293B" stroke="#334155"/>
+    <rect x="500" y="300" width="400" height="44" rx="16" fill="#014498"/>
+    <rect x="500" y="328" width="400" height="16" fill="#014498"/>
+    <text x="520" y="330" fill="#FFFFFF" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700">Model B</text>
+    <rect x="520" y="368" width="280" height="10" rx="5" fill="#64748B"/>
+    <rect x="520" y="392" width="320" height="10" rx="5" fill="#475569"/>
+    <rect x="520" y="416" width="240" height="10" rx="5" fill="#64748B"/>
+    <rect x="520" y="440" width="300" height="10" rx="5" fill="#475569"/>
+  </g>
+  <g>
+    <rect x="936" y="300" width="400" height="200" rx="16" fill="#1E293B" stroke="#334155"/>
+    <rect x="936" y="300" width="400" height="44" rx="16" fill="#2563EB"/>
+    <rect x="936" y="328" width="400" height="16" fill="#2563EB"/>
+    <text x="956" y="330" fill="#FFFFFF" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700">Model C</text>
+    <rect x="956" y="368" width="300" height="10" rx="5" fill="#64748B"/>
+    <rect x="956" y="392" width="250" height="10" rx="5" fill="#475569"/>
+    <rect x="956" y="416" width="320" height="10" rx="5" fill="#64748B"/>
+    <rect x="956" y="440" width="200" height="10" rx="5" fill="#475569"/>
+  </g>
+</svg>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 function scrollToTop(): void {
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
@@ -10,6 +10,9 @@ function scrollToTop(): void {
 }
 
 export const Footer: React.FC = () => {
+  const { pathname } = useLocation()
+  const showSourceOffer = pathname !== '/'
+
   const linkStyle: React.CSSProperties = {
     color: 'var(--primary-color)',
     textDecoration: 'none',
@@ -97,6 +100,23 @@ export const Footer: React.FC = () => {
       <p style={{ margin: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
         © 2026 CompareIntel. All rights reserved.
       </p>
+
+      {showSourceOffer && (
+        <p style={{ margin: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+          CompareIntel is open source under AGPL-3.0 —{' '}
+          <a
+            href="https://github.com/jaydeelew/CompareIntel"
+            style={{
+              color: 'var(--primary-color)',
+              textDecoration: 'underline',
+              textDecorationThickness: '1px',
+              textUnderlineOffset: '2px',
+            }}
+          >
+            Source code
+          </a>
+        </p>
+      )}
     </footer>
   )
 }

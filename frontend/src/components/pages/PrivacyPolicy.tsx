@@ -98,8 +98,8 @@ export const PrivacyPolicy: React.FC = () => {
               <li>
                 <strong>Page content:</strong> Text extracted from tabs you explicitly include
                 (current tab and/or pinned tabs) is sent to our servers only when you submit a
-                comparison with page context enabled. We do not read page content continuously or in
-                the background.
+                comparison with page context enabled. We do not run a content script on every
+                website, and we do not read page content continuously or in the background.
               </li>
               <li>
                 <strong>Tab metadata:</strong> Page titles and URLs for tabs you include in context
