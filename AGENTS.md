@@ -102,7 +102,7 @@ See [docs/development/ADDING_NEW_MODELS.md](docs/development/ADDING_NEW_MODELS.m
 
 ### API Endpoints
 - Backend routes: `backend/app/api/` (organized by resource)
-- CORS: configured in `backend/app/main.py`
+- CORS: allowlist in `backend/app/cors.py`; wired in `backend/app/main.py`
 - Auth: `backend/app/core/security.py`
 
 ### Frontend Components

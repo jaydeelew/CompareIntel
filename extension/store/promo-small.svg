@@ -1,0 +1,40 @@
+<svg width="440" height="280" viewBox="0 0 440 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="440" height="280" fill="#0B1220"/>
+  <rect width="8" height="280" fill="#0171FE"/>
+  <image href="{{LOGO}}" x="28" y="22" width="44" height="44"/>
+  <text x="82" y="50" fill="#F1F5F9" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700">CompareIntel</text>
+  <text x="28" y="92" fill="#F1F5F9" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="600">Compare AI models side by side</text>
+  <g>
+    <rect x="28" y="118" width="124" height="138" rx="10" fill="#1E293B" stroke="#334155"/>
+    <rect x="28" y="118" width="124" height="28" rx="10" fill="#0171FE"/>
+    <rect x="28" y="136" width="124" height="10" fill="#0171FE"/>
+    <text x="40" y="137" fill="#FFFFFF" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="11" font-weight="700">Model A</text>
+    <rect x="40" y="160" width="100" height="8" rx="4" fill="#64748B"/>
+    <rect x="40" y="176" width="88" height="8" rx="4" fill="#475569"/>
+    <rect x="40" y="192" width="96" height="8" rx="4" fill="#64748B"/>
+    <rect x="40" y="208" width="72" height="8" rx="4" fill="#475569"/>
+    <rect x="40" y="224" width="84" height="8" rx="4" fill="#64748B"/>
+  </g>
+  <g>
+    <rect x="162" y="118" width="124" height="138" rx="10" fill="#1E293B" stroke="#334155"/>
+    <rect x="162" y="118" width="124" height="28" rx="10" fill="#014498"/>
+    <rect x="162" y="136" width="124" height="10" fill="#014498"/>
+    <text x="174" y="137" fill="#FFFFFF" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="11" font-weight="700">Model B</text>
+    <rect x="174" y="160" width="88" height="8" rx="4" fill="#64748B"/>
+    <rect x="174" y="176" width="100" height="8" rx="4" fill="#475569"/>
+    <rect x="174" y="192" width="76" height="8" rx="4" fill="#64748B"/>
+    <rect x="174" y="208" width="92" height="8" rx="4" fill="#475569"/>
+    <rect x="174" y="224" width="68" height="8" rx="4" fill="#64748B"/>
+  </g>
+  <g>
+    <rect x="296" y="118" width="116" height="138" rx="10" fill="#1E293B" stroke="#334155"/>
+    <rect x="296" y="118" width="116" height="28" rx="10" fill="#2563EB"/>
+    <rect x="296" y="136" width="116" height="10" fill="#2563EB"/>
+    <text x="308" y="137" fill="#FFFFFF" font-family="Segoe UI, DejaVu Sans, Arial, sans-serif" font-size="11" font-weight="700">Model C</text>
+    <rect x="308" y="160" width="92" height="8" rx="4" fill="#64748B"/>
+    <rect x="308" y="176" width="80" height="8" rx="4" fill="#475569"/>
+    <rect x="308" y="192" width="88" height="8" rx="4" fill="#64748B"/>
+    <rect x="308" y="208" width="64" height="8" rx="4" fill="#475569"/>
+    <rect x="308" y="224" width="76" height="8" rx="4" fill="#64748B"/>
+  </g>
+</svg>

@@ -42,7 +42,8 @@ describe('openUrlWithoutSidePanel', () => {
       sidePanel: { setOptions, close },
     })
 
-    await openUrlWithoutSidePanel('https://compareintel.com/?handoff=1')
+    const tabId = await openUrlWithoutSidePanel('https://compareintel.com/?handoff=1')
+    expect(tabId).toBe(42)
 
     expect(tabsCreate).toHaveBeenCalledWith({
       url: 'https://compareintel.com/?handoff=1',

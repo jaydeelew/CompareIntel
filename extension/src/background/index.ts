@@ -2,8 +2,14 @@ import type { TabContextMessage, TabContextResponse } from '@compareintel/core'
 import { getPanelScope, setPanelScope, type PanelScope } from '../shared/extensionSettings'
 import browser from 'webextension-polyfill'
 
-import { authStorage } from '../shared/authStorage'
-import { consumeHandoff, storeHandoff } from '../shared/handoff'
+import { authStorage, lockRefreshTokenToTrustedContexts } from '../shared/authStorage'
+import {
+  parseCiAuthTokens,
+  parseCiClaimHandoffNonce,
+  senderWebOrigin,
+} from '../shared/externalAuth'
+import { acceptHandoffTokensFromSender, authorizeRuntimeMessage } from '../shared/extensionSender'
+import { bindHandoffTab, claimHandoffTokens, consumeHandoff, storeHandoff } from '../shared/handoff'
 import type { CiExternalMessage } from '../shared/messages'
 import { isAllowedWebAppOrigin } from '../shared/webAppOrigins'
 import {
@@ -21,14 +27,13 @@ const tabContextManager = new TabContextManager()
 
 type BackgroundMessage =
   | TabContextMessage
-  | { type: 'SELECTION_CAPTURED'; text: string }
   | { type: 'GET_PANEL_SCOPE' }
   | { type: 'SET_PANEL_SCOPE'; scope: PanelScope }
   | { type: 'GET_HANDOFF' }
-  | { type: 'STORE_HANDOFF'; payload: Parameters<typeof storeHandoff>[0] }
+  | { type: 'STORE_HANDOFF'; payload: Parameters<typeof storeHandoff>[0]; tokens?: Parameters<typeof storeHandoff>[1] }
   | { type: 'BROADCAST_LOGOUT' }
   | { type: 'WEB_APP_BRIDGE_READY' }
-  | { type: 'OPEN_TAB_WITHOUT_PANEL'; url: string; windowId?: number }
+  | { type: 'OPEN_TAB_WITHOUT_PANEL'; url: string; windowId?: number; bindHandoff?: boolean }
 
 type BackgroundResponse =
   | TabContextResponse
@@ -36,6 +41,7 @@ type BackgroundResponse =
   | { type: 'PANEL_SCOPE'; scope: PanelScope }
   | { type: 'ERROR'; message: string }
   | { type: 'HANDOFF'; payload: Awaited<ReturnType<typeof consumeHandoff>> }
+  | { type: 'HANDOFF_TOKENS'; tokens: Awaited<ReturnType<typeof claimHandoffTokens>> }
 
 async function notifyWebAppTabsLogout(): Promise<void> {
   const tabs = await browser.tabs.query({})
@@ -52,10 +58,12 @@ async function notifyWebAppTabsLogout(): Promise<void> {
 }
 
 browser.runtime.onInstalled.addListener(() => {
+  void lockRefreshTokenToTrustedContexts()
   void initializeSidePanel()
 })
 
 browser.runtime.onStartup.addListener(() => {
+  void lockRefreshTokenToTrustedContexts()
   void initializeSidePanel()
 })
 
@@ -75,24 +83,28 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 
 browser.action.onClicked.addListener(async (tab) => {
   if (tab.id) {
+    tabContextManager.rememberInvokedTab(tab)
     await openPanelForTab(tab.id)
   }
 })
 
 browser.runtime.onMessageExternal.addListener(
-  (message: unknown, sender, sendResponse: (response?: { ok: boolean }) => void) => {
-    if (!isAllowedWebAppOrigin(sender.url ? new URL(sender.url).origin : sender.origin)) {
+  (
+    message: unknown,
+    sender,
+    sendResponse: (response?: { ok: boolean; tokens?: { accessToken?: string; refreshToken?: string } | null }) => void,
+  ) => {
+    const origin = senderWebOrigin(sender)
+    if (!isAllowedWebAppOrigin(origin)) {
       sendResponse({ ok: false })
       return true
     }
 
     const typed = message as CiExternalMessage
-    if (typed.type === 'CI_AUTH') {
+    const authTokens = parseCiAuthTokens(message)
+    if (authTokens) {
       void authStorage
-        .setTokens({
-          accessToken: typed.access_token,
-          refreshToken: typed.refresh_token,
-        })
+        .setTokens(authTokens)
         .then(() => sendResponse({ ok: true }))
         .catch(() => sendResponse({ ok: false }))
       return true
@@ -102,6 +114,14 @@ browser.runtime.onMessageExternal.addListener(
       void authStorage
         .clearTokens()
         .then(() => sendResponse({ ok: true }))
+        .catch(() => sendResponse({ ok: false }))
+      return true
+    }
+
+    const nonce = parseCiClaimHandoffNonce(message)
+    if (nonce) {
+      void claimHandoffTokens(nonce, sender.tab?.id)
+        .then((tokens) => sendResponse({ ok: Boolean(tokens), tokens }))
         .catch(() => sendResponse({ ok: false }))
       return true
     }
@@ -119,9 +139,8 @@ browser.runtime.onMessage.addListener(
   ) => {
     const typedMessage = message as BackgroundMessage
 
-    if (typedMessage.type === 'SELECTION_CAPTURED' && sender.tab?.id) {
-      tabContextManager.setSelection(sender.tab.id, typedMessage.text)
-      sendResponse({ type: 'OK' })
+    if (!authorizeRuntimeMessage(typedMessage.type, sender)) {
+      sendResponse({ type: 'ERROR', message: 'Unauthorized' })
       return true
     }
 
@@ -151,14 +170,15 @@ browser.runtime.onMessage.addListener(
     }
 
     if (typedMessage.type === 'GET_HANDOFF') {
-      void consumeHandoff()
+      void consumeHandoff(sender.tab?.id)
         .then((payload) => sendResponse({ type: 'HANDOFF', payload }))
         .catch(() => sendResponse({ type: 'HANDOFF', payload: null }))
       return true
     }
 
     if (typedMessage.type === 'STORE_HANDOFF') {
-      void storeHandoff(typedMessage.payload)
+      const tokens = acceptHandoffTokensFromSender(sender, typedMessage.tokens)
+      void storeHandoff(typedMessage.payload, tokens)
         .then(() => sendResponse({ type: 'OK' }))
         .catch((err: unknown) => {
           sendResponse({
@@ -171,6 +191,11 @@ browser.runtime.onMessage.addListener(
 
     if (typedMessage.type === 'BROADCAST_LOGOUT') {
       void notifyWebAppTabsLogout().then(() => sendResponse({ type: 'OK' }))
+      return true
+    }
+
+    if (typedMessage.type === 'WEB_APP_BRIDGE_READY') {
+      sendResponse({ type: 'OK' })
       return true
     }
 
@@ -187,7 +212,12 @@ browser.runtime.onMessage.addListener(
       }
 
       void openUrlWithoutSidePanel(typedMessage.url, typedMessage.windowId)
-        .then(() => sendResponse({ type: 'OK' }))
+        .then(async (tabId) => {
+          if (typedMessage.bindHandoff && tabId != null) {
+            await bindHandoffTab(tabId)
+          }
+          sendResponse({ type: 'OK' })
+        })
         .catch((err: unknown) => {
           sendResponse({
             type: 'ERROR',

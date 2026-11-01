@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 440px;
+        height: 280px;
+        overflow: hidden;
+        background: #0b1220;
+        color: #f1f5f9;
+        font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+      }
+      .tile {
+        width: 440px;
+        height: 280px;
+        box-sizing: border-box;
+        padding: 22px 22px 22px 30px;
+        border-left: 8px solid #0171fe;
+        background: #0b1220;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .brand img {
+        width: 44px;
+        height: 44px;
+      }
+      .brand h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+      .tagline {
+        margin: 0 0 16px;
+        font-size: 17px;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .col {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        overflow: hidden;
+        min-height: 132px;
+      }
+      .col header {
+        background: #0171fe;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 7px 10px;
+      }
+      .col:nth-child(2) header {
+        background: #014498;
+      }
+      .col:nth-child(3) header {
+        background: #2563eb;
+      }
+      .line {
+        height: 8px;
+        margin: 10px 10px 0;
+        border-radius: 4px;
+        background: #64748b;
+      }
+      .line.short {
+        width: 58%;
+        background: #475569;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tile">
+      <div class="brand">
+        <img src="{{LOGO}}" alt="" />
+        <h1>CompareIntel</h1>
+      </div>
+      <p class="tagline">Compare AI models side by side</p>
+      <div class="cols">
+        <article class="col">
+          <header>Model A</header>
+          <div class="line"></div>
+          <div class="line short"></div>
+          <div class="line"></div>
+          <div class="line short"></div>
+        </article>
+        <article class="col">
+          <header>Model B</header>
+          <div class="line short"></div>
+          <div class="line"></div>
+          <div class="line short"></div>
+          <div class="line"></div>
+        </article>
+        <article class="col">
+          <header>Model C</header>
+          <div class="line"></div>
+          <div class="line"></div>
+          <div class="line short"></div>
+          <div class="line short"></div>
+        </article>
+      </div>
+    </div>
+  </body>
+</html>

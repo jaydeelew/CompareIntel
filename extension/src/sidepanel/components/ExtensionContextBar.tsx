@@ -42,6 +42,7 @@ export function ExtensionContextBar({
   const [activeTab, setActiveTab] = useState<TabInfo | null>(null)
   const [openTabs, setOpenTabs] = useState<TabInfo[]>([])
   const [showTabPicker, setShowTabPicker] = useState(false)
+  const [accessMessage, setAccessMessage] = useState<string | null>(null)
 
   const pageContextsRef = useRef(pageContexts)
   const sharePageContextRef = useRef(sharePageContext)
@@ -97,6 +98,9 @@ export function ExtensionContextBar({
     const pollActiveTab = async () => {
       const activeRes = await sendTabContextMessage({ type: 'GET_ACTIVE_TAB' })
       const tab = activeRes.type === 'ACTIVE_TAB' ? activeRes.tab : null
+      if (activeRes.type === 'ACTIVE_TAB') {
+        setAccessMessage(activeRes.restriction?.message ?? null)
+      }
       const nextKey = tab ? `${tab.tabId}|${tab.url}|${tab.title}` : ''
       const tabChanged = nextKey !== lastKey
       if (tabChanged) {
@@ -277,9 +281,15 @@ export function ExtensionContextBar({
         )}
       </div>
 
+      {accessMessage && (
+        <p className="context-restriction-note" role="status">
+          {accessMessage}
+        </p>
+      )}
+
       {!collapsed && (
         <div className="tab-chips">
-          {contextTabs.length === 0 && (
+          {contextTabs.length === 0 && !accessMessage && (
             <span style={{ fontSize: 12, color: 'var(--muted)' }}>No page context included</span>
           )}
           {contextTabs.map((tab) => (
@@ -319,7 +329,10 @@ export function ExtensionContextBar({
             <h2>Pin a tab</h2>
             <div className="tab-picker-list">
               {pickerTabs.length === 0 && (
-                <span style={{ fontSize: 12, color: 'var(--muted)' }}>No tabs available to pin</span>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                  No tabs available to pin. Switch to a page and click the CompareIntel icon, then
+                  pin it here.
+                </span>
               )}
               {pickerTabs.map((tab) => (
                 <div
