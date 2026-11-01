@@ -19,6 +19,7 @@ import {
 } from '../utils/attachmentStorage'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
+import { latencyMsBetween, lookupPerModelUsage } from '../utils/verdictMetrics'
 
 export interface UseStreamCompletionConfig {
   selectedModels: string[]
@@ -170,6 +171,15 @@ export function useStreamCompletion(
       const allModelIds = [
         ...new Set([...Object.keys(streamingResults), ...Object.keys(streamingImages)]),
       ]
+      const perModelUsage = streamingMetadata?.per_model_usage
+      const turnMetrics = (modelId: string) => {
+        const usage = lookupPerModelUsage(perModelUsage, modelId)
+        return {
+          cost_usd: usage?.cost_usd ?? null,
+          latency_ms: latencyMsBetween(modelStartTimes[modelId], modelCompletionTimes[modelId]),
+          usageOutputTokens: usage?.completion_tokens,
+        }
+      }
       setResponse({
         results: { ...streamingResults },
         metadata: {
@@ -184,6 +194,7 @@ export function useStreamCompletion(
           timestamp: new Date().toISOString(),
           processing_time_ms: Date.now() - startTime,
           conversation_id: streamingMetadata?.conversation_id,
+          per_model_usage: perModelUsage,
         },
       })
 
@@ -206,12 +217,18 @@ export function useStreamCompletion(
                   return { ...msg, timestamp: startT || msg.timestamp }
                 }
                 if (idx === 1 && msg.type === 'assistant') {
+                  const metrics = turnMetrics(conv.modelId)
                   return {
                     ...msg,
                     content,
                     images: images.length > 0 ? images : undefined,
                     timestamp: completionTime || msg.timestamp,
-                    output_tokens: msg.output_tokens || estimateTokensSimple(content),
+                    output_tokens:
+                      metrics.usageOutputTokens ??
+                      msg.output_tokens ??
+                      estimateTokensSimple(content),
+                    cost_usd: metrics.cost_usd,
+                    latency_ms: metrics.latency_ms,
                   }
                 }
                 return msg
@@ -240,12 +257,15 @@ export function useStreamCompletion(
             )
             if (!hasNewUserMessage) {
               const startT = modelStartTimes[conv.modelId]
+              const metrics = turnMetrics(conv.modelId)
               const assistantMessage = createStreamingMessage(
                 'assistant',
                 contentStr,
                 completionTime || new Date().toISOString()
               )
-              assistantMessage.output_tokens = outputTokens
+              assistantMessage.output_tokens = metrics.usageOutputTokens ?? outputTokens
+              assistantMessage.cost_usd = metrics.cost_usd
+              assistantMessage.latency_ms = metrics.latency_ms
               if (images.length > 0) assistantMessage.images = images
               return {
                 ...conv,
@@ -260,12 +280,15 @@ export function useStreamCompletion(
               ...conv,
               messages: conv.messages.map((msg, idx) => {
                 if (idx === conv.messages.length - 1 && msg.type === 'assistant') {
+                  const metrics = turnMetrics(conv.modelId)
                   return {
                     ...msg,
                     content: contentStr || msg.content,
                     images: images.length > 0 ? images : msg.images,
                     timestamp: completionTime || msg.timestamp,
-                    output_tokens: outputTokens,
+                    output_tokens: metrics.usageOutputTokens ?? outputTokens,
+                    cost_usd: metrics.cost_usd,
+                    latency_ms: metrics.latency_ms,
                   }
                 }
                 return msg

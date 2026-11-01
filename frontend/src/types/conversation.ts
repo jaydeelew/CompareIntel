@@ -45,6 +45,10 @@ export interface ConversationMessage {
   input_tokens?: number | null
   /** Output tokens for assistant messages (from API) */
   output_tokens?: number | null
+  /** Reported OpenRouter USD cost for this assistant turn, when the stream provided it */
+  cost_usd?: number | null
+  /** Client-measured time from first token request to model done event */
+  latency_ms?: number | null
 }
 
 /**

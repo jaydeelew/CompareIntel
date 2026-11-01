@@ -25,7 +25,13 @@ export type {
 } from './api'
 
 // Comparison types
-export type { ComparisonMetadata, CompareResponse, ResultTab, ActiveResultTabs } from './comparison'
+export type {
+  ComparisonMetadata,
+  CompareResponse,
+  ResultTab,
+  ActiveResultTabs,
+  PerModelUsage,
+} from './comparison'
 
 // Conversation types
 export type {
