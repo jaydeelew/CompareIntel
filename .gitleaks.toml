@@ -24,4 +24,5 @@ regexes = [
   '''YOUR_ADMIN_TOKEN''',                               # Placeholder token in docs
   '''sk-or-v1-abc123\.\.\.''',                         # Truncated OpenRouter API key example
   '''6LeIxAc''',                                        # Google reCAPTCHA official test keys
+  '''423fd187f89f44bdadec92bc373b1829''',              # Cloudflare Web Analytics public beacon token
 ]
