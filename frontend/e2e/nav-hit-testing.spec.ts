@@ -172,10 +172,13 @@ test.describe('Navbar hit-testing above the hero', () => {
     await page.setViewportSize({ width: 1024, height: 720 })
     await openHomeAndRevealNav(page)
     
-    // Scroll to top to ensure navbar and composer are in viewport. Longer hero text
-    // can push content below viewport at this breakpoint.
+    // Scroll to top and wait for layout to stabilize. The longer hero text pushes
+    // the composer below the 720px viewport at 1024px width, but we're testing
+    // navbar buttons which are at the top.
     await page.evaluate(() => window.scrollTo(0, 0))
-    await page.waitForTimeout(100)
+    await page.waitForTimeout(200)
+    // Ensure the page stayed scrolled to top (webkit can auto-scroll to focused elements)
+    await page.evaluate(() => window.scrollTo(0, 0))
     
     await assertNavButtonsAreHitTargets(page)
   })
