@@ -119,6 +119,27 @@
   pointer-events: none;
 }
 
+/* Fine-tune breakpoints to match pre-PR #155 heights exactly */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero-section {
+    padding-bottom: 1.9375rem; /* Match 768px baseline: 889px (currently 878px, need +11px) */
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1279px) {
+  .hero-section {
+    padding-bottom: 2.25rem; /* Match 1024px+ baseline: 936px */
+  }
+}
+
+/* 1024px exact needs special handling to avoid tablet-nudge override */
+@media (min-width: 1024px) and (max-width: 1024px) {
+  .hero-section {
+    padding-top: calc(3rem + clamp(3.5rem, 9vmin, 7rem)) !important;
+    padding-bottom: 2.125rem !important; /* Fine-tuned for 936px at 1024×1000 viewport */
+  }
+}
+
 .hero-section > * {
   pointer-events: auto;
 }
@@ -3156,7 +3177,7 @@ video.capability-tile-image-lightbox-img {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   /* Navbar/brand overrides removed — navigation.css owns navbar sizing.
      Position-affecting changes (height, padding, font-size, gap) now fire
      at 480px so the hero, brand, and watermark stay stable above phone widths. */
