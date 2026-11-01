@@ -57,6 +57,7 @@
   },
   {
     "path": "/privacy-policy",
+    "aliases": ["/privacy"],
     "title": "Privacy Policy - CompareIntel",
     "description": "CompareIntel Privacy Policy: how we collect, use, and protect your data. Learn about our commitment to user privacy and data security.",
     "h1": "Privacy Policy",

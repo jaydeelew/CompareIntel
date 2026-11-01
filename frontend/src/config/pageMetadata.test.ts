@@ -57,6 +57,20 @@ describe('getPageMetadata', () => {
     expect(getPageMetadata('/models/')?.path).toBe('/models')
   })
 
+  it('resolves /privacy to the privacy-policy page', () => {
+    const meta = getPageMetadata('/privacy')
+    expect(meta?.path).toBe('/privacy-policy')
+    expect(meta?.h1).toBe('Privacy Policy')
+    expect(getPageTitle('/privacy')).toBe('Privacy Policy - CompareIntel')
+  })
+
+  it('lists /privacy as an alias of /privacy-policy', () => {
+    const privacy = staticPublicPages.find(page => page.path === '/privacy-policy') as
+      | { aliases?: string[] }
+      | undefined
+    expect(privacy?.aliases).toContain('/privacy')
+  })
+
   it('returns undefined for unknown model slugs', () => {
     expect(getPageMetadata('/models/not-a-real-model')).toBeUndefined()
     expect(getPageTitle('/models/not-a-real-model')).toBe('CompareIntel')
