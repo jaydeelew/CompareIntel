@@ -33,6 +33,10 @@ if (sidePanelExposed) {
   fail('production manifest must not expose the side panel via web_accessible_resources')
 }
 
+if (Object.hasOwn(manifest, 'key') || manifest.key) {
+  fail('production manifest must not include key (Chrome Web Store rejects uploads that contain it)')
+}
+
 const allUrlsContentScript = (manifest.content_scripts ?? []).some((entry) =>
   (entry.matches ?? []).includes('<all_urls>'),
 )
@@ -50,5 +54,5 @@ if (
 }
 
 console.log(
-  `[compareintel] production manifest ok (version ${manifest.version}, no localhost, side panel not web-accessible, no <all_urls> content scripts, extension_pages CSP)`,
+  `[compareintel] production manifest ok (version ${manifest.version}, no localhost, no key, side panel not web-accessible, no <all_urls> content scripts, extension_pages CSP)`,
 )
