@@ -2072,11 +2072,7 @@ video.capability-tile-image-lightbox-img {
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
   line-height: 1.5;
-}
-
-.hero-pricing-free,
-.hero-pricing-paid {
-  font-weight: 500;
+  color: rgba(0, 0, 0, 0.75); /* Light mode default */
 }
 
 /* Dark mode - ensure WCAG AA contrast (4.5:1) against dark background */
@@ -2084,9 +2080,9 @@ video.capability-tile-image-lightbox-img {
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* Light mode - ensure WCAG AA contrast (4.5:1) against light background */
-:root[data-theme='light'] .hero-pricing-line {
-  color: rgba(0, 0, 0, 0.75);
+.hero-pricing-free,
+.hero-pricing-paid {
+  font-weight: 500;
 }
 
 .hero-pricing-separator {
