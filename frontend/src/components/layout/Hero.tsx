@@ -497,14 +497,14 @@ export function Hero({
           </div>
 
           <h1 className="hero-title">
-            <span className="sr-only">Choose the right AI model with evidence, not guesswork</span>
+            <span className="sr-only">Compare AI Language and Image Models Side by Side</span>
             <span aria-hidden="true">
-              <span className="hero-title-first-line">Choose the right AI model</span>{' '}
-              <span className="hero-title-second-line">with evidence, not guesswork</span>
+              <span className="hero-title-first-line">Compare AI Models</span>{' '}
+              <span className="hero-title-second-line">Side by Side</span>
             </span>
           </h1>
           <p className="hero-subtitle">
-            CompareIntel — built for humans to find the best AI models for their needs.
+            Built for humans to find the best AI models for their needs.
           </p>
 
           <div className="hero-capabilities-wrap">

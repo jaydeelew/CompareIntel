@@ -6,6 +6,7 @@
 
 import { fireEvent, render, screen } from '@testing-library/react'
 import React, { createRef } from 'react'
+import { BrowserRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createModelId } from '../../../types'
@@ -45,7 +46,6 @@ vi.mock('../FileUpload', () => ({
 vi.mock('../HistoryDropdown', () => ({ HistoryDropdown: () => null }))
 vi.mock('../SavedSelectionsDropdown', () => ({ SavedSelectionsDropdown: () => null }))
 vi.mock('../TokenUsageDisplay', () => ({ TokenUsageDisplay: () => null }))
-vi.mock('../../layout/PricingTeaser', () => ({ PricingTeaser: () => null }))
 
 vi.mock('../../../hooks', async importOriginal => {
   const actual = await importOriginal<typeof import('../../../hooks')>()
@@ -117,7 +117,11 @@ function renderComparisonForm(overrides: Partial<ComparisonFormProps> = {}) {
     },
     ...overrides,
   }
-  const view = render(<ComparisonForm {...props} />)
+  const view = render(
+    <BrowserRouter>
+      <ComparisonForm {...props} />
+    </BrowserRouter>
+  )
   return { textareaRef, ...view, props }
 }
 

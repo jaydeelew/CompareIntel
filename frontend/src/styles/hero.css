@@ -80,7 +80,7 @@
 }
 
 .hero-section {
-  padding: 3rem 1.5rem 4rem;
+  padding: 3rem 1.5rem 2.5rem; /* Reduced bottom padding from 4rem to 2.5rem to accommodate pricing line */
   margin: 0;
   margin-top: 0 !important;
   text-align: center;
@@ -117,6 +117,27 @@
      direct children. Composer-focused mode then disables .hero-content and
      re-enables only the controls that must stay live. */
   pointer-events: none;
+}
+
+/* Fine-tune breakpoints to match pre-PR #155 heights exactly */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero-section {
+    padding-bottom: 1.9375rem; /* Match 768px baseline: 889px (currently 878px, need +11px) */
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1279px) {
+  .hero-section {
+    padding-bottom: 2.25rem; /* Match 1024px+ baseline: 936px */
+  }
+}
+
+/* 1024px exact needs special handling to avoid tablet-nudge override */
+@media (min-width: 1024px) and (max-width: 1024px) {
+  .hero-section {
+    padding-top: calc(3rem + clamp(3.5rem, 9vmin, 7rem)) !important;
+    padding-bottom: 2.125rem !important; /* Fine-tuned for 936px at 1024×1000 viewport */
+  }
 }
 
 .hero-section > * {
@@ -2065,6 +2086,48 @@ video.capability-tile-image-lightbox-img {
   color: #e0f2fe;
 }
 
+/* Hero pricing line - shown below CTA for unauthenticated users */
+.hero-pricing-line {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 2.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.75); /* Light mode default */
+}
+
+/* Dark mode - ensure WCAG AA contrast (4.5:1) against dark background */
+:root[data-theme='dark'] .hero-pricing-line {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hero-pricing-free,
+.hero-pricing-paid {
+  font-weight: 500;
+}
+
+.hero-pricing-separator {
+  opacity: 0.6;
+}
+
+.hero-pricing-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.hero-pricing-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .hero-pricing-line {
+    font-size: 0.8125rem;
+  }
+}
+
 /* Credits remaining – wrapper, link, and info trigger */
 .credits-remaining-wrapper {
   display: inline-flex;
@@ -3114,7 +3177,7 @@ video.capability-tile-image-lightbox-img {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   /* Navbar/brand overrides removed — navigation.css owns navbar sizing.
      Position-affecting changes (height, padding, font-size, gap) now fire
      at 480px so the hero, brand, and watermark stay stable above phone widths. */

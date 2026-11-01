@@ -1,9 +1,9 @@
 [
   {
     "path": "/",
-    "title": "CompareIntel - Choose the Right AI Model | Evidence-Based Comparison",
-    "description": "Choose the right AI model with evidence, not guesswork. Compare language and image models from OpenAI, Anthropic, Google, Meta, xAI side-by-side. Free tier available.",
-    "h1": "Choose the right AI model with evidence, not guesswork",
+    "title": "CompareIntel - Compare AI & Image Models Side-by-Side | Free",
+    "description": "Built for humans to find the best AI models for their needs. Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, FLUX, DALL-E from OpenAI, Anthropic, Google, Meta, xAI. Free tier.",
+    "h1": "Compare AI Language and Image Models Side by Side",
     "priority": 1.0,
     "changefreq": "weekly"
   },

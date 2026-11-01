@@ -147,6 +147,27 @@
   opacity: 0.9;
 }
 
+.pricing-tier-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pricing-error {
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  padding: 1rem 1.5rem;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 8px;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.pricing-error p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 .pricing-notes {
   max-width: 800px;
   margin: 0 auto;
