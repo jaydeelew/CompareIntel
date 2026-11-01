@@ -1,9 +1,9 @@
 [
   {
     "path": "/",
-    "title": "CompareIntel - Compare AI & Image Models Side-by-Side | Free",
-    "description": "Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, FLUX, DALL-E from OpenAI, Anthropic, Google, Meta, xAI. Image generation comparison included. Free tier.",
-    "h1": "Compare AI Language and Image Models Side by Side",
+    "title": "CompareIntel - Choose the Right AI Model | Evidence-Based Comparison",
+    "description": "Choose the right AI model with evidence, not guesswork. Compare language and image models from OpenAI, Anthropic, Google, Meta, xAI side-by-side. Free tier available.",
+    "h1": "Choose the right AI model with evidence, not guesswork",
     "priority": 1.0,
     "changefreq": "weekly"
   },
@@ -37,6 +37,14 @@
     "description": "Frequently asked questions about CompareIntel: supported AI models, pricing, credits, image generation, data privacy, and how to get started.",
     "h1": "Frequently Asked Questions",
     "priority": 0.7,
+    "changefreq": "monthly"
+  },
+  {
+    "path": "/pricing",
+    "title": "Pricing - CompareIntel",
+    "description": "Compare AI model pricing plans: Free tier with daily credits, and paid plans starting at $9/month with monthly credit allocations and metered overage.",
+    "h1": "Pricing Plans",
+    "priority": 0.9,
     "changefreq": "monthly"
   },
   {

@@ -73,6 +73,11 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
   // Descendants must remain hittable (pointer-events is not inherited).
   const composer = page.getByTestId('comparison-input-textarea')
   await expect(composer).toBeVisible({ timeout: 20000 })
+  
+  // Scroll composer into view for hit-test check (longer hero text can push it below viewport)
+  await composer.scrollIntoViewIfNeeded()
+  await page.waitForTimeout(100)
+  
   const composerHit = await composer.evaluate((el: HTMLElement) => {
     const rect = el.getBoundingClientRect()
     const top = document.elementFromPoint(
@@ -85,6 +90,10 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
     }
   })
   expect(composerHit.inComposer, `composer not hittable: ${JSON.stringify(composerHit)}`).toBe(true)
+  
+  // Scroll back to top for navbar button checks
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.waitForTimeout(100)
 
   const testIds = ['nav-sign-up-button', 'nav-sign-in-button']
   const themeToggle = page.getByTestId('theme-toggle')
@@ -171,6 +180,15 @@ test.describe('Navbar hit-testing above the hero', () => {
 
     await page.setViewportSize({ width: 1024, height: 720 })
     await openHomeAndRevealNav(page)
+    
+    // Scroll to top and wait for layout to stabilize. The longer hero text pushes
+    // the composer below the 720px viewport at 1024px width, but we're testing
+    // navbar buttons which are at the top.
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.waitForTimeout(200)
+    // Ensure the page stayed scrolled to top (webkit can auto-scroll to focused elements)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    
     await assertNavButtonsAreHitTargets(page)
   })
 })

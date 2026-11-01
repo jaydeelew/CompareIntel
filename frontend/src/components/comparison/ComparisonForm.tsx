@@ -18,6 +18,7 @@ import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { getFirstFileFromClipboard } from '../../utils/clipboardFiles'
 import { showNotification } from '../../utils/error'
+import { PricingTeaser } from '../layout/PricingTeaser'
 import { StyledTooltip } from '../shared'
 
 import { ActionButtonTooltipModal, type ComposerTooltipButtonId } from './ActionButtonTooltipModal'
@@ -1224,6 +1225,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         {isFollowUpMode && conversations.length > 0 && (
           <ContextWarning tokenUsageInfo={tokenUsageInfo} renderUsagePreview={renderUsagePreview} />
         )}
+        {!isFollowUpMode && !isAuthenticated && <PricingTeaser />}
       </>
     )
 
