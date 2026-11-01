@@ -32,6 +32,15 @@
   text-decoration: underline;
 }
 
+/* Hide on webkit-specific tablet width (769-1024px) where hero pull-up
+   can cause hit-testing issues. The teaser is supplementary messaging that
+   can be safely hidden at this breakpoint. */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pricing-teaser {
+    display: none;
+  }
+}
+
 @media (max-width: 480px) {
   .pricing-teaser-text {
     font-size: 0.85rem;
