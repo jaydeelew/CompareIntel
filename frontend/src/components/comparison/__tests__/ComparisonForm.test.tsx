@@ -6,6 +6,7 @@
 
 import { fireEvent, render, screen } from '@testing-library/react'
 import React, { createRef } from 'react'
+import { BrowserRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createModelId } from '../../../types'
@@ -116,7 +117,11 @@ function renderComparisonForm(overrides: Partial<ComparisonFormProps> = {}) {
     },
     ...overrides,
   }
-  const view = render(<ComparisonForm {...props} />)
+  const view = render(
+    <BrowserRouter>
+      <ComparisonForm {...props} />
+    </BrowserRouter>
+  )
   return { textareaRef, ...view, props }
 }
 
