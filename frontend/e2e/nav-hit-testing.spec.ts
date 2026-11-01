@@ -75,13 +75,21 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
   await expect(composer).toBeVisible({ timeout: 20000 })
   const composerHit = await composer.evaluate((el: HTMLElement) => {
     const rect = el.getBoundingClientRect()
-    const top = document.elementFromPoint(
-      rect.left + Math.min(24, rect.width / 2),
-      rect.top + Math.min(16, rect.height / 2)
-    )
+    const x = rect.left + Math.min(24, rect.width / 2)
+    const y = rect.top + Math.min(16, rect.height / 2)
+    const top = document.elementFromPoint(x, y)
     return {
       inComposer: !!(top && (top === el || el.contains(top) || top.closest('.hero-input-section'))),
       className: top instanceof HTMLElement ? top.className : '',
+      tagName: top?.tagName ?? '',
+      id: top instanceof HTMLElement ? top.id : '',
+      testId: top instanceof HTMLElement ? (top.dataset.testid ?? '') : '',
+      x,
+      y,
+      rectTop: rect.top,
+      rectLeft: rect.left,
+      rectWidth: rect.width,
+      rectHeight: rect.height,
     }
   })
   expect(composerHit.inComposer, `composer not hittable: ${JSON.stringify(composerHit)}`).toBe(true)
