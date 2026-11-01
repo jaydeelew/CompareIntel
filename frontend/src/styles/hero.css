@@ -2089,16 +2089,16 @@ video.capability-tile-image-lightbox-img {
 /* Hero pricing line - shown below CTA for unauthenticated users */
 .hero-pricing-line {
   text-align: center;
-  margin-top: 0;
-  margin-bottom: 2.5rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: rgba(0, 0, 0, 0.75); /* Light mode default */
+  margin-top: 0.625rem; /* Spacing below credits line */
+  margin-bottom: 1.5rem; /* Compensate for removed spacing to maintain hero height */
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.95); /* White text for readability on blue gradient */
 }
 
-/* Dark mode - ensure WCAG AA contrast (4.5:1) against dark background */
+/* Dark mode - keep white text (same as light for hero blue background) */
 :root[data-theme='dark'] .hero-pricing-line {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .hero-pricing-free,
@@ -2107,19 +2107,26 @@ video.capability-tile-image-lightbox-img {
 }
 
 .hero-pricing-separator {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .hero-pricing-link {
-  color: var(--primary-color);
-  text-decoration: none;
+  color: rgba(255, 255, 255, 0.95); /* White link on blue gradient */
+  text-decoration: underline; /* Always underlined for clarity */
   font-weight: 500;
   transition: opacity 0.2s ease;
 }
 
 .hero-pricing-link:hover {
-  opacity: 0.8;
-  text-decoration: underline;
+  opacity: 0.85;
+}
+
+@media (max-width: 480px) {
+  .hero-pricing-line {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
 }
 
 @media (max-width: 480px) {
