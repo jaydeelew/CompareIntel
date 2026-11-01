@@ -79,13 +79,13 @@ export async function openPanelForTab(tabId: number): Promise<void> {
 export async function openUrlWithoutSidePanel(
   url: string,
   windowId?: number
-): Promise<void> {
+): Promise<number | undefined> {
   const tab = await browser.tabs.create({
     url,
     active: false,
     ...(windowId != null ? { windowId } : {}),
   })
-  if (tab.id == null) return
+  if (tab.id == null) return undefined
 
   tabsWithoutPanel.add(tab.id)
   await setSidePanelEnabledForTab(tab.id, false)
@@ -94,6 +94,7 @@ export async function openUrlWithoutSidePanel(
     tabId: tab.id,
     windowId: tab.windowId ?? windowId,
   })
+  return tab.id
 }
 
 export async function handleTabActivated(tabId: number, windowId: number): Promise<void> {

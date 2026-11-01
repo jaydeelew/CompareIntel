@@ -7,6 +7,7 @@ import {
 } from '@compareintel/core'
 
 import { addExtensionMessageListener, sendExtensionMessage } from '../shared/extensionRuntime'
+import { stripHandoffSecrets } from '../shared/handoff'
 
 function postToPage(message: CiPageMessage): void {
   window.postMessage(message, window.location.origin)
@@ -21,11 +22,17 @@ window.addEventListener('message', (event) => {
   if (type === CI_PAGE_MESSAGE.HANDOFF_REQUEST) {
     void sendExtensionMessage({ type: 'GET_HANDOFF' })
       .then((response) => {
-        const handoffResponse = response as { type?: string; payload?: ExtensionHandoffPayload | null }
+        const handoffResponse = response as {
+          type?: string
+          payload?: ExtensionHandoffPayload | null
+        }
+        const payload = handoffResponse?.payload
+          ? stripHandoffSecrets(handoffResponse.payload)
+          : null
         postToPage({
           source: CI_BRIDGE_SOURCE,
           type: CI_PAGE_MESSAGE.HANDOFF_RESPONSE,
-          payload: handoffResponse?.payload ?? null,
+          payload,
         })
       })
     return

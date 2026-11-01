@@ -33,6 +33,22 @@ if (sidePanelExposed) {
   fail('production manifest must not expose the side panel via web_accessible_resources')
 }
 
+const allUrlsContentScript = (manifest.content_scripts ?? []).some((entry) =>
+  (entry.matches ?? []).includes('<all_urls>'),
+)
+if (allUrlsContentScript) {
+  fail('production manifest must not register content scripts on <all_urls>')
+}
+
+const extensionPagesCsp = manifest.content_security_policy?.extension_pages
+if (
+  typeof extensionPagesCsp !== 'string' ||
+  !extensionPagesCsp.includes("script-src 'self'") ||
+  !extensionPagesCsp.includes("object-src 'none'")
+) {
+  fail("production manifest must set content_security_policy.extension_pages to script-src 'self'; object-src 'none'")
+}
+
 console.log(
-  `[compareintel] production manifest ok (version ${manifest.version}, no localhost, side panel not web-accessible)`,
+  `[compareintel] production manifest ok (version ${manifest.version}, no localhost, side panel not web-accessible, no <all_urls> content scripts, extension_pages CSP)`,
 )

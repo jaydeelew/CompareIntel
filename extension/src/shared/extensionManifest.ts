@@ -21,10 +21,26 @@ export const DEV_HOST_PERMISSIONS = [
   'http://localhost:5173/*',
 ] as const
 
+/** Chrome production API permissions. `tabs` and optional all-http hosts are intentionally omitted. */
+export const CHROME_PERMISSIONS = ['sidePanel', 'storage', 'scripting', 'activeTab'] as const
+
+export const EXTENSION_PAGES_CSP = "script-src 'self'; object-src 'none'"
+
+/** Firefox has sidebar_action instead of sidePanel. */
+export const FIREFOX_PERMISSIONS = ['storage', 'scripting', 'activeTab'] as const
+
 export type ManifestBuildEnv = Pick<ConfigEnv, 'mode' | 'command'>
 
 export function isExtensionDevBuild(env: ManifestBuildEnv): boolean {
   return env.mode === 'development' || env.command === 'serve' || process.argv.includes('--watch')
+}
+
+function webAppBridgeContentScript(webAppMatches: string[]) {
+  return {
+    matches: webAppMatches,
+    js: ['src/content/webAppBridge.ts'],
+    run_at: 'document_idle' as const,
+  }
 }
 
 export function createChromeManifest(env: ManifestBuildEnv) {
@@ -37,7 +53,7 @@ export function createChromeManifest(env: ManifestBuildEnv) {
     name: 'CompareIntel',
     version: EXTENSION_VERSION,
     description:
-      'Compare AI model responses side-by-side. Page context is optional and can come from any open tab, not just the active one.',
+      'Compare AI model responses side-by-side. Page context is optional and is read only after you open CompareIntel or submit a comparison.',
     icons: {
       '16': 'public/icons/icon-16.png',
       '32': 'public/icons/icon-32.png',
@@ -58,21 +74,12 @@ export function createChromeManifest(env: ManifestBuildEnv) {
       service_worker: 'src/background/index.ts',
       type: 'module',
     },
-    content_scripts: [
-      {
-        matches: ['<all_urls>'],
-        js: ['src/content/selection.ts'],
-        run_at: 'document_idle',
-      },
-      {
-        matches: webAppMatches,
-        js: ['src/content/webAppBridge.ts'],
-        run_at: 'document_idle',
-      },
-    ],
-    permissions: ['sidePanel', 'storage', 'scripting', 'tabs', 'activeTab'],
+    content_scripts: [webAppBridgeContentScript(webAppMatches)],
+    content_security_policy: {
+      extension_pages: EXTENSION_PAGES_CSP,
+    },
+    permissions: [...CHROME_PERMISSIONS],
     host_permissions: hostPermissions,
-    optional_host_permissions: ['https://*/*', 'http://*/*'],
     externally_connectable: {
       matches: webAppMatches,
     },
@@ -87,7 +94,7 @@ export function createFirefoxManifest(env: ManifestBuildEnv) {
     name: 'CompareIntel',
     version: EXTENSION_VERSION,
     description:
-      'Compare AI model responses side-by-side. Page context is optional and can come from any open tab, not just the active one.',
+      'Compare AI model responses side-by-side. Page context is optional and is read only after you open CompareIntel or submit a comparison.',
     browser_specific_settings: {
       gecko: {
         id: 'compareintel@compareintel.com',
@@ -116,17 +123,12 @@ export function createFirefoxManifest(env: ManifestBuildEnv) {
       scripts: ['src/background/index.ts'],
       type: 'module',
     },
-    content_scripts: [
-      {
-        matches: ['<all_urls>'],
-        js: ['src/content/selection.ts'],
-        run_at: 'document_idle',
-      },
-    ],
-    permissions: ['storage', 'scripting', 'tabs', 'activeTab'],
+    content_security_policy: {
+      extension_pages: EXTENSION_PAGES_CSP,
+    },
+    permissions: [...FIREFOX_PERMISSIONS],
     host_permissions: isDev
       ? ['https://compareintel.com/*', 'http://localhost:8000/*']
       : ['https://compareintel.com/*'],
-    optional_host_permissions: ['<all_urls>'],
   }
 }
