@@ -80,7 +80,7 @@
 }
 
 .hero-section {
-  padding: 3rem 1.5rem 4rem;
+  padding: 3rem 1.5rem 2.5rem;  /* Reduced bottom padding from 4rem to 2.5rem to accommodate pricing line */
   margin: 0;
   margin-top: 0 !important;
   text-align: center;
@@ -2068,8 +2068,8 @@ video.capability-tile-image-lightbox-img {
 /* Hero pricing line - shown below CTA for unauthenticated users */
 .hero-pricing-line {
   text-align: center;
-  margin-top: -1.5rem;
-  margin-bottom: 0.5rem;
+  margin-top: 0;
+  margin-bottom: 2.5rem;
   font-size: 0.875rem;
   line-height: 1.5;
   color: rgba(0, 0, 0, 0.75); /* Light mode default */
