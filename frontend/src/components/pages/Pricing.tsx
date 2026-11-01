@@ -113,9 +113,7 @@ export function Pricing() {
               </div>
 
               <div className="pricing-tier-price">
-                <span className="pricing-tier-price-amount">
-                  ${tier.price}
-                </span>
+                <span className="pricing-tier-price-amount">${tier.price}</span>
                 <span className="pricing-tier-price-period">/{tier.period}</span>
               </div>
 

@@ -497,9 +497,7 @@ export function Hero({
           </div>
 
           <h1 className="hero-title">
-            <span className="sr-only">
-              Choose the right AI model with evidence, not guesswork
-            </span>
+            <span className="sr-only">Choose the right AI model with evidence, not guesswork</span>
             <span aria-hidden="true">
               <span className="hero-title-first-line">Choose the right AI model</span>{' '}
               <span className="hero-title-second-line">with evidence, not guesswork</span>
