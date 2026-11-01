@@ -37,9 +37,7 @@ export function Pricing() {
         window.location.href = url
       } catch (error) {
         const msg =
-          error instanceof Error
-            ? error.message
-            : 'Checkout could not start. Please try again.'
+          error instanceof Error ? error.message : 'Checkout could not start. Please try again.'
         setSubscribeError(msg)
         setSubscribingTier(null)
       }

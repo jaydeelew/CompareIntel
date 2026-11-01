@@ -1228,11 +1228,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         {!isFollowUpMode && !isAuthenticated && (
           <div className="hero-pricing-line">
             <span className="hero-pricing-free">
-              {DAILY_CREDIT_LIMITS.unregistered} free credits/day, {DAILY_CREDIT_LIMITS.free} with a free account
+              {DAILY_CREDIT_LIMITS.unregistered} free credits/day, {DAILY_CREDIT_LIMITS.free} with a
+              free account
             </span>
             <span className="hero-pricing-separator"> • </span>
             <span className="hero-pricing-paid">
-              Paid plans from ${Math.min(...Object.entries(TIER_PRICING).filter(([tier]) => tier !== 'free' && tier !== 'unregistered').map(([, price]) => price))}/month
+              Paid plans from $
+              {Math.min(
+                ...Object.entries(TIER_PRICING)
+                  .filter(([tier]) => tier !== 'free' && tier !== 'unregistered')
+                  .map(([, price]) => price)
+              )}
+              /month
             </span>
             <span className="hero-pricing-separator"> • </span>
             <Link to="/pricing" className="hero-pricing-link">
