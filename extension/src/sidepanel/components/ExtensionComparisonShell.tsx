@@ -287,6 +287,11 @@ export function ExtensionComparisonShell({
     if (activeRes.type === 'ACTIVE_TAB' && activeRes.tab) {
       tabUrlById.set(activeRes.tab.tabId, activeRes.tab.url)
     }
+    for (const context of pageContexts) {
+      if (context.tabId == null) continue
+      tabUrlById.set(context.tabId, context.url)
+      if (context.source === 'pinned') tabIds.add(context.tabId)
+    }
     const listRes = await sendTabContextMessage({ type: 'LIST_TABS', allWindows: true })
     if (listRes.type === 'TABS_LIST') {
       for (const tab of listRes.tabs) {

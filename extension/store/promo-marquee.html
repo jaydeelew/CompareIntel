@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1400px;
+        height: 560px;
+        overflow: hidden;
+        background: #0b1220;
+        color: #f1f5f9;
+        font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+      }
+      .tile {
+        position: relative;
+        width: 1400px;
+        height: 560px;
+        box-sizing: border-box;
+        padding: 64px 64px 64px 80px;
+        border-left: 16px solid #0171fe;
+        background:
+          radial-gradient(circle at 92% -10%, rgba(1, 113, 254, 0.16), transparent 32%),
+          radial-gradient(circle at 8% 110%, rgba(1, 68, 152, 0.18), transparent 28%),
+          #0b1220;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 28px;
+      }
+      .brand img {
+        width: 88px;
+        height: 88px;
+      }
+      .brand h1 {
+        margin: 0;
+        font-size: 48px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+      .tagline {
+        margin: 0;
+        font-size: 36px;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+      .sub {
+        margin: 14px 0 36px;
+        font-size: 20px;
+        color: #94a3b8;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+      }
+      .col {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 16px;
+        overflow: hidden;
+        min-height: 196px;
+      }
+      .col header {
+        background: #0171fe;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        padding: 12px 18px;
+      }
+      .col:nth-child(2) header {
+        background: #014498;
+      }
+      .col:nth-child(3) header {
+        background: #2563eb;
+      }
+      .line {
+        height: 10px;
+        margin: 18px 18px 0;
+        border-radius: 5px;
+        background: #64748b;
+      }
+      .line.short {
+        width: 62%;
+        background: #475569;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tile">
+      <div class="brand">
+        <img src="{{LOGO}}" alt="" />
+        <h1>CompareIntel</h1>
+      </div>
+      <p class="tagline">Compare AI models side by side</p>
+      <p class="sub">One prompt. Several answers. Right next to the page.</p>
+      <div class="cols">
+        <article class="col">
+          <header>Model A</header>
+          <div class="line"></div>
+          <div class="line short"></div>
+          <div class="line"></div>
+          <div class="line short"></div>
+        </article>
+        <article class="col">
+          <header>Model B</header>
+          <div class="line short"></div>
+          <div class="line"></div>
+          <div class="line short"></div>
+          <div class="line"></div>
+        </article>
+        <article class="col">
+          <header>Model C</header>
+          <div class="line"></div>
+          <div class="line short"></div>
+          <div class="line"></div>
+          <div class="line short"></div>
+        </article>
+      </div>
+    </div>
+  </body>
+</html>
