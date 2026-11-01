@@ -136,7 +136,7 @@ pydantic-core==2.50.1
     # via
     #   -r requirements.in
     #   pydantic
-pydantic-settings==2.16.1
+pydantic-settings==2.16.2
     # via
     #   -r requirements.in
     #   fastapi-mail
@@ -183,7 +183,7 @@ starlette==1.10.0
     #   -r requirements.in
     #   fastapi
     #   fastapi-mail
-stripe==15.0.0
+stripe==15.6.2
     # via -r requirements.in
 tiktoken==0.14.0
     # via -r requirements.in
