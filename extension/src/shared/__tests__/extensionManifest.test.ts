@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CHROME_PERMISSIONS,
+  CHROME_STORE_EXTENSION_ID,
+  CHROME_STORE_PUBLIC_KEY,
   EXTENSION_PAGES_CSP,
   EXTENSION_VERSION,
   FIREFOX_PERMISSIONS,
+  chromeExtensionIdFromPublicKey,
   createChromeManifest,
   createFirefoxManifest,
   isExtensionDevBuild,
@@ -42,6 +45,7 @@ describe('extensionManifest', () => {
     expect(prod.content_scripts[0]?.matches).toEqual(['https://compareintel.com/*'])
     expect(prod.content_scripts[0]?.js).toEqual(['src/content/webAppBridge.ts'])
     expect(prod).not.toHaveProperty('web_accessible_resources')
+    expect(prod).not.toHaveProperty('key')
 
     const dev = createChromeManifest({ mode: 'development', command: 'serve' })
     expect(dev.host_permissions).toEqual(
@@ -54,6 +58,18 @@ describe('extensionManifest', () => {
     )
     expect(dev.content_scripts[0]?.matches).toContain('http://localhost:5173/*')
     expect(dev.externally_connectable.matches).toContain('http://localhost:5173/*')
+    expect(dev.key).toBe(CHROME_STORE_PUBLIC_KEY)
+  })
+
+  it('maps the Chrome Web Store public key to the draft item ID', () => {
+    expect(chromeExtensionIdFromPublicKey(CHROME_STORE_PUBLIC_KEY)).toBe(CHROME_STORE_EXTENSION_ID)
+  })
+
+  it('never adds the Chrome public key to Firefox manifests', () => {
+    const prod = createFirefoxManifest({ mode: 'production', command: 'build' })
+    const dev = createFirefoxManifest({ mode: 'development', command: 'serve' })
+    expect(prod).not.toHaveProperty('key')
+    expect(dev).not.toHaveProperty('key')
   })
 
   it('does not register an <all_urls> selection content script', () => {
