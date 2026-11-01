@@ -171,6 +171,12 @@ test.describe('Navbar hit-testing above the hero', () => {
 
     await page.setViewportSize({ width: 1024, height: 720 })
     await openHomeAndRevealNav(page)
+    
+    // Wait for layout to settle after viewport resize, especially on webkit where
+    // reflow can take longer (pricing teaser and other dynamic content)
+    await page.waitForTimeout(300)
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => resolve(undefined))))
+    
     await assertNavButtonsAreHitTargets(page)
   })
 })
