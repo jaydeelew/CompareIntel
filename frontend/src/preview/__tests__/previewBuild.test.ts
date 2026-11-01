@@ -98,6 +98,9 @@ describe('headersHaveNoIndex / analytics leak detector', () => {
     expect(distTextHasAnalyticsOrProdSecrets('hostname==="api.stripe.com"')).toBe(false)
     expect(distTextHasAnalyticsOrProdSecrets('https://o1.ingest.us.sentry.io/123')).toBe(true)
     expect(distTextHasAnalyticsOrProdSecrets('https://compareintel.com/api/models')).toBe(true)
+    expect(
+      distTextHasAnalyticsOrProdSecrets('https://static.cloudflareinsights.com/beacon.min.js')
+    ).toBe(true)
     expect(distTextHasAnalyticsOrProdSecrets('const api="/preview-api"')).toBe(false)
   })
 })
@@ -127,8 +130,12 @@ describe('previewDeployPlugin closeBundle', () => {
         ? htmlHook.handler
         : htmlHook
     expect(typeof transform).toBe('function')
-    const transformed = (transform as (html: string) => string)(SAMPLE_INDEX)
+    const transformed = (transform as (html: string) => string)(
+      `${SAMPLE_INDEX}\n<!--cf-beacon-start--><script id="cf-beacon-loader">var token='%VITE_CF_BEACON_TOKEN%';document.write('https://static.cloudflareinsights.com/beacon.min.js')</script><!--cf-beacon-end-->`
+    )
     expect(htmlHasNoIndex(transformed)).toBe(true)
+    expect(transformed).not.toContain('cf-beacon-loader')
+    expect(transformed).not.toContain('beacon.min.js')
 
     const resolved = plugin.configResolved
     const close = plugin.closeBundle

@@ -47,6 +47,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_VERSION?: string
   readonly VITE_PERFORMANCE_ENDPOINT?: string
   readonly VITE_EXTENSION_ID?: string
+  readonly VITE_CF_BEACON_TOKEN?: string
   readonly CF_PAGES?: string
   readonly CF_PAGES_BRANCH?: string
   readonly CF_PAGES_COMMIT_SHA?: string

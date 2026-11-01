@@ -94,12 +94,14 @@ describe('applyPreviewDeployEnv', () => {
       VITE_SENTRY_DSN: 'https://abc@o1.ingest.us.sentry.io/1',
       VITE_PERFORMANCE_ENDPOINT: 'https://compareintel.com/api/performance',
       VITE_RECAPTCHA_SITE_KEY: 'prod-site-key',
+      VITE_CF_BEACON_TOKEN: '423fd187f89f44bdadec92bc373b1829',
     }
     expect(applyPreviewDeployEnv(env)).toBe(true)
     expect(env.VITE_API_URL).toBe(PREVIEW_API_BASE_URL)
     expect(env.VITE_SENTRY_DSN).toBe('')
     expect(env.VITE_PERFORMANCE_ENDPOINT).toBe('')
     expect(env.VITE_RECAPTCHA_SITE_KEY).toBe('')
+    expect(env.VITE_CF_BEACON_TOKEN).toBe('')
   })
 
   it('does not mutate production env', () => {

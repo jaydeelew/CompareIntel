@@ -14,6 +14,8 @@ const REPO_ROOT = path.resolve(__dirname, '..')
 const NGINX_PATH = path.join(REPO_ROOT, 'nginx/nginx.ssl.conf')
 const HTML_PATH = path.join(REPO_ROOT, 'frontend/index.html')
 const SENTRY_CONNECT_SRC = 'https://*.ingest.us.sentry.io'
+const CF_BEACON_SCRIPT_SRC = 'https://static.cloudflareinsights.com'
+const CF_BEACON_CONNECT_SRC = 'https://cloudflareinsights.com'
 
 function extractNginxCsp(content) {
   const match = content.match(/add_header\s+Content-Security-Policy\s+"([^"]+)"/)
@@ -56,6 +58,16 @@ function connectSrc(policy) {
   return directive
 }
 
+function scriptSrc(policy) {
+  const directive = directives(policy).find(part =>
+    part.toLowerCase().startsWith('script-src')
+  )
+  if (!directive) {
+    throw new Error('CSP is missing script-src')
+  }
+  return directive
+}
+
 function checkCspSync({ nginxContent, htmlContent } = {}) {
   const nginxCsp = extractNginxCsp(nginxContent ?? fs.readFileSync(NGINX_PATH, 'utf8'))
   const htmlCsp = extractMetaCsp(htmlContent ?? fs.readFileSync(HTML_PATH, 'utf8'))
@@ -81,6 +93,20 @@ function checkCspSync({ nginxContent, htmlContent } = {}) {
         `connect-src: ${connect}`
     )
   }
+  if (!connect.split(/\s+/).includes(CF_BEACON_CONNECT_SRC)) {
+    throw new Error(
+      `connect-src must allow ${CF_BEACON_CONNECT_SRC} so Cloudflare Web Analytics is not blocked.\n` +
+        `connect-src: ${connect}`
+    )
+  }
+
+  const script = scriptSrc(nginxCsp)
+  if (!script.split(/\s+/).includes(CF_BEACON_SCRIPT_SRC)) {
+    throw new Error(
+      `script-src must allow ${CF_BEACON_SCRIPT_SRC} so the Cloudflare beacon can load.\n` +
+        `script-src: ${script}`
+    )
+  }
 
   return { nginxCsp, htmlCsp, comparable: nginxComparable }
 }
@@ -89,7 +115,7 @@ if (require.main === module) {
   try {
     checkCspSync()
     console.log(
-      `CSP in sync (nginx ↔ index.html) and connect-src includes ${SENTRY_CONNECT_SRC}`
+      `CSP in sync (nginx ↔ index.html); connect-src includes ${SENTRY_CONNECT_SRC} and ${CF_BEACON_CONNECT_SRC}`
     )
   } catch (error) {
     console.error(`❌ ${error.message}`)
@@ -99,6 +125,8 @@ if (require.main === module) {
 
 module.exports = {
   SENTRY_CONNECT_SRC,
+  CF_BEACON_SCRIPT_SRC,
+  CF_BEACON_CONNECT_SRC,
   extractNginxCsp,
   extractMetaCsp,
   withoutFrameAncestors,
