@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
+from .cors import CORS_EXPOSE_HEADERS, get_cors_allow_origins
 from .model_runner import (
     preload_model_token_limits,
 )
@@ -199,49 +200,21 @@ app = FastAPI(
 )
 
 
-# Add CORS middleware BEFORE including routers
-# For development, allow all localhost origins
-if os.environ.get("ENVIRONMENT") == "development":
-    allowed_origins = ["*"]  # Allow all origins in development
-else:
-    allowed_origins = [
-        # Production domains
-        "https://compareintel.com",  # Main production domain (HTTPS)
-        "https://www.compareintel.com",  # www subdomain (HTTPS)
-        "http://compareintel.com",  # HTTP (redirects to HTTPS)
-        "http://www.compareintel.com",  # HTTP www (redirects to HTTPS)
-        "http://54.163.207.252",  # Server IP (legacy)
-        # Local development with SSL
-        "https://localhost",  # HTTPS localhost
-        "https://localhost:443",  # HTTPS localhost with port
-        # Local development without SSL
-        "http://localhost:5173",  # Vite default port
-        "http://localhost:4173",  # Vite preview (production build testing)
-        "http://localhost:5174",  # Alternative Vite port
-        "http://localhost:5175",  # Extension dev / alternative Vite port
-        "http://localhost:3000",  # Alternative local port
-        "http://127.0.0.1:5173",  # Alternative localhost
-        "http://127.0.0.1:4173",  # Vite preview (production build testing)
-        "http://127.0.0.1:5174",  # Alternative localhost
-        "http://127.0.0.1:5175",  # Extension dev
-        "http://127.0.0.1:3000",  # Alternative localhost
-    ]
-
-# Chrome extension origins (chrome-extension://<id>) — set after Web Store publish
-_extension_origins = os.environ.get("EXTENSION_CORS_ORIGINS", "")
-if _extension_origins:
-    allowed_origins.extend(
-        origin.strip() for origin in _extension_origins.split(",") if origin.strip()
-    )
+# Add CORS middleware BEFORE including routers.
+# Web origins are an explicit list in every environment. Extension pages are
+# allowed only when EXTENSION_CORS_ORIGINS lists their exact origin
+# (chrome-extension://<id> or moz-extension://<id>). Unset/empty allows none.
+# Do not use allow_origin_regex — a chrome-extension://.* pattern would let any
+# installed extension make credentialed requests.
+allowed_origins = get_cors_allow_origins(settings.extension_cors_origins)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"^chrome-extension://.*$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
+    expose_headers=list(CORS_EXPOSE_HEADERS),
 )
 
 # Add security headers middleware
