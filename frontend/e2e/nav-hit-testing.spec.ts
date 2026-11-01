@@ -73,11 +73,6 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
   // Descendants must remain hittable (pointer-events is not inherited).
   const composer = page.getByTestId('comparison-input-textarea')
   await expect(composer).toBeVisible({ timeout: 20000 })
-  
-  // Ensure composer is scrolled into view and layout is stable
-  await composer.scrollIntoViewIfNeeded({ timeout: 5000 })
-  await page.waitForTimeout(200)
-  
   const composerHit = await composer.evaluate((el: HTMLElement) => {
     const rect = el.getBoundingClientRect()
     const top = document.elementFromPoint(
@@ -177,10 +172,17 @@ test.describe('Navbar hit-testing above the hero', () => {
     await page.setViewportSize({ width: 1024, height: 720 })
     await openHomeAndRevealNav(page)
     
-    // Wait for layout to settle after viewport resize, especially on webkit where
-    // reflow can take longer (pricing teaser and other dynamic content)
-    await page.waitForTimeout(300)
-    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => resolve(undefined))))
+    // Wait for layout to settle after viewport resize. WebKit needs extra time
+    // for reflow with dynamic content (pricing teaser, usage preview, etc.)
+    await page.waitForTimeout(500)
+    // Ensure all animations and layout recalcs complete
+    await page.evaluate(() => {
+      return new Promise(resolve => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve(undefined))
+        })
+      })
+    })
     
     await assertNavButtonsAreHitTargets(page)
   })

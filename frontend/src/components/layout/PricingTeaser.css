@@ -1,6 +1,7 @@
 .pricing-teaser {
   margin-top: 1rem;
   text-align: center;
+  pointer-events: auto;
 }
 
 .pricing-teaser-text {
@@ -23,6 +24,7 @@
   text-decoration: none;
   font-weight: 500;
   transition: opacity 0.2s ease;
+  pointer-events: auto;
 }
 
 .pricing-teaser-link:hover {
