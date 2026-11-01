@@ -75,21 +75,13 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
   await expect(composer).toBeVisible({ timeout: 20000 })
   const composerHit = await composer.evaluate((el: HTMLElement) => {
     const rect = el.getBoundingClientRect()
-    const x = rect.left + Math.min(24, rect.width / 2)
-    const y = rect.top + Math.min(16, rect.height / 2)
-    const top = document.elementFromPoint(x, y)
+    const top = document.elementFromPoint(
+      rect.left + Math.min(24, rect.width / 2),
+      rect.top + Math.min(16, rect.height / 2)
+    )
     return {
       inComposer: !!(top && (top === el || el.contains(top) || top.closest('.hero-input-section'))),
       className: top instanceof HTMLElement ? top.className : '',
-      tagName: top?.tagName ?? '',
-      id: top instanceof HTMLElement ? top.id : '',
-      testId: top instanceof HTMLElement ? (top.dataset.testid ?? '') : '',
-      x,
-      y,
-      rectTop: rect.top,
-      rectLeft: rect.left,
-      rectWidth: rect.width,
-      rectHeight: rect.height,
     }
   })
   expect(composerHit.inComposer, `composer not hittable: ${JSON.stringify(composerHit)}`).toBe(true)
@@ -180,17 +172,10 @@ test.describe('Navbar hit-testing above the hero', () => {
     await page.setViewportSize({ width: 1024, height: 720 })
     await openHomeAndRevealNav(page)
     
-    // Wait for layout to settle after viewport resize. WebKit needs extra time
-    // for reflow with dynamic content (pricing teaser, usage preview, etc.)
-    await page.waitForTimeout(500)
-    // Ensure all animations and layout recalcs complete
-    await page.evaluate(() => {
-      return new Promise(resolve => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => resolve(undefined))
-        })
-      })
-    })
+    // Scroll to top to ensure navbar and composer are in viewport. Longer hero text
+    // can push content below viewport at this breakpoint.
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.waitForTimeout(100)
     
     await assertNavButtonsAreHitTargets(page)
   })
