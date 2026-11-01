@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
 import './styles/variables.css'
 import './styles/base.css'
@@ -26,6 +26,9 @@ const Features = lazy(() =>
   import('./components/pages/Features').then(module => ({ default: module.Features }))
 )
 const FAQ = lazy(() => import('./components/pages/FAQ').then(module => ({ default: module.FAQ })))
+const Pricing = lazy(() =>
+  import('./components/pages/Pricing').then(module => ({ default: module.Pricing }))
+)
 const PrivacyPolicy = lazy(() =>
   import('./components/pages/PrivacyPolicy').then(module => ({ default: module.PrivacyPolicy }))
 )
@@ -102,6 +105,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/pricing"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Pricing />
+                    </Suspense>
+                  }
+                />
+                <Route
                   path="/privacy-policy"
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
@@ -109,6 +120,7 @@ function App() {
                     </Suspense>
                   }
                 />
+                <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
                 <Route
                   path="/terms-of-service"
                   element={
@@ -117,6 +129,7 @@ function App() {
                     </Suspense>
                   }
                 />
+                <Route path="/terms" element={<Navigate to="/terms-of-service" replace />} />
                 <Route
                   path="/help-me-choose-methodology"
                   element={

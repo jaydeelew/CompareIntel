@@ -6,6 +6,7 @@
 export { About } from './About'
 export { Features } from './Features'
 export { FAQ } from './FAQ'
+export { Pricing } from './Pricing'
 export { PrivacyPolicy } from './PrivacyPolicy'
 export { HowItWorks } from './HowItWorks'
 export { ImageGeneration } from './ImageGeneration'
