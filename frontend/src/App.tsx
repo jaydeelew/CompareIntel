@@ -120,7 +120,14 @@ function App() {
                     </Suspense>
                   }
                 />
-                <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+                <Route
+                  path="/privacy"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <PrivacyPolicy />
+                    </Suspense>
+                  }
+                />
                 <Route
                   path="/terms-of-service"
                   element={

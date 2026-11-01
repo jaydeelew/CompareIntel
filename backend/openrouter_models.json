@@ -210,6 +210,187 @@
       }
     },
     {
+      "id": "anthropic/claude-fable-5.1",
+      "canonical_slug": "anthropic/claude-fable-5.1-20260831",
+      "hugging_face_id": null,
+      "name": "Anthropic: Claude Fable 5.1",
+      "created": 1788285838,
+      "description": "Claude Fable 5.1 improves on Claude Fable 5 across the board, with the biggest gains in agentic coding, long-running agentic workflows, and knowledge work: long code refactors, front-end and visual...",
+      "context_length": 1000000,
+      "architecture": {
+        "modality": "text+image+file->text",
+        "input_modalities": [
+          "text",
+          "image",
+          "file"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Claude",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.00001",
+        "completion": "0.00005",
+        "web_search": "0.01",
+        "input_cache_read": "0.00000025",
+        "input_cache_write": "0.0000125",
+        "input_cache_write_1h": "0.00002"
+      },
+      "top_provider": {
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "is_moderated": true
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "stop",
+        "structured_outputs",
+        "tool_choice",
+        "tools",
+        "verbosity"
+      ],
+      "default_parameters": {},
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/anthropic/claude-fable-5.1-20260831/endpoints"
+      },
+      "benchmarks": {
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "fullstack",
+            "elo": 1326,
+            "win_rate": 57.2,
+            "rank": 1
+          },
+          {
+            "arena": "agents",
+            "category": "godotgamedev",
+            "elo": 1327,
+            "win_rate": 60.7,
+            "rank": 1
+          },
+          {
+            "arena": "agents",
+            "category": "htmlslides",
+            "elo": 1394,
+            "win_rate": 56.5,
+            "rank": 1
+          },
+          {
+            "arena": "agents",
+            "category": "mobileapps",
+            "elo": 1265,
+            "win_rate": 56.3,
+            "rank": 6
+          },
+          {
+            "arena": "agents",
+            "category": "python-pptxslides",
+            "elo": 1318,
+            "win_rate": 60.8,
+            "rank": 1
+          },
+          {
+            "arena": "agents",
+            "category": "spreadsheet",
+            "elo": 1418,
+            "win_rate": 70.4,
+            "rank": 1
+          },
+          {
+            "arena": "agents",
+            "category": "webapps",
+            "elo": 1296,
+            "win_rate": 54.9,
+            "rank": 2
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1403,
+            "win_rate": 63.4,
+            "rank": 5
+          },
+          {
+            "arena": "models",
+            "category": "asciiart",
+            "elo": 1321,
+            "win_rate": 65,
+            "rank": 4
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1333,
+            "win_rate": 57.4,
+            "rank": 8
+          },
+          {
+            "arena": "models",
+            "category": "dataviz",
+            "elo": 1344,
+            "win_rate": 61.8,
+            "rank": 5
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1373,
+            "win_rate": 60.2,
+            "rank": 6
+          },
+          {
+            "arena": "models",
+            "category": "svg",
+            "elo": 1296,
+            "win_rate": 56.4,
+            "rank": 9
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1333,
+            "win_rate": 59.6,
+            "rank": 11
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1308,
+            "win_rate": 55.1,
+            "rank": 10
+          }
+        ],
+        "artificial_analysis": {
+          "intelligence_index": 49.7,
+          "coding_index": 80.7,
+          "agentic_index": 57.2
+        }
+      },
+      "reasoning": {
+        "mandatory": true,
+        "supported_efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "default_effort": "high"
+      }
+    },
+    {
       "id": "anthropic/claude-haiku-4.5",
       "canonical_slug": "anthropic/claude-4.5-haiku-20251001",
       "hugging_face_id": "",

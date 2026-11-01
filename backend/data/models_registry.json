@@ -91,6 +91,18 @@
         "knowledge_cutoff": null
       },
       {
+        "id": "anthropic/claude-fable-5.1",
+        "name": "Claude Fable 5.1",
+        "description": "Claude Fable 5.1 improves on Claude Fable 5 across the board, with the biggest gains in agentic coding, long-running agentic workflows, and knowledge work: long code refactors, front-end and visual code generation, and finance and analysis tasks in particular.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "supports_vision_probed": true,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "anthropic/claude-opus-5.5",
         "name": "Claude Opus 5.5",
         "description": "Claude Opus 5.5 is Anthropic's flagship model for demanding reasoning, coding, and long-horizon agentic work, succeeding Claude Opus 5.",
