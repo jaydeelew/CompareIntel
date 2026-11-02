@@ -2065,12 +2065,21 @@ video.capability-tile-image-lightbox-img {
   color: #e0f2fe;
 }
 
+/* New single-sentence subtitle fits on one line at 481-768px, where the old
+   two-span subtitle was forced onto two lines; reserve two lines so the
+   hero height matches the pre-PR layout. */
+@media (min-width: 481px) and (max-width: 768px) {
+  .hero-subtitle {
+    min-height: 2lh;
+  }
+}
+
 /* Hero pricing line - positioned absolutely to not add height */
 .hero-pricing-line {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 2.25rem; /* Higher position to avoid overlapping flash logo */
+  bottom: 1.5rem; /* Sits in the space below the credits line (~6px gap) */
   width: calc(100% - 3rem);
   max-width: 900px;
   text-align: center;
@@ -2108,7 +2117,7 @@ video.capability-tile-image-lightbox-img {
 @media (max-width: 480px) {
   .hero-pricing-line {
     font-size: 0.75rem;
-    bottom: 1.75rem; /* Add gap above credits line on phones */
+    bottom: 0.25rem; /* Two-line wrap on phones: keep >=4px gap below credits line */
     width: calc(100% - 2rem);
   }
 }
