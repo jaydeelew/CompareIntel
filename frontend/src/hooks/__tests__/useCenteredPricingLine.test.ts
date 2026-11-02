@@ -18,7 +18,7 @@ describe('useCenteredPricingLine', () => {
 
     mockHeroSection.className = 'hero-section'
     mockCredits.className = 'credits-remaining-wrapper'
-    
+
     mockContainer.appendChild(mockCredits)
     mockContainer.appendChild(mockElement)
     mockHeroSection.appendChild(mockContainer)
@@ -90,7 +90,7 @@ describe('useCenteredPricingLine', () => {
 
   it('should set top position when enabled', () => {
     const ref: RefObject<HTMLDivElement> = { current: mockElement }
-    
+
     renderHook(() => useCenteredPricingLine(ref, true))
 
     // Allow requestAnimationFrame to execute
@@ -105,7 +105,7 @@ describe('useCenteredPricingLine', () => {
 
   it('should not position when disabled', () => {
     const ref: RefObject<HTMLDivElement> = { current: mockElement }
-    
+
     renderHook(() => useCenteredPricingLine(ref, false))
 
     return new Promise<void>(resolve => {
@@ -118,7 +118,7 @@ describe('useCenteredPricingLine', () => {
 
   it('should not position when element is null', () => {
     const ref: RefObject<HTMLDivElement> = { current: null }
-    
+
     expect(() => {
       renderHook(() => useCenteredPricingLine(ref, true))
     }).not.toThrow()
@@ -126,7 +126,7 @@ describe('useCenteredPricingLine', () => {
 
   it('should calculate centered position between credits and hero bottom', () => {
     const ref: RefObject<HTMLDivElement> = { current: mockElement }
-    
+
     renderHook(() => useCenteredPricingLine(ref, true))
 
     return new Promise<void>(resolve => {

@@ -34,7 +34,9 @@ export function useCenteredPricingLine(lineRef: RefObject<HTMLElement | null>, e
 
     update()
     const ro = new ResizeObserver(update)
-    ;[hero, container, line, hero.querySelector('.hero-content')].forEach(el => el && ro.observe(el))
+    ;[hero, container, line, hero.querySelector('.hero-content')].forEach(
+      el => el && ro.observe(el)
+    )
     window.addEventListener('resize', update)
     hero.addEventListener('animationend', update)
     hero.addEventListener('transitionend', update)
