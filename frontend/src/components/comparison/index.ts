@@ -51,3 +51,5 @@ export type { ModelsSectionHeaderProps } from './ModelsSectionHeader'
 export { LoadingSection } from './LoadingSection'
 
 export { ResultsSectionHeader } from './ResultsSectionHeader'
+export { VerdictPanel } from './VerdictPanel'
+export type { VerdictPanelProps } from './VerdictPanel'

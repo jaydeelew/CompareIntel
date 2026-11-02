@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest'
 
-import { wrapBareLatexBlocks } from '../latex/fixSyntax'
+import { wrapBareLatexBlocks, fixLatexIssues } from '../latex/fixSyntax'
 
 describe('wrapBareLatexBlocks', () => {
   it('does not wrap markdown-bold inline math (prompt style **$...$**)', () => {
@@ -23,5 +23,58 @@ describe('wrapBareLatexBlocks', () => {
     expect(out).toMatch(/^\$\$/)
     expect(out).toMatch(/\$\$$/)
     expect(out).toContain('frac')
+  })
+})
+
+describe('fixLatexIssues', () => {
+  describe('plain English word preservation', () => {
+    it('does not convert the word "times" to \\times (regression test)', () => {
+      const input = 'How many times does the letter r appear in "strawberry"?'
+      const output = fixLatexIssues(input)
+      expect(output).toBe(input)
+      expect(output).toContain('times')
+      expect(output).not.toContain('\\times')
+    })
+
+    it('does not convert "times" in model responses', () => {
+      const input =
+        'The letter r appears 3 times in the word "strawberry". Let me count: once at position 3, once at position 4, and once at position 9.'
+      const output = fixLatexIssues(input)
+      expect(output).toBe(input)
+      expect(output).toContain('times')
+      expect(output).not.toContain('\\times')
+    })
+
+    it('does not convert "times" in various contexts', () => {
+      const testCases = [
+        'How many times should I repeat this?',
+        'At times, the algorithm fails.',
+        'Sometimes it works.',
+        'The function was called 10 times.',
+        'In ancient times, people believed...',
+      ]
+
+      testCases.forEach(input => {
+        const output = fixLatexIssues(input)
+        expect(output).toBe(input)
+        expect(output).not.toContain('\\times')
+      })
+    })
+
+    it('converts Unicode × symbol to \\times for math rendering', () => {
+      const input = '5 × 3 = 15'
+      const output = fixLatexIssues(input)
+      expect(output).toContain('\\times')
+      expect(output).toBe('5 \\times 3 = 15')
+    })
+
+    it('converts other math operators but not "times" word', () => {
+      const input = 'x leq 5 and x neq 0 but how many times is x positive?'
+      const output = fixLatexIssues(input)
+      expect(output).toContain('\\leq')
+      expect(output).toContain('\\neq')
+      expect(output).toContain('times')
+      expect(output).not.toContain('\\times')
+    })
   })
 })

@@ -8,6 +8,16 @@
 import type { ModelId } from './branded'
 
 /**
+ * Per-model usage already collected during the stream (OpenRouter usage).
+ * Missing or null cost is shown as a dash — never estimated here.
+ */
+export interface PerModelUsage {
+  prompt_tokens?: number
+  completion_tokens?: number
+  cost_usd?: number | null
+}
+
+/**
  * Metadata included with comparison responses
  */
 export interface ComparisonMetadata {
@@ -43,6 +53,8 @@ export interface ComparisonMetadata {
   overage_limit_credits?: number | null
   /** Server conversation id, present after a signed-in comparison is stored */
   conversation_id?: number
+  /** Per-model tokens and reported USD cost from the comparison stream */
+  per_model_usage?: Record<string, PerModelUsage>
 }
 
 /**

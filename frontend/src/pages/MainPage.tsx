@@ -3009,6 +3009,7 @@ export function MainPage() {
               dismissMobileCapabilityDemoModelTabsHighlight,
             tutorialSwipeHintNonce,
             capabilitySwipeHintNonce,
+            onOpenHelpMeChoose: openHelpMeChoose,
           }}
         />
 

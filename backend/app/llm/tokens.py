@@ -422,6 +422,26 @@ def calculate_token_usage(
     )
 
 
+def serialize_per_model_usage(usage_data_dict: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """JSON-safe per-model usage for the comparison complete event.
+
+    Only reports OpenRouter ``cost_usd`` when the provider supplied it.
+    Image-generation usage dicts and missing usage are omitted so the client
+    can show a dash instead of an invented price.
+    """
+    out: dict[str, dict[str, Any]] = {}
+    for mid, usage in usage_data_dict.items():
+        if usage is None or isinstance(usage, dict):
+            continue
+        cost = getattr(usage, "cost_usd", None)
+        out[str(mid)] = {
+            "prompt_tokens": int(getattr(usage, "prompt_tokens", 0) or 0),
+            "completion_tokens": int(getattr(usage, "completion_tokens", 0) or 0),
+            "cost_usd": float(cost) if cost is not None else None,
+        }
+    return out
+
+
 def fractional_credits_for_text_usage(usage: TokenUsage, model_id: str) -> Decimal:
     """Credits (fractional) for billing: API USD, else list pricing, else legacy token formula."""
     if usage.cost_usd is not None:

@@ -139,12 +139,30 @@
 }
 
 .pricing-tier-button-paid {
-  background: var(--text-primary);
-  color: var(--background-color);
+  background: var(--primary-color); /* Use brand blue, not text-primary */
+  color: white; /* Always white text for visibility */
 }
 
 .pricing-tier-button-paid:hover {
-  opacity: 0.9;
+  background: var(--primary-hover);
+}
+
+/* Dark mode: use dark text on cyan background for WCAG AA contrast */
+:root .pricing-tier-button-paid {
+  color: #0f172a; /* Dark slate text on cyan background (~6.8:1 contrast) */
+}
+
+:root .pricing-tier-button-paid:hover {
+  color: #0f172a; /* Maintain contrast on hover background #0891b2 (~5.5:1) */
+}
+
+/* Light mode: keep white text on blue background */
+[data-theme='light'] .pricing-tier-button-paid {
+  color: white; /* White text on blue #2563eb (~5.9:1 contrast) */
+}
+
+[data-theme='light'] .pricing-tier-button-paid:hover {
+  color: white; /* White on hover background #1d4ed8 (~7.5:1) */
 }
 
 .pricing-tier-button:disabled {
