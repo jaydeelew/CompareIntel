@@ -2,7 +2,7 @@
   {
     "path": "/",
     "title": "CompareIntel - Compare AI & Image Models Side-by-Side | Free",
-    "description": "Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, FLUX, DALL-E from OpenAI, Anthropic, Google, Meta, xAI. Image generation comparison included. Free tier.",
+    "description": "Built for humans to find the best AI models for their needs. Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, FLUX, DALL-E from OpenAI, Anthropic, Google, Meta, xAI. Free tier.",
     "h1": "Compare AI Language and Image Models Side by Side",
     "priority": 1.0,
     "changefreq": "weekly"
@@ -40,6 +40,14 @@
     "changefreq": "monthly"
   },
   {
+    "path": "/pricing",
+    "title": "Pricing - CompareIntel",
+    "description": "Compare AI model pricing plans: Free tier with daily credits, and paid plans starting at $9/month with monthly credit allocations and metered overage.",
+    "h1": "Pricing Plans",
+    "priority": 0.9,
+    "changefreq": "monthly"
+  },
+  {
     "path": "/image-generation",
     "title": "Image Generation - CompareIntel",
     "description": "Compare AI image generation models side-by-side: FLUX, Imagen, GPT-5 Image, DALL-E, Riverflow. Test prompts and find the best image AI for your creative projects.",
@@ -57,6 +65,7 @@
   },
   {
     "path": "/privacy-policy",
+    "aliases": ["/privacy"],
     "title": "Privacy Policy - CompareIntel",
     "description": "CompareIntel Privacy Policy: how we collect, use, and protect your data. Learn about our commitment to user privacy and data security.",
     "h1": "Privacy Policy",

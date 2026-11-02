@@ -6,11 +6,15 @@ import { fileURLToPath } from 'node:url'
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const scriptPath = path.join(repoRoot, 'scripts/check-csp-sync.js')
 const require = createRequire(import.meta.url)
-const { checkCspSync, SENTRY_CONNECT_SRC } = require(scriptPath) as {
+const { checkCspSync, SENTRY_CONNECT_SRC, CF_BEACON_CONNECT_SRC, CF_BEACON_SCRIPT_SRC } = require(
+  scriptPath
+) as {
   checkCspSync: (input?: { nginxContent?: string; htmlContent?: string }) => {
     comparable: string
   }
   SENTRY_CONNECT_SRC: string
+  CF_BEACON_CONNECT_SRC: string
+  CF_BEACON_SCRIPT_SRC: string
 }
 
 const POLICY_WITHOUT_SENTRY =
@@ -23,16 +27,15 @@ describe('CSP sync', () => {
       encoding: 'utf8',
     })
     expect(output).toContain(SENTRY_CONNECT_SRC)
+    expect(output).toContain(CF_BEACON_CONNECT_SRC)
   })
 
   it('ignores nginx-only frame-ancestors when comparing', () => {
-    const html =
-      "  <meta http-equiv=\"Content-Security-Policy\"\n    content=\"default-src 'self'; connect-src 'self' https://*.ingest.us.sentry.io; base-uri 'self';\" />"
-    const nginx =
-      "add_header Content-Security-Policy \"default-src 'self'; connect-src 'self' https://*.ingest.us.sentry.io; frame-ancestors 'none'; base-uri 'self';\" always;"
-    expect(checkCspSync({ nginxContent: nginx, htmlContent: html }).comparable).toContain(
-      SENTRY_CONNECT_SRC
-    )
+    const html = `  <meta http-equiv="Content-Security-Policy"\n    content="default-src 'self'; script-src 'self' ${CF_BEACON_SCRIPT_SRC}; connect-src 'self' https://*.ingest.us.sentry.io ${CF_BEACON_CONNECT_SRC}; base-uri 'self';" />`
+    const nginx = `add_header Content-Security-Policy "default-src 'self'; script-src 'self' ${CF_BEACON_SCRIPT_SRC}; connect-src 'self' https://*.ingest.us.sentry.io ${CF_BEACON_CONNECT_SRC}; frame-ancestors 'none'; base-uri 'self';" always;`
+    const comparable = checkCspSync({ nginxContent: nginx, htmlContent: html }).comparable
+    expect(comparable).toContain(SENTRY_CONNECT_SRC)
+    expect(comparable).toContain(CF_BEACON_CONNECT_SRC)
   })
 
   it('fails when connect-src omits Sentry ingest', () => {

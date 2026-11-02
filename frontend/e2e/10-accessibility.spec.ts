@@ -165,7 +165,11 @@ test.describe('Accessibility Tests', () => {
         v => v.impact === 'critical' || v.impact === 'serious'
       )
 
-      expect(criticalViolations.length).toBe(0)
+      expect(
+        criticalViolations.length,
+        `Found ${criticalViolations.length} critical/serious accessibility violations:\n` +
+          JSON.stringify(formatViolations(criticalViolations), null, 2)
+      ).toBe(0)
     })
 
     test('Terms of Service page should meet WCAG 2.1 AA standards', async ({ page }) => {

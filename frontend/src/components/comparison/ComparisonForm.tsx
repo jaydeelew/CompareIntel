@@ -10,9 +10,11 @@ import React, {
   type SetStateAction,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 
-import { BREAKPOINT_MOBILE } from '../../config/constants'
+import { BREAKPOINT_MOBILE, DAILY_CREDIT_LIMITS, TIER_PRICING } from '../../config/constants'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
+import { useCenteredPricingLine } from '../../hooks/useCenteredPricingLine'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
@@ -191,6 +193,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const mirrorSavedSelectionsSlotRef = useRef<HTMLDivElement>(null)
     const baseInputWhenSpeechStartedRef = useRef<string>('')
     const mobileBaseInputRef = useRef<string>('')
+    const pricingLineRef = useRef<HTMLDivElement>(null)
+    useCenteredPricingLine(pricingLineRef, !isFollowUpMode && !isAuthenticated)
     const currentInputRef = useRef<string>(input)
 
     const handleSpeechResult = useCallback(
@@ -1223,6 +1227,28 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         {!isFollowUpMode && <div className="usage-preview-container">{renderUsagePreview()}</div>}
         {isFollowUpMode && conversations.length > 0 && (
           <ContextWarning tokenUsageInfo={tokenUsageInfo} renderUsagePreview={renderUsagePreview} />
+        )}
+        {!isFollowUpMode && !isAuthenticated && (
+          <div className="hero-pricing-line" ref={pricingLineRef}>
+            <span className="hero-pricing-free">
+              {DAILY_CREDIT_LIMITS.unregistered} free credits/day, {DAILY_CREDIT_LIMITS.free} with a
+              free account
+            </span>
+            <span className="hero-pricing-separator"> • </span>
+            <span className="hero-pricing-paid">
+              Paid plans from $
+              {Math.min(
+                ...Object.entries(TIER_PRICING)
+                  .filter(([tier]) => tier !== 'free' && tier !== 'unregistered')
+                  .map(([, price]) => price)
+              )}
+              /month
+            </span>
+            <span className="hero-pricing-separator"> • </span>
+            <Link to="/pricing" className="hero-pricing-link">
+              See plans
+            </Link>
+          </div>
         )}
       </>
     )

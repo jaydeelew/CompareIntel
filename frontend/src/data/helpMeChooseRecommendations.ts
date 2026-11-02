@@ -185,6 +185,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       'Ranked by Vision Arena (lmarena.ai), human preference votes on image+text prompts. Higher Arena Score = better at interpreting photos, diagrams, and screenshots. Required when you attach images to your prompt.',
     models: [
       { modelId: 'anthropic/claude-opus-5', evidence: 'Vision Arena (lmarena.ai): 1320.' },
+      { modelId: 'anthropic/claude-fable-5.1', evidence: 'Vision Arena (lmarena.ai): 1319.' },
       { modelId: 'anthropic/claude-opus-4.7', evidence: 'Vision Arena (lmarena.ai): 1317.' },
       { modelId: 'anthropic/claude-opus-4.6', evidence: 'Vision Arena (lmarena.ai): 1316.' },
       { modelId: 'google/gemini-3.6-flash', evidence: 'Vision Arena (lmarena.ai): 1311.' },
@@ -334,6 +335,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       'Ranked by LegalBench (vals.ai) across 161 legal reasoning tasks. Higher % = stronger legal analysis and statutory interpretation.',
     models: [
       { modelId: 'anthropic/claude-fable-5', evidence: 'LegalBench (vals.ai): 88.56%.' },
+      { modelId: 'anthropic/claude-fable-5.1', evidence: 'LegalBench (vals.ai): 88.51%.' },
       { modelId: 'google/gemini-3.1-pro-preview', evidence: 'LegalBench (vals.ai): 87.04%.' },
       { modelId: 'anthropic/claude-opus-5', evidence: 'LegalBench (vals.ai): 86.97%.' },
       { modelId: 'openai/gpt-5.6-sol', evidence: 'LegalBench (vals.ai): 86.97%.' },

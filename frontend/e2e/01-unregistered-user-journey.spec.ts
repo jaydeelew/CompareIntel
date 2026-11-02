@@ -1123,12 +1123,12 @@ test.describe('Unregistered User Journey', () => {
 
   test('Unregistered user sees clear value proposition', async ({ page }) => {
     // Check for key messaging about the platform
-    // Hero: "Get responses from multiple AI models at the same time"
+    // Hero: "Built for humans to find the best AI models for their needs"
     const valueProps = [
       /compare.*models/i,
       /ai.*comparison/i,
       /side.*side/i,
-      /(real[- ]?time|concurrent|same time)/i, // Hero: "at the same time"; others: "real-time" or "concurrent"
+      /(built for humans|find.*best.*models)/i,
     ]
 
     const pageContent = await page.textContent('body')

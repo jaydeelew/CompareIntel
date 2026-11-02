@@ -73,6 +73,7 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
   // Descendants must remain hittable (pointer-events is not inherited).
   const composer = page.getByTestId('comparison-input-textarea')
   await expect(composer).toBeVisible({ timeout: 20000 })
+  
   const composerHit = await composer.evaluate((el: HTMLElement) => {
     const rect = el.getBoundingClientRect()
     const top = document.elementFromPoint(
@@ -171,6 +172,7 @@ test.describe('Navbar hit-testing above the hero', () => {
 
     await page.setViewportSize({ width: 1024, height: 720 })
     await openHomeAndRevealNav(page)
+    
     await assertNavButtonsAreHitTargets(page)
   })
 })

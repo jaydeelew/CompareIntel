@@ -1,0 +1,241 @@
+.pricing-page {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.pricing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pricing-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.pricing-subtitle {
+  font-size: 1.125rem;
+  text-align: center;
+  color: var(--text-secondary);
+  margin: 0 0 3rem 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pricing-tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.pricing-tier {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.pricing-tier:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-tier-free {
+  border-color: var(--primary-color);
+  border-width: 2px;
+}
+
+.pricing-tier-header {
+  margin-bottom: 1.5rem;
+}
+
+.pricing-tier-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.pricing-tier-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.pricing-tier-price {
+  margin-bottom: 2rem;
+}
+
+.pricing-tier-price-amount {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pricing-tier-price-period {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+}
+
+.pricing-tier-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+  flex-grow: 1;
+}
+
+.pricing-tier-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.pricing-tier-feature-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--primary-color);
+  margin-top: 2px;
+}
+
+.pricing-tier-cta {
+  margin-top: auto;
+}
+
+.pricing-tier-button {
+  display: block;
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.pricing-tier-button-free {
+  background: var(--primary-color);
+  color: white;
+}
+
+.pricing-tier-button-free:hover {
+  background: var(--primary-hover);
+}
+
+.pricing-tier-button-paid {
+  background: var(--primary-color); /* Use brand blue, not text-primary */
+  color: white; /* Always white text for visibility */
+}
+
+.pricing-tier-button-paid:hover {
+  background: var(--primary-hover);
+}
+
+/* Dark mode: use dark text on cyan background for WCAG AA contrast */
+:root .pricing-tier-button-paid {
+  color: #0f172a; /* Dark slate text on cyan background (~6.8:1 contrast) */
+}
+
+:root .pricing-tier-button-paid:hover {
+  color: #0f172a; /* Maintain contrast on hover background #0891b2 (~5.5:1) */
+}
+
+/* Light mode: keep white text on blue background */
+[data-theme='light'] .pricing-tier-button-paid {
+  color: white; /* White text on blue #2563eb (~5.9:1 contrast) */
+}
+
+[data-theme='light'] .pricing-tier-button-paid:hover {
+  color: white; /* White on hover background #1d4ed8 (~7.5:1) */
+}
+
+.pricing-tier-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pricing-error {
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  padding: 1rem 1.5rem;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 8px;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.pricing-error p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.pricing-notes {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--card-background);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.pricing-notes h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.pricing-notes p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+}
+
+.pricing-notes p:last-child {
+  margin-bottom: 0;
+}
+
+.pricing-notes a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.pricing-notes a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .pricing-title {
+    font-size: 2rem;
+  }
+
+  .pricing-subtitle {
+    font-size: 1rem;
+  }
+
+  .pricing-tiers {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-tier-price-amount {
+    font-size: 2.5rem;
+  }
+}

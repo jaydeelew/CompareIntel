@@ -1,0 +1,37 @@
+.pricing-teaser {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.pricing-teaser-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.pricing-teaser-free,
+.pricing-teaser-paid {
+  font-weight: 500;
+}
+
+.pricing-teaser-separator {
+  color: var(--text-tertiary);
+}
+
+.pricing-teaser-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.pricing-teaser-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .pricing-teaser-text {
+    font-size: 0.85rem;
+  }
+}
