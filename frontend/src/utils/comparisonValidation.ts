@@ -2,6 +2,7 @@
  * Input validation for comparison submissions
  */
 
+import { MAX_INPUT_DATA_CHARS } from '../config/constants'
 import type { ModelsByProvider } from '../types'
 
 import { formatNumber } from './format'
@@ -65,6 +66,13 @@ export function validateComparisonInput(params: ValidationParams): ValidationRes
 
   if (!input.trim()) {
     return { valid: false, error: 'Please enter some text to compare' }
+  }
+
+  if (input.length > MAX_INPUT_DATA_CHARS) {
+    return {
+      valid: false,
+      error: `Input exceeds maximum length of ${MAX_INPUT_DATA_CHARS.toLocaleString()} characters. Current length: ${input.length.toLocaleString()}.`,
+    }
   }
 
   // When images are attached, require at least one vision-capable model

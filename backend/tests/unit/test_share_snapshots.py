@@ -14,13 +14,13 @@ pytestmark = pytest.mark.unit
 PAYLOAD = {
     "prompt": "Explain gravity to a child",
     "models": [
-        {"id": "openai/gpt-4o", "name": "GPT-4o"},
+        {"id": "openai/gpt-4o-mini", "name": "GPT-4o Mini"},
         {"id": "anthropic/claude-sonnet", "name": "Claude Sonnet"},
     ],
     "responses": [
         {
-            "model_id": "openai/gpt-4o",
-            "model_name": "GPT-4o",
+            "model_id": "openai/gpt-4o-mini",
+            "model_name": "GPT-4o Mini",
             "content": "Gravity pulls things down.",
         },
         {
@@ -110,7 +110,7 @@ class TestShareSnapshots:
         assert 'name="twitter:card"' in html
         assert "summary_large_image" in html
         assert "Explain gravity to a child" in html
-        assert "GPT-4o" in html
+        assert "GPT-4o Mini" in html
         assert "Try your own comparison" in html
         assert 'href="/"' in html
         assert "test@example.com" not in html

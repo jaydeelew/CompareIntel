@@ -373,7 +373,6 @@ def get_model_id_to_name_map() -> dict[str, str]:
 # llmdb slug -> registry model_id. Only same-generation aliases — never map
 # Gemini 2.0 → 2.5 or o1 → o3 (that produced fake 2.0% MATH scores).
 MATH_SLUG_TO_MODEL_ID: dict[str, str] = {
-    "gpt-4o": "openai/gpt-4o",
     "o3": "openai/o3",
     "gpt-oss-120b": "openai/gpt-oss-120b",
     "gemini-2-5-pro": "google/gemini-2.5-pro",
@@ -887,8 +886,6 @@ def fetch_mmlu_pro_scores() -> dict[str, tuple[float, str]]:
 
 WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
     "Claude Opus 4 6": "anthropic/claude-opus-4.6",
-    "Gpt 4.5 Preview 2025 02 27": "openai/gpt-4o",
-    "Chatgpt 4o Latest 20250326": "openai/gpt-4o",
     "Grok 4 1 Fast Reasoning": "x-ai/grok-4.20",
     "Grok 4.1 Thinking": "x-ai/grok-4.20",
     "Grok 4.1": "x-ai/grok-4.20",
@@ -896,7 +893,6 @@ WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
     "Gemini 3 Pro": "google/gemini-3.1-pro-preview",
     "Gemini 3 Flash": "google/gemini-3-flash-preview",
     "Gemini 3 Flash (thinking Minimal)": "google/gemini-3-flash-preview",
-    "Gpt 4.1 2025 04 14": "openai/gpt-4o",
     "Claude Opus 5": "anthropic/claude-opus-5",
     "Gpt 5.6 Sol": "openai/gpt-5.6-sol",
     "Grok 4.5": "x-ai/grok-4.5",
@@ -909,9 +905,6 @@ VISION_MIN_ARENA = 1060.0
 
 # LMArena Vision Arena: leaderboard slug -> registry model_id
 VISION_ARENA_SLUG_TO_MODEL_ID: dict[str, str] = {
-    "chatgpt-4o-latest-20250326": "openai/gpt-4o",
-    "gpt-4o": "openai/gpt-4o",
-    "gpt-4o-2024-05-13": "openai/gpt-4o",
     "gpt-4o-mini": "openai/gpt-4o-mini",
     "gpt-4o-mini-2024-07-18": "openai/gpt-4o-mini",
     "gpt-5-chat-latest": "openai/gpt-5-chat",
@@ -1267,7 +1260,6 @@ AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID: dict[str, str] = {
     "GPT-5.6 Sol": "openai/gpt-5.6-sol",
     "Grok 4.5": "x-ai/grok-4.5",
     "Kimi K3": "moonshotai/kimi-k3",
-    "GPT-4.1": "openai/gpt-4o",  # GPT-4.1 maps to gpt-4o in registry
 }
 
 

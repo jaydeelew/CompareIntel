@@ -2,7 +2,7 @@
 // This file uses Playwright's fixture pattern with 'use' parameter,
 // which is not related to React hooks. Disabling react-hooks rule for entire file.
 
-import { test as base, expect, Page, BrowserContext } from '@playwright/test'
+import { test as base, expect, type Locator, type Page, type BrowserContext } from '@playwright/test'
 
 import { mockComparisonStream, mockModelsApi } from './helpers/mockModels'
 
@@ -345,7 +345,10 @@ async function ensureUnfoldedNavbar(page: Page): Promise<void> {
   let folded = await shell
     .evaluate((el: HTMLElement) => el.classList.contains('app-header-shell--folded'))
     .catch(() => false)
-  if (!folded) return
+  if (!folded) {
+    await waitForHeaderShellOpen(shell)
+    return
+  }
 
   // Navigation arms wheel-reveal after ~280ms once folded at top (AT_TOP_SETTLE_MS).
   await safeWait(page, 400)
@@ -361,7 +364,10 @@ async function ensureUnfoldedNavbar(page: Page): Promise<void> {
     folded = await shell
       .evaluate((el: HTMLElement) => el.classList.contains('app-header-shell--folded'))
       .catch(() => false)
-    if (!folded) return
+    if (!folded) {
+      await waitForHeaderShellOpen(shell)
+      return
+    }
 
     await page.mouse.wheel(0, -200).catch(() => {})
     // WebKit sometimes drops Playwright mouse.wheel; fire the window listener the navbar uses.
@@ -376,6 +382,16 @@ async function ensureUnfoldedNavbar(page: Page): Promise<void> {
   }
 
   await expect(shell).not.toHaveClass(/app-header-shell--folded/, { timeout: 5000 })
+  await waitForHeaderShellOpen(shell)
+}
+
+/** Fold uses max-height plus overflow:hidden. The class drops before the 380ms transition finishes, so hit-testing during the animation lands on main. */
+async function waitForHeaderShellOpen(shell: Locator): Promise<void> {
+  await expect
+    .poll(async () => shell.evaluate((el: HTMLElement) => el.getBoundingClientRect().height), {
+      timeout: 2000,
+    })
+    .toBeGreaterThan(40)
 }
 
 /**

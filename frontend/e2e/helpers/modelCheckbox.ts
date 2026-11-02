@@ -17,6 +17,18 @@ function prefersCheckboxPointerClick(projectName: string): boolean {
   return isMobileE2eProject(projectName)
 }
 
+/** Install banner and the "Done Selecting?" card cover headers on short mobile viewports. */
+export async function dismissMobileBlockers(page: Page): Promise<void> {
+  const install = page.getByRole('button', { name: 'Dismiss install prompt' })
+  if (await install.isVisible().catch(() => false)) {
+    await install.click({ timeout: 2000 }).catch(() => {})
+  }
+  const doneCard = page.getByRole('button', { name: 'Close done selecting card' })
+  if (await doneCard.isVisible().catch(() => false)) {
+    await doneCard.click({ timeout: 2000 }).catch(() => {})
+  }
+}
+
 export async function toggleModelCheckbox(checkbox: Locator, projectName: string): Promise<void> {
   if (prefersCheckboxPointerClick(projectName)) {
     await checkbox.click({ timeout: 10000 })
@@ -76,12 +88,17 @@ export async function selectSelectableTextModels(
     `${catalog.user_tier} tier has fewer than ${count} selectable text models`
   ).toBeGreaterThanOrEqual(count)
 
+  await dismissMobileBlockers(page)
+
   const selected: string[] = []
   for (const { provider, id } of candidates.slice(0, count)) {
     const dropdown = page.locator(`.provider-dropdown[data-provider-name="${provider}"]`)
     const header = dropdown.locator('.provider-header')
     if ((await header.getAttribute('aria-expanded')) !== 'true') {
-      await header.scrollIntoViewIfNeeded().catch(() => {})
+      // Center the header so a fixed install banner cannot intercept the click.
+      await header.evaluate((el: HTMLElement) => {
+        el.scrollIntoView({ block: 'center', inline: 'nearest' })
+      })
       await header.click({ timeout: 10000 })
       await expect(header).toHaveAttribute('aria-expanded', 'true')
     }

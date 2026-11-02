@@ -9,6 +9,12 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer, field_validator
 
+# Hard cap for compare / token-estimate request bodies. Rejects oversized payloads
+# with HTTP 422 before tokenization. Client limits must stay below this value.
+# CompareRequest / EstimateTokensRequest live in app.routers.api.core (name clash
+# with conversation response models in this module).
+INPUT_DATA_MAX_LENGTH = 300_000
+
 
 class UserRegister(BaseModel):
     """Schema for user registration request."""
@@ -452,7 +458,9 @@ class BreakoutConversationCreate(BaseModel):
     model_id: str = Field(..., description="Model ID to break out into a separate conversation")
 
     model_config = ConfigDict(
-        json_schema_extra={"example": {"parent_conversation_id": 123, "model_id": "openai/gpt-4o"}}
+        json_schema_extra={
+            "example": {"parent_conversation_id": 123, "model_id": "openai/gpt-4o-mini"}
+        }
     )
 
 

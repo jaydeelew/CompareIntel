@@ -32,7 +32,7 @@ describe('PUBLIC_PAGES shared route list', () => {
   it('skips models that are being removed', () => {
     const ids = seoCatalog.models.map(model => model.id)
     expect(ids).not.toContain('qwen/qwen3-next-80b-a3b-thinking')
-    expect(ids).not.toContain('x-ai/grok-5')
+    expect(ids).not.toContain('openai/gpt-6.1-terra')
     for (const skipId of featuredModels.skipIds) {
       expect(ids).not.toContain(skipId)
     }

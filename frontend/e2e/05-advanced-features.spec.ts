@@ -2,7 +2,11 @@ import { Page } from '@playwright/test'
 
 import { test, expect, dismissTutorialOverlay } from './fixtures'
 import { dispatchComposerFilePaste } from './helpers/composerPaste'
-import { toggleModelCheckbox } from './helpers/modelCheckbox'
+import {
+  dismissMobileBlockers,
+  selectSelectableTextModels,
+  toggleModelCheckbox,
+} from './helpers/modelCheckbox'
 
 /**
  * E2E Tests: Advanced Features
@@ -366,8 +370,13 @@ test.describe('Advanced Features', () => {
     })
   })
 
-  test('User can load saved model selections', async ({ authenticatedPage, browserName }) => {
-    test.setTimeout(60000) // 60 seconds for this test
+  test('User can load saved model selections', async ({
+    authenticatedPage,
+    browserName,
+  }, testInfo) => {
+    // CI passes --timeout=90000. A 60s cap timed out on Mobile Safari while
+    // provider-header clicks retried under the fixed install banner.
+    test.setTimeout(90000)
     // Skip if saved selections feature is not available
     test.skip(
       !(await savedSelectionsTrigger(authenticatedPage)
@@ -375,27 +384,15 @@ test.describe('Advanced Features', () => {
         .catch(() => false)),
       'Saved selections feature not available'
     )
+    const selectedIds: string[] = []
+    const providerById: Record<string, string> = {}
     await test.step('Ensure a saved selection exists', async () => {
       // Wait for models to load first
       const loadingMessage = authenticatedPage.locator(
         '.loading-message:has-text("Loading available models")'
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
-
-      // Expand first few provider dropdowns only (enough to find models)
-      const providerHeaders = authenticatedPage.locator(
-        '.provider-header, button[class*="provider-header"]'
-      )
-      const providerCount = Math.min(await providerHeaders.count(), 3) // Only expand first 3
-      for (let i = 0; i < providerCount; i++) {
-        if (authenticatedPage.isClosed()) break
-        const provider = providerHeaders.nth(i)
-        const isExpanded = await provider.getAttribute('aria-expanded').catch(() => 'false')
-        if (isExpanded !== 'true') {
-          await provider.click({ timeout: 5000 }).catch(() => {})
-          await safeWait(authenticatedPage, 300)
-        }
-      }
+      await dismissMobileBlockers(authenticatedPage)
 
       // Check if we have a saved selection, if not create one
       const hasSavedSelectionsButton = await savedSelectionsTrigger(authenticatedPage)
@@ -417,49 +414,18 @@ test.describe('Advanced Features', () => {
           await closeSavedSelectionsDropdown(authenticatedPage)
           await safeWait(authenticatedPage, 500)
 
-          // Select models
-          const modelCheckboxes = authenticatedPage.locator(
-            '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+          // WebKit/mobile checkboxes ignore .check() (onMouseDown preventDefault) and
+          // walking every checkbox blows the mobile timeout. Pick two selectable text models.
+          selectedIds.push(
+            ...(await selectSelectableTextModels(authenticatedPage, 2, testInfo.project.name))
           )
-          const checkboxCount = await modelCheckboxes.count()
-
-          expect(checkboxCount).toBeGreaterThan(0)
-
-          // Find first two enabled, unchecked models
-          let selectedCount = 0
-          for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {
-            const checkbox = modelCheckboxes.nth(i)
-            const isEnabled = await checkbox.isEnabled().catch(() => false)
-            const isChecked = await checkbox.isChecked().catch(() => false)
-            if (isEnabled && !isChecked) {
-              await checkbox.check({ timeout: 10000 }).catch(() => {
-                // If check fails, try clicking instead
-                checkbox.click({ timeout: 10000 }).catch(() => {})
-              })
-              selectedCount++
-            }
+          for (const id of selectedIds) {
+            const provider = await authenticatedPage
+              .getByTestId(`model-checkbox-${id}`)
+              .locator('xpath=ancestor::*[@data-provider-name][1]')
+              .getAttribute('data-provider-name')
+            if (provider) providerById[id] = provider
           }
-
-          // If we didn't find enough unchecked models, uncheck some first
-          if (selectedCount < 2) {
-            // Uncheck first few to make room
-            for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {
-              const checkbox = modelCheckboxes.nth(i)
-              const isEnabled = await checkbox.isEnabled().catch(() => false)
-              const isChecked = await checkbox.isChecked().catch(() => false)
-              if (isEnabled && isChecked) {
-                await checkbox.uncheck({ timeout: 5000 }).catch(() => {})
-              }
-              if (isEnabled && !isChecked) {
-                await checkbox.check({ timeout: 10000 }).catch(() => {
-                  checkbox.click({ timeout: 10000 }).catch(() => {})
-                })
-                selectedCount++
-              }
-            }
-          }
-
-          expect(selectedCount).toBeGreaterThan(0)
 
           // Wait a bit for React to update
           await safeWait(authenticatedPage, 500)
@@ -543,6 +509,21 @@ test.describe('Advanced Features', () => {
         throw new Error('Page was closed before loading saved selection')
       }
 
+      await dismissMobileBlockers(authenticatedPage)
+      if (selectedIds.length > 0) {
+        const clearButton = authenticatedPage.getByRole('button', { name: 'Clear all selections' })
+        if (await clearButton.isVisible().catch(() => false)) {
+          await clearButton.evaluate((el: HTMLElement) => {
+            el.scrollIntoView({ block: 'center', inline: 'nearest' })
+          })
+          await clearButton.click()
+          await expect(authenticatedPage.locator('.credits-remaining-wrapper')).toContainText(
+            '0 models selected',
+            { timeout: 5000 }
+          )
+        }
+      }
+
       // Open saved selections dropdown
       await openSavedSelectionsDropdown(authenticatedPage)
       await safeWait(authenticatedPage, 500) // Wait for dropdown to open and list to render (reduced from 1500)
@@ -594,51 +575,29 @@ test.describe('Advanced Features', () => {
     })
 
     await test.step('Verify models are selected', async () => {
-      // Expand first few provider dropdowns to ensure checkboxes are visible
-      const providerHeaders = authenticatedPage.locator(
-        '.provider-header, button[class*="provider-header"]'
-      )
-      const providerCount = Math.min(await providerHeaders.count(), 5) // Only expand first 5
-      for (let i = 0; i < providerCount; i++) {
-        if (authenticatedPage.isClosed()) break
-        const provider = providerHeaders.nth(i)
-        const isExpanded = await provider.getAttribute('aria-expanded').catch(() => 'false')
-        if (isExpanded !== 'true') {
-          await provider.click({ timeout: 5000 }).catch(() => {})
-          await safeWait(authenticatedPage, 300)
-        }
-      }
-
-      // Wait a bit more for React to update checkboxes
-      await safeWait(authenticatedPage, 1000)
-
       if (authenticatedPage.isClosed()) return
+      await dismissMobileBlockers(authenticatedPage)
 
-      // Check all checkboxes for checked state
-      const allModelCheckboxes = authenticatedPage.locator(
-        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
-      )
-      const allCount = await allModelCheckboxes.count().catch(() => 0)
-
-      if (allCount === 0) {
-        // Page might be closed or checkboxes not loaded
+      if (selectedIds.length === 0) {
+        await expect(authenticatedPage.getByText(/[1-9]\d* models selected/)).toBeVisible()
         return
       }
 
-      expect(allCount).toBeGreaterThan(0)
-
-      // Count checked checkboxes
-      let checkedCount = 0
-      for (let i = 0; i < allCount; i++) {
-        if (authenticatedPage.isClosed()) break
-        const checkbox = allModelCheckboxes.nth(i)
-        const isChecked = await checkbox.isChecked().catch(() => false)
-        if (isChecked) {
-          checkedCount++
+      for (const id of selectedIds) {
+        const provider = providerById[id]
+        if (provider) {
+          const header = authenticatedPage.locator(
+            `.provider-dropdown[data-provider-name="${provider}"] .provider-header`
+          )
+          if ((await header.getAttribute('aria-expanded').catch(() => 'false')) !== 'true') {
+            await header.evaluate((el: HTMLElement) => {
+              el.scrollIntoView({ block: 'center', inline: 'nearest' })
+            })
+            await header.click({ timeout: 10000 })
+          }
         }
+        await expect(authenticatedPage.getByTestId(`model-checkbox-${id}`)).toBeChecked()
       }
-
-      expect(checkedCount).toBeGreaterThan(0)
     })
   })
 

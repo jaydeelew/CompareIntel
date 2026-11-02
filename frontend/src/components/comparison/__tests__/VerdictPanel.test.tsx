@@ -17,7 +17,7 @@ import { VerdictPanel } from '../VerdictPanel'
 describe('VerdictPanel', () => {
   it('highlights cheapest and fastest models and shows dashes for missing values', async () => {
     const user = userEvent.setup()
-    const gpt = createModelId('openai/gpt-4o')
+    const gpt = createModelId('openai/gpt-5')
     const cheap = createModelId('openai/gpt-4o-mini')
     const onOpenHelpMeChoose = vi.fn()
 
@@ -60,7 +60,7 @@ describe('VerdictPanel', () => {
           }),
         ]}
         allModels={[
-          { id: gpt, name: 'GPT-4o' },
+          { id: gpt, name: 'GPT-5' },
           { id: cheap, name: 'GPT-4o mini' },
         ]}
         onOpenHelpMeChoose={onOpenHelpMeChoose}
@@ -81,7 +81,7 @@ describe('VerdictPanel', () => {
   })
 
   it('shows a dash when cost is missing and uses the generic Help Me Choose fallback', () => {
-    const modelId = createModelId('openai/gpt-4o')
+    const modelId = createModelId('openai/gpt-5')
     render(
       <VerdictPanel
         conversations={[
@@ -98,7 +98,7 @@ describe('VerdictPanel', () => {
             ],
           }),
         ]}
-        allModels={[{ id: modelId, name: 'GPT-4o' }]}
+        allModels={[{ id: modelId, name: 'GPT-5' }]}
       />
     )
 

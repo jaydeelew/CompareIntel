@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-25",
+  "generated": "2026-11-02",
   "sources": {
     "registry": "backend/data/models_registry.json (master)",
     "renderer": "frontend/src/config/model_renderer_configs.json",
@@ -499,38 +499,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
-      "id": "cohere/command-r7b-12-2024",
-      "slug": "command-r7b-12-2024",
-      "name": "Command R7B",
-      "provider": "Cohere",
-      "category": "Language",
-      "description_registry": "A compact 7B model optimized for fast, efficient responses in conversational and RAG applications.",
-      "description_openrouter": "Command R7B (12-2024) is a small, fast update of the Command R+ model, delivered in December 2024. It excels at RAG, tool use, agents, and similar tasks requiring complex reasoning...",
-      "knowledge_cutoff": "December 2024",
-      "supports_web_search": false,
-      "supports_vision": false,
-      "supports_image_generation": null,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 128000,
-      "max_completion_tokens": 4000,
-      "input_modalities": [
-        "text"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 0.0375,
-      "price_output_usd_per_mtok": 0.15,
-      "price_per_image_usd": null,
-      "openrouter_created": "2024-12-14",
-      "openrouter_url": "https://openrouter.ai/cohere/command-r7b-12-2024",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-    {
+        {
       "id": "cohere/command-r-plus-08-2024",
       "slug": "command-r-plus-08-2024",
       "name": "Command R+",
@@ -1860,40 +1829,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
-      "id": "openai/gpt-4o",
-      "slug": "gpt-4o",
-      "name": "GPT-4o",
-      "provider": "OpenAI",
-      "category": "Language",
-      "description_registry": "An omnimodal model supporting text and image inputs with fast, intelligent multimodal responses.",
-      "description_openrouter": "GPT-4o (\"o\" for \"omni\") is OpenAI's latest AI model, supporting both text and image inputs with text outputs. It maintains the intelligence level of [GPT-4 Turbo](/models/openai/gpt-4-turbo) while being twice as...",
-      "knowledge_cutoff": "October 2023",
-      "supports_web_search": true,
-      "supports_vision": true,
-      "supports_image_generation": null,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 128000,
-      "max_completion_tokens": 16384,
-      "input_modalities": [
-        "text",
-        "image",
-        "file"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 2.5,
-      "price_output_usd_per_mtok": 10.0,
-      "price_per_image_usd": null,
-      "openrouter_created": "2024-05-13",
-      "openrouter_url": "https://openrouter.ai/openai/gpt-4o",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-    {
+        {
       "id": "openai/gpt-4o-mini",
       "slug": "gpt-4o-mini",
       "name": "Gpt 4o Mini",
@@ -2386,40 +2322,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
-      "id": "openai/gpt-5.6-terra",
-      "slug": "gpt-5-6-terra",
-      "name": "Gpt 5.6 Terra",
-      "provider": "OpenAI",
-      "category": "Language",
-      "description_registry": "GPT-5.6 Terra is a balanced model in OpenAI's GPT-5.6 series, positioned between the flagship Sol tier and the cost-efficient Luna tier.",
-      "description_openrouter": "GPT-5.6 Terra is a balanced model in OpenAI's GPT-5.6 series, positioned between the flagship Sol tier and the cost-efficient Luna tier. It is suited for everyday coding, reasoning, and agentic...",
-      "knowledge_cutoff": null,
-      "supports_web_search": true,
-      "supports_vision": true,
-      "supports_image_generation": false,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 1050000,
-      "max_completion_tokens": 128000,
-      "input_modalities": [
-        "file",
-        "image",
-        "text"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 2.0,
-      "price_output_usd_per_mtok": 12.0,
-      "price_per_image_usd": null,
-      "openrouter_created": "2026-07-09",
-      "openrouter_url": "https://openrouter.ai/openai/gpt-5.6-terra",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-    {
+        {
       "id": "qwen/qwen3-coder-next",
       "slug": "qwen3-coder-next",
       "name": "Qwen3 Coder Next",
@@ -2671,39 +2574,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
-      "id": "sourceful/riverflow-v2-fast",
-      "slug": "riverflow-v2-fast",
-      "name": "Riverflow V2 Fast",
-      "provider": "Sourceful",
-      "category": "Image",
-      "description_registry": "Fastest variant of Sourceful's Riverflow 2.0 lineup for production deployments and low latency.",
-      "description_openrouter": "Riverflow V2 Fast is the fastest variant of Sourceful's Riverflow 2.0 lineup, best for production deployments and latency-critical workflows. The Riverflow 2.0 series represents SOTA performance on image generation and...",
-      "knowledge_cutoff": "N/A",
-      "supports_web_search": false,
-      "supports_vision": null,
-      "supports_image_generation": true,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 8192,
-      "max_completion_tokens": 7372,
-      "input_modalities": [
-        "text",
-        "image"
-      ],
-      "output_modalities": [
-        "image"
-      ],
-      "price_input_usd_per_mtok": 0.0,
-      "price_output_usd_per_mtok": 0.0,
-      "price_per_image_usd": null,
-      "openrouter_created": "2026-02-02",
-      "openrouter_url": "https://openrouter.ai/sourceful/riverflow-v2-fast",
-      "has_renderer_config": false,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-    {
+        {
       "id": "sourceful/riverflow-v2-pro",
       "slug": "riverflow-v2-pro",
       "name": "Riverflow V2 Pro",
@@ -3020,6 +2891,136 @@
       "openrouter_created": "2025-12-22",
       "openrouter_url": "https://openrouter.ai/z-ai/glm-4.7",
       "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "openai/gpt-6-astra",
+      "slug": "gpt-6-astra",
+      "name": "Gpt 6 Astra",
+      "provider": "OpenAI",
+      "category": "Language",
+      "description_registry": "GPT-6 Astra is OpenAI's flagship model for demanding end-to-end work.",
+      "description_openrouter": "GPT-6 Astra is OpenAI's flagship model for demanding end-to-end work. It is suited for advanced analysis, software engineering, deep research, scientific work, and document creation, with particular strengths in long-horizon...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1050000,
+      "max_completion_tokens": 128000,
+      "input_modalities": [
+        "file",
+        "image",
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 10.0,
+      "price_output_usd_per_mtok": 50.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-09-04",
+      "openrouter_url": "https://openrouter.ai/openai/gpt-6-astra",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "openai/gpt-6.1-terra",
+      "slug": "gpt-6-1-terra",
+      "name": "Gpt 6.1 Terra",
+      "provider": "OpenAI",
+      "category": "Language",
+      "description_registry": "GPT-6.1 Terra is the mid-tier model in OpenAI's GPT-6.1 series, priced below GPT-6.1 Sol.",
+      "description_openrouter": "GPT-6.1 Terra is the mid-tier model in OpenAI's GPT-6.1 series, priced below GPT-6.1 Sol. It is suited for everyday agentic, coding, and writing work, is particularly strong at understanding screenshots...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1050000,
+      "max_completion_tokens": 128000,
+      "input_modalities": [
+        "file",
+        "image",
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 1.0,
+      "price_output_usd_per_mtok": 5.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-10-26",
+      "openrouter_url": "https://openrouter.ai/openai/gpt-6.1-terra",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "sourceful/riverflow-v2.6-pro",
+      "slug": "riverflow-v2-6-pro",
+      "name": "Riverflow V2.6 Pro",
+      "provider": "Sourceful",
+      "category": "Image",
+      "description_registry": "Riverflow 2.6 Pro is the flagship model of Sourceful's Riverflow 2.6 lineup, a unified text-to-image and image-to-image family that treats generation as a production workflow: an integrated reasoning model plans...",
+      "description_openrouter": "Riverflow 2.6 Pro is the flagship model of Sourceful's Riverflow 2.6 lineup, a unified text-to-image and image-to-image family that treats generation as a production workflow: an integrated reasoning model plans...",
+      "knowledge_cutoff": "N/A",
+      "supports_web_search": false,
+      "supports_vision": null,
+      "supports_image_generation": true,
+      "is_thinking_model": null,
+      "available": null,
+      "context_length": 32768,
+      "max_completion_tokens": 29491,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "image"
+      ],
+      "price_input_usd_per_mtok": 0.0,
+      "price_output_usd_per_mtok": 0.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-10-29",
+      "openrouter_url": "https://openrouter.ai/sourceful/riverflow-v2.6-pro",
+      "has_renderer_config": false,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "qwen/qwen-image-2.1-pro",
+      "slug": "qwen-image-2-1-pro",
+      "name": "Qwen Image 2.1 Pro",
+      "provider": "Qwen",
+      "category": "Image",
+      "description_registry": "Qwen Image 2.1 Pro is an image generation and editing model from Qwen, the higher-quality tier of the Qwen Image 2.1 series.",
+      "description_openrouter": "Qwen Image 2.1 Pro is an image generation and editing model from Qwen, the higher-quality tier of the Qwen Image 2.1 series. Choose it over Qwen Image 2.1 Turbo when...",
+      "knowledge_cutoff": "N/A",
+      "supports_web_search": false,
+      "supports_vision": null,
+      "supports_image_generation": true,
+      "is_thinking_model": null,
+      "available": null,
+      "context_length": 65536,
+      "max_completion_tokens": 58982,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "image"
+      ],
+      "price_input_usd_per_mtok": 0.0,
+      "price_output_usd_per_mtok": 0.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-10-16",
+      "openrouter_url": "https://openrouter.ai/qwen/qwen-image-2.1-pro",
+      "has_renderer_config": false,
       "openrouter_rankings_position": null,
       "in_openrouter": true
     }

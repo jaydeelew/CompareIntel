@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from 'vitest'
 
+import { MAX_INPUT_DATA_CHARS } from '../../config/constants'
 import type { ModelsByProvider } from '../../types'
 import { validateComparisonInput } from '../comparisonValidation'
 
@@ -57,11 +58,11 @@ describe('validateComparisonInput', () => {
 
     it('returns valid when image attached and vision-capable model selected', () => {
       const modelsByProvider = createModelsByProvider([
-        { id: 'openai/gpt-4o', name: 'GPT-4o', supports_vision: true },
+        { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', supports_vision: true },
       ])
       const result = validateComparisonInput({
         ...baseParams,
-        selectedModels: ['openai/gpt-4o'],
+        selectedModels: ['openai/gpt-4o-mini'],
         modelsByProvider,
         hasAttachedImages: true,
       })
@@ -71,11 +72,11 @@ describe('validateComparisonInput', () => {
     it('returns valid when image attached and at least one of multiple models supports vision', () => {
       const modelsByProvider = createModelsByProvider([
         { id: 'anthropic/claude-3-haiku', name: 'Claude 3 Haiku', supports_vision: false },
-        { id: 'openai/gpt-4o', name: 'GPT-4o', supports_vision: true },
+        { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', supports_vision: true },
       ])
       const result = validateComparisonInput({
         ...baseParams,
-        selectedModels: ['anthropic/claude-3-haiku', 'openai/gpt-4o'],
+        selectedModels: ['anthropic/claude-3-haiku', 'openai/gpt-4o-mini'],
         modelsByProvider,
         hasAttachedImages: true,
       })
@@ -114,8 +115,10 @@ describe('validateComparisonInput', () => {
       const result = validateComparisonInput({
         ...baseParams,
         input: '   ',
-        selectedModels: ['openai/gpt-4o'],
-        modelsByProvider: createModelsByProvider([{ id: 'openai/gpt-4o', name: 'GPT-4o' }]),
+        selectedModels: ['openai/gpt-4o-mini'],
+        modelsByProvider: createModelsByProvider([
+          { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
+        ]),
       })
       expect(result).toEqual({
         valid: false,
@@ -136,13 +139,34 @@ describe('validateComparisonInput', () => {
     })
 
     it('returns valid for valid input with model selected', () => {
-      const modelsByProvider = createModelsByProvider([{ id: 'openai/gpt-4o', name: 'GPT-4o' }])
+      const modelsByProvider = createModelsByProvider([
+        { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
+      ])
       const result = validateComparisonInput({
         ...baseParams,
-        selectedModels: ['openai/gpt-4o'],
+        selectedModels: ['openai/gpt-4o-mini'],
         modelsByProvider,
       })
       expect(result).toEqual({ valid: true })
+    })
+
+    it('returns invalid when input exceeds the client character cap', () => {
+      const modelsByProvider = createModelsByProvider([{ id: 'openai/gpt-4o', name: 'GPT-4o' }])
+      const result = validateComparisonInput({
+        ...baseParams,
+        input: 'a'.repeat(MAX_INPUT_DATA_CHARS + 1),
+        selectedModels: ['openai/gpt-4o'],
+        modelsByProvider,
+      })
+      expect(result.valid).toBe(false)
+      if (!result.valid) {
+        expect(result.error).toContain('maximum length')
+        expect(result.error).toContain(MAX_INPUT_DATA_CHARS.toLocaleString())
+      }
+    })
+
+    it('stays below the backend CompareRequest.input_data max_length', () => {
+      expect(MAX_INPUT_DATA_CHARS).toBeLessThan(300_000)
     })
   })
 })
