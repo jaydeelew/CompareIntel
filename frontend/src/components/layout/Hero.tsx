@@ -503,9 +503,14 @@ export function Hero({
               <span className="hero-title-second-line">Side by Side</span>
             </span>
           </h1>
-          <p className="hero-subtitle">
-            Built for humans to find the best AI models for their needs.
-          </p>
+          <div className="hero-subtitle-container">
+            <p className="hero-subtitle hero-subtitle--primary">
+              Built for humans to find the best AI models for their needs.
+            </p>
+            <p className="hero-subtitle hero-subtitle--alternate" aria-hidden="true">
+              Choose the right AI model with evidence, not guesswork.
+            </p>
+          </div>
 
           <div className="hero-capabilities-wrap">
             <div className={`hero-logo-flash ${showFlash ? 'active' : ''}`} aria-hidden="true">

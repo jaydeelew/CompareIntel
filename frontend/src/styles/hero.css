@@ -640,11 +640,24 @@
   }
 }
 
+/* Hero Subtitle Container - stacks two subtitles in same space for CSS cross-fade */
+.hero-subtitle-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  margin-bottom: 2.5rem;
+}
+
+.hero-subtitle-container > * {
+  grid-column: 1;
+  grid-row: 1;
+}
+
 /* Hero Subtitle */
 .hero-subtitle {
   font-size: clamp(1.1rem, 2.5vw, 1.4rem);
   color: var(--text-secondary);
-  margin-bottom: 2.5rem;
+  margin-bottom: 0; /* Container handles bottom margin */
   line-height: 1.6;
   font-weight: var(--font-normal);
   max-width: 700px;
@@ -668,6 +681,44 @@
 
 .hero-subtitle-second-line {
   white-space: normal;
+}
+
+/* Subtitle cross-fade animation - both subtitles in HTML for crawlers */
+@keyframes subtitleFadeInOut {
+  0%,
+  40% {
+    opacity: 1;
+  }
+  45%,
+  95% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.hero-subtitle--primary {
+  animation:
+    fadeInUp 0.8s ease-out 0.1s both,
+    subtitleFadeInOut 10s ease-in-out infinite;
+}
+
+.hero-subtitle--alternate {
+  opacity: 0;
+  animation: subtitleFadeInOut 10s ease-in-out 5s infinite;
+}
+
+/* Prefers-reduced-motion: show only primary subtitle, no animation */
+@media (prefers-reduced-motion: reduce) {
+  .hero-subtitle--primary {
+    animation: fadeInUp 0.8s ease-out 0.1s both;
+    opacity: 1;
+  }
+
+  .hero-subtitle--alternate {
+    display: none;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2065,21 +2116,21 @@ video.capability-tile-image-lightbox-img {
   color: #e0f2fe;
 }
 
-/* New single-sentence subtitle fits on one line at 481-768px, where the old
+/* New single-sentence subtitles fit on one line at 481-768px, where the old
    two-span subtitle was forced onto two lines; reserve two lines so the
    hero height matches the pre-PR layout. */
 @media (min-width: 481px) and (max-width: 768px) {
-  .hero-subtitle {
+  .hero-subtitle-container {
     min-height: 2lh;
   }
 }
 
-/* Hero pricing line - positioned absolutely to not add height */
+/* Hero pricing line - vertically centered in space between credits line and hero bottom */
 .hero-pricing-line {
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
-  bottom: 1.5rem; /* Sits in the space below the credits line (~6px gap) */
+  top: 50%;
+  transform: translate(-50%, -50%);
   width: calc(100% - 3rem);
   max-width: 900px;
   text-align: center;
@@ -2117,14 +2168,8 @@ video.capability-tile-image-lightbox-img {
 @media (max-width: 480px) {
   .hero-pricing-line {
     font-size: 0.75rem;
-    bottom: 0.25rem; /* Two-line wrap on phones: keep >=4px gap below credits line */
     width: calc(100% - 2rem);
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-pricing-line {
-    font-size: 0.8125rem;
+    /* Keep vertically centered on mobile too */
   }
 }
 
