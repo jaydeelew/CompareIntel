@@ -12,7 +12,7 @@
 import type { ExportFormat } from '../../hooks/useExport'
 import type { Model, ActiveResultTabs, ResultTab } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
-import { ResultsDisplay, ResultsSectionHeader } from '../comparison'
+import { ResultsDisplay, ResultsSectionHeader, VerdictPanel } from '../comparison'
 import { ErrorBoundary } from '../shared'
 
 /** Breakout animation phase type */
@@ -66,6 +66,8 @@ export interface ResultsAreaProps {
   tutorialSwipeHintNonce?: number
   /** Bumps when a capability-demo comparison finishes with tabbed multi-model results (Try a comparison). */
   capabilitySwipeHintNonce?: number
+  /** Open Help Me Choose, optionally scrolled to a category */
+  onOpenHelpMeChoose?: (options?: { scrollToCategoryId?: string }) => void
 }
 
 export function ResultsArea({
@@ -111,6 +113,7 @@ export function ResultsArea({
   onDismissMobileCapabilityDemoModelTabsHighlight,
   tutorialSwipeHintNonce = 0,
   capabilitySwipeHintNonce = 0,
+  onOpenHelpMeChoose,
 }: ResultsAreaProps) {
   return (
     <ErrorBoundary>
@@ -131,6 +134,17 @@ export function ResultsArea({
           isMobileLayout={isMobileLayout}
           isTutorialActive={isTutorialActive}
         />
+
+        {conversations.length > 0 &&
+          !isComparisonLoading &&
+          conversations.every(conversation => !modelProcessingStates[conversation.modelId]) && (
+            <VerdictPanel
+              conversations={conversations}
+              allModels={allModels}
+              modelErrorStates={modelErrorStates}
+              onOpenHelpMeChoose={onOpenHelpMeChoose}
+            />
+          )}
 
         <div className="results-display-host">
           <ResultsDisplay
