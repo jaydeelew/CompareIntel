@@ -49,25 +49,13 @@ updates:
     reviewers:
       - "jaydeelew"
 
-  # npm workspace (root lockfile). frontend/ is a workspace member, so
-  # `cd frontend && npm ci` validates against the root package-lock.json,
-  # not frontend/package-lock.json. Pointing Dependabot at /frontend made
-  # every npm PR fail npm ci (package.json bumped, root lockfile stale).
-  #
-  # A previous comment omitted directory: "/" because extension depends on
-  # @compareintel/core via file:../compare-core (that path does not exist
-  # from extension/; the real package is packages/compare-core). That used
-  # to fail Dependabot with path_dependencies_not_reachable.
-  #
-  # We still use "/" because it is the only YAML-only fix that updates the
-  # lockfile CI actually reads. npm workspaces already resolve
-  # @compareintel/core via packages/* (root lockfile links
-  # node_modules/@compareintel/core -> packages/compare-core). Dependabot
-  # treats workspace packages by name, so the stale file: path should not
-  # block the graph. We are not rewriting the file: path here: that would
-  # require lockfile edits, which another PR is handling. If the root npm
-  # job still errors, the follow-up is to change the extension dep to
-  # file:../packages/compare-core (or "*") in that lockfile PR.
+  # npm workspace (root lockfile). The root package.json declares workspaces
+  # covering packages/*, extension, and frontend. Dependabot needs visibility
+  # into the workspace package (@compareintel/core at packages/compare-core)
+  # to resolve extension's dependency. Adding the workspace package directory
+  # lets Dependabot discover it during graph resolution, even though extension
+  # uses a stale file:../compare-core path (fixed in a separate lockfile PR).
+  # Updates to workspace members still land in the root lockfile, which CI reads.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -126,6 +114,37 @@ updates:
         update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 3
     # No repo labels exist for Dependabot; [] disables default labels too.
+    labels: []
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    reviewers:
+      - "jaydeelew"
+
+  # Workspace package @compareintel/core (packages/compare-core).
+  # This entry ensures Dependabot can discover the workspace package that
+  # extension depends on. Dependencies here are dev-only and updates
+  # land in the root lockfile (same as other workspace members).
+  - package-ecosystem: "npm"
+    directory: "/packages/compare-core"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    open-pull-requests-limit: 0
     labels: []
     commit-message:
       prefix: "build"
