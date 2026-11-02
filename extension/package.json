@@ -29,7 +29,7 @@
     "@types/react-dom": "^18.2.0",
     "@types/webextension-polyfill": "^0.12.1",
     "@vitejs/plugin-react": "^4.3.4",
-    "archiver": "^7.0.1",
+    "archiver": "^8.0.0",
     "@playwright/test": "1.60.0",
     "jsdom": "^24.0.0",
     "sharp": "^0.35.5",
