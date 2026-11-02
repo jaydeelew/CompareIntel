@@ -119,27 +119,6 @@
   pointer-events: none;
 }
 
-/* Fine-tune breakpoints to match pre-PR #155 heights exactly */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .hero-section {
-    padding-bottom: 1.9375rem; /* Match 768px baseline: 889px (currently 878px, need +11px) */
-  }
-}
-
-@media (min-width: 1025px) and (max-width: 1279px) {
-  .hero-section {
-    padding-bottom: 2.25rem; /* Match 1024px+ baseline: 936px */
-  }
-}
-
-/* 1024px exact needs special handling to avoid tablet-nudge override */
-@media (min-width: 1024px) and (max-width: 1024px) {
-  .hero-section {
-    padding-top: calc(3rem + clamp(3.5rem, 9vmin, 7rem)) !important;
-    padding-bottom: 2.125rem !important; /* Fine-tuned for 936px at 1024×1000 viewport */
-  }
-}
-
 .hero-section > * {
   pointer-events: auto;
 }
@@ -2086,17 +2065,22 @@ video.capability-tile-image-lightbox-img {
   color: #e0f2fe;
 }
 
-/* Hero pricing line - shown below CTA for unauthenticated users */
+/* Hero pricing line - positioned absolutely to not add height */
 .hero-pricing-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 1.5rem; /* Position in existing bottom padding space */
+  width: calc(100% - 3rem);
+  max-width: 900px;
   text-align: center;
-  margin-top: 0.625rem; /* Spacing below credits line */
-  margin-bottom: 1.5rem; /* Compensate for removed spacing to maintain hero height */
+  margin: 0;
   font-size: 0.8125rem;
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.95); /* White text for readability on blue gradient */
+  color: rgba(255, 255, 255, 0.95);
+  z-index: 10;
 }
 
-/* Dark mode - keep white text (same as light for hero blue background) */
 :root[data-theme='dark'] .hero-pricing-line {
   color: rgba(255, 255, 255, 0.95);
 }
@@ -2111,8 +2095,8 @@ video.capability-tile-image-lightbox-img {
 }
 
 .hero-pricing-link {
-  color: rgba(255, 255, 255, 0.95); /* White link on blue gradient */
-  text-decoration: underline; /* Always underlined for clarity */
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: underline;
   font-weight: 500;
   transition: opacity 0.2s ease;
 }
@@ -2124,8 +2108,8 @@ video.capability-tile-image-lightbox-img {
 @media (max-width: 480px) {
   .hero-pricing-line {
     font-size: 0.75rem;
-    margin-top: 0.5rem;
-    margin-bottom: 1.25rem;
+    bottom: 1rem;
+    width: calc(100% - 2rem);
   }
 }
 
@@ -3184,7 +3168,7 @@ video.capability-tile-image-lightbox-img {
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   /* Navbar/brand overrides removed — navigation.css owns navbar sizing.
      Position-affecting changes (height, padding, font-size, gap) now fire
      at 480px so the hero, brand, and watermark stay stable above phone widths. */
