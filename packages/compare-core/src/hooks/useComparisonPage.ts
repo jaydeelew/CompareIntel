@@ -5,7 +5,7 @@ import { getPerModelContextMessageCount } from '../conversation/contextMessageCo
 import type { ModelInfo, StreamEvent } from '../api/services'
 import { deriveStreamErrorMessage } from '../api/streamErrors'
 import { getEventModelId } from '../api/services'
-import { buildPromptWithPageContext } from '../tabContext/promptBuilder'
+import { buildPromptWithPageContext, MAX_COMPARE_INPUT_CHARS } from '../tabContext/promptBuilder'
 import type { TabContextBundle } from '../tabContext/types'
 import { shouldAutoEnableWebSearch } from '../webSearch/autoEnable'
 
@@ -132,6 +132,13 @@ export function useComparisonPage(options: UseComparisonPageOptions) {
   const submitComparison = useCallback(async () => {
     if (!input.trim() || selectedModels.length === 0) {
       setError('Enter a prompt and select at least one model.')
+      return
+    }
+
+    if (input.trim().length > MAX_COMPARE_INPUT_CHARS) {
+      setError(
+        `Input exceeds maximum length of ${MAX_COMPARE_INPUT_CHARS.toLocaleString()} characters. Current length: ${input.trim().length.toLocaleString()}.`
+      )
       return
     }
 
