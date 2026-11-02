@@ -80,7 +80,7 @@
 }
 
 .hero-section {
-  padding: 3rem 1.5rem 2.5rem; /* Reduced bottom padding from 4rem to 2.5rem to accommodate pricing line */
+  padding: 3rem 1.5rem 4rem; /* Baseline padding restored */
   margin: 0;
   margin-top: 0 !important;
   text-align: center;
@@ -2070,7 +2070,7 @@ video.capability-tile-image-lightbox-img {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 1.5rem; /* Position in existing bottom padding space */
+  bottom: 2.25rem; /* Higher position to avoid overlapping flash logo */
   width: calc(100% - 3rem);
   max-width: 900px;
   text-align: center;
@@ -2108,7 +2108,7 @@ video.capability-tile-image-lightbox-img {
 @media (max-width: 480px) {
   .hero-pricing-line {
     font-size: 0.75rem;
-    bottom: 1rem;
+    bottom: 1.75rem; /* Add gap above credits line on phones */
     width: calc(100% - 2rem);
   }
 }
