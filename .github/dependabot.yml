@@ -50,12 +50,11 @@ updates:
       - "jaydeelew"
 
   # npm workspace (root lockfile). The root package.json declares workspaces
-  # covering packages/*, extension, and frontend. Dependabot needs visibility
-  # into the workspace package (@compareintel/core at packages/compare-core)
-  # to resolve extension's dependency. Adding the workspace package directory
-  # lets Dependabot discover it during graph resolution, even though extension
-  # uses a stale file:../compare-core path (fixed in a separate lockfile PR).
-  # Updates to workspace members still land in the root lockfile, which CI reads.
+  # covering packages/*, extension, and frontend. All workspace members share
+  # the root package-lock.json, so Dependabot must point at "/" to update the
+  # lockfile CI actually reads. Extension references @compareintel/core (the
+  # workspace package at packages/compare-core) via file:../packages/compare-core,
+  # which npm resolves correctly through the workspace configuration.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -114,37 +113,6 @@ updates:
         update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 3
     # No repo labels exist for Dependabot; [] disables default labels too.
-    labels: []
-    commit-message:
-      prefix: "build"
-      include: "scope"
-    reviewers:
-      - "jaydeelew"
-
-  # Workspace package @compareintel/core (packages/compare-core).
-  # This entry ensures Dependabot can discover the workspace package that
-  # extension depends on. Dependencies here are dev-only and updates
-  # land in the root lockfile (same as other workspace members).
-  - package-ecosystem: "npm"
-    directory: "/packages/compare-core"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "America/New_York"
-    groups:
-      minor-and-patch:
-        applies-to: version-updates
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-      security-updates:
-        applies-to: security-updates
-        patterns:
-          - "*"
-    open-pull-requests-limit: 0
     labels: []
     commit-message:
       prefix: "build"
