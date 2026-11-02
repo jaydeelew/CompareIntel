@@ -2125,11 +2125,11 @@ video.capability-tile-image-lightbox-img {
   }
 }
 
-/* Hero pricing line - positioned in lower portion of available space */
+/* Hero pricing line - positioned for equal gaps above and below */
 .hero-pricing-line {
   position: absolute;
   left: 50%;
-  bottom: 1.5rem;
+  bottom: 3rem;  /* Adjusted for vertical centering */
   transform: translateX(-50%);
   width: calc(100% - 3rem);
   max-width: 900px;
