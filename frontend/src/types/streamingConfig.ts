@@ -16,11 +16,7 @@ import type {
 } from './textComposerAdvanced'
 
 export type CreditWarningType =
-  | 'low'
-  | 'insufficient'
-  | 'none'
-  | 'overage_active'
-  | 'overage_cap_hit'
+  'low' | 'insufficient' | 'none' | 'overage_active' | 'overage_cap_hit'
 
 export interface OverageContext {
   overage_enabled?: boolean

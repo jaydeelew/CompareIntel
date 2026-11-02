@@ -481,8 +481,7 @@ export function useComparisonStreaming(
           credits_allocated: balance.credits_allocated ?? creditBalance?.credits_allocated ?? 0,
           credits_remaining: balance.credits_remaining ?? creditBalance?.credits_remaining ?? 0,
           period_type: (balance.period_type ?? creditBalance?.period_type ?? 'daily') as
-            | 'daily'
-            | 'monthly',
+            'daily' | 'monthly',
           subscription_tier:
             balance.subscription_tier ?? creditBalance?.subscription_tier ?? 'free',
         }
