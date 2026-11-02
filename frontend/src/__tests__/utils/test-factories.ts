@@ -134,6 +134,11 @@ export function createMockConversationMessage(
     type: overrides?.type || 'user',
     content: overrides?.content || `Test message content ${id}`,
     timestamp: overrides?.timestamp || new Date().toISOString(),
+    input_tokens: overrides?.input_tokens,
+    output_tokens: overrides?.output_tokens,
+    images: overrides?.images,
+    cost_usd: overrides?.cost_usd,
+    latency_ms: overrides?.latency_ms,
   }
 }
 

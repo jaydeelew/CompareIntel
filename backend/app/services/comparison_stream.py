@@ -28,6 +28,7 @@ from ..config.settings import settings
 from ..credit_manager import get_user_credits
 from ..database import SessionLocal
 from ..llm.registry import require_configured_openrouter_api_key
+from ..llm.tokens import serialize_per_model_usage
 from ..model_runner import (
     MODELS_BY_PROVIDER,
     call_openrouter_streaming,
@@ -771,6 +772,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
             "processing_time_ms": processing_time_ms,
             "credits_used": float(total_credits_used),
             "credits_remaining": int(credits_remaining[0]),
+            "per_model_usage": serialize_per_model_usage(usage_data_dict),
             **overage_meta,
         }
 
