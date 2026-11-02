@@ -80,7 +80,7 @@
 }
 
 .hero-section {
-  padding: 3rem 1.5rem 2.5rem; /* Reduced bottom padding from 4rem to 2.5rem to accommodate pricing line */
+  padding: 3rem 1.5rem 4rem; /* Baseline padding restored */
   margin: 0;
   margin-top: 0 !important;
   text-align: center;
@@ -117,27 +117,6 @@
      direct children. Composer-focused mode then disables .hero-content and
      re-enables only the controls that must stay live. */
   pointer-events: none;
-}
-
-/* Fine-tune breakpoints to match pre-PR #155 heights exactly */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .hero-section {
-    padding-bottom: 1.9375rem; /* Match 768px baseline: 889px (currently 878px, need +11px) */
-  }
-}
-
-@media (min-width: 1025px) and (max-width: 1279px) {
-  .hero-section {
-    padding-bottom: 2.25rem; /* Match 1024px+ baseline: 936px */
-  }
-}
-
-/* 1024px exact needs special handling to avoid tablet-nudge override */
-@media (min-width: 1024px) and (max-width: 1024px) {
-  .hero-section {
-    padding-top: calc(3rem + clamp(3.5rem, 9vmin, 7rem)) !important;
-    padding-bottom: 2.125rem !important; /* Fine-tuned for 936px at 1024×1000 viewport */
-  }
 }
 
 .hero-section > * {
@@ -661,11 +640,23 @@
   }
 }
 
+/* Hero Subtitle Container - stacks two subtitles in same space for CSS cross-fade */
+.hero-subtitle-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.hero-subtitle-container > * {
+  grid-column: 1;
+  grid-row: 1;
+}
+
 /* Hero Subtitle */
 .hero-subtitle {
   font-size: clamp(1.1rem, 2.5vw, 1.4rem);
   color: var(--text-secondary);
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.5rem; /* Kept on each stacked subtitle so breakpoint overrides still apply */
   line-height: 1.6;
   font-weight: var(--font-normal);
   max-width: 700px;
@@ -689,6 +680,44 @@
 
 .hero-subtitle-second-line {
   white-space: normal;
+}
+
+/* Subtitle cross-fade animation - both subtitles in HTML for crawlers */
+@keyframes subtitleFadeInOut {
+  0%,
+  40% {
+    opacity: 1;
+  }
+  45%,
+  95% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.hero-subtitle--primary {
+  animation:
+    fadeInUp 0.8s ease-out 0.1s both,
+    subtitleFadeInOut 10s ease-in-out infinite;
+}
+
+.hero-subtitle--alternate {
+  opacity: 0;
+  animation: subtitleFadeInOut 10s ease-in-out 5s infinite;
+}
+
+/* Prefers-reduced-motion: show only primary subtitle, no animation */
+@media (prefers-reduced-motion: reduce) {
+  .hero-subtitle--primary {
+    animation: fadeInUp 0.8s ease-out 0.1s both;
+    opacity: 1;
+  }
+
+  .hero-subtitle--alternate {
+    display: none;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2086,19 +2115,33 @@ video.capability-tile-image-lightbox-img {
   color: #e0f2fe;
 }
 
-/* Hero pricing line - shown below CTA for unauthenticated users */
-.hero-pricing-line {
-  text-align: center;
-  margin-top: 0;
-  margin-bottom: 2.5rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: rgba(0, 0, 0, 0.75); /* Light mode default */
+/* New single-sentence subtitles fit on one line at 481-768px, where the old
+   two-span subtitle was forced onto two lines; reserve two lines so the
+   hero height matches the pre-PR layout. */
+@media (min-width: 481px) and (max-width: 768px) {
+  .hero-subtitle {
+    min-height: 2lh;
+  }
 }
 
-/* Dark mode - ensure WCAG AA contrast (4.5:1) against dark background */
+/* Hero pricing line - positioned for equal gaps above and below */
+.hero-pricing-line {
+  position: absolute;
+  left: 50%;
+  bottom: 3rem; /* Fallback; useCenteredPricingLine sets top to center it below the credits line */
+  transform: translateX(-50%);
+  width: calc(100% - 3rem);
+  max-width: 900px;
+  text-align: center;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.95);
+  z-index: 10;
+}
+
 :root[data-theme='dark'] .hero-pricing-line {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .hero-pricing-free,
@@ -2107,24 +2150,25 @@ video.capability-tile-image-lightbox-img {
 }
 
 .hero-pricing-separator {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .hero-pricing-link {
-  color: var(--primary-color);
-  text-decoration: none;
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: underline;
   font-weight: 500;
   transition: opacity 0.2s ease;
 }
 
 .hero-pricing-link:hover {
-  opacity: 0.8;
-  text-decoration: underline;
+  opacity: 0.85;
 }
 
 @media (max-width: 480px) {
   .hero-pricing-line {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
+    width: calc(100% - 2rem);
+    /* Keep vertically centered on mobile too */
   }
 }
 
@@ -3177,7 +3221,7 @@ video.capability-tile-image-lightbox-img {
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   /* Navbar/brand overrides removed — navigation.css owns navbar sizing.
      Position-affecting changes (height, padding, font-size, gap) now fire
      at 480px so the hero, brand, and watermark stay stable above phone widths. */

@@ -384,7 +384,8 @@ export function fixLatexIssues(text: string): string {
     'leq',
     'geq',
     'cdot',
-    'times',
+    // Removed 'times' - the plain English word should not be converted to \times
+    // Only the × Unicode symbol should be converted (handled elsewhere)
     'div',
     'pm',
     'mp',

@@ -46,6 +46,10 @@ export interface StreamEvent {
     models_failed: number
     timestamp: string
     processing_time_ms?: number
+    per_model_usage?: Record<
+      string,
+      { prompt_tokens?: number; completion_tokens?: number; cost_usd?: number | null }
+    >
   }
 }
 
