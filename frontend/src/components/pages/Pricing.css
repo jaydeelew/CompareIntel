@@ -139,12 +139,12 @@
 }
 
 .pricing-tier-button-paid {
-  background: var(--text-primary);
-  color: var(--background-color);
+  background: var(--primary-color); /* Use brand blue, not text-primary */
+  color: white; /* Always white text for visibility */
 }
 
 .pricing-tier-button-paid:hover {
-  opacity: 0.9;
+  background: var(--primary-hover);
 }
 
 .pricing-tier-button:disabled {
