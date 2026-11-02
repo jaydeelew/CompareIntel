@@ -6,7 +6,7 @@
 
 import { useCallback } from 'react'
 
-import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
+import { getCreditAllocation, getDailyCreditLimit, MAX_INPUT_DATA_CHARS } from '../config/constants'
 import { apiClient } from '../services/api/client'
 import { ApiError } from '../services/api/errors'
 import { compareStream } from '../services/compareService'
@@ -346,6 +346,14 @@ export function useComparisonStreaming(
           stateCb.setIsLoading(false)
           return
         }
+      }
+
+      if (expandedInput.length > MAX_INPUT_DATA_CHARS) {
+        stateCb.setError(
+          `Input exceeds maximum length of ${MAX_INPUT_DATA_CHARS.toLocaleString()} characters. Current length: ${expandedInput.length.toLocaleString()}.`
+        )
+        stateCb.setIsLoading(false)
+        return
       }
 
       lastSubmittedInputRef.current = expandedInput

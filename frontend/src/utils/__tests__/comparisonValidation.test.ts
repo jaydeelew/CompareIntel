@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from 'vitest'
 
+import { MAX_INPUT_DATA_CHARS } from '../../config/constants'
 import type { ModelsByProvider } from '../../types'
 import { validateComparisonInput } from '../comparisonValidation'
 
@@ -143,6 +144,25 @@ describe('validateComparisonInput', () => {
         modelsByProvider,
       })
       expect(result).toEqual({ valid: true })
+    })
+
+    it('returns invalid when input exceeds the client character cap', () => {
+      const modelsByProvider = createModelsByProvider([{ id: 'openai/gpt-4o', name: 'GPT-4o' }])
+      const result = validateComparisonInput({
+        ...baseParams,
+        input: 'a'.repeat(MAX_INPUT_DATA_CHARS + 1),
+        selectedModels: ['openai/gpt-4o'],
+        modelsByProvider,
+      })
+      expect(result.valid).toBe(false)
+      if (!result.valid) {
+        expect(result.error).toContain('maximum length')
+        expect(result.error).toContain(MAX_INPUT_DATA_CHARS.toLocaleString())
+      }
+    })
+
+    it('stays below the backend CompareRequest.input_data max_length', () => {
+      expect(MAX_INPUT_DATA_CHARS).toBeLessThan(300_000)
     })
   })
 })

@@ -40,6 +40,52 @@ logger = logging.getLogger(__name__)
 REASONING_STREAM_TYPE = "reasoning"
 
 
+def _message_content_length(content: Any) -> int:
+    """Length of message content without exposing the text itself."""
+    if content is None:
+        return 0
+    if isinstance(content, str):
+        return len(content)
+    if isinstance(content, list):
+        length = 0
+        for part in content:
+            if isinstance(part, str):
+                length += len(part)
+            elif isinstance(part, dict):
+                text = part.get("text")
+                if isinstance(text, str):
+                    length += len(text)
+        return length
+    return 0
+
+
+def content_free_message_structure(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Metadata-only view of chat messages (roles, counts, lengths). Never includes prompt/page text."""
+    structure: list[dict[str, Any]] = []
+    for i, msg in enumerate(messages):
+        info: dict[str, Any] = {
+            "index": i,
+            "role": msg.get("role"),
+            "content_length": _message_content_length(msg.get("content")),
+        }
+        if msg.get("role") == "assistant" and msg.get("tool_calls"):
+            tool_calls = msg["tool_calls"]
+            info["tool_calls_count"] = len(tool_calls)
+            info["tool_call_ids"] = [tc.get("id") for tc in tool_calls if tc.get("id")]
+            info["tool_call_functions"] = [tc.get("function", {}).get("name") for tc in tool_calls]
+        elif msg.get("role") == "tool":
+            info["tool_call_id"] = msg.get("tool_call_id")
+        structure.append(info)
+    return structure
+
+
+def log_message_structure(messages: list[dict[str, Any]]) -> None:
+    """Debug-log message metadata only; no-op in production even if DEBUG is enabled."""
+    if settings.environment == "production":
+        return
+    logger.debug("Message structure: %s", content_free_message_structure(messages))
+
+
 def _reasoning_text_delta(delta: Any, choice: Any) -> str | None:
     """Extract incremental reasoning/thinking text from a stream delta (OpenRouter / OpenAI-style APIs)."""
     for obj in (delta, choice):
@@ -1973,29 +2019,12 @@ def call_openrouter_streaming(
                         if msg.get("role") == "tool" and msg.get("tool_call_id"):
                             all_tool_result_ids_in_messages.append(msg["tool_call_id"])
 
-                    # Log detailed message structure for debugging
-                    message_structure = []
-                    for i, msg in enumerate(messages):
-                        msg_info = {"index": i, "role": msg.get("role")}
-                        if msg.get("role") == "assistant" and msg.get("tool_calls"):
-                            msg_info["tool_calls_count"] = len(msg["tool_calls"])
-                            msg_info["tool_call_ids"] = [
-                                tc.get("id") for tc in msg["tool_calls"] if tc.get("id")
-                            ]
-                            msg_info["tool_call_functions"] = [
-                                tc.get("function", {}).get("name") for tc in msg["tool_calls"]
-                            ]
-                        elif msg.get("role") == "tool":
-                            msg_info["tool_call_id"] = msg.get("tool_call_id")
-                            msg_info["content_length"] = len(msg.get("content", ""))
-                        message_structure.append(msg_info)
-
                     logger.info(
                         f"Making continuation API call for model {model_id} (iteration {tool_call_iteration}). "
                         f"Total messages: {len(messages)}, Tool call IDs: {all_tc_ids_in_final_messages}, "
                         f"Tool result IDs: {all_tool_result_ids_in_messages}"
                     )
-                    logger.debug(f"Message structure: {message_structure}")
+                    log_message_structure(messages)
 
                     # Final validation: Check for duplicate tool result IDs
                     tool_result_id_counts = {}

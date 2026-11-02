@@ -17,6 +17,9 @@ export const ANONYMOUS_MODEL_LIMIT = 3
 
 // Model Limits per Subscription Tier
 
+/** Client-side compare input cap. Must stay below backend INPUT_DATA_MAX_LENGTH (300_000). */
+export const MAX_INPUT_DATA_CHARS = 280_000
+
 export const MODEL_LIMITS = {
   unregistered: 3,
   free: 3,
