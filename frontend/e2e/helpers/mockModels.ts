@@ -23,7 +23,7 @@ const MOCK_OPENAI_MODELS = [
   mockModel('openai/gpt-4.1-nano', 'GPT-4.1 Nano', 'unregistered'),
   mockModel('openai/gpt-4.1-mini', 'GPT-4.1 Mini', 'unregistered'),
   mockModel('openai/gpt-oss-20b', 'GPT OSS 20B', 'unregistered'),
-  mockModel('openai/gpt-4o', 'GPT-4o', 'free'),
+  mockModel('openai/gpt-5', 'GPT-5', 'free'),
   mockModel('openai/gpt-4.1', 'GPT-4.1', 'free'),
 ]
 

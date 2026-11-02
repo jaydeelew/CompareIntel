@@ -60,7 +60,6 @@ ASPECT_RATIO_TOLERANCE = 0.05  # 5% tolerance for dimension matching
 MODELS_SKIP_4K = frozenset(
     {
         "google/gemini-2.5-flash-image",
-        "sourceful/riverflow-v2-fast",
     }
 )
 

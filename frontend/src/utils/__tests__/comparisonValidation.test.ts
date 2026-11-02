@@ -57,11 +57,11 @@ describe('validateComparisonInput', () => {
 
     it('returns valid when image attached and vision-capable model selected', () => {
       const modelsByProvider = createModelsByProvider([
-        { id: 'openai/gpt-4o', name: 'GPT-4o', supports_vision: true },
+        { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', supports_vision: true },
       ])
       const result = validateComparisonInput({
         ...baseParams,
-        selectedModels: ['openai/gpt-4o'],
+        selectedModels: ['openai/gpt-4o-mini'],
         modelsByProvider,
         hasAttachedImages: true,
       })
@@ -71,11 +71,11 @@ describe('validateComparisonInput', () => {
     it('returns valid when image attached and at least one of multiple models supports vision', () => {
       const modelsByProvider = createModelsByProvider([
         { id: 'anthropic/claude-3-haiku', name: 'Claude 3 Haiku', supports_vision: false },
-        { id: 'openai/gpt-4o', name: 'GPT-4o', supports_vision: true },
+        { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', supports_vision: true },
       ])
       const result = validateComparisonInput({
         ...baseParams,
-        selectedModels: ['anthropic/claude-3-haiku', 'openai/gpt-4o'],
+        selectedModels: ['anthropic/claude-3-haiku', 'openai/gpt-4o-mini'],
         modelsByProvider,
         hasAttachedImages: true,
       })
@@ -114,8 +114,10 @@ describe('validateComparisonInput', () => {
       const result = validateComparisonInput({
         ...baseParams,
         input: '   ',
-        selectedModels: ['openai/gpt-4o'],
-        modelsByProvider: createModelsByProvider([{ id: 'openai/gpt-4o', name: 'GPT-4o' }]),
+        selectedModels: ['openai/gpt-4o-mini'],
+        modelsByProvider: createModelsByProvider([
+          { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
+        ]),
       })
       expect(result).toEqual({
         valid: false,
@@ -136,10 +138,12 @@ describe('validateComparisonInput', () => {
     })
 
     it('returns valid for valid input with model selected', () => {
-      const modelsByProvider = createModelsByProvider([{ id: 'openai/gpt-4o', name: 'GPT-4o' }])
+      const modelsByProvider = createModelsByProvider([
+        { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
+      ])
       const result = validateComparisonInput({
         ...baseParams,
-        selectedModels: ['openai/gpt-4o'],
+        selectedModels: ['openai/gpt-4o-mini'],
         modelsByProvider,
       })
       expect(result).toEqual({ valid: true })

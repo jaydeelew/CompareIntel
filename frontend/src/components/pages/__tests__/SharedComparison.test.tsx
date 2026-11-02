@@ -15,9 +15,13 @@ import { SharedComparison } from '../SharedComparison'
 const snapshot = {
   slug: 'abc123xyz9',
   prompt: 'Explain gravity to a child',
-  models: [{ id: 'openai/gpt-4o', name: 'GPT-4o' }],
+  models: [{ id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' }],
   responses: [
-    { model_id: 'openai/gpt-4o', model_name: 'GPT-4o', content: 'Gravity pulls things down.' },
+    {
+      model_id: 'openai/gpt-4o-mini',
+      model_name: 'GPT-4o Mini',
+      content: 'Gravity pulls things down.',
+    },
   ],
   created_at: '2026-10-30T00:00:00Z',
 }
@@ -42,7 +46,7 @@ describe('SharedComparison', () => {
 
     expect(await screen.findByText('Explain gravity to a child')).toBeInTheDocument()
     expect(screen.getByText('Gravity pulls things down.')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'GPT-4o' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'GPT-4o Mini' })).toBeInTheDocument()
     const cta = screen.getByRole('link', { name: /try your own comparison/i })
     expect(cta).toHaveAttribute('href', '/')
   })

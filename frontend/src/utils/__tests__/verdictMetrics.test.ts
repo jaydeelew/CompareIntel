@@ -47,8 +47,10 @@ describe('verdictMetrics', () => {
   })
 
   it('looks up usage by exact or branded model id and ignores non-positive latency', () => {
-    const modelId = createModelId('openai/gpt-4o')
-    expect(lookupPerModelUsage({ 'openai/gpt-4o': { cost_usd: 0.2 } }, modelId)?.cost_usd).toBe(0.2)
+    const modelId = createModelId('openai/gpt-4o-mini')
+    expect(
+      lookupPerModelUsage({ 'openai/gpt-4o-mini': { cost_usd: 0.2 } }, modelId)?.cost_usd
+    ).toBe(0.2)
     expect(latencyMsBetween('2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')).toBeNull()
     expect(latencyMsBetween('2026-01-01T00:00:00.000Z', '2026-01-01T00:00:01.500Z')).toBe(1500)
   })

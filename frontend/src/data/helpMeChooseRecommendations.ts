@@ -49,7 +49,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     categoryInfoTooltip:
       'Ranked by average cost per million tokens (OpenRouter pricing: prompt + completion). Only models under $1/1M tokens are included. Lower cost = better value. Prices vary by provider.',
     models: [
-      { modelId: 'cohere/command-r7b-12-2024', evidence: 'Avg. $0.09/1M tokens.' },
       { modelId: 'microsoft/phi-4', evidence: 'Avg. $0.10/1M tokens.' },
       { modelId: 'openai/gpt-oss-120b', evidence: 'Avg. $0.11/1M tokens.' },
       { modelId: 'google/gemma-3-27b-it', evidence: 'Avg. $0.12/1M tokens.' },
@@ -96,7 +95,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'google/gemini-3-flash-preview', evidence: 'LMSpeed (lmspeed.net): 160 t/s.' },
       { modelId: 'qwen/qwen3-coder-next', evidence: 'LMSpeed (lmspeed.net): 147 t/s.' },
       { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'LMSpeed (lmspeed.net): 138 t/s.' },
-      { modelId: 'sourceful/riverflow-v2-fast', evidence: 'LMSpeed (lmspeed.net): 133 t/s.' },
       { modelId: 'qwen/qwen3-next-80b-a3b-instruct', evidence: 'LMSpeed (lmspeed.net): 116 t/s.' },
       { modelId: 'qwen/qwen3-coder-flash', evidence: 'LMSpeed (lmspeed.net): 110 t/s.' },
       { modelId: 'google/gemini-2.5-pro', evidence: 'LMSpeed (lmspeed.net): 97 t/s.' },
@@ -168,7 +166,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'google/gemini-2.5-pro',
         evidence: 'Creative Writing Arena (kearai.com): 1450 Elo.',
       },
-      { modelId: 'openai/gpt-4o', evidence: 'Creative Writing Arena (kearai.com): 1438 Elo.' },
       { modelId: 'x-ai/grok-4.20', evidence: 'Creative Writing Arena (kearai.com): 1434 Elo.' },
       { modelId: 'openai/gpt-5.2', evidence: 'Creative Writing Arena (kearai.com): 1398 Elo.' },
       {
@@ -202,7 +199,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'Vision Arena (lmarena.ai): 1257.' },
       { modelId: 'x-ai/grok-4.20', evidence: 'Vision Arena (lmarena.ai): 1256.' },
       { modelId: 'google/gemini-2.5-flash', evidence: 'Vision Arena (lmarena.ai): 1249.' },
-      { modelId: 'openai/gpt-4o', evidence: 'Vision Arena (lmarena.ai): 1244.' },
       {
         modelId: 'google/gemini-3.1-flash-lite-preview',
         evidence: 'Vision Arena (lmarena.ai): 1243.',
@@ -262,7 +258,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       'Ranked by MATH benchmark (llmdb.com), 12.5K competition mathematics problems. Higher % = better at multi-step math reasoning. GSM8K used when MATH not available.',
     models: [
       { modelId: 'openai/o3', evidence: 'MATH (llmdb.com): 94.8%.' },
-      { modelId: 'openai/gpt-4o', evidence: 'MATH (llmdb.com): 76.6%.' },
       { modelId: 'google/gemini-2.5-pro', evidence: 'MATH (llmdb.com): 2.0%.' },
       { modelId: 'google/gemini-2.5-flash', evidence: 'MATH (llmdb.com): 2.0%.' },
     ],
@@ -299,7 +294,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'anthropic/claude-sonnet-4.6',
         evidence: 'MRCR v2 4-needle 256K (awesomeagents.ai): 82%.',
       },
-      { modelId: 'openai/gpt-4o', evidence: 'MRCR v2 4-needle 256K (awesomeagents.ai): 80%.' },
       { modelId: 'anthropic/claude-opus-4.6', evidence: 'MRCR 1M (llmdb.com): 76.0/100.' },
       { modelId: 'google/gemini-2.5-flash', evidence: 'MRCR 1M (llmdb.com): 70.5/100.' },
     ],
@@ -363,10 +357,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'HealthBench Hard (OpenAI): 46%. Challenging clinical subset.',
       },
       { modelId: 'openai/gpt-5.2', evidence: 'HealthBench Hard (OpenAI): 42%.' },
-      {
-        modelId: 'openai/gpt-4o',
-        evidence: 'HealthBench (OpenAI): 32%. Multi-turn health scenarios.',
-      },
       { modelId: 'google/gemini-2.5-pro', evidence: 'HealthBench Hard (OpenAI): 19%.' },
     ],
   },

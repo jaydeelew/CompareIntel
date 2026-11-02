@@ -452,7 +452,9 @@ class BreakoutConversationCreate(BaseModel):
     model_id: str = Field(..., description="Model ID to break out into a separate conversation")
 
     model_config = ConfigDict(
-        json_schema_extra={"example": {"parent_conversation_id": 123, "model_id": "openai/gpt-4o"}}
+        json_schema_extra={
+            "example": {"parent_conversation_id": 123, "model_id": "openai/gpt-4o-mini"}
+        }
     )
 
 

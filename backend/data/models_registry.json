@@ -312,16 +312,6 @@
     ],
     "Cohere": [
       {
-        "id": "cohere/command-r7b-12-2024",
-        "name": "Command R7B",
-        "description": "A compact 7B model optimized for fast, efficient responses in conversational and RAG applications.",
-        "category": "Language",
-        "provider": "Cohere",
-        "supports_web_search": false,
-        "knowledge_cutoff": "December 2024",
-        "supports_vision_probed": false
-      },
-      {
         "id": "cohere/command-a",
         "name": "Command A",
         "description": "An open-weights 111B model with 256k context excelling in agentic, multilingual, and coding tasks.",
@@ -904,16 +894,6 @@
         "supports_vision_probed": true
       },
       {
-        "id": "openai/gpt-4o",
-        "name": "GPT-4o",
-        "description": "An omnimodal model supporting text and image inputs with fast, intelligent multimodal responses.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "knowledge_cutoff": "October 2023",
-        "supports_vision_probed": true
-      },
-      {
         "id": "openai/gpt-4o-mini",
         "name": "Gpt 4o Mini",
         "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
@@ -1036,20 +1016,31 @@
         "knowledge_cutoff": null
       },
       {
-        "id": "openai/gpt-5.6-terra",
-        "name": "Gpt 5.6 Terra",
-        "description": "GPT-5.6 Terra is a balanced model in OpenAI's GPT-5.6 series, positioned between the flagship Sol tier and the cost-efficient Luna tier.",
+        "id": "openai/gpt-6.1-sol",
+        "name": "Gpt 6.1 Sol",
+        "description": "GPT-6.1 Sol is an upgrade to GPT-6 Sol from OpenAI, positioned below the flagship GPT-6 Astra in the GPT-6 series.",
         "category": "Language",
         "provider": "OpenAI",
         "supports_web_search": true,
         "supports_image_generation": false,
-        "supports_vision_probed": true,
+        "is_thinking_model": true,
         "knowledge_cutoff": null
       },
       {
-        "id": "openai/gpt-6.1-sol",
-        "name": "Gpt 6.1 Sol",
-        "description": "GPT-6.1 Sol is an upgrade to GPT-6 Sol from OpenAI, positioned below the flagship GPT-6 Astra in the GPT-6 series.",
+        "id": "openai/gpt-6-astra",
+        "name": "Gpt 6 Astra",
+        "description": "GPT-6 Astra is OpenAI's flagship model for demanding end-to-end work.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-6.1-terra",
+        "name": "Gpt 6.1 Terra",
+        "description": "GPT-6.1 Terra is the mid-tier model in OpenAI's GPT-6.1 series, priced below GPT-6.1 Sol.",
         "category": "Language",
         "provider": "OpenAI",
         "supports_web_search": true,
@@ -1129,29 +1120,56 @@
         "supports_image_generation": false,
         "is_thinking_model": true,
         "knowledge_cutoff": null
+      },
+      {
+        "id": "qwen/qwen-image-2.1-pro",
+        "name": "Qwen Image 2.1 Pro",
+        "description": "Qwen Image 2.1 Pro is an image generation and editing model from Qwen, the higher-quality tier of the Qwen Image 2.1 series.",
+        "category": "Image",
+        "provider": "Qwen",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "9:16",
+          "2:3",
+          "3:4",
+          "4:5",
+          "1:1",
+          "5:4",
+          "4:3",
+          "3:2",
+          "16:9",
+          "21:9"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ],
+        "returns_multiple_images": false
       }
     ],
     "Sourceful": [
       {
-        "id": "sourceful/riverflow-v2-fast",
-        "name": "Riverflow V2 Fast",
-        "description": "Fastest variant of Sourceful's Riverflow 2.0 lineup for production deployments and low latency.",
+        "id": "sourceful/riverflow-v2.6-pro",
+        "name": "Riverflow V2.6 Pro",
+        "description": "Riverflow 2.6 Pro is the flagship model of Sourceful's Riverflow 2.6 lineup, a unified text-to-image and image-to-image family that treats generation as a production workflow: an integrated reasoning model plans...",
         "category": "Image",
         "provider": "Sourceful",
         "supports_image_generation": true,
         "supports_web_search": false,
         "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
+          "9:16",
           "2:3",
-          "3:2",
           "3:4",
-          "4:3",
           "4:5",
+          "1:1",
           "5:4",
-          "9:16"
+          "4:3",
+          "3:2",
+          "16:9",
+          "21:9"
         ],
         "image_sizes": [
           "1K",
@@ -1358,7 +1376,6 @@
     ]
   },
   "unregistered_tier_models": [
-    "cohere/command-r7b-12-2024",
     "deepseek/deepseek-v3.2",
     "deepseek/deepseek-v4-flash",
     "deepseek/deepseek-v4.1-flash",
@@ -1386,7 +1403,7 @@
     "black-forest-labs/flux.2-pro",
     "black-forest-labs/flux.2-flex",
     "black-forest-labs/flux.2-klein-4b",
-    "sourceful/riverflow-v2-fast",
+    "sourceful/riverflow-v2.6-pro",
     "sourceful/riverflow-v2-pro",
     "bytedance-seed/seedream-4.5",
     "openai/gpt-5-image",
@@ -1396,7 +1413,8 @@
     "google/gemini-3-pro-image",
     "google/gemini-3.1-flash-image",
     "google/gemini-nano-banana-2.1",
-    "openai/gpt-image-2.5-sunburst"
+    "openai/gpt-image-2.5-sunburst",
+    "qwen/qwen-image-2.1-pro"
   ],
   "free_tier_additional_models": [
     "anthropic/claude-haiku-4.5",

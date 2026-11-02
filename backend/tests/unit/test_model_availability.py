@@ -71,7 +71,9 @@ def test_assess_flags_zero_uptime_endpoints() -> None:
 
 
 def test_check_model_availability_reports_catalog_only_miss() -> None:
-    live = {"openai/gpt-4o": {"id": "openai/gpt-4o", "canonical_slug": "openai/gpt-4o"}}
+    live = {
+        "openai/gpt-4o-mini": {"id": "openai/gpt-4o-mini", "canonical_slug": "openai/gpt-4o-mini"}
+    }
     results = check_model_availability(
         [
             {

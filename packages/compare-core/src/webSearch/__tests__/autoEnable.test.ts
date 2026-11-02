@@ -8,8 +8,8 @@ import {
 } from '../autoEnable'
 
 const gpt4: ModelInfo = {
-  id: 'openai/gpt-4o',
-  name: 'GPT-4o',
+  id: 'openai/gpt-4o-mini',
+  name: 'GPT-4o Mini',
   provider: 'OpenAI',
   supports_web_search: true,
   knowledge_cutoff: 'October 2023',
