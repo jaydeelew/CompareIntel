@@ -1,7 +1,8 @@
 import { renderHook } from '@testing-library/react'
+import { type RefObject } from 'react'
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+
 import { useCenteredPricingLine } from '../useCenteredPricingLine'
-import type { RefObject } from 'react'
 
 describe('useCenteredPricingLine', () => {
   let mockElement: HTMLDivElement
