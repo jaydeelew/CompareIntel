@@ -13,9 +13,9 @@ import { server } from '../msw/server'
 const snapshot = {
   slug: 'abc123xyz9',
   prompt: 'Explain gravity',
-  models: [{ id: 'openai/gpt-4o', name: 'GPT-4o' }],
+  models: [{ id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' }],
   responses: [
-    { model_id: 'openai/gpt-4o', model_name: 'GPT-4o', content: 'It pulls things down.' },
+    { model_id: 'openai/gpt-4o-mini', model_name: 'GPT-4o Mini', content: 'It pulls things down.' },
   ],
   created_at: '2026-10-30T00:00:00Z',
 }

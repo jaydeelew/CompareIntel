@@ -4,8 +4,8 @@ import { getEventModelId, type StreamEvent } from '../services'
 
 describe('getEventModelId', () => {
   it('reads model field from backend SSE events', () => {
-    const event: StreamEvent = { type: 'chunk', model: 'openai/gpt-4o', content: 'hi' }
-    expect(getEventModelId(event)).toBe('openai/gpt-4o')
+    const event: StreamEvent = { type: 'chunk', model: 'openai/gpt-4o-mini', content: 'hi' }
+    expect(getEventModelId(event)).toBe('openai/gpt-4o-mini')
   })
 
   it('falls back to model_id', () => {

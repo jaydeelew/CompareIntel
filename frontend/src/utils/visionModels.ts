@@ -7,7 +7,6 @@ import type { ModelsByProvider } from '../types'
 
 /** Fallback vision-capable model IDs when registry metadata is missing (mirrors Best for vision). */
 export const KNOWN_VISION_MODEL_IDS = new Set([
-  'openai/gpt-4o',
   'openai/gpt-4o-mini',
   'anthropic/claude-sonnet-4.6',
   'anthropic/claude-opus-5',

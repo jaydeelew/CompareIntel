@@ -1,5 +1,5 @@
 {
-  "skipIds": ["qwen/qwen3-next-80b-a3b-thinking", "x-ai/grok-5"],
+  "skipIds": ["qwen/qwen3-next-80b-a3b-thinking", "openai/gpt-6.1-terra"],
   "models": [
     {
       "id": "anthropic/claude-opus-5",
