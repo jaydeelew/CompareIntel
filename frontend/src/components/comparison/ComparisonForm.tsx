@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom'
 
 import { BREAKPOINT_MOBILE, DAILY_CREDIT_LIMITS, TIER_PRICING } from '../../config/constants'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
+import { useCenteredPricingLine } from '../../hooks/useCenteredPricingLine'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
@@ -192,6 +193,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const mirrorSavedSelectionsSlotRef = useRef<HTMLDivElement>(null)
     const baseInputWhenSpeechStartedRef = useRef<string>('')
     const mobileBaseInputRef = useRef<string>('')
+    const pricingLineRef = useRef<HTMLDivElement>(null)
+    useCenteredPricingLine(pricingLineRef, !isFollowUpMode && !isAuthenticated)
     const currentInputRef = useRef<string>(input)
 
     const handleSpeechResult = useCallback(
@@ -1226,7 +1229,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           <ContextWarning tokenUsageInfo={tokenUsageInfo} renderUsagePreview={renderUsagePreview} />
         )}
         {!isFollowUpMode && !isAuthenticated && (
-          <div className="hero-pricing-line">
+          <div className="hero-pricing-line" ref={pricingLineRef}>
             <span className="hero-pricing-free">
               {DAILY_CREDIT_LIMITS.unregistered} free credits/day, {DAILY_CREDIT_LIMITS.free} with a
               free account

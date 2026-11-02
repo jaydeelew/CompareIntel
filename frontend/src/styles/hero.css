@@ -645,7 +645,6 @@
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
-  margin-bottom: 2.5rem;
 }
 
 .hero-subtitle-container > * {
@@ -657,7 +656,7 @@
 .hero-subtitle {
   font-size: clamp(1.1rem, 2.5vw, 1.4rem);
   color: var(--text-secondary);
-  margin-bottom: 0; /* Container handles bottom margin */
+  margin-bottom: 2.5rem; /* Kept on each stacked subtitle so breakpoint overrides still apply */
   line-height: 1.6;
   font-weight: var(--font-normal);
   max-width: 700px;
@@ -2120,7 +2119,7 @@ video.capability-tile-image-lightbox-img {
    two-span subtitle was forced onto two lines; reserve two lines so the
    hero height matches the pre-PR layout. */
 @media (min-width: 481px) and (max-width: 768px) {
-  .hero-subtitle-container {
+  .hero-subtitle {
     min-height: 2lh;
   }
 }
@@ -2129,7 +2128,7 @@ video.capability-tile-image-lightbox-img {
 .hero-pricing-line {
   position: absolute;
   left: 50%;
-  bottom: 3rem;  /* Adjusted for vertical centering */
+  bottom: 3rem; /* Fallback; useCenteredPricingLine sets top to center it below the credits line */
   transform: translateX(-50%);
   width: calc(100% - 3rem);
   max-width: 900px;
