@@ -21,7 +21,7 @@ describe('mapExtensionHandoff', () => {
         selectedModels: [
           'deepseek/deepseek-chat',
           'deepseek/deepseek-v4.1-flash',
-          'cohere/command-r7b',
+          'cohere/command-a',
         ],
       })
     )
@@ -29,7 +29,7 @@ describe('mapExtensionHandoff', () => {
     expect(hydration.selectedModels).toEqual([
       'deepseek/deepseek-chat',
       'deepseek/deepseek-v4.1-flash',
-      'cohere/command-r7b',
+      'cohere/command-a',
     ])
     expect(hydration.conversations).toEqual([])
     expect(hydration.isFollowUpMode).toBe(false)
@@ -40,12 +40,12 @@ describe('mapExtensionHandoff', () => {
     const hydration = mapExtensionHandoff(
       payload({
         input: 'Compare these approaches',
-        selectedModels: ['openai/gpt-4o'],
+        selectedModels: ['openai/gpt-4o-mini'],
       })
     )
 
     expect(hydration.input).toBe('Compare these approaches')
-    expect(hydration.selectedModels).toEqual(['openai/gpt-4o'])
+    expect(hydration.selectedModels).toEqual(['openai/gpt-4o-mini'])
     expect(hydration.conversations).toEqual([])
     expect(hydration.isFollowUpMode).toBe(false)
   })
@@ -83,11 +83,11 @@ describe('mapExtensionHandoff', () => {
     const hydration = mapExtensionHandoff(
       payload({
         input: 'Draft prompt still in the box',
-        selectedModels: ['openai/gpt-4o'],
+        selectedModels: ['openai/gpt-4o-mini'],
         results: [
           {
-            modelId: 'openai/gpt-4o',
-            modelName: 'GPT-4o',
+            modelId: 'openai/gpt-4o-mini',
+            modelName: 'GPT-4o Mini',
             content: '',
             isStreaming: false,
             error: null,
@@ -106,16 +106,16 @@ describe('mapExtensionHandoff', () => {
     const hydration = mapExtensionHandoff(
       payload({
         input: 'follow-up question',
-        selectedModels: ['openai/gpt-4o'],
+        selectedModels: ['openai/gpt-4o-mini'],
         conversationId: 42,
         conversationHistory: [
           { role: 'user', content: 'What is 2+2?' },
-          { role: 'assistant', content: '4', model_id: 'openai/gpt-4o' },
+          { role: 'assistant', content: '4', model_id: 'openai/gpt-4o-mini' },
         ],
         results: [
           {
-            modelId: 'openai/gpt-4o',
-            modelName: 'GPT-4o',
+            modelId: 'openai/gpt-4o-mini',
+            modelName: 'GPT-4o Mini',
             content: '4',
             isStreaming: false,
             error: null,

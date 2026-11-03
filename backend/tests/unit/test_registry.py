@@ -58,8 +58,9 @@ class TestCatalogLineup:
         "bytedance-seed/seedream-4.5",
         "bytedance-seed/seedream-5-0-flash",
         "openai/gpt-image-2.5-sunburst",
-        "sourceful/riverflow-v2-fast",
         "sourceful/riverflow-v2-pro",
+        "sourceful/riverflow-v2.6-pro",
+        "qwen/qwen-image-2.1-pro",
     )
 
     def test_image_output_models_remain_in_registry(self):
@@ -71,6 +72,45 @@ class TestCatalogLineup:
         ids = registry.get_registry_model_ids()
         assert "qwen/qwen3-next-80b-a3b-thinking" not in ids
         assert "qwen/qwen3-next-80b-a3b-instruct" in ids
+
+    def test_weekly_refresh_adds_and_removes(self):
+        ids = registry.get_registry_model_ids()
+        for model_id in (
+            "openai/gpt-6-astra",
+            "openai/gpt-6.1-terra",
+            "sourceful/riverflow-v2.6-pro",
+            "qwen/qwen-image-2.1-pro",
+        ):
+            assert model_id in ids
+        for model_id in (
+            "openai/gpt-4o",
+            "openai/gpt-5.6-terra",
+            "sourceful/riverflow-v2-fast",
+            "cohere/command-r7b-12-2024",
+        ):
+            assert model_id not in ids
+
+    def test_qwen_image_model_is_image_only_and_text_qwen_is_not(self):
+        """Qwen text and image models share a prefix, so image-only comes from metadata."""
+        from app.llm.registry import (
+            get_model_outputs_image_only,
+            get_model_supports_image_generation,
+            invalidate_openrouter_models_json_caches,
+        )
+
+        invalidate_openrouter_models_json_caches()
+        assert get_model_supports_image_generation("qwen/qwen-image-2.1-pro") is True
+        assert get_model_outputs_image_only("qwen/qwen-image-2.1-pro") is True
+        assert get_model_supports_image_generation("qwen/qwen3.8-max-0902") is False
+        assert get_model_outputs_image_only("qwen/qwen3.8-max-0902") is False
+
+        qwen = {
+            model["id"]: model for model in registry.load_registry()["models_by_provider"]["Qwen"]
+        }
+        image_model = qwen["qwen/qwen-image-2.1-pro"]
+        assert image_model["category"] == "Image"
+        assert image_model["supports_image_generation"] is True
+        assert image_model["provider"] == "Qwen"
 
 
 class TestOpenRouterClientKey:
@@ -126,12 +166,16 @@ class TestOpenRouterClientKey:
         with pytest.raises(
             registry.OpenRouterConfigError, match="OPENROUTER_API_KEY is not configured"
         ):
-            next(call_openrouter_streaming(prompt="hi", model_id="openai/gpt-4o", use_mock=False))
+            next(
+                call_openrouter_streaming(
+                    prompt="hi", model_id="openai/gpt-4o-mini", use_mock=False
+                )
+            )
 
 
 class TestTierFiltering:
     def test_is_model_available_paid_tier_always_true(self):
-        model_id = "openai/gpt-4o"
+        model_id = "openai/gpt-4o-mini"
         assert registry.is_model_available_for_tier(model_id, "starter") is True
         assert registry.is_model_available_for_tier(model_id, "pro") is True
 
@@ -143,7 +187,7 @@ class TestTierFiltering:
             assert registry.is_model_available_for_tier(model_id, "unregistered") is True
 
     def test_filter_models_by_tier_adds_tier_access(self):
-        models = [{"id": "openai/gpt-4o", "name": "GPT-4o"}]
+        models = [{"id": "openai/gpt-4o-mini", "name": "GPT-4o Mini"}]
         result = registry.filter_models_by_tier(models, "free")
         assert len(result) == 1
         assert result[0]["tier_access"] in ("unregistered", "free", "paid")

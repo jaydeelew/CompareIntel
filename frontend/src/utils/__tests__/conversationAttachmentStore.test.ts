@@ -47,7 +47,7 @@ describe('conversationAttachmentStore', () => {
       `compareintel_conversation_${conversationId}`,
       JSON.stringify({
         input_data: '',
-        models_used: ['openai/gpt-4o'],
+        models_used: ['openai/gpt-4o-mini'],
         messages: [],
         file_contents: externalized,
       })

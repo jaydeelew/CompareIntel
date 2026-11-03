@@ -11,9 +11,9 @@ from app.llm.tokens import TokenUsage, serialize_per_model_usage
 
 def test_serialize_includes_reported_cost() -> None:
     usage = TokenUsage(10, 20, 30, 60, Decimal("0.1"), Decimal("0.0025"))
-    out = serialize_per_model_usage({"openai/gpt-4o": usage})
+    out = serialize_per_model_usage({"openai/gpt-4o-mini": usage})
     assert out == {
-        "openai/gpt-4o": {
+        "openai/gpt-4o-mini": {
             "prompt_tokens": 10,
             "completion_tokens": 20,
             "cost_usd": 0.0025,
@@ -34,4 +34,4 @@ def test_serialize_skips_image_usage_dicts() -> None:
 
 
 def test_serialize_skips_missing_usage() -> None:
-    assert serialize_per_model_usage({"openai/gpt-4o": None}) == {}
+    assert serialize_per_model_usage({"openai/gpt-4o-mini": None}) == {}

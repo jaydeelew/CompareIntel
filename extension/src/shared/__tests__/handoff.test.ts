@@ -28,7 +28,7 @@ import {
 
 const payload = {
   input: 'hello',
-  selectedModels: ['openai/gpt-4o'],
+  selectedModels: ['openai/gpt-4o-mini'],
   results: [],
   conversationHistory: [],
   conversationId: null,
@@ -44,7 +44,7 @@ describe('handoff', () => {
   it('never includes tokens on the public payload', () => {
     expect(stripHandoffSecrets(payload, 'nonce-1')).toEqual({
       input: 'hello',
-      selectedModels: ['openai/gpt-4o'],
+      selectedModels: ['openai/gpt-4o-mini'],
       results: [],
       conversationHistory: [],
       conversationId: null,

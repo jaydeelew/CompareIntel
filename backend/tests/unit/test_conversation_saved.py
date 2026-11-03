@@ -14,7 +14,7 @@ class TestConversationSavedAndImport:
         conv = Conversation(
             user_id=user.id,
             input_data="Keep this one",
-            models_used=json.dumps(["openai/gpt-4o"]),
+            models_used=json.dumps(["openai/gpt-4o-mini"]),
         )
         db_session.add(conv)
         db_session.commit()
@@ -34,7 +34,7 @@ class TestConversationSavedAndImport:
                 "conversations": [
                     {
                         "input_data": "Device chat",
-                        "models_used": ["openai/gpt-4o"],
+                        "models_used": ["openai/gpt-4o-mini"],
                         "client_source": "extension",
                         "saved": True,
                         "messages": [
@@ -42,7 +42,7 @@ class TestConversationSavedAndImport:
                             {
                                 "role": "assistant",
                                 "content": "Hello",
-                                "model_id": "openai/gpt-4o",
+                                "model_id": "openai/gpt-4o-mini",
                             },
                         ],
                     }
@@ -74,12 +74,12 @@ class TestConversationSavedAndImport:
                 "conversations": [
                     {
                         "input_data": "No user turn",
-                        "models_used": ["openai/gpt-4o"],
+                        "models_used": ["openai/gpt-4o-mini"],
                         "messages": [{"role": "assistant", "content": "Hello"}],
                     },
                     {
                         "input_data": "Keep me",
-                        "models_used": ["openai/gpt-4o"],
+                        "models_used": ["openai/gpt-4o-mini"],
                         "messages": [{"role": "user", "content": "Keep me"}],
                     },
                 ]

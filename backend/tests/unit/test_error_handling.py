@@ -135,7 +135,7 @@ class TestFormatStreamingErrorMessage:
             provider_name=None,
             original_exception=Exception("Invalid request"),
         )
-        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        msg = format_streaming_error_message(err, "openai/gpt-4o-mini", 60)
         assert msg.startswith("Error:")
         assert "Invalid" in msg
 
@@ -148,7 +148,7 @@ class TestFormatStreamingErrorMessage:
             provider_name=None,
             original_exception=Exception("Bad input"),
         )
-        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        msg = format_streaming_error_message(err, "openai/gpt-4o-mini", 60)
         assert msg == "Error: Invalid request - Bad input"
 
     def test_401_returns_auth_message(self):
@@ -160,7 +160,7 @@ class TestFormatStreamingErrorMessage:
             provider_name=None,
             original_exception=Exception("Unauthorized"),
         )
-        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        msg = format_streaming_error_message(err, "openai/gpt-4o-mini", 60)
         assert "Authentication failed" in msg
 
     def test_429_returns_friendly_retry_message(self):
@@ -172,7 +172,7 @@ class TestFormatStreamingErrorMessage:
             provider_name=None,
             original_exception=Exception("Rate limited"),
         )
-        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        msg = format_streaming_error_message(err, "openai/gpt-4o-mini", 60)
         assert "try again" in msg.lower()
         assert "busy" in msg.lower()
 
@@ -186,7 +186,7 @@ class TestFormatStreamingErrorMessage:
             original_exception=Exception("Rate limited"),
             retry_after_seconds=12,
         )
-        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        msg = format_streaming_error_message(err, "openai/gpt-4o-mini", 60)
         assert "12 seconds" in msg
 
     def test_402_insufficient_credits_returns_try_again_later(self):
@@ -199,7 +199,7 @@ class TestFormatStreamingErrorMessage:
             original_exception=Exception("Payment required"),
             is_402_insufficient_credits=True,
         )
-        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        msg = format_streaming_error_message(err, "openai/gpt-4o-mini", 60)
         assert "try again later" in msg.lower()
 
     def test_402_max_tokens_returns_credits_message(self):
@@ -211,7 +211,7 @@ class TestFormatStreamingErrorMessage:
             provider_name=None,
             original_exception=Exception("Payment required"),
         )
-        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        msg = format_streaming_error_message(err, "openai/gpt-4o-mini", 60)
         assert "credits" in msg.lower() or "max_tokens" in msg
         assert "Error:" in msg
 
@@ -274,7 +274,7 @@ class TestFormatStreamingErrorMessage:
             provider_name=None,
             original_exception=Exception("timeout"),
         )
-        msg = format_streaming_error_message(err, "openai/gpt-4o", 45)
+        msg = format_streaming_error_message(err, "openai/gpt-4o-mini", 45)
         assert msg == "Error: Timeout (45s)"
 
     def test_generic_error_truncates_long_message(self):
@@ -287,5 +287,5 @@ class TestFormatStreamingErrorMessage:
             provider_name=None,
             original_exception=Exception("boom"),
         )
-        msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
+        msg = format_streaming_error_message(err, "openai/gpt-4o-mini", 60)
         assert msg == f"Error: {'x' * 200}"

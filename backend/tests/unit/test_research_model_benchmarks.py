@@ -224,9 +224,11 @@ class TestDetermineCategories:
             assert len(cost_eff) == 0, f"Expected exclusion for cost={cost}"
 
     def test_model_in_vision_arena_gets_images(self):
-        model = make_registry_model("openai/gpt-4o")
-        vision = {"openai/gpt-4o": (1244.0, "Vision Arena (lmarena.ai): 1244.")}
-        entries = determine_categories("openai/gpt-4o", model, None, {}, vision_arena_scores=vision)
+        model = make_registry_model("openai/gpt-4o-mini")
+        vision = {"openai/gpt-4o-mini": (1244.0, "Vision Arena (lmarena.ai): 1244.")}
+        entries = determine_categories(
+            "openai/gpt-4o-mini", model, None, {}, vision_arena_scores=vision
+        )
         images = [e for e in entries if e["category_id"] == "images"]
         assert len(images) == 1
         assert images[0]["evidence"] == "Vision Arena (lmarena.ai): 1244."
@@ -949,10 +951,10 @@ class TestFetchDateAndStaleMarkers:
 
     def test_attach_fetch_dates_preserves_score(self):
         dated = attach_fetch_dates(
-            {"openai/gpt-4o": (76.6, "MATH (llmdb.com): 76.6%.")}, fetched_on="2026-10-31"
+            {"openai/gpt-4o-mini": (76.6, "MATH (llmdb.com): 76.6%.")}, fetched_on="2026-10-31"
         )
-        assert dated["openai/gpt-4o"][0] == 76.6
-        assert "Fetched 2026-10-31" in dated["openai/gpt-4o"][1]
+        assert dated["openai/gpt-4o-mini"][0] == 76.6
+        assert "Fetched 2026-10-31" in dated["openai/gpt-4o-mini"][1]
 
     def test_mark_category_skips_implausible_rows(self):
         cat = {
@@ -983,7 +985,7 @@ class TestLineupSync:
     def test_get_lineup_model_ids_reads_models_by_provider_only(self):
         registry = {
             "models_by_provider": {
-                "OpenAI": [{"id": "openai/gpt-5"}, {"id": "openai/gpt-4o"}],
+                "OpenAI": [{"id": "openai/gpt-5"}, {"id": "openai/gpt-4o-mini"}],
                 "Google": [{"id": "google/gemini-2.5-flash"}],
             },
             "unregistered_tier_models": ["openai/gpt-5"],
@@ -991,7 +993,7 @@ class TestLineupSync:
         }
         assert get_lineup_model_ids(registry) == {
             "openai/gpt-5",
-            "openai/gpt-4o",
+            "openai/gpt-4o-mini",
             "google/gemini-2.5-flash",
         }
 
@@ -1008,17 +1010,17 @@ class TestLineupSync:
                 "id": "writing",
                 "models": [
                     {"modelId": "retired/old-model", "evidence": "Elo: 1400."},
-                    {"modelId": "openai/gpt-4o", "evidence": "Elo: 1438."},
+                    {"modelId": "openai/gpt-4o-mini", "evidence": "Elo: 1438."},
                 ],
             },
         ]
-        removed = drop_rankings_not_in_lineup(categories, {"openai/gpt-5", "openai/gpt-4o"})
+        removed = drop_rankings_not_in_lineup(categories, {"openai/gpt-5", "openai/gpt-4o-mini"})
         assert removed == {
             "coding": ["retired/old-model"],
             "writing": ["retired/old-model"],
         }
         assert [m["modelId"] for m in categories[0]["models"]] == ["openai/gpt-5"]
-        assert [m["modelId"] for m in categories[1]["models"]] == ["openai/gpt-4o"]
+        assert [m["modelId"] for m in categories[1]["models"]] == ["openai/gpt-4o-mini"]
 
     def test_report_unranked_lineup_models_is_not_an_error(self, capsys):
         categories = [
@@ -1037,10 +1039,10 @@ class TestLineupSync:
 
     def test_collect_ranked_model_ids_is_unique(self):
         categories = [
-            {"id": "a", "models": [{"modelId": "openai/gpt-5"}, {"modelId": "openai/gpt-4o"}]},
+            {"id": "a", "models": [{"modelId": "openai/gpt-5"}, {"modelId": "openai/gpt-4o-mini"}]},
             {"id": "b", "models": [{"modelId": "openai/gpt-5"}]},
         ]
-        assert collect_ranked_model_ids(categories) == {"openai/gpt-5", "openai/gpt-4o"}
+        assert collect_ranked_model_ids(categories) == {"openai/gpt-5", "openai/gpt-4o-mini"}
 
     def test_sync_rankings_with_lineup_drops_and_reports(self, tmp_path, capsys):
         ts_file = tmp_path / "helpMeChooseRecommendations.ts"
@@ -1062,7 +1064,7 @@ class TestLineupSync:
                     label: 'Writing',
                     description: 'D',
                     models: [
-                      { modelId: 'openai/gpt-4o', evidence: 'Creative Writing Arena (kearai.com): 1438 Elo.' },
+                      { modelId: 'openai/gpt-4o-mini', evidence: 'Creative Writing Arena (kearai.com): 1438 Elo.' },
                     ],
                   },
                 ]
@@ -1075,7 +1077,7 @@ class TestLineupSync:
             json.dumps(
                 {
                     "models_by_provider": {
-                        "OpenAI": [{"id": "openai/gpt-5"}, {"id": "openai/gpt-4o"}],
+                        "OpenAI": [{"id": "openai/gpt-5"}, {"id": "openai/gpt-4o-mini"}],
                     }
                 }
             ),
@@ -1116,7 +1118,7 @@ class TestLineupSync:
                 label: 'Writing',
                 description: 'D',
                 models: [
-                  { modelId: 'openai/gpt-4o', evidence: 'Creative Writing Arena (kearai.com): 1438 Elo.' },
+                  { modelId: 'openai/gpt-4o-mini', evidence: 'Creative Writing Arena (kearai.com): 1438 Elo.' },
                 ],
               },
             ]
@@ -1129,7 +1131,7 @@ class TestLineupSync:
             json.dumps(
                 {
                     "models_by_provider": {
-                        "OpenAI": [{"id": "openai/gpt-5"}, {"id": "openai/gpt-4o"}],
+                        "OpenAI": [{"id": "openai/gpt-5"}, {"id": "openai/gpt-4o-mini"}],
                     }
                 }
             ),

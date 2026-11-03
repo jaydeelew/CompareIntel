@@ -47,7 +47,9 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
   'openai/gpt-image-2.5-sunburst': { image_sizes: ['1K', '2K'] },
 
   // Sourceful - Riverflow V2
-  'sourceful/riverflow-v2-fast': { image_sizes: ['1K', '2K'] },
+  'sourceful/riverflow-v2.6-pro': { image_sizes: ['1K', '2K'] },
+  // Qwen Image 2.1 Pro: 1K and 2K (4K not validated)
+  'qwen/qwen-image-2.1-pro': { image_sizes: ['1K', '2K'] },
   'sourceful/riverflow-v2-fast-preview': {
     image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
     image_sizes: ['1K'],

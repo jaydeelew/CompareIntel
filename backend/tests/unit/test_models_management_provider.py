@@ -53,6 +53,16 @@ class TestProviderNameResolution:
             == "Mistral"
         )
 
+    def test_resolve_provider_qwen_image_reuses_qwen_bucket(self):
+        models_by_provider = {
+            "Qwen": [{"id": "qwen/qwen3.8-max-0902", "name": "Qwen3.8 Max"}],
+        }
+        assert _display_provider_from_openrouter_slug("qwen") == "Qwen"
+        assert (
+            _resolve_provider_name_for_registry("qwen/qwen-image-2.1-pro", models_by_provider)
+            == "Qwen"
+        )
+
     @pytest.mark.parametrize(
         ("model_id", "expected"),
         [
