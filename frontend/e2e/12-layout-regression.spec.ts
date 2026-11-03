@@ -77,8 +77,27 @@ async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
     localStorage.setItem('theme', targetTheme)
   }, theme)
 
-  // Wait for theme transition to complete
-  await page.waitForTimeout(150)
+  // Wait for theme transition animations to complete
+  await page.evaluate(async () => {
+    // Wait for any finite transition animations triggered by theme change
+    const elements = document.querySelectorAll('*')
+    const animations = Array.from(elements).flatMap(el =>
+      Array.from(el.getAnimations({ subtree: false })) // Don't recurse to avoid infinite animations
+    ).filter(animation => {
+      // Only wait for finite animations (those with a duration)
+      const effect = animation.effect as KeyframeEffect | null
+      return effect && effect.getTiming().duration !== Infinity
+    })
+    
+    // Race with timeout to avoid hanging on long animations
+    await Promise.race([
+      Promise.all(
+        animations.map(animation => animation.finished.catch(() => undefined))
+      ),
+      new Promise(resolve => setTimeout(resolve, 1000)) // 1s max wait
+    ])
+  })
+
   await waitForStableLayout(page)
 }
 
@@ -151,38 +170,78 @@ test.describe('Layout Regression Tests', () => {
       }
     }
 
-    test('should keep hero subtitles inside hero bounds', async ({ page }) => {
-      // Test at mobile width where issues are most likely
-      await page.setViewportSize({ width: 375, height: 667 })
-      await gotoStable(page, '/')
+    for (const { name: vpName, size: viewport } of viewports) {
+      for (const theme of themes) {
+        test(`should keep hero text elements within bounds at ${vpName} in ${theme} mode`, async ({ page }) => {
+          // Set viewport
+          await page.setViewportSize(viewport)
+          await gotoStable(page, '/')
+          await setTheme(page, theme)
 
-      const heroSection = page.locator('.hero-section')
-      const heroBox = await heroSection.boundingBox()
-      expect(heroBox, 'Hero section should have a bounding box').not.toBeNull()
+          const heroSection = page.locator('.hero-section')
+          const heroBox = await heroSection.boundingBox()
+          expect(heroBox, 'Hero section should have a bounding box').not.toBeNull()
 
-      // Check all subtitles are inside hero bounds
-      const subtitles = page.locator('.hero-subtitle')
-      const count = await subtitles.count()
-      
-      for (let i = 0; i < count; i++) {
-        const subtitle = subtitles.nth(i)
-        if (await subtitle.isVisible()) {
-          const subtitleBox = await subtitle.boundingBox()
-          if (subtitleBox) {
-            // Check subtitle is inside hero bounds
+          // Check all major hero text elements are within hero bounds
+          const textSelectors = [
+            '.hero-title',
+            '.hero-subtitle--primary',
+            '.hero-subtitle--alternate',
+          ]
+
+          for (const selector of textSelectors) {
+            const element = page.locator(selector).first()
+            // Element might be hidden (alternate subtitle with aria-hidden), skip if not visible
+            const isVisible = await element.isVisible().catch(() => false)
+            if (!isVisible) continue
+
+            const elementBox = await element.boundingBox()
+            if (!elementBox) continue
+
+            // Verify element is within hero bounds vertically
             expect(
-              subtitleBox.y,
-              `Subtitle ${i} should be within hero top boundary`
-            ).toBeGreaterThanOrEqual(heroBox!.y)
+              elementBox.y,
+              `${selector} at ${vpName} (${theme}) should be within hero top boundary`
+            ).toBeGreaterThanOrEqual(heroBox!.y - 1) // -1px for subpixel rounding
 
             expect(
-              subtitleBox.y + subtitleBox.height,
-              `Subtitle ${i} should be within hero bottom boundary`
-            ).toBeLessThanOrEqual(heroBox!.y + heroBox!.height)
+              elementBox.y + elementBox.height,
+              `${selector} at ${vpName} (${theme}) should be within hero bottom boundary`
+            ).toBeLessThanOrEqual(heroBox!.y + heroBox!.height + 1) // +1px for subpixel rounding
+
+            // Verify element doesn't overflow horizontally
+            expect(
+              elementBox.x,
+              `${selector} at ${vpName} (${theme}) should not overflow hero left`
+            ).toBeGreaterThanOrEqual(heroBox!.x - 1)
+
+            expect(
+              elementBox.x + elementBox.width,
+              `${selector} at ${vpName} (${theme}) should not overflow hero right`
+            ).toBeLessThanOrEqual(heroBox!.x + heroBox!.width + 1)
           }
-        }
+
+          // Additional check: verify subtitle vertical spacing is reasonable
+          // (ensure they're not overlapping in a broken way)
+          const primarySubtitle = page.locator('.hero-subtitle--primary')
+          const primaryVisible = await primarySubtitle.isVisible().catch(() => false)
+          
+          if (primaryVisible) {
+            const primaryBox = await primarySubtitle.boundingBox()
+            const heroTitle = page.locator('.hero-title')
+            const titleBox = await heroTitle.boundingBox()
+            
+            if (primaryBox && titleBox) {
+              // Primary subtitle should be below the title
+              expect(
+                primaryBox.y,
+                `Primary subtitle should be positioned below hero title at ${vpName} (${theme})`
+              ).toBeGreaterThan(titleBox.y + titleBox.height - 10) // -10px for potential overlap
+            }
+          }
+        })
       }
-    })
+    }
 
     test('should not clip or overflow hero text horizontally at mobile widths', async ({ page }) => {
       // Test at narrowest mobile width
