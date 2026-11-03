@@ -201,17 +201,25 @@ test.describe('Mobile Platform Tests', () => {
       const signUpButton = page.getByTestId('nav-sign-up-button')
       await expect(signUpButton).toBeVisible()
 
+      // Wait for any ongoing animations/transitions to complete
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})
+      await safeWait(page, 300)
+
+      // Ensure no overlays are blocking the button
+      const heroSection = page.locator('.hero-section').first()
+      await expect(heroSection).toHaveCSS('pointer-events', 'none', { timeout: 5000 })
+
       const hasTouch = await page.evaluate(() => navigator.maxTouchPoints > 0)
       if (hasTouch) {
-        await signUpButton.tap({ timeout: 10000 })
+        await signUpButton.tap({ timeout: 15000 })
       } else {
-        await signUpButton.click({ timeout: 10000 })
+        await signUpButton.click({ timeout: 15000 })
       }
       await safeWait(page, 500)
 
       // Auth modal should appear
       const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
-      await expect(authModal).toBeVisible({ timeout: 5000 })
+      await expect(authModal).toBeVisible({ timeout: 10000 })
 
       // Close modal
       const closeButton = page.locator('[data-testid="auth-modal-close"], .auth-modal-close')
@@ -250,10 +258,14 @@ test.describe('Mobile Platform Tests', () => {
       const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
+      // Wait for models API to complete before expanding providers
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})
+
       // Expand first provider dropdown if collapsed
       const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
       if ((await providerHeaders.count()) > 0) {
         const firstProvider = providerHeaders.first()
+        await firstProvider.waitFor({ state: 'visible', timeout: 10000 })
         const isExpanded = await firstProvider.getAttribute('aria-expanded')
         if (isExpanded !== 'true') {
           await tapOrClick(firstProvider, page, browserName)
@@ -266,6 +278,9 @@ test.describe('Mobile Platform Tests', () => {
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
       )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
+
+      // Wait for checkbox to be ready (not animating)
+      await safeWait(page, 300)
 
       // Tap/click first checkbox
       const firstCheckbox = modelCheckboxes.first()

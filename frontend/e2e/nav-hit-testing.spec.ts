@@ -57,9 +57,12 @@ async function probeNavHitTargets(
 async function openHomeAndRevealNav(page: import('@playwright/test').Page) {
   await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 })
   await page.waitForLoadState('load', { timeout: 30000 }).catch(() => {})
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {})
   await waitForReactHydration(page)
   await dismissTutorialOverlay(page)
   await ensureUnfoldedNavbar(page)
+  // Wait for any CSS transitions from ensureUnfoldedNavbar to complete
+  await page.waitForTimeout(600)
 }
 
 async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Page) {
@@ -68,7 +71,10 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
   await expect(signUp).toBeVisible({ timeout: 20000 })
   await expect(signIn).toBeVisible({ timeout: 20000 })
 
-  await expect(page.locator('.hero-section').first()).toHaveCSS('pointer-events', 'none')
+  // Wait for hero-section pointer-events to be properly set (WebKit needs extra time)
+  await expect(page.locator('.hero-section').first()).toHaveCSS('pointer-events', 'none', {
+    timeout: 10000,
+  })
 
   // Descendants must remain hittable (pointer-events is not inherited).
   const composer = page.getByTestId('comparison-input-textarea')
@@ -106,8 +112,11 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
     ).toBe(true)
   }
 
+  // Wait for any remaining transitions before clicking (WebKit needs this)
+  await page.waitForTimeout(400)
+
   // Real pointer click — no force / DOM-click workaround.
-  await signUp.click({ timeout: 10000 })
+  await signUp.click({ timeout: 15000 })
   await expect(page.getByTestId('auth-modal')).toBeVisible({ timeout: 15000 })
 }
 
