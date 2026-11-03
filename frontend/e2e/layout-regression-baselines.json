@@ -1,0 +1,27 @@
+{
+  "hero": {
+    "description": "Baseline heights for the hero section at various viewports and themes. Measured in pixels with ±4px tolerance. To update: run the test once, copy the actual heights from the failure output, and paste them here.",
+    "viewports": {
+      "375x667": {
+        "light": 678,
+        "dark": 678
+      },
+      "390x844": {
+        "light": 780,
+        "dark": 780
+      },
+      "768x1024": {
+        "light": 889,
+        "dark": 889
+      },
+      "1280x800": {
+        "light": 736,
+        "dark": 736
+      },
+      "1920x1080": {
+        "light": 1016,
+        "dark": 1016
+      }
+    }
+  }
+}
