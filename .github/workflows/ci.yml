@@ -32,6 +32,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
       seo: ${{ steps.filter.outputs.seo }}
+      extension: ${{ steps.filter.outputs.extension }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -60,6 +61,10 @@ jobs:
               - 'frontend/index.html'
               - 'frontend/public/robots.txt'
               - 'frontend/src/utils/pageMeta.ts'
+            extension:
+              - 'extension/**'
+              - 'packages/compare-core/**'
+              - '.github/workflows/ci.yml'
 
       - name: Check CSP header sync
         run: node scripts/check-csp-sync.js
@@ -975,6 +980,38 @@ jobs:
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0
 
+  extension-test:
+    name: Extension Tests
+    needs: detect-changes
+    if: needs.detect-changes.outputs.extension == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run compare-core tests
+        run: npm run core:test
+      
+      - name: Build extension
+        run: npm run extension:build
+      
+      - name: Verify manifest
+        run: node extension/scripts/assert-dist-manifest.mjs
+      
+      - name: Run extension tests
+        run: npm run test -w @compareintel/extension
+
   e2e-test-prerendered:
     name: E2E Tests - Prerendered Build
     needs: detect-changes
@@ -1042,7 +1079,8 @@ jobs:
       e2e-test-browsers,
       e2e-test-accessibility,
       e2e-test-prerendered,
-      security-scan
+      security-scan,
+      extension-test
     ]
     if: always()
     runs-on: ubuntu-latest
@@ -1069,6 +1107,7 @@ jobs:
             echo "| E2E Tests (Accessibility) | ${{ needs.e2e-test-accessibility.result }} |"
             echo "| E2E Tests (Prerendered) | ${{ needs.e2e-test-prerendered.result }} |"
             echo "| Security Scan | ${{ needs.security-scan.result }} |"
+            echo "| Extension Tests | ${{ needs.extension-test.result }} |"
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -1100,6 +1139,7 @@ jobs:
           check_job "E2E Tests (Accessibility)" "${{ needs.e2e-test-accessibility.result }}"
           check_job "E2E Tests (Prerendered)" "${{ needs.e2e-test-prerendered.result }}"
           check_job "Security Scan" "${{ needs.security-scan.result }}"
+          check_job "Extension Tests" "${{ needs.extension-test.result }}"
 
           if [[ ${#FAILED_JOBS[@]} -gt 0 ]]; then
             {
