@@ -470,7 +470,7 @@ export function ModelsSectionHeader({
                   handleSelectionCountClick(e)
                 }
               }}
-              aria-label={`${selectedModels.length} of ${maxModelsLimit} models selected. Learn about tier limits.`}
+              aria-label={`${selectedModels.length} of ${maxModelsLimit} selected. Click to learn about tier limits.`}
             >
               {selectedModels.length} of {maxModelsLimit} selected
             </div>

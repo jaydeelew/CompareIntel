@@ -24,17 +24,17 @@
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.7.0",
-    "@types/chrome": "^0.0.287",
+    "@types/chrome": "^0.3.7",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@types/webextension-polyfill": "^0.12.1",
+    "@types/webextension-polyfill": "^0.12.6",
     "@vitejs/plugin-react": "^4.3.4",
     "archiver": "^8.0.0",
     "@playwright/test": "1.60.0",
     "jsdom": "^24.0.0",
     "sharp": "^0.35.5",
     "typescript": "~5.7.2",
-    "vite": "^6.0.5",
-    "vitest": "^3.0.5"
+    "vite": "^6.4.5",
+    "vitest": "^4.1.12"
   }
 }
