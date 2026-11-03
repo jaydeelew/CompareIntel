@@ -25,7 +25,6 @@
     ]
   },
   "overrides": {
-    "jszip": "3.10.1",
     "vitest@^4": {
       "std-env": "^4.1.0"
     },
