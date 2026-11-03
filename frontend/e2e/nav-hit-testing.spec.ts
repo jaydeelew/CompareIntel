@@ -60,6 +60,13 @@ async function openHomeAndRevealNav(page: import('@playwright/test').Page) {
   await waitForReactHydration(page)
   await dismissTutorialOverlay(page)
   await ensureUnfoldedNavbar(page)
+
+  // Wait for all CSS transitions/animations on the header shell to complete
+  const shell = page.locator('.app-header-shell').first()
+  await shell.evaluate(async el => {
+    const animations = el.getAnimations({ subtree: true })
+    await Promise.all(animations.map(a => a.finished))
+  })
 }
 
 async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Page) {
@@ -68,12 +75,13 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
   await expect(signUp).toBeVisible({ timeout: 20000 })
   await expect(signIn).toBeVisible({ timeout: 20000 })
 
+  // Wait for hero-section pointer-events to be properly set
   await expect(page.locator('.hero-section').first()).toHaveCSS('pointer-events', 'none')
 
   // Descendants must remain hittable (pointer-events is not inherited).
   const composer = page.getByTestId('comparison-input-textarea')
   await expect(composer).toBeVisible({ timeout: 20000 })
-  
+
   const composerHit = await composer.evaluate((el: HTMLElement) => {
     const rect = el.getBoundingClientRect()
     const top = document.elementFromPoint(
@@ -106,9 +114,15 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
     ).toBe(true)
   }
 
+  // Wait for all animations on the sign-up button to finish
+  await signUp.evaluate(async el => {
+    const animations = el.getAnimations()
+    await Promise.all(animations.map(a => a.finished))
+  })
+
   // Real pointer click — no force / DOM-click workaround.
   await signUp.click({ timeout: 10000 })
-  await expect(page.getByTestId('auth-modal')).toBeVisible({ timeout: 15000 })
+  await expect(page.getByTestId('auth-modal')).toBeVisible({ timeout: 5000 })
 }
 
 test.describe('Navbar hit-testing above the hero', () => {
@@ -172,7 +186,7 @@ test.describe('Navbar hit-testing above the hero', () => {
 
     await page.setViewportSize({ width: 1024, height: 720 })
     await openHomeAndRevealNav(page)
-    
+
     await assertNavButtonsAreHitTargets(page)
   })
 })
