@@ -67,6 +67,19 @@ updates:
         applies-to: version-updates
         patterns:
           - "*"
+        exclude-patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "prettier"
+          - "@axe-core/*"
+        update-types:
+          - "minor"
+          - "patch"
+      vitest:
+        applies-to: version-updates
+        patterns:
+          - "vitest"
+          - "@vitest/*"
         update-types:
           - "minor"
           - "patch"
@@ -98,6 +111,10 @@ updates:
       # jszip 3.10.2+ is held for the GPL license constraint (stay on 3.10.1).
       - dependency-name: "jszip"
         versions: [">=3.10.2"]
+      # eslint 10+ is blocked by plugin incompatibilities (eslint-plugin-import
+      # 2.32.0 and eslint-plugin-react-hooks 5.2.0 only support eslint ^9).
+      - dependency-name: "eslint"
+        versions: [">=10"]
       # React 19 / plugin-react 5 / Vitest 5 / imagetools 10+ need dedicated PRs.
       - dependency-name: "react"
         update-types: ["version-update:semver-major"]

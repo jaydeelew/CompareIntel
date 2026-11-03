@@ -12,10 +12,7 @@ import { ImageGenerationPageLink } from './ImageGenerationPageLink'
 import './DisabledModelInfoModal.css'
 
 export type ImageConfigConflictType =
-  | 'advanced-setting-change'
-  | 'model-add'
-  | 'no-common-config'
-  | 'auto-adjusted'
+  'advanced-setting-change' | 'model-add' | 'no-common-config' | 'auto-adjusted'
 
 export type ImageConfigSettingKind = 'aspect_ratio' | 'image_size'
 

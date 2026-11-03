@@ -264,8 +264,7 @@ export function getPerformanceSummary(): {
   resource: PerformanceResourceTiming[]
 } {
   const navigation = performance.getEntriesByType('navigation')[0] as
-    | PerformanceNavigationTiming
-    | undefined
+    PerformanceNavigationTiming | undefined
   const paint = performance.getEntriesByType('paint') as PerformancePaintTiming[]
   const resource = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
 

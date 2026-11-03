@@ -138,11 +138,7 @@ export function MainPage() {
   const [imageSize, setImageSize] = useState('1K')
   const [imageConfigConflict, setImageConfigConflict] = useState<{
     conflictType:
-      | 'advanced-setting-change'
-      | 'model-add'
-      | 'no-common-config'
-      | 'auto-adjusted'
-      | null
+      'advanced-setting-change' | 'model-add' | 'no-common-config' | 'auto-adjusted' | null
     settingKind?: 'aspect_ratio' | 'image_size'
     incompatibleModelIds: string[]
     previousAspectRatio?: string

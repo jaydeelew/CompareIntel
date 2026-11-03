@@ -66,8 +66,7 @@ describe('getPageMetadata', () => {
 
   it('lists /privacy as an alias of /privacy-policy', () => {
     const privacy = staticPublicPages.find(page => page.path === '/privacy-policy') as
-      | { aliases?: string[] }
-      | undefined
+      { aliases?: string[] } | undefined
     expect(privacy?.aliases).toContain('/privacy')
   })
 
