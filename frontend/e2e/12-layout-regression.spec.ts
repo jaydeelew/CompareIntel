@@ -16,6 +16,7 @@
 import { readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
+
 import type { Page } from '@playwright/test'
 
 import { test, expect } from './fixtures'
@@ -30,9 +31,6 @@ const baselines = JSON.parse(readFileSync(baselinesPath, 'utf-8'))
 
 /** Tolerance for height measurements (±4px) */
 const HEIGHT_TOLERANCE = 4
-
-/** Tolerance for centering checks (±6px) */
-const CENTERING_TOLERANCE = 6
 
 interface Viewport {
   width: number
@@ -339,33 +337,33 @@ test.describe('Layout Regression Tests', () => {
 
         // Import axe for contrast checking (if axe is available in this project)
         // Check if @axe-core/playwright is installed
-        try {
-          const { default: AxeBuilder } = await import('@axe-core/playwright')
+          try {
+            const { default: AxeBuilder } = await import('@axe-core/playwright')
 
-          // Run axe only on Subscribe buttons
-          const results = await new AxeBuilder({ page })
-            .include('.pricing-tier-button-paid')
-            .withTags(['wcag2aa'])
-            .disableRules([
-              'region', 'landmark-one-main', 'page-has-heading-one',
-              'bypass', 'document-title', 'html-has-lang', 'landmark-unique'
-            ])
-            .analyze()
+            // Run axe only on Subscribe buttons
+            const results = await new AxeBuilder({ page })
+              .include('.pricing-tier-button-paid')
+              .withTags(['wcag2aa'])
+              .disableRules([
+                'region', 'landmark-one-main', 'page-has-heading-one',
+                'bypass', 'document-title', 'html-has-lang', 'landmark-unique'
+              ])
+              .analyze()
 
-          // Check specifically for color-contrast violations on buttons
-          const contrastViolations = results.violations.filter(
-            v => v.id === 'color-contrast'
-          )
+            // Check specifically for color-contrast violations on buttons
+            const contrastViolations = results.violations.filter(
+              v => v.id === 'color-contrast'
+            )
 
-          expect(
-            contrastViolations.length,
-            `Subscribe buttons should have sufficient contrast in ${theme} mode. ` +
-            `Found ${contrastViolations.length} contrast violation(s).`
-          ).toBe(0)
-        } catch (err) {
-          // If axe is not available or import fails, skip this check
-          test.skip()
-        }
+            expect(
+              contrastViolations.length,
+              `Subscribe buttons should have sufficient contrast in ${theme} mode. ` +
+              `Found ${contrastViolations.length} contrast violation(s).`
+            ).toBe(0)
+          } catch {
+            // If axe is not available or import fails, skip this check
+            test.skip()
+          }
       })
     }
   })
