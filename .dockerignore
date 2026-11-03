@@ -1,0 +1,98 @@
+# Root .dockerignore for frontend builds (context: .)
+# Backend builds use ./backend context with its own .dockerignore
+
+# Dependencies (huge, reinstalled in container)
+**/node_modules/
+node_modules/
+
+# Backend directory (frontend builds don't need it)
+backend/
+
+# Python virtual environments
+**/.venv/
+**/venv/
+**/env/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+**/.git/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.*
+
+# Build outputs
+**/dist/
+**/build/
+**/dist-ssr/
+frontend/dist/
+packages/*/dist/
+extension/dist/
+
+# Test outputs
+**/test-results/
+**/playwright-report/
+**/coverage/
+**/.nyc_output/
+frontend/test-results/
+frontend/playwright-report/
+frontend/coverage/
+
+# Cache directories
+**/.vite/
+**/.turbo/
+**/.parcel-cache/
+**/.eslintcache
+**/.ruff_cache/
+**/.pytest_cache/
+**/.mypy_cache/
+
+# IDE
+.vscode/
+.idea/
+**/.vscode/
+**/.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+**/*.log
+
+# Documentation
+*.md
+!package*.json
+docs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+*.backup
+*.old
+tmp/
+temp/
+
+# Testing & QA
+*.tgz
+.hypothesis/
+.tox/
+.nox/
