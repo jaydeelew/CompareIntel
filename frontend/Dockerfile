@@ -1,27 +1,30 @@
 FROM mcr.microsoft.com/playwright:v1.60.0-noble as build
 
-WORKDIR /app
+WORKDIR /repo
 
-# Copy package files
+# Copy root workspace package files
 COPY package*.json ./
+
+# Copy workspace member package.json files (npm ci needs them to resolve workspace deps)
+COPY frontend/package*.json ./frontend/
+COPY packages/compare-core/package.json ./packages/compare-core/
+COPY extension/package.json ./extension/
 
 # Upgrade npm to fix lockfile resolution issues (Playwright image ships with npm 10.9.3)
 # Pin to npm 11.x (compatible with Node 22.20.0; npm 12 requires Node >=22.22.2)
 RUN npm install -g npm@11
 
-# Install dependencies (npm ci for reproducible, lockfile-based builds)
-RUN npm ci
+# Install dependencies for the frontend workspace (uses root package-lock.json)
+RUN npm ci -w frontend --include-workspace-root
 
-# Copy source code
-COPY . .
+# Copy frontend source code
+COPY frontend ./frontend
 
-# Shared package lives one level above the frontend context (see additional_contexts / build-contexts).
-COPY --from=core . /packages/compare-core
-# Model registry for SEO catalog generation (optional at source, required for fresh model pages).
+# Shared package source (was passed via build-contexts in docker-compose)
+COPY --from=core . ./packages/compare-core
+# Model registry for SEO catalog generation (optional at source, required for fresh model pages)
 COPY --from=registry models_registry.json /data/models_registry.json
 ENV SEO_REGISTRY_PATH=/data/models_registry.json
-# Peer deps (react) live in the frontend install; let core files resolve them.
-RUN ln -sfn /app/node_modules /packages/node_modules
 
 # Set environment variable to fix crypto issue
 ENV NODE_OPTIONS="--openssl-legacy-provider"
@@ -45,21 +48,25 @@ ARG VITE_SENTRY_RELEASE
 ENV VITE_SENTRY_RELEASE=${VITE_SENTRY_RELEASE}
 
 # Build the app with prerendering (Playwright is available in this image)
+WORKDIR /repo/frontend
 RUN npm run build
 
 # For development (default)
 FROM node:20-alpine as dev
-WORKDIR /app
+WORKDIR /repo
 COPY package*.json ./
+COPY frontend/package*.json ./frontend/
+COPY packages/compare-core/package.json ./packages/compare-core/
+COPY extension/package.json ./extension/
 RUN npm install
-COPY . .
-COPY --from=core . /packages/compare-core
-RUN ln -sfn /app/node_modules /packages/node_modules
+COPY frontend ./frontend
+COPY --from=core . ./packages/compare-core
+WORKDIR /repo/frontend
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # For production with SSL (runs as root so nginx can read host-mounted certs and write to /var/cache/nginx)
 FROM nginx:alpine as prod
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /repo/frontend/dist /usr/share/nginx/html
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]

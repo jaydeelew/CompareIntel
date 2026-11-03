@@ -71,7 +71,7 @@ app.use(express.static(distPath))
 const PUBLIC_ROUTES = getPublicPaths()
 
 // SPA fallback with 404 handling
-app.get('*', (req, res) => {
+app.get('/{*splat}', (req, res) => {
   try {
     const path = req.path
     
