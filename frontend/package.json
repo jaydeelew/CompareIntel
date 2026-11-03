@@ -36,7 +36,7 @@
     "generate:brand:fullbleed": "node scripts/generate-fullbleed-brand-pngs.js"
   },
   "dependencies": {
-    "@sentry/react": "^8.55.0",
+    "@sentry/react": "^11.10.0",
     "@types/katex": "^0.16.7",
     "heic2any": "^0.0.4",
     "html-to-image": "^1.11.13",
