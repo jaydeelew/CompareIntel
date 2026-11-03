@@ -57,12 +57,16 @@ async function probeNavHitTargets(
 async function openHomeAndRevealNav(page: import('@playwright/test').Page) {
   await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 })
   await page.waitForLoadState('load', { timeout: 30000 }).catch(() => {})
-  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {})
   await waitForReactHydration(page)
   await dismissTutorialOverlay(page)
   await ensureUnfoldedNavbar(page)
-  // Wait for any CSS transitions from ensureUnfoldedNavbar to complete (WebKit needs more time)
-  await page.waitForTimeout(1000)
+
+  // Wait for all CSS transitions/animations on the header shell to complete
+  const shell = page.locator('.app-header-shell').first()
+  await shell.evaluate(async el => {
+    const animations = el.getAnimations({ subtree: true })
+    await Promise.all(animations.map(a => a.finished))
+  })
 }
 
 async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Page) {
@@ -71,10 +75,8 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
   await expect(signUp).toBeVisible({ timeout: 20000 })
   await expect(signIn).toBeVisible({ timeout: 20000 })
 
-  // Wait for hero-section pointer-events to be properly set (WebKit needs extra time)
-  await expect(page.locator('.hero-section').first()).toHaveCSS('pointer-events', 'none', {
-    timeout: 10000,
-  })
+  // Wait for hero-section pointer-events to be properly set
+  await expect(page.locator('.hero-section').first()).toHaveCSS('pointer-events', 'none')
 
   // Descendants must remain hittable (pointer-events is not inherited).
   const composer = page.getByTestId('comparison-input-textarea')
@@ -112,18 +114,15 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
     ).toBe(true)
   }
 
-  // Wait for any remaining transitions before clicking (WebKit needs more time)
-  await page.waitForTimeout(800)
-
-  // Ensure button is not animating before clicking
-  await signUp.evaluate(el => {
-    const rect = el.getBoundingClientRect()
-    return rect.height > 0 && rect.width > 0
+  // Wait for all animations on the sign-up button to finish
+  await signUp.evaluate(async el => {
+    const animations = el.getAnimations()
+    await Promise.all(animations.map(a => a.finished))
   })
 
   // Real pointer click — no force / DOM-click workaround.
-  await signUp.click({ timeout: 20000 })
-  await expect(page.getByTestId('auth-modal')).toBeVisible({ timeout: 15000 })
+  await signUp.click({ timeout: 10000 })
+  await expect(page.getByTestId('auth-modal')).toBeVisible({ timeout: 5000 })
 }
 
 test.describe('Navbar hit-testing above the hero', () => {
