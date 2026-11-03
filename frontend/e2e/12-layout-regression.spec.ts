@@ -32,6 +32,9 @@ const baselines = JSON.parse(readFileSync(baselinesPath, 'utf-8'))
 /** Tolerance for height measurements (±4px) */
 const HEIGHT_TOLERANCE = 4
 
+/** Tolerance for centering checks (±6px) */
+const CENTERING_TOLERANCE = 6
+
 interface Viewport {
   width: number
   height: number
@@ -45,12 +48,16 @@ async function waitForStableLayout(page: Page): Promise<void> {
   // Wait for fonts to load
   await page.evaluate(() => document.fonts.ready)
 
-  // Wait for layout to settle
+  // Wait for layout to settle and any pending updates to complete
   await page.evaluate(() => {
     return new Promise<void>(resolve => {
+      // Double rAF to ensure paint has completed
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          resolve()
+          // Additional rAF to ensure any React updates from paint have been processed
+          requestAnimationFrame(() => {
+            resolve()
+          })
         })
       })
     })
@@ -75,25 +82,27 @@ async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
     localStorage.setItem('theme', targetTheme)
   }, theme)
 
-  // Wait for theme transition animations to complete
-  await page.evaluate(async () => {
-    // Wait for any finite transition animations triggered by theme change
-    const elements = document.querySelectorAll('*')
-    const animations = Array.from(elements).flatMap(el =>
-      Array.from(el.getAnimations({ subtree: false })) // Don't recurse to avoid infinite animations
-    ).filter(animation => {
-      // Only wait for finite animations (those with a duration)
-      const effect = animation.effect as KeyframeEffect | null
-      return effect && effect.getTiming().duration !== Infinity
+  // Wait for fonts to load
+  await page.evaluate(() => document.fonts.ready)
+
+  // At desktop viewports, hover over the navbar area to trigger activity
+  // The navbar auto-folds after 5s of inactivity, which affects hero min-height
+  const isDesktop = page.viewportSize()!.width > 768
+  if (isDesktop) {
+    await page.mouse.move(100, 30)
+  }
+
+  // Wait for pricing line centering and layout updates to complete
+  await page.evaluate(() => {
+    return new Promise<void>(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            resolve()
+          })
+        })
+      })
     })
-    
-    // Race with timeout to avoid hanging on long animations
-    await Promise.race([
-      Promise.all(
-        animations.map(animation => animation.finished.catch(() => undefined))
-      ),
-      new Promise(resolve => setTimeout(resolve, 1000)) // 1s max wait
-    ])
   })
 
   await waitForStableLayout(page)
@@ -150,7 +159,23 @@ test.describe('Layout Regression Tests', () => {
           const actualHeight = Math.round(heroBox!.height)
 
           // Get baseline
-          const baselineHeight = baselines.hero.viewports[vpName][theme]
+          let baselineHeight = baselines.hero.viewports[vpName][theme]
+
+          // At desktop viewports (> 768px), navbar can auto-fold after 5s
+          // When folded, hero uses 100vh instead of 100vh - 64px
+          // Accept either height since timing determines fold state
+          const isDesktop = viewport.width > 768
+          if (isDesktop) {
+            const isNavbarFolded = await page.evaluate(() => {
+              const navbar = document.querySelector('.app-header-shell')
+              return navbar?.classList.contains('app-header-shell--folded') ?? false
+            })
+
+            if (isNavbarFolded && actualHeight === viewport.height) {
+              // Navbar is folded, hero is 100vh (full viewport height)
+              baselineHeight = viewport.height
+            }
+          }
 
           // Assert height is within tolerance
           expect(
@@ -170,6 +195,65 @@ test.describe('Layout Regression Tests', () => {
 
     for (const { name: vpName, size: viewport } of viewports) {
       for (const theme of themes) {
+        test(`should center pricing line between credits and hero bottom at ${vpName} in ${theme} mode`, async ({ page }) => {
+          // Set viewport
+          await page.setViewportSize(viewport)
+          await gotoStable(page, '/')
+          await setTheme(page, theme)
+
+          const heroSection = page.locator('.hero-section')
+          const heroBox = await heroSection.boundingBox()
+          expect(heroBox, 'Hero section should have a bounding box').not.toBeNull()
+
+          // Find the credits line and pricing line
+          const creditsLine = page.locator('.credits-remaining-wrapper').first()
+          const pricingLine = page.locator('.hero-pricing-line').first()
+
+          // Pricing line should be visible (only shown for unauthenticated users)
+          const pricingVisible = await pricingLine.isVisible().catch(() => false)
+          
+          if (pricingVisible) {
+            await expect(pricingLine).toBeVisible()
+            await expect(creditsLine).toBeVisible()
+
+            const creditsBox = await creditsLine.boundingBox()
+            const pricingBox = await pricingLine.boundingBox()
+
+            expect(creditsBox, 'Credits line should have a bounding box').not.toBeNull()
+            expect(pricingBox, 'Pricing line should have a bounding box').not.toBeNull()
+
+            // Calculate expected center position
+            // Pricing line should be centered between bottom of credits line and bottom of hero
+            const creditsBottom = creditsBox!.y + creditsBox!.height
+            const heroBottom = heroBox!.y + heroBox!.height
+            const expectedCenter = (creditsBottom + heroBottom) / 2
+
+            // Get actual center of pricing line
+            const pricingCenter = pricingBox!.y + pricingBox!.height / 2
+
+            // Assert centering (±6px tolerance)
+            const centeringError = Math.abs(pricingCenter - expectedCenter)
+            expect(
+              centeringError,
+              `Pricing line should be vertically centered at ${vpName} (${theme}). ` +
+              `Expected center: ${expectedCenter.toFixed(1)}px, Actual: ${pricingCenter.toFixed(1)}px, ` +
+              `Error: ${centeringError.toFixed(1)}px (tolerance: ±${CENTERING_TOLERANCE}px). ` +
+              `Credits bottom: ${creditsBottom.toFixed(1)}px, Hero bottom: ${heroBottom.toFixed(1)}px`
+            ).toBeLessThanOrEqual(CENTERING_TOLERANCE)
+
+            // Also verify pricing line is within hero bounds
+            expect(
+              pricingBox!.y,
+              `Pricing line at ${vpName} (${theme}) should be below credits line`
+            ).toBeGreaterThanOrEqual(creditsBottom - 1)
+
+            expect(
+              pricingBox!.y + pricingBox!.height,
+              `Pricing line at ${vpName} (${theme}) should be above hero bottom`
+            ).toBeLessThanOrEqual(heroBottom + 1)
+          }
+        })
+
         test(`should keep hero text elements within bounds at ${vpName} in ${theme} mode`, async ({ page }) => {
           // Set viewport
           await page.setViewportSize(viewport)
