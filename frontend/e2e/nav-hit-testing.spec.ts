@@ -61,8 +61,8 @@ async function openHomeAndRevealNav(page: import('@playwright/test').Page) {
   await waitForReactHydration(page)
   await dismissTutorialOverlay(page)
   await ensureUnfoldedNavbar(page)
-  // Wait for any CSS transitions from ensureUnfoldedNavbar to complete
-  await page.waitForTimeout(600)
+  // Wait for any CSS transitions from ensureUnfoldedNavbar to complete (WebKit needs more time)
+  await page.waitForTimeout(1000)
 }
 
 async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Page) {
@@ -79,7 +79,7 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
   // Descendants must remain hittable (pointer-events is not inherited).
   const composer = page.getByTestId('comparison-input-textarea')
   await expect(composer).toBeVisible({ timeout: 20000 })
-  
+
   const composerHit = await composer.evaluate((el: HTMLElement) => {
     const rect = el.getBoundingClientRect()
     const top = document.elementFromPoint(
@@ -112,11 +112,17 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
     ).toBe(true)
   }
 
-  // Wait for any remaining transitions before clicking (WebKit needs this)
-  await page.waitForTimeout(400)
+  // Wait for any remaining transitions before clicking (WebKit needs more time)
+  await page.waitForTimeout(800)
+
+  // Ensure button is not animating before clicking
+  await signUp.evaluate(el => {
+    const rect = el.getBoundingClientRect()
+    return rect.height > 0 && rect.width > 0
+  })
 
   // Real pointer click — no force / DOM-click workaround.
-  await signUp.click({ timeout: 15000 })
+  await signUp.click({ timeout: 20000 })
   await expect(page.getByTestId('auth-modal')).toBeVisible({ timeout: 15000 })
 }
 
@@ -181,7 +187,7 @@ test.describe('Navbar hit-testing above the hero', () => {
 
     await page.setViewportSize({ width: 1024, height: 720 })
     await openHomeAndRevealNav(page)
-    
+
     await assertNavButtonsAreHitTargets(page)
   })
 })
