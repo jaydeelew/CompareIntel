@@ -32,9 +32,9 @@ export const PERFORMANCE_BUDGETS = {
 
 /**
  * Performance metric with additional context
+ * Note: In web-vitals v6+, the base Metric type now includes the rating field
  */
 export interface PerformanceMetric extends Metric {
-  rating: 'good' | 'needs-improvement' | 'poor'
   threshold: number
 }
 
