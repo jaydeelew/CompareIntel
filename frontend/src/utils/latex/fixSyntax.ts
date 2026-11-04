@@ -344,6 +344,9 @@ export function normalizeUnicodeMath(text: string): string {
   return r
 }
 
+const DELIMITED_MATH_RE =
+  /\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|(?<![\\$])\$(?!\$)[^$\n]+?(?<!\\)\$/g
+
 export function fixLatexIssues(text: string): string {
   let fixed = text
 
@@ -417,8 +420,10 @@ export function fixLatexIssues(text: string): string {
 
   fixed = fixed.replace(/√(\d+)/g, '\\sqrt{$1}')
   fixed = fixed.replace(/±+/g, '\\pm')
-  fixed = fixed.replace(/×/g, '\\times')
-  fixed = fixed.replace(/\((\d+)\\times(\d+)\)/g, '($1 \\times $2)')
+  // `×` stays literal in prose (e.g. "a 2×2 matrix"); `\times` would show as raw text there
+  fixed = fixed.replace(DELIMITED_MATH_RE, math =>
+    math.replace(/×/g, '\\times').replace(/\((\d+)\\times(\d+)\)/g, '($1 \\times $2)')
+  )
 
   fixed = fixed.replace(/−/g, '-')
   fixed = fixed.replace(/‒/g, '-')

@@ -1,0 +1,32 @@
+{
+  "modelId": "deepseek/deepseek-v4-pro",
+  "modelName": "Deepseek V4 Pro",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here's the response with the requested fenced code blocks and inline code examples.\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code\n\nTo render small code snippets inside a paragraph, wrap them in single backticks. For example, the variable `x^2` is displayed as code, not interpreted as superscript. Similarly, `a_b` and `$price` stay as plain text code instead of turning into a subscript or a math expression. This keeps technical identifiers readable within normal text.",
+  "usage": {
+    "prompt_tokens": 240,
+    "completion_tokens": 523,
+    "total_tokens": 763,
+    "cost": 0.0010005,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0010005,
+      "upstream_inference_prompt_cost": 0.000216,
+      "upstream_inference_completions_cost": 0.0007845
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 284,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0,
+  "timestamp": "2026-11-04T00:51:50.953Z"
+}
