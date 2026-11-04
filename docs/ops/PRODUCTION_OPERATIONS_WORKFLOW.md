@@ -92,7 +92,7 @@ The SSH username for connecting to the production server.
 - Secret Name: `PROD_USER`
 - Secret Value: Your SSH username
 
-### Optional Secret
+### Optional Secrets
 
 #### `PROD_APP_DIR`
 
@@ -105,6 +105,99 @@ Only set this secret if your application is installed in a different location.
 **Add to GitHub:**
 - Secret Name: `PROD_APP_DIR`
 - Secret Value: Your custom application directory path (e.g., `/opt/compareintel`)
+
+#### AWS Security Group Management (Optional)
+
+If your EC2 instance security group only allows SSH from specific IPs (e.g., Jack's home IP), the workflow can temporarily authorize the GitHub Actions runner IP before connecting.
+
+**When to use:** Your EC2 security group restricts SSH access by source IP.
+
+**Required secrets for security group management:**
+
+##### Option 1: IAM User Credentials
+
+- `AWS_SG_ID` - The security group ID (e.g., `sg-0123456789abcdef0`)
+- `AWS_ACCESS_KEY_ID` - IAM user access key
+- `AWS_SECRET_ACCESS_KEY` - IAM user secret key
+- `AWS_REGION` - AWS region (e.g., `us-east-1`)
+
+##### Option 2: OIDC (Recommended)
+
+- `AWS_SG_ID` - The security group ID (e.g., `sg-0123456789abcdef0`)
+- `AWS_ROLE_ARN` - IAM role ARN to assume (e.g., `arn:aws:iam::123456789012:role/GitHubActionsProductionOps`)
+- `AWS_REGION` - AWS region (e.g., `us-east-1`)
+
+**How it works:**
+
+1. Before SSH connection, the workflow gets the runner's public IP
+2. Adds a temporary ingress rule: `RUNNER_IP/32` → port 22 on the security group
+3. Performs the SSH operations
+4. Always revokes the rule afterward (even if the workflow fails)
+
+**Minimal IAM Policy:**
+
+Create an IAM user or role with this minimal policy (replace `sg-xxxxxxxxx` with your actual security group ID):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:RevokeSecurityGroupIngress"
+      ],
+      "Resource": "arn:aws:ec2:*:*:security-group/sg-xxxxxxxxx"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ec2:DescribeSecurityGroups",
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+**Setting up OIDC (Recommended):**
+
+OIDC is more secure than long-lived access keys. To set it up:
+
+1. Create an IAM OIDC identity provider in AWS:
+   - Provider URL: `https://token.actions.githubusercontent.com`
+   - Audience: `sts.amazonaws.com`
+
+2. Create an IAM role with the minimal policy above and this trust policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::YOUR_ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": "repo:jaydeelew/CompareIntel:ref:refs/heads/master"
+        }
+      }
+    }
+  ]
+}
+```
+
+3. Add the role ARN as `AWS_ROLE_ARN` secret in GitHub
+
+**Security notes:**
+
+- The ingress rule is tagged with workflow metadata for tracking
+- Rules are automatically revoked even if the workflow fails
+- Only the specific security group can be modified (scoped by IAM policy)
+- OIDC roles are temporary and don't require long-lived credentials
 
 ## How to Use
 
@@ -234,8 +327,31 @@ Reverts to the previous deployment using the `:previous` Docker image tags.
 **Solutions:**
 - Verify `PROD_HOST` is correct
 - Check that the production server is running
-- Verify security group/firewall allows SSH from GitHub Actions IPs
+- If using AWS security group management, verify the secrets are configured correctly
+- If not using AWS security group management, verify the security group allows SSH from GitHub Actions IPs
 - Confirm the server is not experiencing downtime
+
+### AWS Security Group Authorization Failed
+
+**Cause:** Failed to add runner IP to security group
+
+**Solutions:**
+- Verify `AWS_SG_ID` is correct (should look like `sg-0123456789abcdef0`)
+- Check that AWS credentials are valid and have the necessary permissions
+- Ensure the IAM policy allows `ec2:AuthorizeSecurityGroupIngress` on the specific security group
+- For OIDC: Verify the trust policy allows the repository and branch
+- Check AWS service health status
+
+### AWS Credentials Invalid
+
+**Cause:** AWS authentication failed
+
+**Solutions:**
+- For IAM user: Verify `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` are correct
+- For OIDC: Verify `AWS_ROLE_ARN` and `AWS_REGION` are correct
+- Check that the IAM user/role still exists and is active
+- For OIDC: Ensure the OIDC provider is configured in your AWS account
+- Verify the IAM policy is attached to the user/role
 
 ### Permission Denied (SSH)
 
@@ -263,9 +379,13 @@ Reverts to the previous deployment using the `:previous` Docker image tags.
 
 ## GitHub Actions IP Ranges
 
-If your production server has firewall restrictions, you may need to allow GitHub Actions IP ranges. GitHub Actions uses dynamic IP addresses from [these published ranges](https://api.github.com/meta).
+GitHub Actions runners use dynamic IP addresses from [these published ranges](https://api.github.com/meta).
 
-For AWS Security Groups, you can use the AWS IP ranges for GitHub Actions or allow your specific GitHub Actions IPs.
+### AWS Security Groups
+
+**Recommended approach:** Use the optional AWS security group management feature (see [Optional Secrets](#optional-secrets) above). The workflow will automatically authorize the runner's IP before connecting and revoke it afterward.
+
+**Alternative:** Manually allow all GitHub Actions IP ranges in your security group, but this is less secure as it opens SSH to a wider range of IPs.
 
 ## Related Documentation
 

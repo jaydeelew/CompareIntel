@@ -20,6 +20,7 @@ concurrency:
 
 permissions:
   contents: read
+  id-token: write  # Required for AWS OIDC authentication
 
 jobs:
   ops:
@@ -52,6 +53,50 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/prod_key
           chmod 600 ~/.ssh/prod_key
           echo "✅ SSH key configured"
+
+      - name: Configure AWS credentials (IAM user)
+        if: ${{ secrets.AWS_SG_ID != '' && secrets.AWS_ACCESS_KEY_ID != '' }}
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Configure AWS credentials (OIDC)
+        if: ${{ secrets.AWS_SG_ID != '' && secrets.AWS_ROLE_ARN != '' && secrets.AWS_ACCESS_KEY_ID == '' }}
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Authorize runner IP in security group
+        if: ${{ secrets.AWS_SG_ID != '' }}
+        env:
+          AWS_SG_ID: ${{ secrets.AWS_SG_ID }}
+        run: |
+          echo "🔓 Authorizing GitHub Actions runner IP in security group..."
+          
+          # Get runner's public IP
+          RUNNER_IP=$(curl -s https://checkip.amazonaws.com)
+          echo "Runner IP: $RUNNER_IP"
+          echo "RUNNER_IP=$RUNNER_IP" >> $GITHUB_ENV
+          
+          # Add temporary SSH access rule
+          aws ec2 authorize-security-group-ingress \
+            --group-id "$AWS_SG_ID" \
+            --protocol tcp \
+            --port 22 \
+            --cidr "${RUNNER_IP}/32" \
+            --tag-specifications "ResourceType=security-group-rule,Tags=[{Key=Name,Value=github-actions-temp},{Key=ManagedBy,Value=github-actions},{Key=Workflow,Value=${{ github.workflow }}},{Key=RunId,Value=${{ github.run_id }}}]" \
+            || {
+              echo "⚠️ Note: Rule may already exist (exit code $?). Continuing..."
+              echo "RUNNER_IP=$RUNNER_IP" >> $GITHUB_ENV
+            }
+          
+          echo "✅ Security group rule added: ${RUNNER_IP}/32 → port 22"
+          
+          # Wait a moment for AWS to propagate the rule
+          sleep 3
 
       - name: Run ${{ github.event.inputs.action }}
         env:
@@ -117,6 +162,22 @@ jobs:
           
           echo ""
           echo "✅ Operation completed successfully"
+
+      - name: Revoke runner IP from security group
+        if: ${{ always() && secrets.AWS_SG_ID != '' && env.RUNNER_IP != '' }}
+        env:
+          AWS_SG_ID: ${{ secrets.AWS_SG_ID }}
+        run: |
+          echo "🔒 Revoking GitHub Actions runner IP from security group..."
+          
+          aws ec2 revoke-security-group-ingress \
+            --group-id "$AWS_SG_ID" \
+            --protocol tcp \
+            --port 22 \
+            --cidr "${RUNNER_IP}/32" \
+            || echo "⚠️ Failed to revoke rule (may have been already removed or never added)"
+          
+          echo "✅ Security group rule revoked: ${RUNNER_IP}/32"
 
       - name: Cleanup
         if: always()
