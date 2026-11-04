@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest'
 import {
   applyCfBeaconBuildEnv,
   CF_BEACON_SCRIPT_SRC,
-  DEFAULT_CF_BEACON_TOKEN,
   htmlHasCfBeaconLoader,
   PRODUCTION_ANALYTICS_HOSTNAME,
   shouldLoadCfBeacon,
@@ -18,7 +17,7 @@ const repoFrontend = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 
 describe('shouldLoadCfBeacon', () => {
   const prod = {
-    token: DEFAULT_CF_BEACON_TOKEN,
+    token: 'real-token-value',
     hostname: PRODUCTION_ANALYTICS_HOSTNAME,
   }
 
@@ -35,18 +34,18 @@ describe('shouldLoadCfBeacon', () => {
     expect(shouldLoadCfBeacon({ ...prod, isDev: true })).toBe(false)
     expect(shouldLoadCfBeacon({ ...prod, isPreview: true })).toBe(false)
     expect(shouldLoadCfBeacon({ ...prod, token: '' })).toBe(false)
+    expect(shouldLoadCfBeacon({ ...prod, token: '__CF_BEACON_TOKEN__' })).toBe(false)
     expect(shouldLoadCfBeacon({ ...prod, token: '%VITE_CF_BEACON_TOKEN%' })).toBe(false)
   })
 })
 
 describe('applyCfBeaconBuildEnv', () => {
-  it('defaults the public token for production builds', () => {
+  it('returns empty for production builds without explicit token', () => {
     const env = {}
-    expect(applyCfBeaconBuildEnv(env, 'production')).toBe(DEFAULT_CF_BEACON_TOKEN)
-    expect(env.VITE_CF_BEACON_TOKEN).toBe(DEFAULT_CF_BEACON_TOKEN)
+    expect(applyCfBeaconBuildEnv(env, 'production')).toBe('')
   })
 
-  it('does not override an explicit production token', () => {
+  it('returns the explicit production token if provided', () => {
     const env = { VITE_CF_BEACON_TOKEN: 'custom-token' }
     expect(applyCfBeaconBuildEnv(env, 'production')).toBe('custom-token')
   })
@@ -54,7 +53,7 @@ describe('applyCfBeaconBuildEnv', () => {
   it('clears the token for preview and leaves development unset', () => {
     const preview = {
       VITE_DEPLOY_ENV: 'preview',
-      VITE_CF_BEACON_TOKEN: DEFAULT_CF_BEACON_TOKEN,
+      VITE_CF_BEACON_TOKEN: 'some-token',
     }
     expect(applyCfBeaconBuildEnv(preview, 'production')).toBe('')
     expect(preview.VITE_CF_BEACON_TOKEN).toBe('')
@@ -68,9 +67,9 @@ describe('applyCfBeaconBuildEnv', () => {
 describe('index.html Cloudflare beacon loader', () => {
   const html = readFileSync(path.join(repoFrontend, 'index.html'), 'utf8')
 
-  it('injects a hostname-guarded Vite token placeholder', () => {
+  it('has a hostname-guarded beacon loader with a real token', () => {
     expect(htmlHasCfBeaconLoader(html)).toBe(true)
-    expect(html).toContain("var token = '%VITE_CF_BEACON_TOKEN%'")
+    expect(html).toMatch(/var token = '(?!__CF_)[A-Za-z0-9_-]+'/)
     expect(html).toContain("location.hostname !== 'compareintel.com'")
     expect(html).toContain(CF_BEACON_SCRIPT_SRC)
   })

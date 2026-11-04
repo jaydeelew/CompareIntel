@@ -25,4 +25,5 @@ regexes = [
   '''sk-or-v1-abc123\.\.\.''',                         # Truncated OpenRouter API key example
   '''6LeIxAc''',                                        # Google reCAPTCHA official test keys
   '''423fd187f89f44bdadec92bc373b1829''',              # Cloudflare Web Analytics public beacon token
+  '''9880ff425ab0bf53e6b75fd91644c4f1''',              # IndexNow public key for compareintel.com
 ]
