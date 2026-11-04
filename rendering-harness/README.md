@@ -47,6 +47,19 @@ export OPENROUTER_API_KEY="your-key-here"
 npm run harness -- --models=openai/gpt-4o,anthropic/claude-sonnet-4.6,google/gemini-2.5-flash,deepseek/deepseek-v4-pro --max-usd=5.0
 ```
 
+### Re-render Existing Results
+
+Re-screenshot saved responses without calling the API:
+
+```bash
+npm run harness -- --render-only --render-dir=runs/2026-11-04
+```
+
+This is useful for:
+- Testing renderer changes without re-running expensive API calls
+- Fixing screenshot issues (e.g., fonts, Prism themes)
+- Regenerating the review page after manual edits
+
 ### Run on All Models
 
 Test all models in the registry:
@@ -62,6 +75,8 @@ npm run harness -- --max-usd=50.0
 - `--models=<ids>`: Comma-separated list of model IDs to test
 - `--max-usd=<amount>`: Maximum allowed cost (default: 10.0)
 - `--max-tokens=<n>`: Max output tokens per request (default: 2048)
+- `--render-only`: Re-screenshot existing results without API calls
+- `--render-dir=<path>`: Directory containing saved JSON responses (required with --render-only)
 
 ## Test Prompts
 
@@ -99,12 +114,22 @@ Results are saved to `runs/<date>/`:
 
 ## Architecture
 
-- **run-harness.ts**: Main script (OpenRouter calls, Playwright screenshots)
+- **run-harness.ts**: Main script (OpenRouter calls, Vite server management, Playwright screenshots)
 - **harness-app.tsx**: Vite React app that wraps `LatexRenderer`
 - **vite.config.ts**: Vite config (aliases `@` to `frontend/src`)
 - **playwright.config.ts**: Playwright config (starts Vite only, no Python backend)
 
 The harness uses the **real** `LatexRenderer` component from `frontend/src/components/LatexRenderer.tsx` with model-specific configs from `frontend/src/config/model_renderer_configs.json`, ensuring screenshots reflect actual production rendering.
+
+### Vite Server Management
+
+The harness automatically:
+1. Checks if Vite dev server is already running on port 5174
+2. Starts the server if not running
+3. Waits for server to be ready (HTTP 200 response)
+4. Shuts down server after run completes (only if it started it)
+
+This allows multiple runs without manual server management.
 
 ## Known Issues
 

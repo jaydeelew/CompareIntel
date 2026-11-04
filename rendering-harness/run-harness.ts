@@ -15,6 +15,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { chromium, Browser, Page } from 'playwright';
 import { fileURLToPath } from 'url';
+import { spawn, ChildProcess } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -169,8 +170,9 @@ function estimateTokens(text: string): number {
 async function callOpenRouter(
   modelId: string,
   prompt: string,
-  maxTokens: number
-): Promise<{ response: string; usage?: any; cost: number }> {
+  maxTokens: number,
+  pricing: Map<string, PricingInfo>
+): Promise<{ response: string; usage: any; cost: number }> {
   if (!OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY environment variable is required');
   }
@@ -204,16 +206,98 @@ async function callOpenRouter(
   const content = data.choices[0]?.message?.content || '';
   const usage = data.usage;
   
-  // Calculate actual cost from usage if available
+  // Calculate actual cost from usage (OpenRouter uses prompt_tokens and completion_tokens)
   let cost = 0;
-  if (usage && data.model) {
-    // OpenRouter returns cost in the response sometimes
-    if (data.cost) {
-      cost = data.cost;
+  if (usage && usage.prompt_tokens && usage.completion_tokens) {
+    const modelPricing = pricing.get(modelId);
+    if (modelPricing) {
+      cost = (usage.prompt_tokens * modelPricing.inputCostPerToken) +
+             (usage.completion_tokens * modelPricing.outputCostPerToken);
     }
   }
   
   return { response: content, usage, cost };
+}
+
+/**
+ * Start Vite dev server
+ */
+async function startViteServer(): Promise<ChildProcess | null> {
+  // Check if server is already running
+  try {
+    const response = await fetch('http://localhost:5174/');
+    if (response.ok) {
+      console.log('✓ Vite dev server already running on port 5174');
+      return null; // Server already running, no process to manage
+    }
+  } catch (e) {
+    // Server not running, start it
+  }
+  
+  return new Promise((resolve, reject) => {
+    console.log('Starting Vite dev server...');
+    const vite = spawn('npm', ['run', 'dev'], {
+      cwd: __dirname,
+      stdio: 'pipe',
+      detached: false,
+    });
+    
+    let output = '';
+    let resolved = false;
+    
+    vite.stdout?.on('data', (data) => {
+      output += data.toString();
+      if (!resolved && output.includes('Local:') && output.includes('5174')) {
+        resolved = true;
+        // Give it a moment to fully initialize
+        setTimeout(() => {
+          console.log('✓ Vite dev server started on port 5174');
+          resolve(vite);
+        }, 2000);
+      }
+    });
+    
+    vite.stderr?.on('data', (data) => {
+      const msg = data.toString();
+      if (!resolved && msg.includes('EADDRINUSE')) {
+        resolved = true;
+        console.log('✓ Vite dev server already running on port 5174');
+        resolve(vite);
+      }
+    });
+    
+    vite.on('error', (err) => {
+      if (!resolved) {
+        resolved = true;
+        reject(err);
+      }
+    });
+    
+    // Timeout after 60s
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        reject(new Error('Vite server failed to start within 60s'));
+      }
+    }, 60000);
+  });
+}
+
+/**
+ * Wait for server to be ready
+ */
+async function waitForServer(maxAttempts = 60): Promise<void> {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const response = await fetch('http://localhost:5174/');
+      if (response.ok) {
+        return;
+      }
+    } catch (e) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  throw new Error('Server did not become ready within 60 seconds');
 }
 
 /**
@@ -258,6 +342,99 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+/**
+ * Render-only mode: re-screenshot existing results without calling API
+ */
+async function renderOnlyMode(runDir: string): Promise<void> {
+  console.log(`\n=== Render-Only Mode ===`);
+  console.log(`Run directory: ${runDir}\n`);
+  
+  const fullPath = path.isAbsolute(runDir) ? runDir : path.join(__dirname, runDir);
+  
+  // Check if directory exists
+  try {
+    await fs.access(fullPath);
+  } catch (error) {
+    console.error(`ERROR: Directory not found: ${fullPath}`);
+    process.exit(1);
+  }
+  
+  // Find all JSON files (saved responses)
+  const files = await fs.readdir(fullPath);
+  const jsonFiles = files.filter(f => f.endsWith('.json') && !f.startsWith('results'));
+  
+  if (jsonFiles.length === 0) {
+    console.error('ERROR: No saved response JSON files found in directory');
+    process.exit(1);
+  }
+  
+  console.log(`Found ${jsonFiles.length} saved responses\n`);
+  
+  // Start Vite server
+  const viteProcess = await startViteServer();
+  await waitForServer();
+  
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  const results: TestResult[] = [];
+  
+  try {
+    for (const jsonFile of jsonFiles) {
+      const jsonPath = path.join(fullPath, jsonFile);
+      const content = await fs.readFile(jsonPath, 'utf-8');
+      const data = JSON.parse(content);
+      
+      console.log(`Rendering ${data.modelName || data.modelId} - ${data.promptName}...`);
+      
+      // Generate screenshot path
+      const screenshotPath = path.join(fullPath, jsonFile.replace('.json', '.png'));
+      
+      try {
+        await renderResponse(page, data.modelId, data.response, screenshotPath);
+        console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
+        
+        results.push({
+          modelId: data.modelId,
+          modelName: data.modelName,
+          promptName: data.promptName,
+          promptText: data.promptText || '',
+          response: data.response,
+          usage: data.usage,
+          actualCost: data.cost || 0,
+          timestamp: data.timestamp,
+        });
+      } catch (error) {
+        console.error(`  ✗ Error rendering: ${error}`);
+      }
+    }
+  } finally {
+    await page.close();
+    await browser.close();
+    
+    // Stop Vite server if we started it
+    if (viteProcess) {
+      viteProcess.kill();
+    }
+  }
+  
+  // Regenerate review page
+  const runDate = path.basename(fullPath);
+  const config: HarnessConfig = {
+    dryRun: false,
+    modelIds: [...new Set(results.map(r => r.modelId))],
+    maxUsd: 0,
+    maxTokens: 0,
+    outputDir: fullPath,
+    runDate,
+  };
+  
+  await generateReviewPage(results, config);
+  
+  console.log('\n=== Render-Only Complete ===');
+  console.log(`Screenshots regenerated: ${results.length}`);
+  console.log(`Review page updated: ${path.join(fullPath, 'review.html')}`);
 }
 
 /**
@@ -393,7 +570,7 @@ async function generateReviewPage(
             <h4>${result.modelName}</h4>
             <div class="meta">
               Model ID: ${result.modelId}<br>
-              ${result.usage ? `Tokens: ${result.usage.totalTokens} (${result.usage.promptTokens} in / ${result.usage.completionTokens} out)<br>` : ''}
+              ${result.usage ? `Tokens: ${result.usage.total_tokens || result.usage.totalTokens || '?'} (${result.usage.prompt_tokens || result.usage.promptTokens || '?'} in / ${result.usage.completion_tokens || result.usage.completionTokens || '?'} out)<br>` : ''}
               Cost: $${result.actualCost.toFixed(4)}<br>
               Time: ${new Date(result.timestamp).toLocaleString()}
             </div>
@@ -463,14 +640,29 @@ async function generateReviewPage(
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
+  const renderOnly = args.includes('--render-only');
   const modelsArg = args.find(arg => arg.startsWith('--models='));
   const maxUsdArg = args.find(arg => arg.startsWith('--max-usd='));
   const maxTokensArg = args.find(arg => arg.startsWith('--max-tokens='));
+  const renderDirArg = args.find(arg => arg.startsWith('--render-dir='));
   
   const maxUsd = maxUsdArg ? parseFloat(maxUsdArg.split('=')[1]) : 10.0;
   const maxTokens = maxTokensArg ? parseInt(maxTokensArg.split('=')[1]) : DEFAULT_MAX_TOKENS;
   
   console.log('=== Model Rendering QA Harness ===\n');
+  
+  // Handle render-only mode
+  if (renderOnly) {
+    const renderDir = renderDirArg ? renderDirArg.split('=')[1] : '';
+    if (!renderDir) {
+      console.error('ERROR: --render-only requires --render-dir=<path>');
+      console.error('Example: --render-only --render-dir=runs/2026-11-04');
+      process.exit(1);
+    }
+    
+    await renderOnlyMode(renderDir);
+    return;
+  }
   
   // Load data
   console.log('Loading model registry...');
@@ -568,6 +760,10 @@ async function main() {
     runDate,
   };
   
+  // Start Vite server
+  const viteProcess = await startViteServer();
+  await waitForServer();
+  
   const browser = await chromium.launch();
   const results: TestResult[] = [];
   let actualTotalCost = 0;
@@ -587,12 +783,14 @@ async function main() {
           const { response, usage, cost } = await callOpenRouter(
             model.id,
             promptText,
-            maxTokens
+            maxTokens,
+            pricing
           );
           
           actualTotalCost += cost;
           
-          console.log(`    ✓ Got response (${usage?.totalTokens || '?'} tokens, $${cost.toFixed(4)})`);
+          const totalTokens = usage?.total_tokens || (usage?.prompt_tokens + usage?.completion_tokens) || 0;
+          console.log(`    ✓ Got response (${totalTokens} tokens, $${cost.toFixed(4)})`);
           
           // Save raw response
           const rawPath = path.join(outputDir, `${model.id.replace(/\//g, '_')}_${promptName}.json`);
@@ -644,6 +842,11 @@ async function main() {
   } finally {
     await page.close();
     await browser.close();
+    
+    // Stop Vite server if we started it
+    if (viteProcess) {
+      viteProcess.kill();
+    }
   }
   
   // Generate review page

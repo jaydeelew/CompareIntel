@@ -1,5 +1,6 @@
 node_modules/
 dist/
-runs/
+runs/*
+!runs/2026-11-04-fixture-test/
 *.log
 .DS_Store
