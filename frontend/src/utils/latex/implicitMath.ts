@@ -1,4 +1,5 @@
 import { looksMathematical, looksProse } from './helpers'
+import { containsProtectedToken } from './protection'
 
 export function convertImplicitMath(text: string): string {
   let converted = text
@@ -12,7 +13,7 @@ export function convertImplicitMath(text: string): string {
   })
 
   converted = converted.replace(/\(\s+((?:[^()]|\([^()]*\))+?)\s+\)/g, (_match, content) => {
-    if (content.includes('*') || content.includes('_') || content.includes('`')) return _match
+    if (/[*_`]/.test(content) || containsProtectedToken(content)) return _match
     if (looksMathematical(content) && !looksProse(content)) {
       return `\\(${content.trim()}\\)`
     }
@@ -30,7 +31,7 @@ export function convertImplicitMath(text: string): string {
   converted = converted.replace(/(?<![a-zA-Z])\(([^()]+)\)/g, (_match, content) => {
     if (_match.includes('\\(') || content.includes('\\boxed')) return _match
     if (content.match(/^(a|an)\s+/i)) return _match
-    if (content.includes('*') || content.includes('_') || content.includes('`')) return _match
+    if (/[*_`]/.test(content) || containsProtectedToken(content)) return _match
 
     let trimmed = content.trim()
 

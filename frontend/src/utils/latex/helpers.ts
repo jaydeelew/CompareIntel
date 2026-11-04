@@ -2,6 +2,8 @@ import katex from 'katex'
 
 import type { ModelRendererConfig } from '../../types/rendererConfig'
 
+import { LITERAL_DOLLAR, literalDollarsToLatex } from './protection'
+
 const DEFAULT_KATEX_OPTIONS = {
   throwOnError: false,
   strict: false,
@@ -14,13 +16,22 @@ const DEFAULT_KATEX_OPTIONS = {
   maxExpand: 1000,
 }
 
+/**
+ * Rendered KaTeX is spliced back into text that still goes through line-based markdown
+ * regexes (tables, emphasis, headings). Keep it on one line (SVG path data contains
+ * newlines) and entity-encode characters those regexes treat as syntax, e.g. the `_` in
+ * the `\sum_{i=1}` annotation or a `|` in `|x|`.
+ */
+const protectRenderedMath = (html: string): string =>
+  html.replace(/\n/g, ' ').replace(/[_*|$`~[\]]/g, c => `&#${c.charCodeAt(0)};`)
+
 export const safeRenderKatex = (
   latex: string,
   displayMode: boolean,
   katexOptions?: ModelRendererConfig['katexOptions']
 ): string => {
   try {
-    let cleanLatex = latex
+    let cleanLatex = literalDollarsToLatex(latex)
       .trim()
       .replace(/<[^>]*>/g, '')
       .replace(/style="[^"]*"/g, '')
@@ -44,12 +55,12 @@ export const safeRenderKatex = (
       displayMode,
     }
 
-    return katex.renderToString(cleanLatex, options)
+    return protectRenderedMath(katex.renderToString(cleanLatex, options))
   } catch {
     const style = displayMode
       ? 'display: block; border: 1px solid #ccc; padding: 8px; margin: 8px 0; background: #f9f9f9;'
       : 'border: 1px solid #ccc; padding: 2px 4px; background: #f9f9f9;'
-    return `<span style="${style} font-family: monospace; font-size: 0.9em;">${latex.trim()}</span>`
+    return `<span style="${style} font-family: monospace; font-size: 0.9em;">${latex.split(LITERAL_DOLLAR).join('$').trim()}</span>`
   }
 }
 
