@@ -3,10 +3,13 @@ import { convertImplicitMath } from './implicitMath'
 const BULLET_ITEM_RE = /^([ \t]*)[-*•][ \t]+\S/
 const ANY_LIST_ITEM_RE = /^[ \t]*(?:[-*•][ \t]|\d+\.[ \t])/
 const BLOCK_PLACEHOLDER_RE = /__(?:DISPLAY_MATH|CODE_BLOCK|HR_PLACEHOLDER)_\d+__|<hr/
+const DISPLAY_MATH_LINE_RE = /^[ \t]*__DISPLAY_MATH_\d+__[ \t]*$/
 
 /**
  * Fold lazily indented continuation lines into the bullet item above them, e.g.
  * `- Calculate:  ` followed by `     $c = 5$`. A trailing double space keeps the line break.
+ * An indented display-math block joins the bullet above it even at the bullet's own indent
+ * (`   - Find c:` / `   \[ … \]` / `   - Therefore …`), so it doesn't split the list.
  */
 function mergeBulletContinuationLines(text: string): string {
   const out: string[] = []
@@ -14,6 +17,15 @@ function mergeBulletContinuationLines(text: string): string {
     const previous = out[out.length - 1]
     const bullet = previous?.match(BULLET_ITEM_RE)
     const indent = line.match(/^[ \t]*/)![0].length
+    if (
+      bullet &&
+      indent > 0 &&
+      indent >= bullet[1].length &&
+      DISPLAY_MATH_LINE_RE.test(line)
+    ) {
+      out[out.length - 1] = previous.trimEnd() + ' ' + line.trim()
+      continue
+    }
     if (
       bullet &&
       line.trim() &&
@@ -48,7 +60,7 @@ export function processMarkdownLists(text: string): string {
 
     const mathPlaceholders = new Map<string, string>()
     let placeholderCounter = 0
-    processedContent = processedContent.replace(/__INLINE_MATH_\d+__/g, match => {
+    processedContent = processedContent.replace(/__(?:INLINE|DISPLAY)_MATH_\d+__/g, match => {
       const tempPlaceholder = `%%MATHPH${placeholderCounter}%%`
       mathPlaceholders.set(tempPlaceholder, match)
       placeholderCounter++
