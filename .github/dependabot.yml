@@ -117,6 +117,9 @@ updates:
         versions: [">=10"]
       - dependency-name: "@eslint/js"
         versions: [">=10.0.0"]
+      # jsdom 30 breaks frontend/extension build and unit tests (#179); revisit in a weekly batch.
+      - dependency-name: "jsdom"
+        versions: [">=30.0.0"]
       # React 19 / plugin-react 5 / Vitest 5 / imagetools 10+ need dedicated PRs.
       - dependency-name: "react"
         update-types: ["version-update:semver-major"]
