@@ -278,3 +278,56 @@ describe('bug 9: \\$ inside $$ display math (Claude prompt 04)', () => {
     expect(el.querySelector('strong')?.textContent).toBe('$5')
   })
 })
+
+describe('bug 10: Unicode × in prose stays literal', () => {
+  it('renders "2×2" in prose without a raw \\times (Claude prompt 01)', () => {
+    const el = renderReply(
+      'The 2×2 identity matrix is:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nMultiplying any 2×2 matrix by $I$ leaves it unchanged.',
+      CLAUDE
+    )
+    expectNoKatexErrors(el)
+    const text = visibleText(el)
+    expect(text).not.toContain('\\times')
+    expect(text).toContain('The 2×2 identity matrix is:')
+    expect(text).toContain('Multiplying any 2×2 matrix by')
+  })
+
+  it('still renders × inside math', () => {
+    const el = renderReply('The area is $3 × 4 = 12$ square units.', CLAUDE)
+    expectNoKatexErrors(el)
+    expect(el.querySelectorAll('.katex')).toHaveLength(1)
+    expect(visibleText(el)).not.toContain('\\times')
+  })
+})
+
+describe('bug 11: display math at a bullet’s indent stays inside the list', () => {
+  const reply =
+    '## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that for any right triangle, the relationship between the lengths of the sides is given by the formula:\n   \\[\n   a^2 + b^2 = c^2\n   \\]\n2. Let’s consider a *right triangle* with side lengths \\(a = 3\\) and \\(b = 4\\):\n   - To find the hypotenuse \\(c\\):\n   \\[\n   c = \\sqrt{a^2 + b^2} = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\n   \\]\n   - Therefore, the length of the hypotenuse \\(c\\) is \\(5\\) units.\n\n## Scenario 2: Tables with Math'
+
+  it('keeps both bullets in the nested list under item 2 (GPT-4o mini prompt 05)', () => {
+    const el = renderReply(reply, GPT_MINI)
+    expectNoKatexErrors(el)
+    const lists = el.querySelectorAll(':scope > ol')
+    expect(lists).toHaveLength(1)
+    const items = lists[0].querySelectorAll(':scope > li')
+    expect(items).toHaveLength(2)
+    const bullets = items[1].querySelectorAll(':scope > ul > li')
+    expect(bullets).toHaveLength(2)
+    expect(texSources(bullets[0].querySelector('.katex-display')!)).toEqual([
+      'c = \\sqrt{a^2 + b^2} = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5',
+    ])
+    expect(visibleText(bullets[1])).toContain('Therefore, the length of the hypotenuse')
+    expect(el.querySelector('ol + p .katex-display')).toBeNull()
+    expect(el.querySelector('h2:last-of-type')?.textContent).toBe('Scenario 2: Tables with Math')
+  })
+
+  it('leaves unindented display math after a bullet outside the list', () => {
+    const el = renderReply(
+      'Consider the function defined as \\(f(x) = x^2\\):\n- Evaluating this function at \\(x = 5\\):\n\\[\nf(5) = 5^2 = 25\n\\]\n\nThis response captures the concepts.',
+      GPT_MINI
+    )
+    expectNoKatexErrors(el)
+    expect(el.querySelector('li .katex-display')).toBeNull()
+    expect(el.querySelectorAll('.katex-display')).toHaveLength(1)
+  })
+})
