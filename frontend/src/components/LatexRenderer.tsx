@@ -30,7 +30,7 @@
 import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react'
 
 import { getModelConfig } from '../config/modelRendererRegistry'
-import { extractCodeBlocks, restoreCodeBlocks } from '../utils/codeBlockPreservation'
+import { extractCodeBlocks } from '../utils/codeBlockPreservation'
 import { loadKatexCss } from '../utils/katexLoader'
 import {
   cleanMalformedContent,
@@ -47,7 +47,15 @@ import {
   preserveEquationLineBreaks,
   preserveMathLineBreaks,
   safeRenderKatex,
-  convertSquareRoots,
+  convertListPlaceholdersToHTML,
+  markBlockquotes,
+  renderBlockquoteMarkers,
+  protectEscapedDollars,
+  protectCurrencyDollars,
+  restoreLiteralDollars,
+  extractInlineCode,
+  restoreInlineCode,
+  renderInlineCodeSpan,
 } from '../utils/latex'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
 
@@ -94,7 +102,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Some models generate headers without proper line breaks - add line breaks before them
     // Match: (non-whitespace) followed by (space) followed by (### or #### etc.)
     // Replace with: (text) + (newline) + (newline) + (header)
-    processed = processed.replace(/(\S)\s+(#{1,6}\s+)/g, '$1\n\n$2')
+    processed = processed.replace(/([^\s#|])\s+(#{1,6}\s+)/g, '$1\n\n$2')
 
     // Additional fix: Ensure headers start at the beginning of a line
     // This handles cases where headers might have leading whitespace or other issues
@@ -290,213 +298,11 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       }
     }
 
-    // Inline code - ALWAYS process backticks to remove them from output
-    // Process AFTER bold/italic so inline code inside bold works correctly
-    // The config only controls whether to render as code vs math, not whether to process backticks
-    // Use a more robust regex that handles edge cases
-    // Match backticks, allowing for whitespace and various characters
-    processed = processed.replace(/`([^`\n]+?)`/g, (_match, content) => {
-      // Trim whitespace from content for detection
-      const trimmedContent = content.trim()
-
-      // If inline code processing is explicitly disabled, render as code without math detection
-      if (markdownRules.processInlineCode === false) {
-        return `<code class="inline-code">${content}</code>`
-      }
-
-      // Check if the content is actually LaTeX/math that should be rendered as math, not code
-      // Look for LaTeX commands (like \sqrt, \frac, etc.) - this is the primary indicator
-      const hasLatexCommands =
-        /\\[a-zA-Z]+\{/.test(trimmedContent) ||
-        /\\(sqrt|frac|cdot|times|pm|neq|leq|geq|alpha|beta|gamma|pi|theta|infty|partial|boxed)/.test(
-          trimmedContent
-        )
-
-      // Check for math symbols that indicate this is math, not code
-      const hasMathSymbols = /[√±×÷≤≥≈∞∑∏∫²³⁴⁵⁶⁷⁸⁹⁰¹]/.test(trimmedContent)
-
-      // Check if it looks like a mathematical expression (has operators, parentheses, etc.)
-      // Note: - needs to be escaped or at end of character class to be literal
-      const hasMathOperators = /[=+\-*/()[\] ]/.test(trimmedContent)
-      const hasArithmetic = /\d+\s*[+\-*/]\s*\d+/.test(trimmedContent)
-
-      // Check for mathematical expressions with variables and operators (e.g., ax² + bx + c = 0)
-      // This catches equations that have variables with superscripts and operators
-      // More permissive: match any letter followed by optional superscript and then operator
-      const hasVariableExpression =
-        /[a-zA-Z][²³⁴⁵⁶⁷⁸⁹⁰¹]*\s*[+\-*/=]/.test(trimmedContent) ||
-        /[+\-*/=]\s*[a-zA-Z][²³⁴⁵⁶⁷⁸⁹⁰¹]*/.test(trimmedContent) ||
-        // Also match patterns like "2x²" (number + variable + superscript)
-        /\d+[a-zA-Z][²³⁴⁵⁶⁷⁸⁹⁰¹]*/.test(trimmedContent) ||
-        // Match any expression with multiple variables and operators
-        (/[a-zA-Z].*[+\-*/=]/.test(trimmedContent) && hasMathOperators)
-
-      // Check for equation-like patterns (has = with content on both sides that looks like math)
-      // More permissive: if it has = and any math-like content, it's probably math
-      const looksLikeEquation =
-        /=/.test(trimmedContent) &&
-        (hasMathOperators ||
-          hasMathSymbols ||
-          /[a-zA-Z][²³⁴⁵⁶⁷⁸⁹⁰¹]/.test(trimmedContent) ||
-          /\d+[a-zA-Z]/.test(trimmedContent) ||
-          /[a-zA-Z]\d+/.test(trimmedContent))
-
-      // Check for mathematical coefficient notation: number followed by letter (e.g., 2a, 3x, 5y)
-      // This is a common pattern in math that should be rendered as math, not code
-      const hasCoefficientNotation =
-        /\d+[a-zA-Z]/.test(trimmedContent) || /[a-zA-Z]\d+/.test(trimmedContent)
-
-      // Check for negative numbers or expressions starting with minus (e.g., -5, -b, -(5))
-      const hasNegativeSign = /^-\s*[\d()a-zA-Z]/.test(trimmedContent)
-
-      // Check for expressions with parentheses that look like math (e.g., (5), 2(2), (5)²)
-      const hasMathParentheses =
-        /\([^)]*\)/.test(trimmedContent) && (hasMathOperators || /\d/.test(trimmedContent))
-
-      // Check for mathematical patterns: multiple terms that look like math (e.g., 2a, ab, x2)
-      // But exclude simple single letters/numbers and prose-like patterns
-      const isMathematicalTerm =
-        hasCoefficientNotation ||
-        (trimmedContent.length > 1 &&
-          /^[a-zA-Z0-9]+$/.test(trimmedContent) &&
-          /\d/.test(trimmedContent) &&
-          /[a-zA-Z]/.test(trimmedContent)) // Has both digits and letters
-
-      // Check if it's a simple single number or letter (should stay as code unless it has math context)
-      const isSimpleNumber = /^-?\d+$/.test(trimmedContent)
-      const isSimpleLetter = /^[a-zA-Z]$/.test(trimmedContent)
-      const isSimpleValue = isSimpleNumber || isSimpleLetter
-
-      // Simple single letters/numbers without math symbols should stay as code
-      // BUT: if it has a negative sign or is part of a math expression, render as math
-      const isSimpleVariable =
-        !hasNegativeSign &&
-        !hasMathParentheses &&
-        /^[a-zA-Z0-9\s,]+$/.test(trimmedContent) &&
-        !hasMathSymbols &&
-        !hasLatexCommands &&
-        !isMathematicalTerm &&
-        isSimpleValue
-
-      // Only render as math if:
-      // 1. It has LaTeX commands (definitely math), OR
-      // 2. It has math symbols (like ²) AND operators - this is the most common case, OR
-      // 3. It has math operators/arithmetic (even without Unicode symbols), OR
-      // 4. It looks like a mathematical term (coefficient notation, etc.), OR
-      // 5. It has a negative sign or math parentheses (mathematical context), OR
-      // 6. It has variable expressions with superscripts and operators (e.g., ax² + bx + c = 0), OR
-      // 7. It looks like an equation (has = with math-like content on both sides)
-
-      // Content with superscripts and operators (e.g. ax² + bx + c = 0) is always math
-      const hasSuperscripts = /[²³⁴⁵⁶⁷⁸⁹⁰¹]/.test(trimmedContent)
-      const definitelyMathWithSuperscripts = hasSuperscripts && hasMathOperators
-
-      // If it has math symbols AND operators, it's definitely math (unless it's a simple variable)
-      const definitelyMath = hasMathSymbols && hasMathOperators && !isSimpleVariable
-
-      // More aggressive: if it has operators and contains variables/numbers/math symbols, it's probably math
-      // This catches cases like "x = 1/2" or "a = 2" that might otherwise be missed
-      const hasMathLikeContent = /[a-zA-Z]/.test(trimmedContent) && /\d/.test(trimmedContent)
-      const probablyMath =
-        hasMathOperators &&
-        (hasMathLikeContent || hasMathSymbols || hasSuperscripts) &&
-        !isSimpleVariable
-
-      const shouldRenderAsMath =
-        hasLatexCommands ||
-        definitelyMathWithSuperscripts ||
-        definitelyMath ||
-        probablyMath ||
-        (hasMathSymbols && (hasMathOperators || hasArithmetic) && !isSimpleVariable) ||
-        ((hasMathOperators || hasArithmetic || hasNegativeSign || hasMathParentheses) &&
-          !isSimpleVariable) ||
-        isMathematicalTerm ||
-        (hasVariableExpression && !isSimpleVariable) ||
-        (looksLikeEquation && !isSimpleVariable)
-
-      if (shouldRenderAsMath) {
-        // Content inside backticks may not have been processed by fixLatexIssues
-        // So we need to convert Unicode to LaTeX, but be careful to avoid double conversion
-        let mathContent = content.replace(/\$/g, '').trim()
-
-        // If content has LaTeX commands, still check for remaining Unicode symbols to convert
-        const hasLaTeXCommands = /\\[a-zA-Z]+/.test(mathContent)
-
-        // Convert superscripts before square root conversion
-        // Always convert superscripts even if LaTeX commands exist (they might be in different parts)
-        // Use braces for better LaTeX compatibility: b² -> b^{2} instead of b^2
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])²+/g, '$1^{2}')
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])³+/g, '$1^{3}')
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])⁴+/g, '$1^{4}')
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])⁵+/g, '$1^{5}')
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])⁶+/g, '$1^{6}')
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])⁷+/g, '$1^{7}')
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])⁸+/g, '$1^{8}')
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])⁹+/g, '$1^{9}')
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])⁰+/g, '$1^{0}')
-        mathContent = mathContent.replace(/([a-zA-Z0-9)\]])¹+/g, '$1^{1}')
-        // Handle standalone superscripts (at start of expression or after operators)
-        mathContent = mathContent.replace(/^²+/g, '^{2}')
-        mathContent = mathContent.replace(/^³+/g, '^{3}')
-        mathContent = mathContent.replace(/^⁴+/g, '^{4}')
-        mathContent = mathContent.replace(/^⁵+/g, '^{5}')
-        mathContent = mathContent.replace(/^⁶+/g, '^{6}')
-        mathContent = mathContent.replace(/^⁷+/g, '^{7}')
-        mathContent = mathContent.replace(/^⁸+/g, '^{8}')
-        mathContent = mathContent.replace(/^⁹+/g, '^{9}')
-        mathContent = mathContent.replace(/^⁰+/g, '^{0}')
-        mathContent = mathContent.replace(/^¹+/g, '^{1}')
-
-        // Convert Unicode square roots with proper nested parentheses handling
-        // This must be done regardless of whether LaTeX commands exist, as content may have mixed Unicode and LaTeX
-        mathContent = convertSquareRoots(mathContent)
-
-        // Only do full Unicode conversion if content doesn't already have LaTeX commands
-        // This prevents double conversion if fixLatexIssues already processed it
-        if (!hasLaTeXCommands) {
-          // Use single replace to handle duplicates; convert consecutive ± to single \pm
-          mathContent = mathContent.replace(/±+/g, '\\pm')
-          mathContent = mathContent.replace(/×/g, '\\times')
-          mathContent = mathContent.replace(/÷/g, '\\div')
-          mathContent = mathContent.replace(/≤/g, '\\leq')
-          mathContent = mathContent.replace(/≥/g, '\\geq')
-          mathContent = mathContent.replace(/≈/g, '\\approx')
-          mathContent = mathContent.replace(/∞/g, '\\infty')
-          mathContent = mathContent.replace(/∑/g, '\\sum')
-          mathContent = mathContent.replace(/∏/g, '\\prod')
-          mathContent = mathContent.replace(/∫/g, '\\int')
-        } else {
-          // Content has LaTeX commands, but may still have Unicode symbols that weren't converted
-          // Only convert Unicode symbols that aren't already LaTeX commands
-          // This handles mixed content where some symbols were converted and others weren't
-          mathContent = mathContent.replace(/(?<!\\)±+/g, '\\pm') // Only convert ± that isn't already \pm
-          mathContent = mathContent.replace(/(?<!\\)×/g, '\\times')
-          mathContent = mathContent.replace(/(?<!\\)÷/g, '\\div')
-          mathContent = mathContent.replace(/(?<!\\)≤/g, '\\leq')
-          mathContent = mathContent.replace(/(?<!\\)≥/g, '\\geq')
-          mathContent = mathContent.replace(/(?<!\\)≈/g, '\\approx')
-          mathContent = mathContent.replace(/(?<!\\)∞/g, '\\infty')
-          mathContent = mathContent.replace(/(?<!\\)∑/g, '\\sum')
-          mathContent = mathContent.replace(/(?<!\\)∏/g, '\\prod')
-          mathContent = mathContent.replace(/(?<!\\)∫/g, '\\int')
-        }
-
-        if (mathContent) {
-          try {
-            const rendered = safeRenderKatex(mathContent, false, config.katexOptions)
-            return rendered
-          } catch {
-            // If math rendering fails, fall back to code
-            return `<code class="inline-code">${content}</code>`
-          }
-        } else {
-          return `<code class="inline-code">${content}</code>`
-        }
-      }
-
-      // Otherwise, render as regular inline code
-      return `<code class="inline-code">${content}</code>`
-    })
+    // Inline code spans are normally protected as placeholders before this stage; this
+    // handles any backtick spans created later in the pipeline. Inline code is never math.
+    processed = processed.replace(/`([^`\n]+?)`/g, (_match, content) =>
+      renderInlineCodeSpan(content)
+    )
 
     // Horizontal rules (if enabled)
     // Horizontal rules are processed in Stage 2.5 before other markdown processing
@@ -522,7 +328,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       processed = processed.replace(/(<\/(ul|ol)[^>]*>\s*\n?\s*)(#{1,6}\s+)/gi, '$1\n\n$3')
       // Replace any header markers that are preceded by non-whitespace (except at start of string)
       // or HTML tags with a newline before them
-      processed = processed.replace(/([^\n])(\s*)(#{1,6}\s+)/g, '$1\n\n$3')
+      processed = processed.replace(/([^\s#|])(\s+)(#{1,6}\s+)/g, '$1\n\n$3')
       // Also handle headers that might be preceded by HTML closing tags or <br> tags
       processed = processed.replace(/(<\/span>|<br\s*\/?>)(\s*)(#{1,6}\s+)/g, '$1\n\n$3')
       // Remove any leading whitespace from headers to ensure they start cleanly
@@ -697,79 +503,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       return `<ul class="task-list">${items}</ul>`
     })
 
-    // Unordered lists
-    converted = converted.replace(/(__UL_[\s\S]*?__\/UL__\s*)+/g, match => {
-      const items: { level: number; content: string }[] = []
-      const regex = /__UL_(\d+)__([\s\S]*?)__\/UL__/g
-      let m
-
-      while ((m = regex.exec(match)) !== null) {
-        items.push({ level: parseInt(m[1]), content: m[2].trim() })
-      }
-
-      if (items.length === 0) return match
-
-      // Normalize levels
-      const minLevel = Math.min(...items.map(i => i.level))
-      items.forEach(i => (i.level -= minLevel))
-
-      let html = '<ul>'
-      let currentLevel = 0
-      const openListItems: boolean[] = [] // Track open <li> tags
-
-      items.forEach((item, index) => {
-        const nextLevel = index < items.length - 1 ? items[index + 1].level : 0
-
-        // Close deeper levels
-        while (currentLevel > item.level) {
-          html += '</ul>'
-          if (openListItems.length > 0) {
-            html += '</li>' // Close the parent <li> that contained the nested <ul>
-            openListItems.pop()
-          }
-          currentLevel--
-        }
-
-        // Open new item at current level
-        html += `<li>${item.content}`
-
-        // If next item is nested deeper, start a nested list
-        if (nextLevel > item.level) {
-          html += '<ul>'
-          currentLevel++
-          openListItems.push(true)
-        } else {
-          // Close the current list item
-          html += '</li>'
-        }
-      })
-
-      // Close any remaining open tags
-      while (currentLevel > 0) {
-        html += '</ul>'
-        if (openListItems.length > 0) {
-          html += '</li>'
-          openListItems.pop()
-        }
-        currentLevel--
-      }
-      html += '</ul>'
-
-      return html
-    })
-
-    // Ordered lists - match and convert each placeholder individually first
-    // Then group consecutive ones if needed
-    converted = converted.replace(
-      /__OL_(\d+)_(\d+)__([\s\S]*?)__\/OL__/g,
-      (_fullMatch, _level, num, content) => {
-        // Convert each item individually with its number
-        return `<ol><li value="${num}">${content.trim()}</li></ol>`
-      }
-    )
-
-    // Merge consecutive <ol> tags (cleanup pass)
-    converted = converted.replace(/<\/ol>\s*<ol>/g, '')
+    // Unordered and ordered lists (nested by indentation, including mixed nesting)
+    converted = convertListPlaceholdersToHTML(converted)
 
     // Handle model-generated placeholders in format ((MDPH...)) or {{MDPH...}}
     // These placeholders appear when models output placeholders for list items
@@ -807,13 +542,13 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Match: <hr> tag followed by optional whitespace/newlines, then any content that starts
     // We use a negative lookahead to skip if a block element follows, otherwise match the start of content
     processed = processed.replace(
-      /(<hr[^>]*>)\s*\n?\s*(?!\s*<(h[1-6]|hr|ul|ol|blockquote|pre|table|div|p)[^>]*>)(?=\S)/gi,
+      /(<hr[^>]*>)\s*\n?\s*(?!\s*<\/?(h[1-6]|hr|ul|ol|li|blockquote|pre|table|div|p)\b[^>]*>)(?=\S)/gi,
       '$1\n\n'
     )
     // Ensure content after closing list tags is properly separated
     // Match: </ul> or </ol> followed by optional whitespace/newlines, then any content that starts
     processed = processed.replace(
-      /(<\/(ul|ol)[^>]*>)\s*\n?\s*(?!\s*<(h[1-6]|hr|ul|ol|blockquote|pre|table|div|p)[^>]*>)(?=\S)/gi,
+      /(<\/(ul|ol)[^>]*>)\s*\n?\s*(?!\s*<\/?(h[1-6]|hr|ul|ol|li|blockquote|pre|table|div|p)\b[^>]*>)(?=\S)/gi,
       '$1\n\n'
     )
 
@@ -940,6 +675,13 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         const codeBlockExtraction = extractCodeBlocks(processed)
         processed = codeBlockExtraction.text
 
+        // Stage 0.1: Protect inline code spans; their content is never markdown or math
+        const inlineCodeExtraction = extractInlineCode(processed)
+        processed = inlineCodeExtraction.text
+
+        // Stage 0.2: An escaped \$ is always a literal dollar sign, even inside $$...$$
+        processed = protectEscapedDollars(processed)
+
         // Normalize double-escaped LaTeX in non-code content (e.g., \\( ... \\), \\frac)
         // Some models/providers emit extra escaping; collapse one slash so delimiters/commands parse.
         processed = processed
@@ -958,6 +700,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // This protects math content from being modified by preprocessing stages
         const displayMathExtraction = extractDisplayMath(processed, config.displayMathDelimiters)
         processed = displayMathExtraction.text
+
+        // Stage 0.55: Currency ($5, $1,200) and unpaired $ become literal dollars; table rows
+        // are paired per cell so inline math never spans a | boundary
+        processed = protectCurrencyDollars(processed)
 
         // Stage 0.6: Extract inline math blocks BEFORE any processing
         // This protects inline math content from being modified by preprocessing stages
@@ -1007,6 +753,11 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Stage 4: Convert implicit math notation
         processed = convertImplicitMath(processed)
+
+        // Stage 4.5: Blockquotes - strip `> ` so quoted lists/markdown are processed normally
+        if (markdownRules.processBlockquotes !== false) {
+          processed = markBlockquotes(processed)
+        }
 
         // Stage 5: Process markdown lists
         // Note: Inline math placeholders are kept intact inside list placeholders
@@ -1088,21 +839,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
           })
         })
 
+        processed = renderBlockquoteMarkers(processed)
+
         // Stage 9: Apply paragraph breaks
         processed = applyParagraphBreaks(processed)
-
-        // Stage 10: Restore code blocks from placeholders
-        // restoreCodeBlocks returns markdown format, so we need to render them
-        processed = restoreCodeBlocks(processed, codeBlockExtraction)
-
-        // Render restored code blocks to HTML
-        // Match code blocks in markdown format: ```language\ncontent\n```
-        processed = processed.replace(
-          /```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```/g,
-          (_match, language, code) => {
-            return renderCodeBlock(language || '', code)
-          }
-        )
 
         // Apply post-processing if configured
         if (config.postProcessing) {
@@ -1296,8 +1036,6 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
           return ''
         })
 
-        processed = processed.replace(/__CODE_BLOCK_\d+__/g, '')
-
         // Remove any malformed placeholder variations (case insensitive)
         processed = processed.replace(/\b(?:INLINE|DISPLAY)[_\s]*MATH[_\s]*\d+\b/gi, '')
 
@@ -1332,6 +1070,15 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Remove any empty placeholder shells that might remain
         processed = processed.replace(/⟨⟨\s*⟩⟩/g, '')
+
+        // Stage 10: Restore protected content last so no markdown, math or cleanup pass
+        // above can modify it
+        processed = restoreLiteralDollars(processed)
+        processed = restoreInlineCode(processed, inlineCodeExtraction.spans)
+        processed = processed.replace(/__CODE_BLOCK_(\d+)__/g, (_match, index) => {
+          const block = codeBlockExtraction.blocks[parseInt(index, 10)]
+          return block ? renderCodeBlock(block.language, block.content) : ''
+        })
 
         return processed
       } catch (error) {

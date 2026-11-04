@@ -1,0 +1,32 @@
+{
+  "modelId": "openai/gpt-4o-mini",
+  "modelName": "Gpt 4o Mini",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here's a detailed response addressing the complex scenarios involving mathematical principles, LaTeX formatting, programming, and other structures:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that for any right triangle, the relationship between the lengths of the sides is given by the formula:\n   \\[\n   a^2 + b^2 = c^2\n   \\]\n2. Let’s consider a *right triangle* with side lengths \\(a = 3\\) and \\(b = 4\\):\n   - To find the hypotenuse \\(c\\):\n   \\[\n   c = \\sqrt{a^2 + b^2} = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\n   \\]\n   - Therefore, the length of the hypotenuse \\(c\\) is \\(5\\) units.\n\n## Scenario 2: Tables with Math\nHere’s a table summarizing key mathematical formulas along with their LaTeX representations and results:\n\n| Formula                        | LaTeX                                      | Result                                   |\n|-------------------------------|--------------------------------------------|------------------------------------------|\n| Quadratic Formula             | $ax^2 + bx + c = 0$                       | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$|\n| Sum of the first \\(n\\) integers| $\\sum_{i=1}^{n} i$                      | $\\frac{n(n+1)}{2}$                      |\n| Product of the first \\(n\\) integers| $\\prod_{i=1}^{n} i$                 | $n!$ (factorial)                        |\n\n### Note:\n- The quadratic formula provides the roots of a quadratic equation.\n- The summation formula calculates the sum of the first \\(n\\) integers.\n- The product formula calculates the factorial for \\(n\\).\n\n## Scenario 3: Code and Math Mixed\nHere's a Python function to calculate the area of a circle given its radius. The underlying mathematical formula used is:\n\\[\nA = \\pi r^2\n\\]\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\n# Example usage:\nprint(f\"Area of circle with radius 5: {circle_area(5)}\")\n```\nThis code will output the area of a circle with a radius of 5 units, where \\( A \\approx 78.54 \\) square units.\n\n## Scenario 4: Horizontal Rules\nThe following sections illustrate the use of horizontal rules to separate content:\n\nFirst section of content.\n\n---\n\nIn the second section, we evaluate a definite integral:\n\\[\n\\int_{0}^{1} x \\, dx = \\frac{1}{2}\n\\]\nThis integral computes the area under the curve \\(y = x\\) from \\(x = 0\\) to \\(x = 1\\).\n\n---\n\nThird section concludes the content.\n\n## Scenario 5: Multiple Dollar Signs\nTo summarize expenses with precise formatting:\n- A computer costs **$1,200**\n- A monitor costs **$300**\n- A keyboard costs **$50**\n- A mouse costs **$25**\n\n**Total Expenses:**\n\\[\n1,200 + 300 + 50 + 25 = 1,575\n\\]\n\n### Additional Math:\nConsider the function defined as \\(f(x) = x^2\\):\n- Evaluating this function at \\(x = 5\\):\n\\[\nf(5) = 5^2 = 25\n\\]\n\nThis response captures the various mathematical concepts and their implementations in a clear and structured manner across the different scenarios provided.",
+  "usage": {
+    "prompt_tokens": 429,
+    "completion_tokens": 791,
+    "total_tokens": 1220,
+    "cost": 0.00053895,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00053895,
+      "upstream_inference_prompt_cost": 0.00006435,
+      "upstream_inference_completions_cost": 0.0004746
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0,
+  "timestamp": "2026-11-04T00:53:25.395Z"
+}

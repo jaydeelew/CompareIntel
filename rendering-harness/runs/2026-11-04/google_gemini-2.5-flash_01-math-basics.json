@@ -1,0 +1,32 @@
+{
+  "modelId": "google/gemini-2.5-flash",
+  "modelName": "Gemini 2.5 Flash",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math: Show the same formula as a display equation:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n3. Matrices: Show a 2x2 identity matrix:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\n4. Multiple equations on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15.\n",
+  "response": "Let's review some math basics!\n\nFirst, the quadratic formula is a fundamental tool for solving quadratic equations of the form $ax^2 + bx + c = 0$. It states that the solutions for $x$ are given by $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. Here, $a$, $b$, and $c$ are coefficients of the quadratic equation. The $\\pm$ symbol indicates that there are generally two solutions: one using the plus sign and one using the minus sign. The term $b^2 - 4ac$ is known as the discriminant, which tells us about the nature of the roots (real or complex, distinct or repeated).\n\nFor clarity, here is the quadratic formula displayed:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\nNext, let's look at matrices. A particularly important matrix is the identity matrix, which has ones on its main diagonal and zeros elsewhere. For a 2x2 matrix, the identity matrix is:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nWe also encounter many important equations in physics and geometry, which can be expressed on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\nFinally, in a non-mathematical context, we can talk about money. The item costs $5 and the shipping is $10, for a total of $15.",
+  "usage": {
+    "prompt_tokens": 200,
+    "completion_tokens": 340,
+    "total_tokens": 540,
+    "cost": 0.00091,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00091,
+      "upstream_inference_prompt_cost": 0.00006,
+      "upstream_inference_completions_cost": 0.00085
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0,
+  "timestamp": "2026-11-04T00:52:44.828Z"
+}
