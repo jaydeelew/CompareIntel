@@ -115,6 +115,8 @@ updates:
       # 2.32.0 and eslint-plugin-react-hooks 5.2.0 only support eslint ^9).
       - dependency-name: "eslint"
         versions: [">=10"]
+      - dependency-name: "@eslint/js"
+        versions: [">=10.0.0"]
       # React 19 / plugin-react 5 / Vitest 5 / imagetools 10+ need dedicated PRs.
       - dependency-name: "react"
         update-types: ["version-update:semver-major"]

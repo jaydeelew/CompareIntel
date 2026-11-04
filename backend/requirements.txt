@@ -152,7 +152,7 @@ python-dotenv==1.2.4
     # via
     #   -r requirements.in
     #   pydantic-settings
-python-multipart==0.0.32
+python-multipart==0.0.33
     # via -r requirements.in
 pytz==2025.2
     # via -r requirements.in
