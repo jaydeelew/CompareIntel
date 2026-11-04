@@ -16,13 +16,14 @@ annotated-types==0.8.0
     # via
     #   -r requirements.in
     #   pydantic
-anthropic==0.83.0
+anthropic==2.3.0
     # via -r requirements.in
 anyio==4.15.1
     # via
     #   -r requirements.in
     #   anthropic
     #   httpx
+    #   httpx2
     #   openai
     #   starlette
 bcrypt==4.0.1
@@ -53,9 +54,7 @@ cryptography==50.0.2
     #   -r requirements.in
     #   fastapi-mail
 distro==1.9.0
-    # via
-    #   anthropic
-    #   openai
+    # via openai
 dnspython==2.9.1
     # via
     #   -r requirements.in
@@ -80,23 +79,28 @@ h11==0.16.0
     # via
     #   -r requirements.in
     #   httpcore
+    #   httpcore2
     #   uvicorn
 httpcore==1.0.9
     # via httpx
+httpcore2==2.16.0
+    # via httpx2
 httptools==0.9.0
     # via -r requirements.in
 httpx==0.28.1
     # via
     #   -r requirements.in
-    #   anthropic
     #   fastapi-mail
     #   openai
+httpx2==2.16.0
+    # via anthropic
 idna==3.20
     # via
     #   -r requirements.in
     #   anyio
     #   email-validator
     #   httpx
+    #   httpx2
     #   requests
 jinja2==3.1.6
     # via fastapi-mail
@@ -113,7 +117,9 @@ markupsafe==3.0.3
 openai==2.54.0
     # via -r requirements.in
 opentelemetry-api==1.45.1
-    # via fastapi
+    # via
+    #   anthropic
+    #   fastapi
 packaging==26.0
     # via gunicorn
 passlib[bcrypt]==1.7.4
@@ -189,6 +195,10 @@ tiktoken==0.14.0
     # via -r requirements.in
 tqdm==4.67.3
     # via openai
+truststore==0.10.5
+    # via
+    #   httpcore2
+    #   httpx2
 typing-extensions==4.16.0
     # via
     #   -r requirements.in
@@ -198,6 +208,7 @@ typing-extensions==4.16.0
     #   beautifulsoup4
     #   fastapi
     #   fastapi-mail
+    #   httpx2
     #   openai
     #   opentelemetry-api
     #   pydantic
