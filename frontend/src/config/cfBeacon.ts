@@ -1,14 +1,14 @@
 /**
  * Cloudflare Web Analytics beacon helpers.
  *
- * The public token is baked into production HTML via VITE_CF_BEACON_TOKEN.
- * The loader still no-ops unless location.hostname is exactly compareintel.com,
- * so localhost, PR previews, E2E/CI, and the browser extension never beacon.
+ * The public token placeholder __CF_BEACON_TOKEN__ is in index.html and will be
+ * replaced by a maintainer in a follow-up commit. The loader no-ops unless the
+ * token is real and location.hostname is exactly compareintel.com, so localhost,
+ * PR previews, E2E/CI, and the browser extension never beacon.
  */
 
 import { isPreviewDeployFromEnv } from './deployEnv'
 
-export const DEFAULT_CF_BEACON_TOKEN = '423fd187f89f44bdadec92bc373b1829'
 export const CF_BEACON_SCRIPT_SRC = 'https://static.cloudflareinsights.com/beacon.min.js'
 export const PRODUCTION_ANALYTICS_HOSTNAME = 'compareintel.com'
 export const CF_BEACON_LOADER_ID = 'cf-beacon-loader'
@@ -26,7 +26,7 @@ function normalizeToken(token: string | undefined): string {
 
 export function isCfBeaconTokenPlaceholder(token: string | undefined): boolean {
   const value = normalizeToken(token)
-  return value.length === 0 || value.includes('%VITE_')
+  return value.length === 0 || value.includes('__CF_') || value.includes('%VITE_')
 }
 
 /**
@@ -41,8 +41,8 @@ export function shouldLoadCfBeacon(gate: CfBeaconGate): boolean {
 }
 
 /**
- * Production builds get the public token when none was supplied. Preview builds
- * always clear it so Vite cannot inline the beacon into Pages HTML.
+ * Preview builds always clear the token so the beacon is not loaded.
+ * For production builds, the token is already in index.html as __CF_BEACON_TOKEN__.
  */
 export function applyCfBeaconBuildEnv(
   env: {
@@ -58,13 +58,7 @@ export function applyCfBeaconBuildEnv(
     return ''
   }
 
-  if (mode === 'production') {
-    if (!normalizeToken(env.VITE_CF_BEACON_TOKEN)) {
-      env.VITE_CF_BEACON_TOKEN = DEFAULT_CF_BEACON_TOKEN
-    }
-    return normalizeToken(env.VITE_CF_BEACON_TOKEN)
-  }
-
+  // Token is now a literal placeholder in index.html, not injected by Vite
   return normalizeToken(env.VITE_CF_BEACON_TOKEN)
 }
 
@@ -81,6 +75,7 @@ export function htmlHasCfBeaconLoader(html: string): boolean {
   return (
     html.includes(CF_BEACON_LOADER_ID) ||
     html.includes(CF_BEACON_SCRIPT_SRC) ||
+    html.includes('__CF_BEACON_TOKEN__') ||
     html.includes('%VITE_CF_BEACON_TOKEN%')
   )
 }

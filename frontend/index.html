@@ -198,12 +198,12 @@
   </div>
   <script type="module" src="/src/main.tsx"></script>
   <!--cf-beacon-start-->
-  <!-- Cloudflare Web Analytics: %VITE_CF_BEACON_TOKEN% is inlined in production builds.
+  <!-- Cloudflare Web Analytics: __CF_BEACON_TOKEN__ will be replaced by maintainer in a follow-up commit.
        Loader is a no-op unless location.hostname is exactly compareintel.com. -->
   <script id="cf-beacon-loader">
     (function () {
-      var token = '%VITE_CF_BEACON_TOKEN%';
-      if (!token || token.indexOf('%VITE_') === 0) return;
+      var token = '__CF_BEACON_TOKEN__';
+      if (!token || token.indexOf('__CF_') === 0) return;
       if (location.hostname !== 'compareintel.com') return;
       var s = document.createElement('script');
       s.defer = true;

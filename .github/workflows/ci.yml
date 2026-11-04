@@ -948,8 +948,8 @@ jobs:
             echo "⚠️  Warning: Potential SQL injection risk. Use parameterized queries."
           fi
 
-  ping-sitemap:
-    name: Ping Sitemap (SEO)
+  submit-indexnow:
+    name: Submit URLs to IndexNow (SEO)
     needs: detect-changes
     if: |
       github.event_name == 'push' &&
@@ -961,8 +961,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Ping Google and Bing sitemap
-        run: bash scripts/ping-sitemap.sh
+      - name: Submit URLs to IndexNow API
+        run: bash scripts/submit-indexnow.sh
 
   dependency-review:
     name: Dependency Review
