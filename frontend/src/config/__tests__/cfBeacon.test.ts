@@ -67,9 +67,9 @@ describe('applyCfBeaconBuildEnv', () => {
 describe('index.html Cloudflare beacon loader', () => {
   const html = readFileSync(path.join(repoFrontend, 'index.html'), 'utf8')
 
-  it('has a hostname-guarded beacon loader with __CF_BEACON_TOKEN__ placeholder', () => {
+  it('has a hostname-guarded beacon loader with a real token', () => {
     expect(htmlHasCfBeaconLoader(html)).toBe(true)
-    expect(html).toContain("var token = '__CF_BEACON_TOKEN__'")
+    expect(html).toMatch(/var token = '(?!__CF_)[A-Za-z0-9_-]+'/)
     expect(html).toContain("location.hostname !== 'compareintel.com'")
     expect(html).toContain(CF_BEACON_SCRIPT_SRC)
   })
