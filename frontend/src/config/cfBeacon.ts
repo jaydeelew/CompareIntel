@@ -51,7 +51,7 @@ export function applyCfBeaconBuildEnv(
     CF_PAGES?: string
     [key: string]: string | boolean | undefined
   },
-  mode: string
+  _mode: string
 ): string {
   if (isPreviewDeployFromEnv(env)) {
     env.VITE_CF_BEACON_TOKEN = ''
