@@ -17,12 +17,7 @@ function mergeBulletContinuationLines(text: string): string {
     const previous = out[out.length - 1]
     const bullet = previous?.match(BULLET_ITEM_RE)
     const indent = line.match(/^[ \t]*/)![0].length
-    if (
-      bullet &&
-      indent > 0 &&
-      indent >= bullet[1].length &&
-      DISPLAY_MATH_LINE_RE.test(line)
-    ) {
+    if (bullet && indent > 0 && indent >= bullet[1].length && DISPLAY_MATH_LINE_RE.test(line)) {
       out[out.length - 1] = previous.trimEnd() + ' ' + line.trim()
       continue
     }
