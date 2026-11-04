@@ -22,7 +22,7 @@ h11>=0.14.0
 websockets>=10.0
 
 # Request handling
-python-multipart>=0.0.31
+python-multipart>=0.0.33
 python-dotenv>=1.2.2
 PyYAML>=6.0
 anyio>=4.14.2
