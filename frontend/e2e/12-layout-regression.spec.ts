@@ -20,6 +20,7 @@ import { fileURLToPath } from 'url'
 import type { Page } from '@playwright/test'
 
 import { test, expect } from './fixtures'
+import { mockModelsApi } from './helpers/mockModels'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
@@ -109,9 +110,22 @@ async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
 }
 
 /**
- * Navigate to page and wait for it to be fully loaded
+ * Navigate to page and wait for it to be fully loaded.
+ * Mocks critical API endpoints to ensure deterministic layout without external dependencies.
  */
 async function gotoStable(page: Page, path: string): Promise<void> {
+  // Mock API responses before navigation to prevent errors from affecting layout
+  await mockModelsApi(page, 'unregistered')
+  
+  // Mock auth/me to return unauthenticated state immediately
+  await page.route('**/api/auth/me', async route => {
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ detail: 'Not authenticated' }),
+    })
+  })
+  
   await page.goto(path, { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('load')
   
