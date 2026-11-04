@@ -1,0 +1,125 @@
+name: Production Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Operation to perform'
+        required: true
+        type: choice
+        options:
+          - status
+          - logs
+          - deploy
+          - rollback
+        default: 'status'
+
+concurrency:
+  group: production-ops
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ops:
+    name: Production ${{ github.event.inputs.action }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Check authorization
+        run: |
+          if [ "${{ github.actor }}" != "jaydeelew" ]; then
+            echo "❌ Unauthorized: Only jaydeelew can run production operations"
+            exit 1
+          fi
+          echo "✅ Authorized user: ${{ github.actor }}"
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          SSH_HOST: ${{ secrets.PROD_HOST }}
+          SSH_USER: ${{ secrets.PROD_USER }}
+        run: |
+          if [ -z "$SSH_KEY" ] || [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
+            echo "❌ Missing required secrets: PROD_SSH_KEY, PROD_HOST, or PROD_USER"
+            echo "See docs/ops/PRODUCTION_OPERATIONS_WORKFLOW.md for setup instructions"
+            exit 1
+          fi
+          
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/prod_key
+          chmod 600 ~/.ssh/prod_key
+          echo "✅ SSH key configured"
+
+      - name: Run ${{ github.event.inputs.action }}
+        env:
+          SSH_HOST: ${{ secrets.PROD_HOST }}
+          SSH_USER: ${{ secrets.PROD_USER }}
+          APP_DIR: ${{ secrets.PROD_APP_DIR }}
+        run: |
+          # Default to documented production path if PROD_APP_DIR not set
+          APP_DIR="${APP_DIR:-/home/ubuntu/CompareIntel}"
+          
+          echo "📡 Connecting to production server..."
+          echo "Host: $SSH_HOST"
+          echo "User: $SSH_USER"
+          echo "App Directory: $APP_DIR"
+          echo ""
+          
+          # Create output file for job summary
+          OUTPUT_FILE=$(mktemp)
+          
+          # Run the deployment script with the selected action
+          ssh -i ~/.ssh/prod_key \
+            -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=30 \
+            "$SSH_USER@$SSH_HOST" \
+            "cd $APP_DIR && ./deploy-production.sh ${{ github.event.inputs.action }}" \
+            2>&1 | tee "$OUTPUT_FILE"
+          
+          EXIT_CODE=${PIPESTATUS[0]}
+          
+          # For logs action, also print recent docker logs
+          if [ "${{ github.event.inputs.action }}" = "logs" ]; then
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📋 Recent Docker Compose Logs (last 200 lines):"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            ssh -i ~/.ssh/prod_key \
+              -o StrictHostKeyChecking=accept-new \
+              -o ConnectTimeout=30 \
+              "$SSH_USER@$SSH_HOST" \
+              "cd $APP_DIR && docker compose -f docker-compose.ssl.yml logs --tail=200" \
+              2>&1 | tee -a "$OUTPUT_FILE"
+          fi
+          
+          # Write output to job summary
+          echo "## Production Operations: ${{ github.event.inputs.action }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Server:** $SSH_HOST" >> $GITHUB_STEP_SUMMARY
+          echo "**Directory:** $APP_DIR" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Output" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat "$OUTPUT_FILE" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          rm -f "$OUTPUT_FILE"
+          
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "❌ Operation failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+          
+          echo ""
+          echo "✅ Operation completed successfully"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/prod_key
+          echo "✅ SSH key cleaned up"
