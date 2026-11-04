@@ -1,0 +1,32 @@
+{
+  "modelId": "anthropic/claude-sonnet-4.6",
+  "modelName": "Claude Sonnet 4.6",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math: Show the same formula as a display equation:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n3. Matrices: Show a 2x2 identity matrix:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\n4. Multiple equations on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15.\n",
+  "response": "# Math Basics Demonstration\n\n## 1. Inline Math\n\nThe quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ is used to solve any quadratic equation of the form $ax^2 + bx + c = 0$, where $a \\neq 0$. The term $b^2 - 4ac$ under the radical is called the **discriminant**.\n\n---\n\n## 2. Display Math\n\nThe same formula presented as a display equation:\n\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n---\n\n## 3. Matrices\n\nThe 2×2 identity matrix is:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nMultiplying any 2×2 matrix by $I$ leaves it unchanged.\n\n---\n\n## 4. Famous Equations\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nThese represent mass-energy equivalence, Newton's second law, and the Pythagorean theorem, respectively.\n\n---\n\n## 5. Plain Currency (No Math Rendering)\n\nThe item costs $5 and the shipping is $10, for a total of $15. These dollar signs are just currency symbols and should **not** trigger any math rendering.",
+  "usage": {
+    "prompt_tokens": 234,
+    "completion_tokens": 348,
+    "total_tokens": 582,
+    "cost": 0.005922,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.005922,
+      "upstream_inference_prompt_cost": 0.000702,
+      "upstream_inference_completions_cost": 0.00522
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0,
+  "timestamp": "2026-11-04T00:50:49.299Z"
+}
