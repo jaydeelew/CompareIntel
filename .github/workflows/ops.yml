@@ -28,6 +28,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     
+    env:
+      HAS_AWS_SG: ${{ secrets.AWS_SG_ID != '' }}
+      HAS_AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+      HAS_AWS_ROLE: ${{ secrets.AWS_ROLE_ARN != '' }}
+    
     steps:
       - name: Check authorization
         run: |
@@ -55,7 +60,7 @@ jobs:
           echo "✅ SSH key configured"
 
       - name: Configure AWS credentials (IAM user)
-        if: ${{ secrets.AWS_SG_ID != '' && secrets.AWS_ACCESS_KEY_ID != '' }}
+        if: env.HAS_AWS_SG == 'true' && env.HAS_AWS_ACCESS_KEY == 'true'
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -63,14 +68,14 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Configure AWS credentials (OIDC)
-        if: ${{ secrets.AWS_SG_ID != '' && secrets.AWS_ROLE_ARN != '' && secrets.AWS_ACCESS_KEY_ID == '' }}
+        if: env.HAS_AWS_SG == 'true' && env.HAS_AWS_ROLE == 'true' && env.HAS_AWS_ACCESS_KEY == 'false'
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Authorize runner IP in security group
-        if: ${{ secrets.AWS_SG_ID != '' }}
+        if: env.HAS_AWS_SG == 'true'
         env:
           AWS_SG_ID: ${{ secrets.AWS_SG_ID }}
         run: |
@@ -164,7 +169,7 @@ jobs:
           echo "✅ Operation completed successfully"
 
       - name: Revoke runner IP from security group
-        if: ${{ always() && secrets.AWS_SG_ID != '' && env.RUNNER_IP != '' }}
+        if: always() && env.HAS_AWS_SG == 'true' && env.RUNNER_IP != ''
         env:
           AWS_SG_ID: ${{ secrets.AWS_SG_ID }}
         run: |
