@@ -50,8 +50,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       additional_contexts:
         core: ./packages/compare-core
         registry: ./backend/data
@@ -63,7 +63,7 @@ services:
         - VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT:-production}
         - VITE_SENTRY_RELEASE=${GIT_SHA:-}
     volumes:
-      - ./frontend/dist:/app/dist
+      - ./frontend/dist:/repo/frontend/dist
     mem_limit: 256m
     mem_reservation: 64m
     logging: *default-logging
@@ -75,8 +75,8 @@ services:
   nginx:
     image: compareintel-nginx:${IMAGE_TAG:-current}
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       additional_contexts:
         core: ./packages/compare-core
         registry: ./backend/data

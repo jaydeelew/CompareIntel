@@ -61,8 +61,8 @@ services:
   nginx:
     image: compareintel-nginx:${IMAGE_TAG:-current}
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       additional_contexts:
         core: ./packages/compare-core
         registry: ./backend/data
