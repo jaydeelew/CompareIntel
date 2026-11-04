@@ -54,8 +54,8 @@ services:
 
   frontend:
     build: 
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       additional_contexts:
         core: ./packages/compare-core
         registry: ./backend/data
@@ -63,9 +63,9 @@ services:
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend:/app
-      - ./packages/compare-core:/packages/compare-core
-      - /app/node_modules
+      - ./frontend:/repo/frontend
+      - ./packages/compare-core:/repo/packages/compare-core
+      - /repo/node_modules
     environment:
       - VITE_API_URL=/api
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0"

@@ -144,7 +144,7 @@ jobs:
       - name: Build frontend image (build stage)
         uses: docker/build-push-action@v7
         with:
-          context: ./frontend
+          context: .
           file: ./frontend/Dockerfile
           build-contexts: |
             core=./packages/compare-core
@@ -160,7 +160,7 @@ jobs:
         run: |
           # Extract the built files from the build stage
           docker create --name temp-build compareintel-frontend:build-test
-          docker cp temp-build:/app/dist ./temp-dist
+          docker cp temp-build:/repo/frontend/dist ./temp-dist
           docker rm temp-build
           
           # Verify prerendered HTML files exist and contain correct content
@@ -232,7 +232,7 @@ jobs:
       - name: Build frontend image (dev stage)
         uses: docker/build-push-action@v7
         with:
-          context: ./frontend
+          context: .
           file: ./frontend/Dockerfile
           build-contexts: |
             core=./packages/compare-core
@@ -246,7 +246,7 @@ jobs:
       - name: Build frontend image (prod stage)
         uses: docker/build-push-action@v7
         with:
-          context: ./frontend
+          context: .
           file: ./frontend/Dockerfile
           build-contexts: |
             core=./packages/compare-core
