@@ -194,6 +194,7 @@ async function callOpenRouter(
         },
       ],
       max_tokens: maxTokens,
+      usage: { include: true },
     }),
   });
   
@@ -206,9 +207,13 @@ async function callOpenRouter(
   const content = data.choices[0]?.message?.content || '';
   const usage = data.usage;
   
-  // Calculate actual cost from usage (OpenRouter uses prompt_tokens and completion_tokens)
+  // Use OpenRouter's actual cost if provided, otherwise estimate from pricing
   let cost = 0;
-  if (usage && usage.prompt_tokens && usage.completion_tokens) {
+  if (usage?.cost) {
+    // OpenRouter returned actual cost
+    cost = usage.cost;
+  } else if (usage && usage.prompt_tokens && usage.completion_tokens) {
+    // Estimate from pricing map when cost not provided
     const modelPricing = pricing.get(modelId);
     if (modelPricing) {
       cost = (usage.prompt_tokens * modelPricing.inputCostPerToken) +
