@@ -61,11 +61,16 @@ describe('fixLatexIssues', () => {
       })
     })
 
-    it('converts Unicode × symbol to \\times for math rendering', () => {
-      const input = '5 × 3 = 15'
-      const output = fixLatexIssues(input)
-      expect(output).toContain('\\times')
-      expect(output).toBe('5 \\times 3 = 15')
+    it('converts Unicode × symbol to \\times inside math delimiters', () => {
+      expect(fixLatexIssues('$5 × 3 = 15$')).toBe('$5 \\times 3 = 15$')
+      expect(fixLatexIssues('\\(5 × 3\\) and \\[(2×4)\\]')).toBe(
+        '\\(5 \\times 3\\) and \\[(2 \\times 4)\\]'
+      )
+    })
+
+    it('leaves Unicode × in prose alone', () => {
+      const input = 'The 2×2 identity matrix is:'
+      expect(fixLatexIssues(input)).toBe(input)
     })
 
     it('converts other math operators but not "times" word', () => {

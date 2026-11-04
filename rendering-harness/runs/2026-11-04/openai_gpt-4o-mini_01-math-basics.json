@@ -1,0 +1,32 @@
+{
+  "modelId": "openai/gpt-4o-mini",
+  "modelName": "Gpt 4o Mini",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math: Show the same formula as a display equation:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n3. Matrices: Show a 2x2 identity matrix:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\n4. Multiple equations on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15.\n",
+  "response": "The quadratic formula is a fundamental concept in algebra, used to find the roots of a quadratic equation of the form \\( ax^2 + bx + c = 0 \\). It is given by the formula:\n\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\nIn this formula, \\( a \\), \\( b \\), and \\( c \\) are coefficients from the quadratic equation, and the expression under the square root, known as the discriminant \\( b^2 - 4ac \\), determines the nature of the roots.\n\nIn terms of matrices, the identity matrix of size 2x2 is represented as:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nThis matrix acts as the multiplicative identity in matrix multiplication.\n\nAdditionally, here are some important equations presented on separate lines:\n\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\nAs for a money context, consider an item that costs $5 and the shipping fee is $10, leading to a total of $15.",
+  "usage": {
+    "prompt_tokens": 206,
+    "completion_tokens": 249,
+    "total_tokens": 455,
+    "cost": 0.0001803,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0001803,
+      "upstream_inference_prompt_cost": 0.0000309,
+      "upstream_inference_completions_cost": 0.0001494
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0,
+  "timestamp": "2026-11-04T00:53:01.524Z"
+}

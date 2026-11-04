@@ -2,7 +2,7 @@ export { safeRenderKatex, looksMathematical, convertSquareRoots, looksProse } fr
 export { cleanMalformedContent } from './cleanup'
 export { fixLatexIssues, wrapBareLatexBlocks, normalizeUnicodeMath } from './fixSyntax'
 export { convertImplicitMath } from './implicitMath'
-export { processMarkdownLists } from './lists'
+export { processMarkdownLists, convertListPlaceholdersToHTML } from './lists'
 export { renderCodeBlock } from './codeBlocks'
 export {
   extractDisplayMath,
@@ -14,3 +14,13 @@ export {
   preserveMathLineBreaks,
   type MathRendererConfig,
 } from './mathRenderer'
+export { markBlockquotes, renderBlockquoteMarkers } from './blockquotes'
+export {
+  LITERAL_DOLLAR,
+  protectEscapedDollars,
+  protectCurrencyDollars,
+  restoreLiteralDollars,
+  extractInlineCode,
+  restoreInlineCode,
+  renderInlineCodeSpan,
+} from './protection'
