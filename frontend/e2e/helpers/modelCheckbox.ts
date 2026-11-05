@@ -94,18 +94,31 @@ export async function selectSelectableTextModels(
   for (const { provider, id } of candidates.slice(0, count)) {
     const dropdown = page.locator(`.provider-dropdown[data-provider-name="${provider}"]`)
     const header = dropdown.locator('.provider-header')
-    if ((await header.getAttribute('aria-expanded')) !== 'true') {
-      // Center the header so a fixed install banner cannot intercept the click.
-      await header.evaluate((el: HTMLElement) => {
-        el.scrollIntoView({ block: 'center', inline: 'nearest' })
-      })
-      await header.click({ timeout: 10000 })
-      await expect(header).toHaveAttribute('aria-expanded', 'true')
-    }
     const checkbox = page.getByTestId(`model-checkbox-${id}`)
+
+    // The picker re-flows right after a click (selected count, expanding dropdown, "Done
+    // Selecting?" card). Playwright's actionability check passes before that, so on Firefox the
+    // pointer can land on the surrounding `.provider-dropdowns` container instead of the header
+    // or checkbox, which is a silent no-op. Each step is idempotent and retried as a unit so a
+    // missed click is repeated, while an already-applied one is never toggled back.
+    await expect(async () => {
+      if ((await header.getAttribute('aria-expanded')) !== 'true') {
+        // Center the header so a fixed install banner cannot intercept the click.
+        await header.evaluate((el: HTMLElement) => {
+          el.scrollIntoView({ block: 'center', inline: 'nearest' })
+        })
+        await header.click({ timeout: 5000 })
+      }
+      await expect(header).toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
+    }, `expand ${provider} provider dropdown`).toPass({ timeout: 20000 })
+
     await expect(checkbox).toBeEnabled({ timeout: 10000 })
-    await toggleModelCheckbox(checkbox, projectName)
-    await expect(checkbox).toBeChecked()
+    await expect(async () => {
+      if (!(await checkbox.isChecked())) {
+        await toggleModelCheckbox(checkbox, projectName)
+      }
+      await expect(checkbox).toBeChecked({ timeout: 2000 })
+    }, `select model ${id}`).toPass({ timeout: 20000 })
     selected.push(id)
   }
   return selected
