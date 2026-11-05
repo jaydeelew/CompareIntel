@@ -75,6 +75,27 @@ async function waitForStableLayout(page: Page): Promise<void> {
 }
 
 /**
+ * Wait for the hero's finite CSS animations (the fade/slide-up entrance) to finish.
+ * The pricing line lives inside the slide-up container, so while that transform is animating the
+ * credits line and the pricing line move together but the hero bottom does not; the line is only
+ * centered between them once the animation has ended (useCenteredPricingLine re-centers on
+ * `animationend`). Under CI load the animation can still be running well after `load`.
+ */
+async function waitForHeroEntranceAnimations(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const hero = document.querySelector('.hero-section')
+    if (!hero) return
+    const running = document.getAnimations().filter(animation => {
+      const target = (animation.effect as KeyframeEffect | null)?.target
+      const endTime = animation.effect?.getComputedTiming().endTime
+      return target instanceof Element && hero.contains(target) && Number.isFinite(endTime)
+    })
+    await Promise.all(running.map(animation => animation.finished.catch(() => undefined)))
+  })
+  await waitForStableLayout(page)
+}
+
+/**
  * Set theme and wait for it to apply completely
  */
 async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
@@ -240,10 +261,14 @@ test.describe('Layout Regression Tests', () => {
           if (pricingVisible) {
             await expect(creditsLine).toBeVisible()
 
+            await waitForHeroEntranceAnimations(page)
+
             // The line is positioned by a requestAnimationFrame-driven hook that re-runs when
             // the hero/credits layout settles. Measure all three boxes in a single task (so they
-            // share one layout) and poll until the line settles, instead of sampling the boxes
-            // across separate round trips where a late relayout can land between them.
+            // share one layout) and run every assertion against that one snapshot, retrying the
+            // whole block: a late relayout (e.g. the desktop navbar auto-fold resizing the hero)
+            // between a "settled" poll and a second measurement would otherwise fail spuriously.
+            // A line that never settles still fails after the timeout; tolerance is unchanged.
             const measure = () =>
               page.evaluate(() => {
                 const rect = (selector: string) =>
@@ -265,27 +290,28 @@ test.describe('Layout Regression Tests', () => {
                 }
               })
 
-            await expect
-              .poll(async () => (await measure())?.centeringError ?? Number.POSITIVE_INFINITY, {
-                message:
-                  `Pricing line should be vertically centered between credits and hero bottom ` +
-                  `at ${vpName} (${theme}) (tolerance: ±${CENTERING_TOLERANCE}px)`,
-                timeout: 5000,
-              })
-              .toBeLessThanOrEqual(CENTERING_TOLERANCE)
+            await expect(async () => {
+              const m = await measure()
+              expect(m, 'Hero, credits and pricing lines should have bounding boxes').not.toBeNull()
 
-            const m = await measure()
-            expect(m, 'Hero, credits and pricing lines should have bounding boxes').not.toBeNull()
+              expect(
+                m!.centeringError,
+                `Pricing line should be vertically centered between credits and hero bottom ` +
+                  `at ${vpName} (${theme}) (tolerance: ±${CENTERING_TOLERANCE}px). ` +
+                  `Credits bottom: ${m!.creditsBottom.toFixed(1)}px, ` +
+                  `Hero bottom: ${m!.heroBottom.toFixed(1)}px`
+              ).toBeLessThanOrEqual(CENTERING_TOLERANCE)
 
-            expect(
-              m!.pricingTop,
-              `Pricing line at ${vpName} (${theme}) should be below credits line`
-            ).toBeGreaterThanOrEqual(m!.creditsBottom - 1)
+              expect(
+                m!.pricingTop,
+                `Pricing line at ${vpName} (${theme}) should be below credits line`
+              ).toBeGreaterThanOrEqual(m!.creditsBottom - 1)
 
-            expect(
-              m!.pricingBottom,
-              `Pricing line at ${vpName} (${theme}) should be above hero bottom`
-            ).toBeLessThanOrEqual(m!.heroBottom + 1)
+              expect(
+                m!.pricingBottom,
+                `Pricing line at ${vpName} (${theme}) should be above hero bottom`
+              ).toBeLessThanOrEqual(m!.heroBottom + 1)
+            }).toPass({ timeout: 5000, intervals: [50, 100, 250] })
           }
         })
 

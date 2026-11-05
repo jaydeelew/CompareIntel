@@ -87,7 +87,8 @@ const PerformanceMonitoringTab: React.FC = () => {
           id: 'fcp-from-paint',
           delta: fcpEntry.startTime,
           entries: [],
-          navigationType: 'navigate' as 'navigate' | 'reload' | 'back_forward' | 'prerender',
+          navigationType: 'navigate',
+          navigationId: 0,
         } as PerformanceMetric
       }
     }
@@ -103,7 +104,8 @@ const PerformanceMonitoringTab: React.FC = () => {
         id: 'ttfb-from-navigation',
         delta: ttfb,
         entries: [],
-        navigationType: 'navigate' as 'navigate' | 'reload' | 'back_forward' | 'prerender',
+        navigationType: 'navigate',
+        navigationId: 0,
       } as PerformanceMetric
     }
 

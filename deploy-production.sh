@@ -29,6 +29,8 @@ source "$DEPLOY_DIR/status.sh"
 source "$DEPLOY_DIR/rollback.sh"
 # shellcheck disable=SC1091
 source "$DEPLOY_DIR/notify_new_models.sh"
+# shellcheck disable=SC1091
+source "$DEPLOY_DIR/diagnostics.sh"
 
 record_deploy_hashes() {
     record_backend_env_hash
@@ -134,6 +136,9 @@ main() {
         status)
             show_status
             ;;
+        diagnostics)
+            run_diagnostics
+            ;;
         logs)
             cd "$PROJECT_DIR"
             docker compose -f docker-compose.ssl.yml logs -f --tail=100
@@ -160,10 +165,10 @@ main() {
             ok "Services restarted"
             ;;
         *)
-            echo "Usage: $0 {check|backup|build|deploy|quick-deploy|rollback|restart|status|logs}"
+            echo "Usage: $0 {check|backup|build|deploy|quick-deploy|rollback|restart|status|diagnostics|logs}"
             echo ""
             echo "Commands: check, backup, build, deploy, quick-deploy,"
-            echo "          rollback [previous] [--with-migrations], restart, status, logs"
+            echo "          rollback [previous] [--with-migrations], restart, status, diagnostics, logs"
             exit 1
             ;;
     esac
