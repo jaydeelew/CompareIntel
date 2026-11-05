@@ -83,7 +83,18 @@ main() {
             capture_prev_deploy_commit
             backup_database
             CODE_CHANGED=false
+            PRE_PULL_HEAD=$(git -C "$PROJECT_DIR" rev-parse HEAD 2>/dev/null || echo "")
             pull_latest_code
+            if [ "$CODE_CHANGED" = true ] && [ -z "${DEPLOY_REEXEC:-}" ] \
+                && deploy_scripts_changed_since "$PRE_PULL_HEAD"; then
+                msg "Deploy scripts changed in this pull; restarting with the updated scripts..."
+                export PREV_DEPLOY_COMMIT DEPLOY_REEXEC=1
+                exec "$SCRIPT_DIR/deploy-production.sh" rebuild-after-pull
+            fi
+            if [ "$CODE_CHANGED" = false ] && head_release_not_running; then
+                warn "HEAD $(git -C "$PROJECT_DIR" rev-parse --short HEAD) is checked out but the running backend is a different release (previous deploy rolled back?). Forcing rebuild."
+                CODE_CHANGED=true
+            fi
             if [ "$CODE_CHANGED" = false ]; then
                 msg "No code changes. Skipping rebuild. Use ./deploy-production.sh build to force."
                 apply_runtime_config_changes
@@ -99,6 +110,14 @@ main() {
                 show_status
                 ok "Deployment completed"
             fi
+            echo ""
+            ;;
+        rebuild-after-pull)
+            # Internal: re-entry from `deploy` after the pull changed these scripts.
+            msg "Continuing deploy with freshly loaded scripts..."
+            deploy_with_rebuild
+            show_status
+            ok "Deployment completed"
             echo ""
             ;;
         quick-deploy)
@@ -155,4 +174,6 @@ main() {
     esac
 }
 
-main "$@"
+# Brace group: bash parses it whole, so a `git pull` that rewrites this file
+# mid-run cannot make it read stale bytes after main returns.
+{ main "$@"; exit $?; }
