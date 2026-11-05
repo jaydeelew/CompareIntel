@@ -44,7 +44,7 @@ probe_backend_health() {
     if echo "$body" | grep -q "healthy"; then
         return 0
     fi
-    body=$(curl -fsS --max-time 5 -k https://localhost/api/health 2>/dev/null || true)
+    body=$(curl -fsS --max-time 5 -k https://localhost/health 2>/dev/null || true)
     if echo "$body" | grep -q "healthy"; then
         return 0
     fi
