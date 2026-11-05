@@ -292,13 +292,19 @@ test.describe('Layout Regression Tests', () => {
           const pricingLine = page.locator('.hero-pricing-line').first()
           await expect(pricingLine).toBeVisible()
 
-          const heroHeight = () =>
-            page.evaluate(() => document.querySelector('.hero-section')!.getBoundingClientRect().height)
-
-          const withLine = await heroHeight()
-          await page.addStyleTag({ content: '.hero-pricing-line { display: none !important; }' })
-          await waitForStableLayout(page)
-          const withoutLine = await heroHeight()
+          // Measure with and without the line inside one synchronous task. The desktop navbar
+          // auto-folds on a timer (changing the hero's viewport-based min-height by 64px), so two
+          // separate measurements could straddle a fold and misattribute that change to the line.
+          const { withLine, withoutLine } = await page.evaluate(() => {
+            const hero = document.querySelector('.hero-section')!
+            const withLine = hero.getBoundingClientRect().height
+            const style = document.createElement('style')
+            style.textContent = '.hero-pricing-line { display: none !important; }'
+            document.head.appendChild(style)
+            const withoutLine = hero.getBoundingClientRect().height
+            style.remove()
+            return { withLine, withoutLine }
+          })
 
           expect(
             withLine - withoutLine,
