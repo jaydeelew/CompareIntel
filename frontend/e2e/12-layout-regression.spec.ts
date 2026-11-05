@@ -231,56 +231,61 @@ test.describe('Layout Regression Tests', () => {
           await gotoStable(page, '/')
           await setTheme(page, theme)
 
-          const heroSection = page.locator('.hero-section')
-          const heroBox = await heroSection.boundingBox()
-          expect(heroBox, 'Hero section should have a bounding box').not.toBeNull()
-
-          // Find the credits line and pricing line
           const creditsLine = page.locator('.credits-remaining-wrapper').first()
           const pricingLine = page.locator('.hero-pricing-line').first()
 
           // Pricing line should be visible (only shown for unauthenticated users)
           const pricingVisible = await pricingLine.isVisible().catch(() => false)
-          
+
           if (pricingVisible) {
-            await expect(pricingLine).toBeVisible()
             await expect(creditsLine).toBeVisible()
 
-            const creditsBox = await creditsLine.boundingBox()
-            const pricingBox = await pricingLine.boundingBox()
+            // The line is positioned by a requestAnimationFrame-driven hook that re-runs when
+            // the hero/credits layout settles. Measure all three boxes in a single task (so they
+            // share one layout) and poll until the line settles, instead of sampling the boxes
+            // across separate round trips where a late relayout can land between them.
+            const measure = () =>
+              page.evaluate(() => {
+                const rect = (selector: string) =>
+                  document.querySelector(selector)?.getBoundingClientRect() ?? null
+                const hero = rect('.hero-section')
+                const credits = rect('.credits-remaining-wrapper')
+                const pricing = rect('.hero-pricing-line')
+                if (!hero || !credits || !pricing) return null
+                const creditsBottom = credits.bottom
+                const heroBottom = hero.bottom
+                return {
+                  creditsBottom,
+                  heroBottom,
+                  pricingTop: pricing.top,
+                  pricingBottom: pricing.bottom,
+                  centeringError: Math.abs(
+                    pricing.top + pricing.height / 2 - (creditsBottom + heroBottom) / 2
+                  ),
+                }
+              })
 
-            expect(creditsBox, 'Credits line should have a bounding box').not.toBeNull()
-            expect(pricingBox, 'Pricing line should have a bounding box').not.toBeNull()
+            await expect
+              .poll(async () => (await measure())?.centeringError ?? Number.POSITIVE_INFINITY, {
+                message:
+                  `Pricing line should be vertically centered between credits and hero bottom ` +
+                  `at ${vpName} (${theme}) (tolerance: ±${CENTERING_TOLERANCE}px)`,
+                timeout: 5000,
+              })
+              .toBeLessThanOrEqual(CENTERING_TOLERANCE)
 
-            // Calculate expected center position
-            // Pricing line should be centered between bottom of credits line and bottom of hero
-            const creditsBottom = creditsBox!.y + creditsBox!.height
-            const heroBottom = heroBox!.y + heroBox!.height
-            const expectedCenter = (creditsBottom + heroBottom) / 2
+            const m = await measure()
+            expect(m, 'Hero, credits and pricing lines should have bounding boxes').not.toBeNull()
 
-            // Get actual center of pricing line
-            const pricingCenter = pricingBox!.y + pricingBox!.height / 2
-
-            // Assert centering (±6px tolerance)
-            const centeringError = Math.abs(pricingCenter - expectedCenter)
             expect(
-              centeringError,
-              `Pricing line should be vertically centered at ${vpName} (${theme}). ` +
-              `Expected center: ${expectedCenter.toFixed(1)}px, Actual: ${pricingCenter.toFixed(1)}px, ` +
-              `Error: ${centeringError.toFixed(1)}px (tolerance: ±${CENTERING_TOLERANCE}px). ` +
-              `Credits bottom: ${creditsBottom.toFixed(1)}px, Hero bottom: ${heroBottom.toFixed(1)}px`
-            ).toBeLessThanOrEqual(CENTERING_TOLERANCE)
-
-            // Also verify pricing line is within hero bounds
-            expect(
-              pricingBox!.y,
+              m!.pricingTop,
               `Pricing line at ${vpName} (${theme}) should be below credits line`
-            ).toBeGreaterThanOrEqual(creditsBottom - 1)
+            ).toBeGreaterThanOrEqual(m!.creditsBottom - 1)
 
             expect(
-              pricingBox!.y + pricingBox!.height,
+              m!.pricingBottom,
               `Pricing line at ${vpName} (${theme}) should be above hero bottom`
-            ).toBeLessThanOrEqual(heroBottom + 1)
+            ).toBeLessThanOrEqual(m!.heroBottom + 1)
           }
         })
 
