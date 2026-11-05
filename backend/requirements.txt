@@ -154,7 +154,7 @@ python-dotenv==1.2.4
     #   pydantic-settings
 python-multipart==0.0.33
     # via -r requirements.in
-pytz==2025.2
+pytz==2026.6
     # via -r requirements.in
 pyyaml==6.0.3
     # via -r requirements.in
