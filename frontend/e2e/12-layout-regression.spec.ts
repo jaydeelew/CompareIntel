@@ -11,6 +11,9 @@
  *   1. Run the test once to see the actual measured values in the failure output
  *   2. Copy those values to layout-regression-baselines.json
  *   3. Commit the updated baselines with a clear explanation of why they changed
+ *
+ * The hero baselines are PRODUCTION heights. Do not raise them to make a change pass: the pricing
+ * line is absolutely positioned and must never add hero height.
  */
 
 import { readFileSync } from 'fs'
@@ -30,8 +33,14 @@ const __dirname = dirname(__filename)
 const baselinesPath = join(__dirname, 'layout-regression-baselines.json')
 const baselines = JSON.parse(readFileSync(baselinesPath, 'utf-8'))
 
-/** Tolerance for height measurements (±4px) */
-const HEIGHT_TOLERANCE = 4
+/**
+ * Tolerance for hero height vs. the production baseline (±1px).
+ * The baselines are production heights; this only absorbs sub-pixel rounding between engines.
+ */
+const HEIGHT_TOLERANCE = 1
+
+/** Minimum WCAG AA contrast for normal-size text */
+const MIN_TEXT_CONTRAST = 4.5
 
 /** Tolerance for centering checks (±6px) */
 const CENTERING_TOLERANCE = 6
@@ -145,7 +154,9 @@ test.describe('Layout Regression Tests', () => {
       { name: '375x667', size: { width: 375, height: 667 } },
       { name: '390x844', size: { width: 390, height: 844 } },
       { name: '768x1024', size: { width: 768, height: 1024 } },
+      { name: '1024x768', size: { width: 1024, height: 768 } },
       { name: '1280x800', size: { width: 1280, height: 800 } },
+      { name: '1440x900', size: { width: 1440, height: 900 } },
       { name: '1920x1080', size: { width: 1920, height: 1080 } },
     ]
 
@@ -153,7 +164,12 @@ test.describe('Layout Regression Tests', () => {
 
     for (const { name: vpName, size: viewport } of viewports) {
       for (const theme of themes) {
-        test(`should maintain hero section height at ${vpName} in ${theme} mode`, async ({ page }) => {
+        test(`should maintain hero section height at ${vpName} in ${theme} mode`, async ({ page }, testInfo) => {
+          test.skip(
+            baselines.hero.chromiumOnly.includes(vpName) && testInfo.project.name !== 'chromium',
+            `${vpName} hero height is content-driven and differs per engine; asserted on desktop Chromium only`
+          )
+
           // Set viewport
           await page.setViewportSize(viewport)
 
@@ -266,6 +282,118 @@ test.describe('Layout Regression Tests', () => {
               `Pricing line at ${vpName} (${theme}) should be above hero bottom`
             ).toBeLessThanOrEqual(heroBottom + 1)
           }
+        })
+
+        test(`pricing line should add zero height to the hero at ${vpName} in ${theme} mode`, async ({ page }) => {
+          await page.setViewportSize(viewport)
+          await gotoStable(page, '/')
+          await setTheme(page, theme)
+
+          const pricingLine = page.locator('.hero-pricing-line').first()
+          await expect(pricingLine).toBeVisible()
+
+          const heroHeight = () =>
+            page.evaluate(() => document.querySelector('.hero-section')!.getBoundingClientRect().height)
+
+          const withLine = await heroHeight()
+          await page.addStyleTag({ content: '.hero-pricing-line { display: none !important; }' })
+          await waitForStableLayout(page)
+          const withoutLine = await heroHeight()
+
+          expect(
+            withLine - withoutLine,
+            `Pricing line must not change hero height at ${vpName} (${theme}): ` +
+            `${withLine}px with the line vs ${withoutLine}px without it`
+          ).toBe(0)
+        })
+
+        test(`pricing line text and link should be readable at ${vpName} in ${theme} mode`, async ({ page }) => {
+          await page.setViewportSize(viewport)
+          await gotoStable(page, '/')
+          await setTheme(page, theme)
+
+          const pricingLine = page.locator('.hero-pricing-line').first()
+          await expect(pricingLine).toBeVisible()
+
+          const styles = await page.evaluate(() => {
+            const line = document.querySelector('.hero-pricing-line')!
+            const link = line.querySelector('a')!
+            const rect = line.getBoundingClientRect()
+            return {
+              text: getComputedStyle(line).color,
+              link: getComputedStyle(link).color,
+              linkDecoration: getComputedStyle(link).textDecorationLine,
+              rect: { x: rect.x, y: rect.y + window.scrollY, width: rect.width, height: rect.height },
+            }
+          })
+
+          // Sample the real gradient behind the line (text hidden) and use its lightest pixel,
+          // which is the worst case for light text.
+          await page.addStyleTag({
+            content:
+              '.hero-pricing-line, .hero-pricing-line * { color: transparent !important; text-shadow: none !important; text-decoration: none !important; }',
+          })
+          const viewportSize = page.viewportSize()!
+          const x = Math.max(0, styles.rect.x)
+          const backdrop = await page.screenshot({
+            fullPage: true,
+            clip: {
+              x,
+              y: styles.rect.y,
+              width: Math.min(styles.rect.width, viewportSize.width - x),
+              height: styles.rect.height,
+            },
+          })
+          const lightestBackdrop = await page.evaluate(async (b64: string) => {
+            const img = new Image()
+            img.src = `data:image/png;base64,${b64}`
+            await img.decode()
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            const ctx = canvas.getContext('2d')!
+            ctx.drawImage(img, 0, 0)
+            const { data } = ctx.getImageData(0, 0, img.width, img.height)
+            const lin = (c: number) => {
+              const v = c / 255
+              return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+            }
+            let best = { l: -1, rgb: [0, 0, 0] }
+            for (let i = 0; i < data.length; i += 4) {
+              const l = 0.2126 * lin(data[i]) + 0.7152 * lin(data[i + 1]) + 0.0722 * lin(data[i + 2])
+              if (l > best.l) best = { l, rgb: [data[i], data[i + 1], data[i + 2]] }
+            }
+            return best.rgb
+          }, backdrop.toString('base64'))
+
+          const parse = (css: string) => {
+            const m = css.match(/[\d.]+/g)!.map(Number)
+            return { rgb: m.slice(0, 3), alpha: m[3] ?? 1 }
+          }
+          const luminance = ([r, g, b]: number[]) => {
+            const lin = (c: number) => {
+              const v = c / 255
+              return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+            }
+            return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+          }
+          const contrast = (css: string) => {
+            const { rgb, alpha } = parse(css)
+            const blended = rgb.map((c, i) => c * alpha + lightestBackdrop[i] * (1 - alpha))
+            const a = luminance(blended)
+            const b = luminance(lightestBackdrop)
+            return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+          }
+
+          expect(
+            contrast(styles.text),
+            `Pricing text (${styles.text}) on lightest backdrop rgb(${lightestBackdrop}) at ${vpName} (${theme})`
+          ).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST)
+          expect(
+            contrast(styles.link),
+            `"See plans" link (${styles.link}) on lightest backdrop rgb(${lightestBackdrop}) at ${vpName} (${theme})`
+          ).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST)
+          expect(styles.linkDecoration, '"See plans" link should be underlined').toContain('underline')
         })
 
         test(`should keep hero text elements within bounds at ${vpName} in ${theme} mode`, async ({ page }) => {
