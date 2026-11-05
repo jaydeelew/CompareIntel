@@ -358,11 +358,11 @@ verify_backend_health() {
         ok "Backend /health: $body"
         return 0
     fi
-    if curl -fsS http://localhost:8080/api/health 2>/dev/null | grep -q "healthy"; then
+    if curl -fsS http://localhost:8080/health 2>/dev/null | grep -q "healthy"; then
         ok "Backend /health via nginx :8080"
         return 0
     fi
-    if curl -fsSk https://localhost/api/health 2>/dev/null | grep -q "healthy"; then
+    if curl -fsSk https://localhost/health 2>/dev/null | grep -q "healthy"; then
         ok "Backend /health via nginx :443"
         return 0
     fi
