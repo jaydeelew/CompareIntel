@@ -94,14 +94,21 @@ export async function selectSelectableTextModels(
   for (const { provider, id } of candidates.slice(0, count)) {
     const dropdown = page.locator(`.provider-dropdown[data-provider-name="${provider}"]`)
     const header = dropdown.locator('.provider-header')
-    if ((await header.getAttribute('aria-expanded')) !== 'true') {
+    // Retry the whole expand, not just the assertion. Under CPU contention in Firefox the first
+    // click on a later provider (after the previous provider's list opened and the "Done
+    // Selecting?" card appeared) can be dispatched while the page is still reflowing and never
+    // reaches the header, leaving it collapsed (traced: the header was ~850px off-screen and no
+    // other provider opened). Re-check and click again; only collapsed headers are clicked, so a
+    // retry can never collapse the target.
+    await expect(async () => {
+      if ((await header.getAttribute('aria-expanded')) === 'true') return
       // Center the header so a fixed install banner cannot intercept the click.
       await header.evaluate((el: HTMLElement) => {
         el.scrollIntoView({ block: 'center', inline: 'nearest' })
       })
-      await header.click({ timeout: 10000 })
-      await expect(header).toHaveAttribute('aria-expanded', 'true')
-    }
+      await header.click({ timeout: 5000 })
+      await expect(header).toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
+    }).toPass({ timeout: 30000, intervals: [250, 500, 1000] })
     const checkbox = page.getByTestId(`model-checkbox-${id}`)
     await expect(checkbox).toBeEnabled({ timeout: 10000 })
     await toggleModelCheckbox(checkbox, projectName)

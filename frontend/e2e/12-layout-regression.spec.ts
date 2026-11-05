@@ -75,6 +75,62 @@ async function waitForStableLayout(page: Page): Promise<void> {
 }
 
 /**
+ * Wait for the hero's finite CSS animations (the fade/slide-up entrance) to finish.
+ * The pricing line lives inside the slide-up container, so while that transform is animating the
+ * credits line and the pricing line move together but the hero bottom does not; the line is only
+ * centered between them once the animation has ended (useCenteredPricingLine re-centers on
+ * `animationend`). Under CI load the animation can still be running well after `load`.
+ */
+async function waitForHeroEntranceAnimations(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const hero = document.querySelector('.hero-section')
+    if (!hero) return
+    const running = document.getAnimations().filter(animation => {
+      const target = (animation.effect as KeyframeEffect | null)?.target
+      const endTime = animation.effect?.getComputedTiming().endTime
+      return target instanceof Element && hero.contains(target) && Number.isFinite(endTime)
+    })
+    await Promise.all(running.map(animation => animation.finished.catch(() => undefined)))
+  })
+  await waitForStableLayout(page)
+}
+
+/**
+ * Measure hero, credits and pricing line geometry in one synchronous task so a layout change
+ * (navbar fold, late font/credits update) cannot land between the three measurements.
+ */
+async function measurePricingLineCentering(page: Page): Promise<{
+  creditsBottom: number
+  heroBottom: number
+  pricingTop: number
+  pricingBottom: number
+  expectedCenter: number
+  pricingCenter: number
+  centeringError: number
+} | null> {
+  return page.evaluate(() => {
+    const hero = document.querySelector('.hero-section')
+    const credits = document.querySelector('.credits-remaining-wrapper')
+    const pricing = document.querySelector('.hero-pricing-line')
+    if (!hero || !credits || !pricing) return null
+    const creditsBottom = credits.getBoundingClientRect().bottom
+    const heroBottom = hero.getBoundingClientRect().bottom
+    const pricingRect = pricing.getBoundingClientRect()
+    const expectedCenter = (creditsBottom + heroBottom) / 2
+    const pricingCenter = pricingRect.top + pricingRect.height / 2
+    return {
+      creditsBottom,
+      heroBottom,
+      pricingTop: pricingRect.top,
+      pricingBottom: pricingRect.bottom,
+      expectedCenter,
+      pricingCenter,
+      centeringError: Math.abs(pricingCenter - expectedCenter),
+    }
+  })
+}
+
+/**
  * Set theme and wait for it to apply completely
  */
 async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
@@ -87,7 +143,7 @@ async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
   }
 
   // Set theme
-  await page.evaluate((targetTheme) => {
+  await page.evaluate(targetTheme => {
     document.documentElement.setAttribute('data-theme', targetTheme)
     localStorage.setItem('theme', targetTheme)
   }, theme)
@@ -125,7 +181,7 @@ async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
 async function gotoStable(page: Page, path: string): Promise<void> {
   // Mock API responses before navigation to prevent errors from affecting layout
   await mockModelsApi(page, 'unregistered')
-  
+
   // Mock auth/me to return unauthenticated state immediately
   await page.route('**/api/auth/me', async route => {
     await route.fulfill({
@@ -134,10 +190,10 @@ async function gotoStable(page: Page, path: string): Promise<void> {
       body: JSON.stringify({ detail: 'Not authenticated' }),
     })
   })
-  
+
   await page.goto(path, { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('load')
-  
+
   // Wait for main content to be visible
   if (path === '/') {
     await page.locator('.hero-section').waitFor({ state: 'visible', timeout: 10000 })
@@ -164,7 +220,9 @@ test.describe('Layout Regression Tests', () => {
 
     for (const { name: vpName, size: viewport } of viewports) {
       for (const theme of themes) {
-        test(`should maintain hero section height at ${vpName} in ${theme} mode`, async ({ page }, testInfo) => {
+        test(`should maintain hero section height at ${vpName} in ${theme} mode`, async ({
+          page,
+        }, testInfo) => {
           test.skip(
             baselines.hero.chromiumOnly.includes(vpName) && testInfo.project.name !== 'chromium',
             `${vpName} hero height is content-driven and differs per engine; asserted on desktop Chromium only`
@@ -211,13 +269,13 @@ test.describe('Layout Regression Tests', () => {
           expect(
             actualHeight,
             `Hero section height at ${vpName} (${theme}) should be ${baselineHeight}px ±${HEIGHT_TOLERANCE}px. ` +
-            `Actual: ${actualHeight}px. If this is intentional, update the baseline in layout-regression-baselines.json.`
+              `Actual: ${actualHeight}px. If this is intentional, update the baseline in layout-regression-baselines.json.`
           ).toBeGreaterThanOrEqual(baselineHeight - HEIGHT_TOLERANCE)
 
           expect(
             actualHeight,
             `Hero section height at ${vpName} (${theme}) should be ${baselineHeight}px ±${HEIGHT_TOLERANCE}px. ` +
-            `Actual: ${actualHeight}px. If this is intentional, update the baseline in layout-regression-baselines.json.`
+              `Actual: ${actualHeight}px. If this is intentional, update the baseline in layout-regression-baselines.json.`
           ).toBeLessThanOrEqual(baselineHeight + HEIGHT_TOLERANCE)
         })
       }
@@ -225,66 +283,57 @@ test.describe('Layout Regression Tests', () => {
 
     for (const { name: vpName, size: viewport } of viewports) {
       for (const theme of themes) {
-        test(`should center pricing line between credits and hero bottom at ${vpName} in ${theme} mode`, async ({ page }) => {
+        test(`should center pricing line between credits and hero bottom at ${vpName} in ${theme} mode`, async ({
+          page,
+        }) => {
           // Set viewport
           await page.setViewportSize(viewport)
           await gotoStable(page, '/')
           await setTheme(page, theme)
 
-          const heroSection = page.locator('.hero-section')
-          const heroBox = await heroSection.boundingBox()
-          expect(heroBox, 'Hero section should have a bounding box').not.toBeNull()
-
-          // Find the credits line and pricing line
-          const creditsLine = page.locator('.credits-remaining-wrapper').first()
-          const pricingLine = page.locator('.hero-pricing-line').first()
-
           // Pricing line should be visible (only shown for unauthenticated users)
+          const pricingLine = page.locator('.hero-pricing-line').first()
           const pricingVisible = await pricingLine.isVisible().catch(() => false)
-          
+
           if (pricingVisible) {
-            await expect(pricingLine).toBeVisible()
-            await expect(creditsLine).toBeVisible()
+            await expect(page.locator('.credits-remaining-wrapper').first()).toBeVisible()
+            await waitForHeroEntranceAnimations(page)
 
-            const creditsBox = await creditsLine.boundingBox()
-            const pricingBox = await pricingLine.boundingBox()
+            // Pricing line should be centered between the bottom of the credits line and the
+            // bottom of the hero. The tolerance is unchanged. Every assertion runs against one
+            // synchronous snapshot, and the block is retried because the hook re-centers on a
+            // requestAnimationFrame after each layout change (e.g. the desktop navbar auto-folding
+            // after 5s resizes the hero); a line that never settles still fails after the timeout.
+            await expect(async () => {
+              const m = await measurePricingLineCentering(page)
+              expect(m, 'Hero, credits line and pricing line should be measurable').not.toBeNull()
+              const { creditsBottom, heroBottom, pricingTop, pricingBottom } = m!
 
-            expect(creditsBox, 'Credits line should have a bounding box').not.toBeNull()
-            expect(pricingBox, 'Pricing line should have a bounding box').not.toBeNull()
+              expect(
+                m!.centeringError,
+                `Pricing line should be vertically centered at ${vpName} (${theme}). ` +
+                  `Expected center: ${m!.expectedCenter.toFixed(1)}px, Actual: ${m!.pricingCenter.toFixed(1)}px, ` +
+                  `Error: ${m!.centeringError.toFixed(1)}px (tolerance: ±${CENTERING_TOLERANCE}px). ` +
+                  `Credits bottom: ${creditsBottom.toFixed(1)}px, Hero bottom: ${heroBottom.toFixed(1)}px`
+              ).toBeLessThanOrEqual(CENTERING_TOLERANCE)
 
-            // Calculate expected center position
-            // Pricing line should be centered between bottom of credits line and bottom of hero
-            const creditsBottom = creditsBox!.y + creditsBox!.height
-            const heroBottom = heroBox!.y + heroBox!.height
-            const expectedCenter = (creditsBottom + heroBottom) / 2
+              // Also verify pricing line is within hero bounds
+              expect(
+                pricingTop,
+                `Pricing line at ${vpName} (${theme}) should be below credits line`
+              ).toBeGreaterThanOrEqual(creditsBottom - 1)
 
-            // Get actual center of pricing line
-            const pricingCenter = pricingBox!.y + pricingBox!.height / 2
-
-            // Assert centering (±6px tolerance)
-            const centeringError = Math.abs(pricingCenter - expectedCenter)
-            expect(
-              centeringError,
-              `Pricing line should be vertically centered at ${vpName} (${theme}). ` +
-              `Expected center: ${expectedCenter.toFixed(1)}px, Actual: ${pricingCenter.toFixed(1)}px, ` +
-              `Error: ${centeringError.toFixed(1)}px (tolerance: ±${CENTERING_TOLERANCE}px). ` +
-              `Credits bottom: ${creditsBottom.toFixed(1)}px, Hero bottom: ${heroBottom.toFixed(1)}px`
-            ).toBeLessThanOrEqual(CENTERING_TOLERANCE)
-
-            // Also verify pricing line is within hero bounds
-            expect(
-              pricingBox!.y,
-              `Pricing line at ${vpName} (${theme}) should be below credits line`
-            ).toBeGreaterThanOrEqual(creditsBottom - 1)
-
-            expect(
-              pricingBox!.y + pricingBox!.height,
-              `Pricing line at ${vpName} (${theme}) should be above hero bottom`
-            ).toBeLessThanOrEqual(heroBottom + 1)
+              expect(
+                pricingBottom,
+                `Pricing line at ${vpName} (${theme}) should be above hero bottom`
+              ).toBeLessThanOrEqual(heroBottom + 1)
+            }).toPass({ timeout: 5000, intervals: [50, 100, 250] })
           }
         })
 
-        test(`pricing line should add zero height to the hero at ${vpName} in ${theme} mode`, async ({ page }) => {
+        test(`pricing line should add zero height to the hero at ${vpName} in ${theme} mode`, async ({
+          page,
+        }) => {
           await page.setViewportSize(viewport)
           await gotoStable(page, '/')
           await setTheme(page, theme)
@@ -309,11 +358,13 @@ test.describe('Layout Regression Tests', () => {
           expect(
             withLine - withoutLine,
             `Pricing line must not change hero height at ${vpName} (${theme}): ` +
-            `${withLine}px with the line vs ${withoutLine}px without it`
+              `${withLine}px with the line vs ${withoutLine}px without it`
           ).toBe(0)
         })
 
-        test(`pricing line text and link should be readable at ${vpName} in ${theme} mode`, async ({ page }) => {
+        test(`pricing line text and link should be readable at ${vpName} in ${theme} mode`, async ({
+          page,
+        }) => {
           await page.setViewportSize(viewport)
           await gotoStable(page, '/')
           await setTheme(page, theme)
@@ -329,7 +380,12 @@ test.describe('Layout Regression Tests', () => {
               text: getComputedStyle(line).color,
               link: getComputedStyle(link).color,
               linkDecoration: getComputedStyle(link).textDecorationLine,
-              rect: { x: rect.x, y: rect.y + window.scrollY, width: rect.width, height: rect.height },
+              rect: {
+                x: rect.x,
+                y: rect.y + window.scrollY,
+                width: rect.width,
+                height: rect.height,
+              },
             }
           })
 
@@ -366,7 +422,8 @@ test.describe('Layout Regression Tests', () => {
             }
             let best = { l: -1, rgb: [0, 0, 0] }
             for (let i = 0; i < data.length; i += 4) {
-              const l = 0.2126 * lin(data[i]) + 0.7152 * lin(data[i + 1]) + 0.0722 * lin(data[i + 2])
+              const l =
+                0.2126 * lin(data[i]) + 0.7152 * lin(data[i + 1]) + 0.0722 * lin(data[i + 2])
               if (l > best.l) best = { l, rgb: [data[i], data[i + 1], data[i + 2]] }
             }
             return best.rgb
@@ -399,10 +456,14 @@ test.describe('Layout Regression Tests', () => {
             contrast(styles.link),
             `"See plans" link (${styles.link}) on lightest backdrop rgb(${lightestBackdrop}) at ${vpName} (${theme})`
           ).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST)
-          expect(styles.linkDecoration, '"See plans" link should be underlined').toContain('underline')
+          expect(styles.linkDecoration, '"See plans" link should be underlined').toContain(
+            'underline'
+          )
         })
 
-        test(`should keep hero text elements within bounds at ${vpName} in ${theme} mode`, async ({ page }) => {
+        test(`should keep hero text elements within bounds at ${vpName} in ${theme} mode`, async ({
+          page,
+        }) => {
           // Set viewport
           await page.setViewportSize(viewport)
           await gotoStable(page, '/')
@@ -455,12 +516,12 @@ test.describe('Layout Regression Tests', () => {
           // (ensure they're not overlapping in a broken way)
           const primarySubtitle = page.locator('.hero-subtitle--primary')
           const primaryVisible = await primarySubtitle.isVisible().catch(() => false)
-          
+
           if (primaryVisible) {
             const primaryBox = await primarySubtitle.boundingBox()
             const heroTitle = page.locator('.hero-title')
             const titleBox = await heroTitle.boundingBox()
-            
+
             if (primaryBox && titleBox) {
               // Primary subtitle should be below the title
               expect(
@@ -473,7 +534,9 @@ test.describe('Layout Regression Tests', () => {
       }
     }
 
-    test('should not clip or overflow hero text horizontally at mobile widths', async ({ page }) => {
+    test('should not clip or overflow hero text horizontally at mobile widths', async ({
+      page,
+    }) => {
       // Test at narrowest mobile width
       await page.setViewportSize({ width: 375, height: 667 })
       await gotoStable(page, '/')
@@ -507,7 +570,7 @@ test.describe('Layout Regression Tests', () => {
       ).toBeLessThanOrEqual(heroBox!.width + 2) // +2px for subpixel rounding
 
       // Check for CSS overflow: hidden or clip on text elements
-      const titleOverflow = await heroTitle.evaluate((el) => {
+      const titleOverflow = await heroTitle.evaluate(el => {
         const styles = window.getComputedStyle(el)
         return styles.overflow || styles.overflowX
       })
@@ -522,7 +585,9 @@ test.describe('Layout Regression Tests', () => {
     const themes: Array<'light' | 'dark'> = ['light', 'dark']
 
     for (const theme of themes) {
-      test(`should have visible, non-overflowing Subscribe buttons in ${theme} mode`, async ({ page }) => {
+      test(`should have visible, non-overflowing Subscribe buttons in ${theme} mode`, async ({
+        page,
+      }) => {
         await gotoStable(page, '/pricing')
         await setTheme(page, theme)
 
@@ -534,7 +599,7 @@ test.describe('Layout Regression Tests', () => {
         // Check each Subscribe button
         for (let i = 0; i < count; i++) {
           const button = subscribeButtons.nth(i)
-          
+
           // Button should be visible
           await expect(button).toBeVisible()
 
@@ -543,7 +608,9 @@ test.describe('Layout Regression Tests', () => {
           expect(buttonBox, `Subscribe button ${i} should have a bounding box`).not.toBeNull()
 
           // Find the closest pricing tier card container
-          const tierCard = button.locator('xpath=ancestor::div[contains(@class, "pricing-tier")][1]')
+          const tierCard = button.locator(
+            'xpath=ancestor::div[contains(@class, "pricing-tier")][1]'
+          )
           const tierBox = await tierCard.boundingBox()
           expect(tierBox, `Tier card ${i} should have a bounding box`).not.toBeNull()
 
@@ -563,39 +630,44 @@ test.describe('Layout Regression Tests', () => {
         }
       })
 
-      test(`should have readable contrast on Subscribe buttons in ${theme} mode with axe`, async ({ page }) => {
+      test(`should have readable contrast on Subscribe buttons in ${theme} mode with axe`, async ({
+        page,
+      }) => {
         await gotoStable(page, '/pricing')
         await setTheme(page, theme)
 
         // Import axe for contrast checking (if axe is available in this project)
         // Check if @axe-core/playwright is installed
-          try {
-            const { default: AxeBuilder } = await import('@axe-core/playwright')
+        try {
+          const { default: AxeBuilder } = await import('@axe-core/playwright')
 
-            // Run axe only on Subscribe buttons
-            const results = await new AxeBuilder({ page })
-              .include('.pricing-tier-button-paid')
-              .withTags(['wcag2aa'])
-              .disableRules([
-                'region', 'landmark-one-main', 'page-has-heading-one',
-                'bypass', 'document-title', 'html-has-lang', 'landmark-unique'
-              ])
-              .analyze()
+          // Run axe only on Subscribe buttons
+          const results = await new AxeBuilder({ page })
+            .include('.pricing-tier-button-paid')
+            .withTags(['wcag2aa'])
+            .disableRules([
+              'region',
+              'landmark-one-main',
+              'page-has-heading-one',
+              'bypass',
+              'document-title',
+              'html-has-lang',
+              'landmark-unique',
+            ])
+            .analyze()
 
-            // Check specifically for color-contrast violations on buttons
-            const contrastViolations = results.violations.filter(
-              v => v.id === 'color-contrast'
-            )
+          // Check specifically for color-contrast violations on buttons
+          const contrastViolations = results.violations.filter(v => v.id === 'color-contrast')
 
-            expect(
-              contrastViolations.length,
-              `Subscribe buttons should have sufficient contrast in ${theme} mode. ` +
+          expect(
+            contrastViolations.length,
+            `Subscribe buttons should have sufficient contrast in ${theme} mode. ` +
               `Found ${contrastViolations.length} contrast violation(s).`
-            ).toBe(0)
-          } catch {
-            // If axe is not available or import fails, skip this check
-            test.skip()
-          }
+          ).toBe(0)
+        } catch {
+          // If axe is not available or import fails, skip this check
+          test.skip()
+        }
       })
     }
   })
@@ -614,7 +686,7 @@ test.describe('Layout Regression Tests', () => {
       expect(
         scrollWidth,
         `Homepage should not have horizontal scroll at 375px. ` +
-        `scrollWidth: ${scrollWidth}px, clientWidth: ${clientWidth}px`
+          `scrollWidth: ${scrollWidth}px, clientWidth: ${clientWidth}px`
       ).toBeLessThanOrEqual(clientWidth + 1) // +1px for subpixel rounding
     })
 
@@ -631,7 +703,7 @@ test.describe('Layout Regression Tests', () => {
       expect(
         scrollWidth,
         `/pricing should not have horizontal scroll at 375px. ` +
-        `scrollWidth: ${scrollWidth}px, clientWidth: ${clientWidth}px`
+          `scrollWidth: ${scrollWidth}px, clientWidth: ${clientWidth}px`
       ).toBeLessThanOrEqual(clientWidth + 1) // +1px for subpixel rounding
     })
   })
