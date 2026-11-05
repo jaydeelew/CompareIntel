@@ -40,11 +40,12 @@ wait_for_service_running() {
 probe_backend_health() {
     local body=""
     body=$(docker compose -f docker-compose.ssl.yml exec -T backend \
-        curl -fsS --max-time 5 http://localhost:8000/health 2>/dev/null || true)
+        python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health', timeout=5).read().decode())" \
+        2>/dev/null || true)
     if echo "$body" | grep -q "healthy"; then
         return 0
     fi
-    body=$(curl -fsS --max-time 5 -k https://localhost/health 2>/dev/null || true)
+    body=$(curl -fsS --max-time 5 -k --resolve compareintel.com:443:127.0.0.1 https://compareintel.com/health 2>/dev/null || true)
     if echo "$body" | grep -q "healthy"; then
         return 0
     fi
