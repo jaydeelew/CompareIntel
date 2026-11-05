@@ -8,10 +8,11 @@ The Production Operations workflow (`.github/workflows/ops.yml`) provides a secu
 
 ## Available Operations
 
-The workflow supports four operations via the `action` input:
+The workflow supports five operations via the `action` input:
 
 - **status** (default) - Shows the current status of production services
 - **logs** - Displays recent application logs (includes last 200 lines of Docker Compose logs)
+- **diagnostics** - Comprehensive READ-ONLY dump for debugging (safe for mobile)
 - **deploy** - Runs the full deployment process
 - **rollback** - Rolls back to the previous deployment
 
@@ -268,6 +269,33 @@ Displays recent application logs for debugging and monitoring.
 - Checking recent API requests
 - Monitoring application behavior
 - Debugging deployment problems
+
+### Diagnostics
+
+Gathers comprehensive READ-ONLY debugging information without changing any state. Designed to be safe to run from GitHub mobile when SSH is unavailable.
+
+**Output includes:**
+- **Compose/Container Status**: Full `docker compose ps` output with health status
+- **Image Tags**: All backend and nginx images (`:current`, `:previous`, SHA tags) with IDs, plus which image ID is actually running in each container
+- **Health Probes**: 
+  - In-container backend probe (same as verify.sh uses)
+  - Public HTTPS probes (compareintel.com and www.compareintel.com)
+  - Exit codes and response bodies for each probe
+- **Recent Logs**: Last 100 lines each for backend and nginx, last 50 lines for redis (with timestamps)
+- **Host Resources**: Disk usage (`df -h`), memory (`free -h`), load average
+- **Git/Deploy Identity**: Current checkout SHA, branch, last commit, and deploy marker files
+
+**When to use:**
+- Deployment verification failed and you need the full picture
+- Backend health checks are failing
+- Investigating production issues from mobile device
+- Need comprehensive snapshot before making changes
+- Quick triage when SSH is inconvenient
+
+**Safety:**
+- **No state changes**: No compose up/down, no rebuilds, no tag swaps, no migrations
+- **Fail-soft**: Each section continues even if previous commands fail
+- **Always exits 0**: Partial dumps still reach the job summary (unhealthy probes are data, not script bugs)
 
 ### Deploy
 
