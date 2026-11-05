@@ -50,6 +50,7 @@ import {
   useAuthStateEffects,
   usePersistedComposerAdvancedSettings,
   useAuthModals,
+  useAuthIntentEffects,
   useBreakoutConversation,
   useExtensionAuthEffects,
   useExtensionHandoff,
@@ -840,6 +841,8 @@ export function MainPage() {
     openLoginAfterVerificationCode,
     handleVerified,
   } = authModals
+
+  useAuthIntentEffects({ isAuthenticated, authLoading, openLogin, openRegister })
 
   const { showExtensionSignedInBanner, dismissExtensionSignedInBanner } = useExtensionAuthEffects({
     openLogin,

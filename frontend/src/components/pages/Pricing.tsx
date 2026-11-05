@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import {
@@ -12,41 +12,71 @@ import {
   createSubscriptionCheckoutSession,
   type PaidSubscriptionTier,
 } from '../../services/billingService'
+import {
+  buildAuthModalPath,
+  clearPendingAuthIntent,
+  peekPendingAuthIntent,
+  savePendingAuthIntent,
+} from '../../utils/authIntent'
 
 import './Pricing.css'
+
+const PAID_TIERS: readonly string[] = ['starter', 'starter_plus', 'pro', 'pro_plus']
+
+function isPaidTier(tier: string | undefined): tier is PaidSubscriptionTier {
+  return tier !== undefined && PAID_TIERS.includes(tier)
+}
 
 /**
  * Pricing - Displays subscription tiers and pricing information
  */
 export function Pricing() {
-  const { user } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [subscribingTier, setSubscribingTier] = useState<string | null>(null)
   const [subscribeError, setSubscribeError] = useState<string | null>(null)
+  const resumedCheckoutRef = useRef(false)
+
+  const startCheckout = useCallback(async (tier: PaidSubscriptionTier) => {
+    setSubscribeError(null)
+    setSubscribingTier(tier)
+    try {
+      const url = await createSubscriptionCheckoutSession(tier)
+      window.location.href = url
+    } catch (error) {
+      const msg =
+        error instanceof Error ? error.message : 'Checkout could not start. Please try again.'
+      setSubscribeError(msg)
+      setSubscribingTier(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (authLoading || !user || resumedCheckoutRef.current) return
+    const intent = peekPendingAuthIntent()
+    if (!intent) return
+    resumedCheckoutRef.current = true
+    clearPendingAuthIntent()
+    if (intent.returnTo === '/pricing' && isPaidTier(intent.tier)) {
+      void startCheckout(intent.tier)
+    }
+  }, [authLoading, user, startCheckout])
 
   const handleSubscribe = useCallback(
     async (tier: PaidSubscriptionTier) => {
       if (!user) {
-        navigate('/?showAuthModal=signup')
+        savePendingAuthIntent({ returnTo: '/pricing', tier })
+        navigate(buildAuthModalPath('signup'))
         return
       }
-      setSubscribeError(null)
-      setSubscribingTier(tier)
-      try {
-        const url = await createSubscriptionCheckoutSession(tier)
-        window.location.href = url
-      } catch (error) {
-        const msg =
-          error instanceof Error ? error.message : 'Checkout could not start. Please try again.'
-        setSubscribeError(msg)
-        setSubscribingTier(null)
-      }
+      await startCheckout(tier)
     },
-    [user, navigate]
+    [user, navigate, startCheckout]
   )
 
   const handleFreeSignup = useCallback(() => {
-    navigate('/?showAuthModal=signup')
+    clearPendingAuthIntent()
+    navigate(buildAuthModalPath('signup'))
   }, [navigate])
 
   // Define tier display order and metadata

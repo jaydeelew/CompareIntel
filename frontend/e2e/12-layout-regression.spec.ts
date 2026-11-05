@@ -96,41 +96,6 @@ async function waitForHeroEntranceAnimations(page: Page): Promise<void> {
 }
 
 /**
- * Measure hero, credits and pricing line geometry in one synchronous task so a layout change
- * (navbar fold, late font/credits update) cannot land between the three measurements.
- */
-async function measurePricingLineCentering(page: Page): Promise<{
-  creditsBottom: number
-  heroBottom: number
-  pricingTop: number
-  pricingBottom: number
-  expectedCenter: number
-  pricingCenter: number
-  centeringError: number
-} | null> {
-  return page.evaluate(() => {
-    const hero = document.querySelector('.hero-section')
-    const credits = document.querySelector('.credits-remaining-wrapper')
-    const pricing = document.querySelector('.hero-pricing-line')
-    if (!hero || !credits || !pricing) return null
-    const creditsBottom = credits.getBoundingClientRect().bottom
-    const heroBottom = hero.getBoundingClientRect().bottom
-    const pricingRect = pricing.getBoundingClientRect()
-    const expectedCenter = (creditsBottom + heroBottom) / 2
-    const pricingCenter = pricingRect.top + pricingRect.height / 2
-    return {
-      creditsBottom,
-      heroBottom,
-      pricingTop: pricingRect.top,
-      pricingBottom: pricingRect.bottom,
-      expectedCenter,
-      pricingCenter,
-      centeringError: Math.abs(pricingCenter - expectedCenter),
-    }
-  })
-}
-
-/**
  * Set theme and wait for it to apply completely
  */
 async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
@@ -287,42 +252,65 @@ test.describe('Layout Regression Tests', () => {
           await gotoStable(page, '/')
           await setTheme(page, theme)
 
-          // Pricing line should be visible (only shown for unauthenticated users)
+          const creditsLine = page.locator('.credits-remaining-wrapper').first()
           const pricingLine = page.locator('.hero-pricing-line').first()
+
+          // Pricing line should be visible (only shown for unauthenticated users)
           const pricingVisible = await pricingLine.isVisible().catch(() => false)
 
           if (pricingVisible) {
-            await expect(page.locator('.credits-remaining-wrapper').first()).toBeVisible()
+            await expect(creditsLine).toBeVisible()
+
             await waitForHeroEntranceAnimations(page)
 
-            // Pricing line should be centered between the bottom of the credits line and the
-            // bottom of the hero. The tolerance is unchanged. Every assertion runs against one
-            // synchronous snapshot, and the block is retried because the hook re-centers on a
-            // requestAnimationFrame after each layout change (e.g. the desktop navbar auto-folding
-            // after 5s resizes the hero); a line that never settles still fails after the timeout.
+            // The line is positioned by a requestAnimationFrame-driven hook that re-runs when
+            // the hero/credits layout settles. Measure all three boxes in a single task (so they
+            // share one layout) and run every assertion against that one snapshot, retrying the
+            // whole block: a late relayout (e.g. the desktop navbar auto-fold resizing the hero)
+            // between a "settled" poll and a second measurement would otherwise fail spuriously.
+            // A line that never settles still fails after the timeout; tolerance is unchanged.
+            const measure = () =>
+              page.evaluate(() => {
+                const rect = (selector: string) =>
+                  document.querySelector(selector)?.getBoundingClientRect() ?? null
+                const hero = rect('.hero-section')
+                const credits = rect('.credits-remaining-wrapper')
+                const pricing = rect('.hero-pricing-line')
+                if (!hero || !credits || !pricing) return null
+                const creditsBottom = credits.bottom
+                const heroBottom = hero.bottom
+                return {
+                  creditsBottom,
+                  heroBottom,
+                  pricingTop: pricing.top,
+                  pricingBottom: pricing.bottom,
+                  centeringError: Math.abs(
+                    pricing.top + pricing.height / 2 - (creditsBottom + heroBottom) / 2
+                  ),
+                }
+              })
+
             await expect(async () => {
-              const m = await measurePricingLineCentering(page)
-              expect(m, 'Hero, credits line and pricing line should be measurable').not.toBeNull()
-              const { creditsBottom, heroBottom, pricingTop, pricingBottom } = m!
+              const m = await measure()
+              expect(m, 'Hero, credits and pricing lines should have bounding boxes').not.toBeNull()
 
               expect(
                 m!.centeringError,
-                `Pricing line should be vertically centered at ${vpName} (${theme}). ` +
-                `Expected center: ${m!.expectedCenter.toFixed(1)}px, Actual: ${m!.pricingCenter.toFixed(1)}px, ` +
-                `Error: ${m!.centeringError.toFixed(1)}px (tolerance: ±${CENTERING_TOLERANCE}px). ` +
-                `Credits bottom: ${creditsBottom.toFixed(1)}px, Hero bottom: ${heroBottom.toFixed(1)}px`
+                `Pricing line should be vertically centered between credits and hero bottom ` +
+                  `at ${vpName} (${theme}) (tolerance: ±${CENTERING_TOLERANCE}px). ` +
+                  `Credits bottom: ${m!.creditsBottom.toFixed(1)}px, ` +
+                  `Hero bottom: ${m!.heroBottom.toFixed(1)}px`
               ).toBeLessThanOrEqual(CENTERING_TOLERANCE)
 
-              // Also verify pricing line is within hero bounds
               expect(
-                pricingTop,
+                m!.pricingTop,
                 `Pricing line at ${vpName} (${theme}) should be below credits line`
-              ).toBeGreaterThanOrEqual(creditsBottom - 1)
+              ).toBeGreaterThanOrEqual(m!.creditsBottom - 1)
 
               expect(
-                pricingBottom,
+                m!.pricingBottom,
                 `Pricing line at ${vpName} (${theme}) should be above hero bottom`
-              ).toBeLessThanOrEqual(heroBottom + 1)
+              ).toBeLessThanOrEqual(m!.heroBottom + 1)
             }).toPass({ timeout: 5000, intervals: [50, 100, 250] })
           }
         })

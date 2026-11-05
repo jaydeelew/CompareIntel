@@ -94,25 +94,31 @@ export async function selectSelectableTextModels(
   for (const { provider, id } of candidates.slice(0, count)) {
     const dropdown = page.locator(`.provider-dropdown[data-provider-name="${provider}"]`)
     const header = dropdown.locator('.provider-header')
-    // Retry the whole expand, not just the assertion. Under CPU contention in Firefox the first
-    // click on a later provider (after the previous provider's list opened and the "Done
-    // Selecting?" card appeared) can be dispatched while the page is still reflowing and never
-    // reaches the header, leaving it collapsed (traced: the header was ~850px off-screen and no
-    // other provider opened). Re-check and click again; only collapsed headers are clicked, so a
-    // retry can never collapse the target.
-    await expect(async () => {
-      if ((await header.getAttribute('aria-expanded')) === 'true') return
-      // Center the header so a fixed install banner cannot intercept the click.
-      await header.evaluate((el: HTMLElement) => {
-        el.scrollIntoView({ block: 'center', inline: 'nearest' })
-      })
-      await header.click({ timeout: 5000 })
-      await expect(header).toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
-    }).toPass({ timeout: 30000, intervals: [250, 500, 1000] })
     const checkbox = page.getByTestId(`model-checkbox-${id}`)
+
+    // The picker re-flows right after a click (selected count, expanding dropdown, "Done
+    // Selecting?" card). Playwright's actionability check passes before that, so on Firefox the
+    // pointer can land on the surrounding `.provider-dropdowns` container instead of the header
+    // or checkbox, which is a silent no-op. Each step is idempotent and retried as a unit so a
+    // missed click is repeated, while an already-applied one is never toggled back.
+    await expect(async () => {
+      if ((await header.getAttribute('aria-expanded')) !== 'true') {
+        // Center the header so a fixed install banner cannot intercept the click.
+        await header.evaluate((el: HTMLElement) => {
+          el.scrollIntoView({ block: 'center', inline: 'nearest' })
+        })
+        await header.click({ timeout: 5000 })
+      }
+      await expect(header).toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
+    }, `expand ${provider} provider dropdown`).toPass({ timeout: 20000 })
+
     await expect(checkbox).toBeEnabled({ timeout: 10000 })
-    await toggleModelCheckbox(checkbox, projectName)
-    await expect(checkbox).toBeChecked()
+    await expect(async () => {
+      if (!(await checkbox.isChecked())) {
+        await toggleModelCheckbox(checkbox, projectName)
+      }
+      await expect(checkbox).toBeChecked({ timeout: 2000 })
+    }, `select model ${id}`).toPass({ timeout: 20000 })
     selected.push(id)
   }
   return selected
