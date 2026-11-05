@@ -195,6 +195,8 @@ Release images are tagged `compareintel-{backend,nginx}:<sha>`, `:current`, and 
 
 If `build.sh` brings the new stack up and verify fails (`/health` never becomes healthy, or backend is restarting/unhealthy), `deploy-production.sh` automatically runs that same previous-tag rollback and exits non-zero. It does **not** auto-downgrade migrations. Pre-deploy checks also require a non-empty `OPENROUTER_API_KEY` in `backend/.env` (production raises `OpenRouterConfigError` and crash-loops otherwise) and run `nginx -t` before applying `nginx/nginx.ssl.conf`.
 
+Health verification probes the backend directly (`docker compose exec backend python` urllib, then `docker exec`) and requires `"status": "healthy"`. nginx's own `/health` is a static 200, so it is logged for context only and never counts as a pass. Failed probes log the exit code and a truncated, redacted error. `deploy` re-executes itself after `git pull` when `deploy-production.sh` or `scripts/deploy/` changed (the shell sources those files once at startup, so it would otherwise run the pre-pull verify logic), and it forces a rebuild when the checked-out commit's image is not the one running (for example after an auto-rollback left git at the new commit).
+
 ### Safety Features
 
 All scripts include:

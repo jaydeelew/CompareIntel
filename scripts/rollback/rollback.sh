@@ -350,20 +350,28 @@ rollback_previous_tag() {
 }
 
 verify_backend_health() {
-    local body=""
-    body=$(compose exec -T backend \
-        python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health', timeout=5).read().decode())" \
-        2>/dev/null || true)
-    if echo "$body" | grep -q "healthy"; then
+    local body="" rc=0 reason
+    body=$(compose exec -T backend python -c '
+import sys, urllib.request
+try:
+    print(urllib.request.urlopen("http://localhost:8000/health", timeout=5).read().decode())
+except Exception as exc:
+    print("probe-error: %s: %s" % (type(exc).__name__, exc))
+    sys.exit(1)' 2>&1) || rc=$?
+    if [ "$rc" -eq 0 ] && echo "$body" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"healthy"'; then
         ok "Backend /health: $body"
         return 0
     fi
+    reason=$(printf '%s' "$body" | tail -n 3 | tr '\r\n\t' '   ' \
+        | sed -E 's#(sk-[A-Za-z0-9_-]{6,})#[REDACTED]#g' | cut -c1-300)
+    warn "Direct backend /health probe failed (exit=$rc): ${reason:-no output}"
+    # nginx answers /health itself with a static 200, so these only show nginx is up.
     if curl -fsS --resolve compareintel.com:80:127.0.0.1 http://compareintel.com/health 2>/dev/null | grep -q "healthy"; then
-        ok "Backend /health via nginx :80"
+        warn "nginx :80 /health is up (static; does not prove the backend is healthy)"
         return 0
     fi
     if curl -fsSk --resolve compareintel.com:443:127.0.0.1 https://compareintel.com/health 2>/dev/null | grep -q "healthy"; then
-        ok "Backend /health via nginx :443"
+        warn "nginx :443 /health is up (static; does not prove the backend is healthy)"
         return 0
     fi
     return 1
