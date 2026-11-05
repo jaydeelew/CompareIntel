@@ -402,7 +402,7 @@ If automation fails, manual rollback:
 5. **Verify:**
    ```bash
    docker compose -f docker-compose.ssl.yml ps
-   curl -f http://localhost:8080/api/health || echo "Health check failed"
+   curl -f http://localhost:8080/health || echo "Health check failed"
    ```
 
 ---

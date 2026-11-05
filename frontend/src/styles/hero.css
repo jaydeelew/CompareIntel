@@ -2120,11 +2120,14 @@ video.capability-tile-image-lightbox-img {
    hero height matches the pre-PR layout. */
 @media (min-width: 481px) and (max-width: 768px) {
   .hero-subtitle {
-    min-height: 2lh;
+    /* 2 x the 1.6 line-height, as em so layout rounding matches two real lines */
+    min-height: 3.2em;
   }
 }
 
-/* Hero pricing line - positioned for equal gaps above and below */
+/* Hero pricing line. Absolutely positioned inside the hero's existing bottom padding
+   (useCenteredPricingLine centers it), so it contributes no height to the hero.
+   The hero is a blue gradient in both themes, so the text is always light. */
 .hero-pricing-line {
   position: absolute;
   left: 50%;
@@ -2136,12 +2139,9 @@ video.capability-tile-image-lightbox-img {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.95);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   z-index: 10;
-}
-
-:root[data-theme='dark'] .hero-pricing-line {
-  color: rgba(255, 255, 255, 0.95);
 }
 
 .hero-pricing-free,
@@ -2150,17 +2150,21 @@ video.capability-tile-image-lightbox-img {
 }
 
 .hero-pricing-separator {
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
-.hero-pricing-link {
-  color: rgba(255, 255, 255, 0.95);
+.hero-section .hero-pricing-line a.hero-pricing-link,
+.hero-section .hero-pricing-line a.hero-pricing-link:visited {
+  color: #ffffff;
   text-decoration: underline;
-  font-weight: 500;
+  text-underline-offset: 2px;
+  font-weight: 600;
   transition: opacity 0.2s ease;
 }
 
-.hero-pricing-link:hover {
+.hero-section .hero-pricing-line a.hero-pricing-link:hover,
+.hero-section .hero-pricing-line a.hero-pricing-link:focus-visible {
+  color: #ffffff;
   opacity: 0.85;
 }
 
@@ -2168,7 +2172,6 @@ video.capability-tile-image-lightbox-img {
   .hero-pricing-line {
     font-size: 0.75rem;
     width: calc(100% - 2rem);
-    /* Keep vertically centered on mobile too */
   }
 }
 

@@ -1,6 +1,6 @@
 {
   "hero": {
-    "description": "Baseline heights for the hero section at various viewports and themes. Measured in pixels with ±4px tolerance. To update: run the test once, copy the actual heights from the failure output, and paste them here.",
+    "description": "Production hero heights (px, rounded) measured on the commit before the pricing line and hero subtitle work (e600964f). The hero must stay identical to these at every viewport; the pricing line is absolutely positioned and adds no height. Tolerance is +/-1px, which only absorbs sub-pixel rounding between browsers. Viewports listed in chromiumOnly are content-height driven and differ per browser engine, so they are only asserted on the desktop Chromium project.",
     "viewports": {
       "375x667": {
         "light": 678,
@@ -14,14 +14,25 @@
         "light": 889,
         "dark": 889
       },
+      "1024x768": {
+        "light": 870,
+        "dark": 870
+      },
       "1280x800": {
         "light": 736,
         "dark": 736
+      },
+      "1440x900": {
+        "light": 836,
+        "dark": 836
       },
       "1920x1080": {
         "light": 1016,
         "dark": 1016
       }
-    }
+    },
+    "chromiumOnly": [
+      "1024x768"
+    ]
   }
 }

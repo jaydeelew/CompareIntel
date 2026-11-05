@@ -88,12 +88,17 @@ describe('VerdictPanel', () => {
           createMockModelConversation({
             modelId,
             messages: [
-              createMockConversationMessage({ type: 'user', content: 'hello there' }),
+              createMockConversationMessage({
+                type: 'user',
+                content: 'hello there',
+                timestamp: '2026-01-01T00:00:00.000Z',
+              }),
               createMockConversationMessage({
                 type: 'assistant',
                 content: 'Hi!',
                 cost_usd: null,
                 latency_ms: null,
+                timestamp: '2026-01-01T00:00:00.000Z',
               }),
             ],
           }),
