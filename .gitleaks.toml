@@ -16,6 +16,7 @@ paths = [
   '''docs/features/DATA_RETENTION_IMPLEMENTATION\.md''',
   '''docs/development/ENVIRONMENT_SETUP\.md''',
   '''README\.md''',
+  '''docs/ops/PRODUCTION_OPERATIONS_WORKFLOW\.md''',  # Names the BEGIN/END key markers in prose; no key present
 ]
 
 # Allowlist specific patterns that are examples only
