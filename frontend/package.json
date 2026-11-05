@@ -43,7 +43,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "katex": "^0.19.1",
-    "lucide-react": "^0.552.0",
+    "lucide-react": "^1.66.0",
     "mailcheck": "^1.1.1",
     "mammoth": "1.13.0",
     "pdfjs-dist": "^6.4.299",
