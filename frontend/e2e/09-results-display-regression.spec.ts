@@ -231,7 +231,9 @@ test.describe('Results Display Regression Tests', () => {
           await toggle.click()
         }
         await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-        await expect(verdict.getByText('this run, via OpenRouter')).toBeVisible()
+        await expect(
+          verdict.locator('.verdict-th-sub', { hasText: 'this run, via OpenRouter' })
+        ).toBeVisible()
         await expect(verdict.getByTestId('verdict-how-this-works')).toHaveAttribute(
           'href',
           '/verdict-methodology'
