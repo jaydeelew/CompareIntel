@@ -7,7 +7,6 @@
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-
 import { ModelsSectionHeader } from '../../components/comparison/ModelsSectionHeader'
 import type { ModelConversation, User } from '../../types'
 import { renderWithProviders, screen, waitFor } from '../utils/test-utils'
@@ -133,7 +132,7 @@ describe('ModelsSectionHeader', () => {
     it('toggles hide premium models on mobile tap', async () => {
       // Set the dismissed flag so it toggles directly without showing modal
       localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
-      
+
       const onToggle = vi.fn()
       const onShowModal = vi.fn()
 
@@ -228,7 +227,9 @@ describe('ModelsSectionHeader', () => {
     })
 
     it('renders model count indicator', () => {
-      renderWithProviders(<ModelsSectionHeader {...defaultProps} selectedModels={['model1', 'model2']} />)
+      renderWithProviders(
+        <ModelsSectionHeader {...defaultProps} selectedModels={['model1', 'model2']} />
+      )
 
       expect(screen.getByText(/2 of 4 selected/)).toBeInTheDocument()
     })

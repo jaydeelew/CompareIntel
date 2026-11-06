@@ -395,7 +395,9 @@ export function ModelsSectionHeader({
                   )}
                 </button>
               ) : (
-                <StyledTooltip text={hidePremiumModels ? 'Show locked models' : 'Hide locked models'}>
+                <StyledTooltip
+                  text={hidePremiumModels ? 'Show locked models' : 'Hide locked models'}
+                >
                   <button
                     className={`hide-premium-button ${hidePremiumModels ? 'active' : ''}`}
                     onClick={handlePremiumToggleClick}
