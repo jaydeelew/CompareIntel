@@ -4235,11 +4235,45 @@ button.nav-button-primary {
   margin-bottom: 0.5rem;
 }
 
-.verdict-panel h3 {
+.verdict-heading {
   margin: 0;
   font-size: var(--font-lg, 1.125rem);
   font-weight: var(--font-semibold, 600);
   color: var(--text-primary);
+}
+
+.verdict-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.15rem 0.2rem 0.15rem 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.verdict-toggle:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.verdict-chevron {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.verdict-chevron.expanded {
+  transform: rotate(180deg);
+}
+
+.verdict-panel-body[hidden] {
+  display: none;
 }
 
 .verdict-agreement {
@@ -4252,13 +4286,20 @@ button.nav-button-primary {
 
 .verdict-agreement-label,
 .verdict-note,
-.verdict-choose {
+.verdict-metrics-help,
+.verdict-choose,
+.verdict-docs,
+.verdict-list-price {
   margin: 0;
   font-size: 0.8125rem;
   color: var(--text-secondary);
 }
 
 .verdict-note {
+  margin-bottom: 0.35rem;
+}
+
+.verdict-metrics-help {
   margin-bottom: 1rem;
 }
 
@@ -4313,8 +4354,33 @@ button.nav-button-primary {
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-muted);
+  letter-spacing: 0;
+  vertical-align: bottom;
+}
+
+.verdict-th-main {
+  display: block;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.verdict-th-sub {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.verdict-list-price {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.6875rem;
 }
 
 .verdict-metrics tbody th {
@@ -4332,21 +4398,32 @@ button.nav-button-primary {
   border-radius: 999px;
   font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
   background: color-mix(in srgb, var(--primary-color) 14%, transparent);
   color: var(--primary-light, var(--primary-color));
   border: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
 }
 
-.verdict-choose a {
+.verdict-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.25rem;
+}
+
+.verdict-choose a,
+.verdict-docs a {
   color: var(--primary-light, var(--primary-color));
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .verdict-choose a:hover,
-.verdict-choose a:focus-visible {
+.verdict-choose a:focus-visible,
+.verdict-docs a:hover,
+.verdict-docs a:focus-visible {
   color: var(--primary-color);
 }
 

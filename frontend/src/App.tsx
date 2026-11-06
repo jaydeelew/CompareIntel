@@ -43,6 +43,11 @@ const HelpMeChooseMethodology = lazy(() =>
     default: module.HelpMeChooseMethodology,
   }))
 )
+const VerdictMethodology = lazy(() =>
+  import('./components/pages/VerdictMethodology').then(module => ({
+    default: module.VerdictMethodology,
+  }))
+)
 const ImageGeneration = lazy(() =>
   import('./components/pages/ImageGeneration').then(module => ({
     default: module.ImageGeneration,
@@ -142,6 +147,14 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <HelpMeChooseMethodology />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/verdict-methodology"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <VerdictMethodology />
                     </Suspense>
                   }
                 />
