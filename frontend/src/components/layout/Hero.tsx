@@ -505,7 +505,7 @@ export function Hero({
           </h1>
           <div className="hero-subtitle-container">
             <p className="hero-subtitle hero-subtitle--primary">
-              Built for humans to find the best AI models for their needs.
+              Built for human intelligence to judge artificial intelligence
             </p>
             <p className="hero-subtitle hero-subtitle--alternate" aria-hidden="true">
               Choose the right AI model with evidence, not guesswork.

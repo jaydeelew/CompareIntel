@@ -685,13 +685,14 @@
 /* Subtitle cross-fade animation - both subtitles in HTML for crawlers */
 @keyframes subtitleFadeInOut {
   0%,
-  40% {
+  43% {
     opacity: 1;
   }
-  45%,
-  95% {
+  48%,
+  93% {
     opacity: 0;
   }
+  98%,
   100% {
     opacity: 1;
   }
@@ -700,12 +701,12 @@
 .hero-subtitle--primary {
   animation:
     fadeInUp 0.8s ease-out 0.1s both,
-    subtitleFadeInOut 10s ease-in-out infinite;
+    subtitleFadeInOut 16s ease-in-out infinite;
 }
 
 .hero-subtitle--alternate {
   opacity: 0;
-  animation: subtitleFadeInOut 10s ease-in-out 5s infinite;
+  animation: subtitleFadeInOut 16s ease-in-out 8s infinite;
 }
 
 /* Prefers-reduced-motion: show only primary subtitle, no animation */
