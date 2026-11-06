@@ -64,6 +64,14 @@
     "changefreq": "monthly"
   },
   {
+    "path": "/verdict-methodology",
+    "title": "Verdict Methodology - CompareIntel",
+    "description": "How CompareIntel's Verdict panel works: this-run OpenRouter cost, end-to-end response time, and a local agreement heuristic that is not a judgment of correctness.",
+    "h1": "How Verdict Works",
+    "priority": 0.6,
+    "changefreq": "monthly"
+  },
+  {
     "path": "/privacy-policy",
     "aliases": ["/privacy"],
     "title": "Privacy Policy - CompareIntel",

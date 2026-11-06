@@ -219,6 +219,23 @@ test.describe('Results Display Regression Tests', () => {
 
         const cardCount = await resultCards.count()
         expect(cardCount).toBeGreaterThan(0)
+
+        await authenticatedPage
+          .locator('.loading-section')
+          .waitFor({ state: 'hidden', timeout: 30000 })
+          .catch(() => {})
+        const verdict = authenticatedPage.getByTestId('verdict-panel')
+        await expect(verdict).toBeVisible({ timeout: 45000 })
+        const toggle = verdict.getByTestId('verdict-toggle')
+        if ((await toggle.getAttribute('aria-expanded')) === 'false') {
+          await toggle.click()
+        }
+        await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+        await expect(verdict.getByText('this run, via OpenRouter')).toBeVisible()
+        await expect(verdict.getByTestId('verdict-how-this-works')).toHaveAttribute(
+          'href',
+          '/verdict-methodology'
+        )
       })
 
       await test.step('Verify result card structure', async () => {
