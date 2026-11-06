@@ -178,6 +178,7 @@ class TestEmailHtml:
             count_label=copy["count_label"],
             models_html=build_new_models_list_html(models),
             compare_url="https://compareintel.com",
+            unsubscribe_html='<a href="https://compareintel.com/api/auth/unsubscribe?token=abc">Unsubscribe</a>',
         )
         assert "linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%)" in rendered
         assert "2 new models" in rendered
@@ -186,6 +187,7 @@ class TestEmailHtml:
         assert "openai/gpt-test" in rendered
         assert "https://compareintel.com" in rendered
         assert "support@compareintel.com" in rendered
+        assert "/api/auth/unsubscribe?token=abc" in rendered
 
 
 class TestRecipients:

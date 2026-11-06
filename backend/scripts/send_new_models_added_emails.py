@@ -96,7 +96,7 @@ async def send_new_models_added_emails(
         for user in users:
             try:
                 print(f"Sending new-models email to {user.email}...")
-                await send_new_models_added_email(user.email, new_models)
+                await send_new_models_added_email(user.id, user.email, new_models)
                 success_count += 1
                 print(f"✓ Email sent to {user.email}")
             except Exception as exc:

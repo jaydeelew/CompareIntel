@@ -9,7 +9,7 @@ from pathlib import Path
 from string import Template
 from typing import Any
 
-from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MultipartSubtypeEnum
 from pydantic import EmailStr
 
 MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
@@ -451,7 +451,9 @@ async def send_new_model_discovery_report(
         raise
 
 
-async def send_new_models_added_email(email: EmailStr, new_models: list[dict[str, str]]) -> None:
+async def send_new_models_added_email(
+    user_id: int, email: EmailStr, new_models: list[dict[str, str]]
+) -> None:
     """Notify a registered user that one or more models were added in a production deploy."""
     if not EMAIL_CONFIGURED:
         print(f"Email service not configured - skipping new models email for {email}")
@@ -461,11 +463,13 @@ async def send_new_models_added_email(email: EmailStr, new_models: list[dict[str
         return
 
     from .services.new_models_notify import build_new_models_list_html, new_models_email_copy
+    from .services.unsubscribe import unsubscribe_email_block
 
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
     compare_url = frontend_url or "https://compareintel.com"
     copy = new_models_email_copy(new_models)
     models_html = build_new_models_list_html(new_models)
+    unsubscribe = unsubscribe_email_block(user_id, email)
 
     html_body = _load_template("new_models_added.html").substitute(
         header_title=copy["header_title"],
@@ -473,13 +477,23 @@ async def send_new_models_added_email(email: EmailStr, new_models: list[dict[str
         count_label=copy["count_label"],
         models_html=models_html,
         compare_url=compare_url,
+        unsubscribe_html=unsubscribe["html"],
+    )
+    text_body = (
+        f"{copy['header_title']}\n\n"
+        f"{copy['intro_text']}\n\n"
+        f"Compare them now: {compare_url}\n"
+        f"{unsubscribe['text']}"
     )
 
     message = MessageSchema(
         subject=copy["subject"],
         recipients=[email],
         body=html_body,
+        alternative_body=text_body,
         subtype="html",
+        multipart_subtype=MultipartSubtypeEnum.alternative,
+        headers=unsubscribe["headers"],
     )
     try:
         await fm.send_message(message)
@@ -488,21 +502,37 @@ async def send_new_models_added_email(email: EmailStr, new_models: list[dict[str
         raise
 
 
-async def send_trial_expired_email(email: EmailStr) -> None:
+async def send_trial_expired_email(user_id: int, email: EmailStr) -> None:
     if not EMAIL_CONFIGURED:
         print(f"Email service not configured - skipping trial expired email for {email}")
         return
 
+    from .services.unsubscribe import unsubscribe_email_block
+
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
     dashboard_url = f"{frontend_url}/dashboard"
+    unsubscribe = unsubscribe_email_block(user_id, email)
 
-    html = _load_template("trial_expired.html").substitute(dashboard_url=dashboard_url)
+    html = _load_template("trial_expired.html").substitute(
+        dashboard_url=dashboard_url, unsubscribe_html=unsubscribe["html"]
+    )
+    text_body = (
+        "Your CompareIntel trial has ended\n\n"
+        "Thank you for trying CompareIntel! Your 7-day premium trial has ended. "
+        "You can still use CompareIntel on the free tier, or upgrade to a paid plan "
+        "from your dashboard.\n\n"
+        f"Continue using CompareIntel: {dashboard_url}\n"
+        f"{unsubscribe['text']}"
+    )
 
     message = MessageSchema(
         subject="Your CompareIntel trial has ended — see paid plans",
         recipients=[email],
         body=html,
+        alternative_body=text_body,
         subtype="html",
+        multipart_subtype=MultipartSubtypeEnum.alternative,
+        headers=unsubscribe["headers"],
     )
     try:
         await fm.send_message(message)
