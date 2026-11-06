@@ -31,11 +31,11 @@ for env_path in env_paths:
         load_dotenv(env_path, override=False)  # Don't override existing env vars
         break
 
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from app.database import SessionLocal
 from app.email_service import EMAIL_CONFIGURED, send_trial_expired_email
-from app.models import User
+from app.models import User, UserPreference
 
 
 def find_users_with_expired_trials(db) -> list[User]:
@@ -58,15 +58,22 @@ def find_users_with_expired_trials(db) -> list[User]:
     # Only check trials that expired in the last 7 days to avoid sending emails for very old trials
     seven_days_ago = now - timedelta(days=7)
 
-    # Get all potential users first, then filter in Python to handle timezone issues
+    # Get all potential users first, then filter in Python to handle timezone issues.
+    # Also respects the no-login email unsubscribe link (shared UserPreference flag
+    # also surfaced in Settings), same as the new-models-added notification.
     potential_users = (
         db.query(User)
+        .outerjoin(UserPreference, User.id == UserPreference.user_id)
         .filter(
             and_(
                 User.subscription_tier == "free",
                 User.trial_ends_at.isnot(None),
                 User.is_verified == True,  # Only send to verified users
                 User.is_active == True,  # Only send to active users
+                or_(
+                    UserPreference.email_notifications == True,
+                    UserPreference.email_notifications.is_(None),
+                ),
             )
         )
         .all()
@@ -116,7 +123,7 @@ async def send_trial_expired_emails() -> None:
                 print(
                     f"Sending trial expired email to {user.email} (trial ended: {user.trial_ends_at})..."
                 )
-                await send_trial_expired_email(user.email)
+                await send_trial_expired_email(user.id, user.email)
                 success_count += 1
                 print(f"✓ Email sent successfully to {user.email}")
             except Exception as e:

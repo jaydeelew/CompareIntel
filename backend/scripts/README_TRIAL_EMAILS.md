@@ -82,6 +82,7 @@ For Docker:
    - `trial_ends_at` is within the last 7 days (to avoid sending emails for very old trials)
    - `is_verified == True` (only verified users)
    - `is_active == True` (only active users)
+   - User has not unsubscribed from notification emails (via the email's unsubscribe link or Settings)
 
 2. **Email Sending**: For each matching user, sends an email with:
    - Reminder that their trial has ended
@@ -133,7 +134,7 @@ The email includes:
    from app.email_service import send_trial_expired_email
    import asyncio
 
-   asyncio.run(send_trial_expired_email("test@example.com"))
+   asyncio.run(send_trial_expired_email(1, "test@example.com"))
    ```
 
 3. **Check email service logs** for error messages
