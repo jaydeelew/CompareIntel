@@ -152,7 +152,9 @@ describe('ModelsSection - Default State and Toggle Restoration', () => {
       expect(screen.queryByText('GPT-4.5')).not.toBeInTheDocument()
 
       // Turn toggle OFF - all models should restore
-      rerender(<ModelsSection {...defaultProps} hidePremiumModels={false} isAuthenticated={false} />)
+      rerender(
+        <ModelsSection {...defaultProps} hidePremiumModels={false} isAuthenticated={false} />
+      )
 
       expect(screen.getByText('GPT-3.5 Turbo')).toBeInTheDocument()
       expect(screen.getByText('GPT-4 Turbo')).toBeInTheDocument()
@@ -240,7 +242,9 @@ describe('ModelsSection - Default State and Toggle Restoration', () => {
       expect(screen.queryByText('GPT-4.5')).not.toBeInTheDocument()
 
       // Turn OFF again: all restored
-      rerender(<ModelsSection {...defaultProps} hidePremiumModels={false} isAuthenticated={false} />)
+      rerender(
+        <ModelsSection {...defaultProps} hidePremiumModels={false} isAuthenticated={false} />
+      )
       expect(screen.getByText('GPT-3.5 Turbo')).toBeInTheDocument()
       expect(screen.getByText('GPT-4 Turbo')).toBeInTheDocument()
       expect(screen.getByText('GPT-4.5')).toBeInTheDocument()
