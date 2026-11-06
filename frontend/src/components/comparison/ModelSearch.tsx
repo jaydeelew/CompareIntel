@@ -35,6 +35,7 @@ export interface ModelSearchProps {
   isAuthenticated: boolean
   user: User | null
   maxModelsLimit: number
+  hidePremiumModels?: boolean
   imageModelsDisabledForUnregistered?: boolean
   onShowDisabledModelModal?: (info: {
     userTier: 'unregistered' | 'free'
@@ -56,6 +57,7 @@ export function ModelSearch({
   isAuthenticated,
   user,
   maxModelsLimit,
+  hidePremiumModels = false,
   imageModelsDisabledForUnregistered = false,
   onShowDisabledModelModal,
   isTutorialActive = false,
@@ -77,7 +79,19 @@ export function ModelSearch({
   const qNorm = normalizeSearchString(query)
   const suggestions = useMemo(() => {
     if (!qNorm) return []
-    const scored = allFlat
+    let candidates = allFlat
+    // Filter by tier when hidePremiumModels is enabled
+    if (hidePremiumModels) {
+      candidates = candidates.filter(m => {
+        if (isPaidTier) return true
+        if (m.trial_unlocked) return true
+        const access = m.tier_access ?? 'paid'
+        if (userTier === 'unregistered') return access === 'unregistered'
+        if (userTier === 'free') return access !== 'paid'
+        return true
+      })
+    }
+    const scored = candidates
       .map(m => ({ m, s: modelSearchScore(m, qNorm) }))
       .filter(x => x.s < MODEL_SEARCH_NO_MATCH)
       .sort((a, b) => {
@@ -87,7 +101,7 @@ export function ModelSearch({
       .slice(0, MAX_SUGGESTIONS)
       .map(x => x.m)
     return scored
-  }, [allFlat, qNorm])
+  }, [allFlat, qNorm, hidePremiumModels, isPaidTier, userTier])
 
   useEffect(() => {
     const onDocDown = (e: MouseEvent) => {
