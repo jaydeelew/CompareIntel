@@ -396,6 +396,7 @@ export function ModelsArea({
                 isAuthenticated={isAuthenticated}
                 user={user}
                 maxModelsLimit={maxModelsLimit}
+                hidePremiumModels={hidePremiumModels}
                 imageModelsDisabledForUnregistered={imageModelsDisabledForUnregistered}
                 onShowDisabledModelModal={onShowDisabledModelModal}
                 isTutorialActive={isTutorialActive}

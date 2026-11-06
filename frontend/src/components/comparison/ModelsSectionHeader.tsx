@@ -334,14 +334,14 @@ export function ModelsSectionHeader({
         }}
       >
         <div className="models-header-buttons">
-          {/* Hide Premium Models Toggle - only for anonymous and free tiers */}
+          {/* Show Only Available Models Toggle - only for anonymous and free tiers */}
           {showHidePremiumToggle && (
             <>
               {useModalForTooltips ? (
                 <button
                   className={`hide-premium-button ${hidePremiumModels ? 'active' : ''}`}
                   onClick={handlePremiumToggleClick}
-                  aria-label={hidePremiumModels ? 'Show locked models' : 'Hide locked models'}
+                  aria-label={hidePremiumModels ? 'Show all models' : 'Show only available models'}
                 >
                   {hidePremiumModels ? (
                     /* Eye icon (hiding premium models - shows open eye to indicate "click to show") */
@@ -396,12 +396,14 @@ export function ModelsSectionHeader({
                 </button>
               ) : (
                 <StyledTooltip
-                  text={hidePremiumModels ? 'Show locked models' : 'Hide locked models'}
+                  text={hidePremiumModels ? 'Show all models' : 'Show only available models'}
                 >
                   <button
                     className={`hide-premium-button ${hidePremiumModels ? 'active' : ''}`}
                     onClick={handlePremiumToggleClick}
-                    aria-label={hidePremiumModels ? 'Show locked models' : 'Hide locked models'}
+                    aria-label={
+                      hidePremiumModels ? 'Show all models' : 'Show only available models'
+                    }
                   >
                     {hidePremiumModels ? (
                       /* Eye icon (hiding premium models - shows open eye to indicate "click to show") */

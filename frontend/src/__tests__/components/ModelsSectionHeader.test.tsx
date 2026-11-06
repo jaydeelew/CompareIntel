@@ -68,29 +68,29 @@ describe('ModelsSectionHeader', () => {
     })
   })
 
-  describe('Hide Premium Models Toggle', () => {
-    it('renders hide premium button for free tier users', () => {
+  describe('Show Only Available Models Toggle', () => {
+    it('renders show only available button for free tier users', () => {
       renderWithProviders(<ModelsSectionHeader {...defaultProps} />)
 
-      const button = screen.getByLabelText('Hide locked models')
+      const button = screen.getByLabelText('Show only available models')
       expect(button).toBeInTheDocument()
     })
 
-    it('renders hide premium button for unregistered users', () => {
+    it('renders show only available button for unregistered users', () => {
       renderWithProviders(
         <ModelsSectionHeader {...defaultProps} isAuthenticated={false} user={null} />
       )
 
-      const button = screen.getByLabelText('Hide locked models')
+      const button = screen.getByLabelText('Show only available models')
       expect(button).toBeInTheDocument()
     })
 
-    it('does not render hide premium button for paid tier users', () => {
+    it('does not render show only available button for paid tier users', () => {
       const paidUser = { ...mockUser, subscription_tier: 'pro' }
       renderWithProviders(<ModelsSectionHeader {...defaultProps} user={paidUser} />)
 
-      expect(screen.queryByLabelText('Hide locked models')).not.toBeInTheDocument()
-      expect(screen.queryByLabelText('Show locked models')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('Show only available models')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('Show all models')).not.toBeInTheDocument()
     })
 
     it('toggles hide premium models on desktop', async () => {
@@ -99,21 +99,21 @@ describe('ModelsSectionHeader', () => {
         <ModelsSectionHeader {...defaultProps} onToggleHidePremiumModels={onToggle} />
       )
 
-      const button = screen.getByLabelText('Hide locked models')
+      const button = screen.getByLabelText('Show only available models')
       await userEvent.click(button)
 
       expect(onToggle).toHaveBeenCalledTimes(1)
     })
 
-    it('shows correct icon when premium models are hidden', () => {
+    it('shows correct label when filter is active', () => {
       renderWithProviders(<ModelsSectionHeader {...defaultProps} hidePremiumModels={true} />)
 
-      const button = screen.getByLabelText('Show locked models')
+      const button = screen.getByLabelText('Show all models')
       expect(button).toBeInTheDocument()
     })
   })
 
-  describe('Mobile Hide Premium Models Toggle', () => {
+  describe('Mobile Show Only Available Models Toggle', () => {
     beforeEach(() => {
       mockUseResponsive.mockReturnValue({
         useModalForTooltips: true,
@@ -122,10 +122,10 @@ describe('ModelsSectionHeader', () => {
       })
     })
 
-    it('renders hide premium button on mobile', () => {
+    it('renders show only available button on mobile', () => {
       renderWithProviders(<ModelsSectionHeader {...defaultProps} isMobileLayout={true} />)
 
-      const button = screen.getByLabelText('Hide locked models')
+      const button = screen.getByLabelText('Show only available models')
       expect(button).toBeInTheDocument()
     })
 
@@ -145,7 +145,7 @@ describe('ModelsSectionHeader', () => {
         />
       )
 
-      const button = screen.getByLabelText('Hide locked models')
+      const button = screen.getByLabelText('Show only available models')
 
       await userEvent.click(button)
 
@@ -168,7 +168,7 @@ describe('ModelsSectionHeader', () => {
         />
       )
 
-      const button = screen.getByLabelText('Hide locked models')
+      const button = screen.getByLabelText('Show only available models')
       await userEvent.click(button)
 
       await waitFor(() => {
@@ -192,7 +192,7 @@ describe('ModelsSectionHeader', () => {
         />
       )
 
-      const button = screen.getByLabelText('Hide locked models')
+      const button = screen.getByLabelText('Show only available models')
       await userEvent.click(button)
 
       await waitFor(() => {
@@ -204,7 +204,7 @@ describe('ModelsSectionHeader', () => {
     it('button is not wrapped in clickable tooltip on mobile', () => {
       renderWithProviders(<ModelsSectionHeader {...defaultProps} isMobileLayout={true} />)
 
-      const button = screen.getByLabelText('Hide locked models')
+      const button = screen.getByLabelText('Show only available models')
 
       const parentSpan = button.parentElement
       expect(parentSpan?.classList.contains('tooltip')).toBe(false)
