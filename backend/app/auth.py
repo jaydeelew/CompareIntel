@@ -154,6 +154,48 @@ def generate_verification_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+# One-click email unsubscribe links are long-lived (the user may click them weeks
+# after the email was sent) but stateless/signed, so no DB-stored token is needed.
+UNSUBSCRIBE_TOKEN_EXPIRE_DAYS = 180
+
+
+def create_unsubscribe_token(user_id: int, email: str) -> str:
+    """
+    Create a signed, stateless token for a no-login email unsubscribe link.
+
+    The token embeds the user id and the exact email address the notification
+    was sent to, so it keeps working even without a session, and a later email
+    change on the account invalidates previously issued links.
+
+    Args:
+        user_id: The recipient's user id
+        email: The recipient's email address at send time
+
+    Returns:
+        str: Encoded JWT unsubscribe token
+    """
+    to_encode: dict[str, Any] = {
+        "sub": str(user_id),
+        "email": email,
+        "type": "unsubscribe",
+        "exp": datetime.now(UTC) + timedelta(days=UNSUBSCRIBE_TOKEN_EXPIRE_DAYS),
+    }
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def verify_unsubscribe_token(token: str) -> dict[str, Any] | None:
+    """
+    Verify an unsubscribe token and return its payload.
+
+    Args:
+        token: The unsubscribe token to verify
+
+    Returns:
+        dict: Decoded payload (with "sub" and "email") if valid, None otherwise
+    """
+    return verify_token(token, token_type="unsubscribe")
+
+
 def generate_verification_code() -> str:
     """
     Generate a 6-digit numeric verification code for email verification.
