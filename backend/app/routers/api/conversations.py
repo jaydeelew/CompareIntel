@@ -22,6 +22,7 @@ from ...schemas import (
     StoredFileContent,
 )
 from ...services.conversation_history import enforce_history_limit
+from ...utils.datetime_utils import to_naive_utc
 
 router = APIRouter(tags=["API - Conversations"])
 
@@ -294,8 +295,14 @@ async def import_conversations(
             saved=bool(item.saved),
         )
         if item.created_at is not None:
-            conversation.created_at = item.created_at
-            conversation.updated_at = item.created_at
+            # Client-supplied timestamps may be timezone-aware (e.g. ISO
+            # strings ending in "Z"), while DB columns store naive
+            # datetimes that are implicitly UTC. Normalize here so later
+            # datetime comparisons (e.g. history-limit enforcement) never
+            # mix aware and naive values (Sentry COMPAREINTEL-BACKEND-3..7).
+            created_at = to_naive_utc(item.created_at)
+            conversation.created_at = created_at
+            conversation.updated_at = created_at
         db.add(conversation)
         db.flush()
 
@@ -309,7 +316,7 @@ async def import_conversations(
                 model_id=msg.model_id,
             )
             if msg.created_at is not None:
-                row.created_at = msg.created_at
+                row.created_at = to_naive_utc(msg.created_at)
             db.add(row)
         imported_ids.append(conversation.id)
 

@@ -7,6 +7,25 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 from ..models import Conversation
+from ..utils.datetime_utils import to_naive_utc
+
+_NAIVE_MIN = datetime.min
+
+
+def _sort_key(conv: Conversation) -> datetime:
+    """Naive-UTC sort key.
+
+    `conv.updated_at`/`conv.created_at` are normally naive (DB columns have
+    no timezone), but a caller could hand us a timezone-aware value (e.g.
+    freshly assigned from a client payload before it round-trips through
+    the DB). Normalizing here keeps `sorted()` from mixing aware and naive
+    datetimes, which raises `TypeError: can't compare offset-naive and
+    offset-aware datetimes`.
+    """
+    value = conv.updated_at or conv.created_at
+    if value is None:
+        return _NAIVE_MIN
+    return to_naive_utc(value) or _NAIVE_MIN
 
 
 def conversations_to_delete(
@@ -19,7 +38,7 @@ def conversations_to_delete(
 
     newest_first = sorted(
         conversations,
-        key=lambda conv: conv.updated_at or conv.created_at or datetime.min,
+        key=_sort_key,
         reverse=True,
     )
     saved = [conv for conv in newest_first if conv.saved]
