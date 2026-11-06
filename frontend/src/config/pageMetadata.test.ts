@@ -11,6 +11,8 @@ describe('PUBLIC_PAGES shared route list', () => {
     const paths = PUBLIC_PAGES.map(page => page.path)
     expect(paths).toContain('/')
     expect(paths).toContain('/models')
+    expect(paths).toContain('/help-me-choose-methodology')
+    expect(paths).toContain('/verdict-methodology')
     expect(paths).toContain('/models/claude-opus-5')
     expect(paths).toContain('/models/gpt-5-5')
     expect(paths).toEqual([

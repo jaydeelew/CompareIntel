@@ -156,6 +156,18 @@ test.describe('Accessibility Tests', () => {
       expect(criticalViolations.length).toBe(0)
     })
 
+    test('Verdict methodology page should meet WCAG 2.1 AA standards', async ({ page }) => {
+      await gotoReady(page, '/verdict-methodology')
+
+      const results = await runAccessibilityAudit(page)
+
+      const criticalViolations = results.violations.filter(
+        v => v.impact === 'critical' || v.impact === 'serious'
+      )
+
+      expect(criticalViolations.length).toBe(0)
+    })
+
     test('Privacy Policy page should meet WCAG 2.1 AA standards', async ({ page }) => {
       await gotoReady(page, '/privacy-policy')
 
