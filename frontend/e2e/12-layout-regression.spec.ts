@@ -146,6 +146,17 @@ async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
 async function gotoStable(page: Page, path: string): Promise<void> {
   // Mock API responses before navigation to prevent errors from affecting layout
   await mockModelsApi(page, 'unregistered')
+
+  // Production never shows the dev-only "Anonymous Mock Mode Active" banner. CI runs without
+  // repository secrets (Dependabot, bot PRs) enable mock mode on the backend, which renders that
+  // fixed banner and pads the hero by ~68-84px. Pin it off so we measure the production layout.
+  await page.route('**/api/anonymous-mock-mode-status', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ anonymous_mock_mode_enabled: false, is_development: false }),
+    })
+  })
   
   // Mock auth/me to return unauthenticated state immediately
   await page.route('**/api/auth/me', async route => {
