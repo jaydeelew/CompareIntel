@@ -59,7 +59,7 @@ pydantic[email]>=2.14.2
 cryptography>=50.0.0
 
 # Timezone
-pytz>=2024.1
+pytz>=2026.6
 
 # Redis (optional, for distributed rate limiting)
 redis>=5.0.0
