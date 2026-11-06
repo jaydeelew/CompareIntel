@@ -276,6 +276,22 @@ test.describe('Navigation and Content Pages', () => {
     await expect(mainContent.first()).toBeVisible({ timeout: 10000 })
   })
 
+  test('User can open Verdict methodology page', async ({ page }) => {
+    await page.goto('/verdict-methodology', { waitUntil: 'domcontentloaded', timeout: 30000 })
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
+    await expect(page.getByRole('heading', { level: 1, name: /how verdict works/i })).toBeVisible({
+      timeout: 10000,
+    })
+    await expect(page.getByText(/not a judgment of correctness/i)).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: /cost \(this run, via openrouter\)/i })
+    ).toBeVisible()
+  })
+
   test('User can navigate to Privacy Policy', async ({ page }) => {
     // Dismiss tutorial overlay before clicking footer link
     await dismissTutorialOverlay(page)
