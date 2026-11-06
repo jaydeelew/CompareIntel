@@ -18,6 +18,7 @@ export function useCenteredPricingLine(lineRef: RefObject<HTMLElement | null>, e
     if (!hero || !container) return
 
     let frame = 0
+    let mutationFrame = 0
     const update = () => {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
@@ -34,19 +35,32 @@ export function useCenteredPricingLine(lineRef: RefObject<HTMLElement | null>, e
 
     update()
     const ro = new ResizeObserver(update)
-    ;[hero, container, line, hero.querySelector('.hero-content')].forEach(
+    const heroContent = hero.querySelector('.hero-content')
+    const credits = container.querySelector<HTMLElement>('.credits-remaining-wrapper')
+    ;[hero, container, line, heroContent, credits].forEach(
       el => el && ro.observe(el)
     )
+
+    const mo = new MutationObserver(() => {
+      cancelAnimationFrame(mutationFrame)
+      mutationFrame = requestAnimationFrame(update)
+    })
+    mo.observe(container, { childList: true, subtree: true })
+
     window.addEventListener('resize', update)
     hero.addEventListener('animationend', update)
     hero.addEventListener('transitionend', update)
+    container.addEventListener('transitionend', update)
     document.fonts?.ready.then(update)
     return () => {
       cancelAnimationFrame(frame)
+      cancelAnimationFrame(mutationFrame)
       ro.disconnect()
+      mo.disconnect()
       window.removeEventListener('resize', update)
       hero.removeEventListener('animationend', update)
       hero.removeEventListener('transitionend', update)
+      container.removeEventListener('transitionend', update)
     }
   }, [lineRef, enabled])
 }
