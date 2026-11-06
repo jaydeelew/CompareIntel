@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 
 from ..config import settings
@@ -45,6 +45,14 @@ from ..schemas import (
     UserLogin,
     UserRegister,
     UserResponse,
+)
+from ..services.unsubscribe import (
+    UnsubscribeTokenError,
+    render_invalid_token_page,
+    render_resubscribed_page,
+    render_unsubscribed_page,
+    resolve_unsubscribe_token,
+    set_email_notifications,
 )
 from ..utils.cookies import clear_auth_cookies, get_refresh_token_from_cookies, set_auth_cookies
 
@@ -670,6 +678,63 @@ async def reset_password(reset: PasswordReset, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Password reset successfully", "email": user.email}
+
+
+def _unsubscribe_response(token: str | None, db: Session, *, resubscribe: bool) -> HTMLResponse:
+    """Shared GET/POST handler for no-reply-email unsubscribe links.
+
+    No authentication is required or possible here on purpose: the signed
+    token itself is the credential, so recipients can act on it straight from
+    their mail client with no login/session.
+    """
+    try:
+        user_id, email = resolve_unsubscribe_token(token)
+    except UnsubscribeTokenError:
+        return HTMLResponse(render_invalid_token_page(), status_code=status.HTTP_400_BAD_REQUEST)
+
+    user = set_email_notifications(db, user_id, email, enabled=resubscribe)
+    if not user:
+        return HTMLResponse(render_invalid_token_page(), status_code=status.HTTP_400_BAD_REQUEST)
+
+    if resubscribe:
+        return HTMLResponse(render_resubscribed_page())
+
+    # Relative so it keeps working whether this was reached via /api or /api/v1.
+    resubscribe_href = f"?token={token}&resubscribe=true"
+    return HTMLResponse(render_unsubscribed_page(resubscribe_href))
+
+
+@router.get("/unsubscribe", response_class=HTMLResponse, include_in_schema=False)
+async def unsubscribe(
+    token: str | None = None,
+    resubscribe: bool = False,
+    db: Session = Depends(get_db),
+) -> HTMLResponse:
+    """
+    One-click, no-login unsubscribe from no-reply notification emails.
+
+    Visiting the link from an email (GET) immediately applies the change and
+    shows a confirmation page, per the UX most transactional/marketing mailers
+    use. Pass resubscribe=true (the link shown on the confirmation page) to
+    undo it, also with no login required.
+    """
+    return _unsubscribe_response(token, db, resubscribe=resubscribe)
+
+
+@router.post("/unsubscribe", response_class=HTMLResponse, include_in_schema=False)
+async def unsubscribe_one_click(
+    token: str | None = None,
+    db: Session = Depends(get_db),
+) -> HTMLResponse:
+    """
+    RFC 8058 one-click unsubscribe target for mail clients (Gmail, Outlook, ...).
+
+    Triggered by the client itself (not the user navigating) when a message
+    carries both List-Unsubscribe and List-Unsubscribe-Post headers; the
+    request body (`List-Unsubscribe=One-Click`) carries no extra information,
+    so the token is read from the query string, same as the GET link.
+    """
+    return _unsubscribe_response(token, db, resubscribe=False)
 
 
 @router.get("/test")
