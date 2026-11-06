@@ -37,9 +37,7 @@ export function useCenteredPricingLine(lineRef: RefObject<HTMLElement | null>, e
     const ro = new ResizeObserver(update)
     const heroContent = hero.querySelector('.hero-content')
     const credits = container.querySelector<HTMLElement>('.credits-remaining-wrapper')
-    ;[hero, container, line, heroContent, credits].forEach(
-      el => el && ro.observe(el)
-    )
+    ;[hero, container, line, heroContent, credits].forEach(el => el && ro.observe(el))
 
     const mo = new MutationObserver(() => {
       cancelAnimationFrame(mutationFrame)
