@@ -2089,7 +2089,9 @@ video.capability-tile-image-lightbox-img {
   opacity: 0.8;
 }
 
-/* Usage Preview Container - enough height to prevent "X models • credits" cutoff */
+/* Usage Preview Container - enough height to prevent "X models • credits" cutoff.
+   Selected-model icons overlay into margin-bottom (see selectedModelIcons.css) so
+   they do not add a new height block or change pricing-line centering. */
 .usage-preview-container {
   min-height: 2rem;
   display: block;
