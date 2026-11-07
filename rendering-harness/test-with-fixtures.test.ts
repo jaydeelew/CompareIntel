@@ -101,8 +101,8 @@ test.describe('Harness Feature Coverage Detection', () => {
   });
   
   test('detects KaTeX errors', async ({ page }) => {
-    // Invalid LaTeX that should cause an error
-    const content = '$$\\invalid{syntax}$$';
+    // Genuinely invalid LaTeX - unbalanced braces
+    const content = '$$x = \\frac{a{b}$$';
     await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     
@@ -178,8 +178,8 @@ test.describe('Harness Known-Bad Fixtures (should fail)', () => {
   });
   
   test('FAILS when KaTeX error present', async ({ page }) => {
-    // Invalid LaTeX
-    const content = '$$\\undefined{command}$$';
+    // Invalid LaTeX - unclosed environment
+    const content = '$$\\begin{matrix} a & b$$';
     await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     

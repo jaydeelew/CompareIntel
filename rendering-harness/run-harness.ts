@@ -226,7 +226,13 @@ async function callOpenRouter(
     if (modelPricing) {
       cost = (usage.prompt_tokens * modelPricing.inputCostPerToken) +
              (usage.completion_tokens * modelPricing.outputCostPerToken);
+    } else {
+      // No pricing data - cannot calculate cost
+      throw new Error(`No pricing data for ${modelId} and usage.cost not provided by OpenRouter`);
     }
+  } else {
+    // No usage data at all
+    throw new Error(`No usage data returned from OpenRouter for ${modelId}`);
   }
   
   return { response: content, usage, cost };

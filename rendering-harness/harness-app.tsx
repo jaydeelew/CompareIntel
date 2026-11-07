@@ -50,17 +50,70 @@ function HarnessApp() {
   
   useEffect(() => {
     if (ready && renderData && !renderComplete) {
-      // Simple timeout-based readiness (LatexRenderer is mostly synchronous)
-      // Wait 1.5 seconds for any async operations (Prism, image loading, etc.)
-      const timer = setTimeout(() => {
-        const container = document.querySelector('[data-render-container]');
-        if (container) {
-          container.setAttribute('data-render-complete', 'true');
-        }
-        setRenderComplete(true);
-      }, 1500);
+      // Wait for actual rendering state: KaTeX completion, Prism highlighting
+      let attempts = 0;
+      const maxAttempts = 50; // 10 seconds max (200ms * 50)
       
-      return () => clearTimeout(timer);
+      const checkRenderState = () => {
+        const container = document.querySelector('[data-render-container]');
+        if (!container) {
+          attempts++;
+          if (attempts < maxAttempts) {
+            setTimeout(checkRenderState, 200);
+          }
+          return;
+        }
+        
+        // Check for KaTeX processing states
+        const katexProcessing = container.querySelectorAll('.katex-html[style*="visibility: hidden"]');
+        if (katexProcessing.length > 0) {
+          attempts++;
+          if (attempts < maxAttempts) {
+            setTimeout(checkRenderState, 200);
+          }
+          return;
+        }
+        
+        // Check if Prism has highlighted code blocks (if any)
+        const codeBlocks = container.querySelectorAll('pre code[class*="language-"]');
+        let prismReady = true;
+        for (const block of codeBlocks) {
+          // Prism adds .token classes when highlighting is done
+          const tokens = block.querySelectorAll('.token');
+          const isEmpty = block.textContent?.trim() === '';
+          if (!isEmpty && tokens.length === 0) {
+            prismReady = false;
+            break;
+          }
+        }
+        
+        if (!prismReady) {
+          attempts++;
+          if (attempts < maxAttempts) {
+            setTimeout(checkRenderState, 200);
+          }
+          return;
+        }
+        
+        // Check if images are loaded (if any)
+        const images = container.querySelectorAll('img');
+        for (const img of images) {
+          if (!img.complete) {
+            attempts++;
+            if (attempts < maxAttempts) {
+              setTimeout(checkRenderState, 200);
+            }
+            return;
+          }
+        }
+        
+        // All checks passed - mark complete
+        container.setAttribute('data-render-complete', 'true');
+        setRenderComplete(true);
+      };
+      
+      // Start checking after initial render
+      setTimeout(checkRenderState, 100);
     }
   }, [ready, renderData, renderComplete]);
   
