@@ -491,7 +491,10 @@ async function analyzeFeatureCoverage(page: Page): Promise<FeatureCoverageResult
       }
     }
 
-    return result;
+    // Get the actual rendered HTML for validation
+    const renderedHTML = container.innerHTML;
+
+    return { coverage: result, renderedHTML };
   });
 }
 
@@ -591,6 +594,16 @@ async function renderOnlyMode(runDir: string): Promise<void> {
       try {
         const { coverage, renderedHTML } = await renderResponse(page, data.modelId, data.response, screenshotPath);
         console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
+        
+        // DEBUG: Save first rendered HTML to inspect
+        if (data.modelId === 'anthropic/claude-sonnet-4.6' && data.promptName === '01-math-basics') {
+          const debugPath = path.join(fullPath, 'debug-rendered.html');
+          await fs.writeFile(debugPath, renderedHTML);
+          console.log(`  [DEBUG] Saved rendered HTML to ${debugPath}`);
+          console.log(`  [DEBUG] Rendered HTML length: ${renderedHTML.length} chars`);
+          console.log(`  [DEBUG] Contains 'katex': ${renderedHTML.includes('katex')}`);
+          console.log(`  [DEBUG] First 500 chars: ${renderedHTML.substring(0, 500)}`);
+        }
         
         // Validate RENDERED HTML against expected features
         const expectedFeatures = getExpectedFeatures(data.promptName);

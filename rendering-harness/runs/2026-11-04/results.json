@@ -19,82 +19,6 @@
     {
       "modelId": "anthropic/claude-sonnet-4.6",
       "modelName": "Claude Sonnet 4.6",
-      "promptName": "01-math-basics",
-      "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math: Show the same formula as a display equation:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n3. Matrices: Show a 2x2 identity matrix:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\n4. Multiple equations on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15.\n",
-      "response": "# Math Basics Demonstration\n\n## 1. Inline Math\n\nThe quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ is used to solve any quadratic equation of the form $ax^2 + bx + c = 0$, where $a \\neq 0$. The term $b^2 - 4ac$ under the radical is called the **discriminant**.\n\n---\n\n## 2. Display Math\n\nThe same formula presented as a display equation:\n\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n---\n\n## 3. Matrices\n\nThe 2×2 identity matrix is:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nMultiplying any 2×2 matrix by $I$ leaves it unchanged.\n\n---\n\n## 4. Famous Equations\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nThese represent mass-energy equivalence, Newton's second law, and the Pythagorean theorem, respectively.\n\n---\n\n## 5. Plain Currency (No Math Rendering)\n\nThe item costs $5 and the shipping is $10, for a total of $15. These dollar signs are just currency symbols and should **not** trigger any math rendering.",
-      "usage": {
-        "prompt_tokens": 234,
-        "completion_tokens": 348,
-        "total_tokens": 582,
-        "cost": 0.005922,
-        "is_byok": false,
-        "prompt_tokens_details": {
-          "cached_tokens": 0,
-          "cache_write_tokens": 0,
-          "audio_tokens": 0,
-          "video_tokens": 0
-        },
-        "cost_details": {
-          "upstream_inference_cost": 0.005922,
-          "upstream_inference_prompt_cost": 0.000702,
-          "upstream_inference_completions_cost": 0.00522
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0,
-          "image_tokens": 0,
-          "audio_tokens": 0
-        }
-      },
-      "actualCost": 0,
-      "timestamp": "2026-11-04T00:50:49.299Z",
-      "validation": {
-        "pass": false,
-        "assertions": [
-          {
-            "pass": false,
-            "expected": "display math present",
-            "actual": "no display math",
-            "message": "Expected display math ($$...$$) but none found"
-          },
-          {
-            "pass": false,
-            "expected": "inline math present",
-            "actual": "no inline math",
-            "message": "Expected inline math ($...$) but none found"
-          },
-          {
-            "pass": true,
-            "expected": "all links safe (no javascript:)",
-            "actual": "all links safe",
-            "message": "All links are safe"
-          },
-          {
-            "pass": true,
-            "expected": "no KaTeX errors",
-            "actual": "no errors",
-            "message": "No KaTeX errors"
-          }
-        ],
-        "coverage": {
-          "hasDisplayMath": false,
-          "hasInlineMath": false,
-          "hasCodeBlocks": false,
-          "hasTables": false,
-          "hasLinks": false,
-          "hasNestedLists": false,
-          "mathErrors": [],
-          "preservedCurrency": false,
-          "preservedCodeDollars": false,
-          "linkDestinations": [],
-          "tableCellCount": 0,
-          "codeBlockLanguages": [],
-          "hasUnsafeLinks": false
-        }
-      }
-    },
-    {
-      "modelId": "anthropic/claude-sonnet-4.6",
-      "modelName": "Claude Sonnet 4.6",
       "promptName": "02-markdown-formatting",
       "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
       "response": "# Markdown Formatting Demo\n\n## Headers\n### This is H3\n#### This is H4\n\n---\n\n## Text Formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\n---\n\n## Lists\n\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n---\n\n## Tables\n\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n---\n\n## Blockquotes\n\n> This is a blockquote\n> with multiple lines\n\n---\n\n> **Note:** All markdown elements above are rendering correctly, including **nested lists**, *formatted text*, tables, and blockquotes. This demonstrates full markdown support across headers `H2` through `H4`.",
@@ -1657,5 +1581,5 @@
       }
     }
   ],
-  "freshRendered": "2026-11-07T17:49:31.655Z"
+  "freshRendered": "2026-11-07T17:53:00.843Z"
 }
