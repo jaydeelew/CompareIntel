@@ -315,7 +315,13 @@ export function MainPage() {
   ])
   const [, setUserMessageTimestamp] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { isTouchDevice, isWideLayout, isMobileLayout, isCapabilityIconRowLayout } = useResponsive()
+  const {
+    isTouchDevice,
+    isWideLayout,
+    isMobileLayout,
+    isCapabilityIconRowLayout,
+    useModalForTooltips,
+  } = useResponsive()
   const modelsSectionRef = useRef<HTMLDivElement>(null)
   const [isAnimatingButton, setIsAnimatingButton] = useState(false)
   const [isAnimatingTextarea, setIsAnimatingTextarea] = useState(false)
@@ -2652,9 +2658,11 @@ export function MainPage() {
             }}
             aria-label="Learn about credits"
           >
-            <span className="credits-info-tooltip" role="tooltip">
-              {CREDITS_MESSAGE}
-            </span>
+            {!useModalForTooltips && (
+              <span className="credits-info-tooltip" role="tooltip">
+                {CREDITS_MESSAGE}
+              </span>
+            )}
             <svg
               className="credits-info-icon"
               width="12"
