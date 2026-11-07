@@ -503,7 +503,7 @@ async function renderResponse(
   modelId: string,
   response: string,
   outputPath: string
-): Promise<FeatureCoverageResult> {
+): Promise<{ coverage: FeatureCoverageResult; renderedHTML: string }> {
   // Navigate to harness with model ID and content as query params
   const encodedContent = encodeURIComponent(response);
   const url = `http://localhost:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
@@ -520,8 +520,8 @@ async function renderResponse(
     { timeout: 30000 }
   );
   
-  // Analyze feature coverage
-  const coverage = await analyzeFeatureCoverage(page);
+  // Analyze feature coverage and get rendered HTML
+  const result = await analyzeFeatureCoverage(page);
   
   // Take screenshot of the rendered content
   const element = await page.$('[data-render-container]');
@@ -529,7 +529,7 @@ async function renderResponse(
     await element.screenshot({ path: outputPath });
   }
   
-  return coverage;
+  return result;
 }
 
 function escapeHtml(text: string): string {
@@ -589,12 +589,12 @@ async function renderOnlyMode(runDir: string): Promise<void> {
       const screenshotPath = path.join(fullPath, jsonFile.replace('.json', '.png'));
       
       try {
-        const coverage = await renderResponse(page, data.modelId, data.response, screenshotPath);
+        const { coverage, renderedHTML } = await renderResponse(page, data.modelId, data.response, screenshotPath);
         console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
         
-        // Validate rendered HTML against expected features
+        // Validate RENDERED HTML against expected features
         const expectedFeatures = getExpectedFeatures(data.promptName);
-        const validation = validateRenderedHTML(data.response, expectedFeatures);
+        const validation = validateRenderedHTML(renderedHTML, expectedFeatures);
         const validationStatus = validation.pass ? '✓' : '✗';
         const failedCount = validation.assertions.filter(a => !a.pass).length;
         console.log(`  ${validationStatus} Validation: ${validation.pass ? 'PASS' : `FAIL (${failedCount} assertions)`}`);
@@ -652,6 +652,21 @@ async function renderOnlyMode(runDir: string): Promise<void> {
   console.log('\n=== Render-Only Complete ===');
   console.log(`Screenshots regenerated: ${results.length}`);
   console.log(`Review page updated: ${path.join(fullPath, 'review.html')}`);
+  
+  // Report validation summary
+  const validationPassed = results.filter(r => r.validation?.pass).length;
+  const validationFailed = results.filter(r => r.validation && !r.validation.pass).length;
+  const noValidation = results.filter(r => !r.validation).length;
+  
+  console.log(`\nValidation Summary:`);
+  console.log(`  ✓ Passed: ${validationPassed}`);
+  console.log(`  ✗ Failed: ${validationFailed}`);
+  console.log(`  - No validation: ${noValidation}\n`);
+  
+  // Exit with error if any validations failed
+  if (validationFailed > 0) {
+    process.exit(1);
+  }
 }
 
 /**
@@ -1141,12 +1156,12 @@ async function main() {
           
           // Render screenshot and analyze coverage
           const screenshotPath = path.join(outputDir, `${model.id.replace(/\//g, '_')}_${promptName}.png`);
-          const coverage = await renderResponse(page, model.id, response, screenshotPath);
+          const { coverage, renderedHTML } = await renderResponse(page, model.id, response, screenshotPath);
           console.log(`    ✓ Rendered screenshot (coverage: ${Object.entries(coverage).filter(([k, v]) => typeof v === 'boolean' && v).length} features)`);
           
-          // Validate rendered HTML against expected features
+          // Validate RENDERED HTML against expected features
           const expectedFeatures = getExpectedFeatures(promptName);
-          const validation = validateRenderedHTML(response, expectedFeatures);
+          const validation = validateRenderedHTML(renderedHTML, expectedFeatures);
           const validationStatus = validation.pass ? '✓' : '✗';
           const failedCount = validation.assertions.filter(a => !a.pass).length;
           console.log(`    ${validationStatus} Validation: ${validation.pass ? 'PASS' : `FAIL (${failedCount} assertions)`}`);
@@ -1211,6 +1226,24 @@ async function main() {
   console.log(`Difference: $${Math.abs(actualTotalCost - totalEstimatedCost).toFixed(4)}`);
   console.log(`\nResults saved to: ${outputDir}`);
   console.log(`Review page: ${path.join(outputDir, 'review.html')}`);
+  
+  // Report validation summary
+  const validationPassed = results.filter(r => r.validation?.pass).length;
+  const validationFailed = results.filter(r => r.validation && !r.validation.pass).length;
+  const noValidation = results.filter(r => !r.validation).length;
+  const renderErrors = results.filter(r => r.error).length;
+  
+  console.log(`\nValidation Summary:`);
+  console.log(`  ✓ Passed: ${validationPassed}`);
+  console.log(`  ✗ Failed: ${validationFailed}`);
+  console.log(`  - No validation: ${noValidation}`);
+  console.log(`  ! Render errors: ${renderErrors}\n`);
+  
+  // Exit with error if any validations or renders failed
+  if (validationFailed > 0 || renderErrors > 0) {
+    console.error(`Harness failed with ${validationFailed} validation failures and ${renderErrors} render errors`);
+    process.exit(1);
+  }
 }
 
 main().catch(console.error);

@@ -47,20 +47,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:50:49.299Z",
-      "featureCoverage": {
-        "hasDisplayMath": true,
-        "hasInlineMath": true,
-        "hasCodeBlocks": false,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -97,7 +83,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -137,20 +123,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:50:54.174Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": false,
-        "hasCodeBlocks": false,
-        "hasTables": true,
-        "hasLinks": false,
-        "hasNestedLists": true,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 9,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -193,7 +165,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -233,24 +205,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:51:00.990Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": false,
-        "hasCodeBlocks": true,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": false,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": [
-          "python",
-          "javascript",
-          "sql"
-        ]
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -321,20 +275,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:51:12.653Z",
-      "featureCoverage": {
-        "hasDisplayMath": true,
-        "hasInlineMath": true,
-        "hasCodeBlocks": false,
-        "hasTables": true,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 12,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -383,7 +323,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -423,22 +363,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:51:18.155Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": true,
-        "hasCodeBlocks": true,
-        "hasTables": true,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 12,
-        "codeBlockLanguages": [
-          "python"
-        ]
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -493,7 +417,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -533,20 +457,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:51:37.040Z",
-      "featureCoverage": {
-        "hasDisplayMath": true,
-        "hasInlineMath": true,
-        "hasCodeBlocks": false,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -583,7 +493,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -623,20 +533,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:51:41.649Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": false,
-        "hasCodeBlocks": false,
-        "hasTables": true,
-        "hasLinks": false,
-        "hasNestedLists": true,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 9,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -679,7 +575,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -719,23 +615,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:51:50.953Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": false,
-        "hasCodeBlocks": true,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": false,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": [
-          "python",
-          "javascript"
-        ]
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -806,20 +685,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:52:13.613Z",
-      "featureCoverage": {
-        "hasDisplayMath": true,
-        "hasInlineMath": true,
-        "hasCodeBlocks": false,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -868,7 +733,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -908,22 +773,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:52:41.850Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": true,
-        "hasCodeBlocks": true,
-        "hasTables": true,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 12,
-        "codeBlockLanguages": [
-          "python"
-        ]
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -978,7 +827,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -1018,20 +867,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:52:44.828Z",
-      "featureCoverage": {
-        "hasDisplayMath": true,
-        "hasInlineMath": true,
-        "hasCodeBlocks": false,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1068,7 +903,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -1108,20 +943,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:52:46.889Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": false,
-        "hasCodeBlocks": false,
-        "hasTables": true,
-        "hasLinks": false,
-        "hasNestedLists": true,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 9,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1164,7 +985,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -1204,23 +1025,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:52:49.385Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": false,
-        "hasCodeBlocks": true,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": false,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": [
-          "python",
-          "javascript"
-        ]
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1291,20 +1095,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:52:54.394Z",
-      "featureCoverage": {
-        "hasDisplayMath": true,
-        "hasInlineMath": true,
-        "hasCodeBlocks": false,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1353,7 +1143,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -1393,22 +1183,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:52:57.198Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": true,
-        "hasCodeBlocks": true,
-        "hasTables": true,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 12,
-        "codeBlockLanguages": [
-          "python"
-        ]
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1463,7 +1237,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -1503,20 +1277,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:53:01.524Z",
-      "featureCoverage": {
-        "hasDisplayMath": true,
-        "hasInlineMath": true,
-        "hasCodeBlocks": false,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1553,7 +1313,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -1593,20 +1353,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:53:05.761Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": false,
-        "hasCodeBlocks": false,
-        "hasTables": true,
-        "hasLinks": false,
-        "hasNestedLists": true,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 9,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1649,7 +1395,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -1689,23 +1435,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:53:09.417Z",
-      "featureCoverage": {
-        "hasDisplayMath": false,
-        "hasInlineMath": false,
-        "hasCodeBlocks": true,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": false,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": [
-          "python",
-          "javascript"
-        ]
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1776,20 +1505,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:53:16.116Z",
-      "featureCoverage": {
-        "hasDisplayMath": true,
-        "hasInlineMath": true,
-        "hasCodeBlocks": false,
-        "hasTables": false,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 0,
-        "codeBlockLanguages": []
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1838,7 +1553,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -1878,22 +1593,6 @@
       },
       "actualCost": 0,
       "timestamp": "2026-11-04T00:53:25.395Z",
-      "featureCoverage": {
-        "hasDisplayMath": true,
-        "hasInlineMath": true,
-        "hasCodeBlocks": true,
-        "hasTables": true,
-        "hasLinks": false,
-        "hasNestedLists": false,
-        "mathErrors": [],
-        "preservedCurrency": true,
-        "preservedCodeDollars": false,
-        "linkDestinations": [],
-        "tableCellCount": 12,
-        "codeBlockLanguages": [
-          "python"
-        ]
-      },
       "validation": {
         "pass": false,
         "assertions": [
@@ -1948,7 +1647,7 @@
           "hasLinks": false,
           "hasNestedLists": false,
           "mathErrors": [],
-          "preservedCurrency": true,
+          "preservedCurrency": false,
           "preservedCodeDollars": false,
           "linkDestinations": [],
           "tableCellCount": 0,
@@ -1958,5 +1657,5 @@
       }
     }
   ],
-  "freshRendered": "2026-11-07T17:22:53.424Z"
+  "freshRendered": "2026-11-07T17:49:31.655Z"
 }
