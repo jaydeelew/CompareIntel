@@ -110,6 +110,18 @@ Tests verify:
 - **Cumulative tracking**: Updates `config.cumulativeCostUsd` after each successful request
 - **Actual cost**: Uses `usage.cost` from OpenRouter when provided, falls back to estimated pricing
 
+### ⚠️ Budget Guard Limitations
+
+**NOT a hard billing ceiling** - this is a best-effort guard based on estimates:
+- Actual cost may exceed estimate if model returns more tokens than requested
+- Can overspend by ~1 request worth (typically $0.05-$0.50) due to estimation variance
+- No provider-side enforcement - OpenRouter will charge actual usage
+- Not safe for parallel execution (sequential only)
+
+**Recommendation**: Set OpenRouter account-level spending limits for true hard caps.
+
+See `BUDGET_GUARD_AUDIT.md` for detailed analysis.
+
 ## CI Integration
 
 All tests are fully offline (no API keys or real requests in CI):
