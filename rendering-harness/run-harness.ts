@@ -393,33 +393,9 @@ async function analyzeFeatureCoverage(page: Page): Promise<FeatureCoverageResult
     const nestedLists = container.querySelectorAll('ul ul ul, ol ol ol, ul ol ul, ol ul ol');
     result.hasNestedLists = nestedLists.length > 0;
 
-    // Check for preserved currency ($5, $10, etc.) - look for literal $ in text nodes outside math
-    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
-      acceptNode: (node) => {
-        // Skip if inside KaTeX or code blocks
-        let parent = node.parentElement;
-        while (parent && parent !== container) {
-          if (parent.classList.contains('katex') || 
-              parent.tagName === 'CODE' || 
-              parent.tagName === 'PRE') {
-            return NodeFilter.FILTER_REJECT;
-          }
-          parent = parent.parentElement;
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      }
-    });
-
-    let foundCurrency = false;
-    let node;
-    while ((node = walker.nextNode())) {
-      const text = node.textContent || '';
-      if (/\$\d+/.test(text)) {
-        foundCurrency = true;
-        break;
-      }
-    }
-    result.preservedCurrency = foundCurrency;
+    // Check for preserved currency ($5, $10, etc.) - simple text check
+    const allText = container.textContent || '';
+    result.preservedCurrency = /\$\d+/.test(allText);
 
     // Check for $ in code blocks (should be preserved as literal)
     for (const block of codeBlocks) {
