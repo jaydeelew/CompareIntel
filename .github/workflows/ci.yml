@@ -1021,6 +1021,10 @@ jobs:
         working-directory: rendering-harness
         run: npx playwright install chromium --with-deps
 
+      - name: TypeScript check (harness core)
+        working-directory: rendering-harness
+        run: npx tsc --project tsconfig.check.json --noEmit
+
       - name: Run offline fixture tests
         working-directory: rendering-harness
         run: npm test

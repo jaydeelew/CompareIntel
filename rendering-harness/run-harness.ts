@@ -984,10 +984,26 @@ async function main() {
     modelEstimates.push({ model, cost: modelCost, hasPricing: !!modelPricing });
   }
   
-  console.log(`\nModels without pricing info: ${modelEstimates.filter(e => !e.hasPricing).length}`);
-  console.log(`Estimated cost per model (avg): $${(totalEstimatedCost / selectedModels.length).toFixed(4)}`);
-  console.log(`Total estimated cost: $${totalEstimatedCost.toFixed(4)}`);
-  console.log(`Cost cap: $${maxUsd.toFixed(2)}\n`);
+  const unpricedModels = modelEstimates.filter(e => !e.hasPricing);
+  const pricedModels = modelEstimates.filter(e => e.hasPricing);
+  
+  console.log(`\n=== Pricing Summary ===`);
+  console.log(`Models with pricing: ${pricedModels.length}/${selectedModels.length}`);
+  console.log(`Models WITHOUT pricing: ${unpricedModels.length}/${selectedModels.length}`);
+  
+  if (unpricedModels.length > 0) {
+    console.log(`\n⚠️  UNKNOWN PRICING (will be REFUSED):`);
+    unpricedModels.forEach(e => console.log(`   - ${e.model.id}`));
+  }
+  
+  if (pricedModels.length > 0) {
+    console.log(`\nEstimated cost (${pricedModels.length} priced models only):`);
+    console.log(`  Per model (avg): $${(totalEstimatedCost / pricedModels.length).toFixed(4)}`);
+    console.log(`  Total: $${totalEstimatedCost.toFixed(4)}`);
+    console.log(`  Cost cap: $${maxUsd.toFixed(2)}\n`);
+  } else {
+    console.log(`\n⚠️  No models have pricing data - all requests will be refused.\n`);
+  }
   
   if (totalEstimatedCost > maxUsd) {
     console.error(`ERROR: Estimated cost ($${totalEstimatedCost.toFixed(4)}) exceeds cap ($${maxUsd.toFixed(2)})`);

@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": [
+    "run-harness.ts",
+    "dom-assertions.ts",
+    "budget-guard.test.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.d.ts",
+    "harness-app.tsx",
+    "vite.config.ts",
+    "*.test.ts"
+  ]
+}

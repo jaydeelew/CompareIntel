@@ -3,6 +3,8 @@
  * Checks if expected features are present based on prompt requirements
  */
 
+import { JSDOM } from 'jsdom';
+
 export interface AssertionResult {
   pass: boolean;
   expected: string;
@@ -47,9 +49,8 @@ export function validateRenderedHTML(
     safeLinksOnly?: boolean;
   }
 ): ValidationResult {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const container = doc.body;
+  const dom = new JSDOM(html);
+  const container = dom.window.document.body;
   
   const assertions: AssertionResult[] = [];
   
