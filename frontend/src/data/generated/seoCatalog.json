@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06",
+  "generatedAt": "2026-11-07",
   "sources": {
     "registry": "backend/data/models_registry.json",
     "snapshot": "frontend/src/data/seo/modelDataSnapshot.json",
