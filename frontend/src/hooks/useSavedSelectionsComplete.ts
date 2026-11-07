@@ -103,6 +103,7 @@ export interface UseSavedSelectionsCompleteReturn {
   renameSelection: (id: string, newName: string) => { success: boolean; error?: string }
   setDefaultSelection: (id: string | null) => void
   getDefaultSelection: () => SavedModelSelection | null
+  getDefaultSelectionId: () => string | null
 
   // UI operations (from useSavedSelectionManager)
   handleSaveSelection: (name: string) => { success: boolean; error?: string }
@@ -519,6 +520,10 @@ export function useSavedSelectionsComplete(
     ]
   )
 
+  const getDefaultSelectionId = useCallback((): string | null => {
+    return defaultSelectionId
+  }, [defaultSelectionId])
+
   return {
     // Data
     savedSelections,
@@ -533,6 +538,7 @@ export function useSavedSelectionsComplete(
     renameSelection,
     setDefaultSelection,
     getDefaultSelection,
+    getDefaultSelectionId,
 
     // UI operations
     handleSaveSelection,

@@ -37,6 +37,7 @@ export * from './useExtensionHandoff'
 export * from './useGeolocation'
 export * from './useComposerFloat'
 export * from './useHideHeroUtilityTiles'
+export * from './useDefaultTestComparison'
 
 // New hooks for better useEffect patterns (2025 best practices)
 export * from './useInputValidation'

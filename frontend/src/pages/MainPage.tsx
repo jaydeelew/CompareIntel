@@ -58,6 +58,7 @@ import {
   useTutorialComplete,
   useSavedSelectionsComplete,
   useMainPageEffects,
+  useDefaultTestComparison,
 } from '../hooks'
 import { ApiError, isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
@@ -591,11 +592,12 @@ export function MainPage() {
     deleteSelection: deleteModelSelection,
     setDefaultSelection,
     getDefaultSelection,
-    defaultSelectionId,
     canSaveMore: canSaveMoreSelections,
     maxSelections: maxSavedSelections,
     handleSaveSelection: handleSaveModelSelection,
     handleLoadSelection: handleLoadModelSelection,
+    saveSelection: rawSaveSelection,
+    getDefaultSelectionId,
   } = useSavedSelectionsComplete(
     {
       userId: user?.id,
@@ -634,8 +636,22 @@ export function MainPage() {
     }
   )
 
-  // Helper to get the default selection ID (used by ComparisonForm)
-  const getDefaultSelectionId = useCallback(() => defaultSelectionId, [defaultSelectionId])
+  // Default "Test Comparison" for anonymous visitors
+  useDefaultTestComparison({
+    userId: user?.id,
+    tier: user?.subscription_tier ?? 'unregistered',
+    selectedModels,
+    modelsByProvider,
+    modelsLoaded: !isLoadingModels && Object.keys(modelsByProvider).length > 0,
+    isAuthenticated,
+    savedSelections: savedModelSelections,
+    canSaveMore: canSaveMoreSelections,
+    maxSelections: maxSavedSelections,
+    saveSelection: rawSaveSelection,
+    handleLoadSelection: handleLoadModelSelection,
+    setDefaultSelection,
+    getDefaultSelectionId,
+  })
 
   const errorMessageRef = useRef<HTMLDivElement>(null)
 
