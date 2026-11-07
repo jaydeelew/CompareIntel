@@ -58,6 +58,8 @@ import {
   useTutorialComplete,
   useSavedSelectionsComplete,
   useMainPageEffects,
+  useDefaultTestComparison,
+  ANONYMOUS_STARTER_SYSTEM_KEY,
 } from '../hooks'
 import { ApiError, isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
@@ -313,7 +315,13 @@ export function MainPage() {
   ])
   const [, setUserMessageTimestamp] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { isTouchDevice, isWideLayout, isMobileLayout, isCapabilityIconRowLayout } = useResponsive()
+  const {
+    isTouchDevice,
+    isWideLayout,
+    isMobileLayout,
+    isCapabilityIconRowLayout,
+    useModalForTooltips,
+  } = useResponsive()
   const modelsSectionRef = useRef<HTMLDivElement>(null)
   const [isAnimatingButton, setIsAnimatingButton] = useState(false)
   const [isAnimatingTextarea, setIsAnimatingTextarea] = useState(false)
@@ -486,28 +494,6 @@ export function MainPage() {
     null
   )
 
-  const {
-    showDoneSelectingCard,
-    setShowDoneSelectingCard,
-    handleDoneSelecting,
-    handleDismissDoneSelecting,
-  } = useDoneSelectingCard(
-    {
-      selectedModelsCount: selectedModels.length,
-      selectedModelsSignature: selectedModels.slice().sort().join(','),
-      isModelsHidden,
-      isFollowUpMode,
-      modelsSectionRef,
-      tutorialIsActive: tutorialState.isActive,
-      suppressDoneSelectingCard: isCapabilityIconRowLayout && capabilityDemoComposerPause,
-    },
-    {
-      onCollapseAllDropdowns: collapseAllDropdowns,
-      onSetIsModelsHidden: setIsModelsHidden,
-      onFocusTextarea: () => textareaRef.current?.focus(),
-    }
-  )
-
   const clearHelpMeChooseScrollCategory = useCallback(() => {
     setHelpMeChooseScrollCategoryId(null)
   }, [])
@@ -591,11 +577,13 @@ export function MainPage() {
     deleteSelection: deleteModelSelection,
     setDefaultSelection,
     getDefaultSelection,
-    defaultSelectionId,
     canSaveMore: canSaveMoreSelections,
     maxSelections: maxSavedSelections,
     handleSaveSelection: handleSaveModelSelection,
     handleLoadSelection: handleLoadModelSelection,
+    saveSelection: rawSaveSelection,
+    patchSelection,
+    getDefaultSelectionId,
   } = useSavedSelectionsComplete(
     {
       userId: user?.id,
@@ -634,8 +622,53 @@ export function MainPage() {
     }
   )
 
-  // Helper to get the default selection ID (used by ComparisonForm)
-  const getDefaultSelectionId = useCallback(() => defaultSelectionId, [defaultSelectionId])
+  // Default "Starter Selection" for anonymous visitors
+  useDefaultTestComparison({
+    userId: user?.id,
+    tier: user?.subscription_tier ?? 'unregistered',
+    selectedModels,
+    modelsByProvider,
+    modelsLoaded: !isLoadingModels && Object.keys(modelsByProvider).length > 0,
+    isAuthenticated,
+    savedSelections: savedModelSelections,
+    canSaveMore: canSaveMoreSelections,
+    maxSelections: maxSavedSelections,
+    saveSelection: (name, modelIds, options) =>
+      rawSaveSelection(name, modelIds, undefined, undefined, options),
+    patchSelection,
+    handleLoadSelection: handleLoadModelSelection,
+    setDefaultSelection,
+    getDefaultSelectionId,
+  })
+
+  const isUntouchedStarterSelection = useMemo(() => {
+    const starter = savedModelSelections.find(sel => sel.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY)
+    if (!starter || selectedModels.length !== starter.modelIds.length) return false
+    return starter.modelIds.every(id => selectedModels.includes(id))
+  }, [savedModelSelections, selectedModels])
+
+  const {
+    showDoneSelectingCard,
+    setShowDoneSelectingCard,
+    handleDoneSelecting,
+    handleDismissDoneSelecting,
+  } = useDoneSelectingCard(
+    {
+      selectedModelsCount: selectedModels.length,
+      selectedModelsSignature: selectedModels.slice().sort().join(','),
+      isModelsHidden,
+      isFollowUpMode,
+      modelsSectionRef,
+      tutorialIsActive: tutorialState.isActive,
+      suppressDoneSelectingCard:
+        (isCapabilityIconRowLayout && capabilityDemoComposerPause) || isUntouchedStarterSelection,
+    },
+    {
+      onCollapseAllDropdowns: collapseAllDropdowns,
+      onSetIsModelsHidden: setIsModelsHidden,
+      onFocusTextarea: () => textareaRef.current?.focus(),
+    }
+  )
 
   const errorMessageRef = useRef<HTMLDivElement>(null)
 
@@ -2625,9 +2658,11 @@ export function MainPage() {
             }}
             aria-label="Learn about credits"
           >
-            <span className="credits-info-tooltip" role="tooltip">
-              {CREDITS_MESSAGE}
-            </span>
+            {!useModalForTooltips && (
+              <span className="credits-info-tooltip" role="tooltip">
+                {CREDITS_MESSAGE}
+              </span>
+            )}
             <svg
               className="credits-info-icon"
               width="12"

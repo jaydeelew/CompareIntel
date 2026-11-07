@@ -108,7 +108,7 @@ async function setTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
   }
 
   // Set theme
-  await page.evaluate((targetTheme) => {
+  await page.evaluate(targetTheme => {
     document.documentElement.setAttribute('data-theme', targetTheme)
     localStorage.setItem('theme', targetTheme)
   }, theme)
@@ -157,7 +157,7 @@ async function gotoStable(page: Page, path: string): Promise<void> {
       body: JSON.stringify({ anonymous_mock_mode_enabled: false, is_development: false }),
     })
   })
-  
+
   // Mock auth/me to return unauthenticated state immediately
   await page.route('**/api/auth/me', async route => {
     await route.fulfill({
@@ -166,13 +166,22 @@ async function gotoStable(page: Page, path: string): Promise<void> {
       body: JSON.stringify({ detail: 'Not authenticated' }),
     })
   })
-  
+
   await page.goto(path, { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('load')
-  
+
   // Wait for main content to be visible
   if (path === '/') {
     await page.locator('.hero-section').waitFor({ state: 'visible', timeout: 10000 })
+    // Anonymous Starter Selection preselects two models (and their hero icons).
+    // Wait so contrast/height samples the default state rather than an empty flash.
+    await page
+      .waitForFunction(
+        () => document.querySelectorAll('input.model-checkbox:checked').length >= 2,
+        null,
+        { timeout: 15000 }
+      )
+      .catch(() => {})
   } else if (path === '/pricing') {
     await page.locator('.pricing-page').waitFor({ state: 'visible', timeout: 10000 })
   }
@@ -196,7 +205,9 @@ test.describe('Layout Regression Tests', () => {
 
     for (const { name: vpName, size: viewport } of viewports) {
       for (const theme of themes) {
-        test(`should maintain hero section height at ${vpName} in ${theme} mode`, async ({ page }, testInfo) => {
+        test(`should maintain hero section height at ${vpName} in ${theme} mode`, async ({
+          page,
+        }, testInfo) => {
           test.skip(
             baselines.hero.chromiumOnly.includes(vpName) && testInfo.project.name !== 'chromium',
             `${vpName} hero height is content-driven and differs per engine; asserted on desktop Chromium only`
@@ -243,13 +254,13 @@ test.describe('Layout Regression Tests', () => {
           expect(
             actualHeight,
             `Hero section height at ${vpName} (${theme}) should be ${baselineHeight}px ±${HEIGHT_TOLERANCE}px. ` +
-            `Actual: ${actualHeight}px. If this is intentional, update the baseline in layout-regression-baselines.json.`
+              `Actual: ${actualHeight}px. If this is intentional, update the baseline in layout-regression-baselines.json.`
           ).toBeGreaterThanOrEqual(baselineHeight - HEIGHT_TOLERANCE)
 
           expect(
             actualHeight,
             `Hero section height at ${vpName} (${theme}) should be ${baselineHeight}px ±${HEIGHT_TOLERANCE}px. ` +
-            `Actual: ${actualHeight}px. If this is intentional, update the baseline in layout-regression-baselines.json.`
+              `Actual: ${actualHeight}px. If this is intentional, update the baseline in layout-regression-baselines.json.`
           ).toBeLessThanOrEqual(baselineHeight + HEIGHT_TOLERANCE)
         })
       }
@@ -257,7 +268,9 @@ test.describe('Layout Regression Tests', () => {
 
     for (const { name: vpName, size: viewport } of viewports) {
       for (const theme of themes) {
-        test(`should center pricing line between credits and hero bottom at ${vpName} in ${theme} mode`, async ({ page }) => {
+        test(`should center pricing line between credits and hero bottom at ${vpName} in ${theme} mode`, async ({
+          page,
+        }) => {
           // Set viewport
           await page.setViewportSize(viewport)
           await gotoStable(page, '/')
@@ -326,7 +339,9 @@ test.describe('Layout Regression Tests', () => {
           }
         })
 
-        test(`pricing line should add zero height to the hero at ${vpName} in ${theme} mode`, async ({ page }) => {
+        test(`pricing line should add zero height to the hero at ${vpName} in ${theme} mode`, async ({
+          page,
+        }) => {
           await page.setViewportSize(viewport)
           await gotoStable(page, '/')
           await setTheme(page, theme)
@@ -351,11 +366,13 @@ test.describe('Layout Regression Tests', () => {
           expect(
             withLine - withoutLine,
             `Pricing line must not change hero height at ${vpName} (${theme}): ` +
-            `${withLine}px with the line vs ${withoutLine}px without it`
+              `${withLine}px with the line vs ${withoutLine}px without it`
           ).toBe(0)
         })
 
-        test(`pricing line text and link should be readable at ${vpName} in ${theme} mode`, async ({ page }) => {
+        test(`pricing line text and link should be readable at ${vpName} in ${theme} mode`, async ({
+          page,
+        }) => {
           await page.setViewportSize(viewport)
           await gotoStable(page, '/')
           await setTheme(page, theme)
@@ -371,7 +388,12 @@ test.describe('Layout Regression Tests', () => {
               text: getComputedStyle(line).color,
               link: getComputedStyle(link).color,
               linkDecoration: getComputedStyle(link).textDecorationLine,
-              rect: { x: rect.x, y: rect.y + window.scrollY, width: rect.width, height: rect.height },
+              rect: {
+                x: rect.x,
+                y: rect.y + window.scrollY,
+                width: rect.width,
+                height: rect.height,
+              },
             }
           })
 
@@ -408,7 +430,8 @@ test.describe('Layout Regression Tests', () => {
             }
             let best = { l: -1, rgb: [0, 0, 0] }
             for (let i = 0; i < data.length; i += 4) {
-              const l = 0.2126 * lin(data[i]) + 0.7152 * lin(data[i + 1]) + 0.0722 * lin(data[i + 2])
+              const l =
+                0.2126 * lin(data[i]) + 0.7152 * lin(data[i + 1]) + 0.0722 * lin(data[i + 2])
               if (l > best.l) best = { l, rgb: [data[i], data[i + 1], data[i + 2]] }
             }
             return best.rgb
@@ -441,10 +464,14 @@ test.describe('Layout Regression Tests', () => {
             contrast(styles.link),
             `"See plans" link (${styles.link}) on lightest backdrop rgb(${lightestBackdrop}) at ${vpName} (${theme})`
           ).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST)
-          expect(styles.linkDecoration, '"See plans" link should be underlined').toContain('underline')
+          expect(styles.linkDecoration, '"See plans" link should be underlined').toContain(
+            'underline'
+          )
         })
 
-        test(`should keep hero text elements within bounds at ${vpName} in ${theme} mode`, async ({ page }) => {
+        test(`should keep hero text elements within bounds at ${vpName} in ${theme} mode`, async ({
+          page,
+        }) => {
           // Set viewport
           await page.setViewportSize(viewport)
           await gotoStable(page, '/')
@@ -497,12 +524,12 @@ test.describe('Layout Regression Tests', () => {
           // (ensure they're not overlapping in a broken way)
           const primarySubtitle = page.locator('.hero-subtitle--primary')
           const primaryVisible = await primarySubtitle.isVisible().catch(() => false)
-          
+
           if (primaryVisible) {
             const primaryBox = await primarySubtitle.boundingBox()
             const heroTitle = page.locator('.hero-title')
             const titleBox = await heroTitle.boundingBox()
-            
+
             if (primaryBox && titleBox) {
               // Primary subtitle should be below the title
               expect(
@@ -515,7 +542,9 @@ test.describe('Layout Regression Tests', () => {
       }
     }
 
-    test('should not clip or overflow hero text horizontally at mobile widths', async ({ page }) => {
+    test('should not clip or overflow hero text horizontally at mobile widths', async ({
+      page,
+    }) => {
       // Test at narrowest mobile width
       await page.setViewportSize({ width: 375, height: 667 })
       await gotoStable(page, '/')
@@ -549,7 +578,7 @@ test.describe('Layout Regression Tests', () => {
       ).toBeLessThanOrEqual(heroBox!.width + 2) // +2px for subpixel rounding
 
       // Check for CSS overflow: hidden or clip on text elements
-      const titleOverflow = await heroTitle.evaluate((el) => {
+      const titleOverflow = await heroTitle.evaluate(el => {
         const styles = window.getComputedStyle(el)
         return styles.overflow || styles.overflowX
       })
@@ -564,7 +593,9 @@ test.describe('Layout Regression Tests', () => {
     const themes: Array<'light' | 'dark'> = ['light', 'dark']
 
     for (const theme of themes) {
-      test(`should have visible, non-overflowing Subscribe buttons in ${theme} mode`, async ({ page }) => {
+      test(`should have visible, non-overflowing Subscribe buttons in ${theme} mode`, async ({
+        page,
+      }) => {
         await gotoStable(page, '/pricing')
         await setTheme(page, theme)
 
@@ -576,7 +607,7 @@ test.describe('Layout Regression Tests', () => {
         // Check each Subscribe button
         for (let i = 0; i < count; i++) {
           const button = subscribeButtons.nth(i)
-          
+
           // Button should be visible
           await expect(button).toBeVisible()
 
@@ -585,7 +616,9 @@ test.describe('Layout Regression Tests', () => {
           expect(buttonBox, `Subscribe button ${i} should have a bounding box`).not.toBeNull()
 
           // Find the closest pricing tier card container
-          const tierCard = button.locator('xpath=ancestor::div[contains(@class, "pricing-tier")][1]')
+          const tierCard = button.locator(
+            'xpath=ancestor::div[contains(@class, "pricing-tier")][1]'
+          )
           const tierBox = await tierCard.boundingBox()
           expect(tierBox, `Tier card ${i} should have a bounding box`).not.toBeNull()
 
@@ -605,39 +638,44 @@ test.describe('Layout Regression Tests', () => {
         }
       })
 
-      test(`should have readable contrast on Subscribe buttons in ${theme} mode with axe`, async ({ page }) => {
+      test(`should have readable contrast on Subscribe buttons in ${theme} mode with axe`, async ({
+        page,
+      }) => {
         await gotoStable(page, '/pricing')
         await setTheme(page, theme)
 
         // Import axe for contrast checking (if axe is available in this project)
         // Check if @axe-core/playwright is installed
-          try {
-            const { default: AxeBuilder } = await import('@axe-core/playwright')
+        try {
+          const { default: AxeBuilder } = await import('@axe-core/playwright')
 
-            // Run axe only on Subscribe buttons
-            const results = await new AxeBuilder({ page })
-              .include('.pricing-tier-button-paid')
-              .withTags(['wcag2aa'])
-              .disableRules([
-                'region', 'landmark-one-main', 'page-has-heading-one',
-                'bypass', 'document-title', 'html-has-lang', 'landmark-unique'
-              ])
-              .analyze()
+          // Run axe only on Subscribe buttons
+          const results = await new AxeBuilder({ page })
+            .include('.pricing-tier-button-paid')
+            .withTags(['wcag2aa'])
+            .disableRules([
+              'region',
+              'landmark-one-main',
+              'page-has-heading-one',
+              'bypass',
+              'document-title',
+              'html-has-lang',
+              'landmark-unique',
+            ])
+            .analyze()
 
-            // Check specifically for color-contrast violations on buttons
-            const contrastViolations = results.violations.filter(
-              v => v.id === 'color-contrast'
-            )
+          // Check specifically for color-contrast violations on buttons
+          const contrastViolations = results.violations.filter(v => v.id === 'color-contrast')
 
-            expect(
-              contrastViolations.length,
-              `Subscribe buttons should have sufficient contrast in ${theme} mode. ` +
+          expect(
+            contrastViolations.length,
+            `Subscribe buttons should have sufficient contrast in ${theme} mode. ` +
               `Found ${contrastViolations.length} contrast violation(s).`
-            ).toBe(0)
-          } catch {
-            // If axe is not available or import fails, skip this check
-            test.skip()
-          }
+          ).toBe(0)
+        } catch {
+          // If axe is not available or import fails, skip this check
+          test.skip()
+        }
       })
     }
   })
@@ -656,7 +694,7 @@ test.describe('Layout Regression Tests', () => {
       expect(
         scrollWidth,
         `Homepage should not have horizontal scroll at 375px. ` +
-        `scrollWidth: ${scrollWidth}px, clientWidth: ${clientWidth}px`
+          `scrollWidth: ${scrollWidth}px, clientWidth: ${clientWidth}px`
       ).toBeLessThanOrEqual(clientWidth + 1) // +1px for subpixel rounding
     })
 
@@ -673,7 +711,7 @@ test.describe('Layout Regression Tests', () => {
       expect(
         scrollWidth,
         `/pricing should not have horizontal scroll at 375px. ` +
-        `scrollWidth: ${scrollWidth}px, clientWidth: ${clientWidth}px`
+          `scrollWidth: ${scrollWidth}px, clientWidth: ${clientWidth}px`
       ).toBeLessThanOrEqual(clientWidth + 1) // +1px for subpixel rounding
     })
   })

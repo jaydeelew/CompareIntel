@@ -39,14 +39,14 @@ export function CreditsFractionInfoTrigger({
   tooltipPlacement = 'above',
   className = '',
 }: CreditsFractionInfoTriggerProps) {
-  const { isMobileLayout } = useResponsive()
+  const { useModalForTooltips } = useResponsive()
   const [fractionInfoOpen, setFractionInfoOpen] = useState(false)
 
   useEffect(() => {
-    if (!isMobileLayout) setFractionInfoOpen(false)
-  }, [isMobileLayout])
+    if (!useModalForTooltips) setFractionInfoOpen(false)
+  }, [useModalForTooltips])
 
-  if (isMobileLayout) {
+  if (useModalForTooltips) {
     return (
       <>
         <button

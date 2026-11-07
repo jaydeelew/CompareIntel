@@ -309,9 +309,11 @@ export function ModelsSectionHeader({
                         <path d="M12 16v-4" />
                         <path d="M12 8h.01" />
                       </svg>
-                      <span className="advanced-settings-tooltip" role="tooltip">
-                        {getTierListContent()}
-                      </span>
+                      {!useModalForTooltips && (
+                        <span className="advanced-settings-tooltip" role="tooltip">
+                          {getTierListContent()}
+                        </span>
+                      )}
                     </button>
                   )}
                 </>

@@ -233,7 +233,7 @@ export function AdvancedSettings({
       ? (v: boolean) => onExpandChange(v)
       : (v: boolean) => setInternalExpanded(v)
   const [infoKey, setInfoKey] = useState<string | null>(null)
-  const { isMobileLayout } = useResponsive()
+  const { isMobileLayout, useModalForTooltips } = useResponsive()
 
   const clampedTemp = Math.max(0, Math.min(2, temperature))
   const clampedTopP = Math.max(0, Math.min(1, topP))
@@ -323,7 +323,7 @@ export function AdvancedSettings({
 
   const renderInfoTrigger = (paramKey: string) => {
     const openModal = () => setInfoKey(paramKey)
-    if (isMobileLayout) {
+    if (useModalForTooltips) {
       return (
         <button
           type="button"
