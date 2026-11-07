@@ -36,6 +36,7 @@ import {
 import { FormHeader } from './FormHeader'
 import { HistoryDropdown } from './HistoryDropdown'
 import { SavedSelectionsDropdown } from './SavedSelectionsDropdown'
+import { SelectedModelIcons } from './SelectedModelIcons'
 import { TokenUsageDisplay, type TokenUsageInfo } from './TokenUsageDisplay'
 import { getTooltipModalSuppressed } from './tooltipModalStorage'
 
@@ -1224,7 +1225,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const usageAndContextBelowComposer = (
       <>
-        {!isFollowUpMode && <div className="usage-preview-container">{renderUsagePreview()}</div>}
+        {!isFollowUpMode && (
+          <div className="usage-preview-container">
+            {renderUsagePreview()}
+            <SelectedModelIcons
+              selectedModels={selectedModels}
+              modelsByProvider={modelsByProvider}
+            />
+          </div>
+        )}
         {isFollowUpMode && conversations.length > 0 && (
           <ContextWarning tokenUsageInfo={tokenUsageInfo} renderUsagePreview={renderUsagePreview} />
         )}

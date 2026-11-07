@@ -1,0 +1,178 @@
+/**
+ * Selected-model provider icons — overlay in the existing credits→pricing gap.
+ *
+ * Must not add in-flow height: the row is absolutely positioned at the bottom
+ * of `.usage-preview-container` and paints into that container’s margin-bottom.
+ * Pricing-line centering (useCenteredPricingLine) stays relative to credits.
+ */
+
+.selected-model-icons,
+.usage-preview-container > .selected-model-icons {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  /* Absolutely positioned: does not grow .usage-preview-container or the hero.
+     Keep a real box so the icons remain visible to AT/hit-testing. */
+  height: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 6;
+  font-size: 0;
+  line-height: 0;
+  color: inherit;
+  max-width: 100%;
+}
+
+.selected-model-icons-track {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.125rem;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  pointer-events: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+  padding: 0 0.25rem;
+  margin: 0;
+  list-style: none;
+}
+
+.selected-model-icons-track > li {
+  display: flex;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.selected-model-icons-track::-webkit-scrollbar {
+  display: none;
+}
+
+.selected-model-icons .tooltip {
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.selected-model-icon-button {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  /* Pull the visual disc slightly into the credits row so the 44px hit area
+     occupies the existing 2.5rem gap instead of extending a new block. */
+  margin-top: -0.35rem;
+}
+
+.selected-model-icon-button:focus,
+.selected-model-icon-button:focus-visible {
+  outline: none;
+}
+
+.selected-model-icon-inner {
+  width: 26px;
+  height: 26px;
+  transform: none;
+}
+
+.selected-model-icon-button .provider-carousel-svg {
+  width: 16px;
+  height: 16px;
+}
+
+.selected-model-icon-button:hover .selected-model-icon-inner,
+.selected-model-icon-button:focus-visible .selected-model-icon-inner {
+  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(6, 182, 212, 0.5);
+}
+
+.selected-model-icon-button:focus-visible .selected-model-icon-inner {
+  box-shadow:
+    0 0 0 2px rgba(6, 182, 212, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='light'] .hero-section .selected-model-icon-inner {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.88) 0%, rgba(240, 245, 255, 0.78) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+[data-theme='light'] .hero-section .selected-model-icon-button:hover .selected-model-icon-inner,
+[data-theme='light']
+  .hero-section
+  .selected-model-icon-button:focus-visible
+  .selected-model-icon-inner {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97) 0%, rgba(245, 248, 255, 0.92) 100%);
+}
+
+/* After-results composer is not height-locked like the hero; hide the overlay
+   so it cannot sit on top of the footer or credits line there. */
+.composer-below-results-stack .selected-model-icons,
+.after-results-composer-slot .selected-model-icons {
+  display: none;
+}
+
+/* Mobile: pin the model-name dialog to the viewport bottom (existing info-modal
+   sheet pattern). Tablet/desktop-touch keep the centered card. */
+@media (max-width: 768px) {
+  .selected-model-name-sheet-overlay {
+    align-items: flex-end;
+    padding: 0.5rem 0.5rem 0;
+    padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+  }
+
+  .selected-model-name-sheet-overlay .disabled-button-info-modal {
+    max-width: 100%;
+    border-radius: var(--radius-2xl, 1rem) var(--radius-2xl, 1rem) 0 0;
+  }
+
+  .selected-model-name-sheet-overlay .disabled-button-info-footer {
+    border-radius: 0;
+    padding-bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 480px) {
+  .selected-model-icon-button {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin-top: -0.25rem;
+  }
+
+  .selected-model-icon-inner {
+    width: 22px;
+    height: 22px;
+  }
+
+  .selected-model-icon-button .provider-carousel-svg {
+    width: 14px;
+    height: 14px;
+  }
+}
