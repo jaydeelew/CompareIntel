@@ -17,8 +17,11 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {
+      "@/*": ["./stub/*"]
+    }
   },
   "include": ["*.ts", "*.tsx"],
-  "exclude": ["node_modules", "**/*.d.ts", "../frontend/**"]
+  "exclude": ["node_modules", "**/*.d.ts", "../frontend"]
 }
