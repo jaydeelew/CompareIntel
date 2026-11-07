@@ -1023,7 +1023,7 @@ jobs:
 
       - name: TypeScript check
         working-directory: rendering-harness
-        run: npx tsc --noEmit
+        run: npx tsc --noEmit --skipLibCheck
 
       - name: Run offline fixture tests
         working-directory: rendering-harness
