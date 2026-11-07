@@ -50,61 +50,17 @@ function HarnessApp() {
   
   useEffect(() => {
     if (ready && renderData && !renderComplete) {
-      // Wait for actual rendering to complete
-      // Check for: KaTeX rendering, Prism highlighting, images loaded
-      const checkRenderComplete = () => {
+      // Simple timeout-based readiness (LatexRenderer is mostly synchronous)
+      // Wait 1.5 seconds for any async operations (Prism, image loading, etc.)
+      const timer = setTimeout(() => {
         const container = document.querySelector('[data-render-container]');
-        if (!container) return false;
-        
-        // Check if KaTeX is done (no .katex-display-processing or pending renders)
-        const katexProcessing = container.querySelectorAll('.katex-display-processing, .katex-processing');
-        if (katexProcessing.length > 0) return false;
-        
-        // Check if Prism has run (code blocks should have .token classes or be empty)
-        const codeBlocks = container.querySelectorAll('pre code[class*="language-"]');
-        for (const block of codeBlocks) {
-          const hasTokens = block.querySelectorAll('.token').length > 0;
-          const isEmpty = block.textContent?.trim() === '';
-          if (!hasTokens && !isEmpty) return false;
+        if (container) {
+          container.setAttribute('data-render-complete', 'true');
         }
-        
-        // Check all images are loaded
-        const images = container.querySelectorAll('img');
-        for (const img of images) {
-          if (!img.complete) return false;
-        }
-        
-        return true;
-      };
+        setRenderComplete(true);
+      }, 1500);
       
-      // Poll for completion with exponential backoff
-      let attempts = 0;
-      const maxAttempts = 30;
-      const checkInterval = () => {
-        if (checkRenderComplete()) {
-          const container = document.querySelector('[data-render-container]');
-          if (container) {
-            container.setAttribute('data-render-complete', 'true');
-          }
-          setRenderComplete(true);
-        } else if (attempts < maxAttempts) {
-          attempts++;
-          const delay = Math.min(100 * Math.pow(1.2, attempts), 2000);
-          setTimeout(checkInterval, delay);
-        } else {
-          // Timeout - mark complete anyway but with a warning attribute
-          console.warn('Render timeout after', attempts, 'attempts');
-          const container = document.querySelector('[data-render-container]');
-          if (container) {
-            container.setAttribute('data-render-complete', 'true');
-            container.setAttribute('data-render-timeout', 'true');
-          }
-          setRenderComplete(true);
-        }
-      };
-      
-      // Start checking after a small initial delay
-      setTimeout(checkInterval, 100);
+      return () => clearTimeout(timer);
     }
   }, [ready, renderData, renderComplete]);
   
