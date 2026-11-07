@@ -23,6 +23,8 @@ export interface SavedModelSelection {
   modelIds: string[]
   createdAt: string
   updatedAt: string
+  /** Stable identity for auto-generated defaults; never match by display name alone. */
+  systemKey?: string
 }
 
 export interface UseSavedModelSelectionsReturn {

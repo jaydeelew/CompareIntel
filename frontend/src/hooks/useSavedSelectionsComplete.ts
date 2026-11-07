@@ -36,6 +36,8 @@ export interface SavedModelSelection {
   modelIds: string[]
   createdAt: string
   updatedAt: string
+  /** Stable identity for auto-generated defaults; never match by display name alone. */
+  systemKey?: string
   /** Text Models mode Advanced settings captured when the selection was saved */
   textComposerAdvanced?: TextComposerAdvancedSettings
   /** Image Models mode Advanced settings captured when the selection was saved */
@@ -96,13 +98,19 @@ export interface UseSavedSelectionsCompleteReturn {
     name: string,
     modelIds: string[],
     textComposerAdvanced?: TextComposerAdvancedSettings,
-    imageComposerAdvanced?: ImageComposerAdvancedSettings
+    imageComposerAdvanced?: ImageComposerAdvancedSettings,
+    options?: { systemKey?: string }
   ) => { success: boolean; error?: string }
   loadSelectionRaw: (id: string) => string[] | null
   deleteSelection: (id: string) => void
   renameSelection: (id: string, newName: string) => { success: boolean; error?: string }
+  patchSelection: (
+    id: string,
+    patch: { name?: string; modelIds?: string[]; systemKey?: string }
+  ) => { success: boolean; error?: string }
   setDefaultSelection: (id: string | null) => void
   getDefaultSelection: () => SavedModelSelection | null
+  getDefaultSelectionId: () => string | null
 
   // UI operations (from useSavedSelectionManager)
   handleSaveSelection: (name: string) => { success: boolean; error?: string }
@@ -226,13 +234,18 @@ export function useSavedSelectionsComplete(
     setImageSize,
   } = callbacks
 
-  // State
-  const [savedSelections, setSavedSelections] = useState<SavedModelSelection[]>([])
-  const [defaultSelectionId, setDefaultSelectionIdState] = useState<string | null>(null)
-
   const storageKey = useMemo(() => getStorageKey(userId), [userId])
   const defaultSelectionKey = useMemo(() => getDefaultSelectionKey(userId), [userId])
   const maxSelections = useMemo(() => getSavedModelSelectionLimit(tier), [tier])
+
+  // Hydrate synchronously so the anonymous starter hook cannot create a duplicate
+  // while localStorage is still pending a follow-up effect.
+  const [savedSelections, setSavedSelections] = useState<SavedModelSelection[]>(() =>
+    loadFromStorage(getStorageKey(userId))
+  )
+  const [defaultSelectionId, setDefaultSelectionIdState] = useState<string | null>(() =>
+    loadDefaultSelectionId(getDefaultSelectionKey(userId))
+  )
   const canSaveMore = savedSelections.length < maxSelections
 
   useEffect(() => {
@@ -247,7 +260,8 @@ export function useSavedSelectionsComplete(
       name: string,
       modelIds: string[],
       textComposerAdvanced?: TextComposerAdvancedSettings,
-      imageComposerAdvanced?: ImageComposerAdvancedSettings
+      imageComposerAdvanced?: ImageComposerAdvancedSettings,
+      options?: { systemKey?: string }
     ): { success: boolean; error?: string } => {
       const trimmedName = name.trim()
 
@@ -283,6 +297,7 @@ export function useSavedSelectionsComplete(
         updatedAt: now,
         ...(textComposerAdvanced != null ? { textComposerAdvanced } : {}),
         ...(imageComposerAdvanced != null ? { imageComposerAdvanced } : {}),
+        ...(options?.systemKey ? { systemKey: options.systemKey } : {}),
       }
 
       const updated = [...savedSelections, newSelection]
@@ -344,6 +359,53 @@ export function useSavedSelectionsComplete(
       setSavedSelections(updated)
       saveToStorage(storageKey, updated)
 
+      return { success: true }
+    },
+    [savedSelections, storageKey]
+  )
+
+  const patchSelection = useCallback(
+    (
+      id: string,
+      patch: { name?: string; modelIds?: string[]; systemKey?: string }
+    ): { success: boolean; error?: string } => {
+      const current = savedSelections.find(s => s.id === id)
+      if (!current) {
+        return { success: false, error: 'Selection not found' }
+      }
+
+      let nextName = current.name
+      if (patch.name != null) {
+        const trimmedName = patch.name.trim()
+        if (!trimmedName) {
+          return { success: false, error: 'Please enter a name' }
+        }
+        if (trimmedName.length > 50) {
+          return { success: false, error: 'Name must be 50 characters or less' }
+        }
+        if (
+          savedSelections.some(
+            s => s.id !== id && s.name.toLowerCase() === trimmedName.toLowerCase()
+          )
+        ) {
+          return { success: false, error: 'A selection with this name already exists' }
+        }
+        nextName = trimmedName
+      }
+
+      const updated = savedSelections.map(s => {
+        if (s.id !== id) return s
+        return {
+          ...s,
+          name: nextName,
+          ...(patch.modelIds ? { modelIds: [...patch.modelIds] } : {}),
+          ...(patch.systemKey ? { systemKey: patch.systemKey } : {}),
+          updatedAt: new Date().toISOString(),
+        }
+      })
+
+      setSavedSelections(updated)
+      saveToStorage(storageKey, updated)
       return { success: true }
     },
     [savedSelections, storageKey]
@@ -519,6 +581,10 @@ export function useSavedSelectionsComplete(
     ]
   )
 
+  const getDefaultSelectionId = useCallback((): string | null => {
+    return defaultSelectionId
+  }, [defaultSelectionId])
+
   return {
     // Data
     savedSelections,
@@ -531,8 +597,10 @@ export function useSavedSelectionsComplete(
     loadSelectionRaw,
     deleteSelection,
     renameSelection,
+    patchSelection,
     setDefaultSelection,
     getDefaultSelection,
+    getDefaultSelectionId,
 
     // UI operations
     handleSaveSelection,

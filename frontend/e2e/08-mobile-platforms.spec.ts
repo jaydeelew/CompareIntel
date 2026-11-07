@@ -1,12 +1,42 @@
 import type { Locator, Page } from '@playwright/test'
 
 import { test, expect, dismissTutorialOverlay, ensureUnfoldedNavbar } from './fixtures'
-import { mockModelsApi, mockComparisonStream } from './helpers/mockModels'
+import { mockComparisonStream, mockModelsApi } from './helpers/mockModels'
+import { toggleModelCheckbox } from './helpers/modelCheckbox'
 
 // Helper to wait safely (handles page closure during async ops)
 async function safeWait(page: Page, ms: number) {
   if (page.isClosed()) return
   await page.waitForTimeout(ms).catch(() => {})
+}
+
+async function expandFirstProvider(page: Page, browserName?: string) {
+  const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
+  if ((await providerHeaders.count()) === 0) return
+  const firstProvider = providerHeaders.first()
+  const isVisible = await firstProvider.isVisible({ timeout: 20000 }).catch(() => false)
+  if (!isVisible) return
+  const isExpanded = await firstProvider.getAttribute('aria-expanded')
+  if (isExpanded !== 'true') {
+    await tapOrClick(firstProvider, page, browserName)
+    await safeWait(page, 500)
+  }
+}
+
+/** After models load, anonymous visits apply Starter Selection (2 checked). Pin an unchecked box. */
+async function uncheckedModelCheckbox(page: Page): Promise<Locator> {
+  await expect(page.locator('input.model-checkbox').first()).toBeVisible({ timeout: 20000 })
+  await page.waitForFunction(
+    () => document.querySelectorAll('input.model-checkbox:checked').length >= 2,
+    null,
+    { timeout: 20000 }
+  )
+  const testId = await page.evaluate(() => {
+    const boxes = Array.from(document.querySelectorAll<HTMLInputElement>('input.model-checkbox'))
+    return boxes.find(el => !el.checked && !el.disabled)?.getAttribute('data-testid') ?? ''
+  })
+  expect(testId, 'expected an unchecked enabled model after Starter Selection init').toBeTruthy()
+  return page.locator(`[data-testid="${testId}"]`)
 }
 
 // Tap for mobile, click for desktop. WebKit needs extra time and force clicks sometimes
@@ -258,29 +288,15 @@ test.describe('Mobile Platform Tests', () => {
       const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      // Expand first provider dropdown if collapsed
-      const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
-      if ((await providerHeaders.count()) > 0) {
-        const firstProvider = providerHeaders.first()
-        await firstProvider.waitFor({ state: 'visible', timeout: 10000 })
-        const isExpanded = await firstProvider.getAttribute('aria-expanded')
-        if (isExpanded !== 'true') {
-          await tapOrClick(firstProvider, page, browserName)
+      await expandFirstProvider(page, browserName)
+      const targetCheckbox = await uncheckedModelCheckbox(page)
+      const projectName = test.info().project.name
+      await expect(async () => {
+        if (!(await targetCheckbox.isChecked())) {
+          await toggleModelCheckbox(targetCheckbox, projectName)
         }
-      }
-
-      // Find model checkboxes
-      const modelCheckboxes = page.locator(
-        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
-      )
-      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
-
-      // Tap/click first checkbox
-      const firstCheckbox = modelCheckboxes.first()
-      await tapOrClick(firstCheckbox, page, browserName)
-
-      // Verify it's checked
-      await expect(firstCheckbox).toBeChecked()
+        await expect(targetCheckbox).toBeChecked({ timeout: 2000 })
+      }).toPass({ timeout: 20000 })
     })
   })
 
@@ -725,52 +741,27 @@ test.describe('Mobile Platform Tests', () => {
       const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      // Expand provider dropdown
-      const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
-      const headerCount = await providerHeaders.count()
-      if (headerCount > 0) {
-        const firstProvider = providerHeaders.first()
-        // Wait for provider header to be visible before getting attribute
-        const isVisible = await firstProvider.isVisible({ timeout: 20000 }).catch(() => false)
-
-        if (!isVisible) {
-          // Provider header not visible, skip expansion
-          return
-        }
-
-        // Check if page is still valid
-        if (page.isClosed()) {
-          throw new Error('Page was closed while waiting for provider header')
-        }
-
-        const isExpanded = await firstProvider.getAttribute('aria-expanded').catch(() => null)
-        if (isExpanded !== 'true') {
-          // Check again before clicking
-          if (page.isClosed()) {
-            throw new Error('Page was closed before clicking provider header')
-          }
-          await tapOrClick(firstProvider, page, browserName)
-          await safeWait(page, 500)
-        }
+      await expandFirstProvider(page, browserName)
+      if (page.isClosed()) {
+        throw new Error('Page was closed while waiting for provider header')
       }
 
-      // Find checkboxes
-      const modelCheckboxes = page.locator(
-        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
-      )
-      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
+      const targetCheckbox = await uncheckedModelCheckbox(page)
+      const projectName = test.info().project.name
+      if (await targetCheckbox.isEnabled().catch(() => false)) {
+        await expect(async () => {
+          if (!(await targetCheckbox.isChecked())) {
+            await toggleModelCheckbox(targetCheckbox, projectName)
+          }
+          await expect(targetCheckbox).toBeChecked({ timeout: 2000 })
+        }).toPass({ timeout: 20000 })
 
-      // Select first checkbox
-      const firstCheckbox = modelCheckboxes.first()
-      if (await firstCheckbox.isEnabled().catch(() => false)) {
-        await tapOrClick(firstCheckbox, page, browserName)
-        await safeWait(page, 300)
-        await expect(firstCheckbox).toBeChecked()
-
-        // Deselect
-        await tapOrClick(firstCheckbox, page, browserName)
-        await safeWait(page, 300)
-        await expect(firstCheckbox).not.toBeChecked()
+        await expect(async () => {
+          if (await targetCheckbox.isChecked()) {
+            await targetCheckbox.click({ timeout: 10000 })
+          }
+          await expect(targetCheckbox).not.toBeChecked({ timeout: 2000 })
+        }).toPass({ timeout: 20000 })
       }
     })
   })

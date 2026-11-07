@@ -121,6 +121,30 @@ describe('useSavedSelectionsComplete', () => {
       expect(result.current.canSaveMore).toBe(true)
     })
 
+    it('should hydrate stored selections including systemKey on first render', () => {
+      localStorageMock.setItem(
+        'compareintel_saved_model_selections_user_1',
+        JSON.stringify([
+          {
+            id: 'stored-1',
+            name: 'Starter Selection',
+            modelIds: ['model-1', 'model-2'],
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
+            systemKey: 'anonymous-starter',
+          },
+        ])
+      )
+
+      const { result } = renderHook(() =>
+        useSavedSelectionsComplete(defaultConfig, defaultCallbacks)
+      )
+
+      expect(result.current.savedSelections).toHaveLength(1)
+      expect(result.current.savedSelections[0].systemKey).toBe('anonymous-starter')
+      expect(result.current.savedSelections[0].name).toBe('Starter Selection')
+    })
+
     it('should have correct max selections based on tier', () => {
       const { result } = renderHook(() =>
         useSavedSelectionsComplete(defaultConfig, defaultCallbacks)
@@ -145,6 +169,25 @@ describe('useSavedSelectionsComplete', () => {
       expect(result.current.savedSelections.length).toBe(1)
       expect(result.current.savedSelections[0].name).toBe('My Selection')
       expect(result.current.savedSelections[0].modelIds).toEqual(['model-1', 'model-2'])
+    })
+
+    it('should persist optional systemKey on save', () => {
+      const { result } = renderHook(() =>
+        useSavedSelectionsComplete(defaultConfig, defaultCallbacks)
+      )
+
+      act(() => {
+        const saveResult = result.current.saveSelection(
+          'Starter Selection',
+          ['model-1', 'model-2'],
+          undefined,
+          undefined,
+          { systemKey: 'anonymous-starter' }
+        )
+        expect(saveResult.success).toBe(true)
+      })
+
+      expect(result.current.savedSelections[0].systemKey).toBe('anonymous-starter')
     })
 
     it('should reject empty name', () => {
@@ -314,6 +357,67 @@ describe('useSavedSelectionsComplete', () => {
 
       expect(renameResult!.success).toBe(false)
       expect(renameResult!.error).toContain('already exists')
+    })
+  })
+
+  describe('patchSelection', () => {
+    it('should patch name, models, and systemKey in place', () => {
+      const { result } = renderHook(() =>
+        useSavedSelectionsComplete(defaultConfig, defaultCallbacks)
+      )
+
+      act(() => {
+        result.current.saveSelection('Test Comparison', ['model-1'])
+      })
+
+      const selectionId = result.current.savedSelections[0].id
+
+      act(() => {
+        const patchResult = result.current.patchSelection(selectionId, {
+          name: 'Starter Selection',
+          modelIds: ['model-1', 'model-2'],
+          systemKey: 'anonymous-starter',
+        })
+        expect(patchResult.success).toBe(true)
+      })
+
+      expect(result.current.savedSelections).toHaveLength(1)
+      expect(result.current.savedSelections[0]).toMatchObject({
+        id: selectionId,
+        name: 'Starter Selection',
+        modelIds: ['model-1', 'model-2'],
+        systemKey: 'anonymous-starter',
+      })
+    })
+
+    it('should reject patch rename when the name is already taken', () => {
+      const { result } = renderHook(() =>
+        useSavedSelectionsComplete(defaultConfig, defaultCallbacks)
+      )
+
+      act(() => {
+        result.current.saveSelection('Starter Selection', ['model-1'])
+      })
+      act(() => {
+        result.current.saveSelection('Test Comparison', ['model-2'])
+      })
+
+      const legacy = result.current.savedSelections.find(s => s.name === 'Test Comparison')
+      expect(legacy).toBeDefined()
+
+      let patchResult: { success: boolean; error?: string }
+      act(() => {
+        patchResult = result.current.patchSelection(legacy!.id, {
+          name: 'Starter Selection',
+          systemKey: 'anonymous-starter',
+        })
+      })
+
+      expect(patchResult!.success).toBe(false)
+      expect(patchResult!.error).toContain('already exists')
+      expect(result.current.savedSelections.find(s => s.id === legacy!.id)?.name).toBe(
+        'Test Comparison'
+      )
     })
   })
 
