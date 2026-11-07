@@ -122,7 +122,7 @@ npm test  # Runs Playwright fixture tests
 
 - 83 text models × 6 prompts = 498 requests
 - ~500 input tokens, 512/1024/2048 output tokens
-- Estimated total: $2.85 (512 out) / $5.29 (1024 out) / $10.15 (2048 out)
+- **Estimated total**: $3.43 (512 out) / $6.34 (1024 out) / $12.18 (2048 out)
 
 **Note**: Always run `--dry-run` first to get current estimates before spending.
 
