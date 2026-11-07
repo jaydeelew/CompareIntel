@@ -51,9 +51,12 @@ interface TestResult {
   promptText: string;
   response: string;
   usage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
     cost?: number; // Actual cost from OpenRouter usage.cost if available
   };
   actualCost: number;
@@ -344,7 +347,20 @@ async function analyzeFeatureCoverage(page: Page): Promise<FeatureCoverageResult
       throw new Error('Render container not found');
     }
 
-    const result = {
+    const result: {
+      hasDisplayMath: boolean;
+      hasInlineMath: boolean;
+      hasCodeBlocks: boolean;
+      hasTables: boolean;
+      hasLinks: boolean;
+      hasNestedLists: boolean;
+      mathErrors: string[];
+      preservedCurrency: boolean;
+      preservedCodeDollars: boolean;
+      linkDestinations: string[];
+      tableCellCount: number;
+      codeBlockLanguages: string[];
+    } = {
       hasDisplayMath: false,
       hasInlineMath: false,
       hasCodeBlocks: false,

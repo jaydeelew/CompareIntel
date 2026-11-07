@@ -51,9 +51,9 @@ test.describe('Harness Feature Coverage Detection', () => {
       const codeBlocks = container.querySelectorAll('pre code');
       return {
         hasCodeBlocks: codeBlocks.length > 0,
-        codeBlockLanguages: Array.from(codeBlocks).map((block: any) => {
-          const classes = Array.from(block.classList);
-          const langClass = classes.find((c: any) => c.startsWith('language-'));
+        codeBlockLanguages: Array.from(codeBlocks).map((block) => {
+          const classes = Array.from((block as HTMLElement).classList);
+          const langClass = classes.find((c) => c.startsWith('language-'));
           return langClass ? langClass.replace('language-', '') : 'plain';
         }),
       };
