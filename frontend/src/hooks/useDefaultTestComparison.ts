@@ -130,10 +130,7 @@ function getSelectableUnregisteredModels(modelsByProvider: ModelsByProvider): Se
 /**
  * Select best 2 models from priority list that are currently available
  */
-function selectBestTwoModels(
-  modelsByProvider: ModelsByProvider,
-  selectableModels: Set<string>
-): string[] {
+function selectBestTwoModels(selectableModels: Set<string>): string[] {
   const selected: string[] = []
 
   // Try priority list first
@@ -232,7 +229,7 @@ export function useDefaultTestComparison(
       return
     }
 
-    const bestTwoModels = selectBestTwoModels(modelsByProvider, selectableModels)
+    const bestTwoModels = selectBestTwoModels(selectableModels)
 
     if (existingTestComparison) {
       // Test Comparison exists - validate its models are still eligible
