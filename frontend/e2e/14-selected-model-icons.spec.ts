@@ -32,6 +32,12 @@ async function mockSignedOutHome(page: import('@playwright/test').Page) {
       body: JSON.stringify({ detail: 'Not authenticated' }),
     })
   })
+  // These tests measure icons from an explicit empty→selected path. Opt out of
+  // the anonymous Starter Selection so it cannot pre-check two models.
+  await page.addInitScript(() => {
+    localStorage.setItem('compareintel_starter_selection_opted_out', 'true')
+    localStorage.setItem('compareintel_test_comparison_opted_out', 'true')
+  })
 }
 
 async function waitForHero(page: import('@playwright/test').Page) {
@@ -161,6 +167,8 @@ test.describe('Hero selected-model icons', () => {
     await page.waitForLoadState('load')
     await waitForHero(page)
     await dismissTutorialOverlay(page)
+
+    await expect(page.getByTestId('selected-model-icons')).toHaveCount(0)
 
     const before = await measureHeroLayout(page)
     expect(before).not.toBeNull()

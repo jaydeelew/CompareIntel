@@ -59,6 +59,7 @@ import {
   useSavedSelectionsComplete,
   useMainPageEffects,
   useDefaultTestComparison,
+  ANONYMOUS_STARTER_SYSTEM_KEY,
 } from '../hooks'
 import { ApiError, isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
@@ -487,28 +488,6 @@ export function MainPage() {
     null
   )
 
-  const {
-    showDoneSelectingCard,
-    setShowDoneSelectingCard,
-    handleDoneSelecting,
-    handleDismissDoneSelecting,
-  } = useDoneSelectingCard(
-    {
-      selectedModelsCount: selectedModels.length,
-      selectedModelsSignature: selectedModels.slice().sort().join(','),
-      isModelsHidden,
-      isFollowUpMode,
-      modelsSectionRef,
-      tutorialIsActive: tutorialState.isActive,
-      suppressDoneSelectingCard: isCapabilityIconRowLayout && capabilityDemoComposerPause,
-    },
-    {
-      onCollapseAllDropdowns: collapseAllDropdowns,
-      onSetIsModelsHidden: setIsModelsHidden,
-      onFocusTextarea: () => textareaRef.current?.focus(),
-    }
-  )
-
   const clearHelpMeChooseScrollCategory = useCallback(() => {
     setHelpMeChooseScrollCategoryId(null)
   }, [])
@@ -655,6 +634,35 @@ export function MainPage() {
     setDefaultSelection,
     getDefaultSelectionId,
   })
+
+  const isUntouchedStarterSelection = useMemo(() => {
+    const starter = savedModelSelections.find(sel => sel.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY)
+    if (!starter || selectedModels.length !== starter.modelIds.length) return false
+    return starter.modelIds.every(id => selectedModels.includes(id))
+  }, [savedModelSelections, selectedModels])
+
+  const {
+    showDoneSelectingCard,
+    setShowDoneSelectingCard,
+    handleDoneSelecting,
+    handleDismissDoneSelecting,
+  } = useDoneSelectingCard(
+    {
+      selectedModelsCount: selectedModels.length,
+      selectedModelsSignature: selectedModels.slice().sort().join(','),
+      isModelsHidden,
+      isFollowUpMode,
+      modelsSectionRef,
+      tutorialIsActive: tutorialState.isActive,
+      suppressDoneSelectingCard:
+        (isCapabilityIconRowLayout && capabilityDemoComposerPause) || isUntouchedStarterSelection,
+    },
+    {
+      onCollapseAllDropdowns: collapseAllDropdowns,
+      onSetIsModelsHidden: setIsModelsHidden,
+      onFocusTextarea: () => textareaRef.current?.focus(),
+    }
+  )
 
   const errorMessageRef = useRef<HTMLDivElement>(null)
 
