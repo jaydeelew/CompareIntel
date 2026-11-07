@@ -82,7 +82,7 @@ test.describe('Budget Guard Boundary Tests', () => {
   
   test('FAIL: no usage data returned - should throw error', async () => {
     // Simulate missing usage data
-    const usage = null; // No usage data from API
+    const usage: any = null; // No usage data from API
     const modelPricing = { inputCost: 0.01, outputCost: 0.03 };
     
     const calculateCost = () => {
@@ -100,7 +100,7 @@ test.describe('Budget Guard Boundary Tests', () => {
   
   test('FAIL: usage data present but no cost and no pricing', async () => {
     // Simulate usage data without cost field and missing pricing
-    const usage = { prompt_tokens: 100, completion_tokens: 200 };
+    const usage: any = { prompt_tokens: 100, completion_tokens: 200 };
     const modelPricing = null; // No pricing data
     
     const calculateCost = () => {
@@ -128,9 +128,12 @@ test.describe('Budget Guard Boundary Tests', () => {
     };
     const modelPricing = { inputCost: 0.01, outputCost: 0.03 }; // Not used
     
+    type Usage = typeof usage & { cost?: number };
+    const usageWithCost = usage as Usage;
+    
     let actualCost;
-    if (usage.cost) {
-      actualCost = usage.cost;
+    if (usageWithCost.cost) {
+      actualCost = usageWithCost.cost;
     } else if (modelPricing) {
       // Would estimate
       actualCost = (usage.prompt_tokens * modelPricing.inputCost + 
@@ -138,7 +141,7 @@ test.describe('Budget Guard Boundary Tests', () => {
     }
     
     expect(actualCost).toBe(0.0042);
-    expect(actualCost).toBe(usage.cost);
+    expect(actualCost).toBe(usageWithCost.cost);
   });
   
   test('FAIL: failed request - no subsequent calls after limit', async () => {

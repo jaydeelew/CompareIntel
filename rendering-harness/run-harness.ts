@@ -16,6 +16,7 @@ import path from 'path';
 import { chromium, Browser, Page } from 'playwright';
 import { fileURLToPath } from 'url';
 import { spawn, ChildProcess } from 'child_process';
+import { validateRenderedHTML, type ValidationResult } from './dom-assertions.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,6 +64,7 @@ interface TestResult {
   timestamp: string;
   error?: string;
   featureCoverage?: FeatureCoverageResult;
+  validation?: ValidationResult;
 }
 
 interface HarnessConfig {
@@ -173,6 +175,68 @@ function estimateRequestCost(
  */
 function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
+}
+
+/**
+ * Get expected features for a prompt based on its name
+ */
+function getExpectedFeatures(promptName: string): {
+  displayMath?: boolean;
+  inlineMath?: boolean;
+  codeBlocks?: boolean;
+  tables?: boolean;
+  links?: boolean;
+  nestedLists?: boolean;
+  currency?: boolean;
+  noKatexErrors?: boolean;
+  safeLinksOnly?: boolean;
+} {
+  const features: Record<string, any> = {
+    '01-math-basics': {
+      displayMath: true,
+      inlineMath: true,
+      noKatexErrors: true,
+      safeLinksOnly: true,
+    },
+    '02-markdown-formatting': {
+      tables: true,
+      links: true,
+      nestedLists: true,
+      safeLinksOnly: true,
+      noKatexErrors: true,
+    },
+    '03-code-blocks': {
+      codeBlocks: true,
+      safeLinksOnly: true,
+      noKatexErrors: true,
+    },
+    '04-mixed-markdown-latex': {
+      displayMath: true,
+      inlineMath: true,
+      codeBlocks: true,
+      tables: true,
+      noKatexErrors: true,
+      safeLinksOnly: true,
+    },
+    '05-complex-scenarios': {
+      displayMath: true,
+      inlineMath: true,
+      codeBlocks: true,
+      tables: true,
+      nestedLists: true,
+      noKatexErrors: true,
+      safeLinksOnly: true,
+    },
+    '06-edge-cases-boundaries': {
+      displayMath: true,
+      currency: true,
+      codeBlocks: true,
+      noKatexErrors: true,
+      safeLinksOnly: true,
+    },
+  };
+  
+  return features[promptName] || { safeLinksOnly: true, noKatexErrors: true };
 }
 
 /**
@@ -528,6 +592,13 @@ async function renderOnlyMode(runDir: string): Promise<void> {
         const coverage = await renderResponse(page, data.modelId, data.response, screenshotPath);
         console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
         
+        // Validate rendered HTML against expected features
+        const expectedFeatures = getExpectedFeatures(data.promptName);
+        const validation = validateRenderedHTML(data.response, expectedFeatures);
+        const validationStatus = validation.pass ? '✓' : '✗';
+        const failedCount = validation.assertions.filter(a => !a.pass).length;
+        console.log(`  ${validationStatus} Validation: ${validation.pass ? 'PASS' : `FAIL (${failedCount} assertions)`}`);
+        
         results.push({
           modelId: data.modelId,
           modelName: data.modelName,
@@ -538,6 +609,7 @@ async function renderOnlyMode(runDir: string): Promise<void> {
           actualCost: data.cost || 0,
           timestamp: data.timestamp,
           featureCoverage: coverage,
+          validation,
         });
       } catch (error) {
         console.error(`  ✗ Error rendering: ${error}`);
@@ -1040,6 +1112,13 @@ async function main() {
           const coverage = await renderResponse(page, model.id, response, screenshotPath);
           console.log(`    ✓ Rendered screenshot (coverage: ${Object.entries(coverage).filter(([k, v]) => typeof v === 'boolean' && v).length} features)`);
           
+          // Validate rendered HTML against expected features
+          const expectedFeatures = getExpectedFeatures(promptName);
+          const validation = validateRenderedHTML(response, expectedFeatures);
+          const validationStatus = validation.pass ? '✓' : '✗';
+          const failedCount = validation.assertions.filter(a => !a.pass).length;
+          console.log(`    ${validationStatus} Validation: ${validation.pass ? 'PASS' : `FAIL (${failedCount} assertions)`}`);
+          
           results.push({
             modelId: model.id,
             modelName: model.name,
@@ -1050,6 +1129,7 @@ async function main() {
             actualCost: cost,
             timestamp: new Date().toISOString(),
             featureCoverage: coverage,
+            validation,
           });
           
         } catch (error) {
