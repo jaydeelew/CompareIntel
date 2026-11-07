@@ -338,7 +338,7 @@ async function analyzeFeatureCoverage(page: Page): Promise<FeatureCoverageResult
       throw new Error('Render container not found');
     }
 
-    const result: FeatureCoverageResult = {
+    const result = {
       hasDisplayMath: false,
       hasInlineMath: false,
       hasCodeBlocks: false,
