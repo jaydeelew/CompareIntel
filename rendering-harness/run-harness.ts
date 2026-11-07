@@ -54,10 +54,12 @@ interface TestResult {
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;
+    cost?: number; // Actual cost from OpenRouter usage.cost if available
   };
   actualCost: number;
   timestamp: string;
   error?: string;
+  featureCoverage?: FeatureCoverageResult;
 }
 
 interface HarnessConfig {
@@ -67,12 +69,14 @@ interface HarnessConfig {
   maxTokens: number;
   outputDir: string;
   runDate: string;
+  textModelsOnly: boolean;
+  cumulativeCostUsd: number; // Track actual spending
 }
 
 /**
  * Load models from registry
  */
-async function loadModelRegistry(): Promise<ModelEntry[]> {
+async function loadModelRegistry(textOnly: boolean = true): Promise<ModelEntry[]> {
   const registryPath = path.join(__dirname, '../backend/data/models_registry.json');
   const content = await fs.readFile(registryPath, 'utf-8');
   const registry = JSON.parse(content);
@@ -81,6 +85,10 @@ async function loadModelRegistry(): Promise<ModelEntry[]> {
   for (const [provider, providerModels] of Object.entries(registry.models_by_provider)) {
     if (Array.isArray(providerModels)) {
       for (const model of providerModels) {
+        // Filter for text/language models only if requested
+        if (textOnly && model.category === 'Image') {
+          continue;
+        }
         models.push({
           id: model.id,
           name: model.name,
@@ -305,6 +313,126 @@ async function waitForServer(maxAttempts = 60): Promise<void> {
   throw new Error('Server did not become ready within 60 seconds');
 }
 
+interface FeatureCoverageResult {
+  hasDisplayMath: boolean;
+  hasInlineMath: boolean;
+  hasCodeBlocks: boolean;
+  hasTables: boolean;
+  hasLinks: boolean;
+  hasNestedLists: boolean;
+  mathErrors: string[];
+  preservedCurrency: boolean;
+  preservedCodeDollars: boolean;
+  linkDestinations: string[];
+  tableCellCount: number;
+  codeBlockLanguages: string[];
+}
+
+/**
+ * Analyze DOM for feature coverage
+ */
+async function analyzeFeatureCoverage(page: Page): Promise<FeatureCoverageResult> {
+  return await page.evaluate(() => {
+    const container = document.querySelector('[data-render-container]');
+    if (!container) {
+      throw new Error('Render container not found');
+    }
+
+    const result: FeatureCoverageResult = {
+      hasDisplayMath: false,
+      hasInlineMath: false,
+      hasCodeBlocks: false,
+      hasTables: false,
+      hasLinks: false,
+      hasNestedLists: false,
+      mathErrors: [],
+      preservedCurrency: false,
+      preservedCodeDollars: false,
+      linkDestinations: [],
+      tableCellCount: 0,
+      codeBlockLanguages: [],
+    };
+
+    // Check for display math (katex-display class)
+    const displayMath = container.querySelectorAll('.katex-display');
+    result.hasDisplayMath = displayMath.length > 0;
+
+    // Check for inline math
+    const inlineMath = container.querySelectorAll('.katex:not(.katex-display)');
+    result.hasInlineMath = inlineMath.length > 0;
+
+    // Check for KaTeX errors
+    const mathErrors = container.querySelectorAll('.katex-error');
+    result.mathErrors = Array.from(mathErrors).map(e => e.textContent || '').slice(0, 5);
+
+    // Check for code blocks
+    const codeBlocks = container.querySelectorAll('pre code');
+    result.hasCodeBlocks = codeBlocks.length > 0;
+    result.codeBlockLanguages = Array.from(codeBlocks)
+      .map(block => {
+        const classes = Array.from(block.classList);
+        const langClass = classes.find(c => c.startsWith('language-'));
+        return langClass ? langClass.replace('language-', '') : 'plain';
+      })
+      .filter((v, i, a) => a.indexOf(v) === i); // unique
+
+    // Check for tables
+    const tables = container.querySelectorAll('table');
+    result.hasTables = tables.length > 0;
+    result.tableCellCount = container.querySelectorAll('td, th').length;
+
+    // Check for links
+    const links = container.querySelectorAll('a[href]');
+    result.hasLinks = links.length > 0;
+    result.linkDestinations = Array.from(links)
+      .map(a => (a as HTMLAnchorElement).href)
+      .filter(href => !href.startsWith('javascript:'))
+      .slice(0, 10); // First 10 links
+
+    // Check for nested lists (3+ levels)
+    const nestedLists = container.querySelectorAll('ul ul ul, ol ol ol, ul ol ul, ol ul ol');
+    result.hasNestedLists = nestedLists.length > 0;
+
+    // Check for preserved currency ($5, $10, etc.) - look for literal $ in text nodes outside math
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        // Skip if inside KaTeX or code blocks
+        let parent = node.parentElement;
+        while (parent && parent !== container) {
+          if (parent.classList.contains('katex') || 
+              parent.tagName === 'CODE' || 
+              parent.tagName === 'PRE') {
+            return NodeFilter.FILTER_REJECT;
+          }
+          parent = parent.parentElement;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    let foundCurrency = false;
+    let node;
+    while ((node = walker.nextNode())) {
+      const text = node.textContent || '';
+      if (/\$\d+/.test(text)) {
+        foundCurrency = true;
+        break;
+      }
+    }
+    result.preservedCurrency = foundCurrency;
+
+    // Check for $ in code blocks (should be preserved as literal)
+    for (const block of codeBlocks) {
+      if (block.textContent?.includes('$')) {
+        result.preservedCodeDollars = true;
+        break;
+      }
+    }
+
+    return result;
+  });
+}
+
 /**
  * Render a response using the real frontend LatexRenderer
  */
@@ -313,31 +441,33 @@ async function renderResponse(
   modelId: string,
   response: string,
   outputPath: string
-): Promise<void> {
+): Promise<FeatureCoverageResult> {
   // Navigate to harness with model ID and content as query params
   const encodedContent = encodeURIComponent(response);
   const url = `http://localhost:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
   
-  await page.goto(url, { waitUntil: 'networkidle' });
+  // Navigate without waiting for network idle (renderer-driven readiness)
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
   
-  // Wait for rendering to complete
-  // Wait for data-render-complete attribute (set after fonts load and Prism highlights)
+  // Wait for rendering to complete via data-render-complete attribute
   await page.waitForFunction(
     () => {
       const container = document.querySelector('[data-render-container]');
-      if (!container) return false;
-      
-      // Check for data-render-complete attribute
-      return container.hasAttribute('data-render-complete');
+      return container?.hasAttribute('data-render-complete');
     },
     { timeout: 30000 }
   );
+  
+  // Analyze feature coverage
+  const coverage = await analyzeFeatureCoverage(page);
   
   // Take screenshot of the rendered content
   const element = await page.$('[data-render-container]');
   if (element) {
     await element.screenshot({ path: outputPath });
   }
+  
+  return coverage;
 }
 
 function escapeHtml(text: string): string {
@@ -397,7 +527,7 @@ async function renderOnlyMode(runDir: string): Promise<void> {
       const screenshotPath = path.join(fullPath, jsonFile.replace('.json', '.png'));
       
       try {
-        await renderResponse(page, data.modelId, data.response, screenshotPath);
+        const coverage = await renderResponse(page, data.modelId, data.response, screenshotPath);
         console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
         
         results.push({
@@ -409,6 +539,7 @@ async function renderOnlyMode(runDir: string): Promise<void> {
           usage: data.usage,
           actualCost: data.cost || 0,
           timestamp: data.timestamp,
+          featureCoverage: coverage,
         });
       } catch (error) {
         console.error(`  ✗ Error rendering: ${error}`);
@@ -424,7 +555,7 @@ async function renderOnlyMode(runDir: string): Promise<void> {
     }
   }
   
-  // Regenerate review page
+  // Regenerate review page with fresh state
   const runDate = path.basename(fullPath);
   const config: HarnessConfig = {
     dryRun: false,
@@ -433,7 +564,18 @@ async function renderOnlyMode(runDir: string): Promise<void> {
     maxTokens: 0,
     outputDir: fullPath,
     runDate,
+    textModelsOnly: true,
+    cumulativeCostUsd: results.reduce((sum, r) => sum + r.actualCost, 0),
   };
+  
+  // Save updated results manifest with fresh feature coverage
+  const resultsPath = path.join(fullPath, 'results.json');
+  await fs.writeFile(resultsPath, JSON.stringify({
+    runDate,
+    config,
+    results,
+    freshRendered: new Date().toISOString(),
+  }, null, 2));
   
   await generateReviewPage(results, config);
   
@@ -521,6 +663,33 @@ async function generateReviewPage(
     .feedback {
       margin-top: 10px;
     }
+    .feature-coverage {
+      font-size: 0.85em;
+      margin: 10px 0;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .feature-coverage .feature {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .feature-coverage .feature.yes {
+      background: #d4edda;
+      color: #155724;
+    }
+    .feature-coverage .feature.no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .feature-coverage .math-error {
+      color: #d32f2f;
+      font-weight: bold;
+      display: block;
+      margin-top: 4px;
+    }
     textarea {
       width: 100%;
       min-height: 80px;
@@ -587,6 +756,28 @@ async function generateReviewPage(
                    class="screenshot" 
                    alt="Rendered output"
                    onerror="this.style.display='none'">
+              
+              ${result.featureCoverage ? `
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature ${result.featureCoverage.hasDisplayMath ? 'yes' : 'no'}">Display Math</span>
+                    <span class="feature ${result.featureCoverage.hasInlineMath ? 'yes' : 'no'}">Inline Math</span>
+                    <span class="feature ${result.featureCoverage.hasCodeBlocks ? 'yes' : 'no'}">Code Blocks</span>
+                    <span class="feature ${result.featureCoverage.hasTables ? 'yes' : 'no'}">Tables</span>
+                    <span class="feature ${result.featureCoverage.hasLinks ? 'yes' : 'no'}">Links</span>
+                    <span class="feature ${result.featureCoverage.hasNestedLists ? 'yes' : 'no'}">Nested Lists</span>
+                    <span class="feature ${result.featureCoverage.preservedCurrency ? 'yes' : 'no'}">Currency</span>
+                    <span class="feature ${result.featureCoverage.preservedCodeDollars ? 'yes' : 'no'}">Code $</span>
+                  </div>
+                  ${result.featureCoverage.mathErrors && result.featureCoverage.mathErrors.length > 0 ? `
+                    <span class="math-error">⚠ KaTeX Errors: ${result.featureCoverage.mathErrors.length}</span>
+                  ` : ''}
+                  ${result.featureCoverage.linkDestinations && result.featureCoverage.linkDestinations.length > 0 ? `
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: ${result.featureCoverage.linkDestinations.slice(0, 3).join(', ')}${result.featureCoverage.linkDestinations.length > 3 ? '...' : ''}</div>
+                  ` : ''}
+                </div>
+              ` : ''}
               
               <details>
                 <summary>Raw Response</summary>
@@ -671,8 +862,8 @@ async function main() {
   
   // Load data
   console.log('Loading model registry...');
-  const allModels = await loadModelRegistry();
-  console.log(`Found ${allModels.length} models in registry\n`);
+  const allModels = await loadModelRegistry(true); // Load text/language models only
+  console.log(`Found ${allModels.length} text models in registry\n`);
   
   console.log('Loading test prompts...');
   const prompts = await loadPrompts();
@@ -763,6 +954,8 @@ async function main() {
     maxTokens,
     outputDir,
     runDate,
+    textModelsOnly: true,
+    cumulativeCostUsd: 0,
   };
   
   // Start Vite server
@@ -784,6 +977,39 @@ async function main() {
         console.log(`  Prompt: ${promptName}`);
         
         try {
+          // Pre-request budget guard: Estimate cost and check against remaining budget
+          const estimatedPromptTokens = estimateTokens(promptText);
+          const estimatedOutputTokens = maxTokens * (model.is_thinking_model ? THINKING_MODEL_OUTPUT_MULTIPLIER : 1);
+          const modelPricing = pricing.get(model.id);
+          
+          let estimatedRequestCost = 0;
+          if (modelPricing) {
+            estimatedRequestCost = 
+              (estimatedPromptTokens * modelPricing.inputCostPerToken) +
+              (estimatedOutputTokens * modelPricing.outputCostPerToken);
+          } else {
+            // Conservative fallback when pricing unavailable (assume $1 per 1M tokens)
+            estimatedRequestCost = ((estimatedPromptTokens + estimatedOutputTokens) / 1_000_000);
+            console.log(`    ⚠ No pricing data for ${model.id}, using conservative estimate`);
+          }
+          
+          const remainingBudget = maxUsd - actualTotalCost;
+          
+          if (estimatedRequestCost > remainingBudget) {
+            console.log(`    ⚠ Skipping: Estimated cost $${estimatedRequestCost.toFixed(4)} exceeds remaining budget $${remainingBudget.toFixed(4)}`);
+            results.push({
+              modelId: model.id,
+              modelName: model.name,
+              promptName,
+              promptText,
+              response: '',
+              actualCost: 0,
+              timestamp: new Date().toISOString(),
+              error: `Budget guard: estimated cost $${estimatedRequestCost.toFixed(4)} > remaining $${remainingBudget.toFixed(4)}`,
+            });
+            continue;
+          }
+          
           // Call OpenRouter
           const { response, usage, cost } = await callOpenRouter(
             model.id,
@@ -793,6 +1019,7 @@ async function main() {
           );
           
           actualTotalCost += cost;
+          config.cumulativeCostUsd = actualTotalCost;
           
           const totalTokens = usage?.total_tokens || (usage?.prompt_tokens + usage?.completion_tokens) || 0;
           console.log(`    ✓ Got response (${totalTokens} tokens, $${cost.toFixed(4)})`);
@@ -810,10 +1037,10 @@ async function main() {
             timestamp: new Date().toISOString(),
           }, null, 2));
           
-          // Render screenshot
+          // Render screenshot and analyze coverage
           const screenshotPath = path.join(outputDir, `${model.id.replace(/\//g, '_')}_${promptName}.png`);
-          await renderResponse(page, model.id, response, screenshotPath);
-          console.log(`    ✓ Rendered screenshot`);
+          const coverage = await renderResponse(page, model.id, response, screenshotPath);
+          console.log(`    ✓ Rendered screenshot (coverage: ${Object.entries(coverage).filter(([k, v]) => typeof v === 'boolean' && v).length} features)`);
           
           results.push({
             modelId: model.id,
@@ -824,6 +1051,7 @@ async function main() {
             usage,
             actualCost: cost,
             timestamp: new Date().toISOString(),
+            featureCoverage: coverage,
           });
           
         } catch (error) {
