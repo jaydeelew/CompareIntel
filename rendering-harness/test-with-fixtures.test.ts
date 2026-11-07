@@ -4,14 +4,10 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { chromium } from 'playwright';
 
 test.describe('Harness Feature Coverage Detection', () => {
-  test('detects display math correctly', async () => {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
-    await page.goto('http://localhost:5174/?modelId=test&content=' + encodeURIComponent('$$x^2 + y^2 = r^2$$'));
+  test('detects display math correctly', async ({ page }) => {
+    await page.goto('/?modelId=test&content=' + encodeURIComponent('$$x^2 + y^2 = r^2$$'));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     
     const coverage = await page.evaluate(() => {
@@ -25,14 +21,10 @@ test.describe('Harness Feature Coverage Detection', () => {
     });
     
     expect(coverage?.hasDisplayMath).toBe(true);
-    await browser.close();
   });
   
-  test('detects inline math correctly', async () => {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
-    await page.goto('http://localhost:5174/?modelId=test&content=' + encodeURIComponent('The formula $x = 5$ is inline'));
+  test('detects inline math correctly', async ({ page }) => {
+    await page.goto('/?modelId=test&content=' + encodeURIComponent('The formula $x = 5$ is inline'));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     
     const coverage = await page.evaluate(() => {
@@ -45,15 +37,11 @@ test.describe('Harness Feature Coverage Detection', () => {
     });
     
     expect(coverage?.hasInlineMath).toBe(true);
-    await browser.close();
   });
   
-  test('detects code blocks correctly', async () => {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
+  test('detects code blocks correctly', async ({ page }) => {
     const content = '```python\nprint("hello")\n```';
-    await page.goto('http://localhost:5174/?modelId=test&content=' + encodeURIComponent(content));
+    await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     
     const coverage = await page.evaluate(() => {
@@ -73,15 +61,11 @@ test.describe('Harness Feature Coverage Detection', () => {
     
     expect(coverage?.hasCodeBlocks).toBe(true);
     expect(coverage?.codeBlockLanguages).toContain('python');
-    await browser.close();
   });
   
-  test('detects tables correctly', async () => {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
+  test('detects tables correctly', async ({ page }) => {
     const content = '| A | B |\n|---|---|\n| 1 | 2 |';
-    await page.goto('http://localhost:5174/?modelId=test&content=' + encodeURIComponent(content));
+    await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     
     const coverage = await page.evaluate(() => {
@@ -96,15 +80,11 @@ test.describe('Harness Feature Coverage Detection', () => {
     
     expect(coverage?.hasTables).toBe(true);
     expect(coverage?.tableCellCount).toBeGreaterThan(0);
-    await browser.close();
   });
   
-  test('preserves currency correctly (outside math)', async () => {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
+  test('preserves currency correctly (outside math)', async ({ page }) => {
     const content = 'The item costs $5 and shipping is $10.';
-    await page.goto('http://localhost:5174/?modelId=test&content=' + encodeURIComponent(content));
+    await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     
     const coverage = await page.evaluate(() => {
@@ -118,16 +98,12 @@ test.describe('Harness Feature Coverage Detection', () => {
     });
     
     expect(coverage?.preservedCurrency).toBe(true);
-    await browser.close();
   });
   
-  test('detects KaTeX errors', async () => {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
+  test('detects KaTeX errors', async ({ page }) => {
     // Invalid LaTeX that should cause an error
     const content = '$$\\invalid{syntax}$$';
-    await page.goto('http://localhost:5174/?modelId=test&content=' + encodeURIComponent(content));
+    await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     
     const coverage = await page.evaluate(() => {
@@ -141,15 +117,11 @@ test.describe('Harness Feature Coverage Detection', () => {
     });
     
     expect(coverage?.mathErrors.length).toBeGreaterThan(0);
-    await browser.close();
   });
   
-  test('detects links correctly', async () => {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
+  test('detects links correctly', async ({ page }) => {
     const content = '[OpenAI](https://openai.com) and [Anthropic](https://anthropic.com)';
-    await page.goto('http://localhost:5174/?modelId=test&content=' + encodeURIComponent(content));
+    await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     
     const coverage = await page.evaluate(() => {
@@ -167,15 +139,11 @@ test.describe('Harness Feature Coverage Detection', () => {
     
     expect(coverage?.hasLinks).toBe(true);
     expect(coverage?.linkDestinations.length).toBeGreaterThan(0);
-    await browser.close();
   });
   
-  test('detects nested lists (3+ levels)', async () => {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
+  test('detects nested lists (3+ levels)', async ({ page }) => {
     const content = '- L1\n  - L2\n    - L3';
-    await page.goto('http://localhost:5174/?modelId=test&content=' + encodeURIComponent(content));
+    await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
     await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
     
     const coverage = await page.evaluate(() => {
@@ -189,6 +157,62 @@ test.describe('Harness Feature Coverage Detection', () => {
     });
     
     expect(coverage?.hasNestedLists).toBe(true);
-    await browser.close();
+  });
+});
+
+test.describe('Harness Known-Bad Fixtures (should fail)', () => {
+  test('FAILS when missing expected display math', async ({ page }) => {
+    // Plain text with no math - should detect absence
+    await page.goto('/?modelId=test&content=' + encodeURIComponent('Just plain text here'));
+    await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
+    
+    const coverage = await page.evaluate(() => {
+      const container = document.querySelector('[data-render-container]');
+      return {
+        hasDisplayMath: container?.querySelectorAll('.katex-display').length! > 0,
+      };
+    });
+    
+    // This SHOULD be false for plain text
+    expect(coverage.hasDisplayMath).toBe(false);
+  });
+  
+  test('FAILS when KaTeX error present', async ({ page }) => {
+    // Invalid LaTeX
+    const content = '$$\\undefined{command}$$';
+    await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
+    await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
+    
+    const hasErrors = await page.evaluate(() => {
+      const container = document.querySelector('[data-render-container]');
+      return container?.querySelectorAll('.katex-error').length! > 0;
+    });
+    
+    // Should detect error
+    expect(hasErrors).toBe(true);
+  });
+  
+  test('FAILS when links are javascript: schemes', async ({ page }) => {
+    // Unsafe link
+    const content = '[Click](javascript:alert(1))';
+    await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
+    await page.waitForSelector('[data-render-complete]', { timeout: 5000 });
+    
+    const coverage = await page.evaluate(() => {
+      const container = document.querySelector('[data-render-container]');
+      const links = container?.querySelectorAll('a[href]');
+      const safeDests = Array.from(links || [])
+        .map((a: any) => a.href)
+        .filter(href => !href.startsWith('javascript:'));
+      
+      return {
+        hasUnsafeLinks: links!.length > safeDests.length,
+        safeLinksOnly: safeDests.length === links!.length,
+      };
+    });
+    
+    // Should detect unsafe link
+    expect(coverage.hasUnsafeLinks).toBe(true);
+    expect(coverage.safeLinksOnly).toBe(false);
   });
 });
