@@ -150,6 +150,7 @@ async function loadPrompts(): Promise<Map<string, string>> {
 
 /**
  * Estimate cost for a single request
+ * Returns null if pricing unavailable
  */
 function estimateRequestCost(
   modelId: string,
@@ -157,10 +158,9 @@ function estimateRequestCost(
   maxTokens: number,
   pricing: PricingInfo | undefined,
   isThinkingModel: boolean
-): number {
+): number | null {
   if (!pricing) {
-    console.warn(`  Warning: No pricing info for ${modelId}, using $0`);
-    return 0;
+    return null;
   }
   
   const outputTokens = maxTokens * (isThinkingModel ? THINKING_MODEL_OUTPUT_MULTIPLIER : 1);
@@ -960,6 +960,7 @@ async function main() {
   for (const model of selectedModels) {
     const modelPricing = pricing.get(model.id);
     let modelCost = 0;
+    let hasNoPricing = false;
     
     for (const [promptName, promptText] of prompts) {
       const promptTokens = estimateTokens(promptText);
@@ -970,10 +971,16 @@ async function main() {
         modelPricing,
         model.is_thinking_model || false
       );
+      if (cost === null) {
+        hasNoPricing = true;
+        break;
+      }
       modelCost += cost;
     }
     
-    totalEstimatedCost += modelCost;
+    if (!hasNoPricing) {
+      totalEstimatedCost += modelCost;
+    }
     modelEstimates.push({ model, cost: modelCost, hasPricing: !!modelPricing });
   }
   
@@ -1052,16 +1059,25 @@ async function main() {
           const estimatedOutputTokens = maxTokens * (model.is_thinking_model ? THINKING_MODEL_OUTPUT_MULTIPLIER : 1);
           const modelPricing = pricing.get(model.id);
           
-          let estimatedRequestCost = 0;
-          if (modelPricing) {
-            estimatedRequestCost = 
-              (estimatedPromptTokens * modelPricing.inputCostPerToken) +
-              (estimatedOutputTokens * modelPricing.outputCostPerToken);
-          } else {
-            // Conservative fallback when pricing unavailable (assume $1 per 1M tokens)
-            estimatedRequestCost = ((estimatedPromptTokens + estimatedOutputTokens) / 1_000_000);
-            console.log(`    ⚠ No pricing data for ${model.id}, using conservative estimate`);
+          if (!modelPricing) {
+            // Refuse request when pricing unavailable - cannot safely estimate budget impact
+            console.log(`    ⚠ Skipping: No pricing data for ${model.id} (cannot estimate cost)`);
+            results.push({
+              modelId: model.id,
+              modelName: model.name,
+              promptName,
+              promptText,
+              response: '',
+              actualCost: 0,
+              timestamp: new Date().toISOString(),
+              error: 'No pricing data available for model',
+            });
+            continue;
           }
+          
+          const estimatedRequestCost = 
+            (estimatedPromptTokens * modelPricing.inputCostPerToken) +
+            (estimatedOutputTokens * modelPricing.outputCostPerToken);
           
           const remainingBudget = maxUsd - actualTotalCost;
           

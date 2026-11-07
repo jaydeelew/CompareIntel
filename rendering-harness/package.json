@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "harness": "tsx run-harness.ts",
-    "test": "playwright test test-with-fixtures.test.ts",
+    "test": "playwright test",
     "test-fixtures": "tsx test-with-fixtures.ts",
     "dev": "vite",
     "build": "vite build"
