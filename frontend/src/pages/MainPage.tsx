@@ -597,6 +597,7 @@ export function MainPage() {
     handleSaveSelection: handleSaveModelSelection,
     handleLoadSelection: handleLoadModelSelection,
     saveSelection: rawSaveSelection,
+    patchSelection,
     getDefaultSelectionId,
   } = useSavedSelectionsComplete(
     {
@@ -636,7 +637,7 @@ export function MainPage() {
     }
   )
 
-  // Default "Test Comparison" for anonymous visitors
+  // Default "Starter Selection" for anonymous visitors
   useDefaultTestComparison({
     userId: user?.id,
     tier: user?.subscription_tier ?? 'unregistered',
@@ -647,8 +648,9 @@ export function MainPage() {
     savedSelections: savedModelSelections,
     canSaveMore: canSaveMoreSelections,
     maxSelections: maxSavedSelections,
-    saveSelection: rawSaveSelection,
-    deleteSelection: deleteModelSelection,
+    saveSelection: (name, modelIds, options) =>
+      rawSaveSelection(name, modelIds, undefined, undefined, options),
+    patchSelection,
     handleLoadSelection: handleLoadModelSelection,
     setDefaultSelection,
     getDefaultSelectionId,

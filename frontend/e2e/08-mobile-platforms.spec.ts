@@ -23,7 +23,7 @@ async function expandFirstProvider(page: Page, browserName?: string) {
   }
 }
 
-/** After models load, anonymous visits apply Test Comparison (2 checked). Pin an unchecked box. */
+/** After models load, anonymous visits apply Starter Selection (2 checked). Pin an unchecked box. */
 async function uncheckedModelCheckbox(page: Page): Promise<Locator> {
   await expect(page.locator('input.model-checkbox').first()).toBeVisible({ timeout: 20000 })
   await page.waitForFunction(
@@ -35,7 +35,7 @@ async function uncheckedModelCheckbox(page: Page): Promise<Locator> {
     const boxes = Array.from(document.querySelectorAll<HTMLInputElement>('input.model-checkbox'))
     return boxes.find(el => !el.checked && !el.disabled)?.getAttribute('data-testid') ?? ''
   })
-  expect(testId, 'expected an unchecked enabled model after Test Comparison init').toBeTruthy()
+  expect(testId, 'expected an unchecked enabled model after Starter Selection init').toBeTruthy()
   return page.locator(`[data-testid="${testId}"]`)
 }
 

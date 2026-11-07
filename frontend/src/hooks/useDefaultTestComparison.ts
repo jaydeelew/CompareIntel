@@ -1,18 +1,19 @@
 /**
- * useDefaultTestComparison - Manages the "Test Comparison" default saved selection for anonymous visitors
+ * useDefaultTestComparison - Manages the system-owned "Starter Selection" for anonymous visitors
  *
  * This hook provides a discoverable starting point for new anonymous users by:
- * - Creating a deletable saved selection named "Test Comparison" on first visit
+ * - Creating a deletable saved selection named "Starter Selection" on first visit
+ * - Identifying it with systemKey (never by display name alone)
  * - Preselecting 2 popular models available to the unregistered tier
  * - Automatically updating the selection when models are added/removed from registry
  * - Respecting explicit user actions (deletion persists forever, manual selections not overwritten)
  *
  * Lifecycle:
- * - Fresh visit: creates "Test Comparison" with 2 models, marks as default, and activates them
+ * - Fresh visit: creates "Starter Selection" with 2 models, marks as default, and activates them
  * - Returning visit: loads the selection if still default (no manual override)
  * - Registry changes: automatically replaces stale/removed/restricted models with eligible fallbacks
  * - Active sync: only updates active selection if user is following the default (no manual override)
- * - Opted-out visit: if user deleted "Test Comparison", NEVER recreate (deletion persists forever)
+ * - Opted-out visit: if the user deleted the system-managed entry, NEVER recreate
  *
  * Signed-in users are not affected (keyed by user ID, not anonymous ID).
  */
@@ -23,11 +24,14 @@ import type { SubscriptionTier } from '../config/constants'
 import type { ModelsByProvider } from '../types'
 import logger from '../utils/logger'
 
-const TEST_COMPARISON_NAME = 'Test Comparison'
-const TEST_COMPARISON_OPTED_OUT_KEY = 'compareintel_test_comparison_opted_out'
+export const STARTER_SELECTION_NAME = 'Starter Selection'
+export const ANONYMOUS_STARTER_SYSTEM_KEY = 'anonymous-starter'
+const STARTER_SELECTION_OPTED_OUT_KEY = 'compareintel_starter_selection_opted_out'
+const LEGACY_TEST_COMPARISON_OPTED_OUT_KEY = 'compareintel_test_comparison_opted_out'
+const LEGACY_DISPLAY_NAME = 'Test Comparison'
 
 /**
- * Model priority list for "Test Comparison" default selection.
+ * Model priority list for the anonymous Starter Selection.
  * Ordered by recognizability and popularity for anonymous users.
  * Must be models from unregistered_tier_models in backend/data/models_registry.json.
  */
@@ -41,6 +45,13 @@ const DEFAULT_MODEL_PRIORITY = [
   'google/gemma-4-31b-it', // Alternative Google
   'qwen/qwen3-coder-next', // Alternative popular model
 ] as const
+
+interface SavedSelectionLike {
+  id: string
+  name: string
+  modelIds: string[]
+  systemKey?: string
+}
 
 interface UseDefaultTestComparisonParams {
   /** User ID (undefined for anonymous users) */
@@ -56,15 +67,22 @@ interface UseDefaultTestComparisonParams {
   /** Whether user is authenticated */
   isAuthenticated: boolean
   /** Existing saved selections (from useSavedSelectionsComplete) */
-  savedSelections: Array<{ id: string; name: string; modelIds: string[] }>
+  savedSelections: SavedSelectionLike[]
   /** Whether user can save more selections */
   canSaveMore: boolean
   /** Max saved selections allowed */
   maxSelections: number
   /** Function to save a selection */
-  saveSelection: (name: string, modelIds: string[]) => { success: boolean; error?: string }
-  /** Function to delete a selection */
-  deleteSelection: (id: string) => void
+  saveSelection: (
+    name: string,
+    modelIds: string[],
+    options?: { systemKey?: string }
+  ) => { success: boolean; error?: string }
+  /** Function to patch a selection in place (name/models/systemKey) */
+  patchSelection: (
+    id: string,
+    patch: { name?: string; modelIds?: string[]; systemKey?: string }
+  ) => { success: boolean; error?: string }
   /** Function to load a selection */
   handleLoadSelection: (id: string) => void
   /** Function to set default selection */
@@ -74,36 +92,59 @@ interface UseDefaultTestComparisonParams {
 }
 
 interface UseDefaultTestComparisonReturn {
-  /** Whether the Test Comparison is currently opted out */
+  /** Whether the Starter Selection is currently opted out */
   isOptedOut: boolean
   /** Whether initialization is complete */
   isInitialized: boolean
 }
 
+function findManagedStarter(selections: SavedSelectionLike[]): SavedSelectionLike | undefined {
+  return selections.find(sel => sel.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY)
+}
+
 /**
- * Check if user has opted out of Test Comparison (deleted it explicitly)
+ * Previous PR builds created the managed default by display name only. Adopt that entry
+ * only when it is still the default — never rename other user-created "Test Comparison" rows.
  */
-function isTestComparisonOptedOut(): boolean {
+function findLegacyDefaultToAdopt(
+  selections: SavedSelectionLike[],
+  defaultId: string | null
+): SavedSelectionLike | undefined {
+  if (!defaultId) return undefined
+  const currentDefault = selections.find(sel => sel.id === defaultId)
+  if (
+    currentDefault &&
+    currentDefault.name === LEGACY_DISPLAY_NAME &&
+    currentDefault.systemKey !== ANONYMOUS_STARTER_SYSTEM_KEY
+  ) {
+    return currentDefault
+  }
+  return undefined
+}
+
+function isStarterSelectionOptedOut(): boolean {
   try {
-    return localStorage.getItem(TEST_COMPARISON_OPTED_OUT_KEY) === 'true'
+    return (
+      localStorage.getItem(STARTER_SELECTION_OPTED_OUT_KEY) === 'true' ||
+      localStorage.getItem(LEGACY_TEST_COMPARISON_OPTED_OUT_KEY) === 'true'
+    )
   } catch (error) {
-    logger.warn('Failed to check Test Comparison opt-out status:', error)
+    logger.warn('Failed to check Starter Selection opt-out status:', error)
     return false
   }
 }
 
-/**
- * Mark user as opted out of Test Comparison
- */
-function setTestComparisonOptedOut(optedOut: boolean): void {
+function setStarterSelectionOptedOut(optedOut: boolean): void {
   try {
     if (optedOut) {
-      localStorage.setItem(TEST_COMPARISON_OPTED_OUT_KEY, 'true')
+      localStorage.setItem(STARTER_SELECTION_OPTED_OUT_KEY, 'true')
+      localStorage.setItem(LEGACY_TEST_COMPARISON_OPTED_OUT_KEY, 'true')
     } else {
-      localStorage.removeItem(TEST_COMPARISON_OPTED_OUT_KEY)
+      localStorage.removeItem(STARTER_SELECTION_OPTED_OUT_KEY)
+      localStorage.removeItem(LEGACY_TEST_COMPARISON_OPTED_OUT_KEY)
     }
   } catch (error) {
-    logger.warn('Failed to set Test Comparison opt-out status:', error)
+    logger.warn('Failed to set Starter Selection opt-out status:', error)
   }
 }
 
@@ -159,7 +200,7 @@ function selectBestTwoModels(selectableModels: Set<string>): string[] {
 }
 
 /**
- * Hook to manage "Test Comparison" default saved selection for anonymous users
+ * Hook to manage the system-owned "Starter Selection" for anonymous users
  */
 export function useDefaultTestComparison(
   params: UseDefaultTestComparisonParams
@@ -173,7 +214,7 @@ export function useDefaultTestComparison(
     canSaveMore,
     maxSelections,
     saveSelection,
-    deleteSelection,
+    patchSelection,
     handleLoadSelection,
     setDefaultSelection,
     getDefaultSelectionId,
@@ -182,6 +223,7 @@ export function useDefaultTestComparison(
   const [isInitialized, setIsInitialized] = useState(false)
   const [isOptedOut, setIsOptedOut] = useState(false)
   const initializationAttempted = useRef(false)
+  const seenManagedRef = useRef(false)
 
   // Only applies to anonymous users
   const isAnonymous = !isAuthenticated
@@ -205,24 +247,20 @@ export function useDefaultTestComparison(
 
     initializationAttempted.current = true
 
-    const optedOut = isTestComparisonOptedOut()
+    const optedOut = isStarterSelectionOptedOut()
     setIsOptedOut(optedOut)
 
     // If opted out, do not recreate
     if (optedOut) {
-      logger.debug('Test Comparison opted out, not initializing')
+      logger.debug('Starter Selection opted out, not initializing')
       setIsInitialized(true)
       return
     }
 
-    // Check if Test Comparison already exists
-    const existingTestComparison = savedSelections.find(sel => sel.name === TEST_COMPARISON_NAME)
-
     const selectableModels = getSelectableUnregisteredModels(modelsByProvider)
 
     if (selectableModels.size < 2) {
-      // Not enough eligible models to create Test Comparison
-      logger.warn('Not enough unregistered-tier models available for Test Comparison', {
+      logger.warn('Not enough unregistered-tier models available for Starter Selection', {
         available: selectableModels.size,
       })
       setIsInitialized(true)
@@ -230,29 +268,38 @@ export function useDefaultTestComparison(
     }
 
     const bestTwoModels = selectBestTwoModels(selectableModels)
+    const managed = findManagedStarter(savedSelections)
+    const legacyDefault = managed
+      ? undefined
+      : findLegacyDefaultToAdopt(savedSelections, getDefaultSelectionId())
+    const existing = managed ?? legacyDefault
 
-    if (existingTestComparison) {
-      // Test Comparison exists - validate its models are still eligible
-      const validModels = existingTestComparison.modelIds.filter(id => selectableModels.has(id))
+    if (existing) {
+      // Only count systemKey identity as "seen". A legacy default is adopted via patch;
+      // marking seen before that lands would look like a deletion and persist opt-out.
+      if (managed) {
+        seenManagedRef.current = true
+      }
+      const validModels = existing.modelIds.filter(id => selectableModels.has(id))
+      const needsName = existing.name !== STARTER_SELECTION_NAME
+      const needsKey = existing.systemKey !== ANONYMOUS_STARTER_SYSTEM_KEY
+      const needsModels = validModels.length < 2
 
-      if (validModels.length < 2) {
-        // Models are stale or restricted - automatically update the selection
-        logger.info('Test Comparison has stale models, automatically updating', {
-          old: existingTestComparison.modelIds,
-          new: bestTwoModels,
+      if (needsName || needsKey || needsModels) {
+        const nameTaken =
+          needsName &&
+          savedSelections.some(
+            sel =>
+              sel.id !== existing.id &&
+              sel.name.toLowerCase() === STARTER_SELECTION_NAME.toLowerCase()
+          )
+        const result = patchSelection(existing.id, {
+          ...(!nameTaken && needsName ? { name: STARTER_SELECTION_NAME } : {}),
+          ...(needsKey ? { systemKey: ANONYMOUS_STARTER_SYSTEM_KEY } : {}),
+          ...(needsModels ? { modelIds: bestTwoModels } : {}),
         })
-
-        // Delete and recreate with new models (without marking as opted out)
-        deleteSelection(existingTestComparison.id)
-
-        // Create new selection with fresh models
-        const result = saveSelection(TEST_COMPARISON_NAME, bestTwoModels)
-
-        if (result.success) {
-          logger.info('Test Comparison updated successfully with fresh models')
-          // Note: We'll handle default setting and loading in the next effect
-        } else {
-          logger.error('Failed to update Test Comparison', { error: result.error })
+        if (!result.success) {
+          logger.error('Failed to update Starter Selection', { error: result.error })
         }
       }
 
@@ -260,16 +307,14 @@ export function useDefaultTestComparison(
       return
     }
 
-    // First visit - create Test Comparison
     if (bestTwoModels.length < 2) {
-      logger.warn('Could not find 2 eligible models for Test Comparison')
+      logger.warn('Could not find 2 eligible models for Starter Selection')
       setIsInitialized(true)
       return
     }
 
-    // Check if we can save more selections
     if (!canSaveMore) {
-      logger.info('Cannot create Test Comparison - at max saved selections limit', {
+      logger.info('Cannot create Starter Selection - at max saved selections limit', {
         current: savedSelections.length,
         max: maxSelections,
       })
@@ -277,17 +322,28 @@ export function useDefaultTestComparison(
       return
     }
 
-    logger.info('Creating Test Comparison on first visit', { models: bestTwoModels })
-
-    const result = saveSelection(TEST_COMPARISON_NAME, bestTwoModels)
-
-    if (!result.success) {
-      logger.error('Failed to create Test Comparison', { error: result.error })
+    const displayNameTaken = savedSelections.some(
+      sel => sel.name.toLowerCase() === STARTER_SELECTION_NAME.toLowerCase()
+    )
+    if (displayNameTaken) {
+      logger.info('Starter Selection name already used by a user entry; not auto-creating')
       setIsInitialized(true)
       return
     }
 
-    logger.info('Test Comparison created successfully')
+    logger.info('Creating Starter Selection on first visit', { models: bestTwoModels })
+
+    const result = saveSelection(STARTER_SELECTION_NAME, bestTwoModels, {
+      systemKey: ANONYMOUS_STARTER_SYSTEM_KEY,
+    })
+
+    if (!result.success) {
+      logger.error('Failed to create Starter Selection', { error: result.error })
+      setIsInitialized(true)
+      return
+    }
+
+    logger.info('Starter Selection created successfully')
     setIsInitialized(true)
   }, [
     isAnonymous,
@@ -297,41 +353,30 @@ export function useDefaultTestComparison(
     canSaveMore,
     maxSelections,
     saveSelection,
-    deleteSelection,
-    handleLoadSelection,
-    setDefaultSelection,
+    patchSelection,
     getDefaultSelectionId,
-    selectedModels.length,
   ])
 
-  // Monitor for Test Comparison creation and load it, or deletion to mark as opted out
+  // Load the managed default, or mark opt-out only after we have seen it in this session
   useEffect(() => {
     if (!isAnonymous || !isInitialized) return
 
-    const testComparison = savedSelections.find(sel => sel.name === TEST_COMPARISON_NAME)
+    const starter = findManagedStarter(savedSelections)
 
-    if (testComparison) {
-      // Test Comparison exists
+    if (starter) {
+      seenManagedRef.current = true
 
-      // If user hasn't selected any models and this is the default, load it
-      if (
-        selectedModels.length === 0 &&
-        getDefaultSelectionId() === null &&
-        !getDefaultSelectionId()
-      ) {
-        // On first creation, set as default and load
-        logger.debug('Setting Test Comparison as default and loading')
-        setDefaultSelection(testComparison.id)
-        handleLoadSelection(testComparison.id)
-      } else if (selectedModels.length === 0 && getDefaultSelectionId() === testComparison.id) {
-        // Returning user with Test Comparison as default
-        logger.debug('Loading Test Comparison (default selection)')
-        handleLoadSelection(testComparison.id)
+      if (selectedModels.length === 0 && getDefaultSelectionId() === null) {
+        logger.debug('Setting Starter Selection as default and loading')
+        setDefaultSelection(starter.id)
+        handleLoadSelection(starter.id)
+      } else if (selectedModels.length === 0 && getDefaultSelectionId() === starter.id) {
+        logger.debug('Loading Starter Selection (default selection)')
+        handleLoadSelection(starter.id)
       }
-    } else if (initializationAttempted.current && !isOptedOut) {
-      // Test Comparison was deleted
-      logger.info('Test Comparison deleted, marking as opted out')
-      setTestComparisonOptedOut(true)
+    } else if (seenManagedRef.current && !isOptedOut) {
+      logger.info('Starter Selection deleted, marking as opted out')
+      setStarterSelectionOptedOut(true)
       setIsOptedOut(true)
     }
   }, [
