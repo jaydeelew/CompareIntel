@@ -648,6 +648,7 @@ export function MainPage() {
     canSaveMore: canSaveMoreSelections,
     maxSelections: maxSavedSelections,
     saveSelection: rawSaveSelection,
+    deleteSelection: deleteModelSelection,
     handleLoadSelection: handleLoadModelSelection,
     setDefaultSelection,
     getDefaultSelectionId,

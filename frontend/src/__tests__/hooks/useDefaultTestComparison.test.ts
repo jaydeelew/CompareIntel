@@ -90,6 +90,7 @@ describe('useDefaultTestComparison', () => {
     canSaveMore: true,
     maxSelections: 2,
     saveSelection: vi.fn(() => ({ success: true })),
+    deleteSelection: vi.fn(),
     handleLoadSelection: vi.fn(),
     setDefaultSelection: vi.fn(),
     getDefaultSelectionId: vi.fn(() => null),
@@ -282,8 +283,9 @@ describe('useDefaultTestComparison', () => {
   })
 
   describe('Registry changes and model validation', () => {
-    it('warns when Test Comparison has stale models', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    it('automatically updates Test Comparison when models become stale', async () => {
+      const deleteSelection = vi.fn()
+      const saveSelection = vi.fn(() => ({ success: true }))
       const existingSelection = {
         id: 'test-id',
         name: TEST_COMPARISON_NAME,
@@ -293,15 +295,71 @@ describe('useDefaultTestComparison', () => {
       }
       const params = createDefaultParams({
         savedSelections: [existingSelection],
+        deleteSelection,
+        saveSelection,
       })
 
       renderHook(() => useDefaultTestComparison(params))
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalled()
+        // Should delete old selection
+        expect(deleteSelection).toHaveBeenCalledWith('test-id')
+        // Should create new selection with fresh models
+        expect(saveSelection).toHaveBeenCalledWith(TEST_COMPARISON_NAME, [
+          'google/gemini-2.5-flash',
+          'deepseek/deepseek-v4.1-flash',
+        ])
+      })
+    })
+
+    it('automatically updates when only 1 model is still valid', async () => {
+      const deleteSelection = vi.fn()
+      const saveSelection = vi.fn(() => ({ success: true }))
+      const existingSelection = {
+        id: 'test-id',
+        name: TEST_COMPARISON_NAME,
+        modelIds: ['google/gemini-2.5-flash', 'removed/model'], // Only 1 valid
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      const params = createDefaultParams({
+        savedSelections: [existingSelection],
+        deleteSelection,
+        saveSelection,
       })
 
-      consoleSpy.mockRestore()
+      renderHook(() => useDefaultTestComparison(params))
+
+      await waitFor(() => {
+        expect(deleteSelection).toHaveBeenCalledWith('test-id')
+        expect(saveSelection).toHaveBeenCalledWith(TEST_COMPARISON_NAME, expect.any(Array))
+        const newModels = saveSelection.mock.calls[0][1]
+        expect(newModels).toHaveLength(2)
+      })
+    })
+
+    it('does not update when both models are still valid', async () => {
+      const deleteSelection = vi.fn()
+      const saveSelection = vi.fn()
+      const existingSelection = {
+        id: 'test-id',
+        name: TEST_COMPARISON_NAME,
+        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'], // Both valid
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      const params = createDefaultParams({
+        savedSelections: [existingSelection],
+        deleteSelection,
+        saveSelection,
+      })
+
+      renderHook(() => useDefaultTestComparison(params))
+
+      await waitFor(() => {
+        expect(deleteSelection).not.toHaveBeenCalled()
+        expect(saveSelection).not.toHaveBeenCalled()
+      })
     })
 
     it('falls back to alternative models when priority models are unavailable', async () => {
@@ -321,6 +379,35 @@ describe('useDefaultTestComparison', () => {
         expect(calledWith).toContain('microsoft/phi-4')
         expect(calledWith).toContain('deepseek/deepseek-v3.2')
       })
+    })
+
+    it('handles update failure gracefully', async () => {
+      const deleteSelection = vi.fn()
+      const saveSelection = vi.fn(() => ({ success: false, error: 'Save failed' }))
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const existingSelection = {
+        id: 'test-id',
+        name: TEST_COMPARISON_NAME,
+        modelIds: ['removed/model-1', 'removed/model-2'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      const params = createDefaultParams({
+        savedSelections: [existingSelection],
+        deleteSelection,
+        saveSelection,
+      })
+
+      const { result } = renderHook(() => useDefaultTestComparison(params))
+
+      await waitFor(() => {
+        expect(result.current.isInitialized).toBe(true)
+        expect(deleteSelection).toHaveBeenCalled()
+        expect(saveSelection).toHaveBeenCalled()
+        expect(consoleSpy).toHaveBeenCalled()
+      })
+
+      consoleSpy.mockRestore()
     })
   })
 

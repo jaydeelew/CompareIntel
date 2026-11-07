@@ -4,14 +4,15 @@
  * This hook provides a discoverable starting point for new anonymous users by:
  * - Creating a deletable saved selection named "Test Comparison" on first visit
  * - Preselecting 2 popular models available to the unregistered tier
- * - Respecting explicit user actions (deletion persists, manual selections not overwritten)
- * - Maintaining valid model selections when registry changes (removes stale/restricted IDs)
+ * - Automatically updating the selection when models are added/removed from registry
+ * - Respecting explicit user actions (deletion persists forever, manual selections not overwritten)
  *
  * Lifecycle:
  * - Fresh visit: creates "Test Comparison" with 2 models, marks as default, and activates them
- * - Returning visit: loads the selection if it still exists and wasn't deleted
- * - Opted-out visit: if user deleted "Test Comparison", never recreate it
- * - Registry changes: validates models are still eligible, falls back to next-best eligible models
+ * - Returning visit: loads the selection if still default (no manual override)
+ * - Registry changes: automatically replaces stale/removed/restricted models with eligible fallbacks
+ * - Active sync: only updates active selection if user is following the default (no manual override)
+ * - Opted-out visit: if user deleted "Test Comparison", NEVER recreate (deletion persists forever)
  *
  * Signed-in users are not affected (keyed by user ID, not anonymous ID).
  */
@@ -62,6 +63,8 @@ interface UseDefaultTestComparisonParams {
   maxSelections: number
   /** Function to save a selection */
   saveSelection: (name: string, modelIds: string[]) => { success: boolean; error?: string }
+  /** Function to delete a selection */
+  deleteSelection: (id: string) => void
   /** Function to load a selection */
   handleLoadSelection: (id: string) => void
   /** Function to set default selection */
@@ -173,6 +176,7 @@ export function useDefaultTestComparison(
     canSaveMore,
     maxSelections,
     saveSelection,
+    deleteSelection,
     handleLoadSelection,
     setDefaultSelection,
     getDefaultSelectionId,
@@ -235,25 +239,24 @@ export function useDefaultTestComparison(
       const validModels = existingTestComparison.modelIds.filter(id => selectableModels.has(id))
 
       if (validModels.length < 2) {
-        // Models are stale or restricted - update the selection
-        logger.info('Test Comparison has stale models, updating', {
+        // Models are stale or restricted - automatically update the selection
+        logger.info('Test Comparison has stale models, automatically updating', {
           old: existingTestComparison.modelIds,
           new: bestTwoModels,
         })
 
-        // Can't update in place (no update method), so delete and recreate
-        // But we don't want to mark as opted out, so we skip that
-        // For now, we'll just log and let user handle it manually
-        // A production version could add an update method to the saved selections API
-        logger.warn(
-          'Test Comparison models are stale but cannot auto-update. User should manually update or delete.'
-        )
-      }
+        // Delete and recreate with new models (without marking as opted out)
+        deleteSelection(existingTestComparison.id)
 
-      // If user hasn't manually selected models, load Test Comparison
-      if (selectedModels.length === 0 && getDefaultSelectionId() === existingTestComparison.id) {
-        logger.debug('Loading Test Comparison on return visit')
-        handleLoadSelection(existingTestComparison.id)
+        // Create new selection with fresh models
+        const result = saveSelection(TEST_COMPARISON_NAME, bestTwoModels)
+
+        if (result.success) {
+          logger.info('Test Comparison updated successfully with fresh models')
+          // Note: We'll handle default setting and loading in the next effect
+        } else {
+          logger.error('Failed to update Test Comparison', { error: result.error })
+        }
       }
 
       setIsInitialized(true)
@@ -297,6 +300,7 @@ export function useDefaultTestComparison(
     canSaveMore,
     maxSelections,
     saveSelection,
+    deleteSelection,
     handleLoadSelection,
     setDefaultSelection,
     getDefaultSelectionId,
