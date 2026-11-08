@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+  "modelName": "Qwen: Qwen3 Next 80B A3B Instruct",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+  "response": "The quadratic formula, $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$, provides the solutions to any quadratic equation of the form $ax^2 + bx + c = 0$, where $a \\neq 0$. The term under the square root, $b^2 - 4ac$, is called the discriminant and determines the nature of the roots: if it’s positive, there are two real solutions; if zero, one real solution; and if negative, two complex solutions.\n\nHere is a system of linear equations solved simultaneously:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding these two equations eliminates $y$:  \n$(x + y) + (2x - y) = 5 + 1 \\Rightarrow 3x = 6 \\Rightarrow x = 2$.  \nSubstituting back, $2 + y = 5 \\Rightarrow y = 3$.  \nSo the solution is $x = 2$, $y = 3$.\n\nMatrices and piecewise functions are common in linear algebra and calculus. For example, the $2 \\times 2$ identity matrix is:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nAnd a piecewise-defined function such as:\n\n$$f(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\nillustrates how output depends on input conditions.\n\nHere are three fundamental equations from physics and geometry:\n\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\nFor more details on the quadratic formula, see [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula).\n\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).",
+  "usage": {
+    "prompt_tokens": 279,
+    "completion_tokens": 448,
+    "total_tokens": 727,
+    "cost": 0.00051791,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00051791,
+      "upstream_inference_prompt_cost": 0.00002511,
+      "upstream_inference_completions_cost": 0.0004928
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00051791,
+  "actualCost": 0.00051791,
+  "timestamp": "2026-11-08T18:32:45.929Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

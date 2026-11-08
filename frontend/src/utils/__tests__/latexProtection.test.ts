@@ -34,6 +34,11 @@ describe('protectCurrencyDollars', () => {
     }
   )
 
+  it('leaves padded inline math with spaces inside the dollars untouched (Qwen 04)', () => {
+    const input = "1. The derivative $ f'(x) $\n2. The integral $ \\int f(x) \\, dx $"
+    expect(protectCurrencyDollars(input)).toBe(input)
+  })
+
   it('pairs dollars per table cell', () => {
     expect(protectCurrencyDollars('| $0.03 | Claude | 200k | $0.02 |')).toBe(
       `| ${L}0.03 | Claude | 200k | ${L}0.02 |`

@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-11-08T18:32:23.241Z",
+  "data": [
+    {
+      "id": "google/gemma-4-26b-a4b-it",
+      "name": "Google: Gemma 4 26B A4B ",
+      "pricing": {
+        "prompt": "0.0000000675",
+        "completion": "0.000000225",
+        "input_cache_read": "0.0000000375"
+      }
+    },
+    {
+      "id": "qwen/qwen3-next-80b-a3b-instruct",
+      "name": "Qwen: Qwen3 Next 80B A3B Instruct",
+      "pricing": {
+        "prompt": "0.00000009",
+        "completion": "0.0000011"
+      }
+    },
+    {
+      "id": "meta-llama/llama-4-maverick",
+      "name": "Meta: Llama 4 Maverick",
+      "pricing": {
+        "prompt": "0.00000035",
+        "completion": "0.000001",
+        "input_cache_read": "0.00000017"
+      }
+    },
+    {
+      "id": "minimax/minimax-m3.1-flash",
+      "name": "MiniMax: MiniMax M3.1 Flash",
+      "pricing": {
+        "prompt": "0.000000075",
+        "completion": "0.0000003",
+        "input_cache_read": "0.0000000075",
+        "overrides": [
+          {
+            "utc_start": 1500,
+            "utc_end": 100,
+            "prompt": "0.000000075",
+            "completion": "0.0000003",
+            "input_cache_read": "0.0000000075"
+          },
+          {
+            "utc_start": 100,
+            "utc_end": 1500,
+            "prompt": "0.00000015",
+            "completion": "0.0000006",
+            "input_cache_read": "0.000000015"
+          }
+        ]
+      }
+    }
+  ]
+}

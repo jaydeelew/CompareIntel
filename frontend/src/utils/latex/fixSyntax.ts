@@ -23,9 +23,11 @@ export function wrapBareLatexBlocks(text: string): string {
       i++
       continue
     }
-    if (insideMathBlock && /^\\\]\s*$/.test(trimmed)) {
+    if (insideMathBlock && /^(?:[-*+]\s+|\d+\.\s+)?\\\]\s*$/.test(trimmed)) {
       insideMathBlock = false
-      result.push(lines[i])
+      // List marker on a closer is not math. Leaving `- \]` in source makes
+      // extractDisplayMath capture a trailing minus (`= 5 -`).
+      result.push(lines[i].replace(/^(\s*)(?:[-*+]\s+|\d+\.\s+)(\\\]\s*)$/, '$1$2'))
       i++
       continue
     }
@@ -35,9 +37,9 @@ export function wrapBareLatexBlocks(text: string): string {
       i++
       continue
     }
-    if (insideMathBlock && /^\$\$\s*$/.test(trimmed)) {
+    if (insideMathBlock && /^(?:[-*+]\s+|\d+\.\s+)?\$\$\s*$/.test(trimmed)) {
       insideMathBlock = false
-      result.push(lines[i])
+      result.push(lines[i].replace(/^(\s*)(?:[-*+]\s+|\d+\.\s+)(\$\$\s*)$/, '$1$2'))
       i++
       continue
     }

@@ -30,6 +30,25 @@ describe('wrapBareLatexBlocks', () => {
     expect(wrapBareLatexBlocks(input)).toBe(input)
     expect(wrapBareLatexBlocks(input)).not.toContain('$$')
   })
+
+  it('treats a list-prefixed \\] as the math-block closer and strips the marker', () => {
+    const input = '- \\[\n  c = \\sqrt{3^2 + 4^2} = 5\n- \\]\n\\frac{1}{2}'
+    const out = wrapBareLatexBlocks(input)
+    expect(out).toContain('- \\[')
+    expect(out).toMatch(/\n\\]\n/)
+    expect(out).not.toMatch(/^- \\]$/m)
+    expect(out).toMatch(/\$\$\\frac\{1\}\{2\}\$\$/)
+    expect(out).not.toContain('$$c =')
+  })
+
+  it('treats a list-prefixed $$ closer the same way', () => {
+    const input = '- $$\n  c = \\sqrt{3^2 + 4^2} = 5\n- $$\n\\frac{1}{2}'
+    const out = wrapBareLatexBlocks(input)
+    const lines = out.split('\n')
+    expect(lines[0]).toBe('- $$')
+    expect(lines[2].trim()).toBe('$$')
+    expect(out).toMatch(/\$\$\\frac\{1\}\{2\}\$\$/)
+  })
 })
 
 describe('fixLatexIssues', () => {

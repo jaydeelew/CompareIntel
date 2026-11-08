@@ -1,0 +1,36 @@
+{
+  "modelId": "meta-llama/llama-4-maverick",
+  "modelName": "Meta: Llama 4 Maverick",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\nThe equation is correctly displayed as a centered block equation: $$x^2 + y^2 = r^2$$\n\n2. Bracket display: \\[E = mc^2\\]\nThe equation is correctly displayed as a centered block equation: \\[E = mc^2\\]\n\n3. Single dollar inline: $a + b = c$\nThe equation is correctly displayed inline: $a + b = c$\n\n4. Paren inline: \\(x = 5\\)\nThe equation is correctly displayed inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\nThe list is correctly formatted with the display math equation centered and the text continuing as expected.\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\nThe code block remains unchanged, preserving the literal syntax.\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\nThe sentence is displayed with the dollar sign interpreted as currency.\n\n- Escaped: The budget is \\$500\nThe escaped dollar sign is correctly displayed as a literal character: The budget is \\$500.\n\n- Multiple: Costs $25, $30, and $45\nMultiple dollar signs are correctly interpreted as currency.\n\n- In sentence: I spent $50 at the store\nThe dollar sign is correctly interpreted within the sentence.\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\nThe table is correctly formatted with inline math equations.\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\nThe dollar signs are correctly interpreted, one as indicating a shell variable and the other as currency.",
+  "usage": {
+    "prompt_tokens": 337,
+    "completion_tokens": 485,
+    "total_tokens": 822,
+    "cost": 0.00060295,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00060295,
+      "upstream_inference_prompt_cost": 0.00011795,
+      "upstream_inference_completions_cost": 0.000485
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00060295,
+  "actualCost": 0.00060295,
+  "timestamp": "2026-11-08T18:34:17.814Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

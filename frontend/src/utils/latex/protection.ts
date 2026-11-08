@@ -41,13 +41,15 @@ const TABLE_ROW_RE = /^\s*\|/
 
 /**
  * A `$` followed by a digit only opens inline math when the span to the next `$` is
- * well formed: non-empty, no whitespace just inside the closing `$`, the closing `$`
- * is not followed by a digit (as in `$5 and $10`), and the content is not prose.
+ * well formed: non-empty, and not a currency `$5 … $10` pair (closing `$` followed by
+ * a digit, or trailing whitespace after a `$`+digit open). Padded math `$ f'(x) $`
+ * (Qwen 04) is still math.
  */
 function isValidCurrencyLikeMathSpan(segment: string, open: number, close: number): boolean {
   const content = segment.slice(open + 1, close)
   if (!content.trim()) return false
-  if (/\s$/.test(content)) return false
+  const opensOnDigit = /\d/.test(segment.charAt(open + 1))
+  if (/\s$/.test(content) && opensOnDigit) return false
   if (/\d/.test(segment.charAt(close + 1))) return false
   const hasMathSyntax = /[\\^_=+*/<>{}]/.test(content)
   if (!hasMathSyntax && /[A-Za-z]{2,}\s+[A-Za-z]{2,}/.test(content)) return false

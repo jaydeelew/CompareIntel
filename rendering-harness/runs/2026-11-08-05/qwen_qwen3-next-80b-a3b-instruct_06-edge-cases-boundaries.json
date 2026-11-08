@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+  "modelName": "Qwen: Qwen3 Next 80B A3B Instruct",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "The prompt you've provided is a comprehensive test for delimiter handling in Markdown or LaTeX-like systems, particularly focusing on how systems distinguish between:\n\n- Mathematical expressions (inline and display)\n- Literal dollar signs (currency, shell variables)\n- Escaped dollars\n- Code blocks\n- Tables\n- Nested structures\n\nBelow is a properly rendered response that respects all edge cases and delimiter variants — **preserving literal dollars and code as-is**, while correctly rendering mathematical expressions **only where intended**.\n\n---\n\n### Delimiter Variants\n\n1. **Double dollar display**:  \n   $$x^2 + y^2 = r^2$$\n\n2. **Bracket display**:  \n   \\[E = mc^2\\]\n\n3. **Single dollar inline**:  \n   $a + b = c$\n\n4. **Paren inline**:  \n   \\(x = 5\\)\n\n---\n\n### Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n---\n\n### Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n> ✅ Note: The `$50` inside the code block is preserved literally — **not** interpreted as math.  \n> The `a**2` and `b**2` are also preserved as Python syntax, not LaTeX.\n\n---\n\n### Currency and Escaped Dollars\n\n- Plain: The price is $100  \n- Escaped: The budget is \\$500  \n- Multiple: Costs $25, $30, and $45  \n- In sentence: I spent $50 at the store  \n\n> ✅ All dollar signs here are treated as literal currency symbols, **not** math delimiters, because they are not surrounded by valid mathematical expressions and appear in natural language contexts.\n\n---\n\n### Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n> ✅ Inline math within table cells is correctly rendered. The numeric values ($78.54$, $523.60$) are **not** interpreted as math — but since they are wrapped in `$`, they are rendered as inline math. In practice, this may be ambiguous.  \n> **Recommendation**: Avoid wrapping pure numbers in `$` unless necessary for formatting consistency. For clarity, consider: `78.54` instead of `$78.54$`.\n\n---\n\n### Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\n> ✅ `$HOME` is preserved as a shell variable reference — **not** interpreted as math.  \n> `$99.99` is preserved as a price — **not** math — because it lacks valid LaTeX syntax (e.g., no operators, Greek letters, or structured expressions).\n\n---\n\n### Summary of Handling Rules Applied\n\n| Case | Handled As | Reason |\n|------|------------|--------|\n| `$$...$$` | Display math | Standard LaTeX display delimiter |\n| `\\[...\\]` | Display math | LaTeX display alternative |\n| `$...$` | Inline math | Standard LaTeX inline delimiter |\n| `\\(...\\)` | Inline math | LaTeX inline alternative |\n| `$50` in code block | Literal text | Code blocks are escaped from Markdown rendering |\n| `$HOME` | Literal shell variable | Not a math expression; no operators or symbols |\n| `$100`, `$99.99` | Literal currency | No LaTeX structure; standalone numbers |\n| `\\$500` | Literal dollar | Escaped with backslash — explicitly non-math |\n| `$A = \\pi r^2$` | Inline math | Valid LaTeX expression |\n| `$78.54$` | Inline math (rendered) | Technically valid, but semantically questionable — rendered as math, but could be improved as plain text |\n\n---\n\n### Recommendation for Robust Systems\n\nTo avoid ambiguity:\n- Use `$$...$$` or `\\[...\\]` for display math.\n- Use `$...$` or `\\(...\\)` for inline math **only** when the content is a true mathematical expression.\n- Avoid wrapping pure numbers or currency in `$` unless required for consistent styling.\n- Always escape literal `$` as `\\$` if the system doesn't auto-detect context.\n- Preserve code blocks and shell variables exactly as written — never interpret `$` inside them.\n\n✅ This response correctly handles **all edge cases** without misrendering.",
+  "usage": {
+    "prompt_tokens": 358,
+    "completion_tokens": 1044,
+    "total_tokens": 1402,
+    "cost": 0.00118062,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00118062,
+      "upstream_inference_prompt_cost": 0.00003222,
+      "upstream_inference_completions_cost": 0.0011484
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00118062,
+  "actualCost": 0.00118062,
+  "timestamp": "2026-11-08T18:33:44.748Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

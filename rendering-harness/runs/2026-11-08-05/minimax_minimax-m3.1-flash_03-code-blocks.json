@@ -1,0 +1,36 @@
+{
+  "modelId": "minimax/minimax-m3.1-flash",
+  "modelName": "MiniMax: MiniMax M3.1 Flash",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here are the requested code blocks, rendered as fenced blocks.\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n**Output:**\n\n```\nSolutions: x = 3.0, x = 2.0\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n**Output:**\n\n```\n55\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nEach of those three tokens appears inside single backticks above, so they are treated as literal code spans rather than math or emphasis — the caret, underscore, and dollar sign are all preserved verbatim with no escaping or interpretation.",
+  "usage": {
+    "prompt_tokens": 436,
+    "completion_tokens": 597,
+    "total_tokens": 1033,
+    "cost": 0.000397275,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 195,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000397275,
+      "upstream_inference_prompt_cost": 0.000039075,
+      "upstream_inference_completions_cost": 0.0003582
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 288,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.000397275,
+  "actualCost": 0.000397275,
+  "timestamp": "2026-11-08T18:34:36.171Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

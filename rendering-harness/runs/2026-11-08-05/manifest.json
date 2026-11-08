@@ -1,0 +1,1010 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.1,
+  "maxTokens": "perModel",
+  "perModelMaxTokens": [
+    {
+      "id": "google/gemma-4-26b-a4b-it",
+      "maxTokens": 8192
+    },
+    {
+      "id": "qwen/qwen3-next-80b-a3b-instruct",
+      "maxTokens": 2048
+    },
+    {
+      "id": "meta-llama/llama-4-maverick",
+      "maxTokens": 2048
+    },
+    {
+      "id": "minimax/minimax-m3.1-flash",
+      "maxTokens": 8192
+    }
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+    }
+  ],
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "google/gemma-4-26b-a4b-it",
+    "qwen/qwen3-next-80b-a3b-instruct",
+    "meta-llama/llama-4-maverick",
+    "minimax/minimax-m3.1-flash"
+  ],
+  "plannedCalls": 24,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.013661330000000001,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "google/gemma-4-26b-a4b-it",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T18:32:28.781Z",
+      "reserveUsd": 0.00237234375,
+      "actualCost": 0.00005926,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:32:29.854Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 292,
+        "completion_tokens": 359,
+        "total_tokens": 651,
+        "cost": 0.00005926,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00005926,
+          "upstream_inference_prompt_cost": 0.00002336,
+          "upstream_inference_completions_cost": 0.0000359
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 2,
+      "modelId": "google/gemma-4-26b-a4b-it",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T18:32:29.854Z",
+      "reserveUsd": 0.0023586749999999997,
+      "actualCost": 0.00003624,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:32:30.569Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 213,
+        "completion_tokens": 192,
+        "total_tokens": 405,
+        "cost": 0.00003624,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00003624,
+          "upstream_inference_prompt_cost": 0.00001704,
+          "upstream_inference_completions_cost": 0.0000192
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 3,
+      "modelId": "google/gemma-4-26b-a4b-it",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T18:32:30.569Z",
+      "reserveUsd": 0.0023661,
+      "actualCost": 0.00004772,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:32:31.420Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 258,
+        "total_tokens": 532,
+        "cost": 0.00004772,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00004772,
+          "upstream_inference_prompt_cost": 0.00002192,
+          "upstream_inference_completions_cost": 0.0000258
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 4,
+      "modelId": "google/gemma-4-26b-a4b-it",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T18:32:31.420Z",
+      "reserveUsd": 0.002382721875,
+      "actualCost": 0.0000561,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:32:32.268Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 330,
+        "completion_tokens": 297,
+        "total_tokens": 627,
+        "cost": 0.0000561,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0000561,
+          "upstream_inference_prompt_cost": 0.0000264,
+          "upstream_inference_completions_cost": 0.0000297
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 5,
+      "modelId": "google/gemma-4-26b-a4b-it",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T18:32:32.268Z",
+      "reserveUsd": 0.002407528125,
+      "actualCost": 0.0001338075,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:32:37.900Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 459,
+        "completion_tokens": 457,
+        "total_tokens": 916,
+        "cost": 0.0001338075,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001338075,
+          "upstream_inference_prompt_cost": 0.0000309825,
+          "upstream_inference_completions_cost": 0.000102825
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 6,
+      "modelId": "google/gemma-4-26b-a4b-it",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T18:32:37.901Z",
+      "reserveUsd": 0.0023931,
+      "actualCost": 0.0000641,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:32:39.132Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 370,
+        "completion_tokens": 345,
+        "total_tokens": 715,
+        "cost": 0.0000641,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0000641,
+          "upstream_inference_prompt_cost": 0.0000296,
+          "upstream_inference_completions_cost": 0.0000345
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 7,
+      "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T18:32:39.132Z",
+      "reserveUsd": 0.002907125,
+      "actualCost": 0.00051791,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:32:45.929Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 279,
+        "completion_tokens": 448,
+        "total_tokens": 727,
+        "cost": 0.00051791,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00051791,
+          "upstream_inference_prompt_cost": 0.00002511,
+          "upstream_inference_completions_cost": 0.0004928
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 8,
+      "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T18:32:45.929Z",
+      "reserveUsd": 0.0028889000000000002,
+      "actualCost": 0.00021966,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:32:47.947Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 204,
+        "completion_tokens": 183,
+        "total_tokens": 387,
+        "cost": 0.00021966,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00021966,
+          "upstream_inference_prompt_cost": 0.00001836,
+          "upstream_inference_completions_cost": 0.0002013
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 9,
+      "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T18:32:47.947Z",
+      "reserveUsd": 0.0028988,
+      "actualCost": 0.00024975,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:32:50.386Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 245,
+        "completion_tokens": 207,
+        "total_tokens": 452,
+        "cost": 0.00024975,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00024975,
+          "upstream_inference_prompt_cost": 0.00002205,
+          "upstream_inference_completions_cost": 0.0002277
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 10,
+      "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T18:32:50.386Z",
+      "reserveUsd": 0.0029209625,
+      "actualCost": 0.00080293,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:33:04.178Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 317,
+        "completion_tokens": 704,
+        "total_tokens": 1021,
+        "cost": 0.00080293,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00080293,
+          "upstream_inference_prompt_cost": 0.00002853,
+          "upstream_inference_completions_cost": 0.0007744
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 11,
+      "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T18:33:04.178Z",
+      "reserveUsd": 0.0029540375000000002,
+      "actualCost": 0.0019965,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:33:31.639Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 440,
+        "completion_tokens": 1779,
+        "total_tokens": 2219,
+        "cost": 0.0019965,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0019965,
+          "upstream_inference_prompt_cost": 0.0000396,
+          "upstream_inference_completions_cost": 0.0019569
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 12,
+      "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T18:33:31.639Z",
+      "reserveUsd": 0.0029348,
+      "actualCost": 0.00118062,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:33:44.748Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 358,
+        "completion_tokens": 1044,
+        "total_tokens": 1402,
+        "cost": 0.00118062,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00118062,
+          "upstream_inference_prompt_cost": 0.00003222,
+          "upstream_inference_completions_cost": 0.0011484
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 13,
+      "modelId": "meta-llama/llama-4-maverick",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T18:33:44.749Z",
+      "reserveUsd": 0.002914375,
+      "actualCost": 0.0006399,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:33:50.940Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 254,
+        "completion_tokens": 551,
+        "total_tokens": 805,
+        "cost": 0.0006399,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0006399,
+          "upstream_inference_prompt_cost": 0.0000889,
+          "upstream_inference_completions_cost": 0.000551
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 14,
+      "modelId": "meta-llama/llama-4-maverick",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T18:33:50.941Z",
+      "reserveUsd": 0.0028435,
+      "actualCost": 0.0002406,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:33:53.005Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 196,
+        "completion_tokens": 172,
+        "total_tokens": 368,
+        "cost": 0.0002406,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0002406,
+          "upstream_inference_prompt_cost": 0.0000686,
+          "upstream_inference_completions_cost": 0.000172
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 15,
+      "modelId": "meta-llama/llama-4-maverick",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T18:33:53.005Z",
+      "reserveUsd": 0.0028819999999999996,
+      "actualCost": 0.0003414,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:33:56.036Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 244,
+        "completion_tokens": 256,
+        "total_tokens": 500,
+        "cost": 0.0003414,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0003414,
+          "upstream_inference_prompt_cost": 0.0000854,
+          "upstream_inference_completions_cost": 0.000256
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 16,
+      "modelId": "meta-llama/llama-4-maverick",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T18:33:56.036Z",
+      "reserveUsd": 0.0029681875,
+      "actualCost": 0.0005576,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:34:02.383Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 296,
+        "completion_tokens": 454,
+        "total_tokens": 750,
+        "cost": 0.0005576,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005576,
+          "upstream_inference_prompt_cost": 0.0001036,
+          "upstream_inference_completions_cost": 0.000454
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 17,
+      "modelId": "meta-llama/llama-4-maverick",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T18:34:02.383Z",
+      "reserveUsd": 0.0030968124999999997,
+      "actualCost": 0.00103665,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:34:11.140Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 419,
+        "completion_tokens": 890,
+        "total_tokens": 1309,
+        "cost": 0.00103665,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00103665,
+          "upstream_inference_prompt_cost": 0.00014665,
+          "upstream_inference_completions_cost": 0.00089
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 18,
+      "modelId": "meta-llama/llama-4-maverick",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T18:34:11.141Z",
+      "reserveUsd": 0.0030219999999999995,
+      "actualCost": 0.00060295,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:34:17.814Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 337,
+        "completion_tokens": 485,
+        "total_tokens": 822,
+        "cost": 0.00060295,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00060295,
+          "upstream_inference_prompt_cost": 0.00011795,
+          "upstream_inference_completions_cost": 0.000485
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 19,
+      "modelId": "minimax/minimax-m3.1-flash",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T18:34:17.814Z",
+      "reserveUsd": 0.006295874999999999,
+      "actualCost": 0.00072312,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:34:31.057Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 436,
+        "completion_tokens": 1125,
+        "total_tokens": 1561,
+        "cost": 0.00072312,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00072312,
+          "upstream_inference_prompt_cost": 0.00004812,
+          "upstream_inference_completions_cost": 0.000675
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 495,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 20,
+      "modelId": "minimax/minimax-m3.1-flash",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T18:34:31.058Z",
+      "reserveUsd": 0.0062655,
+      "actualCost": 0.00029322,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:34:33.168Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 366,
+        "completion_tokens": 426,
+        "total_tokens": 792,
+        "cost": 0.00029322,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00029322,
+          "upstream_inference_prompt_cost": 0.00003762,
+          "upstream_inference_completions_cost": 0.0002556
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 253,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 21,
+      "modelId": "minimax/minimax-m3.1-flash",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T18:34:33.168Z",
+      "reserveUsd": 0.006281999999999999,
+      "actualCost": 0.000397275,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:34:36.171Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 436,
+        "completion_tokens": 597,
+        "total_tokens": 1033,
+        "cost": 0.000397275,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 195,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000397275,
+          "upstream_inference_prompt_cost": 0.000039075,
+          "upstream_inference_completions_cost": 0.0003582
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 288,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 22,
+      "modelId": "minimax/minimax-m3.1-flash",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T18:34:36.172Z",
+      "reserveUsd": 0.0063189375,
+      "actualCost": 0.0002477775,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:34:40.504Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 485,
+        "completion_tokens": 749,
+        "total_tokens": 1234,
+        "cost": 0.0002477775,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 197,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0002477775,
+          "upstream_inference_prompt_cost": 0.0000230775,
+          "upstream_inference_completions_cost": 0.0002247
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 341,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 23,
+      "modelId": "minimax/minimax-m3.1-flash",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T18:34:40.504Z",
+      "reserveUsd": 0.0063740624999999995,
+      "actualCost": 0.00234852,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:35:10.319Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 604,
+        "completion_tokens": 3792,
+        "total_tokens": 4396,
+        "cost": 0.00234852,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00234852,
+          "upstream_inference_prompt_cost": 0.00007332,
+          "upstream_inference_completions_cost": 0.0022752
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1481,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 24,
+      "modelId": "minimax/minimax-m3.1-flash",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T18:35:10.319Z",
+      "reserveUsd": 0.006342,
+      "actualCost": 0.00086772,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T18:35:17.117Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 531,
+        "completion_tokens": 1358,
+        "total_tokens": 1889,
+        "cost": 0.00086772,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 198,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00086772,
+          "upstream_inference_prompt_cost": 0.00005292,
+          "upstream_inference_completions_cost": 0.0008148
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1038,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed: collection only, no rendering or feature validation",
+  "startedAt": "2026-11-08T18:32:28.778Z",
+  "conservativeBatchReserve": 0.08739034374999999,
+  "status": "completed",
+  "finishedAt": "2026-11-08T18:35:17.118Z",
+  "files": {
+    "replies": [
+      "replies/google_gemma-4-26b-a4b-it_01-math-basics.json",
+      "replies/google_gemma-4-26b-a4b-it_02-markdown-formatting.json",
+      "replies/google_gemma-4-26b-a4b-it_03-code-blocks.json",
+      "replies/google_gemma-4-26b-a4b-it_04-mixed-markdown-latex.json",
+      "replies/google_gemma-4-26b-a4b-it_05-complex-scenarios.json",
+      "replies/google_gemma-4-26b-a4b-it_06-edge-cases-boundaries.json",
+      "replies/meta-llama_llama-4-maverick_01-math-basics.json",
+      "replies/meta-llama_llama-4-maverick_02-markdown-formatting.json",
+      "replies/meta-llama_llama-4-maverick_03-code-blocks.json",
+      "replies/meta-llama_llama-4-maverick_04-mixed-markdown-latex.json",
+      "replies/meta-llama_llama-4-maverick_05-complex-scenarios.json",
+      "replies/meta-llama_llama-4-maverick_06-edge-cases-boundaries.json",
+      "replies/minimax_minimax-m3.1-flash_01-math-basics.json",
+      "replies/minimax_minimax-m3.1-flash_02-markdown-formatting.json",
+      "replies/minimax_minimax-m3.1-flash_03-code-blocks.json",
+      "replies/minimax_minimax-m3.1-flash_04-mixed-markdown-latex.json",
+      "replies/minimax_minimax-m3.1-flash_05-complex-scenarios.json",
+      "replies/minimax_minimax-m3.1-flash_06-edge-cases-boundaries.json",
+      "replies/qwen_qwen3-next-80b-a3b-instruct_01-math-basics.json",
+      "replies/qwen_qwen3-next-80b-a3b-instruct_02-markdown-formatting.json",
+      "replies/qwen_qwen3-next-80b-a3b-instruct_03-code-blocks.json",
+      "replies/qwen_qwen3-next-80b-a3b-instruct_04-mixed-markdown-latex.json",
+      "replies/qwen_qwen3-next-80b-a3b-instruct_05-complex-scenarios.json",
+      "replies/qwen_qwen3-next-80b-a3b-instruct_06-edge-cases-boundaries.json"
+    ],
+    "raw": [
+      "raw/google__gemma-4-26b-a4b-it__01-math-basics.raw.json",
+      "raw/google__gemma-4-26b-a4b-it__02-markdown-formatting.raw.json",
+      "raw/google__gemma-4-26b-a4b-it__03-code-blocks.raw.json",
+      "raw/google__gemma-4-26b-a4b-it__04-mixed-markdown-latex.raw.json",
+      "raw/google__gemma-4-26b-a4b-it__05-complex-scenarios.raw.json",
+      "raw/google__gemma-4-26b-a4b-it__06-edge-cases-boundaries.raw.json",
+      "raw/meta-llama__llama-4-maverick__01-math-basics.raw.json",
+      "raw/meta-llama__llama-4-maverick__02-markdown-formatting.raw.json",
+      "raw/meta-llama__llama-4-maverick__03-code-blocks.raw.json",
+      "raw/meta-llama__llama-4-maverick__04-mixed-markdown-latex.raw.json",
+      "raw/meta-llama__llama-4-maverick__05-complex-scenarios.raw.json",
+      "raw/meta-llama__llama-4-maverick__06-edge-cases-boundaries.raw.json",
+      "raw/minimax__minimax-m3.1-flash__01-math-basics.raw.json",
+      "raw/minimax__minimax-m3.1-flash__02-markdown-formatting.raw.json",
+      "raw/minimax__minimax-m3.1-flash__03-code-blocks.raw.json",
+      "raw/minimax__minimax-m3.1-flash__04-mixed-markdown-latex.raw.json",
+      "raw/minimax__minimax-m3.1-flash__05-complex-scenarios.raw.json",
+      "raw/minimax__minimax-m3.1-flash__06-edge-cases-boundaries.raw.json",
+      "raw/qwen__qwen3-next-80b-a3b-instruct__01-math-basics.raw.json",
+      "raw/qwen__qwen3-next-80b-a3b-instruct__02-markdown-formatting.raw.json",
+      "raw/qwen__qwen3-next-80b-a3b-instruct__03-code-blocks.raw.json",
+      "raw/qwen__qwen3-next-80b-a3b-instruct__04-mixed-markdown-latex.raw.json",
+      "raw/qwen__qwen3-next-80b-a3b-instruct__05-complex-scenarios.raw.json",
+      "raw/qwen__qwen3-next-80b-a3b-instruct__06-edge-cases-boundaries.raw.json"
+    ]
+  },
+  "reservePolicy": "Per-model max completion, maximum current catalog/time-override/same-model observed preflight rates, UTF8 bytes+32 input, 25% margin."
+}

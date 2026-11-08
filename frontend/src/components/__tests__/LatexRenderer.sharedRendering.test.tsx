@@ -432,6 +432,37 @@ describe('bug 19b: Qwen 05 summary table with `$...$` examples and unicode ² is
   })
 })
 
+describe("bug 21: padded `$ f'(x) $` is inline math, not leftover dollars", () => {
+  it('renders Qwen 04 spaced dollar spans as KaTeX (not raw $…$)', () => {
+    const el = renderReply(
+      "1. The ***derivative*** $ f'(x) $\n2. The ***integral*** $ \\int f(x) \\, dx $\n\nConsider the $ 2 \\times 2 $ matrix.\n",
+      'qwen/qwen3-next-80b-a3b-instruct'
+    )
+    expectNoKatexErrors(el)
+    const tex = texSources(el)
+    expect(tex.some(t => t.includes("f'(x)"))).toBe(true)
+    expect(tex.some(t => t.includes('\\int'))).toBe(true)
+    expect(tex.some(t => t.includes('\\times'))).toBe(true)
+    expect(visibleText(el)).not.toMatch(/\$\s*f'/)
+    expect(visibleText(el)).not.toContain('$ 2')
+  })
+})
+
+describe('bug 20: list-prefixed \\] closes display math without a trailing minus', () => {
+  it('renders \\sqrt and a following bare fraction; no dangling minus (phi-4 config)', () => {
+    const el = renderReply(
+      '- \\[\nc = \\sqrt{3^2 + 4^2} = 5\n- \\]\n\nBare fraction after the block:\n\n\\frac{1}{2}\n',
+      'microsoft/phi-4'
+    )
+    expectNoKatexErrors(el)
+    const tex = texSources(el)
+    expect(tex.some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
+    expect(tex.some(t => /=\s*5\s*-/.test(t))).toBe(false)
+    expect(tex.some(t => t.includes('\\frac{1}{2}'))).toBe(true)
+    expect(visibleText(el)).not.toContain('\\frac')
+  })
+})
+
 describe('bug 16: $...$ / $$...$$ delimiter examples are not math', () => {
   it('does not extract ellipsis dollar examples or leak list/math placeholders (Phi-4 prompt 05)', () => {
     const el = renderReply(
