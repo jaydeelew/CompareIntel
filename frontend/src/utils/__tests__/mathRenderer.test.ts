@@ -5,7 +5,11 @@
 import { describe, it, expect } from 'vitest'
 
 import type { MathRendererConfig } from '../../types/rendererConfig'
-import { renderMathContent } from '../latex/mathRenderer'
+import {
+  extractDisplayMath,
+  restoreDisplayMath,
+  renderMathContent,
+} from '../latex/mathRenderer'
 
 // Config matching GPT 5.2 Pro: \( \) has priority over $
 const parenFirstConfig: MathRendererConfig = {
@@ -71,5 +75,52 @@ So \\(x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}\\).`
       expect(result).not.toMatch(/62-4a[cs]/)
       expect(result).not.toMatch(/b2-4ac√/)
     })
+  })
+})
+
+const qwenCoderDisplayDelimiters: MathRendererConfig['displayMathDelimiters'] = [
+  {
+    pattern: /\\begin\{align\}([\s\S]*?)\\end\{align\}/g,
+    name: 'align-env',
+    priority: 1,
+  },
+  {
+    pattern: /\$\$([^$]+?)\$\$/gs,
+    name: 'double-dollar',
+    priority: 2,
+  },
+]
+
+describe('extractDisplayMath - $$\\begin{align}$$ is one outer block', () => {
+  it('does not nest __DISPLAY_MATH_0__ inside a later $$ capture (Qwen3 Coder 01)', () => {
+    const input = `## Display Math with Aligned Equations
+$$\\begin{align}
+x + y &= 5 \\\\
+2x - y &= 1
+\\end{align}$$
+
+$$E = mc^2$$`
+    const { text, mathBlocks } = extractDisplayMath(input, qwenCoderDisplayDelimiters)
+    expect(text).not.toContain('\\begin{align}')
+    expect(mathBlocks.some(block => block.includes('__DISPLAY_MATH_'))).toBe(false)
+    expect(mathBlocks.some(block => /\\begin\{align\}/.test(block))).toBe(true)
+    const restored = restoreDisplayMath(text, mathBlocks)
+    expect(restored).toContain('\\begin{align}')
+    expect(restored).not.toContain('__DISPLAY_MATH_')
+  })
+
+  it('renders $$\\begin{align}$$ without KaTeX errors', () => {
+    const input = `$$\\begin{align}
+x + y &= 5 \\\\
+2x - y &= 1
+\\end{align}$$`
+    const result = renderMathContent(input, {
+      displayMathDelimiters: qwenCoderDisplayDelimiters,
+      inlineMathDelimiters: [],
+      katexOptions: { throwOnError: false, strict: false },
+    })
+    expect(result).toContain('katex-display')
+    expect(result).not.toContain('katex-error')
+    expect(result).not.toContain('__DISPLAY_MATH_')
   })
 })

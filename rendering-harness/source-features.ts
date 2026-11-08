@@ -62,6 +62,18 @@ function hasInlineMath(text: string): boolean {
   return /(?<!\\)\$(?!\$)(?:\\\$|[^$\n])+?(?<!\\)\$/.test(text)
 }
 
+/** GFM table: a pipe row followed by a separator. `|x|` piecewise math is not a table. */
+function hasMarkdownTable(text: string): boolean {
+  const lines = text.split('\n')
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (!/^\s*\|.+\|\s*$/.test(lines[i])) continue
+    if (/^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(lines[i + 1])) {
+      return true
+    }
+  }
+  return false
+}
+
 function hasNestedLists(text: string): boolean {
   const indents: number[] = []
   for (const line of text.split('\n')) {
@@ -88,7 +100,7 @@ export function detectSourceFeatures(markdown: string): SourceFeatures {
     hasDisplayMath: hasDisplayMath(proseProtected),
     hasInlineMath: hasInlineMath(proseProtected),
     hasCodeBlocks: fenced.length > 0 || /```/.test(markdown),
-    hasTables: /^\s*\|.+\|/m.test(prose),
+    hasTables: hasMarkdownTable(proseNoMath) || hasMarkdownTable(prose),
     hasLinks: /\[[^\]]+\]\([^)\s]+\)/.test(prose),
     hasNestedLists: hasNestedLists(prose),
     hasCurrency: CURRENCY_AFTER_LITERAL.test(proseProtected) || /\$\d/.test(proseNoMath),

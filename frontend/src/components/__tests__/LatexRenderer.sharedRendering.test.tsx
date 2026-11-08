@@ -399,6 +399,45 @@ describe('bug 18: **$x = 0$** in an ordered-list continuation is bold math, not 
   })
 })
 
+describe('bug 24: double-backtick `` `$x$` `` is inline code, not leaked KaTeX HTML', () => {
+  it('does not dump KaTeX HTML for GLM 5 05 delimiter example', () => {
+    const el = renderReply(
+      'In Markdown, writing `` `$x$` `` renders as inline code, whereas writing $y$ renders as math.',
+      'z-ai/glm-5'
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('class="katex"')
+    expect(el.innerHTML).not.toContain('&lt;span class="katex"')
+    const code = el.querySelector('code')
+    expect(code?.textContent).toContain('$x$')
+    expect(texSources(el).some(t => t.includes('y'))).toBe(true)
+  })
+})
+
+describe('bug 23: $$\\begin{align}$$ is not a leaked __DISPLAY_MATH_0__ placeholder', () => {
+  it('renders Qwen3 Coder 01 aligned display math without placeholder KaTeX errors', () => {
+    const el = renderReply(
+      [
+        '## Display Math with Aligned Equations',
+        '$$\\begin{align}',
+        'x + y &= 5 \\\\',
+        '2x - y &= 1',
+        '\\end{align}$$',
+        '',
+        '$$E = mc^2$$',
+      ].join('\n'),
+      'qwen/qwen3-coder'
+    )
+    expectNoKatexErrors(el)
+    expect(el.innerHTML).not.toContain('__DISPLAY_MATH_')
+    expect(visibleText(el)).not.toContain('__DISPLAY_MATH_0__')
+    expect(el.querySelectorAll('.katex-display').length).toBeGreaterThanOrEqual(2)
+    const tex = texSources(el)
+    expect(tex.some(t => /x \+ y/.test(t) && /2x - y/.test(t))).toBe(true)
+    expect(tex.some(t => t.includes('E = mc^2') || t.includes('E=mc^2'))).toBe(true)
+  })
+})
+
 describe('bug 22: hyphenated prose (Non-Math) is not implicit math', () => {
   it('does not wrap (Non-Math) as KaTeX (Mistral Medium 01 heading)', () => {
     const el = renderReply(

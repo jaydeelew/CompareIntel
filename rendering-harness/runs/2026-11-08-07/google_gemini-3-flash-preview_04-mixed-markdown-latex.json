@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3-flash-preview",
+  "modelName": "Google: Gemini 3 Flash Preview",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "Here is a response that continues the exploration of Markdown and LaTeX formatting by building upon your examples:\n\n## Advanced Calculus & Sequences\n**Exercise 2**: Consider the infinite series related to the exponential function $e^x$.\n\n1. The *Taylor Series* expansion for $e^x$ centered at 0 is:\n   $$\\sum_{n=0}^{\\infty} \\frac{x^n}{n!} = 1 + x + \\frac{x^2}{2!} + \\frac{x^3}{3!} + \\dots$$\n2. The limit definition of the derivative for $f(x) = \\sin(x)$:\n   $$f'(x) = \\lim_{h \\to 0} \\frac{\\sin(x+h) - \\sin(x)}{h} = \\cos(x)$$\n\n---\n\n## Vector Calculus in 3D\nWhen working with a vector field $\\mathbf{F} = P\\mathbf{i} + Q\\mathbf{j} + R\\mathbf{k}$, we define:\n\n*   **Divergence**: $\\nabla \\cdot \\mathbf{F} = \\frac{\\partial P}{\\partial x} + \\frac{\\partial Q}{\\partial y} + \\frac{\\partial R}{\\partial z}$\n*   **Curl**: \n    $$\\nabla \\times \\mathbf{F} = \\begin{vmatrix} \\mathbf{i} & \\mathbf{j} & \\mathbf{k} \\\\ \\frac{\\partial}{\\partial x} & \\frac{\\partial}{\\partial y} & \\frac{\\partial}{\\partial z} \\\\ P & Q & R \\end{vmatrix}$$\n\n---\n\n## Statistics & Probability\nIn a normal distribution $X \\sim \\mathcal{N}(\\mu, \\sigma^2)$, the probability density function (PDF) is given by:\n\n> $$f(x | \\mu, \\sigma^2) = \\frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}$$\n\n**Key takeaways for data analysis:**\n*   Approximately **68%** of data falls within one standard deviation ($\\pm 1\\sigma$).\n*   The Z-score formula to normalize a value $x$ is: \n    $$z = \\frac{x - \\mu}{\\sigma}$$\n\n---\n\n## Chemistry Context\nThe **Ideal Gas Law** relates pressure ($P$), volume ($V$), and temperature ($T$):\n\n$$PV = nRT$$\n\nWhere:\n- $n$ is the number of moles.\n- $R$ is the gas constant $\\approx 8.314 \\, \\text{J} \\cdot \\text{mol}^{-1} \\cdot \\text{K}^{-1}$.\n\n> **Warning**: Ensure temperature is always converted to **Kelvin** ($K = ^\\circ C + 273.15$) before calculation.",
+  "usage": {
+    "prompt_tokens": 317,
+    "completion_tokens": 624,
+    "total_tokens": 941,
+    "cost": 0.0020305,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0020305,
+      "upstream_inference_prompt_cost": 0.0001585,
+      "upstream_inference_completions_cost": 0.001872
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0020305,
+  "actualCost": 0.0020305,
+  "timestamp": "2026-11-08T18:53:54.235Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

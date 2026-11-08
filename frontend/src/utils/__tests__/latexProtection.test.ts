@@ -85,9 +85,28 @@ describe('inline code protection', () => {
       'The variable <code class="inline-code">x^2</code> and <code class="inline-code">&lt;b&gt;</code> and <code class="inline-code">$price</code>.'
     )
   })
+
+  it('keeps `` `$x$` `` as one code span so $x$ is not math (GLM 5 05)', () => {
+    const { text, spans } = extractInlineCode(
+      'In Markdown, writing `` `$x$` `` renders as inline code, whereas writing $y$ renders as math.'
+    )
+    expect(spans).toEqual(['`$x$`'])
+    expect(text).not.toContain('$x$')
+    expect(text).toContain('$y$')
+    expect(restoreInlineCode(text, spans)).toContain('<code class="inline-code">`$x$`</code>')
+  })
 })
 
 describe('blockquotes', () => {
+  it('strips nested > markers so leftover quotes are not visible (GLM 5 05)', () => {
+    const marked = markBlockquotes(
+      '> **Euler**\n> $$ e^{i\\pi} + 1 = 0 $$\n>\n> > Nested quote containing inline code:\n> > You can verify this.'
+    )
+    expect(marked).not.toMatch(/^>/m)
+    expect(marked).not.toContain('> Nested')
+    expect(marked).toContain('Nested quote containing inline code:')
+  })
+
   it('strips > markers and wraps the run', () => {
     const marked = markBlockquotes('Intro\n> This is a blockquote\n> with multiple lines\nAfter')
     expect(marked).not.toContain('>')

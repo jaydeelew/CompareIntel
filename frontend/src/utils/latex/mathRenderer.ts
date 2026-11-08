@@ -34,12 +34,62 @@ export interface MathRendererConfig {
   katexOptions?: ModelRendererConfig['katexOptions']
 }
 
-function sortDelimiters(delimiters: MathDelimiterPattern[]) {
+function delimiterKindRank(name?: MathDelimiterPattern['name']): number {
+  // Outer $$ / \[ must win over inner \begin{align}. Otherwise align-env
+  // (often priority 1) extracts from $$\begin{align}...\end{align}$$, then
+  // $$ wraps the leftover $$__DISPLAY_MATH_0__$$ and KaTeX renders the
+  // placeholder (Qwen3 Coder 01).
+  if (name === 'double-dollar' || name === 'bracket') return 0
+  if (name === 'align-env' || name === 'equation-env') return 2
+  return 1
+}
+
+export function sortMathDelimiters(delimiters: MathDelimiterPattern[]) {
   return [...delimiters].sort((a, b) => {
+    const rankA = delimiterKindRank(a.name)
+    const rankB = delimiterKindRank(b.name)
+    if (rankA !== rankB) return rankA - rankB
     const priorityA = a.priority ?? 999
     const priorityB = b.priority ?? 999
     return priorityA - priorityB
   })
+}
+
+function sortDelimiters(delimiters: MathDelimiterPattern[]) {
+  return sortMathDelimiters(delimiters)
+}
+
+/** True when `start` sits inside an unclosed $$...$$ or \[...\] span. */
+function isInsideOuterDisplayMath(text: string, start: number): boolean {
+  const before = text.slice(0, start)
+  const dollarPairs = before.match(/\$\$/g)
+  if ((dollarPairs?.length ?? 0) % 2 === 1) return true
+  const opens = (before.match(/\\\[/g) || []).length
+  const closes = (before.match(/\\\]/g) || []).length
+  return opens > closes
+}
+
+/** True when a later delimiter would rewrite KaTeX source (annotation / error). */
+export function isInsideRenderedMathHtml(text: string, start: number): boolean {
+  const before = text.slice(0, start)
+  if (before.lastIndexOf('<annotation') > before.lastIndexOf('</annotation>')) return true
+  if (before.lastIndexOf('class="katex-error"') > before.lastIndexOf('</span>')) return true
+  return false
+}
+
+function shouldSkipDisplayDelimiterMatch(
+  text: string,
+  start: number,
+  name?: MathDelimiterPattern['name']
+): boolean {
+  if (isInsideRenderedMathHtml(text, start)) return true
+  if (
+    (name === 'align-env' || name === 'equation-env') &&
+    isInsideOuterDisplayMath(text, start)
+  ) {
+    return true
+  }
+  return false
 }
 
 export function extractDisplayMath(
@@ -53,9 +103,13 @@ export function extractDisplayMath(
   let processed = text
   const delimiters = sortDelimiters(displayMathDelimiters)
 
-  delimiters.forEach(({ pattern }) => {
-    processed = processed.replace(pattern, fullMatch => {
+  delimiters.forEach(({ pattern, name }) => {
+    processed = processed.replace(pattern, (fullMatch, ...rest) => {
       if (isEllipsisDelimiterExample(fullMatch)) return leaveDelimiterExample(fullMatch)
+      const offset = rest[rest.length - 2]
+      if (typeof offset === 'number' && shouldSkipDisplayDelimiterMatch(processed, offset, name)) {
+        return fullMatch
+      }
       const index = mathBlocks.length
       mathBlocks.push(fullMatch)
       return `${placeholderPrefix}${index}${placeholderSuffix}`
@@ -67,14 +121,20 @@ export function extractDisplayMath(
 
 export function restoreDisplayMath(text: string, mathBlocks: string[]): string {
   const placeholderRegex = /__DISPLAY_MATH_(\d+)__/g
-
-  return text.replace(placeholderRegex, (_match, index) => {
-    const blockIndex = parseInt(index, 10)
-    if (blockIndex >= 0 && blockIndex < mathBlocks.length) {
-      return mathBlocks[blockIndex]
-    }
-    return _match
-  })
+  let result = text
+  // Nested leftover $$__DISPLAY_MATH_0__$$ needs a second pass.
+  for (let pass = 0; pass <= mathBlocks.length; pass++) {
+    const next = result.replace(placeholderRegex, (_match, index) => {
+      const blockIndex = parseInt(index, 10)
+      if (blockIndex >= 0 && blockIndex < mathBlocks.length) {
+        return mathBlocks[blockIndex]
+      }
+      return _match
+    })
+    if (next === result) break
+    result = next
+  }
+  return result
 }
 
 export function extractInlineMath(
@@ -195,10 +255,15 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
   // Process delimiter-based math FIRST - this ensures \( \displaystyle ... \), \( \frac{}{} \), etc.
   // are rendered correctly. Ad-hoc patterns below (e.g. standalone \displaystyle, ^x =) must run
   // AFTER so they don't steal/corrupt content that belongs to delimited math.
-  displayDelimiters.forEach(({ pattern }) => {
-    rendered = rendered.replace(pattern, (_match, math) => {
+  displayDelimiters.forEach(({ pattern, name }) => {
+    rendered = rendered.replace(pattern, (fullMatch, math, ...rest) => {
+      const offset = rest[rest.length - 2]
+      if (typeof offset === 'number' && shouldSkipDisplayDelimiterMatch(rendered, offset, name)) {
+        return fullMatch
+      }
       renderedFromDelimiters = true
-      return safeRenderKatex(math, true, config.katexOptions)
+      const body = typeof math === 'string' ? math : fullMatch
+      return safeRenderKatex(body, true, config.katexOptions)
     })
   })
 

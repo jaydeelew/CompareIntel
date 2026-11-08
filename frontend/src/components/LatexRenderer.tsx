@@ -46,6 +46,8 @@ import {
   renderMathContent,
   preserveEquationLineBreaks,
   preserveMathLineBreaks,
+  sortMathDelimiters,
+  isInsideRenderedMathHtml,
   safeRenderKatex,
   convertListPlaceholdersToHTML,
   markBlockquotes,
@@ -822,18 +824,18 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Stage 8.4: Render display math that was restored in Stage 8.3
         // Display math blocks restored here need to be rendered since they weren't rendered in Stage 6
-        const displayDelimiters = [...config.displayMathDelimiters].sort((a, b) => {
-          const priorityA = a.priority ?? 999
-          const priorityB = b.priority ?? 999
-          return priorityA - priorityB
-        })
+        const displayDelimiters = sortMathDelimiters(config.displayMathDelimiters)
         displayDelimiters.forEach(({ pattern }) => {
-          processed = processed.replace(pattern, (_match, math) => {
-            // Check if already rendered
-            if (_match.includes('<span class="katex">')) {
-              return _match
+          processed = processed.replace(pattern, (fullMatch, math, ...rest) => {
+            const offset = rest[rest.length - 2]
+            if (typeof offset === 'number' && isInsideRenderedMathHtml(processed, offset)) {
+              return fullMatch
             }
-            return safeRenderKatex(math, true, config.katexOptions)
+            if (fullMatch.includes('<span class="katex">')) {
+              return fullMatch
+            }
+            const body = typeof math === 'string' ? math : fullMatch
+            return safeRenderKatex(body, true, config.katexOptions)
           })
         })
 
@@ -990,11 +992,16 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Render any restored math placeholders
         displayDelimiters.forEach(({ pattern }) => {
-          processed = processed.replace(pattern, (_match, math) => {
-            if (_match.includes('<span class="katex">')) {
-              return _match
+          processed = processed.replace(pattern, (fullMatch, math, ...rest) => {
+            const offset = rest[rest.length - 2]
+            if (typeof offset === 'number' && isInsideRenderedMathHtml(processed, offset)) {
+              return fullMatch
             }
-            return safeRenderKatex(math, true, config.katexOptions)
+            if (fullMatch.includes('<span class="katex">')) {
+              return fullMatch
+            }
+            const body = typeof math === 'string' ? math : fullMatch
+            return safeRenderKatex(body, true, config.katexOptions)
           })
         })
         inlineDelimiters.forEach(({ pattern }) => {

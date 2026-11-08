@@ -124,13 +124,27 @@ export interface InlineCodeExtraction {
   spans: string[]
 }
 
+function pushInlineCodeSpan(spans: string[], content: string): string {
+  // CommonMark: one leading and trailing space are stripped when both are present.
+  let normalized = content
+  if (normalized.length >= 2 && normalized.startsWith(' ') && normalized.endsWith(' ')) {
+    normalized = normalized.slice(1, -1)
+  }
+  spans.push(normalized)
+  return `${INLINE_CODE_OPEN}${spans.length - 1}${INLINE_CODE_CLOSE}`
+}
+
 /** Replace single-line backtick spans with placeholders. `spans` holds the raw content. */
 export function extractInlineCode(text: string): InlineCodeExtraction {
   const spans: string[] = []
-  const processed = text.replace(/`([^`\n]+?)`/g, (_match, content: string) => {
-    spans.push(content)
-    return `${INLINE_CODE_OPEN}${spans.length - 1}${INLINE_CODE_CLOSE}`
-  })
+  // Double-or-more backticks first so `` `$x$` `` is one code span (GLM 5 05).
+  // A single-backtick pass would close on the inner ` and leave `$x$` as math.
+  let processed = text.replace(/(``+)((?:(?!\1)[^\n])*?)\1/g, (_match, _delim: string, content: string) =>
+    pushInlineCodeSpan(spans, content)
+  )
+  processed = processed.replace(/`([^`\n]+?)`/g, (_match, content: string) =>
+    pushInlineCodeSpan(spans, content)
+  )
   return { text: processed, spans }
 }
 

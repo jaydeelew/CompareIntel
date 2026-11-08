@@ -30,6 +30,20 @@ test.describe('Source feature detection vs renderer loss', () => {
     expect(src.hasCodeDollars).toBe(true)
   })
 
+  test('|x| piecewise math is not a markdown table (GLM 5 05)', () => {
+    const md = [
+      'The absolute value function:',
+      '$$',
+      '|x| =',
+      '\\begin{cases}',
+      'x & \\text{if } x \\geq 0 \\\\',
+      '-x & \\text{if } x < 0',
+      '\\end{cases}',
+      '$$',
+    ].join('\n')
+    expect(detectSourceFeatures(md).hasTables).toBe(false)
+  })
+
   test('nested lists require three indent levels in source', () => {
     expect(detectSourceFeatures('- a\n  - b').hasNestedLists).toBe(false)
     expect(detectSourceFeatures('- a\n  - b\n    - c').hasNestedLists).toBe(true)

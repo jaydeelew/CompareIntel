@@ -505,7 +505,11 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
     'next-batch-preflight.json',
   ]);
   const jsonFiles = files.filter(
-    f => f.endsWith('.json') && !f.startsWith('results') && !skipJson.has(f)
+    f =>
+      f.endsWith('.json') &&
+      !f.startsWith('results') &&
+      !f.startsWith('unique-') &&
+      !skipJson.has(f)
   );
   
   if (jsonFiles.length === 0) {

@@ -15,7 +15,13 @@ export function markBlockquotes(text: string): string {
     const inner = block
       .replace(/\n$/, '')
       .split('\n')
-      .map(line => line.replace(/^[ \t]{0,3}> ?/, ''))
+      .map(line => {
+        let out = line
+        while (/^[ \t]{0,3}> ?/.test(out)) {
+          out = out.replace(/^[ \t]{0,3}> ?/, '')
+        }
+        return out
+      })
       .join('\n')
     return `\n${BLOCKQUOTE_OPEN}\n${inner}\n${BLOCKQUOTE_CLOSE}\n${hasTrailingNewline ? '\n' : ''}`
   })

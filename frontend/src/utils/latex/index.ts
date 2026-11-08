@@ -12,6 +12,8 @@ export {
   renderMathContent,
   preserveEquationLineBreaks,
   preserveMathLineBreaks,
+  sortMathDelimiters,
+  isInsideRenderedMathHtml,
   type MathRendererConfig,
 } from './mathRenderer'
 export { markBlockquotes, renderBlockquoteMarkers } from './blockquotes'
