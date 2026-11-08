@@ -1,0 +1,45 @@
+{
+  "status": "completed",
+  "attemptedCalls": 1,
+  "actualCost": 0.0008057,
+  "unknownCosts": 0,
+  "promptTokens": 440,
+  "completionTokens": 2539,
+  "reasoningTokensIncludedInCompletion": 0,
+  "firstCallCST": "11/8/2026, 12:12:43 PM CST",
+  "lastCallCST": "11/8/2026, 12:13:06 PM CST",
+  "truncated": [],
+  "coverage": "Unassessed; no rendering",
+  "visibleEmpty": [],
+  "perCall": [
+    {
+      "modelId": "qwen/qwen3-30b-a3b-instruct-2507",
+      "promptName": "05-complex-scenarios",
+      "finishReason": "stop",
+      "cost": 0.0008057,
+      "usage": {
+        "prompt_tokens": 440,
+        "completion_tokens": 2539,
+        "total_tokens": 2979,
+        "cost": 0.0008057,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008057,
+          "upstream_inference_prompt_cost": 0.000044,
+          "upstream_inference_completions_cost": 0.0007617
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  ]
+}

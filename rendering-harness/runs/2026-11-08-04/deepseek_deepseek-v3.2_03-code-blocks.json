@@ -1,0 +1,36 @@
+{
+  "modelId": "deepseek/deepseek-v3.2",
+  "modelName": "DeepSeek: DeepSeek V3.2",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here's the response with the requested fenced code blocks and inline code examples:\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\nFor inline code with math-like content:\n- The variable `x^2` should render as code, not math.\n- Similarly `a_b` and `$price` should be code.\n- So you would write: `x^2`, `a_b`, and `$price` in your text.",
+  "usage": {
+    "prompt_tokens": 246,
+    "completion_tokens": 254,
+    "total_tokens": 500,
+    "cost": 0.00017556,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00017556,
+      "upstream_inference_prompt_cost": 0.00006888,
+      "upstream_inference_completions_cost": 0.00010668
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00017556,
+  "actualCost": 0.00017556,
+  "timestamp": "2026-11-08T18:09:49.391Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

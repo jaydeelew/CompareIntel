@@ -1,0 +1,36 @@
+{
+  "modelId": "meta-llama/llama-3.3-70b-instruct",
+  "modelName": "Meta: Llama 3.3 70B Instruct",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "## Step 1: Testing Double Dollar Display\nThe equation $$x^2 + y^2 = r^2$$ should be displayed as a block equation.\n\n## Step 2: Testing Bracket Display\nThe equation \\[E = mc^2\\] should also be displayed as a block equation, similar to the double dollar display but using brackets instead.\n\n## Step 3: Testing Single Dollar Inline\nThe equation $a + b = c$ should be displayed inline within the text.\n\n## Step 4: Testing Paren Inline\nThe equation \\(x = 5\\) should be displayed inline as well, using parentheses for delimiting.\n\n## Step 5: Testing Nested Structures\nIn a list, the equation $$\\int_0^1 x dx = \\frac{1}{2}$$ should be properly displayed within the list structure, ensuring that the list formatting and the equation display correctly together.\n\n## Step 6: Testing Code with Math-like Syntax\nThe code block ```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n``` should remain unchanged, with the dollar signs and mathematical operations treated as literal code rather than being interpreted as LaTeX or other formatting instructions.\n\n## Step 7: Testing Currency and Escaped Dollars\n- The plain text \"The price is $100\" should display the dollar sign as part of the currency notation.\n- The escaped dollar sign in \"The budget is \\$500\" should prevent the dollar sign from being interpreted as a LaTeX delimiter.\n- The text \"Costs $25, $30, and $45\" should display multiple dollar amounts correctly.\n- The sentence \"I spent $50 at the store\" should also handle the dollar sign appropriately within a sentence.\n\n## Step 8: Testing Tables with Math\nThe table with math formulas and values should display correctly, with the formulas $A = \\pi r^2$ and $V = \\frac{4}{3}\\pi r^3$ rendered properly within the table cells, along with their respective values $78.54$ and $523.60$.\n\n## Step 9: Testing Raw Dollar Signs\nThe text \"The shell variable $HOME is set. Price: $99.99.\" should display the dollar signs correctly, both in the context of a shell variable and as part of a price.\n\nThe final answer is: $\\boxed{0}$",
+  "usage": {
+    "prompt_tokens": 344,
+    "completion_tokens": 512,
+    "total_tokens": 856,
+    "cost": 0.0008208,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0008208,
+      "upstream_inference_prompt_cost": 0.0002064,
+      "upstream_inference_completions_cost": 0.0006144
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0008208,
+  "actualCost": 0.0008208,
+  "timestamp": "2026-11-08T18:08:43.495Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

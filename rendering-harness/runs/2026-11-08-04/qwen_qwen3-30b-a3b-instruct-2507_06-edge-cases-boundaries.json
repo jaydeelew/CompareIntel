@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-30b-a3b-instruct-2507",
+  "modelName": "Qwen: Qwen3 30B A3B Instruct 2507",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here is a comprehensive response testing the edge cases and delimiter variants, carefully preserving intended formatting while properly handling math, code, currency, and raw dollar signs:\n\n---\n\n## Delimiter Variants\n\n1. **Double dollar display**:  \n   $$x^2 + y^2 = r^2$$\n\n2. **Bracket display**:  \n   \\[E = mc^2\\]\n\n3. **Single dollar inline**:  \n   $a + b = c$\n\n4. **Paren inline**:  \n   \\(x = 5\\)\n\n---\n\n## Nested Structures\n\n- First item  \n- The equation is:  \n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$  \n  And it evaluates to 0.5  \n- Third item  \n\n> ✅ Note: The math block is properly isolated and renders as display math, with proper alignment and continuation in context.\n\n---\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n> ✅ The content remains unaltered: dollar signs within strings and comments are **not** interpreted as math delimiters.\n\n---\n\n## Currency and Escaped Dollars\n\n- **Plain**: The price is $100  \n- **Escaped**: The budget is \\$500  \n- **Multiple**: Costs $25, $30, and $45  \n- **In sentence**: I spent $50 at the store  \n\n> ✅ While some of these use single dollar signs, they are not surrounded by spaces or in math context, so they are treated as literal currency symbols.\n\n---\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n> ✅ Math is properly rendered inline within cells; `$$...$$` would not be used in table cells (as they break table rendering), but `$...$` is fine.\n\n---\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\n> ✅ The `$HOME` is preserved as a literal shell variable without triggering math rendering. The price is rendered as plain text with a dollar sign.\n\n---\n\n## Summary of Handling\n\n| Use Case | Correct Interpretation |\n|--------|------------------------|\n| `$$...$$` | Display math (correctly rendered) |\n| `\\[…\\]` | Display math (correctly rendered) |\n| `$...$` | Inline math (correctly rendered) |\n| `\\(...\\)` | Inline math (correctly rendered) |\n| Code with `$` | Preserved as literal (no parsing) |\n| `$` in text | Treated as currency, not math |\n| `\\` before `$` | Escaped — rendered as literal `$` |\n| `$` in URLs or shell variables | Preserved as literal |\n\n✅ **All edge cases and delimiter variants have been correctly interpreted and preserved according to standard markdown/math rendering conventions.**\n\n> This response demonstrates robust handling of mixed syntax: math, code, tables, currency, and raw symbols — especially with respect to **delimiters, escaping, and context awareness**.",
+  "usage": {
+    "prompt_tokens": 358,
+    "completion_tokens": 722,
+    "total_tokens": 1080,
+    "cost": 0.00024882,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00024882,
+      "upstream_inference_prompt_cost": 0.00003222,
+      "upstream_inference_completions_cost": 0.0002166
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00024882,
+  "actualCost": 0.00024882,
+  "timestamp": "2026-11-08T18:08:14.759Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

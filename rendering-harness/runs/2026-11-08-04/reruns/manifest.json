@@ -1,0 +1,63 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.01,
+  "maxTokens": 8192,
+  "temperature": "omitted, unchanged",
+  "attemptedCalls": 1,
+  "knownActualCost": 0.0008057,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "modelId": "qwen/qwen3-30b-a3b-instruct-2507",
+      "promptName": "05-complex-scenarios",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-04/replies/qwen_qwen3-30b-a3b-instruct-2507_05-complex-scenarios.json",
+      "originalFinishReason": "length",
+      "promptSha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+      "reserveUsd": 0.003225375,
+      "startedAt": "2026-11-08T18:12:43.888Z",
+      "actualCost": 0.0008057,
+      "finishedAt": "2026-11-08T18:13:06.041Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 440,
+        "completion_tokens": 2539,
+        "total_tokens": 2979,
+        "cost": 0.0008057,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008057,
+          "upstream_inference_prompt_cost": 0.000044,
+          "upstream_inference_completions_cost": 0.0007617
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed; collection only",
+  "batchReserve": 0.003225375,
+  "reservePolicy": "Max of catalog and prior observed per-token provider rates, UTF8 bytes+32 input, 8192 total completion tokens, 25% margin",
+  "status": "completed",
+  "finishedAt": "2026-11-08T18:13:06.041Z",
+  "files": {
+    "replies": [
+      "replies/qwen_qwen3-30b-a3b-instruct-2507_05-complex-scenarios.json"
+    ],
+    "raw": [
+      "raw/qwen_qwen3-30b-a3b-instruct-2507_05-complex-scenarios.json"
+    ]
+  }
+}
