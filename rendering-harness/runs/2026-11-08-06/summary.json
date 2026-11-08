@@ -1,0 +1,42 @@
+{
+  "status": "completed",
+  "stopReason": null,
+  "attemptedCalls": 24,
+  "actualCost": 0.0171586013,
+  "unknownCosts": 0,
+  "errors": [],
+  "promptTokens": 7556,
+  "completionTokens": 18816,
+  "totalTokens": 26372,
+  "reasoningTokensIncludedInCompletion": 7457,
+  "firstCallCST": "11/8/2026, 12:46:36 PM CST",
+  "lastCallCST": "11/8/2026, 12:49:07 PM CST",
+  "finishReasonCounts": {
+    "stop": 24
+  },
+  "truncated": [],
+  "visibleEmpty": [],
+  "perModel": [
+    {
+      "id": "qwen/qwen3-coder-next",
+      "cost": 0.00373796,
+      "calls": 6
+    },
+    {
+      "id": "google/gemma-4-31b-it",
+      "cost": 0.0008415,
+      "calls": 6
+    },
+    {
+      "id": "deepseek/deepseek-v4.1-flash",
+      "cost": 0.0052435413,
+      "calls": 6
+    },
+    {
+      "id": "mistralai/mistral-medium-3.1",
+      "cost": 0.007335600000000001,
+      "calls": 6
+    }
+  ],
+  "coverage": "Collection only; rendering/feature coverage not assessed"
+}

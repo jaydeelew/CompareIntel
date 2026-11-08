@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/mistral-medium-3.1",
+  "modelName": "Mistral: Mistral Medium 3.1",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here’s a response that handles all the edge cases while maintaining clarity, correctness, and formatting consistency:\n\n---\n\n### **Response to Complex Scenarios**\n\n#### **Scenario 1: Math in Lists with Formatting**\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$.\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculation:\n     $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$.\n   - **Result**: The hypotenuse $c = \\boxed{5}$ units.\n\n---\n\n#### **Scenario 2: Tables with Math**\n| **Formula**       | **LaTeX**               | **Result**                          |\n|-------------------|-------------------------|-------------------------------------|\n| Quadratic         | $ax^2 + bx + c = 0$    | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum of Integers   | $\\sum_{i=1}^{n} i$     | $\\frac{n(n+1)}{2}$                 |\n| Factorial         | $\\prod_{i=1}^{n} i$    | $n!$                                |\n| **Edge Case**     | $\\lim_{x \\to 0} \\frac{\\sin x}{x}$ | $\\boxed{1}$ (L'Hôpital's Rule) |\n\n---\n\n#### **Scenario 3: Code and Math Mixed**\n```python\n# Calculate area of a circle (A = πr²)\nimport math\n\ndef circle_area(r):\n    return math.pi * r**2\n\nprint(f\"Area for r=5: {circle_area(5):.2f}\")  # Output: 78.54\n```\n**Mathematical Explanation**:\nThe formula $A = \\pi r^2$ yields:\n- For $r = 5$: $A = \\pi \\times 5^2 = \\boxed{25\\pi \\approx 78.54}$.\n\n---\n\n#### **Scenario 4: Horizontal Rules**\n**First Section**\n*No math here.*\n\n---\n**Second Section**\nIntegral example:\n$\\int_{0}^{1} x \\, dx = \\left. \\frac{x^2}{2} \\right|_{0}^{1} = \\boxed{\\frac{1}{2}}$.\n\n---\n**Third Section**\n*Back to text.*\n\n---\n\n#### **Scenario 5: Multiple Dollar Signs**\n**Pricing (Escaped Dollars)**:\n- Computer: \\$1,200\n- Monitor: \\$300\n- Keyboard: \\$50\n- Mouse: \\$25\n- **Total**: \\$1,575.\n\n**Math (LaTeX Dollars)**:\nThe function $f(x) = x^2$ evaluated at $x=5$ gives:\n$f(5) = 5^2 = \\boxed{25}$.\n\n---\n\n### **Key Edge Cases Addressed**\n1. **Mixed Formatting**: Bold/italics + LaTeX in lists (Scenario 1).\n2. **Table Alignment**: Complex LaTeX in markdown tables (Scenario 2).\n3. **Code + Math**: Python code with inline LaTeX (Scenario 3).\n4. **Horizontal Rules**: Separating math/non-math sections (Scenario 4).\n5. **Dollar Ambiguity**: Escaping `\\$` for currency vs. LaTeX `$...$` (Scenario 5).\n6. **Boxed Results**: Highlighting final answers with `\\boxed{}` for clarity.\n\n**Note**: In plaintext environments (e.g., some chat interfaces), LaTeX may not render. For those, use Unicode approximations:\n- $x^2$ → `x²`\n- $\\sqrt{25}$ → `√25`\n- $\\pi$ → `π`.",
+  "usage": {
+    "prompt_tokens": 448,
+    "completion_tokens": 854,
+    "total_tokens": 1302,
+    "cost": 0.0018872,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0018872,
+      "upstream_inference_prompt_cost": 0.0001792,
+      "upstream_inference_completions_cost": 0.001708
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0018872,
+  "actualCost": 0.0018872,
+  "timestamp": "2026-11-08T18:49:01.751Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

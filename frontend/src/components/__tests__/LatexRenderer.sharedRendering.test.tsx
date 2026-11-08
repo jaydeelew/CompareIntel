@@ -399,6 +399,21 @@ describe('bug 18: **$x = 0$** in an ordered-list continuation is bold math, not 
   })
 })
 
+describe('bug 22: hyphenated prose (Non-Math) is not implicit math', () => {
+  it('does not wrap (Non-Math) as KaTeX (Mistral Medium 01 heading)', () => {
+    const el = renderReply(
+      '6. **Money Context (Non-Math):**\n   The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).',
+      'mistralai/mistral-medium-3.1'
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).toContain('Non-Math')
+    expect(visibleText(el)).not.toContain('\\Non')
+    expect(texSources(el).some(t => /Non-Math/.test(t))).toBe(false)
+    expect(visibleText(el)).toContain('$5')
+    expect(visibleText(el)).toContain('$10')
+  })
+})
+
 describe('bug 19: (U+00B2) code-point notes are not implicit math', () => {
   it('does not wrap Qwen 05 superscript notes as KaTeX (U+00B2\\)', () => {
     const el = renderReply(

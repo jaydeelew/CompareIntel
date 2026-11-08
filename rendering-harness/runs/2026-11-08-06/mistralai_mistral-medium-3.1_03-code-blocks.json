@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/mistral-medium-3.1",
+  "modelName": "Mistral: Mistral Medium 3.1",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here's a response with fenced code blocks as requested:\n\n## Python Example\n```python\n# Calculate factorial recursively\ndef factorial(n):\n    return 1 if n == 0 else n * factorial(n - 1)\n\nprint(factorial(5))  # Output: 120\n```\n\n## JavaScript Example\n```javascript\n// Check if a number is prime\nfunction isPrime(num) {\n  if (num <= 1) return false;\n  for (let i = 2; i <= Math.sqrt(num); i++) {\n    if (num % i === 0) return false;\n  }\n  return true;\n}\n\nconsole.log(isPrime(17)); // true\n```\n\n## Inline Code Examples\n- The variable `x^2` is displayed as code\n- The identifier `a_b` appears as code\n- The variable `$price` is formatted as code\n\nThe fenced code blocks maintain proper syntax highlighting for their respective languages, while the inline examples demonstrate how to display code-like content without mathematical rendering.",
+  "usage": {
+    "prompt_tokens": 258,
+    "completion_tokens": 217,
+    "total_tokens": 475,
+    "cost": 0.0005372,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0005372,
+      "upstream_inference_prompt_cost": 0.0001032,
+      "upstream_inference_completions_cost": 0.000434
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0005372,
+  "actualCost": 0.0005372,
+  "timestamp": "2026-11-08T18:48:52.001Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}
