@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794165906-Ex19hXAmLflVf7509WWK",
+  "object": "chat.completion",
+  "created": 1794165906,
+  "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "provider": "Nvidia",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "# Test Response: Edge Cases and Boundaries\n\nHere is the test content with various delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "The user wants me to generate a response that tests various edge cases and boundaries related to math delimiters and dollar signs. This appears to be a test prompt for a system that processes LaTeX math delimiters.\n\nLet me analyze what they're asking for:\n\n1. Different delimiter variants (display and inline math)\n2. Nested structures (math in lists)\n3. Code blocks with math-like syntax (should stay as literal code)\n4. Currency and escaped dollars\n5. Tables with math\n6. Raw dollar signs\n\nThe user wants me to respond with this content, presumably to test how a math rendering system handles these cases. I should output this content as-is, but I need to be careful - the prompt says \"Generate a response testing delimiter variants and edge cases\" and then provides the content.\n\nSince this is a test prompt, I should probably just output the content exactly as provided, perhaps with some commentary about what's being tested. But looking at the format, it seems like they want me to reproduce this test content.\n\nLet me just output the test content as a response, which will allow whatever system is processing this to test its math delimiter handling.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants me to generate a response that tests various edge cases and boundaries related to math delimiters and dollar signs. This appears to be a test prompt for a system that processes LaTeX math delimiters.\n\nLet me analyze what they're asking for:\n\n1. Different delimiter variants (display and inline math)\n2. Nested structures (math in lists)\n3. Code blocks with math-like syntax (should stay as literal code)\n4. Currency and escaped dollars\n5. Tables with math\n6. Raw dollar signs\n\nThe user wants me to respond with this content, presumably to test how a math rendering system handles these cases. I should output this content as-is, but I need to be careful - the prompt says \"Generate a response testing delimiter variants and edge cases\" and then provides the content.\n\nSince this is a test prompt, I should probably just output the content exactly as provided, perhaps with some commentary about what's being tested. But looking at the format, it seems like they want me to reproduce this test content.\n\nLet me just output the test content as a response, which will allow whatever system is processing this to test its math delimiter handling.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 371,
+    "completion_tokens": 595,
+    "total_tokens": 966,
+    "cost": 0,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 236,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

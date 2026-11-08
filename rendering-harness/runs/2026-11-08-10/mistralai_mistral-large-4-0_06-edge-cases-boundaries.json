@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/mistral-large-4-0",
+  "modelName": "Mistral: Mistral Large 4",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here's each case reproduced, with the expected handling noted:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$ → should render as **display math**\n2. Bracket display: \\[E = mc^2\\] → should render as **display math**\n3. Single dollar inline: $a + b = c$ → should render as **inline math**\n4. Paren inline: \\(x = 5\\) → should render as **inline math**\n\n## Nested Structures\n- First item\n- The equation is:\n  $$\\int_0^1 x\\,dx = \\frac{1}{2}$$\n  And it evaluates to 0.5\n- Third item\n\n→ Display math should render correctly nested inside a list item, with the continuation line unaffected.\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n→ Everything inside the fenced block must remain literal — no math parsing, no delimiter pairing.\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n→ All of these should stay literal text. The escaped variant should show a backslash-dollar or just a dollar, but must **not** trigger math mode.\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n→ The Formula column should render as inline math inside the table cells. The Value column is the ambiguous case: wrapped in dollars it *looks* like math, but semantically it's currency — a parser keying only on delimiter characters will misrender it.\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n\n→ Ideally stays literal; a naive parser will treat the text between the first and second dollar sign as math.\n\n## Notes on the tricky cases\n- **Odd counts of dollar signs on one line** (e.g., three amounts in one sentence) are the classic failure mode: a parser pairs the 1st–2nd and leaves the 3rd dangling, or vice versa, corrupting the line.\n- **Adjacent cases on one line** (shell variable followed by a price) will be paired into a single \"math\" span by simple regex-based parsers.\n- **Code blocks and escaped dollars** are the reliable opt-outs: fenced code should never be scanned for math, and an escaped dollar should be treated as a literal character.\n- **Table cells** are the hardest context — each cell needs its own delimiter pairing so math in one cell can't swallow text from neighboring cells.",
+  "usage": {
+    "prompt_tokens": 349,
+    "completion_tokens": 1873,
+    "total_tokens": 2222,
+    "cost": 0.0041776,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0041776,
+      "upstream_inference_prompt_cost": 0.0002443,
+      "upstream_inference_completions_cost": 0.0039333
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1215,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0041776,
+  "actualCost": 0.0041776,
+  "timestamp": "2026-11-08T19:24:24.824Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

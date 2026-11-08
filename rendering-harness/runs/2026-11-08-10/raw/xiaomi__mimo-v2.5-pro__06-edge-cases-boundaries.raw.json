@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794165743-pX5z0oD1wtTFynCAx6NX",
+  "object": "chat.completion",
+  "created": 1794165743,
+  "model": "xiaomi/mimo-v2.5-pro",
+  "provider": "AtlasCloud",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "# Edge Cases and Boundaries\n\n## Delimiter Variants\n\n1. Double dollar display:\n$$x^2 + y^2 = r^2$$\n\n2. Bracket display:\n\\[E = mc^2\\]\n\n3. Single dollar inline: $a + b = c$\n\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "The user wants me to generate a response testing delimiter variants and edge cases. This appears to be a test of markdown/math rendering. I should respond by rendering/writing these out properly. Let me produce a clean response that presents the math correctly.\n\nI should just output the content, likely demonstrating correct handling. Let me produce the response with the math rendered as intended.\n\nKeep it concise, no emojis.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants me to generate a response testing delimiter variants and edge cases. This appears to be a test of markdown/math rendering. I should respond by rendering/writing these out properly. Let me produce a clean response that presents the math correctly.\n\nI should just output the content, likely demonstrating correct handling. Let me produce the response with the math rendered as intended.\n\nKeep it concise, no emojis.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 620,
+    "completion_tokens": 402,
+    "total_tokens": 1022,
+    "cost": 0.0005974386,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 51,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0005974386,
+      "upstream_inference_prompt_cost": 0.0002476986,
+      "upstream_inference_completions_cost": 0.00034974
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 86,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

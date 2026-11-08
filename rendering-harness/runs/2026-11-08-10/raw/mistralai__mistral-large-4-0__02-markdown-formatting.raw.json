@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794165783-laCsZWZavusIXUUNqzPk",
+  "object": "chat.completion",
+  "created": 1794165783,
+  "model": "mistralai/mistral-large-4-0",
+  "provider": "Mistral",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "Here's a response demonstrating all the requested markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+        "refusal": null,
+        "reasoning": "The user wants a response demonstrating various Markdown formatting elements. They've provided a specific structure they want me to include:\n\n1. Headers (H2, H3, H4)\n2. Text formatting (bold, italic, bold italic)\n3. Lists (nested unordered and nested ordered)\n4. Tables (with specific content about models)\n5. Blockquotes (multi-line)\n\nI should generate a response that includes all these elements exactly as specified (or with the same structure). I'll present it cleanly with the markdown rendered as it would appear, but since this is a text response, I'll use the actual markdown syntax so the user can see it formatted.\n\nLet me structure the response to match exactly what they asked for:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n\nI should present this exactly as requested, perhaps with a brief intro, then the markdown content. Actually, looking at the prompt, it seems they want me to generate a response containing these elements. I'll provide a clean demonstration of all these markdown elements.\n\nWait, I need to be careful - if I just output the markdown exactly as given, it will render as formatted text. That's actually what they want - a response demonstrating these elements. So I should output the markdown as is, which will then be rendered by whatever system displays my response.\n\nActually, looking at the prompt again: \"Generate a response with these markdown elements\" - so I should include all these elements in my response. I'll add a brief introductory sentence, then present all the markdown sections as requested.\n\nLet me construct the response:\n\nHere's a demonstration of the requested markdown formatting:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n\nThat should cover everything requested. I'll make sure the indentation for nested lists is correct (2 spaces for standard markdown nesting, though some renderers accept 4 spaces). I'll use 2 spaces to be safe and standard.\n\nFor the ordered list nesting, I'll use 3 spaces or proper indentation so it renders correctly under the parent item.\n\nLet me double-check the table formatting - needs the separator line with dashes.\n\nEverything looks good. I'll present it cleanly.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants a response demonstrating various Markdown formatting elements. They've provided a specific structure they want me to include:\n\n1. Headers (H2, H3, H4)\n2. Text formatting (bold, italic, bold italic)\n3. Lists (nested unordered and nested ordered)\n4. Tables (with specific content about models)\n5. Blockquotes (multi-line)\n\nI should generate a response that includes all these elements exactly as specified (or with the same structure). I'll present it cleanly with the markdown rendered as it would appear, but since this is a text response, I'll use the actual markdown syntax so the user can see it formatted.\n\nLet me structure the response to match exactly what they asked for:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n\nI should present this exactly as requested, perhaps with a brief intro, then the markdown content. Actually, looking at the prompt, it seems they want me to generate a response containing these elements. I'll provide a clean demonstration of all these markdown elements.\n\nWait, I need to be careful - if I just output the markdown exactly as given, it will render as formatted text. That's actually what they want - a response demonstrating these elements. So I should output the markdown as is, which will then be rendered by whatever system displays my response.\n\nActually, looking at the prompt again: \"Generate a response with these markdown elements\" - so I should include all these elements in my response. I'll add a brief introductory sentence, then present all the markdown sections as requested.\n\nLet me construct the response:\n\nHere's a demonstration of the requested markdown formatting:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n\nThat should cover everything requested. I'll make sure the indentation for nested lists is correct (2 spaces for standard markdown nesting, though some renderers accept 4 spaces). I'll use 2 spaces to be safe and standard.\n\nFor the ordered list nesting, I'll use 3 spaces or proper indentation so it renders correctly under the parent item.\n\nLet me double-check the table formatting - needs the separator line with dashes.\n\nEverything looks good. I'll present it cleanly.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 205,
+    "completion_tokens": 955,
+    "total_tokens": 1160,
+    "cost": 0.002149,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.002149,
+      "upstream_inference_prompt_cost": 0.0001435,
+      "upstream_inference_completions_cost": 0.0020055
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 768,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

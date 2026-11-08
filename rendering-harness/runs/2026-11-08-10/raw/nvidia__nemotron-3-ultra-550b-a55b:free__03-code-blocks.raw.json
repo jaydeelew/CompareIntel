@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794165875-YxUI9rRYhpqwofOS7BSZ",
+  "object": "chat.completion",
+  "created": 1794165875,
+  "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "provider": "Nvidia",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "Here's a response with various fenced code blocks:\n\n## Python Example\n```python\ndef factorial(n):\n    \"\"\"Calculate factorial recursively.\"\"\"\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)\n\n# Test\nfor i in range(6):\n    print(f\"{i}! = {factorial(i)}\")\n```\n\n## JavaScript Example\n```javascript\nconst greet = (name) => {\n  const messages = {\n    morning: \"Good morning\",\n    afternoon: \"Good afternoon\", \n    evening: \"Good evening\"\n  };\n  \n  const hour = new Date().getHours();\n  let timeOfDay;\n  \n  if (hour < 12) timeOfDay = \"morning\";\n  else if (hour < 17) timeOfDay = \"afternoon\";\n  else timeOfDay = \"evening\";\n  \n  return `${messages[timeOfDay]}, ${name}!`;\n};\n\nconsole.log(greet(\"World\"));\n```\n\n## TypeScript with Interfaces\n```typescript\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n  isActive: boolean;\n}\n\nfunction createUser(data: Omit<User, \"id\">): User {\n  return {\n    id: Date.now(),\n    ...data\n  };\n}\n\nconst user = createUser({\n  name: \"Alice\",\n  email: \"alice@example.com\",\n  isActive: true\n});\n```\n\n## Inline Code Examples\nThe variable `x^2 + y^2 = z^2` renders as code, not math. \nArray access like `arr[0]` and object properties like `obj.key_name` stay as code.\nSpecial characters: `$variable`, `#hashtag`, `@mention`, `&entity` all render literally in code blocks.",
+        "refusal": null,
+        "reasoning": "The user wants me to generate a response with fenced code blocks. They've provided examples of what they want in the prompt itself. I should respond with similar code blocks but perhaps with different content or just acknowledge and provide similar examples.\n\nLooking at the prompt, it seems like they want me to generate a response that includes fenced code blocks for Python, JavaScript, and inline code examples. The prompt itself contains examples. I think they want me to produce a response that demonstrates proper rendering of code blocks.\n\nI'll create a response with similar structure but different code examples to show the formatting works.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants me to generate a response with fenced code blocks. They've provided examples of what they want in the prompt itself. I should respond with similar code blocks but perhaps with different content or just acknowledge and provide similar examples.\n\nLooking at the prompt, it seems like they want me to generate a response that includes fenced code blocks for Python, JavaScript, and inline code examples. The prompt itself contains examples. I think they want me to produce a response that demonstrates proper rendering of code blocks.\n\nI'll create a response with similar structure but different code examples to show the formatting works.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 259,
+    "completion_tokens": 503,
+    "total_tokens": 762,
+    "cost": 0,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_prompt_cost": 0,
+      "upstream_inference_completions_cost": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 120,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

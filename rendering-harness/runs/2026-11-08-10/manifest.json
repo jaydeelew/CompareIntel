@@ -1,0 +1,1010 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.45,
+  "maxTokens": "perModel",
+  "perModelMaxTokens": [
+    {
+      "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "maxTokens": 8192
+    },
+    {
+      "id": "stepfun/step-5-preview",
+      "maxTokens": 8192
+    },
+    {
+      "id": "xiaomi/mimo-v2.5-pro",
+      "maxTokens": 8192
+    },
+    {
+      "id": "mistralai/mistral-large-4-0",
+      "maxTokens": 8192
+    }
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+    }
+  ],
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "stepfun/step-5-preview",
+    "xiaomi/mimo-v2.5-pro",
+    "mistralai/mistral-large-4-0",
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "plannedCalls": 24,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.0646893122,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "stepfun/step-5-preview",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:20:11.571Z",
+      "reserveUsd": 0.028660500000000002,
+      "actualCost": 0.0047822,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:20:26.639Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 257,
+        "completion_tokens": 1676,
+        "total_tokens": 1933,
+        "cost": 0.0047822,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0047822,
+          "upstream_inference_prompt_cost": 0.000257,
+          "upstream_inference_completions_cost": 0.0045252
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 2,
+      "modelId": "stepfun/step-5-preview",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:20:26.639Z",
+      "reserveUsd": 0.028457999999999997,
+      "actualCost": 0.0010963,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:20:39.149Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 208,
+        "completion_tokens": 329,
+        "total_tokens": 537,
+        "cost": 0.0010963,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010963,
+          "upstream_inference_prompt_cost": 0.000208,
+          "upstream_inference_completions_cost": 0.0008883
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 3,
+      "modelId": "stepfun/step-5-preview",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:20:39.149Z",
+      "reserveUsd": 0.028568,
+      "actualCost": 0.0014782,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:20:42.802Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 247,
+        "completion_tokens": 456,
+        "total_tokens": 703,
+        "cost": 0.0014782,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0014782,
+          "upstream_inference_prompt_cost": 0.000247,
+          "upstream_inference_completions_cost": 0.0012312
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 4,
+      "modelId": "stepfun/step-5-preview",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:20:42.802Z",
+      "reserveUsd": 0.02881425,
+      "actualCost": 0.0041961,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:20:51.207Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 300,
+        "completion_tokens": 1443,
+        "total_tokens": 1743,
+        "cost": 0.0041961,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0041961,
+          "upstream_inference_prompt_cost": 0.0003,
+          "upstream_inference_completions_cost": 0.0038961
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 5,
+      "modelId": "stepfun/step-5-preview",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:20:51.208Z",
+      "reserveUsd": 0.02918175,
+      "actualCost": 0.0095392,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:21:09.640Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 424,
+        "completion_tokens": 3376,
+        "total_tokens": 3800,
+        "cost": 0.0095392,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0095392,
+          "upstream_inference_prompt_cost": 0.000424,
+          "upstream_inference_completions_cost": 0.0091152
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 6,
+      "modelId": "stepfun/step-5-preview",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:21:09.641Z",
+      "reserveUsd": 0.028968,
+      "actualCost": 0.0094616,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:21:39.574Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 341,
+        "completion_tokens": 3378,
+        "total_tokens": 3719,
+        "cost": 0.0094616,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0094616,
+          "upstream_inference_prompt_cost": 0.000341,
+          "upstream_inference_completions_cost": 0.0091206
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 7,
+      "modelId": "xiaomi/mimo-v2.5-pro",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:21:39.574Z",
+      "reserveUsd": 0.018917999999999997,
+      "actualCost": 0.0014184,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:21:48.680Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 522,
+        "completion_tokens": 700,
+        "total_tokens": 1222,
+        "cost": 0.0014184,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 240,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0014184,
+          "upstream_inference_prompt_cost": 0.0001584,
+          "upstream_inference_completions_cost": 0.00126
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 163,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 8,
+      "modelId": "xiaomi/mimo-v2.5-pro",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:21:48.680Z",
+      "reserveUsd": 0.0188208,
+      "actualCost": 0.0005994,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:21:52.970Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 447,
+        "completion_tokens": 265,
+        "total_tokens": 712,
+        "cost": 0.0005994,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 240,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005994,
+          "upstream_inference_prompt_cost": 0.0001224,
+          "upstream_inference_completions_cost": 0.000477
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 34,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 9,
+      "modelId": "xiaomi/mimo-v2.5-pro",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:21:52.971Z",
+      "reserveUsd": 0.018873599999999997,
+      "actualCost": 0.00080268,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:22:02.269Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 488,
+        "completion_tokens": 367,
+        "total_tokens": 855,
+        "cost": 0.00080268,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 240,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00080268,
+          "upstream_inference_prompt_cost": 0.00014208,
+          "upstream_inference_completions_cost": 0.0006606
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 184,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 10,
+      "modelId": "xiaomi/mimo-v2.5-pro",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:22:02.270Z",
+      "reserveUsd": 0.0189918,
+      "actualCost": 0.00126924,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:22:12.356Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 560,
+        "completion_tokens": 607,
+        "total_tokens": 1167,
+        "cost": 0.00126924,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 240,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00126924,
+          "upstream_inference_prompt_cost": 0.00017664,
+          "upstream_inference_completions_cost": 0.0010926
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 136,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 11,
+      "modelId": "xiaomi/mimo-v2.5-pro",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:22:12.356Z",
+      "reserveUsd": 0.0191682,
+      "actualCost": 0.0017784636,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:22:23.984Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 703,
+        "completion_tokens": 1718,
+        "total_tokens": 2421,
+        "cost": 0.0017784636,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 51,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0017784636,
+          "upstream_inference_prompt_cost": 0.0002838036,
+          "upstream_inference_completions_cost": 0.00149466
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1284,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 12,
+      "modelId": "xiaomi/mimo-v2.5-pro",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:22:23.984Z",
+      "reserveUsd": 0.0190656,
+      "actualCost": 0.0005974386,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:22:28.016Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 620,
+        "completion_tokens": 402,
+        "total_tokens": 1022,
+        "cost": 0.0005974386,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 51,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005974386,
+          "upstream_inference_prompt_cost": 0.0002476986,
+          "upstream_inference_completions_cost": 0.00034974
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 86,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 13,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:22:28.016Z",
+      "reserveUsd": 0.02221275,
+      "actualCost": 0.0066969,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:23:03.051Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 264,
+        "completion_tokens": 3101,
+        "total_tokens": 3365,
+        "cost": 0.0066969,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0066969,
+          "upstream_inference_prompt_cost": 0.0001848,
+          "upstream_inference_completions_cost": 0.0065121
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2838,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 14,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:23:03.051Z",
+      "reserveUsd": 0.022070999999999997,
+      "actualCost": 0.002149,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:23:14.849Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 205,
+        "completion_tokens": 955,
+        "total_tokens": 1160,
+        "cost": 0.002149,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002149,
+          "upstream_inference_prompt_cost": 0.0001435,
+          "upstream_inference_completions_cost": 0.0020055
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 768,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 15,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:23:14.849Z",
+      "reserveUsd": 0.022147999999999998,
+      "actualCost": 0.00341418,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:23:24.784Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 252,
+        "completion_tokens": 1394,
+        "total_tokens": 1646,
+        "cost": 0.00341418,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00341418,
+          "upstream_inference_prompt_cost": 0.00019404,
+          "upstream_inference_completions_cost": 0.00322014
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1027,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 16,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:23:24.785Z",
+      "reserveUsd": 0.022320374999999996,
+      "actualCost": 0.008512,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:23:47.357Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 301,
+        "completion_tokens": 3953,
+        "total_tokens": 4254,
+        "cost": 0.008512,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.008512,
+          "upstream_inference_prompt_cost": 0.0002107,
+          "upstream_inference_completions_cost": 0.0083013
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2868,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 17,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:23:47.357Z",
+      "reserveUsd": 0.022577624999999997,
+      "actualCost": 0.00272041,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:24:04.799Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 1035,
+        "total_tokens": 1463,
+        "cost": 0.00272041,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00272041,
+          "upstream_inference_prompt_cost": 0.00032956,
+          "upstream_inference_completions_cost": 0.00239085
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 481,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 18,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:24:04.799Z",
+      "reserveUsd": 0.022427999999999997,
+      "actualCost": 0.0041776,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:24:24.824Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 349,
+        "completion_tokens": 1873,
+        "total_tokens": 2222,
+        "cost": 0.0041776,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0041776,
+          "upstream_inference_prompt_cost": 0.0002443,
+          "upstream_inference_completions_cost": 0.0039333
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1215,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 19,
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:24:24.825Z",
+      "reserveUsd": 0,
+      "actualCost": 0,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:24:30.822Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 270,
+        "completion_tokens": 626,
+        "total_tokens": 896,
+        "cost": 0,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 28,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 20,
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:24:30.822Z",
+      "reserveUsd": 0,
+      "actualCost": 0,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:24:35.925Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 223,
+        "completion_tokens": 232,
+        "total_tokens": 455,
+        "cost": 0,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 42,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 21,
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:24:35.926Z",
+      "reserveUsd": 0,
+      "actualCost": 0,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:24:46.959Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 259,
+        "completion_tokens": 503,
+        "total_tokens": 762,
+        "cost": 0,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 120,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 22,
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:24:46.960Z",
+      "reserveUsd": 0,
+      "actualCost": 0,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:24:52.592Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 318,
+        "completion_tokens": 406,
+        "total_tokens": 724,
+        "cost": 0,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 126,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 23,
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:24:52.592Z",
+      "reserveUsd": 0,
+      "actualCost": 0,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:25:06.191Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 449,
+        "completion_tokens": 841,
+        "total_tokens": 1290,
+        "cost": 0,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 245,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 24,
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:25:06.192Z",
+      "reserveUsd": 0,
+      "actualCost": 0,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:25:15.203Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 371,
+        "completion_tokens": 595,
+        "total_tokens": 966,
+        "cost": 0,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 236,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed: collection only, no rendering or feature validation",
+  "startedAt": "2026-11-08T19:20:11.568Z",
+  "conservativeBatchReserve": 0.42024624999999993,
+  "status": "completed",
+  "finishedAt": "2026-11-08T19:25:15.205Z",
+  "files": {
+    "replies": [
+      "replies/mistralai_mistral-large-4-0_01-math-basics.json",
+      "replies/mistralai_mistral-large-4-0_02-markdown-formatting.json",
+      "replies/mistralai_mistral-large-4-0_03-code-blocks.json",
+      "replies/mistralai_mistral-large-4-0_04-mixed-markdown-latex.json",
+      "replies/mistralai_mistral-large-4-0_05-complex-scenarios.json",
+      "replies/mistralai_mistral-large-4-0_06-edge-cases-boundaries.json",
+      "replies/nvidia_nemotron-3-ultra-550b-a55b:free_01-math-basics.json",
+      "replies/nvidia_nemotron-3-ultra-550b-a55b:free_02-markdown-formatting.json",
+      "replies/nvidia_nemotron-3-ultra-550b-a55b:free_03-code-blocks.json",
+      "replies/nvidia_nemotron-3-ultra-550b-a55b:free_04-mixed-markdown-latex.json",
+      "replies/nvidia_nemotron-3-ultra-550b-a55b:free_05-complex-scenarios.json",
+      "replies/nvidia_nemotron-3-ultra-550b-a55b:free_06-edge-cases-boundaries.json",
+      "replies/stepfun_step-5-preview_01-math-basics.json",
+      "replies/stepfun_step-5-preview_02-markdown-formatting.json",
+      "replies/stepfun_step-5-preview_03-code-blocks.json",
+      "replies/stepfun_step-5-preview_04-mixed-markdown-latex.json",
+      "replies/stepfun_step-5-preview_05-complex-scenarios.json",
+      "replies/stepfun_step-5-preview_06-edge-cases-boundaries.json",
+      "replies/xiaomi_mimo-v2.5-pro_01-math-basics.json",
+      "replies/xiaomi_mimo-v2.5-pro_02-markdown-formatting.json",
+      "replies/xiaomi_mimo-v2.5-pro_03-code-blocks.json",
+      "replies/xiaomi_mimo-v2.5-pro_04-mixed-markdown-latex.json",
+      "replies/xiaomi_mimo-v2.5-pro_05-complex-scenarios.json",
+      "replies/xiaomi_mimo-v2.5-pro_06-edge-cases-boundaries.json"
+    ],
+    "raw": [
+      "raw/mistralai__mistral-large-4-0__01-math-basics.raw.json",
+      "raw/mistralai__mistral-large-4-0__02-markdown-formatting.raw.json",
+      "raw/mistralai__mistral-large-4-0__03-code-blocks.raw.json",
+      "raw/mistralai__mistral-large-4-0__04-mixed-markdown-latex.raw.json",
+      "raw/mistralai__mistral-large-4-0__05-complex-scenarios.raw.json",
+      "raw/mistralai__mistral-large-4-0__06-edge-cases-boundaries.raw.json",
+      "raw/nvidia__nemotron-3-ultra-550b-a55b:free__01-math-basics.raw.json",
+      "raw/nvidia__nemotron-3-ultra-550b-a55b:free__02-markdown-formatting.raw.json",
+      "raw/nvidia__nemotron-3-ultra-550b-a55b:free__03-code-blocks.raw.json",
+      "raw/nvidia__nemotron-3-ultra-550b-a55b:free__04-mixed-markdown-latex.raw.json",
+      "raw/nvidia__nemotron-3-ultra-550b-a55b:free__05-complex-scenarios.raw.json",
+      "raw/nvidia__nemotron-3-ultra-550b-a55b:free__06-edge-cases-boundaries.raw.json",
+      "raw/stepfun__step-5-preview__01-math-basics.raw.json",
+      "raw/stepfun__step-5-preview__02-markdown-formatting.raw.json",
+      "raw/stepfun__step-5-preview__03-code-blocks.raw.json",
+      "raw/stepfun__step-5-preview__04-mixed-markdown-latex.raw.json",
+      "raw/stepfun__step-5-preview__05-complex-scenarios.raw.json",
+      "raw/stepfun__step-5-preview__06-edge-cases-boundaries.raw.json",
+      "raw/xiaomi__mimo-v2.5-pro__01-math-basics.raw.json",
+      "raw/xiaomi__mimo-v2.5-pro__02-markdown-formatting.raw.json",
+      "raw/xiaomi__mimo-v2.5-pro__03-code-blocks.raw.json",
+      "raw/xiaomi__mimo-v2.5-pro__04-mixed-markdown-latex.raw.json",
+      "raw/xiaomi__mimo-v2.5-pro__05-complex-scenarios.raw.json",
+      "raw/xiaomi__mimo-v2.5-pro__06-edge-cases-boundaries.raw.json"
+    ]
+  },
+  "reservePolicy": "Per-model max completion;max catalog/timeoverride/observed preflight rates;UTF8 bytes+32 input;25%margin;USD .45 guard"
+}
