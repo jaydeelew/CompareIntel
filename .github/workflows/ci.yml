@@ -1029,6 +1029,8 @@ jobs:
         working-directory: rendering-harness
         run: |
           npx playwright test budget-guard.test.ts
+          npx playwright test durable-spend.test.ts
+          npx playwright test paid-call.test.ts
           npx playwright test source-features.test.ts
           npx playwright test expected-features.test.ts
           npx playwright test overall-status.test.ts

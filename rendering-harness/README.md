@@ -107,10 +107,11 @@ Tests verify:
 
 Logic is in `budget-guard.ts` (imported by the runner and by tests):
 
-- **Pre-request guard**: `preRequestBudgetDecision` estimates cost and refuses the request when it would exceed remaining budget
+- **Pre-request guard**: `SharedCostGuard.reserve` + `gate` (dry-run and live use the same formula)
 - **Unknown pricing**: refused (no $1/1M fallback)
-- **Actual cost**: `usage.cost` when OpenRouter sends it; otherwise tokens × catalog rates; throws if neither is known
-- **Thinking models**: 3× output token reservation
+- **Actual cost**: `usage.cost` only. Missing cost is persisted as unknown (`actualCost`/`resolution` null) and fail-closes later paid calls. Not guessed from catalog tokens, not treated as $0.
+- **Thinking / reasoning**: completion cap includes visible + reasoning once, plus 25% margin. Not a blind 3× multiplier.
+- **Durable state**: `guard-global-state.json` is global (not per-batch). Interrupted pending POSTs and historical unknowns block every batch until explicit resolution/approval.
 
 See `BUDGET_GUARD_AUDIT.md` for limits (not a provider hard cap).
 
@@ -126,7 +127,7 @@ npm test  # Runs Playwright fixture tests
 
 Nov 6 scenario (not a cap): $3.43 / $6.34 / $12.18 at 512 / 1024 / 2048 out.
 
-Nov 8 public catalog refresh (83 text models, 49 thinking, 3× output reserve, ~500 in): **$6.00 / $11.49 / $22.47**.
+Nov 8 public catalog refresh used a 3× thinking contingency that is **not** the live billing policy. Live/dry-run now reserve completion cap once + 25%.
 
 **Note**: Always run `--dry-run` first. Do not treat either scenario as an approved spend cap.
 

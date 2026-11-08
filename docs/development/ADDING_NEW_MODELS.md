@@ -132,6 +132,8 @@ python scripts/generate_renderer_configs.py analysis.json --overwrite
 
 **Time:** ~10-30 seconds
 
+**Runtime delimiter fill:** `getModelConfig()` in `frontend/src/config/modelRendererRegistry.ts` keeps the model's listed `$$` / `$` patterns, then fills standard `\[...\]` (display) and `\(...\)` (inline) when the JSON row omitted them. You do not need to copy those bracket/paren patterns into every new config; leaving them out is fine. Per-model JSON is not the only place those delimiters exist.
+
 ## Complete Example
 
 Here's a complete example for adding 4 new GPT 5.6 / GPT-6 models:

@@ -3,7 +3,24 @@
  * Unknown pricing is unknowable: the caller must refuse the request, never guess.
  */
 
+import crypto from 'node:crypto'
+import {
+  type DurableStore,
+  unresolvedBlocksPaid,
+} from './durable-spend.js'
+
+/**
+ * Optional contingency only — not OpenRouter reasoning billing.
+ * Chat max_tokens / max_completion_tokens already shares combined
+ * reasoning + visible completion on most providers. Live and dry-run
+ * reserves use the completion cap once, plus RESERVE_MARGIN.
+ * Do not apply this multiplier to billed usage.cost (completion_tokens
+ * already include reasoning).
+ */
 export const THINKING_MODEL_OUTPUT_MULTIPLIER = 3
+
+/** Grok 4.3 03 502 + Tencent HY4 06 timeout. Never treat as $0; never reset on a new batch. */
+export const HISTORICAL_UNKNOWN_CHARGES = 2
 
 export interface PricingInfo {
   inputCostPerToken: number
@@ -27,7 +44,11 @@ export function estimateTokens(text: string): number {
 }
 
 /**
- * Estimated USD for one request, or null when pricing is missing (refuse; do not guess).
+ * Token-based USD estimate, or null when pricing is missing (refuse; do not guess).
+ * `isThinkingModel` is accepted for call-site compatibility and is ignored:
+ * the completion cap already includes reasoning + visible tokens.
+ * Live and dry-run paid paths use SharedCostGuard.reserve (UTF-8 bytes + pad,
+ * cap once, RESERVE_MARGIN) — not this helper and not a 3× thinking multiplier.
  */
 export function estimateRequestCost(
   promptTokens: number,
@@ -36,12 +57,12 @@ export function estimateRequestCost(
   isThinkingModel: boolean,
   observed?: PricingInfo
 ): number | null {
+  void isThinkingModel
   const rates = mergeMaxRates(pricing, observed)
   if (!rates) {
     return null
   }
-  const outputTokens = maxTokens * (isThinkingModel ? THINKING_MODEL_OUTPUT_MULTIPLIER : 1)
-  return promptTokens * rates.inputCostPerToken + outputTokens * rates.outputCostPerToken
+  return promptTokens * rates.inputCostPerToken + maxTokens * rates.outputCostPerToken
 }
 
 export function remainingBudget(maxUsd: number, spentUsd: number): number {
@@ -200,38 +221,210 @@ export interface ReserveDetails {
   outputRate: number
   inputByteAllowance: number
   completionCap: number
+  reasoningPolicy?: string
+}
+
+export const REASONING_RESERVE_POLICY =
+  'Completion cap includes visible+reasoning once; 25% margin; estimate not hard cap'
+
+export interface PaidCallContext {
+  callId: string
+  modelId?: string
+  promptName?: string
+}
+
+export interface GuardOptions {
+  store?: DurableStore
+  batchId?: string
 }
 
 /**
  * Shared collection/harness cost guard. Takes max(catalog, historical observed,
  * newly observed same-model rates) before later requests. Reserve is an estimate
  * with margin, not a hard billing cap.
+ *
+ * With a DurableStore, unknown spend is persisted (actualCost/resolution null)
+ * before throw. Pending pre-request intent blocks interrupted POSTs. There is
+ * no acknowledge/reset API — resumption needs explicit reviewed resolution.
  */
 export class SharedCostGuard {
   readonly budget: number
+  readonly batchId: string
+  readonly store?: DurableStore
   actual = 0
+  unknownCharges = 0
+  failClosed = false
+  localHalt: string | null = null
   readonly rates = new Map<string, PricingInfo>()
 
-  constructor(budget: number, prior: Array<{ modelId: string; usage?: UsageLike }> = []) {
+  constructor(
+    budget: number,
+    prior: Array<{ modelId: string; usage?: UsageLike }> = [],
+    opts: GuardOptions | string = {}
+  ) {
     if (!validNonNeg(budget)) throw new Error('Invalid budget')
+    const options: GuardOptions = typeof opts === 'string' ? { batchId: opts } : opts
     this.budget = budget
+    this.batchId = options.batchId || 'unscoped'
+    this.store = options.store
+    if (this.store) this.refresh()
     for (const call of prior) {
       if (call.usage && validNonNeg(call.usage.cost)) {
         this.observe(call.modelId, call.usage, false)
+      } else if (call.usage) {
+        throw new Error('Invalid historical billing evidence: stop')
       }
     }
   }
 
-  observe(modelId: string, usage: UsageLike, charge = true): PricingInfo {
-    const next = observedRatesFromUsage(usage)
+  refresh(): ReturnType<DurableStore['read']> {
+    if (this.localHalt) throw new Error(this.localHalt)
+    if (!this.store) throw new Error('Durable guard state missing/corrupt/unreadable: stop')
+    try {
+      this.store.assertAvailable()
+      const state = this.store.read()
+      for (const [id, rate] of Object.entries(state.observedRates)) {
+        this.mergeRate(id, {
+          inputCostPerToken: rate.input,
+          outputCostPerToken: rate.output,
+        })
+      }
+      this.actual = state.batches[this.batchId]?.knownActualUsd || 0
+      this.unknownCharges = state.unknownCharges.length
+      this.failClosed = unresolvedBlocksPaid(state)
+      return state
+    } catch {
+      this.localHalt = 'Durable guard state missing/corrupt/unreadable: stop'
+      throw new Error(this.localHalt)
+    }
+  }
+
+  private mergeRate(modelId: string, next: PricingInfo): PricingInfo {
     const previous = this.rates.get(modelId) || {
       inputCostPerToken: 0,
       outputCostPerToken: 0,
     }
     const merged = mergeMaxRates(previous, next)!
     this.rates.set(modelId, merged)
-    if (charge) this.actual += usage.cost as number
     return merged
+  }
+
+  private assertClear(state: ReturnType<DurableStore['read']>): void {
+    if (unresolvedBlocksPaid(state)) {
+      throw new Error(
+        'Durable unresolved unknown/pending spend: explicit resolution/approval required'
+      )
+    }
+  }
+
+  /**
+   * Persist an unknown billed (or maybe-billed) charge with actualCost/resolution
+   * null, then throw. Does not estimate or zero the spend. No reset helper.
+   */
+  markUnknown(reason: string, context: Partial<PaidCallContext> = {}): never {
+    this.localHalt =
+      'Unknown spend permanently halted; explicit resolution/approval required'
+    this.failClosed = true
+    const callId = context.callId || crypto.randomUUID()
+    if (this.store) {
+      try {
+        this.store.mutate(state => {
+          state.pendingRequests = state.pendingRequests.filter(x => x.callId !== callId)
+          if (!state.unknownCharges.some(x => x.callId === callId)) {
+            state.unknownCharges.push({
+              callId,
+              batchId: this.batchId,
+              modelId: context.modelId ?? null,
+              promptName: context.promptName ?? null,
+              reason,
+              detectedAt: new Date().toISOString(),
+              actualCost: null,
+              resolution: null,
+            })
+          }
+        })
+        this.unknownCharges = this.store.read().unknownCharges.length
+      } catch {
+        this.localHalt =
+          'Failed to persist unknown spend: stop; state/pending must be reconciled'
+        throw new Error(this.localHalt)
+      }
+    } else {
+      this.unknownCharges += 1
+    }
+    throw new Error(this.localHalt)
+  }
+
+  observe(
+    modelId: string,
+    usage: UsageLike | null | undefined,
+    charge = true,
+    context: Partial<PaidCallContext> = {}
+  ): PricingInfo {
+    if (!charge) {
+      if (!usage || !validNonNeg(usage.cost)) throw new Error('Invalid historical cost')
+      return this.mergeRate(modelId, observedRatesFromUsage(usage))
+    }
+    if (!usage || !validNonNeg(usage.cost)) {
+      this.markUnknown('Missing/invalid usage.cost', { ...context, modelId })
+    }
+    if (this.localHalt) throw new Error(this.localHalt)
+    let next: PricingInfo
+    try {
+      next = observedRatesFromUsage(usage)
+    } catch (err) {
+      this.markUnknown(err instanceof Error ? err.message : String(err), {
+        ...context,
+        modelId,
+      })
+    }
+    if (!this.store) {
+      this.actual += usage.cost
+      return this.mergeRate(modelId, next)
+    }
+    try {
+      this.store.mutate(state => {
+        if (state.unknownCharges.length) {
+          throw new Error('Existing unresolved unknown spend: stop')
+        }
+        const pending = context.callId
+          ? state.pendingRequests.find(x => x.callId === context.callId)
+          : undefined
+        if (state.pendingRequests.length && !pending) {
+          throw new Error('Unmatched pending request: stop')
+        }
+        if (pending && pending.batchId !== this.batchId) {
+          throw new Error('Pending request batch mismatch')
+        }
+        const batch = state.batches[this.batchId] || {
+          knownActualUsd: 0,
+          settledCallIds: [],
+        }
+        if (context.callId && batch.settledCallIds.includes(context.callId)) {
+          throw new Error('Duplicate settlement: stop')
+        }
+        const billed = usage.cost as number
+        batch.knownActualUsd += billed
+        state.knownActualUsd += billed
+        if (context.callId) batch.settledCallIds.push(context.callId)
+        state.batches[this.batchId] = batch
+        state.pendingRequests = state.pendingRequests.filter(
+          x => x.callId !== context.callId
+        )
+        const old = state.observedRates[modelId] || { input: 0, output: 0 }
+        state.observedRates[modelId] = {
+          input: Math.max(old.input, next.inputCostPerToken),
+          output: Math.max(old.output, next.outputCostPerToken),
+        }
+      })
+    } catch (err) {
+      this.localHalt =
+        'Settlement/state write failed: stop; ' +
+        (err instanceof Error ? err.message : String(err))
+      throw new Error(this.localHalt)
+    }
+    this.refresh()
+    return this.rates.get(modelId)!
   }
 
   catalogRates(pricing: CatalogPricing | undefined, promptByteLength: number): PricingInfo {
@@ -280,6 +473,8 @@ export class SharedCostGuard {
     if (!Number.isInteger(opts.completionCap) || opts.completionCap < 1 || !rates) {
       throw new Error('Invalid reserve inputs')
     }
+    // Completion cap is applied once. Reasoning is a subset of completion, not
+    // a second billed pool. THINKING_MODEL_OUTPUT_MULTIPLIER is not used here.
     return {
       usd:
         RESERVE_MARGIN *
@@ -288,13 +483,52 @@ export class SharedCostGuard {
       outputRate: rates.outputCostPerToken,
       inputByteAllowance: bytes,
       completionCap: opts.completionCap,
+      reasoningPolicy: REASONING_RESERVE_POLICY,
     }
   }
 
   gate(reserve: ReserveDetails | number): true {
+    if (this.localHalt) throw new Error(this.localHalt)
+    if (this.store) {
+      const state = this.refresh()
+      this.assertClear(state)
+    } else if (this.failClosed || this.unknownCharges > 0) {
+      throw new Error('Unknown billed charge latched: fail closed')
+    }
     const usd = typeof reserve === 'number' ? reserve : reserve.usd
     if (!validNonNeg(usd) || this.budget - this.actual < usd) {
       throw new Error('Insufficient remaining estimated budget: stop')
+    }
+    return true
+  }
+
+  /** Persist intent under the global lock before any completion POST. */
+  beginRequest(reserve: ReserveDetails, context: PaidCallContext): true {
+    if (!context?.callId) throw new Error('Durable request callId required')
+    this.gate(reserve)
+    if (!this.store) return true
+    try {
+      this.store.mutate(state => {
+        this.assertClear(state)
+        const actual = state.batches[this.batchId]?.knownActualUsd || 0
+        if (!validNonNeg(reserve.usd) || this.budget - actual < reserve.usd) {
+          throw new Error('Insufficient remaining estimated budget')
+        }
+        state.pendingRequests.push({
+          callId: context.callId,
+          batchId: this.batchId,
+          modelId: context.modelId,
+          promptName: context.promptName,
+          startedAt: new Date().toISOString(),
+          reserveUsd: reserve.usd,
+          actualCost: null,
+        })
+      })
+    } catch (err) {
+      this.localHalt =
+        'Cannot persist pre-request intent: stop; ' +
+        (err instanceof Error ? err.message : String(err))
+      throw new Error(this.localHalt)
     }
     return true
   }

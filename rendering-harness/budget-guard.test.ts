@@ -164,12 +164,40 @@ test.describe('Budget Guard (production module)', () => {
     expect(outcomes.slice(firstRefuse).every(o => o.action === 'refuse')).toBe(true)
   })
 
-  test('PASS: thinking models reserve 3x output tokens', () => {
+  test('PASS: thinking flag does not 3× the completion cap (cap includes reasoning)', () => {
     const normal = estimateRequestCost(100, 1000, pricing, false)!
     const thinking = estimateRequestCost(100, 1000, pricing, true)!
-    const extraOutput =
+    expect(thinking).toBe(normal)
+    expect(THINKING_MODEL_OUTPUT_MULTIPLIER).toBe(3)
+    const extraIfContingency =
       1000 * (THINKING_MODEL_OUTPUT_MULTIPLIER - 1) * pricing.outputCostPerToken
-    expect(thinking - normal).toBeCloseTo(extraOutput, 12)
+    expect(thinking - normal).not.toBeCloseTo(extraIfContingency, 12)
+  })
+
+  test('PASS: dry-run reserve matches live cap-once+25% (repro 500in/2048cap)', () => {
+    const prompt = 'x'.repeat(2000)
+    const catalog = { prompt: 1e-6, completion: 2e-6 }
+    const live = new SharedCostGuard(1)
+    const dry = new SharedCostGuard(1)
+    const liveReserve = live.reserve({
+      modelId: 'test/thinking',
+      prompt,
+      completionCap: 2048,
+      catalog,
+    })
+    const dryReserve = dry.reserve({
+      modelId: 'test/thinking',
+      prompt,
+      completionCap: 2048,
+      catalog,
+    })
+    expect(dryReserve.usd).toBeCloseTo(liveReserve.usd, 12)
+    const bytes = Buffer.byteLength(prompt, 'utf8') + 32
+    expect(liveReserve.usd).toBeCloseTo(RESERVE_MARGIN * (bytes * 1e-6 + 2048 * 2e-6), 12)
+    expect(liveReserve.usd).toBeCloseTo(0.00766, 5)
+    const tokenEstimate = estimateRequestCost(500, 2048, pricing, true)!
+    expect(tokenEstimate).toBeCloseTo(0.004596, 6)
+    expect(tokenEstimate).not.toBeCloseTo(0.012788, 6)
   })
 
   test('PASS: token estimate is ceil(chars/4)', () => {
@@ -313,9 +341,32 @@ test.describe('SharedCostGuard — catalog vs observed provider rates (GLM 5.3)'
   test('unknown usage.cost throws — never guessed', () => {
     const guard = new SharedCostGuard(1)
     expect(() => observedRatesFromUsage({})).toThrow(/Unknown usage.cost/)
-    expect(() => guard.observe('z-ai/glm-5.3', { prompt_tokens: 10, completion_tokens: 10 })).toThrow(
-      /Unknown usage.cost/
-    )
+    expect(() =>
+      guard.observe('z-ai/glm-5.3', { prompt_tokens: 10, completion_tokens: 10 })
+    ).toThrow(/Unknown spend/)
+    expect(guard.failClosed).toBe(true)
+    expect(guard.unknownCharges).toBe(1)
+    expect(() =>
+      guard.gate({
+        usd: 0.001,
+        inputRate: 1e-6,
+        outputRate: 2e-6,
+        inputByteAllowance: 32,
+        completionCap: 1,
+      })
+    ).toThrow(/Unknown spend|fail closed|unresolved/)
+  })
+
+  test('caught unknown-cost throw still fail-closes later gates', () => {
+    const guard = new SharedCostGuard(1)
+    try {
+      guard.observe('test/model', { prompt_tokens: 10, completion_tokens: 10 })
+    } catch {
+      /* collector catch */
+    }
+    expect(guard.unknownCharges).toBe(1)
+    expect(guard.actual).toBe(0)
+    expect(() => guard.gate(0.001)).toThrow(/Unknown spend|fail closed|unresolved/)
   })
 
   test('invalid cost components throw', () => {

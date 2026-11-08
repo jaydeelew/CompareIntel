@@ -18,11 +18,13 @@ import { fileURLToPath } from 'url';
 import { spawn, ChildProcess } from 'child_process';
 import { validateRenderedHTML, type ValidationResult } from './dom-assertions.js';
 import {
-  estimateRequestCost,
-  estimateTokens,
-  resolveActualCost,
   SharedCostGuard,
 } from './budget-guard.js';
+import {
+  runPaidPromptAttempt,
+  type PaidTransportResult,
+} from './paid-call.js';
+import { DEFAULT_GUARD_STATE_FILE, DurableStore } from './durable-spend.js';
 import { droppedNameExpectations, getExpectedFeatures } from './expected-features.js';
 import {
   isTruncatedReply,
@@ -170,18 +172,18 @@ async function loadPrompts(): Promise<Map<string, string>> {
 }
 
 /**
- * Call OpenRouter API
+ * OpenRouter transport for runPaidPromptAttempt. Does not resolve cost —
+ * accounting is settlePaidCall so a missing usage.cost cannot be forgotten.
  */
-async function callOpenRouter(
-  modelId: string,
-  prompt: string,
-  maxTokens: number,
-  pricing: Map<string, PricingInfo>
-): Promise<{ response: string; usage: any; cost: number }> {
+async function openRouterTransport(req: {
+  modelId: string
+  prompt: string
+  completionCap: number
+}): Promise<PaidTransportResult> {
   if (!OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY environment variable is required');
   }
-  
+
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -191,29 +193,28 @@ async function callOpenRouter(
       'X-Title': 'CompareIntel Rendering Harness',
     },
     body: JSON.stringify({
-      model: modelId,
+      model: req.modelId,
       messages: [
         {
           role: 'user',
-          content: prompt,
+          content: req.prompt,
         },
       ],
-      max_tokens: maxTokens,
+      max_tokens: req.completionCap,
       usage: { include: true },
     }),
   });
-  
+
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenRouter API error (${response.status}): ${error}`);
+    return { httpStatus: response.status, usage: null, content: '' };
   }
-  
+
   const data = await response.json();
-  const content = data.choices[0]?.message?.content || '';
-  const usage = data.usage;
-  
-  const cost = resolveActualCost(usage, pricing.get(modelId), modelId);
-  return { response: content, usage, cost };
+  return {
+    httpStatus: 200,
+    usage: data.usage,
+    content: data.choices[0]?.message?.content || '',
+  };
 }
 
 interface ViteHandle {
@@ -1129,31 +1130,40 @@ async function main() {
   const pricing = await fetchOpenRouterPricing();
   console.log(`Fetched pricing for ${pricing.size} models\n`);
   
-  // Calculate estimates
+  // Dry-run uses the same SharedCostGuard.reserve as live (UTF-8 bytes + pad,
+  // completion cap once, 1.25 margin). Not token-estimate × 3 thinking.
   console.log('=== Cost Estimation ===');
   let totalEstimatedCost = 0;
   const modelEstimates = [];
-  
+  const estimateGuard = new SharedCostGuard(Number.MAX_SAFE_INTEGER);
+
   for (const model of selectedModels) {
     const modelPricing = pricing.get(model.id);
     let modelCost = 0;
     let hasNoPricing = false;
-    
-    for (const [promptName, promptText] of prompts) {
-      const promptTokens = estimateTokens(promptText);
-      const cost = estimateRequestCost(
-        promptTokens,
-        maxTokens,
-        modelPricing,
-        model.is_thinking_model || false
-      );
-      if (cost === null) {
+
+    for (const [, promptText] of prompts) {
+      if (!modelPricing) {
         hasNoPricing = true;
         break;
       }
-      modelCost += cost;
+      try {
+        const reserve = estimateGuard.reserve({
+          modelId: model.id,
+          prompt: promptText,
+          completionCap: maxTokens,
+          catalog: {
+            prompt: modelPricing.inputCostPerToken,
+            completion: modelPricing.outputCostPerToken,
+          },
+        });
+        modelCost += reserve.usd;
+      } catch {
+        hasNoPricing = true;
+        break;
+      }
     }
-    
+
     if (!hasNoPricing) {
       totalEstimatedCost += modelCost;
     }
@@ -1233,7 +1243,15 @@ async function main() {
   const browser = await chromium.launch();
   const results: TestResult[] = [];
   let actualTotalCost = 0;
-  const costGuard = new SharedCostGuard(maxUsd);
+  const costGuard = new SharedCostGuard(maxUsd, [], {
+    store: new DurableStore(DEFAULT_GUARD_STATE_FILE),
+    batchId: runDate,
+  });
+  if (costGuard.unknownCharges > 0 || costGuard.failClosed) {
+    console.log(
+      `\n⚠ Durable unresolved unknown/pending spend (${costGuard.unknownCharges} unknown). Live paid calls fail-closed until explicit resolution/approval. Historical unknowns stay actualCost/resolution null — not $0.\n`
+    );
+  }
   
   // Create a single page for all renders (faster than creating new pages each time)
   const page = await browser.newPage();
@@ -1247,22 +1265,26 @@ async function main() {
         
         try {
           const modelPricing = pricing.get(model.id);
-          try {
-            const reserve = costGuard.reserve({
-              modelId: model.id,
-              prompt: promptText,
-              completionCap: maxTokens,
-              catalog: modelPricing
-                ? {
-                    prompt: modelPricing.inputCostPerToken,
-                    completion: modelPricing.outputCostPerToken,
-                  }
-                : undefined,
-            });
-            costGuard.gate(reserve);
-          } catch (guardError) {
-            const reason =
-              guardError instanceof Error ? guardError.message : String(guardError);
+          const attempt = await runPaidPromptAttempt({
+            guard: costGuard,
+            modelId: model.id,
+            prompt: promptText,
+            completionCap: maxTokens,
+            catalog: modelPricing
+              ? {
+                  prompt: modelPricing.inputCostPerToken,
+                  completion: modelPricing.outputCostPerToken,
+                }
+              : undefined,
+            pricing: modelPricing,
+            promptName,
+            transport: openRouterTransport,
+          });
+          actualTotalCost = costGuard.actual;
+          config.cumulativeCostUsd = actualTotalCost;
+
+          if (attempt.skipped || attempt.error || !attempt.response) {
+            const reason = attempt.error || 'paid call skipped';
             console.log(`    ⚠ Skipping: ${reason}`);
             results.push({
               modelId: model.id,
@@ -1276,19 +1298,12 @@ async function main() {
             });
             continue;
           }
+
+          const response = attempt.response;
+          const usage = attempt.usage;
+          const cost = attempt.actualCost;
           
-          // Call OpenRouter
-          const { response, usage, cost } = await callOpenRouter(
-            model.id,
-            promptText,
-            maxTokens,
-            pricing
-          );
-          costGuard.observe(model.id, usage);
-          actualTotalCost = costGuard.actual;
-          config.cumulativeCostUsd = actualTotalCost;
-          
-          const totalTokens = usage?.total_tokens || (usage?.prompt_tokens + usage?.completion_tokens) || 0;
+          const totalTokens = (usage?.prompt_tokens || 0) + (usage?.completion_tokens || 0);
           console.log(`    ✓ Got response (${totalTokens} tokens, $${cost.toFixed(4)})`);
           
           // Save raw response
@@ -1340,7 +1355,7 @@ async function main() {
             promptName,
             promptText,
             response,
-            usage,
+            usage: usage ?? undefined,
             actualCost: cost,
             timestamp: new Date().toISOString(),
             featureCoverage: coverage,

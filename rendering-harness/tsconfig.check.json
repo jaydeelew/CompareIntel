@@ -7,6 +7,8 @@
     "run-harness.ts",
     "dom-assertions.ts",
     "budget-guard.ts",
+    "durable-spend.ts",
+    "paid-call.ts",
     "source-features.ts",
     "expected-features.ts",
     "overall-status.ts"
