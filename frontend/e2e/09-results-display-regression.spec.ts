@@ -691,8 +691,36 @@ test.describe('Results Display Regression Tests', () => {
         const breakoutBtn = resultCard.locator(
           '[data-testid="breakout-button"], .breakout-card-btn, button[aria-label*="Break out"]'
         )
-        // Avoid fixed sleeps: reasoning models / slow CI need longer for both cards to be non-error.
-        await expect(breakoutBtn).toBeVisible({ timeout: 45000 })
+        // Breakout is hidden on error cards. Wait until the stream either succeeds
+        // (button appears) or fails (Error: text) so a 402 does not burn 45s.
+        const comparisonError = resultCard.getByText(/^Error:/)
+        await expect
+          .poll(
+            async () => {
+              if (await breakoutBtn.isVisible().catch(() => false)) return 'breakout'
+              if (
+                await comparisonError
+                  .first()
+                  .isVisible()
+                  .catch(() => false)
+              )
+                return 'error'
+              return 'pending'
+            },
+            { timeout: 45000, intervals: [200, 500, 1000] }
+          )
+          .not.toBe('pending')
+        if (
+          await comparisonError
+            .first()
+            .isVisible()
+            .catch(() => false)
+        ) {
+          throw new Error(
+            `Breakout button is hidden because the comparison failed: ${await comparisonError.first().innerText()}`
+          )
+        }
+        await expect(breakoutBtn).toBeVisible()
 
         const breakoutResponse = await triggerBreakoutAndWaitForResponse(
           authenticatedPage,

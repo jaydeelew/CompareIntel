@@ -81,8 +81,18 @@ export async function selectSelectableTextModels(
       candidates.push({ provider, id: model.id, thinking: model.is_thinking_model === true })
     }
   }
+  // Prefer compact/cheap models so live-API suites are less likely to 402 on
+  // max_tokens reservation (CI Cross-Browser jobs share one OpenRouter key).
   // Reasoning models stream much slower; only use them if nothing else is available.
-  candidates.sort((a, b) => Number(a.thinking) - Number(b.thinking))
+  const cheapScore = (id: string): number => {
+    const s = id.toLowerCase()
+    if (/(mini|nano|haiku|flash|small|3\.5)/.test(s)) return 0
+    if (/(27b|70b|405b|opus|sonnet)/.test(s)) return 2
+    return 1
+  }
+  candidates.sort(
+    (a, b) => cheapScore(a.id) - cheapScore(b.id) || Number(a.thinking) - Number(b.thinking)
+  )
   expect(
     candidates.length,
     `${catalog.user_tier} tier has fewer than ${count} selectable text models`

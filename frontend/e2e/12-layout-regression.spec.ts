@@ -379,21 +379,19 @@ test.describe('Layout Regression Tests', () => {
 
           const pricingLine = page.locator('.hero-pricing-line').first()
           await expect(pricingLine).toBeVisible()
+          await waitForHeroEntranceAnimations(page)
+          // 1024x768 hero is 870px (taller than the viewport). Scroll the line into view
+          // before sampling so we never need a full-page clip.
+          await pricingLine.scrollIntoViewIfNeeded()
+          await waitForStableLayout(page)
 
           const styles = await page.evaluate(() => {
             const line = document.querySelector('.hero-pricing-line')!
             const link = line.querySelector('a')!
-            const rect = line.getBoundingClientRect()
             return {
               text: getComputedStyle(line).color,
               link: getComputedStyle(link).color,
               linkDecoration: getComputedStyle(link).textDecorationLine,
-              rect: {
-                x: rect.x,
-                y: rect.y + window.scrollY,
-                width: rect.width,
-                height: rect.height,
-              },
             }
           })
 
@@ -403,17 +401,10 @@ test.describe('Layout Regression Tests', () => {
             content:
               '.hero-pricing-line, .hero-pricing-line * { color: transparent !important; text-shadow: none !important; text-decoration: none !important; }',
           })
-          const viewportSize = page.viewportSize()!
-          const x = Math.max(0, styles.rect.x)
-          const backdrop = await page.screenshot({
-            fullPage: true,
-            clip: {
-              x,
-              y: styles.rect.y,
-              width: Math.min(styles.rect.width, viewportSize.width - x),
-              height: styles.rect.height,
-            },
-          })
+          // Element screenshot of the current viewport box. `fullPage: true` + document-Y
+          // clip at 1024x768 scrolls the page to stitch, which can fold the navbar and
+          // sample the light page background below the hero (CI: rgb(163,166,173)).
+          const backdrop = await pricingLine.screenshot()
           const lightestBackdrop = await page.evaluate(async (b64: string) => {
             const img = new Image()
             img.src = `data:image/png;base64,${b64}`
