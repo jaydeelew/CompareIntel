@@ -630,11 +630,9 @@ describe('bug 28: array row-skip \\[6pt] is not a display-math delimiter', () =>
     '$$',
   ].join('\n')
 
-  const o3Pmatrix = [
-    '\\[',
-    'A=\\begin{pmatrix}a & b \\\\[4pt] c & d\\end{pmatrix}.',
-    '\\]',
-  ].join('\n')
+  const o3Pmatrix = ['\\[', 'A=\\begin{pmatrix}a & b \\\\[4pt] c & d\\end{pmatrix}.', '\\]'].join(
+    '\n'
+  )
 
   it('renders o3 01 cases without leftover \\[6pt] (openai/o3)', () => {
     const el = renderReply(o3Cases, 'openai/o3')
