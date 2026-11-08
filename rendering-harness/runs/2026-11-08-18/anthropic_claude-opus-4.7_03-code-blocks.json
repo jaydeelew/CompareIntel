@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-opus-4.7",
+  "modelName": "Anthropic: Claude Opus 4.7",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "# Code Blocks Response\n\nHere are the code examples with explanations:\n\n## Python: Quadratic Formula\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\nThis function solves equations of the form `ax² + bx + c = 0`. For the example `x² - 5x + 6 = 0`, it returns `(3.0, 2.0)`.\n\n**Note:** This implementation doesn't handle complex roots (when `discriminant < 0`). To support those, you'd use the `cmath` module:\n\n```python\nimport cmath\n\ndef quadratic_formula_complex(a, b, c):\n    discriminant = cmath.sqrt(b**2 - 4*a*c)\n    return ((-b + discriminant) / (2*a), (-b - discriminant) / (2*a))\n```\n\n## JavaScript: Fibonacci\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\nThis recursive implementation is elegant but inefficient—it has **O(2ⁿ)** time complexity. A memoized version performs much better:\n\n```javascript\nconst fibMemo = (() => {\n  const cache = new Map();\n  const fib = (n) => {\n    if (n <= 1) return n;\n    if (cache.has(n)) return cache.get(n);\n    const result = fib(n - 1) + fib(n - 2);\n    cache.set(n, result);\n    return result;\n  };\n  return fib;\n})();\n\nconsole.log(fibMemo(50)); // 12586269025 (fast!)\n```\n\n## Inline Code Examples\n\nWhen discussing code inline, these should all render as code rather than math or variables:\n\n- `x^2` — the caret is a literal character here, not an exponent\n- `a_b` — the underscore is part of an identifier, not a subscript\n- `$price` — the dollar sign is a variable prefix (common in PHP, Bash, jQuery), not math delimiters\n- `arr[i]` — array indexing syntax\n- `obj.method()` — method invocation\n\n## Shell Example for Good Measure\n\n```bash\n#!/bin/bash\nprice=100\ndiscount=20\nfinal=$((price - discount))\necho \"Final price: \\$${final}\"\n```\n\nAll three languages demonstrate different paradigms: Python's readable syntax, JavaScript's functional style, and Bash's shell scripting conventions.",
+  "usage": {
+    "prompt_tokens": 343,
+    "completion_tokens": 954,
+    "total_tokens": 1297,
+    "cost": 0.025565,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.025565,
+      "upstream_inference_prompt_cost": 0.001715,
+      "upstream_inference_completions_cost": 0.02385
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.025565,
+  "actualCost": 0.025565,
+  "timestamp": "2026-11-08T20:38:51.300Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

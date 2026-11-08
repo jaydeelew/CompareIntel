@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794170248-Lha4bbXKTReHMnentR6q",
+  "object": "chat.completion",
+  "created": 1794170248,
+  "model": "openai/gpt-5.6-sol",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that \\(a^2+b^2=c^2\\).\n2. For a *right triangle* with sides \\(a=3\\) and \\(b=4\\):\n   - Calculate:\n     \\[\n     c=\\sqrt{3^2+4^2}\n      =\\sqrt{9+16}\n      =\\sqrt{25}\n      =5\n     \\]\n   - Therefore, \\(c=5\\) units.\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---|---|---|\n| Quadratic | \\(ax^2+bx+c=0\\) | \\(x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}\\) |\n| Sum | \\(\\sum_{i=1}^{n}i\\) | \\(\\frac{n(n+1)}{2}\\) |\n| Product | \\(\\prod_{i=1}^{n}i\\) | \\(n!\\) |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is \\(A=\\pi r^2\\), where \\(r\\) is the radius. For \\(r=5\\), the area is \\(25\\pi\\), approximately \\(78.54\\).\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math:\n\n\\[\n\\int_0^1 x\\,dx\n=\\left[\\frac{x^2}{2}\\right]_0^1\n=\\frac12\n\\]\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices:\n\n- Computer: \\$1,200\n- Monitor: \\$300\n- Keyboard: \\$50\n- Mouse: \\$25\n- **Total: \\$1,575**\n\nMath: The formula \\(f(x)=x^2\\) evaluates to \\(f(5)=25\\).",
+        "refusal": null,
+        "reasoning": "**Formulating challenging edge cases**\n\nI’m considering how to generate a response with challenging edge cases while maintaining formatting. I might need to preserve specific features, like correctly escaping dollar signs to avoid ambiguity with math delimiters. \n\nThe user didn’t ask a direct question, so I should present scenarios clearly, perhaps in a titled format. For example, in scenario 5, I'll ensure that currency is properly escaped. \n\nI want to keep the math and structure clean, using tables, lists, and horizontal rules. Let’s make this response polished and precise!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Formulating challenging edge cases**\n\nI’m considering how to generate a response with challenging edge cases while maintaining formatting. I might need to preserve specific features, like correctly escaping dollar signs to avoid ambiguity with math delimiters. \n\nThe user didn’t ask a direct question, so I should present scenarios clearly, perhaps in a titled format. For example, in scenario 5, I'll ensure that currency is properly escaped. \n\nI want to keep the math and structure clean, using tables, lists, and horizontal rules. Let’s make this response polished and precise!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8N2NearqjTUxiTRZLtfc1k7g5De1LmLoMlQqwig83_cC1yvOzyx9YReB268yDHxNmQRDl_VbTeKD0Tv7Q0uqQQpR2f9HyUqwA2gu-xcyTY16x27nCkTmk4eVy_rrfl-GRbdbLlypcmKrzZZz2iXuGGC_T_Ah5FVHlzdbtp2Kz1YFI2WVhFKEUU6dfNAmIxjUKHWy1SjFjvw9Fnz4A6lDFnmv5w1p4lbnr953bFp3kQRo6fnoNEMCTpictllObhYiwwDNmHAuCULmk9kvbY60zklVrBDEvHpIEbi-xkJj0rlmz71Zh1U7F1DdHtm8AplgX6kW25S4PpNeNmpGjmU-cywGvyLG1RlVRtFNPck7SvYiiU3aIVN3IqcjD_S6wQ7smz4UiuVjFYh1KUeze3vqsiDMtcKFZ9XH47y_dGZ7E7GeDAyqXqbw9-QuI0zZyxUScqfYXhBngQF160a67jcs2odyNDd7q0hukJ5EvVZnbvsgbJjp_xpAjKR1aCvwg4QIHCp02ZyazzSkfOsfXiRzTH5iFI_2Nr31YH9Q47ML--obaQ-_fZ2WCbNBOb-Jx64CYR0a0eUC5LXaTAlkFtfzbgXfU2mxvmtmzMYGDC_T1bvxS8WUrF0omM9BItCBmgYE0sXtScVbLi1nXPrvHAM9nE0kaBDtaUpIlCqFL71nmszrv3d6JuGLYeXr93crgIWosFYRwzsP7l2HuPe6ljZ4GEZMxDrrVcaujog63mwyFc_vt1mDBhlPeLUhKnMoTDoGicVAqDXlVDSTNKcgX8y9H-Eu-xbtyzvc7nhQlOlCakTb3VlLiOUP6I0x-6UOuCq1SL2ebAsvCnAjNHqvSvNldU2udVubBtz0ijGcgs8unsOWQyBuuOPW9b6kqIxOQe9jqPfIC3SS8CL5YqlC1dIzYHUskY2aMt2AobSs0beJy8I6M5VTxClFj5CaeP9FE9M9GFSqju3vh9Rk7RmA1hEpfuPDRkNKfPnVYNU1pvkNqr9NRFaa58bnDc_PpJW-IOOvuk_E0DLzytXSTFxlgTgZoPPLhzevpfSYOkAa7yCZZriH14nHx9OXF4rKtlwL0hyxdcTUAaS9p5XrxWamUe0CggiDa5BxO-dDxkNvA3mpIfik2onWHKGtg7WPpVvRwk-DQEUK2fsVDHkh0_rIM4BzcJl-QCJxE1ioCjtuE3i-y_3IMiUTwApPf_y4LEHBD7aKKDp7FPg2J0PP2NuLmbzwIuyWcOGo3q6OjFT--zejbyw-3SFK2vMHVC-9GH1nDxPr-i_Y04fwig8CU_Rj0lS0BiPyW9TRNQvwLEdrGI2Lwt18QV99fbsqGZBkIVM-U6eENyZjXm8iIaLlk3lmsEtF1woMOajc0etsfYSqdSIlwGxQ1hFlJZ2Y7---NdgAcVoU1vXxBwSnoU4QBQkahMNos0nADCBVkaqAcIk9JTJ6A5Ws0QhQGt1995b3MgRVarOQ5BRBkbEFlaEY7Y52KzcVEm6Og2RbmlFbWxEcUPHH-t9sGpn4vFMexlqOp_3G47po_yN5qyUgotQLPC6czZTYyl05R2XWYt1fkaWaMX-sv9NRh9aCkXnxW5vHmcqfLbVirwK1KDn4cAmF1ess9pCXope3jMKKgjIX-lCCXsFAVs9LAij5T0BN5S1-96ZyaCsMDfXCadXqq29CtPWkDp8sGRdJi5kGY7nsaNZgjRG0U21XLnUv7fv3SafgdyC19NxYAtQDODYn5e4fuWRIJWInSXrjYp2rQ7Uw4QVkcw-S9TLrQ7wdgMKPCgxu3Ug9Wre0CZrx2warZg768aNSjSkT7yar4UnNmaH0LhaYuZxbkDLSn9_mtMDSmIht6epytthSWLUAVoLt46orM5SqEPw4FWqba7ACJXS3w60jbKg2w7oDMJFOeqk7Ue4Vd4zZ0nu9kfdXjNA-dzuRM6fYEMxmSlFH27sJkcNGG3LoRM6NPHs37YhoIhk2EKC-uRmc9zJlN0z0P6uro8KGToSHqGY_4vgGEleKFZX-iBKW7dA9P9YWsmeiVBfhNEhTyXyOykropfnSOSy3xCaVBtKMVsZndppYIWFVX6i-nz9hlFU50fyH_3ZG9nB0SrJtkRK3y-WeamDbWWBLFWDC8z3th-iQ0l-cWRGBoX_TZ6Pq8Evcdp1zy5TkdsFosbgngze5EwkqcnDn27XjmXYG1UjBOm7awq6y5Rl8Ez8BlhqklpxZh2M-MFnLaswFkC3mY_N68HBDQku1b4Z_2ucTegCKfAXXwoaWUNxGAgBq2t8CgK_G5Y-1IodrRhvp8_bWTuG7RUg2AP11A5v4ONNcYyoIXPCNSjjGn-E0utM7F_Y1dqJcYJ7AzFtaDCtALHxqF9smzCc-2lZdu_WopL8W1uReVd-bZ_Hko7GEK86dwUpDDHJ3IuGecnFZWP50b8Mk8dHtdpMmOHptJUkNZO9UWM3QVUAQoC0QXbjHxHNFx9twXrbKHrVoKlGYCF5-PHRIzF4fk4nx2SIQGCYE_qpo8sGHGoVZkemC7K8cmtXRA_JO76euqDyQe0bM_WS0y8ommUOfh6E8jw3QXOTrIo4DIeX55rtwcAsAmm3NfiJNpuNUfeLh3Mxm1guuvtBnVcEjOXufNOeQgGDP1VDfZX1uad2pyNltmjRnIG74XHaI0fuidulh4u33E5jO1WHRhnjNGaU8GqrrVvTCGwpKdHpg8FnE4rWu3TpFZ1DLMri-A2aiJXljxMqy3O2zwaisQ6QZJJ1b6EbDCxqihijTXqFm4LlFXbmr5wHc_53dTnIEasLPNK99M6t4_WfnF17XUl0I1ZV0WAifVcZv3u0p7JQZ8oFRGSLwfahq6fnTFZRb6iQbsYoD-ecaXJ64hxVmNZSlFCrp8R6LVN_tQmKf3U6E6QGQsQo-8EInb2p3yP4VtFzC-e1oOrH7TBTe87gMY1NH-hnS_SEA5zCUd4KV6apST0G4Kex48I_YPL1UnZSqkDjXLrwRkxNqcOFyPEv9A9YaBOHVacZsDHVdqqzLeLflGitS1dWBUhVaVLCH4V5JUWp07CeYe5JGVAPuKuDLynJ66mfiku2wS2_0EFi1DYZg9vwwTaXDeyzNTcomJrYbTT9iXP1wVd3B6uxiLmyW9QxmmciQDyEI-Am2QCRNPn3T6JQZZH8UdDy4pRbVbaBzNAxcHkFYhklGEUzBYgerRac6Aa-jh_605sODRjFPLK_13mKm4seLMf4H6xe7zdGPm6y1Vod2ySwDLktn4poOLASZypl7sg12B3M3Xx5PdhzblmHclxZACBg9CFYMI3ecvSKmrrNSatCVwevYh-UEvvPfIIWOJlLZCiM8SszzUpIsGQfDpHquFww8QC_UEcjaskFcTw_odlGqHmZeEFvKnWiTA8wNtht8hC90I1BpMU4w4rdje-V3xe3Z1o6CIVjT4kXFaWfjnRj6CelBNbaDZaTFg8YX4tvGGOOHAZb7JMJRoQN19AA5Bo0YklhEBseB6fFHeYhBSdtNdQx2NRiOrBbxO-Bbu2Y9vikahZYd0FFAn_DKYCMC2-H5_PnTtLVZ1gjawf0s9tN-jWKV3cIAHYR0ELDBxCLqvJMhwbHgpbRpyfq_a-zCT5RdKuInB53GR_xByHTG0ng84Q-fFeSDwHsY1PWeLQ1gwetoH6KZDPL0I7illAr3Uyc_c9gtQeeuIUoHR5zjiqxFaCpCRG5Zlugv7EBzfZx_QJKQ3p-mvQl0IrINL-PF2GWsmfHzgGWoV1QWA8JzGxf9pfbEgbqxcQYP0373i9IGvS0x3KvXGv_XDAo6xwrlRhe53j1i5J5JdbllXONf-KKGhLSurHMolnxJemo0q9p1TZvtxVvuckfdyvWegd-WNNlooAgVHw1-MXc7Sic2k5WZUCGLbCwGeg-Ha0F44Q7gaHCX6aYtZ3aDe1rQPGdRH8MpwJ8j9FfPhCmAJlkNPLq9zFIqIt_f20urUq4a36zyMfZzmvQlpiSNczgHcww24FR1kOPa71jzC0ux94vxiGUum615NYCJp6r-X750Gww2R8YHEslLaAWKYE7Iek_jDjmHg1We-Ci0JHa7JiFarlUs90QyjKCurch8Ybie_SjJCh56yEOreug3rFFvbN9M0Yu8rxcFk71G3QzsSdtu8vg0kUJCrKeQdfQg6IUez_1vWMci.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtc29sLTIwMjYwNzA5fG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_0d02bac46b43ecc4016af0dd89d9ac87d18b98e1715b1c42b0",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 639,
+    "total_tokens": 1067,
+    "cost": 0.014492,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.014492,
+      "upstream_inference_prompt_cost": 0.001712,
+      "upstream_inference_completions_cost": 0.01278
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 170,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

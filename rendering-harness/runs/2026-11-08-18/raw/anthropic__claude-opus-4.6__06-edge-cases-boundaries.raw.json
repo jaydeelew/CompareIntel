@@ -1,0 +1,46 @@
+{
+  "id": "gen-1794170299-9Au5gFgxlRHlnoP5eJbm",
+  "object": "chat.completion",
+  "created": 1794170299,
+  "model": "anthropic/claude-opus-4.6",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Testing Edge Cases and Boundaries\n\n## Delimiter Variants\n\n1. Double dollar display:\n\n$$x^2 + y^2 = r^2$$\n\n2. Bracket display:\n\n$$E = mc^2$$\n\n3. Single dollar inline: $a + b = c$\n\n4. Paren inline: $x = 5$\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n\n$$\\int_0^1 x\\, dx = \\frac{1}{2}$$\n\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\n---\n\n## Notes on Rendering Behavior\n\n- **Delimiter variants**: `$$...$$` and `\\[...\\]` both produce display math; `$...$` and `\\(...\\)` both produce inline math.\n- **Code blocks**: Everything inside fenced code blocks (`` ``` ``) is preserved literally — no LaTeX rendering occurs.\n- **Currency vs. math**: Context determines interpretation. Standalone prices like \"$100\" or \"$99.99\" are treated as literal text, not math delimiters, because they lack a closing match or contain non-math patterns.\n- **Escaped dollars**: `\\$` produces a literal dollar sign.\n- **Tables**: Inline math inside table cells works normally with `$...$` delimiters.\n- **Nested structures**: Display math inside list items works, though it may break list continuation depending on the renderer.\n- **Shell variables**: `$HOME` with no closing `$` is not interpreted as math.",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 376,
+    "completion_tokens": 572,
+    "total_tokens": 948,
+    "cost": 0.01618,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01618,
+      "upstream_inference_prompt_cost": 0.00188,
+      "upstream_inference_completions_cost": 0.0143
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

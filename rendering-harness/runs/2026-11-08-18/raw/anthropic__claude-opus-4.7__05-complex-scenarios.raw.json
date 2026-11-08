@@ -1,0 +1,46 @@
+{
+  "id": "gen-1794170343-0zFPAOnn9u0JZea2lmbQ",
+  "object": "chat.completion",
+  "created": 1794170343,
+  "model": "anthropic/claude-opus-4.7",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Response to Complex Scenarios Test\n\nHere's my handling of each challenging edge case:\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\nThis demonstrates nested lists with inline math, bold, and italic formatting working together.\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| Euler | $e^{i\\pi} + 1 = 0$ | $0$ |\n\nTables with LaTeX expressions in cells require careful pipe handling since `|` is a table delimiter.\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius. When $r = 5$:\n\n$$A = \\pi \\cdot 5^2 = 25\\pi \\approx 78.54$$\n\nNotice how code blocks preserve the `$` and `²` characters literally, while the surrounding prose renders math properly.\n\n## Scenario 4: Horizontal Rules\n\nFirst section with some introductory content.\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\nWe can verify this by computing:\n\n$$\\int_{0}^{1} x \\, dx = \\left[\\frac{x^2}{2}\\right]_0^1 = \\frac{1}{2} - 0 = \\frac{1}{2}$$\n\n---\n\nThird section follows the second horizontal rule.\n\n## Scenario 5: Multiple Dollar Signs\n\n**Currency context** (dollar signs should NOT trigger math mode):\n- Prices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25\n- Total: $1,575\n\n**Math context** (dollar signs SHOULD trigger math mode):\n- The formula $f(x) = x^2$ evaluates to $f(5) = 25$\n- Another example: $g(x) = 2x + 3$, so $g(10) = 23$\n\nThis is the trickiest case because renderers must distinguish between currency symbols and math delimiters. Typically, this works when:\n- Currency `$` is followed by a digit with no closing `$` on the same logical expression\n- Math `$...$` has balanced delimiters around a mathematical expression\n\n## Summary\n\n| Scenario | Challenge | Status |\n|----------|-----------|--------|\n| 1 | Nested lists + inline math | ✓ |\n| 2 | Math inside table cells | ✓ |\n| 3 | Code blocks vs. math rendering | ✓ |\n| 4 | Horizontal rules with surrounding math | ✓ |\n| 5 | Currency `$` vs. math `$` ambiguity | ⚠️ Renderer-dependent |",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 636,
+    "completion_tokens": 1228,
+    "total_tokens": 1864,
+    "cost": 0.03388,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.03388,
+      "upstream_inference_prompt_cost": 0.00318,
+      "upstream_inference_completions_cost": 0.0307
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

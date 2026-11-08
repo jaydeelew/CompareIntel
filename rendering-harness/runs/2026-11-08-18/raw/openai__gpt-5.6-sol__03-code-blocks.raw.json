@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170243-6jQMkZ6qHpCmel0plwh4",
+  "object": "chat.completion",
+  "created": 1794170243,
+  "model": "openai/gpt-5.6-sol",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly, `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": null,
+        "reasoning_details": [
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8N2E05cJ09FplyOHeAvdRHCW78FPZBmalgCiTkMU1hfYydHEdDun99AeeMyiPAQJApa-c1qBSp9Xh4kik9fhgakyZnMk3MweEIEz-9AVUgVsRdgkjU-4JFlQzuwbtvaS1vWVDx0f7XhIPqQNeQwUESIlBrxWViS0qddJfvTmpSd_nTvV_IVoM_l8PwP70KaDIP2E52twjGjiAwIXWe45U3dIxvzINcxXBniSZG-Et_c9rVakVbtVcEp_ixhrxgnx5DXaRJUVvVGNCJhDSQ4w9zqV1r3DSyC1BgMZVO4QBEi-2TKJARdwqZ-uy3zGRsjupynO3Z5Siak5AFrJ16EWBT7XDROck0gVYGC4LWjs_2agBrvahZL7erE6orfHGtPnJJJXbPRULI4QFpbLpL93phvnG3WqlWofvy_FGZiAgPwWGUQCjjngJhRndEMQX429KNHr4XgkLFfA3OLR9Tem9ryFLqE7cB_FV03-zG2ZEkW3mpH9qzTlzZMHKtunxNxl8rQT_FvQylX4V9WDXXxRo7zCj9PEHnZhuF4JjAgkaXWN5FNG98HAXYDOpFFZYTUEAycwgzmE93qYfcLGsZ8uSYIW9-1uJcGceHg-W6jmRnkz-QAze-Gm9aXi2KpD0kSF81vAbfUT-ffaqEGby0TcH5vKNCupxhMH9eCPiFB1jfdGm4j4AzPoDqAmJ6mPTs9d5VRrRQiSUjjo9BTUXH9oiQTkwnyYYZn6AFdoGzjy_hHqe3FLQevhs3a6oxLKYWqrOZiqmE4NYye3wDGUy6Je62_Rgyr4SUFYjpfR6T5JKDVwNwvhDiWE_CTh0ayj0rOTOGePO6RiLJIcpZ_85kVyVV73y8WJYN76DdXBghMltZ8d8w8k1XIpMj8e_TEsImFMlTVEQGP2lCHcyi6z9zB37B9m678nMYvFVGZr2QEjZZp9KE_dfkBIM3JNTOP4ZQcrNA1AgE_3aDOUHv527o6jqVNNpuPHk2lOAJNgSADgefjpoRdGtiD6aC4yYWrvJT4xhoL9u9wVj1OY-fQC7uI-AnRC2Ju8dIrVoWpCtEJJb0QFLpWBYjD1cLAftiRZo1uWA-VSaE1PkH_XGVciqZUPROCAo81DGnNFq0Z5aU6LcYGbGT02PM3oYoExZc7oLq9acFqEzm5NaaM3-aJAP409zYPvpySEMdVnXIYfdOrFAKl1PxWLxaBNlUIHuZSi1lK2Dh5UAlYqk5tfrrWD_9uctRc1BtDOPwSmjLMMc4kiCDzD2Rt24YEJ4BlaF6pew9dsgFoDmobM1KzZf_yCrlT_ZWL2DlUynYXILL7GRBam77uXrlcjp0_4tnKB2SZcpZJeLUf5iEdAf8luNNJnSwe6wD2FYMzvXCQcHSG_ZYMh-TLdpTVfD9cXWVmx-Hf1RfmFC8xtxoG7sy7aGkjrSkSDcLAL-v_nnMJRLvHZBa3xIdbK2fRhrZb1RsLiJnkU7rKYLraVPooyUsJoV4qr-wCVLtn9E16gCNTV3VRs1lqgv5fTU7a_9SyO3Yo5Ko8FWlvzUwX9ZqDKBbbis1CHo6M43ZzCW43vRjHqaR5lwN2sMIYzSqPduNuT4Hp_SF5cpTcheZEOXQDSbKCWf-765rIrPI7BEiUVWDAjz-Fjv9eaLEYf6lTFj3ZHAX09-15oC3lk7W1NI_bZJrp-SFQn-P49nj2pd06gJ__DgMV19ezF-WOd0Uc3skyCvhMK7czwC9RzcK7KDvwVRbC9SIM_t9FZ4GRG3s64IPXbzSCVQ8XJw7JwA8-KQMJIseI_iN-RVKOYPTQsnFrLhnKi-YXuGdNUlZW44LSKdsxEu3sX4-specL_6xQKJHRyvdfI9_CtlmcQidFbLJUJWxtEfzq7z_Qcm4xPMpD6giEbH8653x_ZxXajkqvflZwOmmMpsL8XLuIdSOc4yedtrNCDLeNhjNH42zwpZQ==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtc29sLTIwMjYwNzA5fG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_010ff0e29a584c16016af0dd83e7e487d19d96987d93802dc8",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 241,
+    "completion_tokens": 241,
+    "total_tokens": 482,
+    "cost": 0.005784,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.005784,
+      "upstream_inference_prompt_cost": 0.000964,
+      "upstream_inference_completions_cost": 0.00482
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 14,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
