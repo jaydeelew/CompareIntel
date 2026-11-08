@@ -90,7 +90,7 @@
     "globals": "^16.3.0",
     "http-proxy-middleware": "^4.2.0",
     "jsdom": "^24.0.0",
-    "lint-staged": "^15.2.7",
+    "lint-staged": "^17.6.0",
     "msw": "^2.14.6",
     "png-to-ico": "^3.0.2",
     "prettier": "^3.9.10",

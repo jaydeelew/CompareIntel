@@ -16,9 +16,9 @@ annotated-types==0.8.0
     # via
     #   -r requirements.in
     #   pydantic
-anthropic==2.3.0
+anthropic==2.5.0
     # via -r requirements.in
-anyio==4.15.1
+anyio==4.16.0
     # via
     #   -r requirements.in
     #   anthropic
@@ -55,7 +55,7 @@ cryptography==50.0.2
     #   fastapi-mail
 distro==1.9.0
     # via openai
-dnspython==2.9.1
+dnspython==2.9.2
     # via
     #   -r requirements.in
     #   email-validator
@@ -154,7 +154,7 @@ python-dotenv==1.2.4
     #   pydantic-settings
 python-multipart==0.0.33
     # via -r requirements.in
-pytz==2025.2
+pytz==2026.6
     # via -r requirements.in
 pyyaml==6.0.3
     # via -r requirements.in
@@ -180,7 +180,7 @@ soupsieve==3.0.4
     # via
     #   -r requirements.in
     #   beautifulsoup4
-sqlalchemy[asyncio]==2.1.6
+sqlalchemy[asyncio]==2.1.8
     # via
     #   -r requirements.in
     #   alembic
