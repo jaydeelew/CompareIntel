@@ -63,7 +63,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -78,13 +78,6 @@
             "expected": "inline math present",
             "actual": "10 inline math expressions",
             "message": "inline math assertion passed"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "links present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain links (not-covered, not a renderer failure)"
           },
           {
             "pass": true,
@@ -124,7 +117,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "anthropic/claude-sonnet-4.6",
@@ -366,7 +359,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -381,20 +374,6 @@
             "expected": "inline math present",
             "actual": "26 inline math expressions",
             "message": "inline math assertion passed"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "code blocks present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain code blocks (not-covered, not a renderer failure)"
-          },
-          {
-            "pass": true,
-            "status": "pass",
-            "expected": "tables present",
-            "actual": "1 tables (12 cells)",
-            "message": "tables assertion passed"
           },
           {
             "pass": true,
@@ -427,7 +406,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "anthropic/claude-sonnet-4.6",
@@ -478,15 +457,8 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "display math present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain display math (not-covered, not a renderer failure)"
-          },
           {
             "pass": true,
             "status": "pass",
@@ -517,13 +489,6 @@
           },
           {
             "pass": true,
-            "status": "not-covered",
-            "expected": "3+ level nested lists",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain 3+ level nested lists (not-covered, not a renderer failure)"
-          },
-          {
-            "pass": true,
             "status": "pass",
             "expected": "no KaTeX errors",
             "actual": "no errors",
@@ -548,7 +513,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "deepseek/deepseek-v4-pro",
@@ -597,7 +562,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -612,13 +577,6 @@
             "expected": "inline math present",
             "actual": "7 inline math expressions",
             "message": "inline math assertion passed"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "links present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain links (not-covered, not a renderer failure)"
           },
           {
             "pass": true,
@@ -658,7 +616,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "deepseek/deepseek-v4-pro",
@@ -898,7 +856,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -913,20 +871,6 @@
             "expected": "inline math present",
             "actual": "12 inline math expressions",
             "message": "inline math assertion passed"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "code blocks present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain code blocks (not-covered, not a renderer failure)"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "tables present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain tables (not-covered, not a renderer failure)"
           },
           {
             "pass": true,
@@ -959,7 +903,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "deepseek/deepseek-v4-pro",
@@ -1010,15 +954,8 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "display math present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain display math (not-covered, not a renderer failure)"
-          },
           {
             "pass": true,
             "status": "pass",
@@ -1049,13 +986,6 @@
           },
           {
             "pass": true,
-            "status": "not-covered",
-            "expected": "3+ level nested lists",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain 3+ level nested lists (not-covered, not a renderer failure)"
-          },
-          {
-            "pass": true,
             "status": "pass",
             "expected": "no KaTeX errors",
             "actual": "no errors",
@@ -1080,7 +1010,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "google/gemini-2.5-flash",
@@ -1129,7 +1059,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -1144,13 +1074,6 @@
             "expected": "inline math present",
             "actual": "13 inline math expressions",
             "message": "inline math assertion passed"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "links present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain links (not-covered, not a renderer failure)"
           },
           {
             "pass": true,
@@ -1190,7 +1113,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "google/gemini-2.5-flash",
@@ -1430,7 +1353,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -1445,20 +1368,6 @@
             "expected": "inline math present",
             "actual": "32 inline math expressions",
             "message": "inline math assertion passed"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "code blocks present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain code blocks (not-covered, not a renderer failure)"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "tables present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain tables (not-covered, not a renderer failure)"
           },
           {
             "pass": true,
@@ -1491,7 +1400,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "google/gemini-2.5-flash",
@@ -1542,15 +1451,8 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "display math present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain display math (not-covered, not a renderer failure)"
-          },
           {
             "pass": true,
             "status": "pass",
@@ -1581,13 +1483,6 @@
           },
           {
             "pass": true,
-            "status": "not-covered",
-            "expected": "3+ level nested lists",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain 3+ level nested lists (not-covered, not a renderer failure)"
-          },
-          {
-            "pass": true,
             "status": "pass",
             "expected": "no KaTeX errors",
             "actual": "no errors",
@@ -1612,7 +1507,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "openai/gpt-4o-mini",
@@ -1661,7 +1556,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -1676,13 +1571,6 @@
             "expected": "inline math present",
             "actual": "10 inline math expressions",
             "message": "inline math assertion passed"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "links present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain links (not-covered, not a renderer failure)"
           },
           {
             "pass": true,
@@ -1722,7 +1610,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "openai/gpt-4o-mini",
@@ -1962,7 +1850,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -1977,20 +1865,6 @@
             "expected": "inline math present",
             "actual": "12 inline math expressions",
             "message": "inline math assertion passed"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "code blocks present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain code blocks (not-covered, not a renderer failure)"
-          },
-          {
-            "pass": true,
-            "status": "not-covered",
-            "expected": "tables present",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain tables (not-covered, not a renderer failure)"
           },
           {
             "pass": true,
@@ -2023,7 +1897,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     },
     {
       "modelId": "openai/gpt-4o-mini",
@@ -2074,15 +1948,8 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
-          {
-            "pass": true,
-            "status": "pass",
-            "expected": "display math present",
-            "actual": "6 display math blocks",
-            "message": "display math assertion passed"
-          },
           {
             "pass": true,
             "status": "pass",
@@ -2113,13 +1980,6 @@
           },
           {
             "pass": true,
-            "status": "not-covered",
-            "expected": "3+ level nested lists",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain 3+ level nested lists (not-covered, not a renderer failure)"
-          },
-          {
-            "pass": true,
             "status": "pass",
             "expected": "no KaTeX errors",
             "actual": "no errors",
@@ -2144,8 +2004,8 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered"
+      "validationStatus": "pass"
     }
   ],
-  "freshRendered": "2026-11-08T02:06:35.911Z"
+  "freshRendered": "2026-11-08T17:40:36.470Z"
 }

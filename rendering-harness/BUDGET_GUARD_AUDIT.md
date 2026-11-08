@@ -17,4 +17,4 @@ This is still a best-effort pre-request estimate, not a provider hard cap:
 - Sequential only. Parallel requests would race the remainder.
 - Set an OpenRouter account limit for a true ceiling.
 
-Paid catalog estimates for 83 text models × 6 prompts (not run in this PR): 512 / 1024 / 2048 billed output with ~500 input ≈ $3.43 / $6.34 / $12.18. Not approved spend.
+Paid catalog estimates for 83 text models × 6 prompts (not run in this PR). The Nov 6 scenario $3.43 / $6.34 / $12.18 is **not a spend cap**. Nov 8 public catalog refresh (83 priced, 49 thinking, 3× output reserve): ~500 in + 512 / 1024 / 2048 out ≈ **$6.00 / $11.49 / $22.47**. Not approved spend.

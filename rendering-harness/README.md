@@ -122,13 +122,13 @@ All tests are fully offline (no API keys or real requests in CI):
 npm test  # Runs Playwright fixture tests
 ```
 
-## Example Cost Estimate (Nov 6, 2026 pricing)
+## Example Cost Estimate
 
-- 83 text models × 6 prompts = 498 requests
-- ~500 input tokens, 512/1024/2048 output tokens
-- **Estimated total**: $3.43 (512 out) / $6.34 (1024 out) / $12.18 (2048 out)
+Nov 6 scenario (not a cap): $3.43 / $6.34 / $12.18 at 512 / 1024 / 2048 out.
 
-**Note**: Always run `--dry-run` first to get current estimates before spending.
+Nov 8 public catalog refresh (83 text models, 49 thinking, 3× output reserve, ~500 in): **$6.00 / $11.49 / $22.47**.
+
+**Note**: Always run `--dry-run` first. Do not treat either scenario as an approved spend cap.
 
 ## Development
 
@@ -148,9 +148,11 @@ npm run dev  # Starts Vite on port 5174
 ## Architecture
 
 - **run-harness.ts**: Main orchestrator (API calls, screenshot capture, cost tracking)
-- **harness-app.tsx**: Minimal React wrapper around `LatexRenderer`
+- **harness-app.tsx**: Wraps `LatexRenderer` in the production results DOM (`results-section` / `results-grid` / `result-card` / `message-content`) and imports `variables.css`, `base.css`, and `results.css` (no copied table styles)
+- **expected-features.ts**: Prompt-name defaults intersected with saved `promptText` so old replies are not scored against later prompt files
 - **vite.config.ts**: Dev server with frontend source alias
 - **test-with-fixtures.test.ts**: Playwright offline tests
+- **production-styling.test.ts**: Desktop 1280×800 and mobile 390×844 computed-style fixtures for table padding/borders/overflow
 
 ## Troubleshooting
 

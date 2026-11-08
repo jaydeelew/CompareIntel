@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import LatexRenderer from '../frontend/src/components/LatexRenderer';
 import { initializeRegistry } from '../frontend/src/config/loadModelConfigs';
-import '../frontend/src/index.css';
+import '../frontend/src/styles/variables.css';
+import '../frontend/src/styles/base.css';
+import '../frontend/src/styles/results.css';
 
 interface RenderRequest {
   modelId: string;
@@ -139,17 +141,16 @@ function HarnessApp() {
   }
 
   return (
-    <div
-      data-render-container
-      style={{
-        padding: '20px',
-        maxWidth: '900px',
-        margin: '0 auto',
-      }}
-    >
-      <LatexRenderer modelId={renderData.modelId}>
-        {renderData.content}
-      </LatexRenderer>
+    <div data-render-container className="results-section">
+      <div className="results-grid">
+        <article className="result-card conversation-card">
+          <div className="message-content">
+            <LatexRenderer className="result-output" modelId={renderData.modelId}>
+              {renderData.content}
+            </LatexRenderer>
+          </div>
+        </article>
+      </div>
     </div>
   );
 }

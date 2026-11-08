@@ -11,3 +11,4 @@ runs/2026-11-04/debug-rendered.html
 test-results/
 playwright-report/
 blob-report/
+fixtures/visual/*.png

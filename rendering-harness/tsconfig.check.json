@@ -7,7 +7,8 @@
     "run-harness.ts",
     "dom-assertions.ts",
     "budget-guard.ts",
-    "source-features.ts"
+    "source-features.ts",
+    "expected-features.ts"
   ],
   "exclude": [
     "node_modules",

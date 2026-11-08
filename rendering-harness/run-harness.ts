@@ -23,6 +23,7 @@ import {
   preRequestBudgetDecision,
   resolveActualCost,
 } from './budget-guard.js';
+import { droppedNameExpectations, getExpectedFeatures } from './expected-features.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -152,69 +153,6 @@ async function loadPrompts(): Promise<Map<string, string>> {
   }
   
   return prompts;
-}
-
-/**
- * Get expected features for a prompt based on its name
- */
-function getExpectedFeatures(promptName: string): {
-  displayMath?: boolean;
-  inlineMath?: boolean;
-  codeBlocks?: boolean;
-  tables?: boolean;
-  links?: boolean;
-  nestedLists?: boolean;
-  currency?: boolean;
-  noKatexErrors?: boolean;
-  safeLinksOnly?: boolean;
-} {
-  const features: Record<string, any> = {
-    '01-math-basics': {
-      displayMath: true,
-      inlineMath: true,
-      links: true,
-      currency: true,
-      noKatexErrors: true,
-      safeLinksOnly: true,
-    },
-    '02-markdown-formatting': {
-      tables: true,
-      nestedLists: true,
-      safeLinksOnly: true,
-      noKatexErrors: true,
-    },
-    '03-code-blocks': {
-      codeBlocks: true,
-      safeLinksOnly: true,
-      noKatexErrors: true,
-    },
-    '04-mixed-markdown-latex': {
-      displayMath: true,
-      inlineMath: true,
-      codeBlocks: true,
-      tables: true,
-      noKatexErrors: true,
-      safeLinksOnly: true,
-    },
-    '05-complex-scenarios': {
-      displayMath: true,
-      inlineMath: true,
-      codeBlocks: true,
-      tables: true,
-      nestedLists: true,
-      noKatexErrors: true,
-      safeLinksOnly: true,
-    },
-    '06-edge-cases-boundaries': {
-      displayMath: true,
-      currency: true,
-      codeBlocks: true,
-      noKatexErrors: true,
-      safeLinksOnly: true,
-    },
-  };
-  
-  return features[promptName] || { safeLinksOnly: true, noKatexErrors: true };
 }
 
 /**
@@ -483,7 +421,8 @@ async function renderResponse(
   // Navigate to harness with model ID and content as query params
   const encodedContent = encodeURIComponent(response);
   const url = `http://localhost:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
-  
+
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(url, { waitUntil: 'domcontentloaded' });
 
   await page.waitForFunction(
@@ -576,7 +515,13 @@ async function renderOnlyMode(runDir: string): Promise<void> {
         );
         console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
 
-        const expectedFeatures = getExpectedFeatures(data.promptName);
+        const expectedFeatures = getExpectedFeatures(data.promptName, data.promptText);
+        const dropped = droppedNameExpectations(data.promptName, data.promptText);
+        if (dropped.length > 0) {
+          console.log(
+            `  · Provenance: saved promptText dropped name-defaults [${dropped.join(', ')}]`
+          );
+        }
         const validation = validateRenderedHTML(
           renderedHTML,
           expectedFeatures,
@@ -1166,7 +1111,13 @@ async function main() {
           console.log(`    ✓ Rendered screenshot (coverage: ${Object.entries(coverage).filter(([k, v]) => typeof v === 'boolean' && v).length} features)`);
           
           // Validate RENDERED HTML against expected features
-          const expectedFeatures = getExpectedFeatures(promptName);
+          const expectedFeatures = getExpectedFeatures(promptName, promptText);
+          const dropped = droppedNameExpectations(promptName, promptText);
+          if (dropped.length > 0) {
+            console.log(
+              `    · Provenance: promptText dropped name-defaults [${dropped.join(', ')}]`
+            );
+          }
           const validation = validateRenderedHTML(renderedHTML, expectedFeatures, response);
           const failedCount = validation.assertions.filter(a => a.status === 'fail').length;
           const notCoveredCount = validation.assertions.filter(a => a.status === 'not-covered').length;
