@@ -2,6 +2,7 @@ import type { Locator, Page, Response } from '@playwright/test'
 
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
+import { ensureBackendMockMode } from './helpers/mockMode'
 import {
   isMobileE2eProject,
   selectSelectableTextModels,
@@ -666,6 +667,12 @@ test.describe('Results Display Regression Tests', () => {
       const projectName = testInfo.project.name
       const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Perform comparison with multiple models', async () => {
+        // Live OpenRouter 402s when Cross-Browser jobs share one key (even flash
+        // models: 8192→4096 retry still yields "Error: …max_tokens", which hides
+        // breakout). Backend mock mode still persists conversations and exercises
+        // the breakout API without spending credits.
+        await ensureBackendMockMode(authenticatedPage)
+
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('Explain APIs')
 
@@ -691,8 +698,25 @@ test.describe('Results Display Regression Tests', () => {
         const breakoutBtn = resultCard.locator(
           '[data-testid="breakout-button"], .breakout-card-btn, button[aria-label*="Break out"]'
         )
-        // Avoid fixed sleeps: reasoning models / slow CI need longer for both cards to be non-error.
-        await expect(breakoutBtn).toBeVisible({ timeout: 45000 })
+        // Breakout is hidden on error cards. Poll for the button, or fail with the
+        // comparison error instead of waiting 45s on a 402 card.
+        const comparisonError = resultCard.getByText(/^Error:/)
+        await expect
+          .poll(
+            async () => {
+              if (await breakoutBtn.isVisible().catch(() => false)) return 'breakout'
+              if (
+                await comparisonError
+                  .first()
+                  .isVisible()
+                  .catch(() => false)
+              )
+                return `error:${await comparisonError.first().innerText()}`
+              return 'pending'
+            },
+            { timeout: 45000, intervals: [200, 500, 1000] }
+          )
+          .toBe('breakout')
 
         const breakoutResponse = await triggerBreakoutAndWaitForResponse(
           authenticatedPage,
