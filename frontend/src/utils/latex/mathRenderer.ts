@@ -83,10 +83,7 @@ function shouldSkipDisplayDelimiterMatch(
   name?: MathDelimiterPattern['name']
 ): boolean {
   if (isInsideRenderedMathHtml(text, start)) return true
-  if (
-    (name === 'align-env' || name === 'equation-env') &&
-    isInsideOuterDisplayMath(text, start)
-  ) {
+  if ((name === 'align-env' || name === 'equation-env') && isInsideOuterDisplayMath(text, start)) {
     return true
   }
   return false

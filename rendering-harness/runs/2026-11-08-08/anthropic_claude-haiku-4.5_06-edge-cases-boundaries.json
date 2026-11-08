@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-haiku-4.5",
+  "modelName": "Anthropic: Claude Haiku 4.5",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "# Test Response: Edge Cases and Boundaries\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n✓ All delimiter variants rendered correctly.\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n✓ Nested display math in lists maintained proper formatting.\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n✓ Code blocks correctly preserve dollar signs and exponentiation as literals.\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n⚠️ **Edge case note**: Single dollars in currency contexts ($100, $25, etc.) are ambiguous. The renderer may interpret these as math delimiters. Recommendation: Use escaped notation \\$100 or write \"100 dollars\" for clarity.\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n✓ Inline math within table cells renders appropriately.\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n\n⚠️ **Edge case**: Context-dependent interpretation. $HOME in programming contexts and $99.99 in pricing contexts may trigger math mode depending on renderer settings.\n\n---\n\n### Summary of Edge Cases Found:\n1. **Currency vs. Math**: Single $ delimiters in currency need context awareness\n2. **Escaped delimiters**: \\$ is the safest approach for literal dollar signs\n3. **Code preservation**: Code blocks ✓ safely preserve mathematical-looking syntax\n4. **Nested structures**: ✓ Display math works well in complex layouts\n5. **Table cells**: ✓ Inline math works reliably in markdown tables",
+  "usage": {
+    "prompt_tokens": 376,
+    "completion_tokens": 620,
+    "total_tokens": 996,
+    "cost": 0.003476,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.003476,
+      "upstream_inference_prompt_cost": 0.000376,
+      "upstream_inference_completions_cost": 0.0031
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.003476,
+  "actualCost": 0.003476,
+  "timestamp": "2026-11-08T18:57:49.759Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

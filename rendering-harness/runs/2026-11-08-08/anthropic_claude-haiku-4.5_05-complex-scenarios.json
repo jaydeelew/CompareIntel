@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-haiku-4.5",
+  "modelName": "Anthropic: Claude Haiku 4.5",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "# Response to Complex Scenarios\n\nI've analyzed all five challenging edge cases. Here's my assessment:\n\n## Scenario 1: Math in Lists with Formatting ✓\nThis renders correctly. The combination of:\n- Bold and italic formatting (`**bold**`, `*italic*`)\n- Nested list structure with proper indentation\n- LaTeX math expressions ($...$)\n- Mixed content in list items\n\nWorks well. The math displays cleanly alongside the formatted text.\n\n## Scenario 2: Tables with Math ✓\nThe table structure is preserved with:\n- Three columns (Formula, LaTeX, Result)\n- Math expressions in both middle and right columns\n- Proper alignment and cell separation\n\nAll LaTeX renders without table structure interference.\n\n## Scenario 3: Code and Math Mixed ✓\nThis demonstrates:\n- Code block with Python syntax highlighting\n- Comments containing math descriptions ($A = \\pi r^2$)\n- Narrative text after the code block with matching LaTeX\n\nThe distinction between code and math contexts is maintained clearly.\n\n## Scenario 4: Horizontal Rules ✓\nMultiple horizontal rules (`---`) successfully:\n- Create visual section breaks\n- Don't interfere with adjacent math expressions\n- Maintain document structure and readability\n\nThe integral expression renders correctly near the dividers.\n\n## Scenario 5: Multiple Dollar Signs ⚠️\n**This is the critical edge case.** The text contains:\n- Currency amounts ($1,200, $300, $50, $25, $1,575)\n- Math expressions ($f(x) = x^2$, $f(5) = 25$)\n\n**Potential issue**: Without careful parsing, a system might confuse currency dollar signs with math delimiters. Best practice is context-aware: dollar amounts before numbers vs. math notation with mathematical symbols.\n\n---\n\n**Summary**: All scenarios handle well with proper markdown/LaTeX rendering, except Scenario 5 requires intelligent disambiguation between currency and mathematical notation.",
+  "usage": {
+    "prompt_tokens": 484,
+    "completion_tokens": 445,
+    "total_tokens": 929,
+    "cost": 0.002709,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.002709,
+      "upstream_inference_prompt_cost": 0.000484,
+      "upstream_inference_completions_cost": 0.002225
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.002709,
+  "actualCost": 0.002709,
+  "timestamp": "2026-11-08T18:57:46.534Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

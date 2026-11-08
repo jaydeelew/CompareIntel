@@ -5,11 +5,7 @@
 import { describe, it, expect } from 'vitest'
 
 import type { MathRendererConfig } from '../../types/rendererConfig'
-import {
-  extractDisplayMath,
-  restoreDisplayMath,
-  renderMathContent,
-} from '../latex/mathRenderer'
+import { extractDisplayMath, restoreDisplayMath, renderMathContent } from '../latex/mathRenderer'
 
 // Config matching GPT 5.2 Pro: \( \) has priority over $
 const parenFirstConfig: MathRendererConfig = {

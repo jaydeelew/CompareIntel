@@ -139,8 +139,9 @@ export function extractInlineCode(text: string): InlineCodeExtraction {
   const spans: string[] = []
   // Double-or-more backticks first so `` `$x$` `` is one code span (GLM 5 05).
   // A single-backtick pass would close on the inner ` and leave `$x$` as math.
-  let processed = text.replace(/(``+)((?:(?!\1)[^\n])*?)\1/g, (_match, _delim: string, content: string) =>
-    pushInlineCodeSpan(spans, content)
+  let processed = text.replace(
+    /(``+)((?:(?!\1)[^\n])*?)\1/g,
+    (_match, _delim: string, content: string) => pushInlineCodeSpan(spans, content)
   )
   processed = processed.replace(/`([^`\n]+?)`/g, (_match, content: string) =>
     pushInlineCodeSpan(spans, content)

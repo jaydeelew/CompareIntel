@@ -1,0 +1,36 @@
+{
+  "modelId": "z-ai/glm-5-turbo",
+  "modelName": "Z.ai: GLM 5 Turbo",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here is the properly formatted response that resolves these challenging edge cases. I have preserved the mathematical typesetting, Markdown structures, and specifically fixed the currency/math ambiguity in Scenario 5 by escaping the currency dollar signs (which is required by most Markdown/MathJax parsers to prevent them from being interpreted as LaTeX delimiters).\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n***\n\n### 🛠️ Edge Case Resolution Notes:\n*   **Scenario 1 & 2:** LaTeX blocks nested within Markdown lists and tables can sometimes break indentation or table parsing. Keeping the math inline (using single `$` instead of `$$`) ensures the structure doesn't break.\n*   **Scenario 3:** Fenced code blocks (triple backticks) naturally protect their contents, preventing the `πr²` and `r**2` from being parsed as LaTeX or Markdown formatting, while allowing the text *outside* the block to render math normally.\n*   **Scenario 5:** This is the most common point of failure in MathJax/KaTeX environments. A raw `$` is exclusively treated as a math delimiter. If left unescaped, a parser will try to read `$1,200, monitor $` as a continuous LaTeX block, resulting in a rendering error. Escaping currency symbols with a backslash (`\\$`) tells the parser to render the literal character rather than initiating a math environment.",
+  "usage": {
+    "prompt_tokens": 427,
+    "completion_tokens": 1590,
+    "total_tokens": 2017,
+    "cost": 0.0068724,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0068724,
+      "upstream_inference_prompt_cost": 0.0005124,
+      "upstream_inference_completions_cost": 0.00636
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 911,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0068724,
+  "actualCost": 0.0068724,
+  "timestamp": "2026-11-08T19:04:48.164Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

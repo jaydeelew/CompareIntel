@@ -101,6 +101,64 @@ test.describe('Production result/table stylesheet context', () => {
     })
   })
 
+  test('align equation tags sit at the display right edge, not on the results', async ({
+    page,
+  }) => {
+    const alignMd = [
+      '## Display Math with Aligned Equations',
+      '$$\\begin{align}',
+      'x + y &= 5 \\\\',
+      '2x - y &= 1',
+      '\\end{align}$$',
+    ].join('\n')
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(
+      '/?modelId=' + encodeURIComponent('qwen/qwen3-coder') + '&content=' + encodeURIComponent(alignMd)
+    )
+    await waitForHarnessRender(page)
+    const layout = await page.evaluate(() => {
+      const display = document.querySelector('.katex-display') as HTMLElement | null
+      const katex = display?.querySelector(':scope > .katex') as HTMLElement | null
+      const tags = Array.from(document.querySelectorAll('.katex-display .eqn-num')) as HTMLElement[]
+      if (!display || !katex || tags.length < 2) {
+        return {
+          ok: false as const,
+          reason: `missing display, katex, or two tags (tags=${tags.length})`,
+        }
+      }
+      const displayBox = display.getBoundingClientRect()
+      const bases = Array.from(display.querySelectorAll('.base')) as HTMLElement[]
+      const eqRight = Math.max(0, ...bases.map(el => el.getBoundingClientRect().right))
+      const tagBoxes = tags.map(tag => {
+        const box = tag.getBoundingClientRect()
+        return {
+          text: (tag.textContent || '').replace(/\s+/g, ''),
+          left: box.left,
+          right: box.right,
+          gapFromEquation: box.left - eqRight,
+          insetFromDisplayRight: displayBox.right - box.right,
+        }
+      })
+      return {
+        ok: true as const,
+        katexDisplay: getComputedStyle(katex).display,
+        katexWidth: katex.getBoundingClientRect().width,
+        displayWidth: displayBox.width,
+        eqRight,
+        tagBoxes,
+      }
+    })
+    expect(layout.ok, 'ok' in layout && layout.ok === false ? layout.reason : '').toBe(true)
+    if (!layout.ok) return
+    expect(layout.katexDisplay).toBe('block')
+    expect(layout.katexWidth).toBeGreaterThan(layout.displayWidth * 0.8)
+    expect(layout.tagBoxes.length).toBeGreaterThanOrEqual(2)
+    for (const tag of layout.tagBoxes) {
+      expect(tag.gapFromEquation, `tag ${tag.text} overlaps the equation`).toBeGreaterThan(24)
+      expect(tag.insetFromDisplayRight, `tag ${tag.text} is not at the right edge`).toBeLessThan(32)
+    }
+  })
+
   test('mobile 390x844 table overflow-x auto and same padding tokens', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await openTable(page)
