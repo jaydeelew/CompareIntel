@@ -1,0 +1,36 @@
+{
+  "modelId": "moonshotai/kimi-k3",
+  "modelName": "MoonshotAI: Kimi K3",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "# Delimiter and Edge Case Test Response\n\n## 1. Delimiter Variants\n\n**Double dollar display:**\n$$x^2 + y^2 = r^2$$\n\n**Bracket display:**\n\\[E = mc^2\\]\n\n**Single dollar inline:** The equation $a + b = c$ is trivially true for the right values.\n\n**Paren inline:** Given \\(x = 5\\), we can proceed.\n\n*Watch for: all four forms should render as math. `$$...$$` and `\\[...\\]` should be block-level; `$...$` and `\\(...\\)` should flow inline.*\n\n## 2. Nested Structures\n\n- First item\n- The equation is:\n  $$\\int_0^1 x\\,dx = \\frac{1}{2}$$\n  And it evaluates to 0.5\n- Third item\n\n*Watch for: the display block should stay inside the second list item's indentation, and \"And it evaluates to 0.5\" should remain part of that item, not a new paragraph outside the list.*\n\n## 3. Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n*Watch for: nothing inside the fence should be parsed as math. `$50`, `mc^2`, and `x**2` must remain literal text in monospace.*\n\n## 4. Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n*Watch for: the \"Multiple\" line is the classic failure case — naive renderers pair the first two `$` and render \"25, \" as math. Correct behavior is three literal dollar amounts throughout.*\n\n## 5. Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n*Watch for: inline math must render inside table cells without breaking the column layout. Note the ambiguity in the Value column — if those are currency amounts rather than math, they should be written `\\$78.54` instead. (Both values check out for $r = 5$: $25\\pi \\approx 78.54$ and $\\tfrac{500\\pi}{3} \\approx 523.60$.)*\n\n## 6. Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\n*Watch for: two unpaired `$` on one line. A strict renderer may treat \"HOME is set. Price: \" as math content. Correct output keeps `$HOME` and `$99.99` fully literal.*\n\n---\n\n## Pass/Fail Checklist\n\n| # | Test | Pass Condition |\n|---|------|----------------|\n| 1 | Four delimiters | All render as math, block vs. inline respected |\n| 2 | Nested display | List structure and indentation intact |\n| 3 | Code fence | Zero math parsing inside fence |\n| 4 | Currency | No false math pairing on multiple `$` |\n| 5 | Table cells | Math renders, columns unbroken |\n| 6 | `$HOME` case | Literal output, no greedy `$...$` matching |\n\nAll six cases are present above — ready to run through your renderer.",
+  "usage": {
+    "prompt_tokens": 413,
+    "completion_tokens": 2598,
+    "total_tokens": 3011,
+    "cost": 0.025045444,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 64,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.025045444,
+      "upstream_inference_prompt_cost": 0.000104644,
+      "upstream_inference_completions_cost": 0.0249408
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1833,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.025045444,
+  "actualCost": 0.025045444,
+  "timestamp": "2026-11-08T20:34:41.782Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

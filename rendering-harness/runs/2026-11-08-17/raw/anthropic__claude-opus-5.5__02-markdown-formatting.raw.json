@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170094-G615gDEjMtx12HN1Nv5u",
+  "object": "chat.completion",
+  "created": 1794170094,
+  "model": "anthropic/claude-opus-5.5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Markdown Formatting Test\n\n## Headers\n\n### This is H3\n\n#### This is H4\n\n## Text Formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\n\n**Nested unordered list:**\n\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\n**Nested ordered list:**\n\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n\n| Model  | Context | Price |\n|--------|---------|-------|\n| GPT-4  | 128k    | $0.03 |\n| Claude | 200k    | $0.02 |\n\n*Note: Table values are sample data for formatting purposes and may not reflect current specs or pricing.*\n\n## Blockquotes\n\n> This is a blockquote\n> with multiple lines",
+        "refusal": null,
+        "reasoning": "I'm working out what a markdown test response should look like, and I'm keeping it simple. The table prices might not be accurate, but since it's their sample data I'll keep them as given and maybe note that it's placeholder content. I could also add a code block, a horizontal rule, or a link as extras.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm working out what a markdown test response should look like, and I'm keeping it simple. The table prices might not be accurate, but since it's their sample data I'll keep them as given and maybe note that it's placeholder content. I could also add a code block, a horizontal rule, or a link as extras.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQSuwcKEAgTGAI4AUIIdGhpbmtpbmcSDL6XMLtfMo4TBsCUCxoMz+iCHFLK2Yb6ILjPIjCBFwIespsUk6Abp7/EFmcjziWePnMh0GWlIlVHfnO5z3TmOxRcB2yF1yoxUFCqmwMq2AYDJaTPDHuQvVBaTbv9CtqlpmpfsPs0+nuqPJBTyBJ+xUWihsP2L5Sld0xxXNtAQiJIWTbWLFs0eLPpkJ0R85TCpBbtD50xc2ZhnoQHJPw67TyfW9kwPp5dssyWkVJ1CFce0U1FjrknLdzNGEmah3I0tjtqFqqKgHOFuFxE76hFwz1pou+gTfgRNzUtUoT80lAv9n+DFx/kMlb1KfloNQFLm5VwKJLyDSqKpnF1v2ykomPeN6akKkvvaOKjf4Ac2WS1gpm7vn0kHTwDXs2p3hAsg5t6eLMWO7P5x9qJD3QUHvUMumLupuECSejXyAbnuVQXK1hheh6lubmt8OKH2nCqRGfBS6dM8OeTMESQ+BmhSwjEAyORQeNZJMw00mhJ8PIzgDXMU3aR8sHGBzWmM6gPsb+PJ1DSIfh6mBedMC0DI5bjTwfeYK9m60iaGZy5HGUKXmYtpmi3hLRLBzHQul9+t9vSMfb4bad4okRapAnCkX6UIUyksqdwuwXsOxMzMOTwu6wUrHy8cAUGX9AVmVseNP7+nLps1RB/vl5nQL8m+fdgQeI6Xov+ou+glyHebaqLwNiJgSCEZ8IT7tMV1N4sPDPyz0UKee8ykbN1QsO0Z8yw+KKIO54oysimd2Rcu2NG2DGBOCyffXlOJjbYVmCbA7UIAqoK6vkrC7LvRS0Ie54f9w92YJJhDUAykl2f2acLhO9YVo3D2+JpeZOSFw/20+yQ7GRvuANTH2gY30nyEJjSgcEDBXevKhKcEn0e8isxHCSu3XHsNgm22XvKdhSWBo6QycX7C8Z2hL0UnNiXegk06BmIp1j8DIjiW6KtD/UOKBeBn0wOP2vtkdtHPlwQVNvHcN+1kMTb/L7xFSnQzP30+rxy8jRt7arcVAD2ndBhAbxQ7wcurDrzmeLbDQKjGZZlu8q0O1ofBDLvVppp03fHe9+6buYQ8qGr1ezeCSpo1e6MD/pTEIs29XssTt1WrzUUUfRwZK1hQHWdhSiYlnTHqd3/4IF10Qps67ZB4QlfiWZDeMHGsSx1WtjI3uoSldNV7FPjs+H0qhV3cdmyXP+XD838SBUMyojflKBnyIA8PisNWwg0Tzi8YOjdcWz5Uev4w5sN/2714XU5uWuSPBRKMpKqdm88GAE=.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1vcHVzLTUuNS0yMDI2MDkyMXxjbGF1ZGUtb24tYXdzIn0"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 279,
+    "completion_tokens": 411,
+    "total_tokens": 690,
+    "cost": 0.009336,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.009336,
+      "upstream_inference_prompt_cost": 0.001116,
+      "upstream_inference_completions_cost": 0.00822
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 115,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

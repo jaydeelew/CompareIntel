@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170116-ZysH3yI7JrihTJnWUVSI",
+  "object": "chat.completion",
+  "created": 1794170116,
+  "model": "anthropic/claude-opus-5.5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Complex Scenarios Test Response\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$.\n2. For a *right triangle* with sides $a = 3$ and $b = 4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units.\n     - *Nested check:* $3^2 + 4^2 = 25 = 5^2$ ✓\n3. **Bonus (display math inside a list):**\n\n   $$\n   c = \\sqrt{a^2 + b^2}\n   $$\n\n---\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| Geometric Series | $\\sum_{k=0}^{\\infty} r^k$ | $\\frac{1}{1-r}$ for $\\lvert r \\rvert < 1$ |\n\n> **Edge case note:** In the last row, I used `\\lvert` and `\\rvert` instead of `|` for absolute value. A literal pipe character inside a table cell would be read as a column separator.\n\n---\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\n**Output:**\n\n```\nArea: 78.53981633974483\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius. For $r = 5$:\n\n$$\nA = \\pi (5)^2 = 25\\pi \\approx 78.54\n$$\n\n> **Edge case note:** Symbols like `$`, `π`, and `**` inside code blocks should render literally, not as math or bold.\n\n---\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n> **Edge case note:** Each `---` has a blank line above it. Without that blank line, the `---` can turn the preceding text into a heading instead of drawing a rule.\n\n---\n\n## Scenario 5: Multiple Dollar Signs\n\n**Prices:** Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. **Total: \\$1,575.**\n\n**Math:** The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n**Mixed currency and math on one line:** If each item costs \\$5 and you buy $n$ items, the total is $T = 5n$, so 4 items cost \\$20.\n\n> **Edge case note:** Currency dollar signs are escaped as `\\$`. Otherwise a renderer might pair `$1,200, monitor $` as a math expression.\n\n---\n\n## Summary of Edge Cases Covered\n\n| # | Edge Case | Handling |\n|---|-----------|----------|\n| 1 | Math inside nested lists | Inline `$...$` and indented display math |\n| 2 | Math inside tables | Avoid raw `\\|`; use `\\lvert`/`\\rvert` |\n| 3 | Math-like symbols in code | Kept inside fenced code blocks |\n| 4 | Horizontal rules near text | Blank lines around `---` |\n| 5 | Currency vs. math `$` | Escape currency as `\\$` |",
+        "refusal": null,
+        "reasoning": "Next I'm checking the currency dollar signs, which need escaping as \\$1,200, and rewriting \"x dx\" as \"x \\, dx\". I also want to confirm the code output for the circle_area call.\n\nI'm confirming that circle_area(5) returns about 78.54, which I'll state in the answer, and keeping the response concise but complete.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "Next I'm checking the currency dollar signs, which need escaping as \\$1,200, and rewriting \"x dx\" as \"x \\, dx\". I also want to confirm the code output for the circle_area call.\n\nI'm confirming that circle_area(5) returns about 78.54, which I'll state in the answer, and keeping the response concise but complete.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQSywgKEAgTGAI4AUIIdGhpbmtpbmcSDM9tpkVmj2IFibGQSxoMHHrdtdHYMtw2NHEZIjBEqmli1QtCVNNz4mwrUuRMceTbaB67Z1NALxab6WHzv1VaTfseS/wjfrus6eKCM1Eq6Advfa6UBTJABjE3VF8iVs1TpZ2PNSTJxKDEVqJrn+JDiNxq7pz6cn9cv6pUxd8bHtRkCWoz6VyTeRyNO4cdXlTK/5PLqo+dZmDR14JfGHQ+4eOye2oAlPYXP1SExWn7UWt++o+c+Qzbtvu4wq+8x2hmPD11i5TC04PQCApXYCrcCI05+Op9XG583qYy5UechFq1d3f4RsJ1d40iG3c0FUx+TAx+ztmeLuO1Nm4NEyjpCi8xLPW808dGETndh6OBkBSYvcNpqinpOQfRxwTczTiCr/t59ekzmn2iG70J+3H6nyQZvKlCZsZfP/6Sgnw/JfvGyhNlMp6PuIhbGwUvWpYvxGnnPnEfL1CHs/6kTvT2R4uI8sIfrkjkLVa5yCVI7Oqrx6PKAHpM1E8AcoF8OWf3PsJoSX1ngq6kAFMfsuHDAvc2xU2sM713i7rkRUMXD4Vqk0BvD6xMkQuJwJDmlGAKOwXnLwx8OgbecX5GVkT5dmQDqgUA+5DL2bRnS+XbEL0qj0IUx9ioEgbR9q3Uq9yOIMmNVt5l15TZUGNkSXBLgtMo/q4fQZkHetN08cT6Vxgqiq6AOgprCedAxStyJpHu6HHmXqc0J2nk7Q2eDOHpnZycVCfyaq7bpTwLKo/dhVGE5B7fMm7fGFfcPDMigsjZzOgL7s4EmwcZgUi1jjHvaZ+Qe+uK2UQhMTVwDIGnC7dMjnS7WyZWszgeyOftV3ZZ/hAudJhqomE1Ls/rP1jj3egcWEKLpzdXNdyYXoh5zzfdXItStRqJ83mF8wiIZc79C8C1WVYgjC0E15dpo1UX7tf/On+/fI9Sj7uL7VcDUD6qCZg0EaR7ZRthscm6cnuyIs6SU6fbuK/NALOaF7hDFKtCqEenwznQF1BafvSmFT2HewdClphUSnSa0NRhHGwmYS5p1Sa8SKgJaouq3xfWJh6ALrSQSpI4VFFPwCEBtliL1zmvNhnii+2siXk6oSAesXJno+vPxtBSEI3b7k264oKKiyW86NGqB08upiSZpWyj2qOXX64RIBWosrY7k8sKrkb1fcas7fmKpf8XHxSbQMbOdFzv7CNxunHiN3KGIif+VPZpICe6cmbtvfLh2iBpkXZlUlSmTBI0y37bcvJ3VliTjE/yoReJ9wJQrcApX8ISNEZUaNKDkvCM0F9ZI+Gif4XrAYKj92Mld9K8A/Z9R4W64pBHfBLVIBkiseyvc8nhjmkMYLL9t8gz048/vTW+lB4VPJHP7LhYdB1gMAijInSqUvUbxXa7f3c8uLQ2DbG63lXaaul2MPHFm1rDtulGGzhWFeE6UFLd5+vgWo9+KcfjD+IftUJmGAE=.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1vcHVzLTUuNS0yMDI2MDkyMXxjbGF1ZGUtb24tYXdzIn0"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 633,
+    "completion_tokens": 1489,
+    "total_tokens": 2122,
+    "cost": 0.032312,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.032312,
+      "upstream_inference_prompt_cost": 0.002532,
+      "upstream_inference_completions_cost": 0.02978
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 182,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

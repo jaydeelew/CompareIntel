@@ -1,0 +1,36 @@
+{
+  "modelId": "moonshotai/kimi-k3",
+  "modelName": "MoonshotAI: Kimi K3",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "# Mixed Markdown + LaTeX — Demo & Review\n\n## 1. Calculus Exercise ✓\n\n**Problem**: Given $f(x) = x^2 + 2x + 1 = (x+1)^2$, find the derivative and integral.\n\n1. *Derivative* (power rule):\n$$f'(x) = 2x + 2$$\n\n2. **Integral** (term by term):\n$$\\int f(x)\\,dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n**Verification**: $\\frac{d}{dx}\\left(\\frac{x^3}{3} + x^2 + x + C\\right) = x^2 + 2x + 1$ ✓\n\n## 2. Matrix Properties ✓\n\nFor $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n\n| Property | Formula |\n|----------|---------|\n| Determinant | $\\det(A) = ad - bc$ |\n| Trace | $\\operatorname{tr}(A) = a + d$ |\n\nThe inverse exists iff $\\det(A) \\neq 0$:\n\n$$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## 3. ⚠️ The Dollar-Sign Trap in Your Example\n\nYour \"Real World Context\" section contains a classic rendering bug: **currency symbols collide with math delimiters**.\n\n**What you wrote:**\n```\nfixed costs are $100 and variable costs are $5 per unit\n```\n\n**How a renderer parses it:** the `$...$` pair around `100 and variable costs are ` gets eaten as a math block, producing garbled output like: *fixed costs are $100$5 per unit*.\n\nWorse, the final line has an **odd number** of `$` signs (`$100`, `$50`, `$150`), which can cause the renderer to swallow everything after `$150` into an unterminated math block.\n\n### Fixes\n\n**Option A** — Escape the currency signs:\n\n> **Note**: The cost function $C(q) = 100 + 5q$ means fixed costs are \\$100 and variable costs are \\$5 per unit.\n\nMoney context: 10 units → \\$100 fixed + \\$50 variable = **\\$150 total** (which matches $C(10) = 100 + 5(10) = 150$ ✓).\n\n**Option B** — Avoid `$` for currency entirely: write \"USD 100\" or \"100 dollars.\"\n\n**Option C** — Keep currency inside math mode: $\\$100$, $\\$5$.\n\n---\n\n**Summary**: All the mathematics in your example is correct; the only issue is the unescaped currency dollar signs. When mixing finance and LaTeX, escape or reword the currency amounts.",
+  "usage": {
+    "prompt_tokens": 381,
+    "completion_tokens": 2488,
+    "total_tokens": 2869,
+    "cost": 0.03653985,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.03653985,
+      "upstream_inference_prompt_cost": 0.00108585,
+      "upstream_inference_completions_cost": 0.035454
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1867,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.03653985,
+  "actualCost": 0.03653985,
+  "timestamp": "2026-11-08T20:34:08.472Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

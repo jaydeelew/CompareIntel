@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-opus-5.5",
+  "modelName": "Anthropic: Claude Opus 5.5",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "# Code Blocks Test\n\n## Python code\n\nThe quadratic formula solves equations of the form ax² + bx + c = 0:\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n**Output:**\n\n```\nSolutions: x = 3.0, x = 2.0\n```\n\n> **Note:** If the discriminant is negative, `discriminant**0.5` returns a complex number in Python 3, so the function will return complex roots.\n\n## JavaScript code\n\nA recursive Fibonacci implementation:\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n> **Note:** This naive recursion runs in exponential time, O(2ⁿ). For large `n`, consider memoization or an iterative approach.\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nMore inline examples that should render literally:\n\n- Exponent: `b**2 - 4*a*c`\n- Subscript-like: `x_1`, `x_2`\n- Dollar signs: `$total = $price * $qty`\n- LaTeX-like: `\\frac{a}{b}`",
+  "usage": {
+    "prompt_tokens": 340,
+    "completion_tokens": 695,
+    "total_tokens": 1035,
+    "cost": 0.01526,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01526,
+      "upstream_inference_prompt_cost": 0.00136,
+      "upstream_inference_completions_cost": 0.0139
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 119,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.01526,
+  "actualCost": 0.01526,
+  "timestamp": "2026-11-08T20:35:05.912Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

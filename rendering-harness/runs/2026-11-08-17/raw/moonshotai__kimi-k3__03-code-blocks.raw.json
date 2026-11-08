@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794170030-lERtwVFLzfH9xAjCLGRP",
+  "object": "chat.completion",
+  "created": 1794170030,
+  "model": "moonshotai/kimi-k3",
+  "provider": "Wafer",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "The user is asking me to generate a response with fenced code blocks. This looks like a test prompt to check how my response formatting works — specifically code blocks, inline code, and ensuring that math-like content inside code spans doesn't get rendered as math.\n\nLet me examine the prompt carefully. The user wants:\n1. Python code in a fenced code block\n2. JavaScript code in a fenced code block\n3. Inline code with math-like content (`x^2`, `a_b`, `$price`) that should render as code, not math\n\nThis appears to be a test of markdown rendering. The user has given me a template/example and wants me to produce a response that follows this pattern. Actually, re-reading it — the prompt says \"Generate a response with fenced code blocks:\" and then shows the content. So it seems like they want me to produce exactly this kind of output, or perhaps reproduce/confirm it.\n\nThe most likely intent: this is a rendering test. The user wants me to output the code blocks as specified so they can verify that the rendering pipeline handles fenced code blocks correctly and doesn't mangle inline code into math. The safest interpretation is to generate the response as described — essentially producing the content with proper fenced code blocks and inline code.\n\nI should just produce the output cleanly, matching what was requested. There's nothing harmful here. Let me write it out.\n\nI'll reproduce the structure exactly:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nFormat considerations: The user explicitly requested code blocks, so markdown with fenced code blocks is appropriate. I should keep the response focused — just deliver the requested content without excessive preamble. Maybe a very brief acknowledgment or just deliver the content directly. Given it's a test prompt, delivering the exact content cleanly is best. I could add nothing extra, or a tiny note. I think delivering the content exactly as specified is the right move — perhaps with no preamble at all, since the prompt itself is formatted as what the response should look like.\n\nActually, let me think about whether to add anything. The prompt is titled \"Test Prompt: Code Blocks\" and says \"Generate a response with fenced code blocks:\" followed by the exact content. So the user wants me to generate this content. I'll output it verbatim, which serves the test purpose — verifying code blocks render, syntax highlighting works, and inline code with ^, _, $ doesn't get converted to math/LaTeX.\n\nI'll just output the content directly.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user is asking me to generate a response with fenced code blocks. This looks like a test prompt to check how my response formatting works — specifically code blocks, inline code, and ensuring that math-like content inside code spans doesn't get rendered as math.\n\nLet me examine the prompt carefully. The user wants:\n1. Python code in a fenced code block\n2. JavaScript code in a fenced code block\n3. Inline code with math-like content (`x^2`, `a_b`, `$price`) that should render as code, not math\n\nThis appears to be a test of markdown rendering. The user has given me a template/example and wants me to produce a response that follows this pattern. Actually, re-reading it — the prompt says \"Generate a response with fenced code blocks:\" and then shows the content. So it seems like they want me to produce exactly this kind of output, or perhaps reproduce/confirm it.\n\nThe most likely intent: this is a rendering test. The user wants me to output the code blocks as specified so they can verify that the rendering pipeline handles fenced code blocks correctly and doesn't mangle inline code into math. The safest interpretation is to generate the response as described — essentially producing the content with proper fenced code blocks and inline code.\n\nI should just produce the output cleanly, matching what was requested. There's nothing harmful here. Let me write it out.\n\nI'll reproduce the structure exactly:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nFormat considerations: The user explicitly requested code blocks, so markdown with fenced code blocks is appropriate. I should keep the response focused — just deliver the requested content without excessive preamble. Maybe a very brief acknowledgment or just deliver the content directly. Given it's a test prompt, delivering the exact content cleanly is best. I could add nothing extra, or a tiny note. I think delivering the content exactly as specified is the right move — perhaps with no preamble at all, since the prompt itself is formatted as what the response should look like.\n\nActually, let me think about whether to add anything. The prompt is titled \"Test Prompt: Code Blocks\" and says \"Generate a response with fenced code blocks:\" followed by the exact content. So the user wants me to generate this content. I'll output it verbatim, which serves the test purpose — verifying code blocks render, syntax highlighting works, and inline code with ^, _, $ doesn't get converted to math/LaTeX.\n\nI'll just output the content directly.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 322,
+    "completion_tokens": 942,
+    "total_tokens": 1264,
+    "cost": 0.009122728,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 64,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.009122728,
+      "upstream_inference_prompt_cost": 0.000079528,
+      "upstream_inference_completions_cost": 0.0090432
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 710,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

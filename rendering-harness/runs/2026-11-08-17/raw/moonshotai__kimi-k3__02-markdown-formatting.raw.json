@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794170027-QYxB2ty4L9OFksu5D7km",
+  "object": "chat.completion",
+  "created": 1794170027,
+  "model": "moonshotai/kimi-k3",
+  "provider": "Relace",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "# Markdown Formatting Demonstration\n\n## Headers\n\n### This is H3\n\n#### This is H4\n\n## Text formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\nYou can also use ~~strikethrough~~ and `inline code` for additional emphasis.\n\n## Lists\n\nNested unordered list:\n\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n\n| Model  | Context | Price  |\n| ------ | ------- | ------ |\n| GPT-4  | 128k    | $0.03  |\n| Claude | 200k    | $0.02  |\n\n## Blockquotes\n\n> This is a blockquote\n> with multiple lines\n\n> Blockquotes can also be nested:\n>\n> > This is a nested quote\n> > providing additional depth\n\n---\n\n**Bonus elements:**\n\nHorizontal rule (above) and a code block:\n\n```python\ndef hello_world():\n    print(\"Markdown test complete!\")\n```\n\nAll requested markdown elements have been rendered. ✅",
+        "refusal": null,
+        "reasoning": "The user wants me to generate a response with specific markdown elements. This appears to be a test prompt for markdown rendering. They've given me a template/structure to follow. Let me create a response that includes all these markdown elements - headers (H3, H4), bold/italic/bold-italic text, nested unordered and ordered lists, tables, and blockquotes.\n\nI should essentially reproduce or expand on what they've shown, demonstrating all these markdown elements work properly. Let me create a well-formatted response that includes all requested elements.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants me to generate a response with specific markdown elements. This appears to be a test prompt for markdown rendering. They've given me a template/structure to follow. Let me create a response that includes all these markdown elements - headers (H3, H4), bold/italic/bold-italic text, nested unordered and ordered lists, tables, and blockquotes.\n\nI should essentially reproduce or expand on what they've shown, demonstrating all these markdown elements work properly. Let me create a well-formatted response that includes all requested elements.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 274,
+    "completion_tokens": 390,
+    "total_tokens": 664,
+    "cost": 0.0041697036,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0041697036,
+      "upstream_inference_prompt_cost": 0.0000499776,
+      "upstream_inference_completions_cost": 0.004119726
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 140,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

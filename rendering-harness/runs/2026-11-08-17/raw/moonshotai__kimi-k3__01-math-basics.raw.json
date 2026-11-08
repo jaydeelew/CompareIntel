@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794170023-KjwG5Vw6N40jmJI74OV3",
+  "object": "chat.completion",
+  "created": 1794170023,
+  "model": "moonshotai/kimi-k3",
+  "provider": "Decart",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "# Math Basics Demonstration\n\n## 1. The Quadratic Formula (Inline Math)\n\nThe quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ solves any equation of the form $ax^2 + bx + c = 0$. The discriminant $b^2 - 4ac$ determines the nature of the roots: if positive, there are two real roots; if zero, exactly one real root; if negative, the roots are complex conjugates involving $i = \\sqrt{-1}$.\n\n## 2. Solving a System (Aligned Equations)\n\nConsider this system of linear equations:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding the equations eliminates $y$, giving $3x = 6$, so $x = 2$ and $y = 3$.\n\n## 3. Matrices and Piecewise Functions\n\nThe $2 \\times 2$ identity matrix and an absolute-value-like function:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n## 4. Famous Equations\n\nThree landmark results from physics and geometry:\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\n## 5. Further Reading\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula, including its derivation by completing the square.\n\n## 6. Money Context (Plain Text, Not Math)\n\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar). These dollar amounts should display as ordinary currency, not trigger math rendering.",
+        "refusal": null,
+        "reasoning": "The user is asking me to generate a response that demonstrates various markdown/LaTeX rendering capabilities. This appears to be a test prompt to verify that math rendering, links, and dollar sign handling work correctly. Let me create a response that demonstrates all six requested elements.\n\nLet me structure this properly:\n\n1. Inline math explanation of the quadratic formula\n2. Display math with aligned equations (system of equations)\n3. Matrices and piecewise functions\n4. Multiple separate display equations\n5. A link to Wikipedia\n6. Money amounts with dollar signs that should NOT be treated as math delimiters\n\nThis is a straightforward formatting demonstration request. I should produce clean, well-formatted content that hits all six points.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user is asking me to generate a response that demonstrates various markdown/LaTeX rendering capabilities. This appears to be a test prompt to verify that math rendering, links, and dollar sign handling work correctly. Let me create a response that demonstrates all six requested elements.\n\nLet me structure this properly:\n\n1. Inline math explanation of the quadratic formula\n2. Display math with aligned equations (system of equations)\n3. Matrices and piecewise functions\n4. Multiple separate display equations\n5. A link to Wikipedia\n6. Money amounts with dollar signs that should NOT be treated as math delimiters\n\nThis is a straightforward formatting demonstration request. I should produce clean, well-formatted content that hits all six points.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 338,
+    "completion_tokens": 576,
+    "total_tokens": 914,
+    "cost": 0.0062751,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0062751,
+      "upstream_inference_prompt_cost": 0.0006591,
+      "upstream_inference_completions_cost": 0.005616
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 145,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
