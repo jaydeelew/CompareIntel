@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794169220-ZTj75qnzyQ3hTCN8570D",
+  "object": "chat.completion",
+  "created": 1794169220,
+  "model": "google/gemini-2.5-pro",
+  "provider": "Google AI Studio",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is a response with the requested fenced code blocks and inline code.\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "**Defining the Core Task**\n\nI'm now zeroing in on the essence of the user's request. It's about demonstrating fenced code blocks and inline code. The prompt itself is a good blueprint, titled and structured. I'm carefully reviewing the provided examples to grasp the specific presentation the user is seeking.\n\n\n**Refining the Response Structure**\n\nI've clarified the response structure. I'm building it around Markdown headings and fenced code blocks, exactly as requested. I've now ensured that I'll begin with \"## Python code\" and the Python code block, followed by the JavaScript code block, with the inline code components accurately formatted as `x^2`, `a_ b`, and `$price`.\n\n\n**Constructing the Code Blocks**\n\nI'm now implementing the fenced code blocks precisely as defined in the user's examples.  I've incorporated both Python and JavaScript blocks, maintaining the original formatting. The Markdown structure is in place with the correct headings. I'm also preparing for the inline code elements.\n\n\n**Confirming Final Details**\n\nI've just finalized the response structure, ensuring precise code block formatting with language identifiers. I'm double-checking the inline code implementation using backticks for the specified variables. My primary goal now is pixel-perfect accuracy in matching the user's initial requirements and examples. I'm ready to proceed with generating the output.\n\n\n**Confirming Precision & Assembly**\n\nI've just solidified my plan, focusing on direct replication. My approach now is purely assembly, a strategic copy-and-paste with formatting, guaranteeing perfect matching of the user's instructions. Accuracy is paramount here. I'll meticulously review the generated output against the initial prompt. I am ready to implement and finalize the answer, and confident it will meet the requirements precisely.\n\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Defining the Core Task**\n\nI'm now zeroing in on the essence of the user's request. It's about demonstrating fenced code blocks and inline code. The prompt itself is a good blueprint, titled and structured. I'm carefully reviewing the provided examples to grasp the specific presentation the user is seeking.\n\n\n**Refining the Response Structure**\n\nI've clarified the response structure. I'm building it around Markdown headings and fenced code blocks, exactly as requested. I've now ensured that I'll begin with \"## Python code\" and the Python code block, followed by the JavaScript code block, with the inline code components accurately formatted as `x^2`, `a_ b`, and `$price`.\n\n\n**Constructing the Code Blocks**\n\nI'm now implementing the fenced code blocks precisely as defined in the user's examples.  I've incorporated both Python and JavaScript blocks, maintaining the original formatting. The Markdown structure is in place with the correct headings. I'm also preparing for the inline code elements.\n\n\n**Confirming Final Details**\n\nI've just finalized the response structure, ensuring precise code block formatting with language identifiers. I'm double-checking the inline code implementation using backticks for the specified variables. My primary goal now is pixel-perfect accuracy in matching the user's initial requirements and examples. I'm ready to proceed with generating the output.\n\n\n**Confirming Precision & Assembly**\n\nI've just solidified my plan, focusing on direct replication. My approach now is purely assembly, a strategic copy-and-paste with formatting, guaranteeing perfect matching of the user's instructions. Accuracy is paramount here. I'll meticulously review the generated output against the initial prompt. I am ready to implement and finalize the answer, and confident it will meet the requirements precisely.\n\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 262,
+    "completion_tokens": 1126,
+    "total_tokens": 1388,
+    "cost": 0.0115875,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0115875,
+      "upstream_inference_prompt_cost": 0.0003275,
+      "upstream_inference_completions_cost": 0.01126
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 875,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

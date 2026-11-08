@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794169204-4fpMo84myDy6e5E34EZ1",
+  "object": "chat.completion",
+  "created": 1794169204,
+  "model": "google/gemini-2.5-pro",
+  "provider": "Google AI Studio",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Of course! Here is a demonstration of various mathematical notations.\n\n### 1. Inline Math\n\nThe quadratic formula is a fundamental equation used to solve for the roots of a quadratic equation of the form $ax^2 + bx + c = 0$. The formula provides the values of $x$ and is expressed as $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. The term inside the square root, $b^2 - 4ac$, is called the discriminant, which determines the nature of the roots.\n\n### 2. Display Math with Aligned Equations\n\nYou can align multiple equations at a specific character (commonly the equals sign) to make them easier to read. Here is a system of two linear equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n### 3. Matrices and Cases\n\nMathematical notation can also represent more complex structures like matrices and piecewise functions (cases). For example, here is the 2x2 identity matrix $I$ and a function $f(x)$ defined differently for non-negative and negative values of $x$:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n### 4. Multiple Equations\n\nHere are several famous equations, each displayed on its own line:\n\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n### 5. Links\n\nFor a more in-depth explanation of the concepts discussed above, you can follow hyperlinks. For instance, see [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n### 6. Money Context (No Math Rendering)\n\nWhen dollar signs are used in a non-mathematical context, they are rendered as standard text. The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).",
+        "refusal": null,
+        "reasoning": "**Defining Response Parameters**\n\nI'm currently focused on ensuring my response adequately addresses all six constraints of the \"Math Basics\" test prompt. Specifically, I'm working to fully explain the quadratic formula, and I am ensuring that the formula provided is accurate within my response. My goal is to craft a comprehensive and compliant reply.\n\n\n**Clarifying Mathematical Notations**\n\nI'm now integrating the provided mathematical notations into my response. I've added an explanation of the quadratic formula's purpose and variable meanings, alongside the inline LaTeX. I've also incorporated the system of linear equations and the matrix with the piecewise function using the exact LaTeX as was provided, adding a brief introduction. I am now working on presenting the three additional equations on separate lines.\n\n\n**Implementing Math Components**\n\nI'm now integrating the three equations, matrix, and piecewise function, all in LaTeX. I'm focusing on ensuring each is correctly formatted and displayed as requested by the prompt. I'll be adding the link to the quadratic formula's Wikipedia page as part of the quadratic formula explanation. Finally, I will be adding the dollar sign examples, and checking all outputs.\n\nI'm making good progress now, and I believe I have incorporated all elements correctly.\n\n\n**Structuring Math Components**\n\nI'm now focusing on organizing the math components into sections, creating a logical flow for the response. I've formulated headings for each section. I'm aiming to keep the structure clear and ensure the order matches the prompt's requirements. Currently, I'm working to integrate the inline LaTeX of the quadratic formula, the aligned equations, and the matrix/piecewise examples with a smooth transition. I am also working on the multiple equations, and the \"money\" context.\n\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Defining Response Parameters**\n\nI'm currently focused on ensuring my response adequately addresses all six constraints of the \"Math Basics\" test prompt. Specifically, I'm working to fully explain the quadratic formula, and I am ensuring that the formula provided is accurate within my response. My goal is to craft a comprehensive and compliant reply.\n\n\n**Clarifying Mathematical Notations**\n\nI'm now integrating the provided mathematical notations into my response. I've added an explanation of the quadratic formula's purpose and variable meanings, alongside the inline LaTeX. I've also incorporated the system of linear equations and the matrix with the piecewise function using the exact LaTeX as was provided, adding a brief introduction. I am now working on presenting the three additional equations on separate lines.\n\n\n**Implementing Math Components**\n\nI'm now integrating the three equations, matrix, and piecewise function, all in LaTeX. I'm focusing on ensuring each is correctly formatted and displayed as requested by the prompt. I'll be adding the link to the quadratic formula's Wikipedia page as part of the quadratic formula explanation. Finally, I will be adding the dollar sign examples, and checking all outputs.\n\nI'm making good progress now, and I believe I have incorporated all elements correctly.\n\n\n**Structuring Math Components**\n\nI'm now focusing on organizing the math components into sections, creating a logical flow for the response. I've formulated headings for each section. I'm aiming to keep the structure clear and ensure the order matches the prompt's requirements. Currently, I'm working to integrate the inline LaTeX of the quadratic formula, the aligned equations, and the matrix/piecewise examples with a smooth transition. I am also working on the multiple equations, and the \"money\" context.\n\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 280,
+    "completion_tokens": 1318,
+    "total_tokens": 1598,
+    "cost": 0.01353,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01353,
+      "upstream_inference_prompt_cost": 0.00035,
+      "upstream_inference_completions_cost": 0.01318
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 832,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794169191-vAckyd8wyGhs5Vy28zSp",
+  "object": "chat.completion",
+  "created": 1794169191,
+  "model": "openai/o3",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "Below is a deliberately “stress-test” reply that combines many Markdown edge cases—nested lists, multiple code-fences, inline and display math, repeated dollar signs, horizontal rules inside lists, tables with long equations, and stray back-ticks that have to be escaped.  \nFeel free to copy-paste it into any Markdown/LaTeX renderer to see what breaks!\n\n---\n\n## Scenario A – Nested Lists with Interleaved Math\n\n1. Outer item **α**\n   1. Inner item *α1*  \n      – Pythagorean triple: $a^2\\;+\\;b^2\\;=\\;c^2$  \n      – Example: $(a,b,c)=(5,12,13)$ → $5^2+12^2=25+144=169=13^2$\n   2. Inner item *α2*  \n      – Derivative rule: $\\displaystyle \\frac{d}{dx}\\bigl[x^n\\bigr] = nx^{n-1}$\n2. Outer item **β**\n   1. Roman numerals in sub-list  \n      i. Evaluate $\\displaystyle \\lim_{x\\to0}\\frac{\\sin x}{x}=1$  \n      ii. Evaluate $\\int_{0}^{\\pi}\\!\\sin x\\,dx = 2$\n   2. A horizontal rule *inside* the list:\n\n      ---\n\n   3. Back to list text after the rule\n\n---\n\n## Scenario B – Table with Multi-Line Math\n\n| Topic | LaTeX | Explanation |\n|-------|-------|-------------|\n| Geometric Series | $\\displaystyle S_n=\\sum_{k=0}^{n-1}ar^{k}$ | If $|r|<1$ and $n\\to\\infty$,<br>$\\displaystyle S_\\infty=\\frac{a}{1-r}$ |\n| Euler’s Identity | $\\displaystyle e^{i\\pi}+1=0$ | Links $e,\\;i,\\;\\pi,\\;1,\\;0$ in one formula |\n| Fourier Coeff. | $\\displaystyle a_n=\\frac{2}{T}\\int_{0}^{T}f(t)\\cos\\!\\bigl(\\tfrac{2\\pi nt}{T}\\bigr)\\,dt$ | Orthogonality of sine/cosine functions |\n\n---\n\n## Scenario C – Code Fence with Internal Back-Ticks and Math\n\n```javascript\n// A quick λ-calculator in JS\nfunction lambdaCube(x, λ=2.0) {\n  // inside string we need an escaped back-tick: \\` \n  return `λ·x³ = ${λ * Math.pow(x, 3)}`;  // Uses formula λx³\n}\nconsole.log(lambdaCube(1.5));\n```\n\nInline math check: For $λ=2$ and $x=1.5$, we expect $λx^{3}=2·(1.5)^{3}=6.75$.\n\n---\n\n## Scenario D – Multiple Dollar Signs and Escaping\n\nPrices (with commas): Laptop $$1,299, monitor $$249, keyboard $$79 → subtotal $$1,627.  \nTax (8 %): $\\$1,627×0.08=\\$130.16$  \nGrand total: **\\$1,757.16**\n\nMathematics right next to dollars: “\\$” does **not** open LaTeX here, but \\$\\(f(x)=x^2\\$) would break most renderers.\n\nProper math: $f(7)=7^{2}=49$.\n\n---\n\n## Scenario E – Blockquote Containing Code *and* Display Math\n\n> Here’s a quoted block that mixes everything:  \n> ```python\n> def fib(n):\n>     \"\"\"Return Fₙ using F₀=0, F₁=1.\"\"\"\n>     return n if n < 2 else fib(n-1)+fib(n-2)\n> ```  \n> $$F_{10}=55$$  \n> End of quote.\n\n---\n\n### Bonus Mini-Checklist\n\n- [x] Inline math `$a+b$` next to punctuation.  \n- [x] Display math on its own line:  \n  $$\\nabla\\cdot\\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$  \n- [x] Triple back-tick fencing ``` inside a larger code fence.  \n- [x] Horizontal rules above and below.\n\nIf your parser survives all that without hiccups—congratulations!",
+        "refusal": null,
+        "reasoning": null,
+        "reasoning_details": [
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NlqRXTjTTv1HVVyrZQEhfeaZ7lWgA5dLDxoFN55s-HXdniheefHa3h05V8gwuu2Y2En8JVDx1j8dVJ2U0c82IETgd8W3M88klvaDMrrT8vrlPeJEF13ieubPBspy7NicRmqRQxKVno6T0yKSq6fEZ_D2abixbbMqEn4N95Xosv0Aqtiocg6gYTdBTXUMV13dhjkpFZo6n9bl1FacdweUoMpmPji1NxUdGw1EcbT8bo52xiUEaU6i0O6ZuzIm-MGTF5Lv9qRzP-h8pt7z8ue8QLXs0dM03UxkzvHgCD_oY1NNOeZUvPxpjIKXorc9i6nHE6cMYgk7UNKQULP9ODkw73eS00nr2zdKVZ5b4vFu1rq8lvXsHrqQm4ZIhlwNpefto2fg1H8tMAdgok8MkH9Oi0IY_TGDibV8ggNDve0Q30fO5NbOhD4wV1bNjpdEZ-k9X_uByr7FIb2px17wggV0HxAP6aXX_1RyHp5DIiblBA-uQCPMXu2RrkBcZTkHzhhuYOIk-RC1xgCeM7K5ggZXiOn4bBRhhA0DAp9MUdYGlUuR99Qrc0bunE2H2D-1sCfFC8qqwwuLc8dsEY3H74Jkwq5IY24fD_NSkiTaxcbmE2_oWPdBHfMyQ8l9sdk3pgoY0DKj0mqJUelcOFfSRdH7ryJy3FcRw3_1JkdUF7U12YAqPN0JSNwkKHSl5KIpc3DZlgCBJo9LvO0xVkf0C2oA1qyjjJ0jV04IpoNtAdhuXZezENLkjGyNy845TySnDvG0KDqAT5-Xn6tZkn3i47k4V3voK6x3xq2AHM599yiBoGp982VwFXCsjg8ow_RyblDHVQi1RJyNzozkJPJ1Y3rhQwQlURhfbSgo_HuRPXLcnvnXJuyoWt6dic7aKxKiAGnF2ctHxABEIZqHaCremspsHnOZpBl0o5K7Bot6_YtfYXlDDChKiNrKpgrro_KsbpyowzsgNwjOAPUvHC45-FfNQrPcbgGkqcJZkzqP9u-ja6QxpSaJsuAwBDIyBdwW1fpErk-7trZS0HZyuoZDJO1vRMs7KpbLgE7s8Jq_UbKpLF3WayueqVy_qgu4JPzQ5HxBPqV4fy_vUW4ZJRrf6bGSx1ksCPIZUqKnYmlibJEigPusVt8Mnp-_Xxe5ieSiSOSAWaqINuZyTG3gSvTnLpVO2WTk9-N8qEULw0C_V0EapPpoxD8ijIG5w3ostC479CTdka2OAZCH1ADV006NfQ0rXwzvhIRS1Ud3MHPDE2k2oUR4rnf7H6yBb9EcokdPap7aV8X5QO0WCv35uiPFHzCEofBjaJCQ896_bnpCblNK5XHDvJm6X7bPonatYgU0gwD_N9vxTazBrxxMrDYhwEwwg8sMrsMs0d-WwfxmeL_f3dBeFIWMIRR60w9_3AVJyOmXFUev2qTIRniyQpcDKoBJtIOZDLzUsy0ExP2buk7zV1LX7D9kCVwTsLObWRry8qJXarjNPeTRfV66hKJzzhpTo17yBmYJz0S1--EhMeI2db5oQ0aqsbiWM_KRJqeKksuwERG5Agd4rsTohT51UcJxnBnQB3GmC-_lb0qLmpYPEA_03GvbDtl1gCr9W53L24lrs6siOzoebtvHPK2Hq6paEO7uaw9IcOl6C5BGLwj6DoO06zoH1lcKFYSgIar7pK3gsXwsGjsCQuPB-KfHk-v_qXUbQJbbkxEooa3rzk7dD6jyJED6wCw9WGi1jVgIHOKEJA8MmQ9agheJkvgFWOj_0WtvtETJsO_KEVdnXsKN0SOqfdDqofVvOdDn19zfl-owmLTyC_pBI6VZ9csIeN_Gj5hHCI3jFckHf1s-fPEcYqhCncHtMsdMpqWSRQUn7zHpTc2ZMNjSijq5sOqPSnrsN-0eCELxGhoe6l59LS7cCnhP6SOj9NDTsNREdNZ_zT5fiNU3R8oDlJawPYAMXaJQUCl1BhZQQdMYUXFb8MTZpH33HpUYYZSpE_KMEDXjN_15PWMaw-iCQUpcD-Cy5p0344nPsZXkDg3eowBa-IbzfJFzvoLhQA28mVagfkqFlqI_WRC5nBsmBz5bsbolq3M9kNXxV5PR8q5RrsFaMWZOuWhf04C2wqA9N-nIqKJ10oMy6Whue2fdaq8UO8-ibRDMLsshICqMjk413hRj6zEFQR7hCN6eIG7AJLSFA_EyvC0uN9z9akxIYjwBuh0rfurQpHsdaTlVNaIagJl6btHIU3R4CPJJ2TwDdG6TUSas-ieUN8LMa7LfsHi5Z0H__OLc5G6m0t0Uc28tDcw6GO7gztZGGqD5fGDiBNzrvfnzL8VtUjtYlYU9_a6ch2oTQTiFP56y3K8_OE9C8u00aAYLVg8xYnhAzKMoZTThZNu2y8_P9IcvWaKHJ1wvyNBfZ6vjzzL9XJUvZjqswOC1VbxWzgjItnUaX3cz_r7K485zZuvHOb7fwugdPgr10XGzGWXX3rf_vSoCiaDzn0g-rKwU6gvVa6V9C7gbG7YulXwYhfCpaKuJG3r7dZsVWy662yR8STXe-i9No_P7Cs2by-4k1sH1FsfhRFgD7SvvIbCJoY0L3ZF5Brhf7bPyJG-ywhM2G33KT9ePOp42ZjfwfpnZ9qKwkjmARNPbk3E8vTf_abMup_ZPFcgBczLgOdWzdbHqgIquAdN7hYxGQqo7X4xMaUWffAQIx1wJQ7xPv1_WEVkNsHNK9siyXmVoXAikAuxqr-Eg1jMWLPW7yqE-HFO5-tdpFAnUfZTfUh_FRfRME4NkjMsC5YNJjXNi6QJv8FSTPf1pMrHQbNOks8IZY1L2dEhmEf5NeGb8IC1mgeysz6IZtOpgdU7taBJR1IN_nV93titddSP4YR33QVpj26q2tWgmSlUrLwViywxnvD8wDj5h0TM8IMnXDlUp7xv_Hga-rV4PcGTzglVyjcGGFbZI3FsSgKxTcJ9wmQocPAe4BKbtFZug5Ef8WFcFMKnGJuSeac2ja8EYTXBUu0AohVzQkeEDoEyyVJ3ZloO0vGnGO0tcFSGvnu-NkC0PlcHylcXPXb8Qmj3A0kaQsyy5ru85keSfhjkBckq82Kku_q0yKqEnYpMn7Xm3n5gQAt3HM_bex5kb9hX4vbFjACHkZOgyO59OpB_mTYqw0D8MpLQD4Gyn-z-qoIDzX06muCm-NTatdedC3tiCl9zFXE6-_pOxvjDVtOjO4L0dNja6E7Xhi599dszDD2d2v7j72lwkKEeVt2UjceeZboMcgjMQ94RAeCEG1cvhypyMOQAD6kacOS_QRiHl8j5Meh5PA01-aK8vB3R_akxMvOAiosGbpIXMRb5KG4aZwZB4cQLS8vRtooQllodeBEmg5ZqqeORJeiiQli9aGIBjs_LCJyvK0GwAfRfJVLNVyMmS5lCwYrbmtXZZEMsOoZ3UONnYCBrzRFUsipk1ulrzl9Md0LBHTU7QQpOxPZfPYFuN8kxcmiqc_KgY2ptBOJj6vfTKn2M5cFHY_xyouGS1lr8CjKLiAvflQTZkckLQouLNjSXZgnGQBBd8EDlZCujNOJQV-q4doaRTX3U_ZaVhVmVNVHotfKUYxJqg6RakWAG1Zr7guqlDVxD-PoqTLqTI_3Vjk7HuzJdUo_XGk1nuM8IIihXcdS6tXzs-frWTW8o764bd2BplMXqArwMXYpDtC63LrTHK0K_6WbYJ-zdY6VHXs54NHLDMF-S9O-Yst3c8y88poOgZ4MO8B-IRKl7BXddePjE0VrcMzpuMVKQ5Ig7PtKiVuaALsjrcf8tvPxYTdWWJVWknHFQLfIu8J5QyjfNa1yrnc276s4cM-gFJdgBYCZ8WwsuZ7ITCNfQJcL68p0lGEeLW2AtiAgygnGo2K3R0z2OmReIq4Tr0nuM_2PBJULQkqlnliWTMCdyJeTr__dO2xZj31HOhp2Nl5RnPsVKqnWIGOnPY32a401PJiJfymTbO8ZsqS6LzLQiwklzJWG4Ls_90L5eqRj1OFoMm54-2liYZxCEB5FfIl4VqyngV62YVVKgmEG63ALi2Agpo567DFSoYx_wFkCiF4LyCYd1UjWYR5UkmtJaaMiUWMMTIjHyK5Gl7RwgLKB96wjOEQ2ohtR9FnbwtXRHqlTWqs54Vw4JW_u5qvqWODlhQtLZoE9Go_Y4XA1twuF3DIJHwpxVmPb4IFwNRMhQ7-12rxJRGzqqUcVGLeAy2u11hAM93NzVSDTRXvnU1IjpLwcdWCbAPhIuqwB7_jRpNwqeQYfRbqcP13UPsUM_Ofi_eDXaUb1hVV2cLG-uIGl_zISbSre3nlCOQcnHvPitwXctgGeufCEp13mlohCoAN1zS67zHsP3iCKxDdszTvB7VKAJN2hv9Mi-wdaKa_f-z0VV-4zxYEToKCu9ZrhjQHWjNuZi2WsBfQ-1jkK50wLATiSVE_E0_KlK0LaTxg06AMzJVLOCe0iz1QguqiU9yeS7j9PfrFqEXZL-l4vIxioLNG1_ZDOq8_JYudNPAvMJcidbkaIFWozUnb36x_T9oyA_n_0jqytBDYhRPokPRIPsUdGgK99AaVLS8w_DKCoGQmXnuYPZ0PU_Qfz_6jcpk4672ol9QTj3ZH3HijGuog-JVZ5ua-ptfXqzFC2y9VMgcEsrH_1BJHoQKNavWnRyPRTHyjKEjxVVIMWwVpDrh2Dhlj4ROIFZUXzIO6saiyLLjdp3ziw_qZyXk_H7FjBncJdQFgQ33kRhDJ7_2irXdh7skyNxB4ipBwv-DHzUv0ffUKaxOtTJQF7Lw3HgUGudJMY3pQhy8p0pOT08jn4k3cGoeDNErngmQpAjpEDnaqGtXe1SjAWhkvtf-1H6PqVf1Vimei40c1mL_h8dWlpPk0YI-g4_aenVsNnMMiqzWzsNOfvgzwLx4Jn7O5eb5AeP2dN809omqBJDm8ijR7u91_yxLkPM5__J_UpMQMXZtxn-9cnKf_OC1XNCbtjoe4L3cHHjOCin3pDPnkRV7lPviyw0Cbxda_WNRWF6pa4k-zV8PfHKSvZlkekPjxcIyC0DKtoo1PEBq6j9A-gVKrBcvRmsnady495gvPTYcrO0PmNTBFz3wc3QeaPqg-lYjcAPr2JsZxKTiFARcBUyR2TAXSpihIjnXofM6nPAxqo015DEToLK0aiahgZBWadVbg5Wn9LJAk3AORaw1puRkSimvEDnQ97vfi2sOAb0TOq6SNAWJGPMmzlJJ5YsoDvlPu239bgPr_RTQG2K3FDXXDTDwb-l0lqcpnGlVIcDuD4iJsDMLQDZ2bDs5gbg-nnlrrs-u6veZvqUpaPf-mD7lQkH7xOHWTUuamneGSFoLF7aEAw_JX7VtQ1Wtk2jaDK9FmGkF_qG4TDlubMMKBT8EufR4nbmMHwiLJ8go4aWMGl9KsDDYVyy3uOEctzS7DIGt_fuXyzGpDXgzySGn_7Q-oKzdONRMtdYMeXz3fdXiokchSLH7hyQXTiyXlYaCJxzZ3KrHVClgiH916MF40J-YY7WG0xZM-NTIFkIcQ3q0FT0GTpIMleddVZSiKiHlRasVaiBga8G3k-WRFo5HEg917t28rYa8akCXs7mOVCqJdY0JVYV0JLTR1Iyg3j6gadYpPGOE0VlD6X-0U4cjrk373k44GFqSaUh4hLST6i_-s7xnpHtEKuJ0Kapg7SLc7G6dlv5D0G6gMzn5NV6QGYXvDmWRJbL6sXn4-dysmZiakuZDTZThX-C0QkK_N4C7Xu5juklO9m7NigW_ujG6VqbhXOZqS1TTmzlStHRvzxDGydvA2GhkTEIKxIDM-S7R4QWlFuofRwQuoBChamuJ18m3p5OVxZvxHIlER-gpKq2RU0pXD5C8-LXrH2RPQq-PNeOL_HCXNBy6Wo01fKdS8G2NXFU-QnksvLwfBHnRHJ1FdFPGIFydrcCSxhyZRhbXEwyU0PLlD8ccMU-NQ5uOt97jeplHPQ9ccMAx3xReAgY_DhV3NCAyrWJjLJxCE4SeZcv6slsROxTFzb5LWJ5JwPXSU9jL5KVMlcdCxWeL_Qp2Phl42pJDvnRe5D5TSmoOsCf8zvfj3o7AHCaeT7dEtAWlOAhgt8sY6VhikDd0EJRaqieAdqRJgOPKODDn6wnMVwi2X7yKLLonBvQzH3kdW29dM4AT4aNu7ivcnfb4V8eO6VodogEC435bfI4hT7whcLOUBbqxR2IhcbgI285DL_2ot5eBAkHNfaT-2o6qbrGT483-5ElfFMCclhejNKTEVpNJv0_ZPoh15i681niis8xQcaEgnJY9WYKeYnITzhbFtINcAfsOxj84QOkknqI65ohO1diHIXlvkJS6VTmTTElndoXXmSExBgyTMWt8A6hvAYeqqlhZu2K1KvpEMU00nKzvOQ7e-Q2_VlQcLrBmNALCQskPbz0H9FcuF1nSgGwu1OL7hmLxjdgo5tVThzrFD-LVvfqM9meJke0jX_wiLb84x2oG9f-TZPg5vbfxVUvjuVmgRPqQ4BEqLWsNJmPYFLRMjQKDxekJyMn027Oai3Zp0S6ZeFObQjsxmFQ2T7-Vh9G-pCQ.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL28zLTIwMjUtMDQtMTZ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0c1aa1ec48e7eb10016af0d9685a7087d1a1fa402982b15c95",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 1316,
+    "total_tokens": 1744,
+    "cost": 0.011384,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.011384,
+      "upstream_inference_prompt_cost": 0.000856,
+      "upstream_inference_completions_cost": 0.010528
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 320,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

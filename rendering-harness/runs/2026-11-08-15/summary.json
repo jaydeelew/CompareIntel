@@ -1,0 +1,414 @@
+{
+  "status": "completed",
+  "stopReason": null,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.210206,
+  "unknownCostCalls": 0,
+  "perModelCost": {
+    "x-ai/grok-4.7": 0.024536,
+    "openai/o3": 0.03762,
+    "google/gemini-2.5-pro": 0.0850825,
+    "openai/gpt-5.1-codex-max": 0.0629675
+  },
+  "promptTokens": 14666,
+  "completionTokens": 21347,
+  "reasoningTokensIncludedInCompletion": 12198,
+  "errors": [],
+  "truncated": [],
+  "visibleEmpty": [],
+  "finishReasons": {
+    "stop": 24
+  },
+  "firstCallCST": "2026-11-08T14:18:54.217000-06:00 CST",
+  "lastCallCST": "2026-11-08T14:22:01.995000-06:00 CST",
+  "cumulativeKnownUsd": 1.2837966175,
+  "priorUnknownCharges": 2,
+  "coverage": "Collection only; no new rendering passes",
+  "requestTimeoutSeconds": 600,
+  "dynamicGuardEvidence": [
+    {
+      "modelId": "x-ai/grok-4.7",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.063465,
+      "reserveRates": {
+        "usd": 0.063465,
+        "inputRate": 2e-06,
+        "outputRate": 6e-06,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 8.533510285335103e-07,
+        "output": 6e-06
+      }
+    },
+    {
+      "modelId": "x-ai/grok-4.7",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.06306,
+      "reserveRates": {
+        "usd": 0.06306,
+        "inputRate": 2e-06,
+        "outputRate": 6e-06,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 8.533510285335103e-07,
+        "output": 6e-06
+      }
+    },
+    {
+      "modelId": "x-ai/grok-4.7",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.06328,
+      "reserveRates": {
+        "usd": 0.06328,
+        "inputRate": 2e-06,
+        "outputRate": 6e-06,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 8.533510285335103e-07,
+        "output": 6e-06
+      }
+    },
+    {
+      "modelId": "x-ai/grok-4.7",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.0637725,
+      "reserveRates": {
+        "usd": 0.0637725,
+        "inputRate": 2e-06,
+        "outputRate": 6e-06,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 8.822768434670116e-07,
+        "output": 6e-06
+      }
+    },
+    {
+      "modelId": "x-ai/grok-4.7",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.0645075,
+      "reserveRates": {
+        "usd": 0.0645075,
+        "inputRate": 2e-06,
+        "outputRate": 6e-06,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 9.658886894075405e-07,
+        "output": 6e-06
+      }
+    },
+    {
+      "modelId": "x-ai/grok-4.7",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.06408,
+      "reserveRates": {
+        "usd": 0.06408,
+        "inputRate": 2e-06,
+        "outputRate": 6e-06,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 9.658886894075405e-07,
+        "output": 6e-06
+      }
+    },
+    {
+      "modelId": "openai/o3",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.08394499999999999,
+      "reserveRates": {
+        "usd": 0.08394499999999999,
+        "inputRate": 2e-06,
+        "outputRate": 8e-06,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 8e-06
+      }
+    },
+    {
+      "modelId": "openai/o3",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.08354,
+      "reserveRates": {
+        "usd": 0.08354,
+        "inputRate": 2e-06,
+        "outputRate": 8e-06,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 8e-06
+      }
+    },
+    {
+      "modelId": "openai/o3",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.08376,
+      "reserveRates": {
+        "usd": 0.08376,
+        "inputRate": 2e-06,
+        "outputRate": 8e-06,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 8e-06
+      }
+    },
+    {
+      "modelId": "openai/o3",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.08425250000000001,
+      "reserveRates": {
+        "usd": 0.08425250000000001,
+        "inputRate": 2e-06,
+        "outputRate": 8e-06,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 8e-06
+      }
+    },
+    {
+      "modelId": "openai/o3",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.0849875,
+      "reserveRates": {
+        "usd": 0.0849875,
+        "inputRate": 2e-06,
+        "outputRate": 8e-06,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 8e-06
+      }
+    },
+    {
+      "modelId": "openai/o3",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.08456,
+      "reserveRates": {
+        "usd": 0.08456,
+        "inputRate": 2e-06,
+        "outputRate": 8e-06,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 8e-06
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.10366562500000001,
+      "reserveRates": {
+        "usd": 0.10366562500000001,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.2499999999999999e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.10341250000000002,
+      "reserveRates": {
+        "usd": 0.10341250000000002,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.25e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.10355000000000002,
+      "reserveRates": {
+        "usd": 0.10355000000000002,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.25e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.10385781250000001,
+      "reserveRates": {
+        "usd": 0.10385781250000001,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.25e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.1043171875,
+      "reserveRates": {
+        "usd": 0.1043171875,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.25e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.10405,
+      "reserveRates": {
+        "usd": 0.10405,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.25e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.1-codex-max",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.10366562500000001,
+      "reserveRates": {
+        "usd": 0.10366562500000001,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.2499999999999999e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.1-codex-max",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.10341250000000002,
+      "reserveRates": {
+        "usd": 0.10341250000000002,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.2499999999999999e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.1-codex-max",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.10355000000000002,
+      "reserveRates": {
+        "usd": 0.10355000000000002,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.2499999999999999e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.1-codex-max",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.10385781250000001,
+      "reserveRates": {
+        "usd": 0.10385781250000001,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.2499999999999999e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.1-codex-max",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.1043171875,
+      "reserveRates": {
+        "usd": 0.1043171875,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.2499999999999999e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.1-codex-max",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.10405,
+      "reserveRates": {
+        "usd": 0.10405,
+        "inputRate": 1.25e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1.2499999999999999e-06,
+        "output": 1e-05
+      }
+    }
+  ]
+}
