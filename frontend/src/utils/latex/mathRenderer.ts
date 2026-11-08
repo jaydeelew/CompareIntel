@@ -59,13 +59,27 @@ function sortDelimiters(delimiters: MathDelimiterPattern[]) {
   return sortMathDelimiters(delimiters)
 }
 
+/** TeX optional row-skip after `\\`, e.g. `\\[6pt]` / `\\[0.5em]`. */
+const TEX_ROW_SKIP_DIM = String.raw`\d+(?:\.\d+)?\s*(?:pt|em|ex|bp|pc|mm|cm|in|mu)`
+
+/**
+ * Collapse a provider extra backslash on `\(` `\)` `\[` `\]` so delimiters parse.
+ * Do not turn array row-skip `\\[6pt]` into a display-math `\[`.
+ */
+export function collapseDoubleEscapedDelimiters(text: string): string {
+  return text
+    .replace(/\\\\(?=[()\]])/g, '\\')
+    .replace(new RegExp(String.raw`\\\\(?=\[(?!\s*(?:${TEX_ROW_SKIP_DIM})\s*\]))`, 'g'), '\\')
+}
+
 /** True when `start` sits inside an unclosed $$...$$ or \[...\] span. */
 export function isInsideOuterDisplayMath(text: string, start: number): boolean {
   const before = text.slice(0, start)
   const dollarPairs = before.match(/\$\$/g)
   if ((dollarPairs?.length ?? 0) % 2 === 1) return true
-  const opens = (before.match(/\\\[/g) || []).length
-  const closes = (before.match(/\\\]/g) || []).length
+  // `(?<!\\)` so `\\[6pt]` row-skip is not counted as a display-math open.
+  const opens = (before.match(/(?<!\\)\\\[/g) || []).length
+  const closes = (before.match(/(?<!\\)\\\]/g) || []).length
   return opens > closes
 }
 

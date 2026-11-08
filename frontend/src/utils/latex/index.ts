@@ -15,6 +15,7 @@ export {
   sortMathDelimiters,
   isInsideRenderedMathHtml,
   isInsideOuterDisplayMath,
+  collapseDoubleEscapedDelimiters,
   EXPLICIT_MATH_ENV_NAMES,
   EXPLICIT_MATH_ENV_RE,
   findMatchedExplicitMathEnvs,

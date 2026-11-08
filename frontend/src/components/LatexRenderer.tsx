@@ -48,6 +48,7 @@ import {
   preserveMathLineBreaks,
   sortMathDelimiters,
   isInsideRenderedMathHtml,
+  collapseDoubleEscapedDelimiters,
   safeRenderKatex,
   convertListPlaceholdersToHTML,
   markBlockquotes,
@@ -705,12 +706,12 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Normalize double-escaped LaTeX in non-code content (e.g., \\( ... \\), \\frac)
         // Some models/providers emit extra escaping; collapse one slash so delimiters/commands parse.
-        processed = processed
-          .replace(/\\\\(?=[()[\]])/g, '\\')
-          .replace(
-            /\\\\(?=(?:frac|sqrt|left|right|boxed|pm|mp|neq|leq|geq|cdot|times|div|Rightarrow|Leftarrow|rightarrow|leftarrow|alpha|beta|gamma|delta|theta|pi|infty|displaystyle)\b)/g,
-            '\\'
-          )
+        // Keep `\\[6pt]` (array row-skip) — collapsing it to `\[` leaks leftover `\[6pt]`.
+        processed = collapseDoubleEscapedDelimiters(processed)
+        processed = processed.replace(
+          /\\\\(?=(?:frac|sqrt|left|right|boxed|pm|mp|neq|leq|geq|cdot|times|div|Rightarrow|Leftarrow|rightarrow|leftarrow|alpha|beta|gamma|delta|theta|pi|infty|displaystyle)\b)/g,
+          '\\'
+        )
 
         // Stage 0.4: Wrap bare LaTeX blocks (commands without delimiters) in $$
         // Some models output \frac{}{}, \sqrt{}, etc. without any math delimiters.

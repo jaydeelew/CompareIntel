@@ -5,7 +5,13 @@
 import { describe, it, expect } from 'vitest'
 
 import type { MathRendererConfig } from '../../types/rendererConfig'
-import { extractDisplayMath, restoreDisplayMath, renderMathContent } from '../latex/mathRenderer'
+import {
+  collapseDoubleEscapedDelimiters,
+  extractDisplayMath,
+  isInsideOuterDisplayMath,
+  restoreDisplayMath,
+  renderMathContent,
+} from '../latex/mathRenderer'
 
 // Config matching GPT 5.2 Pro: \( \) has priority over $
 const parenFirstConfig: MathRendererConfig = {
@@ -149,5 +155,26 @@ x^2, & x \\ge 0 \\\\
     const { text, mathBlocks } = extractDisplayMath(inlinePmatrix, gpt5DisplayDelimiters)
     expect(mathBlocks).toHaveLength(0)
     expect(text).toContain('\\begin{pmatrix}')
+  })
+})
+
+describe('collapseDoubleEscapedDelimiters - keep array row-skip \\[dim]', () => {
+  it('does not turn \\[6pt] row-skip into a display-math open', () => {
+    const cases = '$$\\begin{cases}\nx^2 & x \\ge 0,\\\\[6pt]\n-x & x < 0.\n\\end{cases}$$'
+    expect(collapseDoubleEscapedDelimiters(cases)).toContain('\\\\[6pt]')
+    expect(collapseDoubleEscapedDelimiters(cases)).not.toMatch(/(?<!\\)\\\[6pt\]/)
+  })
+
+  it('still collapses double-escaped \\[ display delimiters', () => {
+    expect(collapseDoubleEscapedDelimiters('\\\\[E = mc^2\\\\]')).toBe('\\[E = mc^2\\]')
+    expect(collapseDoubleEscapedDelimiters('\\\\(x = 5\\\\)')).toBe('\\(x = 5\\)')
+  })
+
+  it('does not count \\[6pt] as an outer display-math open', () => {
+    const text = '$$\\begin{cases}x^2\\\\[6pt]-x\\end{cases}$$ later'
+    const skipAt = text.indexOf('[6pt]')
+    expect(isInsideOuterDisplayMath(text, skipAt)).toBe(true)
+    const after = text.indexOf(' later')
+    expect(isInsideOuterDisplayMath(text, after)).toBe(false)
   })
 })

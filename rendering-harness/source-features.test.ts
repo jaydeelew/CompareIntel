@@ -146,6 +146,20 @@ test.describe('Source feature detection vs renderer loss', () => {
     expect(rendered.assertions.some(a => a.status === 'fail')).toBe(false)
   })
 
+  test('leftover visible \\[ fails even when \\begin{cases} was consumed', () => {
+    const source = '$$\\begin{cases}\nx^2 & x \\ge 0,\\\\[6pt]\n-x & x < 0.\n\\end{cases}$$'
+    const leftover = validateRenderedHTML(
+      '<div><span class="katex-display"><span class="katex-html">f(x)={ x^2 if x ≥ 0, \\[6pt] -x if x < 0.}</span></span></div>',
+      { noKatexErrors: true },
+      source
+    )
+    expect(leftover.pass).toBe(false)
+    expect(leftover.status).toBe('fail')
+    expect(leftover.assertions.some(a => /lost it/.test(a.message) && /\\\[/.test(a.message))).toBe(
+      true
+    )
+  })
+
   test('unmatched \\begin{cases} is source-issue, not an unqualified pass', () => {
     const result = validateRenderedHTML(
       '<div>raw \\begin{cases} x^2</div>',

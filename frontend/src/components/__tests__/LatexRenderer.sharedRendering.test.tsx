@@ -619,6 +619,50 @@ describe('bug 26: multiline `$ \\begin{cases} $` is display math, not leftover r
   })
 })
 
+describe('bug 28: array row-skip \\[6pt] is not a display-math delimiter', () => {
+  const o3Cases = [
+    '$$',
+    'I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\qquad',
+    'f(x) = \\begin{cases}',
+    '  x^2 & \\text{if } x \\ge 0,\\\\[6pt]',
+    '  -x  & \\text{if } x < 0.',
+    '\\end{cases}',
+    '$$',
+  ].join('\n')
+
+  const o3Pmatrix = [
+    '\\[',
+    'A=\\begin{pmatrix}a & b \\\\[4pt] c & d\\end{pmatrix}.',
+    '\\]',
+  ].join('\n')
+
+  it('renders o3 01 cases without leftover \\[6pt] (openai/o3)', () => {
+    const el = renderReply(o3Cases, 'openai/o3')
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('\\[6pt]')
+    expect(visibleText(el)).not.toContain('[6pt]')
+    expect(visibleText(el)).not.toContain('\\begin{cases}')
+    expect(texSources(el).some(t => /\\begin\{cases\}/.test(t) && /6pt/.test(t))).toBe(true)
+    expect(el.querySelector('.katex-display')).not.toBeNull()
+  })
+
+  it('renders o3 04 pmatrix \\[4pt] as two rows (openai/o3)', () => {
+    const el = renderReply(o3Pmatrix, 'openai/o3')
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('\\[4pt]')
+    expect(visibleText(el)).not.toContain('[4pt]')
+    expect(texSources(el).some(t => /\\begin\{pmatrix\}/.test(t) && /4pt/.test(t))).toBe(true)
+    expect(el.querySelector('.katex-display')).not.toBeNull()
+  })
+
+  it('still renders double-escaped \\[E = mc^2\\] as display math', () => {
+    const el = renderReply('2. **Bracket display:** \\\\[E = mc^2\\\\]', 'openai/o3')
+    expectNoKatexErrors(el)
+    expect(el.querySelector('.katex-display')).not.toBeNull()
+    expect(texSources(el.querySelector('.katex-display')!)).toEqual(['E = mc^2'])
+  })
+})
+
 describe('bug 11: display math at a bullet’s indent stays inside the list', () => {
   const reply =
     '## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that for any right triangle, the relationship between the lengths of the sides is given by the formula:\n   \\[\n   a^2 + b^2 = c^2\n   \\]\n2. Let’s consider a *right triangle* with side lengths \\(a = 3\\) and \\(b = 4\\):\n   - To find the hypotenuse \\(c\\):\n   \\[\n   c = \\sqrt{a^2 + b^2} = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\n   \\]\n   - Therefore, the length of the hypotenuse \\(c\\) is \\(5\\) units.\n\n## Scenario 2: Tables with Math'

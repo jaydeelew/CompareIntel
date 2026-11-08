@@ -55,14 +55,23 @@ export interface ExpectedFeatures {
   safeLinksOnly?: boolean
 }
 
+function visibleMathText(container: Element): string {
+  const clone = container.cloneNode(true) as Element
+  clone.querySelectorAll('.katex-mathml, pre, code, annotation').forEach(node => node.remove())
+  return clone.textContent || ''
+}
+
 /** Visible leftover `\begin{env}` after stripping MathML, annotations, and code. */
 function visibleUnrenderedMathEnvs(container: Element, envNames: string[]): string[] {
   const unique = [...new Set(envNames)]
   if (unique.length === 0) return []
-  const clone = container.cloneNode(true) as Element
-  clone.querySelectorAll('.katex-mathml, pre, code, annotation').forEach(node => node.remove())
-  const text = clone.textContent || ''
+  const text = visibleMathText(container)
   return unique.filter(name => text.includes(`\\begin{${name}}`))
+}
+
+/** Visible leftover `\[` (e.g. `\\[6pt]` collapsed to a fake display open). */
+function visibleLeftoverDisplayBrackets(container: Element): boolean {
+  return visibleMathText(container).includes('\\[')
 }
 
 function presentAssertion(
@@ -283,6 +292,17 @@ export function validateRenderedHTML(
         expected: 'well-formed \\begin{env}...\\end{env}',
         actual: `unmatched \\begin{${envs.unmatchedOpens.join(',')}} in source`,
         message: `Source math environment is malformed/unsupported (unmatched begin): ${envs.unmatchedOpens.join(', ')}`,
+      })
+    }
+    // Always-on: leftover `\[` is a user-visible defect even when `\begin{env}`
+    // was consumed (o3 01 `\\[6pt]` inside cases). Independent of requiredFeatures.
+    if (visibleLeftoverDisplayBrackets(container)) {
+      assertions.push({
+        pass: false,
+        status: 'fail',
+        expected: 'no leftover \\[ in visible text',
+        actual: 'visible raw \\[',
+        message: 'Source math rendered with leftover \\[ — rendered DOM lost it',
       })
     }
   }
