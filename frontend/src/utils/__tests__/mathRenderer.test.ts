@@ -120,3 +120,34 @@ x + y &= 5 \\\\
     expect(result).not.toContain('__DISPLAY_MATH_')
   })
 })
+
+const gpt5DisplayDelimiters: MathRendererConfig['displayMathDelimiters'] = [
+  { pattern: /\$\$([^$]+?)\$\$/gs, name: 'double-dollar', priority: 1 },
+]
+
+describe('extractDisplayMath - multiline $ \\begin{cases} $ is one display block', () => {
+  const piecewise = `$f(x) = \\begin{cases}
+x^2, & x \\ge 0 \\\\
+-\\,|x|, & x < 0
+\\end{cases}$`
+
+  it('extracts GPT-5 05 cases as $$...$$ (not leftover wrapping $)', () => {
+    const { text, mathBlocks } = extractDisplayMath(piecewise, gpt5DisplayDelimiters)
+    expect(text).not.toContain('\\begin{cases}')
+    expect(mathBlocks).toHaveLength(1)
+    expect(mathBlocks[0]).toMatch(/^\$\$/)
+    expect(mathBlocks[0]).toContain('\\begin{cases}')
+    expect(mathBlocks[0]).not.toMatch(/^\$[^$]/)
+  })
+
+  it('does not extract currency or single-line pmatrix as display', () => {
+    const currency = 'Prices: Laptop costs $1,499.99, monitor $329.00, keyboard $49.95.'
+    const { mathBlocks: moneyBlocks } = extractDisplayMath(currency, gpt5DisplayDelimiters)
+    expect(moneyBlocks).toHaveLength(0)
+
+    const inlinePmatrix = '$A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$'
+    const { text, mathBlocks } = extractDisplayMath(inlinePmatrix, gpt5DisplayDelimiters)
+    expect(mathBlocks).toHaveLength(0)
+    expect(text).toContain('\\begin{pmatrix}')
+  })
+})

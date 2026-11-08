@@ -60,7 +60,7 @@ function sortDelimiters(delimiters: MathDelimiterPattern[]) {
 }
 
 /** True when `start` sits inside an unclosed $$...$$ or \[...\] span. */
-function isInsideOuterDisplayMath(text: string, start: number): boolean {
+export function isInsideOuterDisplayMath(text: string, start: number): boolean {
   const before = text.slice(0, start)
   const dollarPairs = before.match(/\$\$/g)
   if ((dollarPairs?.length ?? 0) % 2 === 1) return true
@@ -89,6 +89,156 @@ function shouldSkipDisplayDelimiterMatch(
   return false
 }
 
+/**
+ * Explicit KaTeX environments. Longest names first so `aligned` wins over `align`.
+ * Used to recognize legitimate `$`-wrapped multiline math without pairing currency `$`.
+ */
+export const EXPLICIT_MATH_ENV_NAMES = [
+  'aligned',
+  'alignat',
+  'align',
+  'equation',
+  'gather',
+  'multline',
+  'split',
+  'cases',
+  'pmatrix',
+  'bmatrix',
+  'Bmatrix',
+  'vmatrix',
+  'Vmatrix',
+  'smallmatrix',
+  'matrix',
+  'array',
+] as const
+
+const EXPLICIT_ENV_NAME_ALT = EXPLICIT_MATH_ENV_NAMES.join('|')
+
+export const EXPLICIT_MATH_ENV_RE = new RegExp(
+  String.raw`\\begin\{((?:${EXPLICIT_ENV_NAME_ALT})\*?)\}([\s\S]*?)\\end\{\1\}`,
+  'g'
+)
+
+export interface ExplicitMathEnvMatch {
+  name: string
+  start: number
+  end: number
+  body: string
+}
+
+export function findMatchedExplicitMathEnvs(text: string): ExplicitMathEnvMatch[] {
+  const re = new RegExp(EXPLICIT_MATH_ENV_RE.source, 'g')
+  const found: ExplicitMathEnvMatch[] = []
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text)) !== null) {
+    found.push({ name: m[1], start: m.index, end: m.index + m[0].length, body: m[0] })
+  }
+  return found
+}
+
+export function unmatchedExplicitMathEnvOpens(text: string): string[] {
+  const covered = new Set<number>()
+  for (const env of findMatchedExplicitMathEnvs(text)) {
+    for (let i = env.start; i < env.end; i++) covered.add(i)
+  }
+  const beginRe = new RegExp(String.raw`\\begin\{((?:${EXPLICIT_ENV_NAME_ALT})\*?)\}`, 'g')
+  const opens: string[] = []
+  let m: RegExpExecArray | null
+  while ((m = beginRe.exec(text)) !== null) {
+    if (!covered.has(m.index)) opens.push(m[1])
+  }
+  return opens
+}
+
+function isSingleDollarChar(text: string, i: number): boolean {
+  return text[i] === '$' && text[i - 1] !== '$' && text[i + 1] !== '$'
+}
+
+function isPlausibleMathPrefix(prefix: string): boolean {
+  if (/\n[ \t]*\n/.test(prefix)) return false
+  const trimmed = prefix.trim()
+  if (/^\d/.test(trimmed)) return false
+  if (prefix.includes('\n')) {
+    const lines = prefix.split('\n')
+    if (!lines.slice(0, -1).every(line => line.trim() === '')) return false
+  }
+  return true
+}
+
+/** Opening/closing single `$` around an explicit env, or null if not wrapped. */
+export function wrappingSingleDollarSpan(
+  text: string,
+  envStart: number,
+  envEnd: number
+): { open: number; close: number } | null {
+  let i = envStart - 1
+  let sawNewline = false
+  while (i >= 0) {
+    const ch = text[i]
+    if (ch === '$') {
+      if (!isSingleDollarChar(text, i)) return null
+      const prefix = text.slice(i + 1, envStart)
+      if (!isPlausibleMathPrefix(prefix)) return null
+      let j = envEnd
+      while (j < text.length && /[ \t]/.test(text[j])) j++
+      if (text[j] === '\n') {
+        j++
+        while (j < text.length && /[ \t]/.test(text[j])) j++
+      }
+      if (!isSingleDollarChar(text, j)) return null
+      const suffix = text.slice(envEnd, j)
+      if (suffix.replace(/[ \t\n]/g, '') !== '') return null
+      if (/\n[ \t]*\n/.test(suffix)) return null
+      return { open: i, close: j + 1 }
+    }
+    if (ch === '\n') {
+      if (sawNewline) return null
+      sawNewline = true
+      i--
+      continue
+    }
+    i--
+  }
+  return null
+}
+
+/**
+ * Convert multiline `$ \begin{ENV}...\end{ENV} $` into a `$$...$$` display block.
+ * Single-line `$A = \begin{pmatrix}...\end{pmatrix}$` stays inline.
+ */
+function extractDollarWrappedExplicitEnvs(processed: string, mathBlocks: string[]): string {
+  const spans: { start: number; end: number; inner: string }[] = []
+  for (const env of findMatchedExplicitMathEnvs(processed)) {
+    const wrap = wrappingSingleDollarSpan(processed, env.start, env.end)
+    if (!wrap) continue
+    const spanText = processed.slice(wrap.open, wrap.close)
+    if (!spanText.includes('\n')) continue
+    const inner = processed.slice(wrap.open + 1, wrap.close - 1).trim()
+    if (!inner || inner.includes('$')) continue
+    spans.push({ start: wrap.open, end: wrap.close, inner })
+  }
+  spans.sort((a, b) => a.start - b.start || b.end - a.end)
+  const kept: typeof spans = []
+  for (const span of spans) {
+    if (kept.some(k => span.start >= k.start && span.end <= k.end)) continue
+    kept.push(span)
+  }
+  for (const span of [...kept].sort((a, b) => b.start - a.start)) {
+    const index = mathBlocks.length
+    mathBlocks.push(`$$\n${span.inner}\n$$`)
+    processed =
+      processed.slice(0, span.start) + `__DISPLAY_MATH_${index}__` + processed.slice(span.end)
+  }
+  return processed.replace(
+    /(?<!\$)\$(?!\$)[ \t]*(?:\n[ \t]*)?(__DISPLAY_MATH_(\d+)__)[ \t]*(?:\n[ \t]*)?\$(?!\$)/g,
+    (full, placeholder, indexStr: string) => {
+      const block = mathBlocks[Number(indexStr)]
+      if (block && /\\begin\{/.test(block)) return placeholder
+      return full
+    }
+  )
+}
+
 export function extractDisplayMath(
   text: string,
   displayMathDelimiters: MathDelimiterPattern[]
@@ -112,6 +262,11 @@ export function extractDisplayMath(
       return `${placeholderPrefix}${index}${placeholderSuffix}`
     })
   })
+
+  // After $$ / \[ (and model align-env) have claimed their spans, lift
+  // remaining multiline `$ \begin{cases}...\end{cases} $` as display math.
+  // Do not allow all multiline `$` — currency `$5 … $10` has no env.
+  processed = extractDollarWrappedExplicitEnvs(processed, mathBlocks)
 
   return { text: processed, mathBlocks }
 }

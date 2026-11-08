@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794167846-vRArEET17hcLugw5FDX4",
+  "object": "chat.completion",
+  "created": 1794167846,
+  "model": "openai/gpt-6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Delimiter Variants\n\n1. Double-dollar display:\n   $$x^2 + y^2 = r^2$$\n\n2. Bracket display:\n   \\[E = mc^2\\]\n\n3. Single-dollar inline: $a + b = c$\n\n4. Parenthesis inline: \\(x = 5\\)\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-Like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "**Considering display variations**\n\nI’m thinking about creating different display formats for currency, like showing it raw for things like $100. I wonder if the math parser might have trouble with wording, especially when there are multiple costs. Okay, that’s a good angle to test. I want to avoid an introduction to keep it concise. I’ll make sure to keep code fences and table math intact while rendering it in a list format with block indentation in Markdown.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Considering display variations**\n\nI’m thinking about creating different display formats for currency, like showing it raw for things like $100. I wonder if the math parser might have trouble with wording, especially when there are multiple costs. Okay, that’s a good angle to test. I want to avoid an introduction to keep it concise. I’ll make sure to keep code fences and table math intact while rendering it in a list format with block indentation in Markdown.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NQq9dQwVPhLPOnwvIdri9_FyHkg5ya9Ebyzjh8fk2IwR4DDnk4dYVvB_v2CcjyhuZfhUA87wnNmpb_nK1x1QlORloPprPij74uaCjQvmXC7-T8nR0fi48Kwo7Opg4vDjHw3q_sW8pNLM8h5Wq7Sy0Q3gbssV3dOUZ-aTfjIA0usv2dPa-6bAphlf5P9-v_Veti4y3iJE2IpzDE3UngF6RWAVHYJv6q_v5llSNeFkHFQ_U1nDYcHh9FFR9vp3Odh50MrvqFBDsSgA7GYYB2KDvmhlOgG2STyGWaYa2zP3iCpys1L_x3jCzJ3D-5JzGPMQeG-PPewvkFRA86tf2NCJRyzUxcstBqYT47ivdnsGFAZ1i-NwTv65-ms8pmWMSW0CVrflXW2JgrhmKqnJ7o_6GUm7s_KA9HRWwgohPTg5a5g2YbbMUbv_L5EwloNxqOkLaX-azt4KeMtgGU4500E_FByZW3zirVIHDDreyLHt-golGR7tbtpXTdUbjP3XiM9J3Ia0C5zX8gqfefHfXZ9ARlk5M8mL_41JVZYsXaF-qW2H1a5hjvnzKieA8t7Kpa5xd0XAjrOSAJ6XgRJZSOaKRmt8lXRg7-RtAGPWFo17oNMK0jdXd__sCT1u8dP0Q495MzAr0j8qUUCud_L5zF6cX_R8W2RLa2o2G5v8-l3npJdii7W1x4wpfwlG2WI6dkNDO-x7tB_QrXMfDT571dM7rsVbEAZIhiOFFfB2jnMDLifJ837jrCd2ogdtWqctIdBltcOQe-xv9KJ7RmWurhFDIccsolOKRpeFTBSOQ405xRJfmDrGONZT2E50hFaEpIadprTGk95Ivq7Kv4tY7MBrDfKKLm8_CFI7Pz-l9DUxj4bnXAwQDS525AHdthQqggslzk2VWT8KaPxSanLu2ZEDZ6zygolM8H4zJgoGheWcPPrzDBZ6Sy37XHEvYjviCSu0U1qAOp-FRRXsB5hYqEY-88DbbmOr91ZdHLC-tfjRSsVD3NCbyy9lOgsHkMKtaY_KtuSGOq3MONXVOIQSNEGgmdfd0jFnqYBjOngwvmtEHJvIopLBPowhmsBvAdwcib-jwACJsSMCegOa9rYbAI5fZ77MMzHdZge6Gi_oH5BRQFIv4XKAEgDs9dPYBwef_VTv3xLfTA_6bKh8MEPu7NZj-XTiqUQxKTxkgbuozM6uAQi6-OT-TTlro37hMJBezfAmgTao7t1E3YMT4oT74lYcrh_aEQaggNVUnynY7KNAa-CHyUnWzknqedX5DzBfozYSxADLQVLjviSIr6Q7WgbB0R1SI-xy58F111oBP7dSBzynqmJoC-FoHxkIHdU92ndNsqZIlQ7G-QGT0Bi4OOoXJGQMzlHxFL42PLN0tIdcpz-mGrbOYg3omKgRqZ3i1IdQobQ-BjK3LBhenIyy97Q8bNQpEWk1UkfRVL77cCxZCh754SdH5feC8EkKUtvAU4UHBa_wy21xQi6E2Dd9RuKNk00J-a9IPGB6eh3qQhSW2aFraQG_UakkQFvriJSkrV_fc20I60DPzshjusfw7YRml27Oxa3_Nlhk_FDwPYAQIzNbwtlMyX1wgui2wJd3KcOc9APwkokzIS3uwwNNI3nVSESCZBhoDy6tKNA74A6nFXFljvIYk09TUPPgYvsEk6EYLsaz5oAuYtVCeVe5oGglIttE2g2acj-1WJoZ83xKTJyg5nBbMWQBQYlgqJtMb9pFePWkIlpCJNkQPp2_XlefLIW5dzJ4A1W-OGH23hziEehKH1ReTUSluFDNWiubFudyRVA6PbZtX57b0qZ-7iTd1Qu2L6egCFRiDrEEgwk_vhAYkwj4k_TXTOWccwcOHwVugF4iZ4OpbkTBfoJiPphc8g0qnBhwbjJTfnEeohbxVEEzmnxUo4A2SEj_DgBpc49udYO4J7ykrolKyMxFhNvdpOTYXtVQU9nxpFyFD4BlXWJQIFXBcUS0GDMJPrAkwr_ucZOXJ_35Pcuewb63BTl1P-ZdXpubMHumBChyg8Nxd4EWoNZONbiiFwKO9lQIX37LBg-y0nskjruKUZ2_0dIiBAiPvh_nVbTJS5vmFsOq2EbsdM_MC7xolMNPUwaCeQVrWXvfpFCYd2L_KF4OPOtFZ8N6udBCp5knBV2hQCcBW8Lw1kaD0eJ0yUyEJFoTiuEhfXxaVzbvs6WA_WcoxGB7fFynjvq47yb73amacxR8LzOuxXPT-j0eO5ij-Kr3hVRgkydG2oJXvd9FWVpYzLrfWxwCa25ulGdZybz7WnuIsND9EJb9F6XLYZDlxpXOg-BMNwhRgtLd5eEJEYSIXl8-3CyUp1NVQtREEUY8GyVz6NmYkxSzO3n9frRhCn6SI2rZZJZ5843C57AtVntLBcT-mb2NJwo_Zfn21FDTNh6Y2DqpdKh34p1o1NoPJa3KK20qjF_UBUPPBN0GkBolUoutW1IDgV59AmReO_G6_7w3TH5pOSmL_KaOaDMDL2fOayFEob66KDnx9iDiQqIMLlf7MbWzPKysbk6xxWKgIirlVn7I1Wjgsv0As_Vxbz-x5vHGOQ4Gx-G8HS9weDxjCOZ9PKJA7x8raBV_dYCJTIgv9XmLjZ5Lu6qIN8iA2VDqk1bxw3aZeyxU_DhBsa2-UPUKDqGC41DLuQ0YmT0q7DP_zTP5ajlxXfsyv1oSWmHiyVlcOFhMDLYN23So-m9jwhSjFQTXKZpGiiFl8x0FZubsaeGaPtLgX9XRcnKOpvl1ql8exOmZB-GrqT7MxXi_nQYnwbpIOlpvc0fb5fvv1rlLoqV2k62eWfhX9VQ7Ws0mWpVSDKYuCYKLqVP-oGitwQ-qPKtmDs0Fysvce6zYqVbQYi-OYZQF3VtH_4xgP4j4scJPxFEoDxrvDc1EYTLGFZ7m6wT-NPdeyJ2GWiFm6HU2qqdUQAA4XJ2QeiVwIcOVUzXXxc_nEltNkOdIYKlf9pDnlKlIHPVN9Z4_WlwEqQcV2ev0VvtPjBZd3Uq77UiK271gszYrv4U6NsTvrO2i2CmhSE-TlWqRro1lODJeNFtwvb4r0B9jevhR2dww3PrIr4gIWfNZQC1EJ60xTtPoUbNpbb386jKeMt4yFA_OF2GsY5_Da3HnXKzMlP17vg8EPFkTfBwAMfGi5LWQoNR4rjPvcchhlys3JENG0mJdf71meT_TMTNXJG569A9iz1LhmBhrdKMETLuUeawfJ9P-0I7m8JQDzLBeYdC0tUTYJxEfasShHsDoHpvm807UgJGsuM1bWcxzPYb2HGdJGpTg9pN4ovrBC-pddSSWatATSHuQQd41vIAJW5sNv-aH6TTitB85FF7z2o7GCSbVnc7wdqtYHM3BWqlNDL3EVM8uR9reeMMlBgWhIUcymbK-xU4XqtSaip-csO4147Ky8HMbFvbEsHZk-5tHdBo8vWErrH_01RvP_WYTUF5uiB81-ipAOzK2jjw4DjEzTDYxG-4q-MqBC9Fd_WlcUZ6UbHPBQfRbZTK7XHXMMjdbZpfpfQz_7T2Zl0O_KmsAxBBTX0yKijN_vVaqrPb6Hyo0y7vQprqJt5KrYcEKQzTpAOQxoObTREikSZ2g3FiiyaPGULPx0pI_S549JaFr2UxQGO2FXkoINyiusFS0xHcct995sOBdCTkZjkOMJyHJaN_KeKZRG6Hf0QQ4rNgGedG3f-WWNWQO80MfgYVRGYhAo4tYU13qDkKMMAMNv24wqoXjUZpfq5pu8Kk8SBIxmuzfKfyRNqzHTwM0mhbTH-gV5S9C-jOkWvXEh119aij8yEl_FezGZE9FCBW1cjjoNOvHmRj6_PTmSfvdrPEL3d3UbPC3UkRBRuN_2W0mKiIg5r3RStq_HJw_RQal0sZSBTZ6gdgVgoEME0eHIeXgVezeVAb48LVDsO2mU02FYg9U2BuA_6Vr-OkejR7CEorC2-n8dx4iTTcJBYa9pOzuHnRwJUSShot3OTe26rThDPW7PbQZTSr_LEl6I66yEGQhD2k1hJG9BdP1M6-rfGheJhSRVh35FlmyGq1DvIt7Kn33giHsDiH0uP3oxXNe3Fv4LGItfsk6rPsj_9R6cCbKurhKjcHU361xBzgy1btVltKXNlPFKtrUlNbdJ1iovRA9FIIL67y7US0G60EPxWh41xGMS-wv-V8jzcNoPh7zsVCBPdUUZD5gTJaCU_qPD13VHjrkaElBTrhXNKM3ouQZBvq_6w68n0m91hCVO-55HI-tTiejgA0gs7sLIwsuvkhy9EUW2EFPK6rzR879nBgqurEkFgRE6bouGuQVcJRskL4epfVn1Z5CLfxMJN0B2g2RTcFr7q2J4x6l3l8hYOxSZDf_98qDjXP5StU4e-F7senvjAxrcnvbphAZFoMut3SeqWGrXUi7nzgNdqndMuMbvH9gA6KV7dip5PPFCM5GhDFN0J27vHPEqsulpyqzBJlvJgY_JnH9P2mtjTCNC80pd8p6eGfVyjuu9GUTMRJZk-wEdSQWcwEtYa61IQuuJqEilhRgQG2qxXZA_ZVuMEM79MHTFU5EhEUUaz2Kml99f-s1SvEaHTAsMfrNrVEK-ycqN3V-YVSc3qufvHPB1-rLgsF5kgY6hTLeArkC6dj-1G8sVFJZJMqpqmVT7SB_KOBo9fQHqSvl0T5_Xyu9tGFWkz0acnw9wYQRy6kG-JS2zw7EkGIcK2xlARi2DOAg0U5z-01sUFdVp9vihMU1iYslZ3R59z7fhv9PdR6q4IhJJuvBIBbqZxpXV9AZ1FZ8xS_JMPZZmFG4WPwW4mj9sgIiXzv9vpemXXPVQ--gmt3ic3gey9mYWXRv-OtHiKnWD4bfxA6g654E79Wz4nFxMNtr-vK9tFPhiJ2SHh0WXzaSaguMRp5S6GIt7d759qTm34gtflXfcTIiydHlTeVpLYd-3F4EsMntM3kRbF5EglV-cukwoMgD3jOUuSfiVl7CB_UeFOs2P-USDu5YaiqJESfros2J3_llaSwLIsfgYS6hw7xaPAmSQ8qPjE2rGjczFfWS8Os5k7B4ERVhF8ATi-oyhfdbvLW2c_cS6wDT2xu6dnJqIXwtJDzAgOmRR1kvhgIsz0IaO9DqOamzOtHG-3sE-c3cctNCvhqsS1v8NmAVdC1vSviN30kmGFk4EPHeexXg5SPzL3th0wu0iXpw0hQuTgodf-6hsdOopFaCLTw57nXuTFo8wCN69-SC-faOw==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LWx1bmEtMjAyNjA5MjJ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0494588485567d1f016af0d426cbc487d19dc9ddca8b3ecaad",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 342,
+    "completion_tokens": 571,
+    "total_tokens": 913,
+    "cost": 0.0003197,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0003197,
+      "upstream_inference_prompt_cost": 0.0000342,
+      "upstream_inference_completions_cost": 0.0002855
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 246,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

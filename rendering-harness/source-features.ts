@@ -9,6 +9,10 @@ import {
   protectCurrencyDollars,
   protectEscapedDollars,
 } from '../frontend/src/utils/latex/protection.ts'
+import {
+  findMatchedExplicitMathEnvs,
+  unmatchedExplicitMathEnvOpens,
+} from '../frontend/src/utils/latex/mathRenderer.ts'
 
 export interface SourceFeatures {
   hasDisplayMath: boolean
@@ -53,8 +57,34 @@ function hasDisplayMath(text: string): boolean {
   return (
     /\$\$[\s\S]+?\$\$/.test(text) ||
     /\\\[[\s\S]+?\\\]/.test(text) ||
-    /\\begin\{(?:align\*?|equation\*?|gather\*?|multline\*?)\}/.test(text)
+    /\\begin\{(?:align\*?|equation\*?|gather\*?|multline\*?)\}/.test(text) ||
+    hasMultilineDollarWrappedExplicitEnv(text)
   )
+}
+
+/** `$ \begin{cases}...\end{cases} $` spanning newlines is display math, not a source omission. */
+function hasMultilineDollarWrappedExplicitEnv(text: string): boolean {
+  for (const env of findMatchedExplicitMathEnvs(text)) {
+    const span = text.slice(Math.max(0, env.start - 80), env.end + 8)
+    if (span.includes('\n') && /(?<!\$)\$(?!\$)/.test(span)) return true
+  }
+  return false
+}
+
+function proseOutsideCode(markdown: string): string {
+  return stripInlineCode(stripFencedCode(markdown))
+}
+
+/** Explicit `\begin{env}...\end{env}` in source prose (not fenced/inline code). */
+export function explicitMathEnvsOutsideCode(markdown: string): {
+  matched: string[]
+  unmatchedOpens: string[]
+} {
+  const prose = proseOutsideCode(markdown)
+  return {
+    matched: findMatchedExplicitMathEnvs(prose).map(env => env.name),
+    unmatchedOpens: unmatchedExplicitMathEnvOpens(prose),
+  }
 }
 
 function hasInlineMath(text: string): boolean {

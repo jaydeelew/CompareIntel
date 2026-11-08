@@ -1,0 +1,74 @@
+{
+  "plannedCalls": 1,
+  "attemptedCalls": 1,
+  "maxUsd": 0.13,
+  "sourcePreflight": "/workspace/prism/batch13-glm04-rerun-preflight.json",
+  "sourceRaw": "/workspace/prism/paid-batch-2026-11-08-13/raw/z-ai__glm-5.3__04-mixed-markdown-latex.raw.json",
+  "promptSha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f",
+  "requestTimeoutSeconds": 600,
+  "coverage": "Collection only",
+  "knownActualCost": 0.0009205389,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "modelId": "z-ai/glm-5.3",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:03:29.358Z",
+      "reserve": {
+        "usd": 0.127299725,
+        "inputRate": 9.800000000000001e-07,
+        "outputRate": 3.08e-06,
+        "inputByteAllowance": 933,
+        "completionCap": 32768
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 32768,
+      "actualCost": 0.0009205389,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:03:34.656Z",
+      "usage": {
+        "prompt_tokens": 311,
+        "completion_tokens": 642,
+        "total_tokens": 953,
+        "cost": 0.0009205389,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009205389,
+          "upstream_inference_prompt_cost": 2.17389e-05,
+          "upstream_inference_completions_cost": 0.0008988
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 23,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "error": null,
+      "truncated": false,
+      "visibleEmpty": false,
+      "observedRateAfterResponse": {
+        "input": 9.800000000000001e-07,
+        "output": 3.08e-06
+      }
+    }
+  ],
+  "budgetCaveat": "Estimated reserve, not hard billing cap",
+  "status": "completed",
+  "finishedAt": "2026-11-08T20:03:34.656Z",
+  "files": [
+    "catalog.json",
+    "manifest.json",
+    "prompts.json",
+    "raw/glm-5.3_04.raw.json",
+    "replies/z-ai_glm-5.3_04-mixed-markdown-latex.json",
+    "summary.json"
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794167827-Mwne1uChM6YDLv13x6sQ",
+  "object": "chat.completion",
+  "created": 1794167827,
+  "model": "openai/gpt-6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "The quadratic formula, \\(x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\\), gives the solutions to a quadratic equation \\(ax^2 + bx + c = 0\\), where \\(a \\ne 0\\).\n\n$$\n\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}\n$$\n\n$$\nI = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}\n$$\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\nThe item costs \\$5 and the shipping is \\$10, for a total of \\$15. Budget: \\$1000.",
+        "refusal": null,
+        "reasoning": "**Ensuring correct dollar formatting**\n\nI need to generate a response that shows exact dollar amounts without causing confusion. The user wants to make sure that dollar signs don’t get treated as math expressions, so I should use escaped dollar symbols like \\$5 instead of $5 to ensure clarity. I’ll mention costs like \\$5 for an item and \\$10 for shipping, with a budget of \\$1000. I'll also include clear math inline formulas and ensure everything displays distinctly.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Ensuring correct dollar formatting**\n\nI need to generate a response that shows exact dollar amounts without causing confusion. The user wants to make sure that dollar signs don’t get treated as math expressions, so I should use escaped dollar symbols like \\$5 instead of $5 to ensure clarity. I’ll mention costs like \\$5 for an item and \\$10 for shipping, with a budget of \\$1000. I'll also include clear math inline formulas and ensure everything displays distinctly.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NQWCy7D5p-S_wr4paeXSnIPHPaF6zSzCe9FSz3cRb-qf96PypkUOjOoTnRjyCW-F7XshMkapYrpxQYYyweMkDGeeiZ4WChJdvvcC5s9JFr7fwFbih8HDVIokg24Vhf6RMkx-5zVsHykZ10lxsdH70HG5R6mRpzJVJofIM5LJFVNBfMZvOEPvdX2e89bkhLPsi3MgykKx7zDajlO90UHREDL-258E-VnRDcNKQFxazqPK2U2B0otmiX3agnNd_D2Ens9LufrcWnPKc2IGzNsu0CHauGz5CTh3DJHmF484yIbSKVgAfP4ektz0aXW5CuMklvdStuuetiGrHm0yaWPs30weZM15wqXdUP3ZXdzSiqxMdwhqYiU5aLxA4WVckgdZnnFBLP7mZxzmPhtkKU5py4UsY9VVvL1vGJLk1ozREFx0L4GPozO6VaDbWzVFDSMJmGNeN-WYJMxmVxZuImLm5lGyNxLuiGoyvu9oJd2rCvccX4zyO2iSYMUvJqqWzY3_zzEruvQBsE6g5OZjAvsY_n7c_XJOan5-HbFJv-BEAsJKV_2LY_j55PbwLEW1x0sIuNQQJl8x7ccz25difO5lbcrEixtxEyywdZaZTSgqlYpn1aTBJq8i7UBBi1yvjm3yr8MUYaB94EUDh7j-c_8qo-8GEAP0_4Tbr_dAqOY6N4SoZuDMk5VYVRcWE33sAwtW0CfW5cZMhWquiG5f6YIcxu3DbS3kb5FLXggOwydJ2veSs6ZKnVmCEjpe1f8yKvGAKDlitxdS1sQhzhA9gJNZauuJmMEuHy_isQmk5ZTUBNUNokdxvm0xxDT1cAgPPXUjSLPHjwof0cWOfRBE4v-pTOAWFZXykjvGs351Mskswzhg04P1hZuo8ncDT9JzZZda_4lKk6UG1KRGy7LDBiJiwZ-U7Bw1cTFFBVtN6XXBxKWQ7XiYr9zhFPreaC-dPoPmxrA68g6Sh49W77MgLAQcHTHzNA1im1MP_ToRJwNwimjq1lBQ1eISjzQHMVYvJgiKmiODsW6SIVxOuyfG_cvKsQsm_GJBx33sccZfaeXUeISl7QGF9p5kZ75I0X90Rxuz8un83Oc_QKokang_oZjOVF3HmjHhxn1ilpZ1pTEKAfIFSYztQ2RCpDDLHfkC6-T50PwXGPgCG1J5ae9OyUh620hcbb87yumRzi42975qV7z1DWj5ZeBwIySzOJlvPFSZEXucVKtfKXitXYm0W-Vsa0GrxNs20x8cxbSFG4HLOAj_-FOZZ6RQ3ngp4nOt93USz-fA3HX-2rETIU2xjILlUi8y1E1KYBdoV0Bu1jXjjiWM9DiHyLF9T3I4zhcbdlw8V9E7cdowkjG-Fg7LNs6dJZhzBruO_LFGxuHBUEPW3uXQf-dmQporK8tPKuJmeOy7u0W7uuBXV_rkBKaTDcrwtijiFY5XH9jl6BZ3fZIW7f6F6wesP4T6597vhdzoGcQY9A19taoXTUA714Ngqvlv5b-z51arYxO8NbbrnQ2vhAHLF2eELxfUg6L7NqlDu-y_qhOKgfYYESxlsheaRp7OIbq9nrXoB40Fi2A0-Hk5qIuZlXpr4jzPYbTikXIx6XjtVqrBwslV6IP56_4NlQguBvx2MgQvphEAimauzpCIyy_GnEI1gx8zCqXSLfhYkUaW8b6CirozcOiYsJp4ehzH52J6hM-c8v3BLpJNtHWUNJAazXKCDTuwtFhmf9CtNYOEs_mjoi7ljb8qlgQxAHAvtihiNQCTiOtlDcU31qkiBnvd1K-HmQRe5vs6zXSD-QNBcvFYZAQvRdRNl94KGR7U4Q-cHADh4iV9nQRF917QIugkH2XbIe1HVU97fDBjoPETrIVsbtc_9_rVZZ3kg8BJSlLUt8RLjGhBTidbOrsUIAz7gJIPsQ21AzR9r0ibPFUeWvHcBy3ab2uhO7_-v-YbrZeh2GJkcUcGI9tOWUy-8dXSTynMryvx1Z2suScwWefqH7LvyThUFKNv1kUwYwElUJp2RVl3-TK95lOUXr7BuSgeRrGMs8EWklZNnwI0S-5LpYSpiruXJIVZi2480DcsjSuGuBE6QEs6dsBkbZADi3jrPGpuJlHYQW6pVr5_2qoGjzg2rlKYTEBzecQaSZDNmTydR3iefFWYq72aVS0d5VPcv0RySWNSHkw_lUPdZj_f1CJlKzJtaoXeEMdQWmg8_DMwSE7VdY_IXnu1q2lTCZc6AuuC67K6LNQ3amRaAmTo3h080gBV1LKg3zGzf2JLNgdR2J6GN6UXVE_xw5NfjDG9O2dngf0HPPhZ_kQldH4QH1I43X469J22wfDS9a6Tn1upsvbd1mTtZ0mYFPB_FgzvPmwQmY1FEMuS6W9stqSd19vzbmmUW8BZzdoebRIi1MF33bJX1KER25rFtER6C2kGFLXBra5TxqZxHe0D59aZRDb18MBEzy6yoW9nNBkYKGjdJY28F90gv9DwedcsZRekgZo5BU8ZBRHOIDgoQMWroFgQBTeo_5FX1GnjkOX14YaQazbSbpXU3H5FD8g1hCIjZOlQJps-osqoyydJwZ84kn80XBaN1-gK0p9goP-FRv0dBlf9QoKyRtryDMgUHZIEKM72dpdSPtiRHbt3lsohtU7nNaNcUB2NxSphAcUHup4uY-8SCtxoJTJ1vne1wTyuONHzdoCURMuJomCv0Qjp4ecufFAyZ3tEnbVmLTKLkZX8PD7danKB0BCas5sV4c_QPmzuoODDy2JbIYAr4jRVo5aez76ELfj9n7g5BoLuVLKqsy-UViIe-aONly4bmUNnwcKnCeQgGz3tTUauiBUL97ft9Od4uieSmSCG4L1GhgxT1u5KZm1JFN8k6su98WK0oZf1eZxyz3ThxuXAcd_oJF-Ip1ebdTSNGvwdA5BbItyRIY04Sq4ONXusVeb7ZyzTNld085igHW2wrCmIuYh6GCQfcJzxXuTJAtKQFZy4d0Ol07Zgld3CqjS48-gyMk7wyRSVHs6yhFcS73coRyFPTj-n2kkJXgClyp_mkPwuIb_O0SxagtncWkzgg9pzfRFS3f5A-z9aw_fogMRsAtwfcnV_z8vmWAI0rwQGsIoGS4hRhQeOvSCTP_sgPz6l43yCWH0C5zqQzyOXoAzIVhcNG1VbB_8O4q1vV_cjrOdnjtJMwYZFv0gIqgL5iIgFB_ItZ9ZCYejKq3gguA0M2XOxf2CPUWZ2UufujZEXYz8o4MzflhLE18qvOxZ2CyebZspi9zjeZedFpW_1s1qVUdiYvBqhNAx7GbA2S51BxAcJ2EJtyKis40pTIdoSJ2f_XgReobCtX4R8DlviCnToUsxjEtX3taqQhwIAkKgHHGxrQ0ErDeAgXbJkRwaQ3eGiOoEge8dkcOIbHAIHtRSfk4w3L7P.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LWx1bmEtMjAyNjA5MjJ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0255bc5d57894970016af0d413c56c87d1836b1a34b0e47854",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 274,
+    "completion_tokens": 369,
+    "total_tokens": 643,
+    "cost": 0.0002119,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0002119,
+      "upstream_inference_prompt_cost": 0.0000274,
+      "upstream_inference_completions_cost": 0.0001845
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 124,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

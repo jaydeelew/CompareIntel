@@ -557,6 +557,68 @@ describe('bug 16: $...$ / $$...$$ delimiter examples are not math', () => {
   })
 })
 
+describe('bug 27: indented align continuation is not a leaked __CODE_BLOCK__ KaTeX error', () => {
+  it('renders GLM 5.3 06 $$\\begin{aligned}$$ without placeholder errors', () => {
+    const el = renderReply(
+      [
+        '**Multiline display:**',
+        '$$',
+        '\\begin{aligned}',
+        'f(x) &= x^2 + 2x + 1 \\\\',
+        '     &= (x+1)^2',
+        '\\end{aligned}',
+        '$$',
+      ].join('\n'),
+      'z-ai/glm-5.3'
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('__CODE_BLOCK_')
+    expect(el.innerHTML).not.toContain('__CODE_BLOCK_')
+    expect(texSources(el).some(t => /\\begin\{aligned\}/.test(t) && /\(x\+1\)\^2/.test(t))).toBe(
+      true
+    )
+  })
+})
+
+describe('bug 26: multiline `$ \\begin{cases} $` is display math, not leftover raw LaTeX', () => {
+  const gpt5Piecewise = [
+    'Third section with a piecewise function: ',
+    '$f(x) = \\begin{cases}',
+    'x^2, & x \\ge 0 \\\\',
+    '-\\,|x|, & x < 0',
+    '\\end{cases}$',
+    '',
+    '## Scenario 5: Multiple Dollar Signs',
+    'Prices: Laptop costs $1,499.99, monitor $329.00, keyboard $49.95, mouse $24.50. Subtotal: $1,903.44. Tax (8.25%): $157.03. Total: $2,060.47.',
+  ].join('\n')
+
+  it.each(['openai/gpt-5', CLAUDE])(
+    'renders GPT-5 05 cases and keeps catalog currency as prose (%s)',
+    modelId => {
+      const el = renderReply(gpt5Piecewise, modelId)
+      expectNoKatexErrors(el)
+      expect(visibleText(el)).not.toContain('\\begin{cases}')
+      expect(visibleText(el)).not.toMatch(/\$f\(x\)/)
+      expect(texSources(el).some(t => /\\begin\{cases\}/.test(t) && /x\^2/.test(t))).toBe(true)
+      expect(el.querySelector('.katex-display, .katex')).not.toBeNull()
+      expect(visibleText(el)).toContain('$1,499.99')
+      expect(visibleText(el)).toContain('$329.00')
+      expect(visibleText(el)).toContain('$2,060.47')
+      expect(texSources(el).some(t => /1,499/.test(t))).toBe(false)
+    }
+  )
+
+  it('does not treat currency dollars as a multiline math span', () => {
+    const el = renderReply(
+      'Prices: Laptop costs $1,499.99, monitor $329.00, keyboard $49.95.',
+      'openai/gpt-5'
+    )
+    expect(el.querySelector('.katex')).toBeNull()
+    expect(visibleText(el)).toContain('$1,499.99')
+    expect(visibleText(el)).toContain('$329.00')
+  })
+})
+
 describe('bug 11: display math at a bullet’s indent stays inside the list', () => {
   const reply =
     '## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that for any right triangle, the relationship between the lengths of the sides is given by the formula:\n   \\[\n   a^2 + b^2 = c^2\n   \\]\n2. Let’s consider a *right triangle* with side lengths \\(a = 3\\) and \\(b = 4\\):\n   - To find the hypotenuse \\(c\\):\n   \\[\n   c = \\sqrt{a^2 + b^2} = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\n   \\]\n   - Therefore, the length of the hypotenuse \\(c\\) is \\(5\\) units.\n\n## Scenario 2: Tables with Math'

@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794167856-O2C1L9brdXiAUb6KD4uN",
+  "object": "chat.completion",
+  "created": 1794167856,
+  "model": "openai/gpt-5.6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Headers\n\n### This is H3\n\n#### This is H4\n\n## Text formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\n\nNested unordered list:\n\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n\n> This is a blockquote  \n> with multiple lines",
+        "refusal": null,
+        "reasoning": "**Considering heading structure**\n\nI need to focus on including exactly the requested elements. It looks like I should make sure I understand whether to use H2 for the main headings. They mention headers, so I need to think about whether I should use H3 or H4 as well. I want to generate a clear and organized output that follows these guidelines correctly. Keeping things structured will really help the user!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Considering heading structure**\n\nI need to focus on including exactly the requested elements. It looks like I should make sure I understand whether to use H2 for the main headings. They mention headers, so I need to think about whether I should use H3 or H4 as well. I want to generate a clear and organized output that follows these guidelines correctly. Keeping things structured will really help the user!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NQz4OSKOviJHu-E1fTqsdEky4hpICzmcfXY0n5K2s9uAOU4nbFWaSJtYhOPVphoPwwrWCiKlc3s0Xas3at3JQtYYbReQwl9Bm263J7xlDZL2l44LYwUFHikfyD1Pjb7IMKJTyfLi00bojyeHWAakf4aoajTOMGB4QmxoZ7GnXgsidALCyOANv1mM9pbtzDokan9xTJCy5BySj0uI0U9zU-eyKk2aXJXJBYh39RcSp8UTyk0L0ZhFpYjFxNuFcEHFAbHXuunn6xW2Exx0Iy0uDVSbl7q0TesBTcjA3RcvPconwD2AANoZrY_grSLtN9rWrc_8Y6xOOyC--aUbcHpqe3JJxP3nDU4R9ZktAWYa1yDFRMspfvxI_tdxYIqt3xEdX5lX_a39skojk9laOp8Ik13mTKqA2vviLqtgE7czsmhMlg0dK1D2gnKF12k1ePmCBHSabQybaMF_Ppx9f5WJvRzwXGFpDd_NR__i6gmZQ_bVj63gjF-MRqBcRzh-qjOns1_xEq7gl1p5JCE5OH_hZK3LJ9TZeZ-pnIVv70Sva8xnMObEqYexpQZBiRTgPZvA-nSVzn_wGD-n93Y0-79S14NjfveWoRCn4QutPl06FDXMX8iA0TK87A_cRegob0hp7pHyfcNsjZg5uKMmCobpvxjbqvd4x8Qkh_DXR52oyk1gzmTE8l4xqn-xnNHOnQdzrVO1X6JZ2M8vWednjmNjGHbBXuI6yVLo559MNS_mce0P1xMybWTs2RID9ulW5wWlVV4KlDU6wkh-7tq_IrP_M72AVrNr2yuY7LZxTP-xARKhaHdLvuZW04bgPPtB27jhjA4IGxU7V_AEOe_5oQPa2L8iZb8bOB0KPIEDCg7LHjvu91ZuEHveYYsZbrfB1ygkhnILH_Gi9g7TzbIKR9S56vZBFokFbNFpQrw_goVVUrsY2abEeVFAQGjDAxUETq0jHSDZtDTn6xt0oMBsnihGOSBiKv-jiRiinoHQR9VijtjjldV_X7-FBtveTGarc7EBvjizpPO9S3jS9w9dE2iXQsB-Z4k_TcDK01Mddc5D6ffymvacgchQkKNhPLAxR-ywdw1tkvYPxmMI0fOy4TlJ2RegtbD68nIg1ErMIOw1yt4ChrIcbnyeMuPiaNJFyBdxhW5a4yDTKSjRSpgHhBlUdoaAD-iHwX82H8IpsPPmLzZ5hYPD06A7-DwVrei0r9A_piymu-thWYFpihMpUSjipRNUWZelsqQ1ruL5X_EVsUCoYp2CeRBAzAFQbQiueskg3Jnt4hs987Grid7L3i6d_UtA1LtydQRZki9d1jZmnOvKxa5mGYbdsP5lGUeHqK-gkzZ9qbcH1Tc3wFqHblisJ10GaMcq-hxX5fnAhSzv8FKD8a4gpiMMDHzbKOb6tFDj4NddCTJcZmGLD0fISRLyTh2hEUotTKZ3tkLML02dd-VFGnU_M6vtw_yObOFoAZK1jxUKDxhcryZHSMH_EphqVGNQOpo0CRjUSOtaCXfdhcLihsycCmQST-yeCSbg2V1MwvYbL0EsiLJ2MPA4y4HIBoUY2kc76X0lQ9DqlUIR-S3RIYLscdXTeEN76yWqECVHlr2ZBXBiDRNZz9nu_srRz7g91orok7Qegq3riDme_toZTDB2rWB8OtEGqwZY-2XxyYuldEA-KkXIPaXvMcYjMR2CAU7RZcqqK_R-t7ZprxDYT7g7Y1KuXeLeq1osw1vrllwxQlnBCnQOM88GsXTiFDETlTIh6ZYiGgN6uENkc_jZ1PNquvYrW6_89nIGVHJJBP-P4GQzK5tWf6utzvUkpbbEDm939hlJoos73V-_TVSZ-hGtJjQf8k2haQUx1QQXrx0bloS0ARvfpgsBlC4l4frqYDsy1f_dmcM_rLMC8GtIAT6ZsK6mdB-3Rr7C3benuzRB9NPvIIHymOB-cGI3z67aIw7WCX6FZW8UzS3BXBCfYmBczqD1zbSi0hYEvPofEYaTRbJT85eQ3MsygHNUytsnUunguXLGQTbtDzUIJfMBPe6bDiybo3DzeewmgSMd08EAzlu5iI3A9ciNa68rfHLEuCDuPWqjCSxA1SEI_dLV-AHgweCDtk8NPQ_WRZV9aW1g_EllHYOmWAY3IrJx9iAAlUsSZ8qmrji-su_7u4aaHs=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
+            "format": "openai-responses-v1",
+            "id": "rs_07f80cb237bce271016af0d43171f087d1a6555fa35942f409",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 195,
+    "completion_tokens": 212,
+    "total_tokens": 407,
+    "cost": 0.0002934,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0002934,
+      "upstream_inference_prompt_cost": 0.000039,
+      "upstream_inference_completions_cost": 0.0002544
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 33,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

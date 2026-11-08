@@ -1,0 +1,36 @@
+{
+  "modelId": "z-ai/glm-5.3",
+  "modelName": "Z.ai: GLM 5.3",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+  "response": "# Math Basics: A Formatting Demonstration\n\n## 1. Inline Math — The Quadratic Formula\n\nAny quadratic equation $ax^2 + bx + c = 0$ (with $a \\neq 0$) can be solved using the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. The quantity under the radical, $b^2 - 4ac$, is the **discriminant**: positive means two real roots, zero means one repeated root, and negative means two complex roots.\n\n## 2. Display Math with Aligned Equations\n\nConsider this linear system:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding the equations eliminates $y$, giving $3x = 6$, so $x = 2$ and $y = 3$.\n\n## 3. Matrices and Cases\n\nThe identity matrix and a piecewise function:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\nThis $f(x)$ is continuous everywhere but not differentiable at $x = 0$, where the slope jumps.\n\n## 4. Multiple Display Equations\n\nThree famous formulas:\n\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\nMass–energy equivalence, Newton's second law, and the Pythagorean theorem.\n\n## 5. Links\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n## 6. Money Context (Not Math)\n\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n\nThe amounts above are currency, not LaTeX — the escaped `\\$1000` shows how to force a literal dollar sign when a renderer might otherwise misinterpret it.",
+  "usage": {
+    "prompt_tokens": 279,
+    "completion_tokens": 6601,
+    "total_tokens": 6880,
+    "cost": 0.0206045,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0206045,
+      "upstream_inference_prompt_cost": 0.00027342,
+      "upstream_inference_completions_cost": 0.02033108
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 6130,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0206045,
+  "actualCost": 0.0206045,
+  "timestamp": "2026-11-08T19:58:54.670Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

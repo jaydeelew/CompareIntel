@@ -116,4 +116,45 @@ test.describe('Source feature detection vs renderer loss', () => {
     expect(lost?.status).toBe('fail')
     expect(lost?.message).toMatch(/lost it/)
   })
+
+  test('leftover visible \\begin{cases} fails even when prompt did not require displayMath', () => {
+    const source = [
+      'Third section with a piecewise function: ',
+      '$f(x) = \\begin{cases}',
+      'x^2, & x \\ge 0 \\\\',
+      '-\\,|x|, & x < 0',
+      '\\end{cases}$',
+    ].join('\n')
+    const leftover = validateRenderedHTML(
+      '<div>Third section with a piecewise function: $f(x) = \\begin{cases} x^2, &amp; x \\ge 0 \\\\ -|x|, &amp; x &lt; 0 \\end{cases}$</div>',
+      { noKatexErrors: true },
+      source
+    )
+    expect(leftover.pass).toBe(false)
+    expect(leftover.status).toBe('fail')
+    expect(leftover.assertions.some(a => /lost it/.test(a.message) && /cases/.test(a.message))).toBe(
+      true
+    )
+
+    const rendered = validateRenderedHTML(
+      '<div><span class="katex-display"><span class="katex"><span class="katex-mathml"><annotation encoding="application/x-tex">f(x)=\\begin{cases}x^2\\end{cases}</annotation></span><span class="katex-html">piecewise</span></span></span></div>',
+      { noKatexErrors: true },
+      source
+    )
+    expect(rendered.pass).toBe(true)
+    expect(rendered.status).toBe('pass')
+    expect(rendered.assertions.some(a => a.status === 'fail')).toBe(false)
+  })
+
+  test('unmatched \\begin{cases} is source-issue, not an unqualified pass', () => {
+    const result = validateRenderedHTML(
+      '<div>raw \\begin{cases} x^2</div>',
+      { noKatexErrors: true },
+      'Here is a broken env: \\begin{cases}\nx^2'
+    )
+    expect(result.status).toBe('source-issue')
+    expect(result.pass).toBe(true)
+    expect(result.assertions.some(a => a.status === 'source-issue')).toBe(true)
+    expect(result.assertions.some(a => a.status === 'fail')).toBe(false)
+  })
 })

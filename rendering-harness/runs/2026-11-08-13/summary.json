@@ -1,0 +1,52 @@
+{
+  "status": "completed",
+  "attemptedCalls": 24,
+  "knownActualCost": 0.0821424451,
+  "unknownCostCalls": 0,
+  "perModelCost": {
+    "openai/gpt-6-luna": 0.0013555,
+    "openai/gpt-5.6-luna": 0.0032596,
+    "z-ai/glm-5.3": 0.0699149951,
+    "x-ai/grok-4.20": 0.00761235
+  },
+  "promptTokens": 8187,
+  "completionTokens": 30421,
+  "reasoningTokensIncludedInCompletion": 21618,
+  "errors": [],
+  "truncated": [
+    "z-ai/glm-5.3/04-mixed-markdown-latex"
+  ],
+  "visibleEmpty": [
+    "z-ai/glm-5.3/04-mixed-markdown-latex"
+  ],
+  "finishReasons": {
+    "stop": 23,
+    "length": 1
+  },
+  "firstCallCST": "2026-11-08T13:57:07.077000-06:00 CST",
+  "lastCallCST": "2026-11-08T14:01:01.383000-06:00 CST",
+  "cumulativeKnownUsd": 0.9817566786,
+  "priorUnknownCharges": 2,
+  "coverage": "Collection only; no new rendering passes",
+  "requestTimeoutSeconds": 600,
+  "actualCostExceededPerRequestEstimate": [
+    {
+      "modelId": "z-ai/glm-5.3",
+      "promptName": "01-math-basics",
+      "preRequestReserve": 0.01440677375,
+      "actualCost": 0.0206045
+    },
+    {
+      "modelId": "z-ai/glm-5.3",
+      "promptName": "04-mixed-markdown-latex",
+      "preRequestReserve": 0.014417520875,
+      "actualCost": 0.02371213
+    },
+    {
+      "modelId": "z-ai/glm-5.3",
+      "promptName": "05-complex-scenarios",
+      "preRequestReserve": 0.014443209124999998,
+      "actualCost": 0.0224658
+    }
+  ]
+}

@@ -20,8 +20,8 @@ import { validateRenderedHTML, type ValidationResult } from './dom-assertions.js
 import {
   estimateRequestCost,
   estimateTokens,
-  preRequestBudgetDecision,
   resolveActualCost,
+  SharedCostGuard,
 } from './budget-guard.js';
 import { droppedNameExpectations, getExpectedFeatures } from './expected-features.js';
 import {
@@ -603,7 +603,15 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
         const failedCount = validation.assertions.filter(a => a.status === 'fail').length;
         const notCoveredCount = validation.assertions.filter(a => a.status === 'not-covered').length;
         const mark =
-          status === 'pass' ? '✓' : status === 'not-covered' ? '○' : status === 'fail' ? '✗' : '△';
+          status === 'pass'
+            ? '✓'
+            : status === 'not-covered'
+              ? '○'
+              : status === 'source-issue'
+                ? '◐'
+                : status === 'fail'
+                  ? '✗'
+                  : '△';
         console.log(
           `  ${mark} Validation: ${status.toUpperCase()}` +
             (emptyVisible ? ' (empty visible, incomplete)' : truncated ? ' (incomplete finishReason, not comprehensive)' : '') +
@@ -768,12 +776,14 @@ function resultStatus(r: TestResult): OverallStatus {
 function reportValidationSummary(results: TestResult[]): void {
   const passed = results.filter(r => resultStatus(r) === 'pass').length
   const notCovered = results.filter(r => resultStatus(r) === 'not-covered').length
+  const sourceIssue = results.filter(r => resultStatus(r) === 'source-issue').length
   const truncated = results.filter(r => resultStatus(r) === 'truncated').length
   const incomplete = results.filter(r => resultStatus(r) === 'incomplete').length
   const failed = results.filter(r => resultStatus(r) === 'fail').length
   console.log(`\nValidation Summary:`)
   console.log(`  ✓ Passed: ${passed}`)
   console.log(`  ○ Not covered (source missing feature): ${notCovered}`)
+  console.log(`  ◐ Source issue (malformed/unsupported math env): ${sourceIssue}`)
   console.log(`  △ Truncated (non-empty, finish length): ${truncated}`)
   console.log(`  △ Incomplete (empty visible / reasoning-only): ${incomplete}`)
   console.log(`  ✗ Failed (renderer loss / error): ${failed}\n`)
@@ -924,6 +934,7 @@ async function generateReviewPage(
     }
     .status-pass { background: #d4edda; color: #155724; }
     .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-source-issue { background: #ffe8cc; color: #9a3412; }
     .status-truncated { background: #e7e3ff; color: #3d348b; }
     .status-incomplete { background: #ede7f6; color: #4a148c; }
     .status-fail { background: #f8d7da; color: #721c24; }
@@ -1222,6 +1233,7 @@ async function main() {
   const browser = await chromium.launch();
   const results: TestResult[] = [];
   let actualTotalCost = 0;
+  const costGuard = new SharedCostGuard(maxUsd);
   
   // Create a single page for all renders (faster than creating new pages each time)
   const page = await browser.newPage();
@@ -1234,17 +1246,24 @@ async function main() {
         console.log(`  Prompt: ${promptName}`);
         
         try {
-          const decision = preRequestBudgetDecision({
-            pricing: pricing.get(model.id),
-            modelId: model.id,
-            promptTokens: estimateTokens(promptText),
-            maxTokens,
-            isThinkingModel: model.is_thinking_model || false,
-            maxUsd,
-            spentUsd: actualTotalCost,
-          });
-          if (decision.action === 'refuse') {
-            console.log(`    ⚠ Skipping: ${decision.reason}`);
+          const modelPricing = pricing.get(model.id);
+          try {
+            const reserve = costGuard.reserve({
+              modelId: model.id,
+              prompt: promptText,
+              completionCap: maxTokens,
+              catalog: modelPricing
+                ? {
+                    prompt: modelPricing.inputCostPerToken,
+                    completion: modelPricing.outputCostPerToken,
+                  }
+                : undefined,
+            });
+            costGuard.gate(reserve);
+          } catch (guardError) {
+            const reason =
+              guardError instanceof Error ? guardError.message : String(guardError);
+            console.log(`    ⚠ Skipping: ${reason}`);
             results.push({
               modelId: model.id,
               modelName: model.name,
@@ -1253,7 +1272,7 @@ async function main() {
               response: '',
               actualCost: 0,
               timestamp: new Date().toISOString(),
-              error: decision.reason,
+              error: reason,
             });
             continue;
           }
@@ -1265,8 +1284,8 @@ async function main() {
             maxTokens,
             pricing
           );
-          
-          actualTotalCost += cost;
+          costGuard.observe(model.id, usage);
+          actualTotalCost = costGuard.actual;
           config.cumulativeCostUsd = actualTotalCost;
           
           const totalTokens = usage?.total_tokens || (usage?.prompt_tokens + usage?.completion_tokens) || 0;
@@ -1302,7 +1321,13 @@ async function main() {
           const failedCount = validation.assertions.filter(a => a.status === 'fail').length;
           const notCoveredCount = validation.assertions.filter(a => a.status === 'not-covered').length;
           const mark =
-            validation.status === 'pass' ? '✓' : validation.status === 'not-covered' ? '○' : '✗';
+            validation.status === 'pass'
+              ? '✓'
+              : validation.status === 'not-covered'
+                ? '○'
+                : validation.status === 'source-issue'
+                  ? '◐'
+                  : '✗';
           console.log(
             `    ${mark} Validation: ${validation.status.toUpperCase()}` +
               (failedCount ? ` (${failedCount} renderer-loss)` : '') +

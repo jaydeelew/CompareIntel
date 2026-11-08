@@ -108,6 +108,13 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
@@ -422,6 +429,13 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
@@ -648,6 +662,13 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
@@ -769,6 +790,13 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
@@ -1079,6 +1107,13 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
@@ -1426,6 +1461,13 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
@@ -1736,6 +1778,13 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
@@ -1795,7 +1844,7 @@
       "actualCost": 0.034005,
       "timestamp": "2026-11-08T19:48:37.692Z",
       "featureCoverage": {
-        "hasDisplayMath": false,
+        "hasDisplayMath": true,
         "hasInlineMath": true,
         "hasCodeBlocks": true,
         "hasTables": true,
@@ -1818,7 +1867,7 @@
             "pass": true,
             "status": "pass",
             "expected": "inline math present",
-            "actual": "24 inline math expressions",
+            "actual": "25 inline math expressions",
             "message": "inline math assertion passed"
           },
           {
@@ -1848,10 +1897,17 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
-          "hasDisplayMath": false,
+          "hasDisplayMath": true,
           "hasInlineMath": true,
           "hasCodeBlocks": true,
           "hasTables": true,
@@ -2083,6 +2139,13 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
@@ -2393,6 +2456,13 @@
             "expected": "no KaTeX errors",
             "actual": "no errors",
             "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
           }
         ],
         "coverage": {
@@ -2917,5 +2987,5 @@
   ],
   "historyRecords": 24,
   "uniqueCells": 24,
-  "freshRendered": "2026-11-08T19:56:30.650Z"
+  "freshRendered": "2026-11-08T20:07:49.047Z"
 }

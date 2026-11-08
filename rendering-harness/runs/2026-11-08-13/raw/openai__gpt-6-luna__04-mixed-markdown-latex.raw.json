@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794167836-Wmq96RZV14iPIfFXTTRW",
+  "object": "chat.completion",
+  "created": 1794167836,
+  "model": "openai/gpt-6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Exercise 1\n\nGiven \\(f(x)=x^2+2x+1\\):\n\n1. **Derivative**\n   \\[\n   f'(x)=2x+2\n   \\]\n\n2. **Indefinite integral**\n   \\[\n   \\int f(x)\\,dx=\\frac{x^3}{3}+x^2+x+C\n   \\]\n\n## Linear Algebra\n\nFor\n\\[\nA=\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix},\n\\]\nthe determinant and trace are\n\\[\n\\det(A)=ad-bc,\n\\qquad\n\\operatorname{tr}(A)=a+d.\n\\]\n\nIf \\(ad-bc\\ne 0\\), then \\(A\\) is invertible and\n\\[\nA^{-1}\n=\\frac{1}{ad-bc}\n\\begin{pmatrix}d&-b\\\\-c&a\\end{pmatrix}.\n\\]\n\n## Real-World Context\n\n> **Note:** In economics, the cost function \\(C(q)=100+5q\\) represents a fixed cost of \\(100\\) and a variable cost of \\(5\\) per unit.\n\nFor \\(q=10\\),\n\\[\nC(10)=100+5(10)=150.\n\\]\nSo the total cost is **\\$150**.",
+        "refusal": null,
+        "reasoning": "**Considering response generation**\n\nI’m thinking about how to handle the request — it sounds like they want a response that includes both markdown and LaTeX formatting. I should clarify any conflicts around currency, especially with dollar signs in the inline math. Producing a polished solution is important, and I’ll need to ensure the integral and any matrix representations are correct, considering real-world context. Alright, I’ll make sure to incorporate both markdown and LaTeX accurately!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Considering response generation**\n\nI’m thinking about how to handle the request — it sounds like they want a response that includes both markdown and LaTeX formatting. I should clarify any conflicts around currency, especially with dollar signs in the inline math. Producing a polished solution is important, and I’ll need to ensure the integral and any matrix representations are correct, considering real-world context. Alright, I’ll make sure to incorporate both markdown and LaTeX accurately!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NQgqoZJ4NIuSr8WoC-YQxNUmGiI-qV1I5jrzpXM9F3909YTm_l3oYA47Xd0N44FyJ3MW6GG93dbnN9eBG_KJYEjwqjP3JIXHIrRrvXV9OIf4wRyGBYzpr3FsjuFb8YMJ0IT1W4kul3zwNER_RjaX-kPYp-yNc-y2owrZ0QJ1q34U3zeHrlV4O49zXwd4d8JLzA5Tc0HvdmrriZCDAyZdvOKUM3hES73hhstPhED81Z6AbBjGvK4Zl9YDcncTco_Ab7jf_H9ztQaBIi9bLoE2-vp-HPgfKPQODI2pHnZVjrhudXV9DtML97cUd1ia_x9dLouvTdpDnsJiUk7nP_QYGY-p7mrpU6m-Ty-hyzRz73LbqANgRtc9vW8xILE-VON_bqYG4-1AmKazuNTzfphVUfgfR_Cp7AqyRwp7pbM_EVQ15FgBAezEu7o5M684Mh8a3wKs8HCP_Mw78l-SXinVeRdGuM7OyAh097glefO7qALPMksVX4OHXy7BeKN1Rp_AO3IFowVDVq4nU9ES0dO3cmugdea6GBqyiYpoDleFXKzZQow7NHBP0Qdwu4yQNFEE79kGfMj8ZkpYAyMScDOcCjlIRj28DbIvMITgIWIHgdha9dgkIuN9E0xad8Xr3AOI7kKdgE5wgpWiQ18jOhJrLZOv9iZAAFNScjhw4MOO9q4gZoyy5SIE6J_cmjplEXfhklcExk9LSkC8xEK6WiHDqOH829lQb_CpvxwwslwHq6HDqbgMK4B49u5HT69a_Fz4tz4DKt6k0wm1bcjd_k1zsFFfol4DUjHA-jaQRl0bwueqlOxYTlQ26oMUGyhORIuEuBjh44aeUYtmw7BBAFIoH4CAsIvd7euCKq2UntKiP3WYgrROdCn6VOg70YCQ1WoL9EoExRsBNo7W7eUtlETqqpMK6AOPt5JelABgBVMXqikDQ-lZtBKOhc2kzGphleeYP_nlMqF2RpsJi85_83CHMvfKYxSosp6-6Lx-VwgR7yCcvfRM-Gaz_Eo3OS9dFzHGnQUv5N-XdBgRXG7G1qX6aDOpzFjHTCkAtt8dJT8HDtPxi0x1eBHX1HHPrIG7hz1DD22vJ9kN8mRpEOWnOxbZQ_UypIqph5p8Oc_qbKMNPfGWS7Y1tK3aRa-4NzWzWk85bs4N8uN8N2dON96zvjp-0M9cwayO-O_dST1w6JUF61IkRvGSt-x_e0odi0Px_oAXSE9xLwQCop_Ahi25qcCfc_PI1VZ3Q2KyO3HTjHl3lFHjx_k3lKQNisTOqRym2YWme1p7_ikPyaMAydc8TZSdSgfmmRwEF4LPWySF2-zx8tKRlFrpqyaIy-9pwnv_h9lpT8mdowj085cEyqiWCiLLqGXvgRmnfCh_bOIgSofZ2eSL3t3kNFcEm2keMkkoDyGK6yb9_aNYZzYnaM40RYyv0z6CrMptTsFeIzuOQ8wBpK-ONO5aYmC85eA4w0PqDOTJchP1FZt4lLhmGkps0WLAUqLzRQF04-vrXl3zQg3nLH2oHe7cdZaD3JnqJK2KIHo6-0Ab7spw6KrvoSBJ4Z9vnQgwhJobyKaupJ2BE-3NCsjiLJlYbTrJfNJWGFEglEDiTjGHa4Sy9tPTQk3kK8oW_GVTec1vSCULt65PhhUwPAuU3sS5o5PrRncYdruVlQ7C8F8oe2_H1WZmbfDXdLyhZG2RoDSPxjhyFR5U4ztTlh3vZnR86YiAUjGfxbKjLUHNqDBSKtKcR7amuT-xJZFsPLHZu8p4nNoaNnrSkPDQC7t3_RD6CGjxEC-du_HYOyB13fdoK_H0376NewWijwMNhLmRkAGonqiZi8bd27fdnDTvmB_PV64Bsg41Sj4h52twnCZjQBN1C2QalGMlujY9K9IjaahwLCDGTb8DDzlcD_HutUvH-HPwyyf0esv8-HaB0rzkEmyqnxuLlAAhcYWF9nyhHUuiCexa5zuNqT2w5vDcK6PCR0t_4wok8fGpIO5e83YLzTXVwwn7DX9DrGchqh9x5n_kIlE2ZiKSToLKN2rEq6GRZg16U8WSFXzvGe0BsqXE791ziFvFygvgT9bW6mXddhUqhfris3A3LzdNQTl7dFlzpxoT2n8Vfv6uZSLkpHimQ6GiIm1J6_regj3E5eVByPnWCL2JD0O6rzO59LEuvPWvXcZQUKrCfISPrBjUurauxKeOwZELAZGTCUgKH5Arn6LwuJBPsU1zPB1IrofnspMb0OXvQDlIEzrjoETl6fPrWkFgcNJ6_TJgKQHwaoZdbgu5b65xn5yCq1Qn_4h7MAjuJYlzqZ9JVY-WixA4zby-1Lv-8Y8Boy6tzpW0WgjdRXutGmr-ZF2rLwAkqROYhUNhtJ1LdQE-I6Dzl8y0gPw6gyHgQ6ea2XFrcRk_BX4zhwOH0dUx7sdH2VpaVkivtBMLzd3aA5amMsSb5JZ3GdybiW6uNWAk-_d3RbU9d5yKINYUwWjoDIEeR6vIHtGQe8qdD-IZqxkGHVDo1CV9TuAwDauEO_X0SjTCHbM8qRUEqMppO_M1UL9FaAG30Qy_rNhI8Oqa-B8yxBwwATv6CkHweSPzkoOHOWOqkUlAxR2U9wPgvnEU7cZzOVBn_dPYZ4=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LWx1bmEtMjAyNjA5MjJ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0adb9cbeab0a31ba016af0d41e344887d185574e4c2e8fafa4",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 310,
+    "completion_tokens": 346,
+    "total_tokens": 656,
+    "cost": 0.000204,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000204,
+      "upstream_inference_prompt_cost": 0.000031,
+      "upstream_inference_completions_cost": 0.000173
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 62,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

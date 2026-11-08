@@ -5,9 +5,13 @@
  */
 
 import { JSDOM } from 'jsdom'
-import { detectSourceFeatures, type SourceFeatures } from './source-features.js'
+import {
+  detectSourceFeatures,
+  explicitMathEnvsOutsideCode,
+  type SourceFeatures,
+} from './source-features.js'
 
-export type AssertionStatus = 'pass' | 'fail' | 'not-covered'
+export type AssertionStatus = 'pass' | 'fail' | 'not-covered' | 'source-issue'
 
 export interface AssertionResult {
   pass: boolean
@@ -49,6 +53,16 @@ export interface ExpectedFeatures {
   currency?: boolean
   noKatexErrors?: boolean
   safeLinksOnly?: boolean
+}
+
+/** Visible leftover `\begin{env}` after stripping MathML, annotations, and code. */
+function visibleUnrenderedMathEnvs(container: Element, envNames: string[]): string[] {
+  const unique = [...new Set(envNames)]
+  if (unique.length === 0) return []
+  const clone = container.cloneNode(true) as Element
+  clone.querySelectorAll('.katex-mathml, pre, code, annotation').forEach(node => node.remove())
+  const text = clone.textContent || ''
+  return unique.filter(name => text.includes(`\\begin{${name}}`))
 }
 
 function presentAssertion(
@@ -238,9 +252,51 @@ export function validateRenderedHTML(
     block.textContent?.includes('$')
   )
 
+  // Always-on: leftover visible `\begin{env}` is a user-visible defect even when
+  // the prompt's requiredFeatures dropped displayMath (GPT-5 05 cases).
+  if (sourceMarkdown) {
+    const envs = explicitMathEnvsOutsideCode(sourceMarkdown)
+    const leftover = visibleUnrenderedMathEnvs(container, envs.matched)
+    if (envs.matched.length > 0) {
+      if (leftover.length > 0) {
+        assertions.push({
+          pass: false,
+          status: 'fail',
+          expected: 'explicit math environments rendered as KaTeX',
+          actual: `visible raw \\begin{${leftover.join(',')}}`,
+          message: `Source included explicit math environment but rendered DOM lost it: ${leftover.join(', ')}`,
+        })
+      } else {
+        assertions.push({
+          pass: true,
+          status: 'pass',
+          expected: 'explicit math environments rendered as KaTeX',
+          actual: 'environments rendered (no visible raw \\begin)',
+          message: 'explicit math environments rendered',
+        })
+      }
+    }
+    if (envs.unmatchedOpens.length > 0) {
+      assertions.push({
+        pass: true,
+        status: 'source-issue',
+        expected: 'well-formed \\begin{env}...\\end{env}',
+        actual: `unmatched \\begin{${envs.unmatchedOpens.join(',')}} in source`,
+        message: `Source math environment is malformed/unsupported (unmatched begin): ${envs.unmatchedOpens.join(', ')}`,
+      })
+    }
+  }
+
   const hasFail = assertions.some(a => a.status === 'fail')
+  const hasSourceIssue = assertions.some(a => a.status === 'source-issue')
   const hasNotCovered = assertions.some(a => a.status === 'not-covered')
-  const status: AssertionStatus = hasFail ? 'fail' : hasNotCovered ? 'not-covered' : 'pass'
+  const status: AssertionStatus = hasFail
+    ? 'fail'
+    : hasSourceIssue
+      ? 'source-issue'
+      : hasNotCovered
+        ? 'not-covered'
+        : 'pass'
 
   return {
     pass: !hasFail,

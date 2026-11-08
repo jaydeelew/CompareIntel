@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794167859-BzkuilLe4BcuJXStpa50",
+  "object": "chat.completion",
+  "created": 1794167859,
+  "model": "openai/gpt-5.6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "**Ensuring code blocks**\n\nI need to fulfill the user's request to generate a response with fenced code blocks. It seems they want the content to go within these fences exactly, so I should comply with that. I’ll make sure to format it properly! It’s crucial that I follow the user’s instructions for clarity and consistency. This allows for better readability, and I want the response to be neat and clear for them.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Ensuring code blocks**\n\nI need to fulfill the user's request to generate a response with fenced code blocks. It seems they want the content to go within these fences exactly, so I should comply with that. I’ll make sure to format it properly! It’s crucial that I follow the user’s instructions for clarity and consistency. This allows for better readability, and I want the response to be neat and clear for them.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NQ1CmnLXkiHFZPwzUXYM5lXyshdgR8U0OQNQPIzIcdPxaCFRDK-n6Z4Y6ZH7Rvgwb-z_E1rXxALiZGSGM-9mGz-BzjLkyFa75jTnanpSciLhQ5sOdHrThRWcqJZK4q-NBWQuVe8BNT0mJ-rr9LR9lFn9ZZ-p6JdJ1diY5Y_-6LlzFfEw6KAJYVcckQVwkRvTisdlZCDokwU-wROVQGG6ZMjHFkRAF-EJOfVBRPSmBNt9MwzjiwdlXdg1H4ZgDdLiyoy1_E4WCZz3inb0L2n9acOWlqWkAxRDWWF4SRjM11sjxnbZZm0Y6u0yFwdv-j_NrknqZiDSpMoiIneuwmveRuYTRM03eqUoVYQ8L0SWGcSSE6ZM7Bm8iIgBJ4XOPF5eCoXO-QHvNUoGLtg_k9wDH_G3vNWjFhcTCXu9Bcn4Rg7ngTVTQlCXaZaojgP07Rputfxsn5clUMk-RHWUIgDhmE0zrzuzbhaoQt_XOT-02RA5Oc0W1NGMGgcHcAmjmPS3PEWB_JL0hmW1gHWJGvohhpx1IB7lbZXL7gbf_7ZuHY5yHTucxedIJwN7VpoKh2eDlpwwvQjgXdTsJ_4ZmSG6Dz9YsDR1SOagqKezgVlxTs9Oqq627HT1ipnfDCKRWDVFXeskXTK06oOwLxT7jlyGzxXl-_eTZ5k47Y9t2Eh0GWATdXt2q8Pp05LAe-YgioC7sdPBw1n1-JpFmMch4_WODrPsPBv0DHQDKmzAuN1ZJxGhYN8fq2_RjYnEDth7TY6zP4Gayc0hSV3HpbvZbE4PiFeegRUdrypNZfBHj6ZXGHXSkSjAkYqmdKv41MF88TVFoSAXNVgnZdc8Nf4w84LkeCU8FwDdnqsxa3wB4JdlhpaIbRXd2Ehp_KKigyhOpMEggCpVs57IYcVcGPxQkjs4Hi6-roJb7K0kO6cbjE72Vzlxl7tTEZm8qcA1P4zHpxU5SlTLSA-vITnUbrGlqegBYLKfcHJ1STrzOcRPXGyWM1aaBDDru-RcJ6BM0QcckTu6qXYFlNXstQcuUnAvIjulsrl2fI8Rxfxikk54Rp_T1bpT2O-qe8wV9JY4Ppfnya2zHl70XHw68ibBLfcJrnn-4eibm_vF6ubFKlkghB9dwuwmGG2HSeLkHoHV-N0FBn_JdrNMZQxEGoDqtY37TEDfwl9HZQJ3vDIQf2x8XmLHMAm6kV8HBqq26FReI36Sph1lQ1-i7vDEtM-0mEi_8DEiyZIHwvIAM5vvacNsVbDmLhs4fHrFsaEQ-_VCwgG9-zQTTnRMNogtwIJzMv3CCVV-dAXagf4uogQIDbvFg7KUZw7RVXryAEc_tWr4xJ7HVp4PZiFWNEb6yBHGuok6N8kDw_Ujj9jpsR3__lrtx4Iw8Dzmt87rStKXPuMscHVeWomLayc_iRQOP31fzxeOts9tat3-5gFjA1RDQOoQhxw7k5wfAbe0PKB2yNd_gyw4sbnMlrO1tFFWgXq_oKoxSgFA8Pdn3C0vB6isKc1dNoWmIPOZzQcDFB5iej5kFfTHYTSgyvog2_VnmPOuQGAflaFgm4t-crZgBTyOCa_S0KP3Zr-Nmhmgh45EK3AZQub5KusNNr_JVR5njYyN6crwMF61lFaMq7SPBNuX7Moi4bDVDHH8VT7HClMlgTGruP7PX9klpmr8-gT1LeW5Ss0RYNT3Yc26ca2Xxv6Wzoqvi5exFWPRzEgRlyyK8O4bx1QCSDzZiaZ6DHH6jRhTZKyRfwNZ3kaxWBOKBETfm2-laegcF9mbhpCWouG5upRF7iSKeQKRyUuVkIBO1CVX3aMevQz0bq7ym6JJ1K2xBNZuIgdHy5iiTMM3JzzCgKBdGPelJ22kdZW-weZF7p_AGxus9p6IWLsK93G79fpj225nINPXEZuLAi4UDrVort_edB-bUdCGUwjONIoHSFruGAX_HOw6Ny6y0hDnPnk0hbFyRsfeNaxv5nTZE1RIrSCXGSwMh4ubEbXujoTJp22uQMmD58ZUtxkNu_EIKZErHyclo0VTO2VrUg_J2vgLZ_E9uAhzg-4n0EV42t60aRsKD4MR8mDtRLvGSAEvBp25BjQuIQCRT3d8vCyrsZ3kl2R48uPFuJsQKL3VfF9UvN18MNxMUVRvAOe-g==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
+            "format": "openai-responses-v1",
+            "id": "rs_0b70065237e53432016af0d43414ac87d18acd111e4462cfc1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 241,
+    "completion_tokens": 254,
+    "total_tokens": 495,
+    "cost": 0.000353,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000353,
+      "upstream_inference_prompt_cost": 0.0000482,
+      "upstream_inference_completions_cost": 0.0003048
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 28,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

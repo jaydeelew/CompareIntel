@@ -14,6 +14,12 @@ export {
   preserveMathLineBreaks,
   sortMathDelimiters,
   isInsideRenderedMathHtml,
+  isInsideOuterDisplayMath,
+  EXPLICIT_MATH_ENV_NAMES,
+  EXPLICIT_MATH_ENV_RE,
+  findMatchedExplicitMathEnvs,
+  unmatchedExplicitMathEnvOpens,
+  wrappingSingleDollarSpan,
   type MathRendererConfig,
 } from './mathRenderer'
 export { markBlockquotes, renderBlockquoteMarkers } from './blockquotes'
