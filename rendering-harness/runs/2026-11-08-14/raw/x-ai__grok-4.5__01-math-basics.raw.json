@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169013-RpQFBIprtzAXXBcWWAop",
+  "object": "chat.completion",
+  "created": 1794169013,
+  "model": "x-ai/grok-4.5",
+  "provider": "xAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "### Math Basics Demonstration\n\nThe quadratic formula provides the solutions to a quadratic equation of the form \\(ax^2 + bx + c = 0\\). In inline notation, it is written as $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$, where the discriminant \\(b^2 - 4ac\\) determines the nature of the roots.\n\nHere is a system of linear equations displayed with alignment:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nThe identity matrix and a piecewise function can be represented as:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\nSome fundamental equations in physics and geometry include:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).",
+        "refusal": null,
+        "reasoning": "I will generate a response demonstrating inline math, aligned equations, matrices, cases, multiple equations, links, and money context.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "I will generate a response demonstrating inline math, aligned equations, matrices, cases, multiple equations, links, and money context.",
+            "format": "xai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "y67I220R6pfVMdHg8B6i8Lq1WDSihAkjL7FHwWcsRYka+AOIADwki6/sSweuEpq2yC/7rd8eGiV7gOwaqAmQGKy9CsTV10yQLuER6rqZ9x/g3IMikm0GzxZicS/2nkYzstbjEt3QRAWgPfWTFJedSPuPVzd3phJkONasr8HrJTzDMfInyxJXV3m6oGveRl4cxyj5g/Fs/9KIr95tpN0CiaS3s+kVS7HsXrtnd9e27EL/Zbw2ZvMlbpdDt0pgmyLBYu5FTlX8EnZUnmgEdUejzCjdMgsZJWYjcQHy+vS5QKIyTHAUevlQDKLrmy1UKOn3HbbjXDvMNvsL+hQtzeDK2sxFLaWQ5W9oj7PLwQq1OtLT/Ch/v8hVD6JsCxM5owJ+1f48eZLSd+QMyeNmabFN4hRdF54vBPF2cEgEdJzWrd11AIKpwEAIgnHTDaVW5i3iKYx+nuQwG0BDw/OxYc/+lhDQCBjzqgPjbZg81RTPs8o75geNIWQ3Jcxe1PDCDEXB+pud6ikx2wHCOXgXQZHFDSvLskjrN7r5UawiHsqWjMqsbOBdbIVv2tuP1r2A8xaqsWvGylT1x1QpJAqVDptBBc97FoSeEMUlx7JpDE18FnwcKjdqIm1s944P1SHbLan3fbpWsKw0jEMNT1hNmPYFD5Z6Srx8fSyApaTbuLgTqArp5mEGsSK8/OGDBo9LG36nZoXXEWoD2ZZnDXHT9UHq/Bk+UUYgGQqDG84qolTIFCrB2eyO9+MPxCVkxO+ozMSxYqY78LkpYG448op9YI54HyivjLV/IVqhp/UtrTdIRkUD2zr0UivbK0YC9SE.eyJlbmRwb2ludF9zbHVnIjoieC1haS9ncm9rLTQuNS0yMDI2MDcwOHx4YWkifQ",
+            "format": "xai-responses-v1",
+            "id": "rs_f5bc446c-303b-92b8-903d-12beb939e516",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 471,
+    "completion_tokens": 586,
+    "total_tokens": 1057,
+    "cost": 0.0042404,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 128,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0042404,
+      "upstream_inference_prompt_cost": 0.0007244,
+      "upstream_inference_completions_cost": 0.003516
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 293,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

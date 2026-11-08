@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3.8-flash",
+  "modelName": "Google: Gemini 3.8 Flash",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here is a response addressing each scenario, followed by an additional suite of advanced stress-test edge cases designed for Markdown and $\\LaTeX$ parsers.\n\n---\n\n### Verification and Rendering of Provided Scenarios\n\n#### Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n#### Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n#### Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n#### Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n#### Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n---\n\n### Additional Challenging Edge Cases\n\nBelow are five advanced scenarios that commonly stress parsers combining CommonMark/GFM and MathJax/KaTeX:\n\n#### Edge Case A: Table Pipes vs. Absolute Values and Sets\n*Challenge: Table column delimiters (`|`) colliding with set-builder notation or matrix determinants.*\n\n| Expression | Markdown-Safe LaTeX | Output |\n| :--- | :--- | :--- |\n| Set Builder | `{x \\in \\mathbb{R} \\mid x > 0}` | $\\{x \\in \\mathbb{R} \\mid x > 0\\}$ |\n| Matrix Determinant | `\\det(A) = \\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}` | $\\det(A) = \\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}$ |\n| Norm / Abs | `\\|x\\| \\le 1 \\implies \\lvert x \\rvert \\le 1` | $\\|x\\| \\le 1 \\implies \\lvert x \\rvert \\le 1$ |\n\n---\n\n#### Edge Case B: Subscripts and Underscores vs. Markdown Italics\n*Challenge: Math variables with underscores (e.g., $x_1, x_2, x_3$) erroneously triggering `<em>` tags.*\n\nLet $x_1, x_2, \\dots, x_n$ be coordinates such that:\n$$S = \\sum_{i=1}^{n} x_i^2 - 2 \\alpha_{max} \\cdot x_{i} \\cdot y_{i}$$\nIf we write $a_b + c_d + e_f$, no text should be *italicized* by markdown engine underscores.\n\n---\n\n#### Edge Case C: Currency Directly Adjacent to Inline Math\n*Challenge: Alternating currency symbols and mathematical expressions on the same line without breaking math delimiters.*\n\nAn asset priced at $100 drops by $x\\%$ where $x = 15$. The new value is $P = 100 \\times (1 - 0.15) = \\$85$. If purchased with a fee of $5, the total cost is $P + 5 = \\$90$.\n\n---\n\n#### Edge Case D: Display Math Nested in Multi-Level Lists and Blockquotes\n*Challenge: Indented display math within complex container blocks.*\n\n> ### Key Takeaways\n> 1. Normal distributions satisfy:\n>    * Probability density function:\n>      $$\\mathcal{N}(x \\mid \\mu, \\sigma^2) = \\frac{1}{\\sqrt{2\\pi\\sigma^2}} \\exp\\left(-\\frac{(x - \\mu)^2}{2\\sigma^2}\\right)$$\n>    * Standardized variable: $Z = \\frac{X - \\mu}{\\sigma} \\sim \\mathcal{N}(0, 1)$\n\n---\n\n#### Edge Case E: Escaped Characters, Backticks, and Inline Code Blocks\n*Challenge: Verbatim backticks containing dollar signs and $\\LaTeX$ commands.*\n\n* Raw syntax: `$x = \\text{`ls -la`}$` (should not parse as math across backtick boundaries).\n* Inline code literal: `$VAR = $HOME` vs inline math: $\\$VAR = \\$HOME$.\n* Escaped braces: evaluate $f(\\{x\\}) \\subseteq \\{y \\in \\mathbb{R} : y \\ge 0\\}$.",
+  "usage": {
+    "prompt_tokens": 446,
+    "completion_tokens": 1899,
+    "total_tokens": 2345,
+    "cost": 0.00745575,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00745575,
+      "upstream_inference_prompt_cost": 0.0003345,
+      "upstream_inference_completions_cost": 0.00712125
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 678,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00745575,
+  "actualCost": 0.00745575,
+  "timestamp": "2026-11-08T20:16:14.190Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

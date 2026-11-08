@@ -1,0 +1,60 @@
+{
+  "id": "gen-1794168891-FzDRf3iyBwqqUKTkTsGo",
+  "object": "chat.completion",
+  "created": 1794168891,
+  "model": "google/gemini-3.6-flash",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is the rendered markdown output matching all the elements from your test prompt:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+        "refusal": null,
+        "reasoning": "**Analyzing User Prompt**\n\nI'm currently examining the user's request, specifically focusing on the \"Test Prompt: Markdown Formatting\" section. My primary task is to identify and process the various Markdown elements detailed within it, such as headers, text formatting, lists, tables, and blockquotes, for subsequent use.\n\n**Processing Markdown Structures**\n\nI'm actively evaluating how best to represent the Markdown elements you've detailed. My current focus is on ensuring a faithful demonstration of headers, text styling, nested lists, tables, and blockquotes, aiming to reproduce them accurately in my output.\n\n**Applying Markdown Constructs**\n\nI'm now applying the specific Markdown elements you've outlined, creating the H2, H3, and H4 headers. I'm also integrating bold, italic, and bold-italic text, alongside nested unordered and ordered lists, and beginning work on the table structure.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Analyzing User Prompt**\n\nI'm currently examining the user's request, specifically focusing on the \"Test Prompt: Markdown Formatting\" section. My primary task is to identify and process the various Markdown elements detailed within it, such as headers, text formatting, lists, tables, and blockquotes, for subsequent use.\n\n**Processing Markdown Structures**\n\nI'm actively evaluating how best to represent the Markdown elements you've detailed. My current focus is on ensuring a faithful demonstration of headers, text styling, nested lists, tables, and blockquotes, aiming to reproduce them accurately in my output.\n\n**Applying Markdown Constructs**\n\nI'm now applying the specific Markdown elements you've outlined, creating the H2, H3, and H4 headers. I'm also integrating bold, italic, and bold-italic text, alongside nested unordered and ordered lists, and beginning work on the table structure.\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "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",
+            "format": "google-gemini-v1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 200,
+    "completion_tokens": 913,
+    "total_tokens": 1113,
+    "cost": 0.00357375,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00357375,
+      "upstream_inference_prompt_cost": 0.00015,
+      "upstream_inference_completions_cost": 0.00342375
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 713,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

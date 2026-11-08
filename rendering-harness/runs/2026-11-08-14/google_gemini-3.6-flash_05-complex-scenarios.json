@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3.6-flash",
+  "modelName": "Google: Gemini 3.6 Flash",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here is the step-by-step processing, validation, and rendering analysis for each scenario in your test prompt.\n\n---\n\n## Scenario 1: Math in Lists with Formatting\n\n### Verification & Rendered Output\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5\\text{ units}$\n\n### Formatting Edge Case Analysis\n* **Nested List Indentation:** The sub-bullets preserve `2-space` or `4-space` markdown list indentation correctly while parsing inline math blocks.\n* **Inline Math inside Bold/Italics:** Math blocks (`$...$`) sit adjacent to bold (`**...**`) and italicized (`*...*`) text tags without causing delimiter collisions.\n\n---\n\n## Scenario 2: Tables with Math\n\n### Rendered Table\n\n| Formula | LaTeX | Result | Derivation / Notes |\n| :--- | :--- | :--- | :--- |\n| **Quadratic** | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ | Derived via completing the square |\n| **Sum** | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ | Triangular number sequence |\n| **Product** | $\\prod_{i=1}^{n} i$ | $n!$ | Definition of factorial |\n\n### Formatting Edge Case Analysis\n* **Pipe (`|`) Collision Avoidance:** If LaTeX formulas contain vertical bars (e.g., absolute values $|x|$ or conditional probability $P(A|B)$), escaping them as `\\|` or `\\mid` prevents Markdown table column breaking.\n* **Fraction and Symbol Scaling:** Inline fractions (`\\frac{}{}`) render cleanly inside standard table row height constraints.\n\n---\n\n## Scenario 3: Code and Math Mixed\n\n### Code Execution Output\n\n```python\nimport math\n\ndef circle_area(r: float) -> float:\n    \"\"\"Calculate area of circle given radius r.\"\"\"\n    # Formula: A = πr²\n    return math.pi * r**2\n\n# Execution\nr = 5\narea = circle_area(r)\nprint(f\"Radius r = {r} => Area: {area:.4f}\")\n# Output: Radius r = 5 => Area: 78.5398\n```\n\n### Mathematical Equivalent\nThe mathematical formula is:\n$$A = \\pi r^2$$\n\nFor $r = 5$:\n$$A = \\pi \\times 5^2 = 25\\pi \\approx 78.5398$$\n\n### Formatting Edge Case Analysis\n* **Code Block Isolation:** Comments containing unicode math symbols (`# Formula: A = πr²`) inside code blocks (`````python ... `````) remain unparsed as Markdown or LaTeX, avoiding rendering side-effects.\n\n---\n\n## Scenario 4: Horizontal Rules\n\nFirst section: Setting up the domain and boundary conditions.\n\n---\n\nSecond section with math: \n$$\\int_{0}^{1} x \\, dx = \\left[ \\frac{x^2}{2} \\right]_{0}^{1} = \\frac{1^2}{2} - \\frac{0^2}{2} = \\frac{1}{2}$$\n\n---\n\nThird section: Verification completed.\n\n### Formatting Edge Case Analysis\n* **Horizontal Rule Delimiters (`---`):** Placed with empty lines above and below to prevent Markdown parsers from interpreting the preceding line as a Setext-style Level 2 Header (`<h2>`).\n\n---\n\n## Scenario 5: Multiple Dollar Signs (Currency vs. Math)\n\n### Disambiguation Summary\n\n1. **Currency (Literal Dollar Signs):**\n   * Computer: **\\$1,200**\n   * Monitor: **\\$300**\n   * Keyboard: **\\$50**\n   * Mouse: **\\$25**\n   * **Total:** $\\$1,200 + \\$300 + \\$50 + \\$25 = \\$1,575$\n\n2. **LaTeX Math Delimiters:**\n   * Function definition: $f(x) = x^2$\n   * Evaluation at $x = 5$: $f(5) = 5^2 = 25$\n\n### Formatting Edge Case Analysis\n* **Parsing Currency vs. Math:** Standard markdown engines distinguish currency from inline math because currency figures usually have a digit immediately following the `$` (e.g., `$1,200`), whereas LaTeX inline math starts with a non-digit or symbol and has a matching closing `$` delimiter without trailing whitespace before the end delimiter.",
+  "usage": {
+    "prompt_tokens": 446,
+    "completion_tokens": 1805,
+    "total_tokens": 2251,
+    "cost": 0.00710325,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00710325,
+      "upstream_inference_prompt_cost": 0.0003345,
+      "upstream_inference_completions_cost": 0.00676875
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 716,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00710325,
+  "actualCost": 0.00710325,
+  "timestamp": "2026-11-08T20:15:28.236Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169008-vSnJOIbUHG1e8sk1n2Yi",
+  "object": "chat.completion",
+  "created": 1794169008,
+  "model": "openai/gpt-6.1-terra",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Delimiter Variants\n\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x\\,dx = \\frac{1}{2}$$\n     And it evaluates to 0.5.\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "**Generating response variants**\n\nI think the user wants to generate response variants that accurately replicate their content with the correct formats and code. It’s important to provide the exact variants while preserving the syntax, maybe even rewriting things just as the user provided. There's a concern about displaying $$ inline versus ensuring it matches the exact format the user uses. I’ll focus on reproducing their content faithfully to meet their expectations.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Generating response variants**\n\nI think the user wants to generate response variants that accurately replicate their content with the correct formats and code. It’s important to provide the exact variants while preserving the syntax, maybe even rewriting things just as the user provided. There's a concern about displaying $$ inline versus ensuring it matches the exact format the user uses. I’ll focus on reproducing their content faithfully to meet their expectations.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NizcPioFcbQ0gncnaizvmrGucu9QgYkd4pmODXwnyZt9dMShWeTJ56cuweiVp1PIiME5p9ppRPnQ7GbjF93pN6IfCg_WqJMGO4M90n4_ekQnk-Y_XUsAwXhn0xrB14tDDVzamOhPXwqkowel9e5hqja2SwRtlMkNv9ODyLtoz0U95-zb1LZfzWS7ipmfTTTqUzNzOOyz862xw94wayhULGVZQs4pKuSU8yobCZkj6a3MxvyPAGjcrqRkKZIavO9gMvXFhHeqXFCBa6jakic1fyxDDuzr2mNchN3s81sUVPh4Sfc-pxMW5auZiHEsK-_2oYsQtB7lk368MT8GNr75wZ7BCaA_ZmN9yvt2g089vlEsD161z-pDRaFUeSIBjCra2WqGN1t5KgDEgotumbNIXNdzewYBVfRh5PUMFTQ2U8_g29h6cevni2an6s-T3dmzE5F4hV2w8pTk19_nIByzMgRyZYYgUIt2wZ4LWotJLX_fhpDzTdYw18lk9fhYpAhuWdJMj_F4BiqEbGIapPcZ3W91HW8lGyS_ORTZyuauXVjqXynuypNfyUQ8ScZocvKoOF22XHk10ofHYk445dNXR8cQup4yaJrSlgYr5wBb-RUeNdVIYKRQTzlIWRgXWRwKo7YvwgPkm2By7DMzGkJ1J2_c687HRj61HQGf9tB9yAwE_rrWwg2A-259BTXIg4x0F-_99nwMlZbxM1SUFLA_qTm1v00hLA84IScDx5zVJ5-8HZS5N1DW7R78cRglh3dDzwf3GpBbsgYwaPyvIYqd2A80g2kE9xMYpu9E35j6e9TIp02CoZyjp15ub8YpsczGAJiDJ2t6dW8D0AszaSXec2RS9YpfbuTr3Edf3h_-v8VolF6YYSxpxY8VR6csp7wuRzOeCbrGoGf0IQ1O_u1hRlB6hqPA_of5X4GithxLbF-KWE8vpwbBL3KLHpAbtEtL97O4g4Spwil0RZ2X5ZtuW3toxlmGA3y1vp1c2dmk98SCNrwOXrnmiqtbO2eUqYbQzvQf49zRXzpxkM_-PY3Z5IH2DoDe0V5zxdRdsrAuq5lKrgDK2ebOTWzHUqKicARk3zHQIeNGk5LEKH2FMyJns-3zu3qZmWDglrVQ_hLHaHETML_mA9pP1cb6KCT03L1ybSZXB7XFdKeYE6GwssqeHF_7r9qVRnFFQNxuaHU7bSFfAjFL_n92RYg4yG8wxciASgIGk8c3N0QTG-n2rV6ZRHL3FeakY04jtXQb4rZn6zvrInOzfOp-TlvShUBjf5otanqnsMks3C8FOM3l3sKB1W8RR4gUOs6dDZm-MYQdqL0kRU2LM4vePcrEUOEgXSxM9H7NpHnN5ozoF5NZ6PFuoXWmJ7h_TGPdTyE2uUbkuIf8e2zwBXvqOH26DtjqOzLtkKDxCg6kHk7n5iAwMWr-jSI1y6GcxvfDxLRM5d7UCW7GCmwPUEJqiKVCdEZEBbKPVvGCPUQ6UdgFeiPmTwnIMzgWjBd-7_9Or0x0jVFuIMhJCVijMbVxWC2gIqxuYp1ZYvnfTxXkUzhx0nmki06WyTkwor-Ttw2pAx3XBknU6XK8fucoh1_SiLxSczpgyYvQdQtyq46tVNX-fjW5k8HigbASC14B6SObCbD0mvJ_FBiLSzPAFGpp0mAlRzkp-RHljJ_IEZ-2QF3AuANIOxbNI7962DAr0Lkl3jeJBlyf0rUS1aqLqnQUJDdMaIQnrFEvT9SPcAA6weW3HcN_jYq_fqT2j40SRx9-RLNuh6JMFd36HpplArKBPotXvjLdeQtzwVQ0oW-gCIeT8PciXCCeFV4ritbpuRziokF-RmS8jEyC2AoWDuzLVZOyFAeYWp22uPjspQBjgp60DfpKLeZcudNL6aKdiBeB18adBLQqNXz0dcvZCMenqkNNsgTS02s_b2Fz1zyPItpPj38x6l2-R8cz03UVBTIbnvjoZXjLmlf7pS2dWqnps-NrFUXzNd6JnB_uIdRAreRRkkRgFr8E74bkXEENPgveYllSEgKR4SYC3GxD77cghs5FFmTiPLwmci7TJhmra60k3or1udtw8fqwpstG2AIb3_HQBhH6M8PX8Hr0ERlg95souD-VCraR9xAz-VG7LoHeAmZ1NW8amxy_r2Ugik7h8v0by7d1HhpniJxhEHmk_vyHR2EljM3Fj0PowEcWBGWbEVT2UX3owSJ5zk8K47yw_kbMatk7-cImMp4rZENSVWSMvR3o7icQHHIAlpNLRyPwAhX_daCcGqG17H0QgoVyvzf5bJMHMsCA6wnRbizh_AxckVYcfcb0Ch_pg7lCY_tMhmGIJ8KCTRgX1BosxHjmDxbJB0aU1Ncq-ujFgS16gF9nJa-qVuln_2Jd4a48-KMXkWpmEC1mb8PHI6wCveGmHw5Kbv67oS5yMJo5YonmsC2XKyUcUBgTc1mW4G6Fcqt5uOUgwDeLet1FIw4zzb2gOAVf5l_nCP5s1U9h0E9JCpvY2FFQ2qikpXp1DXRbnL6KJMmUWdYvnhDIg==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LjEtdGVycmEtMjAyNjEwMjZ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_01b438eb4c570b28016af0d8b0d4cc87d190043cf0a0f4c5ee",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 342,
+    "completion_tokens": 374,
+    "total_tokens": 716,
+    "cost": 0.002212,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.002212,
+      "upstream_inference_prompt_cost": 0.000342,
+      "upstream_inference_completions_cost": 0.00187
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 51,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

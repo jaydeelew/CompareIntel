@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794168988-H630LojSTYJFw8zHEWQv",
+  "object": "chat.completion",
+  "created": 1794168988,
+  "model": "openai/gpt-6.1-terra",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Headers\n\n### This is H3\n\n#### This is H4\n\n## Text formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\n\nNested unordered list:\n\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n\n> This is a blockquote\n> with multiple lines",
+        "refusal": null,
+        "reasoning": "**Generating a structured response**\n\nI need to produce a response that includes the specified elements in a concise manner, reflecting what the user is asking for. They want markdown elements, so I'll make sure to replicate them exactly, including headers, items, and a table. I'll also preserve the nested ordered list with three spaces for clarity. It’s all about mirroring their exact request while ensuring it’s neat and organized!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Generating a structured response**\n\nI need to produce a response that includes the specified elements in a concise manner, reflecting what the user is asking for. They want markdown elements, so I'll make sure to replicate them exactly, including headers, items, and a table. I'll also preserve the nested ordered list with three spaces for clarity. It’s all about mirroring their exact request while ensuring it’s neat and organized!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NifPlNLID4NVGVZi6K4aMos2R0i77uYiREttA1Lyynn2Kp__TOrJR5_Gl-bIz-6giC7S5q5kQnhsU-ywey9GVznMs6AE24dKwgOBxKW9BTrOUnIedFoEHQCcjhsuxBqTPacpEEAY8L56wSQydY8j1Sl4R-E4KeYNwQNwvyW86-8Og8Cwp5uofNc-oQtkTnlmSUr9NzNAI3jVqW5vLgLWhSKldWetoQKxWXsGUfE93GZynye4ldp8ugZtMRc1o3t8TlgmK8UhF3c1-9lHSf65VcpEUmw-4dhwLd7VEDyFIJ4jpl3kvgX-EOrLp181kIQrYGKvcd4zRZOsTfZe2r9HuNpJFxfW7pOmWJhND1TzkNU-Jo0IYdpmy1PqALo8YaSe6lwU5KosVSpqfRHOPRD5gyrACJV87k_5QqhXZzWqeDZEDGkKEJVkov1cVNsK7WcXQ3nGETBLU4EMReJdMeV_Z0GPBeasVagCqrAG6VwAWrGCKz0aB3ZK0LSpQ1TFxwjPpVQOiIOzIVeJ2TCTm0zGWBAnDymT4Tgd6LAl0HU60Heli6xtT67t4gwm6YiiXqnQjSapTkCLrLGqGgCGye4yfOss_aqwItC4co1Xlz-PBM8O8WM8-hac--lvHPbasIYL1rYjc18FsA75_Afc6VKQ5eC6dnJ7VVzsf32niVmOjpyGLVqKOoNo-U-4NMX_q_oM8nwPRjwz__P7RkM73CFAa5P66buViaddpvItB_Ix2KonSFiQ9kkst77vVcdkI9t9p4pLwLHO6kHX9Q5bl75GHFWXDAiFU1tPo6h253hVriBdNdEZKfmBaxUpLtJQCBbsZwoh_HeI_7-_BWbIFFkebAXf_7aJvVdZ-SCG5ONf20R1GrD61bCm312nuFH2MzqMSGECNicQeD9tsIAh_lF-0v9Xr1tOgYWMKLkeJb5tiRc4mLnaYZHBv8UfUVestI2LAtCFzH7KZ6Dgf0mhd6RJJNGRBy_4BvbHgyr2ueSV6mrRDKv_30u1mFU2yTCONNq2-LkmhuFzIdqOrsicGjzy8XwVgKxoBrk1_pUTWyK0WKL7pMm7tu1pZPUUNp6ZUFJ3HHApIiuJtOs0UefvwmEuSQwRfo1jYxf_xq999d18cB2PPQQiuGzdjutiN1H-APU6R2GIloEtiahvCcJMsOqJXey9N6P7xUJKAO_FVZ-zvqZ8DpRup77tIN0Bd5g75DAFfH7uwsWX-UJwZsQNDqTqB_A7WsKvbg7_2Cxhl7Ja3VZP54IhyA3Vda5oDJ2jTxZVMU38OPZBhn0gbOfuI3YtkVxOfXR7-fa_81OLlwVm38sjs3zvtK2Sjj6CQZLICr3cCeMEEHkkP2Z8-xilYA2OkKTeBwxCFBb8upwy_UCILQzfXCxramxwVs_CQnSM3PpLOqToeWROgsIDlcX7EeTfx47O2mug8JeejacrOebJglrjs7T-B9ZxbX9NGkxbFMTby8Kn2vCoaqAAQT8Niv8Zfs_xt5ddmFTxpweTUpz6mK93hP3OhYKCTBTCg5GRO1sB4xrZMeWI8bEh_Rep5tI0SB2NfAQLz87BCCNdC6h7fs0onq_Yr63mP7smeRQu_QJEag4rPNlG0QamOBBZvPYRo1fJtWeMiE6oC-DT5ruedlDl2cq4-5GnvrpI1boWujH9DLURrfdb1N4TkeC6gZaDSU7WO2wBJbicqbR5wKn4FNs3lis9o5-XFLUr9qzKEpvMFYeW-fRhCQaqdu92JocbHxadH_kiRbAvK-6QkJaTeDlwUVXrhwkZarBxQCIvdPndsfleALw7Glp34s6EDpQKZu4Ow4tJCr1rbxTeOsiDyx-6zK-y1pWN-ymkoWtDoSy8u6s3N7SoDvxOIOm7hnodOjm2KwueFeBqo3jYGcXISDvJx-0kDzomnw5efWLp6mfef7BRbH-kv74-ikZCsfLesQB-1e3nifc2mMDbmC88L2LRB6C0iOOJuptq1YA0dgcaPakUxKsDxcAErCxiKQBMsCXTdhrD0VADwyf4yumNiclUpACJFmy19ok3jJjfBwpCxzeKsN7P6BaX3TSNckG0LtjW8dnyl2np16XX-wjcPLb-kSwX6ejCDGcnWDSQ_idi-yujCCrxVWC1RYBhuLfCQIniCxOLuzJr0Ev9j5GykigCEqiFa-cSNjrISKobTZ-LkCYDPeOs4o29AwO0UwVfHUnEfCqjcEaRV0SRXyQSvQ9AWydclwQTVQZGBcHfNaumMGEVMpiMiw-5xnqIWN5bboM56Ayhxd6_oMXk4uzq4WuEtJZhTdhjeWJD4IGhCHSR5PCaE8q80Lw-Tbd68RiJ3TNuPWcwsP8g2UmAd7MXzvsbpN3Kqtvo0VJJQjSXiNrR_AN56oMIpkQ2PB4Nzkw1UyQJMon6gnXDxilJ0Bxkisail4xQb-urckJHhvYsiXTm9R7.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LjEtdGVycmEtMjAyNjEwMjZ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0df702bda1fea060016af0d89d7e8087d1ab14d9e84b5c1388",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 195,
+    "completion_tokens": 225,
+    "total_tokens": 420,
+    "cost": 0.00132,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00132,
+      "upstream_inference_prompt_cost": 0.000195,
+      "upstream_inference_completions_cost": 0.001125
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 46,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

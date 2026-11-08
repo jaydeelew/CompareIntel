@@ -1,0 +1,60 @@
+{
+  "id": "gen-1794168898-6bc1wL89JDPSglODqJIq",
+  "object": "chat.completion",
+  "created": 1794168898,
+  "model": "google/gemini-3.6-flash",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is the response formatted with fenced code blocks and inline code elements as requested:\n\n## Python Code\n\n```python\ndef quadratic_formula(a, b, c):\n    \"\"\"\n    Calculates the roots of a quadratic equation ax^2 + bx + c = 0.\n    Handles real roots using basic exponentiation.\n    \"\"\"\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n---\n\n## JavaScript Code\n\n```javascript\n/**\n * Computes the n-th Fibonacci number recursively.\n * @param {number} n\n * @returns {number}\n */\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // Output: 55\n```\n\n---\n\n## Inline Code with Special Characters\n\nWhen writing technical descriptions, inline code blocks prevent formatting conflicts:\n\n- Expression `x^2` is rendered as inline code rather than exponentiation or LaTeX math ($x^2$).\n- Identifier `a_b` stays intact rather than triggering *italicized* text via underscores (`a_b`).\n- Variable `$price` retains the dollar sign without initiating a math environment (`$price$`).",
+        "refusal": null,
+        "reasoning": "**Processing User Inputs**\n\nI'm currently processing your request, focusing on how various code and markdown elements render. My aim is to accurately represent each instance, paying close attention to potential conflicts like superscripts, subscripts, and inline math.\n\n**Demonstrating Code Rendering**\n\nI'm now focusing on accurately displaying the Python and JavaScript code snippets you've provided. I'm also ensuring that inline code elements, such as `x^2`, `a_b`, and `$price`, render correctly without being interpreted as mathematical notation.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Processing User Inputs**\n\nI'm currently processing your request, focusing on how various code and markdown elements render. My aim is to accurately represent each instance, paying close attention to potential conflicts like superscripts, subscripts, and inline math.\n\n**Demonstrating Code Rendering**\n\nI'm now focusing on accurately displaying the Python and JavaScript code snippets you've provided. I'm also ensuring that inline code elements, such as `x^2`, `a_b`, and `$price`, render correctly without being interpreted as mathematical notation.\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "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",
+            "format": "google-gemini-v1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 261,
+    "completion_tokens": 798,
+    "total_tokens": 1059,
+    "cost": 0.00318825,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00318825,
+      "upstream_inference_prompt_cost": 0.00019575,
+      "upstream_inference_completions_cost": 0.0029925
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 411,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
