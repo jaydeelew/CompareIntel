@@ -1,0 +1,45 @@
+{
+  "modelId": "openai/gpt-5-nano",
+  "modelName": "OpenAI: GPT-5 Nano",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+  "response": "1) Inline math\nThe quadratic formula is x = (-b \u00b1 sqrt(b^2 - 4ac)) / (2a), which gives the solutions to ax^2 + bx + c = 0 (with a \u2260 0) in terms of a, b, and c.\n\n2) Display math with aligned equations\n$$\n\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}\n$$\n\n3) Matrices and cases\n$$\nI = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}\n$$\n\n4) Multiple equations\n$$\nE = mc^2\n$$\n$$\nF = ma\n$$\n$$\na^2 + b^2 = c^2\n$$\n\n5) Links\nSee Wikipedia for more details on the quadratic formula: https://en.wikipedia.org/wiki/Quadratic_formula\n\n6) Money context (these should NOT render as math)\nThe item costs \\$5 and the shipping is \\$10, for a total of \\$15. Budget: \\$1000",
+  "usage": {
+    "prompt_tokens": 274,
+    "completion_tokens": 2441,
+    "total_tokens": 2715,
+    "cost": 0.0009901,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0009901,
+      "upstream_inference_prompt_cost": 1.37e-05,
+      "upstream_inference_completions_cost": 0.0009764
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2112,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0009901,
+  "actualCost": 0.0009901,
+  "timestamp": "2026-11-08T17:59:54.458Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null,
+  "provenance": {
+    "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_01-math-basics.json",
+    "promptSha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+    "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd"
+  },
+  "attempt": "rerun-8192",
+  "maxTokens": 8192,
+  "replacesCoverageFor": "openai_gpt-5-nano_01-math-basics.json",
+  "truncated": false
+}

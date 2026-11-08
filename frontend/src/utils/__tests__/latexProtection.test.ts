@@ -128,4 +128,13 @@ describe('lists', () => {
       '__UL_0__Calculate:<br>$c = 5$__/UL__\n__UL_0__Next__/UL__'
     )
   })
+
+  it('applies bold to ordered-list continuation lines (Gemini 04 leftover **)', () => {
+    const out = processMarkdownLists(
+      '2. **Find critical points**:\n   Thus the points are at **$x = 0$** and **$x = 2$**.\n'
+    )
+    expect(out).toContain('<strong>$x = 0$</strong>')
+    expect(out).toContain('<strong>$x = 2$</strong>')
+    expect(out).not.toContain('**$x = 0$**')
+  })
 })

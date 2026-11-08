@@ -57,12 +57,12 @@ export function overallStatus(opts: {
   error?: string
   validation?: { status: AssertionStatus; assertions: AssertionResult[] }
 }): OverallStatus {
-  if (opts.error) return 'fail'
   const validation = opts.validation
   const rendererLoss = Boolean(validation?.assertions.some(isRendererLossFail))
   if (rendererLoss) return 'fail'
   if (opts.emptyVisible) return 'incomplete'
   if (opts.truncated) return 'truncated'
+  if (opts.error) return 'fail'
   if (!validation) return 'fail'
   return validation.status
 }

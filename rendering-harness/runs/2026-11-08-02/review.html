@@ -137,22 +137,22 @@
     <p><strong>Run Date:</strong> 2026-11-08-02</p>
     <p><strong>Models Tested:</strong> 4</p>
     <p><strong>Prompts:</strong> 6</p>
-    <p><strong>API history records:</strong> 24
+    <p><strong>API history records:</strong> 34
        &nbsp;<strong>Unique coverage cells:</strong> 24</p>
     <p><strong>History:</strong>
-       Passed 12
-       / Not covered 2
+       Passed 20
+       / Not covered 4
        / Truncated 1
        / Incomplete 9
        / Failed 0</p>
     <p><strong>Unique coverage:</strong>
-       Passed 12
-       / Not covered 2
-       / Truncated 1
-       / Incomplete 9
+       Passed 20
+       / Not covered 4
+       / Truncated 0
+       / Incomplete 0
        / Failed 0
        (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
-    <p><strong>Cumulative actual cost (all records):</strong> $0.006822</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $0.012725</p>
     <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
   </div>
   
@@ -385,6 +385,186 @@ Three famous equations, each displ...</div>
               <label>Feedback:</label>
               <textarea 
                 data-feedback-model="z-ai/glm-5.3-flash"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>DeepSeek: DeepSeek V4 Flash 0423 <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: deepseek/deepseek-v4-flash<br>
+              Attempt: rerun-8192 · deepseek_deepseek-v4-flash_01-math-basics.json<br>
+              Tokens: 635 (250 in / 385 out)<br>
+              Cost: $0.000092<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 5:59:25 PM
+            </div>
+            
+            
+              <img src="reruns/deepseek_deepseek-v4-flash_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here’s a response that covers all requested LaTeX, formatting, and plain-dollar examples:
+
+---
+
+### 1. Inline Math
+The quadratic formula is written as $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$. It gives the solutions to any quadratic equation of the form $ax^2 + bx + c = 0$, provided $a \neq 0$. The symbol $\pm$ indicates there are usually two solutions.
+
+### 2. Display Math with Aligned Equations
+We can solve the system of equations:
+$$
+\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}
+$$
+Adding the two equations gives $3x = 6$, so $x = 2$. Substituting into the first equation gives $2 + y = 5$, so $y = 3$.
+
+### 3. Matrices and Cases
+The $2 \times 2$ identity matrix is:
+$$
+I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}
+$$
+A piecewise function can be written as:
+$$
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}
+$$
+
+### 4. Multiple Equations
+Here are three famous equations:
+$$
+E = mc^2
+$$
+$$
+F = ma
+$$
+$$
+a^2 + b^2 = c^2
+$$
+
+### 5. Links
+For more d...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="deepseek/deepseek-v4-flash"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5 Nano <span class="status status-not-covered">not-covered</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5-nano<br>
+              Attempt: rerun-8192 · openai_gpt-5-nano_01-math-basics.json<br>
+              Tokens: 2715 (274 in / 2441 out)<br>
+              Cost: $0.000990<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 5:59:54 PM
+            </div>
+            
+            
+              <img src="reruns/openai_gpt-5-nano_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">1) Inline math
+The quadratic formula is x = (-b ± sqrt(b^2 - 4ac)) / (2a), which gives the solutions to ax^2 + bx + c = 0 (with a ≠ 0) in terms of a, b, and c.
+
+2) Display math with aligned equations
+$$
+\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}
+$$
+
+3) Matrices and cases
+$$
+I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}
+$$
+
+4) Multiple equations
+$$
+E = mc^2
+$$
+$$
+F = ma
+$$
+$$
+a^2 + b^2 = c^2
+$$
+
+5) Links
+See Wikipedia for more details on the quadratic formula: https://en.wikipedia.org/wiki/Quadratic_formula
+
+6) Money context (these should NOT render as math)
+The item costs \$5 and the shipping is \$10, for a total of \$15. Budget: \$1000</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5-nano"
                 data-feedback-prompt="01-math-basics"
                 placeholder="Note any rendering issues, bugs, or observations..."></textarea>
             </div>
@@ -658,6 +838,86 @@ Nested ordered list:
               <label>Feedback:</label>
               <textarea 
                 data-feedback-model="z-ai/glm-5.3-flash"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5 Nano <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5-nano<br>
+              Attempt: rerun-8192 · openai_gpt-5-nano_02-markdown-formatting.json<br>
+              Tokens: 1291 (195 in / 1096 out)<br>
+              Cost: $0.000448<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 6:00:09 PM
+            </div>
+            
+            
+              <img src="reruns/openai_gpt-5-nano_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5-nano"
                 data-feedback-prompt="02-markdown-formatting"
                 placeholder="Note any rendering issues, bugs, or observations..."></textarea>
             </div>
@@ -943,6 +1203,80 @@ The variable `x^2` should render as code, not math. Similarly `a_b` and `$price`
             </div>
           </div>
         
+          <div class="model-card">
+            <h4>OpenAI: GPT-5 Nano <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5-nano<br>
+              Attempt: rerun-8192 · openai_gpt-5-nano_03-code-blocks.json<br>
+              Tokens: 2211 (241 in / 1970 out)<br>
+              Cost: $0.000800<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 6:00:32 PM
+            </div>
+            
+            
+              <img src="reruns/openai_gpt-5-nano_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5-nano"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
       </div>
     </div>
   
@@ -1165,6 +1499,256 @@ To provide further clarification and expand on the given problem:
             </div>
           </div>
         
+          <div class="model-card">
+            <h4>DeepSeek: DeepSeek V4 Flash 0423 <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: deepseek/deepseek-v4-flash<br>
+              Attempt: rerun-8192 · deepseek_deepseek-v4-flash_04-mixed-markdown-latex.json<br>
+              Tokens: 638 (293 in / 345 out)<br>
+              Cost: $0.000088<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 5:59:28 PM
+            </div>
+            
+            
+              <img src="reruns/deepseek_deepseek-v4-flash_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here’s a response that mixes Markdown formatting with mathematical expressions based on your test prompt:
+
+---
+
+## Problem Statement  
+**Exercise 1**: Given the function \( f(x) = x^2 + 2x + 1 \), find:  
+
+1. The *derivative* \( f&#039;(x) \)  
+2. The **integral** \( \int f(x) \, dx \)
+
+### Solution  
+The derivative is:  
+\[
+f&#039;(x) = 2x + 2
+\]
+
+The integral is:  
+\[
+\int f(x) \, dx = \frac{x^3}{3} + x^2 + x + C
+\]
+
+---
+
+## Linear Algebra with Lists  
+Properties of the matrix \( A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix} \):  
+- **Determinant**: \( \det(A) = ad - bc \)  
+- **Trace**: \( \text{tr}(A) = a + d \)  
+- **Inverse** (if exists):  
+\[
+A^{-1} = \frac{1}{ad - bc} \begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}
+\]
+
+---
+
+## Real World Context  
+&gt; **Note**: In economics, the cost function \( C(q) = 100 + 5q \) means fixed costs are $100 and variable costs are $5 per unit.
+
+**Money context**:  
+If you buy 10 units, that’s $100 fixed + $50 variable = **$150 total**.
+
+--- 
+
+Let me know ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="deepseek/deepseek-v4-flash"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5 Nano <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5-nano<br>
+              Attempt: rerun-8192 · openai_gpt-5-nano_04-mixed-markdown-latex.json<br>
+              Tokens: 1859 (310 in / 1549 out)<br>
+              Cost: $0.000635<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 6:00:51 PM
+            </div>
+            
+            
+              <img src="reruns/openai_gpt-5-nano_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Problem Statement
+**Exercise 1**: Given the function \(f(x) = x^2 + 2x + 1\), find:
+
+1. The derivative \(f&#039;(x)\)
+2. The integral \(\displaystyle \int f(x)\,dx\)
+
+### Solution
+The derivative is:
+\[
+f&#039;(x) = 2x + 2.
+\]
+
+The integral is:
+\[
+\int f(x)\,dx = \frac{x^3}{3} + x^2 + x + C.
+\]
+
+## Linear Algebra with Lists
+Properties of the matrix \(A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}\):
+
+- Determinant: \(\det(A) = ad - bc\)
+
+- Trace: \(\operatorname{tr}(A) = a + d\)
+
+- Inverse (if exists):
+  \[
+  A^{-1} = \frac{1}{ad - bc}\begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}
+  \]
+
+## Real World Context
+&gt; **Note**: In economics, the cost function \(C(q) = 100 + 5q\) means fixed costs are 100 and variable costs are 5 per unit.
+
+Money context: If you buy 10 units, that&#039;s \(100\) fixed plus \(50\) variable = \(150\) total.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5-nano"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.3 Flash <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.3-flash<br>
+              Attempt: rerun-8192 · z-ai_glm-5.3-flash_04-mixed-markdown-latex.json<br>
+              Tokens: 2031 (311 in / 1720 out)<br>
+              Cost: $0.000456<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 6:01:39 PM
+            </div>
+            
+            
+              <img src="reruns/z-ai_glm-5.3-flash_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Complete Solutions with Verification
+
+## Exercise 1: Verified Solution
+
+Given $f(x) = x^2 + 2x + 1$, we can factor this as a perfect square: $f(x) = (x+1)^2$.
+
+### Part 1: Derivative
+Using the power rule term-by-term:
+$$f&#039;(x) = \frac{d}{dx}\left(x^2 + 2x + 1\right) = 2x + 2$$
+
+**Check** via the factored form: $f&#039;(x) = 2(x+1) \cdot 1 = 2x + 2$ ✓
+
+### Part 2: Integral
+$$\int (x^2 + 2x + 1)\, dx = \frac{x^3}{3} + x^2 + x + C$$
+
+**Check** by differentiating the result: $\frac{d}{dx}\left[\frac{x^3}{3} + x^2 + x\right] = x^2 + 2x + 1$ ✓
+
+## Extended Linear Algebra
+
+For the matrix $A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$, we can add the **eigenvalue** properties:
+
+- The characteristic polynomial is $\lambda^2 - (a+d)\lambda + (ad - bc) = 0$
+- Eigenvalues: $\lambda = \frac{(a+d) \pm \sqrt{(a+d)^2 - 4(ad-bc)}}{2}$
+- Note that $\lambda_1 + \lambda_2 = \text{tr}(A)$ and $\lambda_1 \lambda_2 = \det(A)$
+
+**Concrete example**: For $A = \begin{pmatrix} 4 &amp; 1 \\ 2 &amp; 3 \end{pmatrix}$:
+$$\d...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.3-flash"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
       </div>
     </div>
   
@@ -1351,6 +1935,149 @@ The problem presents a simple integral: $\int_{0}^{1} x dx = \left[\frac{...</di
             
             
               <div class="error">No visible assistant text (completion tokens were reasoning-only or truncated before content). Incomplete — not a renderer failure.</div>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.3-flash"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5 Nano <span class="status status-not-covered">not-covered</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5-nano<br>
+              Attempt: rerun-8192 · openai_gpt-5-nano_05-complex-scenarios.json<br>
+              Tokens: 3340 (428 in / 2912 out)<br>
+              Cost: $0.001186<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 6:01:09 PM
+            </div>
+            
+            
+              <img src="reruns/openai_gpt-5-nano_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here are concise results for each scenario, plus a note on potential edge cases and formatting considerations.
+
+Scenario 1: Math in Lists with Formatting
+- Given a right triangle with a = 3 and b = 4:
+  - c = sqrt(3^2 + 4^2) = sqrt(9 + 16) = sqrt(25) = 5
+  - Therefore, c = 5 units
+- Edge notes:
+  - This is the classic 3-4-5 triangle; no ambiguity in the calculation.
+  - If formatting is parsed, ensure the superscripts and square root are properly rendered.
+
+Scenario 2: Tables with Math
+- Quadratic: x = (-b ± sqrt(b^2 - 4ac)) / (2a)
+  - Conditions: a ≠ 0; discriminant Δ = b^2 - 4ac
+  - Real roots when Δ ≥ 0; two real roots if Δ &gt; 0; one real root if Δ = 0; complex roots if Δ &lt; 0
+- Sum: ∑_{i=1}^n i = n(n+1)/2
+  - Valid for positive integers n; for other n, the interpretation may differ (e.g., empty sum, negative n, etc.)
+- Product: ∏_{i=1}^n i = n!
+  - Valid for nonnegative integers n; note n = 0 gives 0! = 1
+- Edge notes:
+  - In a rendered table, ensure proper alignment and that inline ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5-nano"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.3 Flash <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.3-flash<br>
+              Attempt: rerun-8192 · z-ai_glm-5.3-flash_05-complex-scenarios.json<br>
+              Tokens: 1378 (434 in / 944 out)<br>
+              Cost: $0.000189<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 6:01:51 PM
+            </div>
+            
+            
+              <img src="reruns/z-ai_glm-5.3-flash_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Complex Formatting Test Response
+
+## Scenario 1: Math in Lists with Formatting
+
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+**Verification notes:** Bold inside a numbered list item, nested bullet content with chained LaTeX equations, and inline math mixed with emphasis — all preserved.
+
+## Scenario 2: Tables with Math
+
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+**Edge case notes:** The quadratic formula contains `\pm`, `\sqrt{}` with a nested expression, and `\frac` with a multi-character numerator — all inside table cells where pipes (`|`) must not be confused with column delimiters.
+
+## Scenario 3: Code and Math Mixed
+
+```python
+# ...</div>
+              </details>
             
             
             <div class="feedback">
@@ -1702,6 +2429,95 @@ The shell variable $HOME is set. Price: $99.99.
               <label>Feedback:</label>
               <textarea 
                 data-feedback-model="z-ai/glm-5.3-flash"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5 Nano <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-8192</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5-nano<br>
+              Attempt: rerun-8192 · openai_gpt-5-nano_06-edge-cases-boundaries.json<br>
+              Tokens: 2842 (342 in / 2500 out)<br>
+              Cost: $0.001017<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 6:01:25 PM
+            </div>
+            
+            
+              <img src="reruns/openai_gpt-5-nano_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is the requested test content, organized to exercise delimiter variants and edge cases exactly as specified.
+
+Delimiter Variants
+1. Double dollar display: $$x^2 + y^2 = r^2$$
+2. Bracket display: \[E = mc^2\]
+3. Single dollar inline: $a + b = c$
+4. Paren inline: \(x = 5\)
+
+Nested Structures
+1. Display math in a list with continuation:
+   - First item
+   - The equation is:
+     $$\int_0^1 x dx = \frac{1}{2}$$
+     And it evaluates to 0.5
+   - Third item
+
+Code with Math-like Syntax
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+Currency and Escaped Dollars
+- Plain: The price is $100
+- Escaped: The budget is \$500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+Tables with Math
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+
+Raw Dollar Signs
+The shell variable $HOME is set. ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5-nano"
                 data-feedback-prompt="06-edge-cases-boundaries"
                 placeholder="Note any rendering issues, bugs, or observations..."></textarea>
             </div>

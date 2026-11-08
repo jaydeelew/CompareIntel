@@ -1,0 +1,45 @@
+{
+  "modelId": "openai/gpt-5-nano",
+  "modelName": "OpenAI: GPT-5 Nano",
+  "promptName": "02-markdown-formatting",
+  "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
+  "response": "## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+  "usage": {
+    "prompt_tokens": 195,
+    "completion_tokens": 1096,
+    "total_tokens": 1291,
+    "cost": 0.00044815,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00044815,
+      "upstream_inference_prompt_cost": 9.75e-06,
+      "upstream_inference_completions_cost": 0.0004384
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 896,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00044815,
+  "actualCost": 0.00044815,
+  "timestamp": "2026-11-08T18:00:09.885Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null,
+  "provenance": {
+    "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_02-markdown-formatting.json",
+    "promptSha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad",
+    "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd"
+  },
+  "attempt": "rerun-8192",
+  "maxTokens": 8192,
+  "replacesCoverageFor": "openai_gpt-5-nano_02-markdown-formatting.json",
+  "truncated": false
+}

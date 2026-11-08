@@ -224,4 +224,15 @@ test.describe('Harness Known-Bad Fixtures (should fail)', () => {
     const complete = await page.locator('[data-render-complete]').count();
     expect(complete).toBeGreaterThan(0);
   });
+
+  test('```markdown fences with nested ** and $ reach complete (Qwen 05 rerun)', async ({
+    page,
+  }) => {
+    const content =
+      '```markdown\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n```\n\nDone.';
+    await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
+    await waitForHarnessRender(page);
+    const complete = await page.locator('[data-render-complete]').count();
+    expect(complete).toBeGreaterThan(0);
+  });
 });

@@ -24,6 +24,12 @@ describe('wrapBareLatexBlocks', () => {
     expect(out).toMatch(/\$\$$/)
     expect(out).toContain('frac')
   })
+
+  it('does not wrap inner lines of a list-prefixed \\[ display block', () => {
+    const input = '- \\[\n  c = \\sqrt{3^2 + 4^2} = 5\n  \\]'
+    expect(wrapBareLatexBlocks(input)).toBe(input)
+    expect(wrapBareLatexBlocks(input)).not.toContain('$$')
+  })
 })
 
 describe('fixLatexIssues', () => {

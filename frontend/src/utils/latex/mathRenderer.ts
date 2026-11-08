@@ -1,6 +1,32 @@
 import type { MathDelimiterPattern, ModelRendererConfig } from '../../types/rendererConfig'
 
 import { safeRenderKatex, looksMathematical, looksProse } from './helpers'
+import { LITERAL_DOLLAR } from './protection'
+
+/** `$...$` / `$$...$$` / `\[...\]` used as delimiter examples, not real math. */
+function isEllipsisDelimiterExample(fullMatch: string): boolean {
+  const inner = fullMatch
+    .replace(/^\$\$/, '')
+    .replace(/\$\$$/, '')
+    .replace(/^\\\[/, '')
+    .replace(/\\\]$/, '')
+    .replace(/^\\\(/, '')
+    .replace(/\\\)$/, '')
+    .replace(/^\$/, '')
+    .replace(/\$$/, '')
+    .trim()
+  return /^(\.{2,}|…)$/.test(inner)
+}
+
+/** Keep the example visible as literal delimiters; do not extract or render it as math. */
+function leaveDelimiterExample(fullMatch: string): string {
+  return fullMatch
+    .replace(/\$/g, LITERAL_DOLLAR)
+    .replace(/\\\[/g, '&#92;[')
+    .replace(/\\\]/g, '&#92;]')
+    .replace(/\\\(/g, '&#92;(')
+    .replace(/\\\)/g, '&#92;)')
+}
 
 export interface MathRendererConfig {
   displayMathDelimiters: MathDelimiterPattern[]
@@ -29,6 +55,7 @@ export function extractDisplayMath(
 
   delimiters.forEach(({ pattern }) => {
     processed = processed.replace(pattern, fullMatch => {
+      if (isEllipsisDelimiterExample(fullMatch)) return leaveDelimiterExample(fullMatch)
       const index = mathBlocks.length
       mathBlocks.push(fullMatch)
       return `${placeholderPrefix}${index}${placeholderSuffix}`
@@ -63,6 +90,7 @@ export function extractInlineMath(
 
   delimiters.forEach(({ pattern }) => {
     processed = processed.replace(pattern, fullMatch => {
+      if (isEllipsisDelimiterExample(fullMatch)) return leaveDelimiterExample(fullMatch)
       const index = mathBlocks.length
       mathBlocks.push(fullMatch)
       return `${placeholderPrefix}${index}${placeholderSuffix}`

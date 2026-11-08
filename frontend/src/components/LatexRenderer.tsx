@@ -168,8 +168,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         return '__TABLE_ROW__' + content + '__/TABLE_ROW__'
       })
 
-      // Process table rows and convert to HTML
-      processed = processed.replace(/(__TABLE_ROW__[\s\S]*__\/TABLE_ROW__)+/g, match => {
+      // Consecutive table rows only. A greedy `[\s\S]*` here joined the first
+      // table in the document to the last, swallowing prose, code, and later
+      // tables (GLM 5.3 Flash 05: `|` in "pipes (`|`)" notes plus a summary table).
+      processed = processed.replace(/(?:__TABLE_ROW__[\s\S]*?__\/TABLE_ROW__\n?)+/g, match => {
         const rows = match.split('__/TABLE_ROW__').filter(row => row.trim())
         let tableHTML = '<div class="markdown-table-scroll"><table class="markdown-table">'
         let isHeader = true
@@ -326,6 +328,13 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // Ensure headers after closing list tags are properly separated
       // Match: </ul> or </ol> tag (with optional newline) followed by header marker
       processed = processed.replace(/(<\/(ul|ol)[^>]*>\s*\n?\s*)(#{1,6}\s+)/gi, '$1\n\n$3')
+      // Tables are emitted as <div class="markdown-table-scroll"><table>…</table></div>
+      // with no trailing newline (MiMo 05/06: `## Scenario 3` / `## Raw Dollar Signs`
+      // stuck to `</div>` and showed a leftover #).
+      processed = processed.replace(
+        /(<\/(?:table|div|blockquote|pre)[^>]*>)(\s*)(#{1,6}\s+)/gi,
+        '$1\n\n$3'
+      )
       // Replace any header markers that are preceded by non-whitespace (except at start of string)
       // or HTML tags with a newline before them
       processed = processed.replace(/([^\s#|])(\s+)(#{1,6}\s+)/g, '$1\n\n$3')
@@ -369,14 +378,16 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       return ''
     })
 
+    const renderMarkdownLink = (_match: string, text: string, url: string, title?: string) => {
+      const titleAttr = title ? ` title="${title}"` : ''
+      return `<a href="${url}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`
+    }
+
     // Links (both inline and reference-style, if enabled)
     if (markdownRules.processLinks !== false) {
       processed = processed.replace(
         /\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g,
-        (_, text, url, title) => {
-          const titleAttr = title ? ` title="${title}"` : ''
-          return `<a href="${url}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`
-        }
+        renderMarkdownLink
       )
 
       // Reference-style links
@@ -450,6 +461,20 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       processed = processed.replace(new RegExp(escapedPlaceholder, 'g'), original)
     })
+
+    // List items were MDPH-protected during the first link pass (Phi-4 prompt 01:
+    // `[Wikipedia](https://…/Quadratic_formula)` stayed raw inside `__OL__`).
+    if (markdownRules.processLinks !== false) {
+      processed = processed.replace(
+        /\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g,
+        renderMarkdownLink
+      )
+    }
+    // Same restore window: `**$x = 0$**` in OL continuations (Gemini 04) stayed
+    // as leftover asterisks around restored KaTeX.
+    if (markdownRules.processBoldItalic !== false) {
+      processed = processed.replace(/\*\*((?:(?!\*\*)[\s\S])+?)\*\*/g, '<strong>$1</strong>')
+    }
 
     // Final safety check: remove any remaining placeholders that weren't restored
     // This handles edge cases where placeholders might have been missed

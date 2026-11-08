@@ -46,6 +46,15 @@ test.describe('Truncation vs renderer loss', () => {
     ).toBe('incomplete')
   })
 
+  test('truncated + screenshot/readiness error is truncated, not renderer fail', () => {
+    expect(
+      overallStatus({
+        truncated: true,
+        error: 'Render readiness failed: prism-highlighting',
+      })
+    ).toBe('truncated')
+  })
+
   test('truncated + passing DOM is truncated, never comprehensive pass', () => {
     expect(
       overallStatus({

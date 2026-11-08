@@ -1,0 +1,45 @@
+{
+  "modelId": "openai/gpt-5-nano",
+  "modelName": "OpenAI: GPT-5 Nano",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here is the requested test content, organized to exercise delimiter variants and edge cases exactly as specified.\n\nDelimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\nNested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\nCode with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\nCurrency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\nTables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\nRaw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.",
+  "usage": {
+    "prompt_tokens": 342,
+    "completion_tokens": 2500,
+    "total_tokens": 2842,
+    "cost": 0.0010171,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0010171,
+      "upstream_inference_prompt_cost": 1.71e-05,
+      "upstream_inference_completions_cost": 0.001
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2112,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0010171,
+  "actualCost": 0.0010171,
+  "timestamp": "2026-11-08T18:01:25.816Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null,
+  "provenance": {
+    "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_06-edge-cases-boundaries.json",
+    "promptSha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51",
+    "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd"
+  },
+  "attempt": "rerun-8192",
+  "maxTokens": 8192,
+  "replacesCoverageFor": "openai_gpt-5-nano_06-edge-cases-boundaries.json",
+  "truncated": false
+}

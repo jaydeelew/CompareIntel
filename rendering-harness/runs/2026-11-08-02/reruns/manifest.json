@@ -1,0 +1,432 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.1,
+  "maxTokens": 8192,
+  "temperature": "omitted, unchanged",
+  "attemptedCalls": 10,
+  "knownActualCost": 0.0059023262,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "modelId": "deepseek/deepseek-v4-flash",
+      "promptName": "01-math-basics",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/deepseek_deepseek-v4-flash_01-math-basics.json",
+      "originalFinishReason": "length",
+      "promptSha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+      "reserveUsd": 0.00474975,
+      "startedAt": "2026-11-08T17:59:20.226Z",
+      "actualCost": 0.0000918,
+      "finishedAt": "2026-11-08T17:59:25.171Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 250,
+        "completion_tokens": 385,
+        "total_tokens": 635,
+        "cost": 0.0000918,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0000918,
+          "upstream_inference_prompt_cost": 0.0000225,
+          "upstream_inference_completions_cost": 0.0000693
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-flash",
+      "promptName": "04-mixed-markdown-latex",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/deepseek_deepseek-v4-flash_04-mixed-markdown-latex.json",
+      "originalFinishReason": "length",
+      "promptSha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f",
+      "reserveUsd": 0.004771275,
+      "startedAt": "2026-11-08T17:59:25.172Z",
+      "actualCost": 0.00008847,
+      "finishedAt": "2026-11-08T17:59:28.954Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 293,
+        "completion_tokens": 345,
+        "total_tokens": 638,
+        "cost": 0.00008847,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00008847,
+          "upstream_inference_prompt_cost": 0.00002637,
+          "upstream_inference_completions_cost": 0.0000621
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "01-math-basics",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_01-math-basics.json",
+      "originalFinishReason": "length",
+      "promptSha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+      "reserveUsd": 0.004146625,
+      "startedAt": "2026-11-08T17:59:28.955Z",
+      "actualCost": 0.0009901,
+      "finishedAt": "2026-11-08T17:59:54.458Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 2441,
+        "total_tokens": 2715,
+        "cost": 0.0009901,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009901,
+          "upstream_inference_prompt_cost": 0.0000137,
+          "upstream_inference_completions_cost": 0.0009764
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2112,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "02-markdown-formatting",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_02-markdown-formatting.json",
+      "originalFinishReason": "length",
+      "promptSha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad",
+      "reserveUsd": 0.0041364999999999996,
+      "startedAt": "2026-11-08T17:59:54.459Z",
+      "actualCost": 0.00044815,
+      "finishedAt": "2026-11-08T18:00:09.885Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 195,
+        "completion_tokens": 1096,
+        "total_tokens": 1291,
+        "cost": 0.00044815,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00044815,
+          "upstream_inference_prompt_cost": 0.00000975,
+          "upstream_inference_completions_cost": 0.0004384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 896,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "03-code-blocks",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_03-code-blocks.json",
+      "originalFinishReason": "length",
+      "promptSha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167",
+      "reserveUsd": 0.004142,
+      "startedAt": "2026-11-08T18:00:09.885Z",
+      "actualCost": 0.00080005,
+      "finishedAt": "2026-11-08T18:00:32.545Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 241,
+        "completion_tokens": 1970,
+        "total_tokens": 2211,
+        "cost": 0.00080005,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00080005,
+          "upstream_inference_prompt_cost": 0.00001205,
+          "upstream_inference_completions_cost": 0.000788
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1728,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "04-mixed-markdown-latex",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_04-mixed-markdown-latex.json",
+      "originalFinishReason": "length",
+      "promptSha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f",
+      "reserveUsd": 0.0041543125,
+      "startedAt": "2026-11-08T18:00:32.546Z",
+      "actualCost": 0.0006351,
+      "finishedAt": "2026-11-08T18:00:51.465Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 310,
+        "completion_tokens": 1549,
+        "total_tokens": 1859,
+        "cost": 0.0006351,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0006351,
+          "upstream_inference_prompt_cost": 0.0000155,
+          "upstream_inference_completions_cost": 0.0006196
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1216,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "05-complex-scenarios",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_05-complex-scenarios.json",
+      "originalFinishReason": "length",
+      "promptSha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+      "reserveUsd": 0.004172687499999999,
+      "startedAt": "2026-11-08T18:00:51.466Z",
+      "actualCost": 0.0011862,
+      "finishedAt": "2026-11-08T18:01:09.227Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 2912,
+        "total_tokens": 3340,
+        "cost": 0.0011862,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0011862,
+          "upstream_inference_prompt_cost": 0.0000214,
+          "upstream_inference_completions_cost": 0.0011648
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2048,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "06-edge-cases-boundaries",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_06-edge-cases-boundaries.json",
+      "originalFinishReason": "length",
+      "promptSha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51",
+      "reserveUsd": 0.004162,
+      "startedAt": "2026-11-08T18:01:09.227Z",
+      "actualCost": 0.0010171,
+      "finishedAt": "2026-11-08T18:01:25.816Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 2500,
+        "total_tokens": 2842,
+        "cost": 0.0010171,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010171,
+          "upstream_inference_prompt_cost": 0.0000171,
+          "upstream_inference_completions_cost": 0.001
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2112,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "z-ai/glm-5.3-flash",
+      "promptName": "04-mixed-markdown-latex",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/z-ai_glm-5.3-flash_04-mixed-markdown-latex.json",
+      "originalFinishReason": "length",
+      "promptSha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f",
+      "reserveUsd": 0.005294937499999999,
+      "startedAt": "2026-11-08T18:01:25.817Z",
+      "actualCost": 0.00045634,
+      "finishedAt": "2026-11-08T18:01:39.683Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 311,
+        "completion_tokens": 1720,
+        "total_tokens": 2031,
+        "cost": 0.00045634,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00045634,
+          "upstream_inference_prompt_cost": 0.00004354,
+          "upstream_inference_completions_cost": 0.0004128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 973,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "z-ai/glm-5.3-flash",
+      "promptName": "05-complex-scenarios",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/z-ai_glm-5.3-flash_05-complex-scenarios.json",
+      "originalFinishReason": "length",
+      "promptSha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+      "reserveUsd": 0.0053500625,
+      "startedAt": "2026-11-08T18:01:39.684Z",
+      "actualCost": 0.0001890162,
+      "finishedAt": "2026-11-08T18:01:51.741Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 434,
+        "completion_tokens": 944,
+        "total_tokens": 1378,
+        "cost": 0.0001890162,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001890162,
+          "upstream_inference_prompt_cost": 0.0000153202,
+          "upstream_inference_completions_cost": 0.000173696
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 77,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed; collection only",
+  "batchReserve": 0.04508015,
+  "reservePolicy": "Max of catalog and prior observed per-token provider rates, UTF8 bytes+32 input, 8192 total completion tokens, 25% margin",
+  "status": "completed",
+  "finishedAt": "2026-11-08T18:01:51.741Z",
+  "files": {
+    "replies": [
+      "replies/deepseek_deepseek-v4-flash_01-math-basics.json",
+      "replies/deepseek_deepseek-v4-flash_04-mixed-markdown-latex.json",
+      "replies/openai_gpt-5-nano_01-math-basics.json",
+      "replies/openai_gpt-5-nano_02-markdown-formatting.json",
+      "replies/openai_gpt-5-nano_03-code-blocks.json",
+      "replies/openai_gpt-5-nano_04-mixed-markdown-latex.json",
+      "replies/openai_gpt-5-nano_05-complex-scenarios.json",
+      "replies/openai_gpt-5-nano_06-edge-cases-boundaries.json",
+      "replies/z-ai_glm-5.3-flash_04-mixed-markdown-latex.json",
+      "replies/z-ai_glm-5.3-flash_05-complex-scenarios.json"
+    ],
+    "raw": [
+      "raw/deepseek_deepseek-v4-flash_01-math-basics.json",
+      "raw/deepseek_deepseek-v4-flash_04-mixed-markdown-latex.json",
+      "raw/openai_gpt-5-nano_01-math-basics.json",
+      "raw/openai_gpt-5-nano_02-markdown-formatting.json",
+      "raw/openai_gpt-5-nano_03-code-blocks.json",
+      "raw/openai_gpt-5-nano_04-mixed-markdown-latex.json",
+      "raw/openai_gpt-5-nano_05-complex-scenarios.json",
+      "raw/openai_gpt-5-nano_06-edge-cases-boundaries.json",
+      "raw/z-ai_glm-5.3-flash_04-mixed-markdown-latex.json",
+      "raw/z-ai_glm-5.3-flash_05-complex-scenarios.json"
+    ]
+  }
+}

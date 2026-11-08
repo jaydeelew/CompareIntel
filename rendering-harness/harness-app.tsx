@@ -11,7 +11,17 @@ interface RenderRequest {
   content: string;
 }
 
-const SKIP_PRISM_LANGS = new Set(['', 'none', 'plain', 'plaintext', 'text']);
+const SKIP_PRISM_LANGS = new Set([
+  '',
+  'none',
+  'plain',
+  'plaintext',
+  'text',
+  // Prism's markdown grammar often emits no .token spans (and nested ```
+  // inside a markdown fence can throw). Do not block screenshots on it.
+  'markdown',
+  'md',
+]);
 
 function markFailed(reason: string) {
   const root = document.getElementById('root');
@@ -54,7 +64,9 @@ function HarnessApp() {
         const modelId = params.get('modelId');
         const content = params.get('content');
         if (modelId && content) {
-          setRenderData({ modelId, content: decodeURIComponent(content) });
+          // URLSearchParams already decodes. A second decodeURIComponent throws
+          // URI malformed on replies that contain a literal `%` (Qwen 05 8192 rerun).
+          setRenderData({ modelId, content });
         }
       })
       .catch((err: unknown) => {

@@ -1,0 +1,36 @@
+{
+  "modelId": "microsoft/phi-4",
+  "modelName": "Microsoft: Phi 4",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "### Handling Complex Scenarios with Math in Lists, Tables, Code, and Mixed Content\n\nHere's a comprehensive guide on processing challenging scenarios involving mixed content such as math expressions, code blocks, tables, and formatted text including horizontal rules and dollar sign indications.\n\n#### Key Considerations for Each Scenario:\n\n1. **Math in Lists with Formatting:**\n   - Ensure mathematical expressions like equations are clearly defined and differentiated from regular text through appropriate formatting (e.g., inline vs. display math).\n   - Use LaTeX or similar markup for mathematical expressions to maintain clarity and correctness when formatted in documents.\n\n2. **Tables with Mathematical Formulas:**\n   - For tables containing formulas, use LaTeX syntax for the equations to ensure they are correctly interpreted by viewers or tools supporting mathematical rendering.\n   - Clearly separate formula, its LaTeX representation, and result fields to maintain table clarity and usability.\n\n3. **Code and Math Integration:**\n   - When mixing code and math, ensure each block is clearly defined and appropriately formatted:\n     - **Code Blocks**: Use syntax highlighting and proper language specification for easier copying or execution (e.g., `python` for Python code).\n     - **Math Explanations**: Accompany code with clear explanatory text, using LaTeX for mathematical explanations to maintain credibility and clarity.\n\n4. **Horizontal Rules with Math:**\n   - Use horizontal rules to demarcate sections. Ensure they don’t split math equations that might run across lines. If no vertical space is available, consider placing math at the beginning of a new section post-rule.\n\n5. **Multiple Dollar Signs:**\n   - Handle dollar signs with caution to avoid accidentally rendering LaTeX when not intended. Interpreting $ for inline math and $$ for display math can help:\n     - **Inline Math**: For quick, inline equations ($...$).\n     - **Display Math**: For equations that require their own line or space ($$...$$ or \\[...\\] for clarity without dollar signs).\n\nHere's a synthesized version considering the above guidelines:\n\n---\n\n### Integrated Handling of Scenarios\n\n#### 1. Math in Lists with Formatting\n\nFor a **right triangle** with sides $a=3$ and $b=4$, the hypotenuse $c$ can be calculated using the Pythagorean theorem \\( a^2 + b^2 = c^2 \\):\n\n- \\[\n  c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\n  \\]\n- Therefore, \\( c = 5 \\) units.\n\n#### 2. Tables with Mathematical Interactions\n\n| Formula              | LaTeX                                     | Result                           |\n|----------------------|-------------------------------------------|----------------------------------|\n| Quadratic Equation   | \\( ax^2 + bx + c = 0 \\)                    | \\( x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} \\) |\n| Sum of Integers      | \\( \\sum_{i=1}^{n} i \\)                    | \\( \\frac{n(n+1)}{2} \\)           |\n| Factorial (Product)  | \\( \\prod_{i=1}^{n} i \\)                   | \\( n! \\)                         |\n\n#### 3. Code Interleaved with Math\n\n```python\n# Calculate the area of a circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe area \\( A \\) of a circle is given by the formula \\( A = \\pi r^2 \\), where \\( r \\) is the radius.\n\n#### 4. Sectioning with Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: The definite integral \\( \\int_{0}^{1} x \\, dx = \\frac{1}{2} \\).\n\n---\n\nThird section\n\n#### 5. Usage of Dollar Signs for Monetary Context\n\n**Prices**: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula \\( f(x) = x^2 \\) evaluates to \\( f(5) = 25 \\).\n\n---\n\nThis structured approach should assist in addressing diverse and complex content mixing, ensuring clarity, accuracy, and readability across various forms of data presentation.",
+  "usage": {
+    "prompt_tokens": 427,
+    "completion_tokens": 914,
+    "total_tokens": 1341,
+    "cost": 0.00015785,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00015785,
+      "upstream_inference_prompt_cost": 0.00002989,
+      "upstream_inference_completions_cost": 0.00012796
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00015785,
+  "actualCost": 0.00015785,
+  "timestamp": "2026-11-08T18:03:56.076Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

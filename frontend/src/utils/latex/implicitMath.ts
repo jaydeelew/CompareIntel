@@ -71,6 +71,10 @@ export function convertImplicitMath(text: string): string {
 
     if (trimmed.includes(' ')) return _match
 
+    // Unicode code point notes like (U+00B2) contain `+` so looksMathematical
+    // is true, but they are not math (Qwen 05 rerun: KaTeX `U+00B2\`).
+    if (/^U\+[0-9A-Fa-f]{2,6}$/.test(trimmed)) return _match
+
     if (
       /^[a-zA-Z0-9]$/.test(trimmed) ||
       /^[+-]?\s*[A-Z]$/.test(trimmed) ||

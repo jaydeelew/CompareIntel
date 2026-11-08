@@ -1,0 +1,36 @@
+{
+  "modelId": "microsoft/phi-4",
+  "modelName": "Microsoft: Phi 4",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here's a detailed response testing various delimiter variants and edge cases, focusing on handling math-like syntax, escaping special characters, and ensuring proper display or interpretation in different contexts:\n\n### Delimiter Variants\n\n1. **Double Dollar Display**\n   - Display: `$$x^2 + y^2 = r^2$$`\n   - Rendered as display math: \\(x^2 + y^2 = r^2\\)\n\n2. **Bracket Display**\n   - Syntax: \\[E = mc^2\\]\n   - Rendered as display math: \\(E = mc^2\\)\n\n3. **Single Dollar Inline**\n   - Syntax: `$a + b = c$`\n   - Rendered inline: \\(a + b = c\\)\n\n4. **Paren Inline**\n   - Syntax: `\\(x = 5\\)`\n   - Rendered inline: \\(x = 5\\)\n\n### Nested Structures\n\n- **List with Continuation**\n  - Example:\n    - First item\n    - The equation is:\n      $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n      And it evaluates to \\(0.5\\)\n    - Third item\n  - This section ensures that mathematical equations can be embedded within textual descriptions without breaking the flow.\n\n### Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50  # Recognized as a variable, not math\nformula = \"E = mc^2\"  # String literal, escaped\nresult = a**2 + b**2  # Mathematical operation in code context\ndef calc(x):\n    return x**2  # Mathematical function definition\n```\n\n- In code blocks, dollar signs and math-like syntax are treated as literal text or code, not as display math.\n\n### Currency and Escaped Dollars\n\n- **Plain**\n  - Example: \"The price is $100\"\n  - Treated as currency, not math.\n\n- **Escaped**\n  - Example: \"The budget is \\$500\"\n  - The backslash escapes the dollar sign, ensuring it's displayed as text.\n\n- **Multiple**\n  - Example: \"Costs $25, $30, and $45\"\n  - Each instance is treated as currency.\n\n- **In Sentence**\n  - Example: \"I spent $50 at the store\"\n  - Contextually recognized as currency.\n\n### Tables with Math\n\n| Variable | Formula                | Value  |\n|----------|------------------------|--------|\n| Area     | $A = \\pi r^2$          | $78.54$|\n| Volume   | $V = \\frac{4}{3}\\pi r^3$ | $523.60$|\n\n- In tables, math can appear within cells, using delimiters to distinguish between text and mathematical expressions.\n\n### Raw Dollar Signs\n\n- **Example**\n  - \"The shell variable $HOME is set. Price: $99.99.\"\n  - In this context, `$HOME` is recognized as a shell variable, while `Price: $99.99` is treated as a monetary value.\n\nThis comprehensive approach ensures that different contexts for math-like syntax and dollar signs are handled appropriately, maintaining clarity and accuracy across various applications.",
+  "usage": {
+    "prompt_tokens": 341,
+    "completion_tokens": 674,
+    "total_tokens": 1015,
+    "cost": 0.00011823,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00011823,
+      "upstream_inference_prompt_cost": 0.00002387,
+      "upstream_inference_completions_cost": 0.00009436
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00011823,
+  "actualCost": 0.00011823,
+  "timestamp": "2026-11-08T18:04:02.110Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

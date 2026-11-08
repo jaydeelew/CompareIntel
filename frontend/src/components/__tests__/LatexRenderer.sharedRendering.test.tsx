@@ -324,6 +324,138 @@ describe('bug 13: \\[...\\] display math is recognized even when a JSON config o
   )
 })
 
+describe('bug 14: consecutive tables stay separate; prose with | is not a table row', () => {
+  const glm05Snippet = `| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |
+| Product | $\\prod_{i=1}^{n} i$ | $n!$ |
+
+**Edge case notes:** table cells where pipes (\`|\`) must not be confused with column delimiters.
+
+\`\`\`python
+print("not a table cell")
+\`\`\`
+
+The formula $A = \\pi r^2$ stays outside the table.
+
+| Scenario | Risk | Handling |
+|----------|------|----------|
+| Math in lists | nested emphasis | Preserve \`$...$\` |
+| Dollar signs | currency vs LaTeX | Heuristic or \`\\\\$\` |`
+
+  it('does not swallow following prose, code, or a later table into the first table', () => {
+    const el = renderReply(glm05Snippet, 'z-ai/glm-5.3-flash')
+    const tables = el.querySelectorAll('table.markdown-table')
+    expect(tables).toHaveLength(2)
+    expect(tables[0].querySelectorAll('tr')).toHaveLength(4)
+    expect(tables[1].querySelectorAll('tr')).toHaveLength(3)
+    expect(visibleText(el)).toContain('pipes (|) must not be confused with column delimiters')
+    expect(el.querySelector('pre')).not.toBeNull()
+    expect(visibleText(el.querySelector('pre')!)).toContain('print("not a table cell")')
+    expect(el.querySelector('td pre')).toBeNull()
+    expect(texSources(el).some(t => t.includes('\\pi r^2'))).toBe(true)
+  })
+})
+
+describe('bug 17: ## after a markdown table becomes a heading, not leftover #', () => {
+  it('renders Scenario 3 as h2 after a math table (MiMo prompt 05)', () => {
+    const el = renderReply(
+      `| Formula | LaTeX |\n|---------|-------|\n| Sum | $\\sum i$ |\n\n## Scenario 3: Code and Math Mixed\n`,
+      'xiaomi/mimo-v2.6-flash'
+    )
+    expect(el.querySelector('h2')?.textContent).toBe('Scenario 3: Code and Math Mixed')
+    expect(visibleText(el)).not.toMatch(/#\s*Scenario 3/)
+  })
+})
+
+describe('bug 15: markdown links inside list items become <a href>', () => {
+  it('renders Wikipedia inside a numbered list continuation (Phi-4 prompt 01)', () => {
+    const el = renderReply(
+      '5. **Links**\n\n   For more information on the quadratic formula, you can refer to [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula).\n',
+      'microsoft/phi-4'
+    )
+    const link = el.querySelector('a[href="https://en.wikipedia.org/wiki/Quadratic_formula"]')
+    expect(link).not.toBeNull()
+    expect(link?.textContent).toBe('Wikipedia')
+    expect(visibleText(el)).not.toContain('[Wikipedia](')
+  })
+})
+
+describe('bug 18: **$x = 0$** in an ordered-list continuation is bold math, not leftover asterisks', () => {
+  it('renders Gemini 04 critical-point prose without visible **', () => {
+    const el = renderReply(
+      `2. **Find critical points**:
+   Setting $g'(x) = 0$.
+   Thus, the critical points are at **$x = 0$** and **$x = 2$**.
+`,
+      GEMINI
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('**')
+    expect(el.querySelectorAll('strong .katex').length).toBeGreaterThanOrEqual(2)
+    expect(texSources(el).some(t => t.includes('x = 0'))).toBe(true)
+    expect(texSources(el).some(t => t.includes('x = 2'))).toBe(true)
+  })
+})
+
+describe('bug 19: (U+00B2) code-point notes are not implicit math', () => {
+  it('does not wrap Qwen 05 superscript notes as KaTeX (U+00B2\\)', () => {
+    const el = renderReply(
+      '- `r²` uses superscript 2 (U+00B2), which may render poorly or cause syntax errors in some parsers.',
+      GPT_MINI
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).toContain('U+00B2')
+    expect(visibleText(el)).not.toContain('U+00B2\\')
+    expect(el.querySelector('.katex')).toBeNull()
+  })
+})
+
+describe('bug 19b: Qwen 05 summary table with `$...$` examples and unicode ² is not a KaTeX error', () => {
+  it('does not extract ² or delimiter examples as math', () => {
+    const el = renderReply(
+      [
+        '| Issue | Solution |',
+        '|------|----------|',
+        '| Dollar signs in text (e.g., prices) | Escape with `\\$` |',
+        '| Math in comments or code | Use `r^2`, `pi`, not `²`, `π` |',
+        '| Math across horizontal rules | Use blank lines and `$$...$$` |',
+        '| Unpaired math delimiters | Always pair `$...$` or `$$...$$` |',
+        '',
+        'Always **escape non-math `$`** to avoid parsing errors.',
+      ].join('\n'),
+      GPT_MINI
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).toContain('²')
+  })
+})
+
+describe('bug 16: $...$ / $$...$$ delimiter examples are not math', () => {
+  it('does not extract ellipsis dollar examples or leak list/math placeholders (Phi-4 prompt 05)', () => {
+    const el = renderReply(
+      `Handle dollar signs with caution.
+   - Interpreting $ for inline math and $$ for display math can help:
+     - **Inline Math**: For quick, inline equations ($...$).
+     - **Display Math**: For equations that require their own line or space ($$...$$ or \\[...\\] for clarity without dollar signs).
+
+- \\[
+  c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5
+  \\]
+`,
+      'microsoft/phi-4'
+    )
+    expectNoKatexErrors(el)
+    expect(el.innerHTML).not.toContain('__INLINE_MATH_')
+    expect(el.innerHTML).not.toContain('__UL_')
+    expect(el.innerHTML).not.toContain('__DISPLAY_MATH_')
+    expect(visibleText(el)).toContain('$...$')
+    expect(visibleText(el)).toContain('$$...$$')
+    expect(texSources(el).some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
+  })
+})
+
 describe('bug 11: display math at a bullet’s indent stays inside the list', () => {
   const reply =
     '## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that for any right triangle, the relationship between the lengths of the sides is given by the formula:\n   \\[\n   a^2 + b^2 = c^2\n   \\]\n2. Let’s consider a *right triangle* with side lengths \\(a = 3\\) and \\(b = 4\\):\n   - To find the hypotenuse \\(c\\):\n   \\[\n   c = \\sqrt{a^2 + b^2} = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\n   \\]\n   - Therefore, the length of the hypotenuse \\(c\\) is \\(5\\) units.\n\n## Scenario 2: Tables with Math'

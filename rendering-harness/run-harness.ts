@@ -452,16 +452,17 @@ async function renderResponse(
     const el = document.querySelector('[data-render-failed]');
     return el?.getAttribute('data-render-failed') || null;
   });
-  if (failReason) {
-    throw new Error(`Render readiness failed: ${failReason}`);
-  }
-
-  const result = await analyzeFeatureCoverage(page);
 
   const element = await page.$('[data-render-container]');
   if (element) {
     await element.screenshot({ path: outputPath });
   }
+
+  if (failReason) {
+    throw new Error(`Render readiness failed: ${failReason}`);
+  }
+
+  const result = await analyzeFeatureCoverage(page);
 
   return result;
 }
@@ -617,16 +618,39 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
         });
       } catch (error) {
         console.error(`  ✗ Error rendering: ${error}`);
+        const screenshotRelpath = jsonFile.replace('.json', '.png');
+        // Truncated / empty replies that time out of Prism (unclosed fence) are
+        // incomplete coverage, not renderer-loss. Keep finishReason so unique
+        // coverage can overlay a complete rerun.
+        const status = overallStatus({
+          truncated,
+          emptyVisible,
+          error: truncated || emptyVisible ? undefined : String(error),
+        });
+        console.log(
+          `  △ Validation: ${status.toUpperCase()}` +
+            (truncated || emptyVisible
+              ? ' (screenshot/readiness error on incomplete source, not renderer-fail)'
+              : '')
+        );
         results.push({
           modelId: data.modelId,
           modelName: data.modelName,
           promptName: data.promptName,
           promptText: data.promptText || '',
           response: data.response || '',
-          actualCost: data.cost || 0,
+          usage: data.usage,
+          actualCost: data.cost || data.actualCost || 0,
           timestamp: data.timestamp || new Date().toISOString(),
           error: String(error),
-          validationStatus: 'fail',
+          validationStatus: status,
+          truncated,
+          emptyVisible,
+          finishReason: data.finishReason ?? null,
+          nativeFinishReason: data.nativeFinishReason ?? null,
+          attempt: data.attempt || 'original',
+          screenshotRelpath,
+          sourceFile: jsonFile,
         });
       }
     }
