@@ -24,7 +24,12 @@ import {
   resolveActualCost,
 } from './budget-guard.js';
 import { droppedNameExpectations, getExpectedFeatures } from './expected-features.js';
-import { isTruncatedReply, overallStatus, type OverallStatus } from './overall-status.js';
+import {
+  isTruncatedReply,
+  overallStatus,
+  uniqueCoverageRecords,
+  type OverallStatus,
+} from './overall-status.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,6 +81,9 @@ interface TestResult {
   truncated?: boolean;
   finishReason?: string | null;
   nativeFinishReason?: string | null;
+  attempt?: string;
+  screenshotRelpath?: string;
+  sourceFile?: string;
 }
 
 interface HarnessConfig {
@@ -468,7 +476,7 @@ function escapeHtml(text: string): string {
 /**
  * Render-only mode: re-screenshot existing results without calling API
  */
-async function renderOnlyMode(runDir: string): Promise<void> {
+async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void> {
   console.log(`\n=== Render-Only Mode ===`);
   console.log(`Run directory: ${runDir}\n`);
   
@@ -484,7 +492,18 @@ async function renderOnlyMode(runDir: string): Promise<void> {
   
   // Find all JSON files (saved responses)
   const files = await fs.readdir(fullPath);
-  const jsonFiles = files.filter(f => f.endsWith('.json') && !f.startsWith('results') && !['summary.json', 'manifest.json', 'catalog.json', 'prompts.json'].includes(f));
+  const skipJson = new Set([
+    'summary.json',
+    'manifest.json',
+    'catalog.json',
+    'prompts.json',
+    'coverage.json',
+    'unique-coverage.json',
+    'next-batch-preflight.json',
+  ]);
+  const jsonFiles = files.filter(
+    f => f.endsWith('.json') && !f.startsWith('results') && !skipJson.has(f)
+  );
   
   if (jsonFiles.length === 0) {
     console.error('ERROR: No saved response JSON files found in directory');
@@ -563,6 +582,9 @@ async function renderOnlyMode(runDir: string): Promise<void> {
           truncated,
           finishReason: data.finishReason ?? null,
           nativeFinishReason: data.nativeFinishReason ?? null,
+          attempt: data.attempt || 'original',
+          screenshotRelpath: path.basename(screenshotPath),
+          sourceFile: jsonFile,
         });
       } catch (error) {
         console.error(`  ✗ Error rendering: ${error}`);
@@ -585,36 +607,85 @@ async function renderOnlyMode(runDir: string): Promise<void> {
     stopOwnedVite();
   }
   
-  // Regenerate review page with fresh state
-  const runDate = path.basename(fullPath);
+  let published = results;
+  let publishDir = fullPath;
+  if (mergeInto) {
+    const parentDir = path.isAbsolute(mergeInto) ? mergeInto : path.join(__dirname, mergeInto);
+    const parentResultsPath = path.join(parentDir, 'results.json');
+    const parentRaw = JSON.parse(await fs.readFile(parentResultsPath, 'utf-8')) as {
+      results?: TestResult[];
+    };
+    const parentResults = (parentRaw.results || []).map(record => ({
+      ...record,
+      attempt: record.attempt || 'original',
+      screenshotRelpath:
+        record.screenshotRelpath ||
+        `${record.modelId.replace(/\//g, '_')}_${record.promptName}.png`,
+    }));
+    const mergedNew = results.map(record => ({
+      ...record,
+      screenshotRelpath: path.posix.join(
+        path.basename(fullPath),
+        record.screenshotRelpath || path.basename(record.sourceFile || '').replace(/\.json$/, '.png')
+      ),
+    }));
+    published = [...parentResults, ...mergedNew];
+    publishDir = parentDir;
+  }
+
+  const unique = uniqueCoverageRecords(published);
+  const runDate = path.basename(publishDir);
   const config: HarnessConfig = {
     dryRun: false,
-    modelIds: [...new Set(results.map(r => r.modelId))],
+    modelIds: [...new Set(published.map(r => r.modelId))],
     maxUsd: 0,
     maxTokens: 0,
-    outputDir: fullPath,
+    outputDir: publishDir,
     runDate,
     textModelsOnly: true,
-    cumulativeCostUsd: results.reduce((sum, r) => sum + r.actualCost, 0),
+    cumulativeCostUsd: published.reduce((sum, r) => sum + r.actualCost, 0),
   };
-  
-  // Save updated results manifest with fresh feature coverage
-  const resultsPath = path.join(fullPath, 'results.json');
-  await fs.writeFile(resultsPath, JSON.stringify({
-    runDate,
-    config,
-    results,
-    freshRendered: new Date().toISOString(),
-  }, null, 2));
-  
-  await generateReviewPage(results, config);
-  
+
+  await fs.writeFile(
+    path.join(publishDir, 'results.json'),
+    JSON.stringify(
+      {
+        runDate,
+        config,
+        results: published,
+        uniqueCoverage: unique.map(r => ({
+          modelId: r.modelId,
+          promptName: r.promptName,
+          validationStatus: resultStatus(r),
+          truncated: r.truncated,
+          finishReason: r.finishReason,
+          attempt: r.attempt,
+          sourceFile: r.sourceFile,
+          screenshotRelpath: r.screenshotRelpath,
+          actualCost: r.actualCost,
+        })),
+        historyRecords: published.length,
+        uniqueCells: unique.length,
+        freshRendered: new Date().toISOString(),
+      },
+      null,
+      2
+    )
+  );
+
+  await generateReviewPage(published, config, unique);
+
   console.log('\n=== Render-Only Complete ===');
-  console.log(`Screenshots regenerated: ${results.length}`);
-  console.log(`Review page updated: ${path.join(fullPath, 'review.html')}`);
-  
-  reportValidationSummary(results);
-  exitIfValidationFailed(results);
+  console.log(`Screenshots regenerated this pass: ${results.length}`);
+  console.log(`History records: ${published.length}`);
+  console.log(`Unique coverage cells: ${unique.length}`);
+  console.log(`Review page updated: ${path.join(publishDir, 'review.html')}`);
+
+  console.log('\nHistory (all API records):');
+  reportValidationSummary(published);
+  console.log('Unique coverage (complete attempt replaces truncated provenance):');
+  reportValidationSummary(unique);
+  exitIfValidationFailed(unique);
 }
 
 function resultStatus(r: TestResult): OverallStatus {
@@ -650,7 +721,8 @@ function exitIfValidationFailed(results: TestResult[]): void {
  */
 async function generateReviewPage(
   results: TestResult[],
-  config: HarnessConfig
+  config: HarnessConfig,
+  unique: TestResult[] = uniqueCoverageRecords(results)
 ): Promise<void> {
   const reviewPath = path.join(config.outputDir, 'review.html');
   
@@ -803,12 +875,20 @@ async function generateReviewPage(
     <p><strong>Run Date:</strong> ${config.runDate}</p>
     <p><strong>Models Tested:</strong> ${config.modelIds.length}</p>
     <p><strong>Prompts:</strong> ${byPrompt.size}</p>
-    <p><strong>Total Results:</strong> ${results.length}</p>
-    <p><strong>Passed:</strong> ${results.filter(r => resultStatus(r) === 'pass').length}
-       &nbsp;<strong>Not covered:</strong> ${results.filter(r => resultStatus(r) === 'not-covered').length}
-       &nbsp;<strong>Truncated:</strong> ${results.filter(r => resultStatus(r) === 'truncated').length}
-       &nbsp;<strong>Failed:</strong> ${results.filter(r => resultStatus(r) === 'fail').length}</p>
-    <p><strong>Total Cost:</strong> $${totalCost.toFixed(4)}</p>
+    <p><strong>API history records:</strong> ${results.length}
+       &nbsp;<strong>Unique coverage cells:</strong> ${unique.length}</p>
+    <p><strong>History:</strong>
+       Passed ${results.filter(r => resultStatus(r) === 'pass').length}
+       / Not covered ${results.filter(r => resultStatus(r) === 'not-covered').length}
+       / Truncated ${results.filter(r => resultStatus(r) === 'truncated').length}
+       / Failed ${results.filter(r => resultStatus(r) === 'fail').length}</p>
+    <p><strong>Unique coverage:</strong>
+       Passed ${unique.filter(r => resultStatus(r) === 'pass').length}
+       / Not covered ${unique.filter(r => resultStatus(r) === 'not-covered').length}
+       / Truncated ${unique.filter(r => resultStatus(r) === 'truncated').length}
+       / Failed ${unique.filter(r => resultStatus(r) === 'fail').length}
+       (complete attempts replace truncated provenance; originals stay in history)</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $${totalCost.toFixed(6)}</p>
     <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
   </div>
   
@@ -818,11 +898,12 @@ async function generateReviewPage(
       <div class="model-grid">
         ${promptResults.map(result => `
           <div class="model-card">
-            <h4>${result.modelName} <span class="status status-${resultStatus(result)}">${resultStatus(result)}</span></h4>
+            <h4>${result.modelName} <span class="status status-${resultStatus(result)}">${resultStatus(result)}</span>${result.attempt && result.attempt !== 'original' ? ` <span class="status status-not-covered">${escapeHtml(result.attempt)}</span>` : ''}</h4>
             <div class="meta">
               Model ID: ${result.modelId}<br>
+              Attempt: ${escapeHtml(result.attempt || 'original')}${result.sourceFile ? ` · ${escapeHtml(result.sourceFile)}` : ''}<br>
               ${result.usage ? `Tokens: ${result.usage.total_tokens || result.usage.totalTokens || '?'} (${result.usage.prompt_tokens || result.usage.promptTokens || '?'} in / ${result.usage.completion_tokens || result.usage.completionTokens || '?'} out)<br>` : ''}
-              Cost: $${result.actualCost.toFixed(4)}<br>
+              Cost: $${result.actualCost.toFixed(6)}<br>
               Finish: ${escapeHtml(String(result.finishReason || 'unknown'))}${result.nativeFinishReason ? ` / ${escapeHtml(String(result.nativeFinishReason))}` : ''}${result.truncated ? ' — truncated, not comprehensive' : ''}<br>
               Time: ${new Date(result.timestamp).toLocaleString()}
             </div>
@@ -830,7 +911,7 @@ async function generateReviewPage(
             ${result.error ? `
               <div class="error">Error: ${result.error}</div>
             ` : `
-              <img src="${result.modelId.replace(/\//g, '_')}_${promptName}.png" 
+              <img src="${escapeHtml(result.screenshotRelpath || `${result.modelId.replace(/\//g, '_')}_${promptName}.png`)}" 
                    class="screenshot" 
                    alt="Rendered output"
                    onerror="this.style.display='none'">
@@ -919,6 +1000,7 @@ async function main() {
   const maxUsdArg = args.find(arg => arg.startsWith('--max-usd='));
   const maxTokensArg = args.find(arg => arg.startsWith('--max-tokens='));
   const renderDirArg = args.find(arg => arg.startsWith('--render-dir='));
+  const mergeIntoArg = args.find(arg => arg.startsWith('--merge-into='));
   
   const maxUsd = maxUsdArg ? parseFloat(maxUsdArg.split('=')[1]) : 10.0;
   const maxTokens = maxTokensArg ? parseInt(maxTokensArg.split('=')[1]) : DEFAULT_MAX_TOKENS;
@@ -934,7 +1016,7 @@ async function main() {
       process.exit(1);
     }
     
-    await renderOnlyMode(renderDir);
+    await renderOnlyMode(renderDir, mergeIntoArg ? mergeIntoArg.split('=')[1] : undefined);
     return;
   }
   

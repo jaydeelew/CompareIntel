@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { isTruncatedReply, overallStatus } from './overall-status.js'
+import { isTruncatedReply, overallStatus, uniqueCoverageRecords } from './overall-status.js'
 
 test.describe('Truncation vs renderer loss', () => {
   test('length / max_tokens finish is truncated', () => {
@@ -65,5 +65,37 @@ test.describe('Truncation vs renderer loss', () => {
         validation: { status: 'pass', assertions: [] },
       })
     ).toBe('pass')
+  })
+
+  test('unique coverage keeps original 24 cells and prefers complete reruns', () => {
+    const unique = uniqueCoverageRecords([
+      {
+        modelId: 'anthropic/claude-haiku-5.5',
+        promptName: '05-complex-scenarios',
+        truncated: true,
+        finishReason: 'length',
+        timestamp: '2026-11-08T17:44:05.550Z',
+      },
+      {
+        modelId: 'qwen/qwen3-coder-flash',
+        promptName: '01-math-basics',
+        truncated: false,
+        finishReason: 'stop',
+        timestamp: '2026-11-08T17:44:13.950Z',
+      },
+      {
+        modelId: 'anthropic/claude-haiku-5.5',
+        promptName: '05-complex-scenarios',
+        truncated: false,
+        finishReason: 'stop',
+        timestamp: '2026-11-08T17:53:40.000Z',
+      },
+    ])
+    expect(unique).toHaveLength(2)
+    const haiku05 = unique.find(
+      r => r.modelId === 'anthropic/claude-haiku-5.5' && r.promptName === '05-complex-scenarios'
+    )
+    expect(haiku05?.finishReason).toBe('stop')
+    expect(haiku05?.truncated).toBe(false)
   })
 })

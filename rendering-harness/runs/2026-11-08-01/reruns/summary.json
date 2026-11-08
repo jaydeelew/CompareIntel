@@ -1,0 +1,13 @@
+{
+  "status": "completed",
+  "attemptedCalls": 3,
+  "actualCost": 0.0015961999999999999,
+  "unknownCosts": 0,
+  "promptTokens": 1566,
+  "completionTokens": 3470,
+  "reasoningTokensIncludedInCompletion": 660,
+  "firstCallCST": "11/8/2026, 11:53:31 AM CST",
+  "lastCallCST": "11/8/2026, 11:53:48 AM CST",
+  "truncated": [],
+  "coverage": "Unassessed; no rendering"
+}

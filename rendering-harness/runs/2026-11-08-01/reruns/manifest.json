@@ -1,0 +1,143 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.05,
+  "maxTokens": 2048,
+  "temperature": "omitted, unchanged",
+  "attemptedCalls": 3,
+  "knownActualCost": 0.0015961999999999999,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "05-complex-scenarios",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-01/replies/anthropic_claude-haiku-5.5_05-complex-scenarios.json",
+      "originalFinishReason": "length",
+      "promptSha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+      "reserveUsd": 0.0024,
+      "startedAt": "2026-11-08T17:53:31.015Z",
+      "actualCost": 0.0005888,
+      "finishedAt": "2026-11-08T17:53:35.610Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 633,
+        "completion_tokens": 1051,
+        "total_tokens": 1684,
+        "cost": 0.0005888,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005888,
+          "upstream_inference_prompt_cost": 0.0000633,
+          "upstream_inference_completions_cost": 0.0005255
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 388,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "06-edge-cases-boundaries",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-01/replies/anthropic_claude-haiku-5.5_06-edge-cases-boundaries.json",
+      "originalFinishReason": "length",
+      "promptSha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51",
+      "reserveUsd": 0.0024,
+      "startedAt": "2026-11-08T17:53:35.611Z",
+      "actualCost": 0.0005195,
+      "finishedAt": "2026-11-08T17:53:40.195Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 485,
+        "completion_tokens": 942,
+        "total_tokens": 1427,
+        "cost": 0.0005195,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005195,
+          "upstream_inference_prompt_cost": 0.0000485,
+          "upstream_inference_completions_cost": 0.000471
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 272,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "05-complex-scenarios",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-01/replies/mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.json",
+      "originalFinishReason": "length",
+      "promptSha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+      "reserveUsd": 0.0024,
+      "startedAt": "2026-11-08T17:53:40.195Z",
+      "actualCost": 0.0004879,
+      "finishedAt": "2026-11-08T17:53:48.669Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 448,
+        "completion_tokens": 1477,
+        "total_tokens": 1925,
+        "cost": 0.0004879,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0004879,
+          "upstream_inference_prompt_cost": 0.0000448,
+          "upstream_inference_completions_cost": 0.0004431
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed; collection only",
+  "status": "completed",
+  "finishedAt": "2026-11-08T17:53:48.670Z",
+  "files": {
+    "replies": [
+      "replies/anthropic_claude-haiku-5.5_05-complex-scenarios.json",
+      "replies/anthropic_claude-haiku-5.5_06-edge-cases-boundaries.json",
+      "replies/mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.json"
+    ],
+    "raw": [
+      "raw/anthropic_claude-haiku-5.5_05-complex-scenarios.json",
+      "raw/anthropic_claude-haiku-5.5_06-edge-cases-boundaries.json",
+      "raw/mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.json"
+    ]
+  }
+}

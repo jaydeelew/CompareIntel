@@ -40,3 +40,39 @@ export function overallStatus(opts: {
   if (opts.truncated) return 'truncated'
   return validation.status
 }
+
+export interface CoverageRecord {
+  modelId: string
+  promptName: string
+  truncated?: boolean
+  finishReason?: string | null
+  nativeFinishReason?: string | null
+  timestamp?: string
+}
+
+/**
+ * One coverage cell per (modelId, promptName). A complete (non-truncated) later
+ * attempt replaces a truncated original; originals are never deleted from history.
+ */
+export function uniqueCoverageRecords<T extends CoverageRecord>(records: T[]): T[] {
+  const byKey = new Map<string, T>()
+  for (const record of records) {
+    const key = `${record.modelId}::${record.promptName}`
+    const existing = byKey.get(key)
+    if (!existing) {
+      byKey.set(key, record)
+      continue
+    }
+    const recordTruncated = isTruncatedReply(record)
+    const existingTruncated = isTruncatedReply(existing)
+    if (existingTruncated && !recordTruncated) {
+      byKey.set(key, record)
+      continue
+    }
+    if (!existingTruncated && recordTruncated) continue
+    if ((record.timestamp || '') > (existing.timestamp || '')) {
+      byKey.set(key, record)
+    }
+  }
+  return [...byKey.values()]
+}

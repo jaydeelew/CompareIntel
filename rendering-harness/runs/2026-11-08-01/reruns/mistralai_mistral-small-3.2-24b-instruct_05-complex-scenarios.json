@@ -1,0 +1,45 @@
+{
+  "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+  "modelName": "Mistral: Mistral Small 3.2 24B",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = \u03c0r\u00b2\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here\u2019s a structured response incorporating all the challenging edge cases from your test prompt, with additional considerations for robustness and edge-case handling:\n\n---\n\n### **1. Math in Lists with Formatting (Edge Cases)**\n1. **Pythagorean Theorem**:\n   The theorem states that \\( a^2 + b^2 = c^2 \\).\n   - **Edge Case**: Nested lists with math:\n     - Sub-item 1: \\( a = 3 \\), \\( b = 4 \\)\n     - Sub-item 2: \\( c = \\sqrt{a^2 + b^2} \\)\n       - Nested math: \\( \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5 \\)\n   - **Edge Case**: Mixed LaTeX and plain text:\n     The hypotenuse \\( c \\) is **5 units** (bolded result).\n\n2. **Edge Case**: Math in list items with line breaks:\n   - For a right triangle:\n     \\( a = 3 \\)\n     \\( b = 4 \\)\n     \\( c = \\sqrt{a^2 + b^2} = 5 \\)\n\n---\n\n### **2. Tables with Math (Edge Cases)**\n| **Formula**       | **LaTeX**                          | **Result**                          | **Edge Case**                     |\n|-------------------|------------------------------------|-------------------------------------|-----------------------------------|\n| Quadratic         | \\( ax^2 + bx + c = 0 \\)            | \\( x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} \\) | **Inline math**: \\( x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} \\) |\n| Sum               | \\( \\sum_{i=1}^{n} i \\)             | \\( \\frac{n(n+1)}{2} \\)             | **Multiline LaTeX**:\n\\( \\sum_{i=1}^{n} i = \\)\n\\( \\frac{n(n+1)}{2} \\)               |\n| Product           | \\( \\prod_{i=1}^{n} i \\)            | \\( n! \\)                            | **Math in table headers**:\n\\( \\prod \\) (symbol only)            |\n\n**Edge Case**: Table with escaped dollar signs:\n| **Price** | **Value** |\n|-----------|-----------|\n| Laptop    | \\$1,200   |\n| Monitor   | \\$300     |\n\n---\n\n### **3. Code and Math Mixed (Edge Cases)**\n```python\n# Edge Case 1: Math in docstrings\ndef circle_area(r: float) -> float:\n    \"\"\"\n    Calculate area of circle with radius r.\n    Formula: \\( A = \\pi r^2 \\)\n    Edge Case: Handle negative radius\n    \"\"\"\n    if r < 0:\n        raise ValueError(\"Radius cannot be negative\")\n    return math.pi * r**2\n\n# Edge Case 2: Math in comments\n# Formula: \\( A = \\pi r^2 \\), but \\( r \\) must be positive\nprint(f\"Area: {circle_area(5)}\")  # Edge Case: Floating-point precision\n\n# Edge Case 3: Math in f-strings (Python 3.6+)\nprint(f\"Area of circle with r=5: {circle_area(5):.2f}\")  # Rounded to 2 decimals\n```\n\n**Edge Case**: Math in code output:\n```python\n# Edge Case: Math in printed output\nprint(f\"Formula: A = \u03c0r\u00b2, where r = 5 \u2192 Area = {circle_area(5)}\")\n```\n\n---\n\n### **4. Horizontal Rules (Edge Cases)**\n**Edge Case 1**: Multiple horizontal rules in sequence:\n---\n\n---\n\n**Edge Case 2**: Horizontal rule with math in adjacent sections:\nFirst section with math: \\( \\int_{0}^{1} x \\, dx = \\frac{1}{2} \\)\n\n---\n\nSecond section with **nested math**:\n\\( \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} \\)\n\n---\n\nThird section with **block math**:\n\\[\nE = mc^2\n\\]\n\n---\n\n### **5. Multiple Dollar Signs (Edge Cases)**\n**Edge Case 1**: Dollar signs in text vs. math:\n- **Text**: The price is \\$1,200 (escaped).\n- **Math**: The price is \\( \\$1,200 \\) (inline math).\n\n**Edge Case 2**: Mixed currency and math:\n- Total cost: \\( \\$1,575 \\) (math mode).\n- Breakdown:\n  - Computer: \\( \\$1,200 \\)\n  - Monitor: \\( \\$300 \\)\n  - Keyboard: \\( \\$50 \\)\n  - Mouse: \\( \\$25 \\)\n\n**Edge Case 3**: Nested dollar signs in math:\n- Formula: \\( f(x) = x^2 \\) evaluates to \\( f(\\$5) = \\$25 \\) (invalid, but edge case).\n\n**Edge Case 4**: Dollar signs in code blocks:\n```python\n# Edge Case: Dollar signs in strings\nprice = \"$1,200\"\nprint(f\"Price: {price}\")  # Output: Price: $1,200\n```\n\n---\n\n### **Additional Edge Cases**\n1. **Math in Blockquotes**:\n   > The formula \\( E = mc^2 \\) is famous.\n   > Edge Case: Nested blockquotes with math:\n   >> \\( \\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0} \\)\n\n2. **Math in Headers**:\n   # **Math in H1**: \\( \\frac{d}{dx} \\sin(x) = \\cos(x) \\)\n   ## **Math in H2**: \\( \\lim_{x \\to 0} \\frac{\\sin x}{x} = 1 \\)\n\n3. **Math in Links**:\n   [Pythagorean theorem](https://en.wikipedia.org/wiki/Pythagorean_theorem) states \\( a^2 + b^2 = c^2 \\).\n\n4. **Math in Images (Alt Text)**:\n   ![Pythagorean theorem](image.png) where \\( a^2 + b^2 = c^2 \\).\n\n5. **Math in Footnotes**:\n   The area of a circle is \\( A = \\pi r^2 \\).[^1]\n\n   [^1]: Derived from \\( \\pi \\approx 3.14159 \\).\n\n---\n\nThis response covers:\n- Nested structures (lists, tables, code).\n- Escaping special characters (dollar signs, underscores).\n- Mixed formatting (bold, italics, code blocks).\n- Edge cases in LaTeX (multiline, symbols, symbols only).\n- Integration with non-math content (headers, links, footnotes).",
+  "usage": {
+    "prompt_tokens": 448,
+    "completion_tokens": 1477,
+    "total_tokens": 1925,
+    "cost": 0.0004879,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0004879,
+      "upstream_inference_prompt_cost": 4.48e-05,
+      "upstream_inference_completions_cost": 0.0004431
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0004879,
+  "actualCost": 0.0004879,
+  "timestamp": "2026-11-08T17:53:48.669Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null,
+  "provenance": {
+    "originalFile": "/workspace/prism/paid-batch-2026-11-08-01/replies/mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.json",
+    "promptSha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+    "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd"
+  },
+  "attempt": "rerun-2048",
+  "maxTokens": 2048,
+  "replacesCoverageFor": "mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.json",
+  "truncated": false
+}

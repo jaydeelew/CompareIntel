@@ -13,7 +13,7 @@
     "outputDir": "/agent/repos/CompareIntel/rendering-harness/runs/2026-11-08-01",
     "runDate": "2026-11-08-01",
     "textModelsOnly": true,
-    "cumulativeCostUsd": 0.007390914999999999
+    "cumulativeCostUsd": 0.008987114999999997
   },
   "results": [
     {
@@ -131,7 +131,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "end_turn"
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_01-math-basics.png"
     },
     {
       "modelId": "anthropic/claude-haiku-5.5",
@@ -230,7 +232,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "end_turn"
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_02-markdown-formatting.png"
     },
     {
       "modelId": "anthropic/claude-haiku-5.5",
@@ -328,7 +332,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "end_turn"
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_03-code-blocks.png"
     },
     {
       "modelId": "anthropic/claude-haiku-5.5",
@@ -427,7 +433,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "end_turn"
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_04-mixed-markdown-latex.png"
     },
     {
       "modelId": "anthropic/claude-haiku-5.5",
@@ -537,7 +545,9 @@
       "validationStatus": "truncated",
       "truncated": true,
       "finishReason": "length",
-      "nativeFinishReason": "max_tokens"
+      "nativeFinishReason": "max_tokens",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_05-complex-scenarios.png"
     },
     {
       "modelId": "anthropic/claude-haiku-5.5",
@@ -647,7 +657,9 @@
       "validationStatus": "truncated",
       "truncated": true,
       "finishReason": "length",
-      "nativeFinishReason": "max_tokens"
+      "nativeFinishReason": "max_tokens",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_06-edge-cases-boundaries.png"
     },
     {
       "modelId": "google/gemma-3-27b-it",
@@ -764,7 +776,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_01-math-basics.png"
     },
     {
       "modelId": "google/gemma-3-27b-it",
@@ -863,7 +877,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_02-markdown-formatting.png"
     },
     {
       "modelId": "google/gemma-3-27b-it",
@@ -961,7 +977,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_03-code-blocks.png"
     },
     {
       "modelId": "google/gemma-3-27b-it",
@@ -1060,7 +1078,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_04-mixed-markdown-latex.png"
     },
     {
       "modelId": "google/gemma-3-27b-it",
@@ -1170,7 +1190,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_05-complex-scenarios.png"
     },
     {
       "modelId": "google/gemma-3-27b-it",
@@ -1280,7 +1302,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_06-edge-cases-boundaries.png"
     },
     {
       "modelId": "mistralai/mistral-small-3.2-24b-instruct",
@@ -1397,7 +1421,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_01-math-basics.png"
     },
     {
       "modelId": "mistralai/mistral-small-3.2-24b-instruct",
@@ -1496,7 +1522,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_02-markdown-formatting.png"
     },
     {
       "modelId": "mistralai/mistral-small-3.2-24b-instruct",
@@ -1594,7 +1622,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_03-code-blocks.png"
     },
     {
       "modelId": "mistralai/mistral-small-3.2-24b-instruct",
@@ -1693,7 +1723,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_04-mixed-markdown-latex.png"
     },
     {
       "modelId": "mistralai/mistral-small-3.2-24b-instruct",
@@ -1803,7 +1835,9 @@
       "validationStatus": "truncated",
       "truncated": true,
       "finishReason": "length",
-      "nativeFinishReason": "length"
+      "nativeFinishReason": "length",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.png"
     },
     {
       "modelId": "mistralai/mistral-small-3.2-24b-instruct",
@@ -1913,7 +1947,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_06-edge-cases-boundaries.png"
     },
     {
       "modelId": "qwen/qwen3-coder-flash",
@@ -2030,7 +2066,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_01-math-basics.png"
     },
     {
       "modelId": "qwen/qwen3-coder-flash",
@@ -2129,7 +2167,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_02-markdown-formatting.png"
     },
     {
       "modelId": "qwen/qwen3-coder-flash",
@@ -2227,7 +2267,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_03-code-blocks.png"
     },
     {
       "modelId": "qwen/qwen3-coder-flash",
@@ -2326,7 +2368,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_04-mixed-markdown-latex.png"
     },
     {
       "modelId": "qwen/qwen3-coder-flash",
@@ -2436,7 +2480,9 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_05-complex-scenarios.png"
     },
     {
       "modelId": "qwen/qwen3-coder-flash",
@@ -2546,8 +2592,596 @@
       "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
-      "nativeFinishReason": "stop"
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_06-edge-cases-boundaries.png"
+    },
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "modelName": "Anthropic: Claude Haiku 5.5",
+      "promptName": "05-complex-scenarios",
+      "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+      "response": "## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n*Note: In the prices line, the dollar signs are escaped with backslashes. Without escaping, a renderer could read the text between two unescaped `$` signs as a LaTeX expression.*",
+      "usage": {
+        "prompt_tokens": 633,
+        "completion_tokens": 1051,
+        "total_tokens": 1684,
+        "cost": 0.0005888,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005888,
+          "upstream_inference_prompt_cost": 0.0000633,
+          "upstream_inference_completions_cost": 0.0005255
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 388,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0005888,
+      "timestamp": "2026-11-08T17:53:35.610Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 12,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "16 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (12 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 12,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "attempt": "rerun-2048",
+      "screenshotRelpath": "reruns/anthropic_claude-haiku-5.5_05-complex-scenarios.png",
+      "sourceFile": "anthropic_claude-haiku-5.5_05-complex-scenarios.json"
+    },
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "modelName": "Anthropic: Claude Haiku 5.5",
+      "promptName": "06-edge-cases-boundaries",
+      "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+      "response": "# Edge Cases and Boundaries: Test Response\n\n## Delimiter Variants\n\n1. **Double dollar display:**\n\n$$x^2 + y^2 = r^2$$\n\n2. **Bracket display:**\n\n\\[E = mc^2\\]\n\n3. **Single dollar inline:** $a + b = c$\n\n4. **Paren inline:** \\(x = 5\\)\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n\n     $$\\int_0^1 x\\,dx = \\frac{1}{2}$$\n\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\nThe code block should render literally. No math processing should occur inside it, even though it contains `$`, `^`, and `**`.\n\n## Currency and Escaped Dollars\n\n- **Plain:** The price is $100\n- **Escaped:** The budget is \\$500\n- **Multiple:** Costs $25, $30, and $45\n- **In sentence:** I spent $50 at the store\n\nExpected behavior: the escaped `\\$500` should display as a literal \"$500.\" The unescaped currency values should display as literal dollar signs. A renderer that pairs the `$` signs in \"$25, $30\" as an inline math span would be a failure.\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\nMath inside table cells should render, and the pipe characters should not break the table layout.\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\nExpected behavior: both `$` signs in this sentence are literal. A renderer might try to pair them as inline math, so this line checks for that false positive.",
+      "usage": {
+        "prompt_tokens": 485,
+        "completion_tokens": 942,
+        "total_tokens": 1427,
+        "cost": 0.0005195,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005195,
+          "upstream_inference_prompt_cost": 0.0000485,
+          "upstream_inference_completions_cost": 0.000471
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 272,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0005195,
+      "timestamp": "2026-11-08T17:53:40.195Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": true,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "3 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": true,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "attempt": "rerun-2048",
+      "screenshotRelpath": "reruns/anthropic_claude-haiku-5.5_06-edge-cases-boundaries.png",
+      "sourceFile": "anthropic_claude-haiku-5.5_06-edge-cases-boundaries.json"
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "modelName": "Mistral: Mistral Small 3.2 24B",
+      "promptName": "05-complex-scenarios",
+      "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+      "response": "Here’s a structured response incorporating all the challenging edge cases from your test prompt, with additional considerations for robustness and edge-case handling:\n\n---\n\n### **1. Math in Lists with Formatting (Edge Cases)**\n1. **Pythagorean Theorem**:\n   The theorem states that \\( a^2 + b^2 = c^2 \\).\n   - **Edge Case**: Nested lists with math:\n     - Sub-item 1: \\( a = 3 \\), \\( b = 4 \\)\n     - Sub-item 2: \\( c = \\sqrt{a^2 + b^2} \\)\n       - Nested math: \\( \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5 \\)\n   - **Edge Case**: Mixed LaTeX and plain text:\n     The hypotenuse \\( c \\) is **5 units** (bolded result).\n\n2. **Edge Case**: Math in list items with line breaks:\n   - For a right triangle:\n     \\( a = 3 \\)\n     \\( b = 4 \\)\n     \\( c = \\sqrt{a^2 + b^2} = 5 \\)\n\n---\n\n### **2. Tables with Math (Edge Cases)**\n| **Formula**       | **LaTeX**                          | **Result**                          | **Edge Case**                     |\n|-------------------|------------------------------------|-------------------------------------|-----------------------------------|\n| Quadratic         | \\( ax^2 + bx + c = 0 \\)            | \\( x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} \\) | **Inline math**: \\( x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} \\) |\n| Sum               | \\( \\sum_{i=1}^{n} i \\)             | \\( \\frac{n(n+1)}{2} \\)             | **Multiline LaTeX**:\n\\( \\sum_{i=1}^{n} i = \\)\n\\( \\frac{n(n+1)}{2} \\)               |\n| Product           | \\( \\prod_{i=1}^{n} i \\)            | \\( n! \\)                            | **Math in table headers**:\n\\( \\prod \\) (symbol only)            |\n\n**Edge Case**: Table with escaped dollar signs:\n| **Price** | **Value** |\n|-----------|-----------|\n| Laptop    | \\$1,200   |\n| Monitor   | \\$300     |\n\n---\n\n### **3. Code and Math Mixed (Edge Cases)**\n```python\n# Edge Case 1: Math in docstrings\ndef circle_area(r: float) -> float:\n    \"\"\"\n    Calculate area of circle with radius r.\n    Formula: \\( A = \\pi r^2 \\)\n    Edge Case: Handle negative radius\n    \"\"\"\n    if r < 0:\n        raise ValueError(\"Radius cannot be negative\")\n    return math.pi * r**2\n\n# Edge Case 2: Math in comments\n# Formula: \\( A = \\pi r^2 \\), but \\( r \\) must be positive\nprint(f\"Area: {circle_area(5)}\")  # Edge Case: Floating-point precision\n\n# Edge Case 3: Math in f-strings (Python 3.6+)\nprint(f\"Area of circle with r=5: {circle_area(5):.2f}\")  # Rounded to 2 decimals\n```\n\n**Edge Case**: Math in code output:\n```python\n# Edge Case: Math in printed output\nprint(f\"Formula: A = πr², where r = 5 → Area = {circle_area(5)}\")\n```\n\n---\n\n### **4. Horizontal Rules (Edge Cases)**\n**Edge Case 1**: Multiple horizontal rules in sequence:\n---\n\n---\n\n**Edge Case 2**: Horizontal rule with math in adjacent sections:\nFirst section with math: \\( \\int_{0}^{1} x \\, dx = \\frac{1}{2} \\)\n\n---\n\nSecond section with **nested math**:\n\\( \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} \\)\n\n---\n\nThird section with **block math**:\n\\[\nE = mc^2\n\\]\n\n---\n\n### **5. Multiple Dollar Signs (Edge Cases)**\n**Edge Case 1**: Dollar signs in text vs. math:\n- **Text**: The price is \\$1,200 (escaped).\n- **Math**: The price is \\( \\$1,200 \\) (inline math).\n\n**Edge Case 2**: Mixed currency and math:\n- Total cost: \\( \\$1,575 \\) (math mode).\n- Breakdown:\n  - Computer: \\( \\$1,200 \\)\n  - Monitor: \\( \\$300 \\)\n  - Keyboard: \\( \\$50 \\)\n  - Mouse: \\( \\$25 \\)\n\n**Edge Case 3**: Nested dollar signs in math:\n- Formula: \\( f(x) = x^2 \\) evaluates to \\( f(\\$5) = \\$25 \\) (invalid, but edge case).\n\n**Edge Case 4**: Dollar signs in code blocks:\n```python\n# Edge Case: Dollar signs in strings\nprice = \"$1,200\"\nprint(f\"Price: {price}\")  # Output: Price: $1,200\n```\n\n---\n\n### **Additional Edge Cases**\n1. **Math in Blockquotes**:\n   > The formula \\( E = mc^2 \\) is famous.\n   > Edge Case: Nested blockquotes with math:\n   >> \\( \\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0} \\)\n\n2. **Math in Headers**:\n   # **Math in H1**: \\( \\frac{d}{dx} \\sin(x) = \\cos(x) \\)\n   ## **Math in H2**: \\( \\lim_{x \\to 0} \\frac{\\sin x}{x} = 1 \\)\n\n3. **Math in Links**:\n   [Pythagorean theorem](https://en.wikipedia.org/wiki/Pythagorean_theorem) states \\( a^2 + b^2 = c^2 \\).\n\n4. **Math in Images (Alt Text)**:\n   ![Pythagorean theorem](image.png) where \\( a^2 + b^2 = c^2 \\).\n\n5. **Math in Footnotes**:\n   The area of a circle is \\( A = \\pi r^2 \\).[^1]\n\n   [^1]: Derived from \\( \\pi \\approx 3.14159 \\).\n\n---\n\nThis response covers:\n- Nested structures (lists, tables, code).\n- Escaping special characters (dollar signs, underscores).\n- Mixed formatting (bold, italics, code blocks).\n- Edge cases in LaTeX (multiline, symbols, symbols only).\n- Integration with non-math content (headers, links, footnotes).",
+      "usage": {
+        "prompt_tokens": 448,
+        "completion_tokens": 1477,
+        "total_tokens": 1925,
+        "cost": 0.0004879,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0004879,
+          "upstream_inference_prompt_cost": 0.0000448,
+          "upstream_inference_completions_cost": 0.0004431
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0004879,
+      "timestamp": "2026-11-08T17:53:48.669Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": true,
+        "linkDestinations": [],
+        "tableCellCount": 22,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "38 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "3 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (22 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": true,
+          "linkDestinations": [],
+          "tableCellCount": 22,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "rerun-2048",
+      "screenshotRelpath": "reruns/mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.png",
+      "sourceFile": "mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.json"
     }
   ],
-  "freshRendered": "2026-11-08T17:50:48.419Z"
+  "uniqueCoverage": [
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_01-math-basics.png",
+      "actualCost": 0.000442
+    },
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_02-markdown-formatting.png",
+      "actualCost": 0.0002344
+    },
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_03-code-blocks.png",
+      "actualCost": 0.000275
+    },
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-haiku-5.5_04-mixed-markdown-latex.png",
+      "actualCost": 0.0004194
+    },
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "rerun-2048",
+      "sourceFile": "anthropic_claude-haiku-5.5_05-complex-scenarios.json",
+      "screenshotRelpath": "reruns/anthropic_claude-haiku-5.5_05-complex-scenarios.png",
+      "actualCost": 0.0005888
+    },
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "rerun-2048",
+      "sourceFile": "anthropic_claude-haiku-5.5_06-edge-cases-boundaries.json",
+      "screenshotRelpath": "reruns/anthropic_claude-haiku-5.5_06-edge-cases-boundaries.png",
+      "actualCost": 0.0005195
+    },
+    {
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_01-math-basics.png",
+      "actualCost": 0.0001983
+    },
+    {
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_02-markdown-formatting.png",
+      "actualCost": 0.0000767
+    },
+    {
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_03-code-blocks.png",
+      "actualCost": 0.0001251
+    },
+    {
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_04-mixed-markdown-latex.png",
+      "actualCost": 0.00032263
+    },
+    {
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_05-complex-scenarios.png",
+      "actualCost": 0.0003101
+    },
+    {
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemma-3-27b-it_06-edge-cases-boundaries.png",
+      "actualCost": 0.0003264
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_01-math-basics.png",
+      "actualCost": 0.000113075
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_02-markdown-formatting.png",
+      "actualCost": 0.00005815
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_03-code-blocks.png",
+      "actualCost": 0.0001134
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_04-mixed-markdown-latex.png",
+      "actualCost": 0.000101075
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "rerun-2048",
+      "sourceFile": "mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.json",
+      "screenshotRelpath": "reruns/mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.png",
+      "actualCost": 0.0004879
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "mistralai_mistral-small-3.2-24b-instruct_06-edge-cases-boundaries.png",
+      "actualCost": 0.0002089
+    },
+    {
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_01-math-basics.png",
+      "actualCost": 0.00038298
+    },
+    {
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_02-markdown-formatting.png",
+      "actualCost": 0.00021528
+    },
+    {
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_03-code-blocks.png",
+      "actualCost": 0.000332475
+    },
+    {
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_04-mixed-markdown-latex.png",
+      "actualCost": 0.00054249
+    },
+    {
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_05-complex-scenarios.png",
+      "actualCost": 0.000634725
+    },
+    {
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen3-coder-flash_06-edge-cases-boundaries.png",
+      "actualCost": 0.000470535
+    }
+  ],
+  "historyRecords": 27,
+  "uniqueCells": 24,
+  "freshRendered": "2026-11-08T17:56:27.821Z"
 }
