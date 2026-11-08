@@ -1,0 +1,78 @@
+{
+  "status": "completed",
+  "attempted": 24,
+  "cost": 0.0068221922,
+  "unknownCostCalls": 0,
+  "errors": [],
+  "promptTokens": 7170,
+  "completionTokens": 17158,
+  "totalTokens": 24328,
+  "reasoningTokensIncludedInCompletion": 11221,
+  "firstCallCST": "11/8/2026, 11:54:29 AM CST",
+  "lastCallFinishedCST": "11/8/2026, 11:58:26 AM CST",
+  "truncated": [
+    {
+      "modelId": "deepseek/deepseek-v4-flash",
+      "promptName": "01-math-basics"
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-flash",
+      "promptName": "04-mixed-markdown-latex"
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "01-math-basics"
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "02-markdown-formatting"
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "03-code-blocks"
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "04-mixed-markdown-latex"
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "05-complex-scenarios"
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "promptName": "06-edge-cases-boundaries"
+    },
+    {
+      "modelId": "z-ai/glm-5.3-flash",
+      "promptName": "04-mixed-markdown-latex"
+    },
+    {
+      "modelId": "z-ai/glm-5.3-flash",
+      "promptName": "05-complex-scenarios"
+    }
+  ],
+  "perModel": [
+    {
+      "id": "deepseek/deepseek-v4-flash",
+      "cost": 0.0011618472,
+      "emptyReplies": 1
+    },
+    {
+      "id": "openai/gpt-5-nano",
+      "cost": 0.0025470999999999996,
+      "emptyReplies": 6
+    },
+    {
+      "id": "meta-llama/llama-4-scout",
+      "cost": 0.00097855,
+      "emptyReplies": 0
+    },
+    {
+      "id": "z-ai/glm-5.3-flash",
+      "cost": 0.002134695,
+      "emptyReplies": 2
+    }
+  ],
+  "coverage": "Not assessed; no renderer run. Empty or truncated replies are not full coverage."
+}

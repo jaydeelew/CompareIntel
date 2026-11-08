@@ -1,0 +1,36 @@
+{
+  "modelId": "meta-llama/llama-4-scout",
+  "modelName": "Meta: Llama 4 Scout",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "## Code Blocks\n\n### Python Code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n### JavaScript Code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n### Inline Code with Math-Like Content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nTo achieve this, you can use backticks to denote inline code: `x^2`, `a_b`, and `$price`. \n\nFor example, in Python:\n```python\nprint(\"Hello, world!\")\nprint(`x^2`)  # This won't work as expected, but you can use:\nprint(\"x^2\") \n```\nOr in JavaScript:\n```javascript\nconsole.log(`x^2`); // This will log \"x^2\" to the console.\n```",
+  "usage": {
+    "prompt_tokens": 244,
+    "completion_tokens": 324,
+    "total_tokens": 568,
+    "cost": 0.0001216,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0001216,
+      "upstream_inference_prompt_cost": 0.0000244,
+      "upstream_inference_completions_cost": 0.0000972
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0001216,
+  "actualCost": 0.0001216,
+  "timestamp": "2026-11-08T17:57:16.396Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

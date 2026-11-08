@@ -1,7 +1,10 @@
 import type { AssertionStatus, AssertionResult } from './dom-assertions.js'
 
-/** Truncation is incomplete coverage, never a comprehensive pass and never a renderer fail. */
-export type OverallStatus = AssertionStatus | 'truncated'
+/**
+ * Truncation / empty visible replies are incomplete coverage: never a
+ * comprehensive pass and never a renderer fail.
+ */
+export type OverallStatus = AssertionStatus | 'truncated' | 'incomplete'
 
 export function isTruncatedReply(data: {
   truncated?: boolean
@@ -11,7 +14,27 @@ export function isTruncatedReply(data: {
   if (data.truncated === true) return true
   const finish = (data.finishReason || '').toLowerCase()
   const native = (data.nativeFinishReason || '').toLowerCase()
-  return finish === 'length' || native === 'length' || native === 'max_tokens'
+  return (
+    finish === 'length' ||
+    native === 'length' ||
+    native === 'max_tokens' ||
+    native === 'max_output_tokens'
+  )
+}
+
+/** Visible assistant text is empty (all completion tokens may still be reasoning). */
+export function isEmptyVisibleReply(response?: string | null): boolean {
+  return !(response || '').trim()
+}
+
+export function isIncompleteReply(data: {
+  truncated?: boolean
+  finishReason?: string | null
+  nativeFinishReason?: string | null
+  response?: string | null
+  emptyVisible?: boolean
+}): boolean {
+  return data.emptyVisible === true || isEmptyVisibleReply(data.response) || isTruncatedReply(data)
 }
 
 function isRendererLossFail(assertion: AssertionResult): boolean {
@@ -23,21 +46,24 @@ function isRendererLossFail(assertion: AssertionResult): boolean {
 }
 
 /**
- * Combine DOM validation with finish-reason truncation.
- * Truncated replies stay `truncated` even when DOM checks pass.
- * Renderer-loss / unsafe links still fail. KaTeX errors on a truncated
- * (incomplete) source are not promoted to renderer failure.
+ * Combine DOM validation with finish-reason truncation and empty visible text.
+ * Empty reasoning-only replies are `incomplete`. Truncated non-empty replies
+ * stay `truncated`. Neither is a renderer fail. Renderer-loss / unsafe links
+ * still fail. KaTeX errors on incomplete source are not promoted to fail.
  */
 export function overallStatus(opts: {
   truncated: boolean
+  emptyVisible?: boolean
   error?: string
   validation?: { status: AssertionStatus; assertions: AssertionResult[] }
 }): OverallStatus {
   if (opts.error) return 'fail'
   const validation = opts.validation
-  if (!validation) return opts.truncated ? 'truncated' : 'fail'
-  if (validation.assertions.some(isRendererLossFail)) return 'fail'
+  const rendererLoss = Boolean(validation?.assertions.some(isRendererLossFail))
+  if (rendererLoss) return 'fail'
+  if (opts.emptyVisible) return 'incomplete'
   if (opts.truncated) return 'truncated'
+  if (!validation) return 'fail'
   return validation.status
 }
 
@@ -45,14 +71,17 @@ export interface CoverageRecord {
   modelId: string
   promptName: string
   truncated?: boolean
+  emptyVisible?: boolean
+  response?: string | null
   finishReason?: string | null
   nativeFinishReason?: string | null
   timestamp?: string
 }
 
 /**
- * One coverage cell per (modelId, promptName). A complete (non-truncated) later
- * attempt replaces a truncated original; originals are never deleted from history.
+ * One coverage cell per (modelId, promptName). A complete later attempt
+ * replaces truncated/empty provenance; originals stay in history.
+ * Do not treat incomplete cells as concluded unique coverage.
  */
 export function uniqueCoverageRecords<T extends CoverageRecord>(records: T[]): T[] {
   const byKey = new Map<string, T>()
@@ -63,13 +92,13 @@ export function uniqueCoverageRecords<T extends CoverageRecord>(records: T[]): T
       byKey.set(key, record)
       continue
     }
-    const recordTruncated = isTruncatedReply(record)
-    const existingTruncated = isTruncatedReply(existing)
-    if (existingTruncated && !recordTruncated) {
+    const recordOpen = isIncompleteReply(record)
+    const existingOpen = isIncompleteReply(existing)
+    if (existingOpen && !recordOpen) {
       byKey.set(key, record)
       continue
     }
-    if (!existingTruncated && recordTruncated) continue
+    if (!existingOpen && recordOpen) continue
     if ((record.timestamp || '') > (existing.timestamp || '')) {
       byKey.set(key, record)
     }

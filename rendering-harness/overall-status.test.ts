@@ -1,12 +1,49 @@
 import { test, expect } from '@playwright/test'
-import { isTruncatedReply, overallStatus, uniqueCoverageRecords } from './overall-status.js'
+import {
+  isTruncatedReply,
+  isEmptyVisibleReply,
+  isIncompleteReply,
+  overallStatus,
+  uniqueCoverageRecords,
+} from './overall-status.js'
 
 test.describe('Truncation vs renderer loss', () => {
   test('length / max_tokens finish is truncated', () => {
     expect(isTruncatedReply({ finishReason: 'length' })).toBe(true)
     expect(isTruncatedReply({ nativeFinishReason: 'max_tokens' })).toBe(true)
+    expect(isTruncatedReply({ nativeFinishReason: 'max_output_tokens' })).toBe(true)
     expect(isTruncatedReply({ truncated: true, finishReason: 'stop' })).toBe(true)
     expect(isTruncatedReply({ finishReason: 'stop', nativeFinishReason: 'end_turn' })).toBe(false)
+  })
+
+  test('empty visible reply is incomplete even when finish is length and DOM would be not-covered', () => {
+    expect(isEmptyVisibleReply('')).toBe(true)
+    expect(isEmptyVisibleReply('   ')).toBe(true)
+    expect(isEmptyVisibleReply('$x$')).toBe(false)
+    expect(
+      isIncompleteReply({
+        finishReason: 'length',
+        nativeFinishReason: 'max_output_tokens',
+        response: '',
+      })
+    ).toBe(true)
+    expect(
+      overallStatus({
+        truncated: true,
+        emptyVisible: true,
+        validation: { status: 'not-covered', assertions: [] },
+      })
+    ).toBe('incomplete')
+  })
+
+  test('empty visible is incomplete, not pass and not renderer fail', () => {
+    expect(
+      overallStatus({
+        truncated: true,
+        emptyVisible: true,
+        validation: { status: 'pass', assertions: [] },
+      })
+    ).toBe('incomplete')
   })
 
   test('truncated + passing DOM is truncated, never comprehensive pass', () => {

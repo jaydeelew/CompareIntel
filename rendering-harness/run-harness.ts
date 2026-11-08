@@ -26,6 +26,7 @@ import {
 import { droppedNameExpectations, getExpectedFeatures } from './expected-features.js';
 import {
   isTruncatedReply,
+  isEmptyVisibleReply,
   overallStatus,
   uniqueCoverageRecords,
   type OverallStatus,
@@ -79,6 +80,7 @@ interface TestResult {
   validation?: ValidationResult;
   validationStatus?: OverallStatus;
   truncated?: boolean;
+  emptyVisible?: boolean;
   finishReason?: string | null;
   nativeFinishReason?: string | null;
   attempt?: string;
@@ -532,6 +534,33 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
       console.log(`Rendering ${data.modelName || data.modelId} - ${data.promptName}...`);
 
       const screenshotPath = path.join(fullPath, jsonFile.replace('.json', '.png'));
+      const truncated = isTruncatedReply(data);
+      const emptyVisible = isEmptyVisibleReply(data.response);
+
+      if (emptyVisible) {
+        const status = overallStatus({ truncated, emptyVisible: true });
+        console.log(
+          `  △ Validation: ${status.toUpperCase()} (empty visible text; reasoning-only / truncated, not pass, not renderer-fail)`
+        );
+        results.push({
+          modelId: data.modelId,
+          modelName: data.modelName,
+          promptName: data.promptName,
+          promptText: data.promptText || '',
+          response: data.response,
+          usage: data.usage,
+          actualCost: data.cost || data.actualCost || 0,
+          timestamp: data.timestamp,
+          validationStatus: status,
+          truncated,
+          emptyVisible: true,
+          finishReason: data.finishReason ?? null,
+          nativeFinishReason: data.nativeFinishReason ?? null,
+          attempt: data.attempt || 'original',
+          sourceFile: jsonFile,
+        });
+        continue;
+      }
 
       try {
         const { coverage, renderedHTML } = await renderResponse(
@@ -554,15 +583,14 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
           expectedFeatures,
           data.response
         );
-        const truncated = isTruncatedReply(data);
-        const status = overallStatus({ truncated, validation });
+        const status = overallStatus({ truncated, emptyVisible, validation });
         const failedCount = validation.assertions.filter(a => a.status === 'fail').length;
         const notCoveredCount = validation.assertions.filter(a => a.status === 'not-covered').length;
         const mark =
-          status === 'pass' ? '✓' : status === 'not-covered' ? '○' : status === 'truncated' ? '△' : '✗';
+          status === 'pass' ? '✓' : status === 'not-covered' ? '○' : status === 'fail' ? '✗' : '△';
         console.log(
           `  ${mark} Validation: ${status.toUpperCase()}` +
-            (truncated ? ' (incomplete finishReason, not comprehensive)' : '') +
+            (emptyVisible ? ' (empty visible, incomplete)' : truncated ? ' (incomplete finishReason, not comprehensive)' : '') +
             (failedCount ? ` (${failedCount} DOM fail assertions)` : '') +
             (notCoveredCount ? ` (${notCoveredCount} not-covered)` : '')
         );
@@ -580,6 +608,7 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
           validation,
           validationStatus: status,
           truncated,
+          emptyVisible,
           finishReason: data.finishReason ?? null,
           nativeFinishReason: data.nativeFinishReason ?? null,
           attempt: data.attempt || 'original',
@@ -691,6 +720,7 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
 function resultStatus(r: TestResult): OverallStatus {
   return overallStatus({
     truncated: Boolean(r.truncated) || isTruncatedReply(r),
+    emptyVisible: Boolean(r.emptyVisible) || isEmptyVisibleReply(r.response),
     error: r.error,
     validation: r.validation,
   })
@@ -700,11 +730,13 @@ function reportValidationSummary(results: TestResult[]): void {
   const passed = results.filter(r => resultStatus(r) === 'pass').length
   const notCovered = results.filter(r => resultStatus(r) === 'not-covered').length
   const truncated = results.filter(r => resultStatus(r) === 'truncated').length
+  const incomplete = results.filter(r => resultStatus(r) === 'incomplete').length
   const failed = results.filter(r => resultStatus(r) === 'fail').length
   console.log(`\nValidation Summary:`)
   console.log(`  ✓ Passed: ${passed}`)
   console.log(`  ○ Not covered (source missing feature): ${notCovered}`)
-  console.log(`  △ Truncated / incomplete (not comprehensive): ${truncated}`)
+  console.log(`  △ Truncated (non-empty, finish length): ${truncated}`)
+  console.log(`  △ Incomplete (empty visible / reasoning-only): ${incomplete}`)
   console.log(`  ✗ Failed (renderer loss / error): ${failed}\n`)
 }
 
@@ -854,6 +886,7 @@ async function generateReviewPage(
     .status-pass { background: #d4edda; color: #155724; }
     .status-not-covered { background: #fff3cd; color: #856404; }
     .status-truncated { background: #e7e3ff; color: #3d348b; }
+    .status-incomplete { background: #ede7f6; color: #4a148c; }
     .status-fail { background: #f8d7da; color: #721c24; }
     .error {
       color: red;
@@ -881,13 +914,15 @@ async function generateReviewPage(
        Passed ${results.filter(r => resultStatus(r) === 'pass').length}
        / Not covered ${results.filter(r => resultStatus(r) === 'not-covered').length}
        / Truncated ${results.filter(r => resultStatus(r) === 'truncated').length}
+       / Incomplete ${results.filter(r => resultStatus(r) === 'incomplete').length}
        / Failed ${results.filter(r => resultStatus(r) === 'fail').length}</p>
     <p><strong>Unique coverage:</strong>
        Passed ${unique.filter(r => resultStatus(r) === 'pass').length}
        / Not covered ${unique.filter(r => resultStatus(r) === 'not-covered').length}
        / Truncated ${unique.filter(r => resultStatus(r) === 'truncated').length}
+       / Incomplete ${unique.filter(r => resultStatus(r) === 'incomplete').length}
        / Failed ${unique.filter(r => resultStatus(r) === 'fail').length}
-       (complete attempts replace truncated provenance; originals stay in history)</p>
+       (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
     <p><strong>Cumulative actual cost (all records):</strong> $${totalCost.toFixed(6)}</p>
     <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
   </div>
@@ -904,12 +939,14 @@ async function generateReviewPage(
               Attempt: ${escapeHtml(result.attempt || 'original')}${result.sourceFile ? ` · ${escapeHtml(result.sourceFile)}` : ''}<br>
               ${result.usage ? `Tokens: ${result.usage.total_tokens || result.usage.totalTokens || '?'} (${result.usage.prompt_tokens || result.usage.promptTokens || '?'} in / ${result.usage.completion_tokens || result.usage.completionTokens || '?'} out)<br>` : ''}
               Cost: $${result.actualCost.toFixed(6)}<br>
-              Finish: ${escapeHtml(String(result.finishReason || 'unknown'))}${result.nativeFinishReason ? ` / ${escapeHtml(String(result.nativeFinishReason))}` : ''}${result.truncated ? ' — truncated, not comprehensive' : ''}<br>
+              Finish: ${escapeHtml(String(result.finishReason || 'unknown'))}${result.nativeFinishReason ? ` / ${escapeHtml(String(result.nativeFinishReason))}` : ''}${result.emptyVisible ? ' — empty visible (reasoning-only), incomplete' : result.truncated ? ' — truncated, not comprehensive' : ''}<br>
               Time: ${new Date(result.timestamp).toLocaleString()}
             </div>
             
             ${result.error ? `
               <div class="error">Error: ${result.error}</div>
+            ` : result.emptyVisible ? `
+              <div class="error">No visible assistant text (completion tokens were reasoning-only or truncated before content). Incomplete — not a renderer failure.</div>
             ` : `
               <img src="${escapeHtml(result.screenshotRelpath || `${result.modelId.replace(/\//g, '_')}_${promptName}.png`)}" 
                    class="screenshot" 

@@ -1,0 +1,36 @@
+{
+  "modelId": "meta-llama/llama-4-scout",
+  "modelName": "Meta: Llama 4 Scout",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "## Step 1: Scenario 1 - Understanding the Pythagorean Theorem\nThe Pythagorean theorem is given by $a^2 + b^2 = c^2$. For a right triangle with sides $a=3$ and $b=4$, we calculate $c$ as $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$ units.\n\n## Step 2: Scenario 2 - Analyzing Tables with Math\nThe table provides formulas and their LaTeX representations along with results. For example, the quadratic formula is $ax^2 + bx + c = 0$, with solutions $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$. The sum of the first $n$ natural numbers is $\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$, and the product of the first $n$ natural numbers is $\\prod_{i=1}^{n} i = n!$.\n\n## 3: Scenario 3 - Understanding Code and Math Mixed\nThe provided Python code calculates the area of a circle given its radius $r$, using the formula $A = \\pi r^2$. For $r = 5$, the area is calculated as $\\pi * 5^2 = 25\\pi$.\n\n## 4: Scenario 4 - Horizontal Rules and Math\nThe problem presents a simple integral: $\\int_{0}^{1} x dx = \\left[\\frac{x^2}{2}\\right]_0^1 = \\frac{1^2}{2} - \\frac{0^2}{2} = \\frac{1}{2}$. This is correctly stated as $\\frac{1}{2}$.\n\n## 5: Scenario 5 - Handling Multiple Dollar Signs\nThe prices are given as: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. The total cost is $1,200 + 300 + 50 + 25 = $1,575. The math function $f(x) = x^2$ evaluated at $x=5$ gives $f(5) = 5^2 = 25$.\n\nThe final answer is: $\\boxed{25}$",
+  "usage": {
+    "prompt_tokens": 419,
+    "completion_tokens": 477,
+    "total_tokens": 896,
+    "cost": 0.000185,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000185,
+      "upstream_inference_prompt_cost": 0.0000419,
+      "upstream_inference_completions_cost": 0.0001431
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.000185,
+  "actualCost": 0.000185,
+  "timestamp": "2026-11-08T17:57:33.670Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}
