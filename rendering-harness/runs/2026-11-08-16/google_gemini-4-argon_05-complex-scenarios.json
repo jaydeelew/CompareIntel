@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-4-argon",
+  "modelName": "Google: Gemini 4 Argon",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here is a response containing the requested scenarios, pushed even further with additional edge cases (such as nested formatting, escaped characters, block math inside lists, and complex currency/math mixing) to thoroughly test your Markdown and LaTeX parser.\n\n---\n\n## Scenario 1: Math in Lists with Heavy Formatting & Nesting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$ for any right-angled triangle.\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - **Step 1:** Set up the equation: $c = \\sqrt{a^2 + b^2}$\n   - **Step 2:** Substitute the values: \n     $$c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25}$$\n   - **Step 3:** Therefore, ***$c = 5$ units*** (combining bold, italics, and inline math).\n3. Edge case with strikethrough and links: ~~$E = mc^3$~~ is incorrect; see [Einstein's $E=mc^2$](https://en.wikipedia.org/wiki/Mass%E2%80%93energy_equivalence) for the correct formula.\n   * Sub-list with inline code and math: `x_val` $= \\lim_{x \\to \\infty} \\frac{1}{x} = 0$.\n\n## Scenario 2: Tables with Complex Math & Escaped Pipes\n\n| Concept | Standard Form | Solution / Identity | Notes & Edge Cases |\n| :--- | :---: | :---: | :--- |\n| **Quadratic** | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ | Complex roots if $b^2 - 4ac < 0$ |\n| **Summation** | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ | Expanded: $1 + 2 + \\dots + n$ |\n| **Product** | $\\prod_{i=1}^{n} i$ | $n!$ | Where $0! = 1$ by definition |\n| **Absolute Value** | $f(x) = \\|x\\|$ | $\\sqrt{x^2}$ | Uses `\\|` to prevent table breaking |\n| **Matrix (Inline)** | $\\mathbf{A} = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$ | $\\det(\\mathbf{A}) = ad - bc$ | Matrix inside a table cell |\n\n## Scenario 3: Code and Math Mixed (Block & Inline)\n\nHere we mix inline code like `math.pi` with inline math like $\\pi \\approx 3.14159$, followed by a code block containing raw LaTeX strings and Unicode math symbols:\n\n```python\n# Calculate area of circle with radius r and compare with LaTeX output\nimport math\n\n\ndef circle_area(r: float) -> float:\n    # Formula: A = πr²\n    # Note: Do not parse $A = \\pi r^2$ inside this code block!\n    cost_per_unit = \"$5.00\"  # Currency inside code\n    return math.pi * (r**2)\n\n\nradius = 5\nprint(f\"Area for r={radius}: {circle_area(radius):.2f}\")\nprint(r\"Raw LaTeX string: \\frac{\\pi r^2}{2}\")\n```\n\nThe mathematical formula used in `circle_area(r)` is $A = \\pi r^2$, where $r$ is the radius. If we integrate the circumference $C = 2\\pi r$ with respect to $r$, we get:\n\n$$\\int_{0}^{r} 2\\pi r' \\, dr' = \\left[ \\pi (r')^2 \\right]_{0}^{r} = \\pi r^2$$\n\n## Scenario 4: Horizontal Rules & Blockquotes\n\nFirst section: Standard text before a divider.\n\n---\n\nSecond section with inline math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$, and a blockquote containing block math:\n\n> **Fundamental Theorem of Calculus:**\n> If $F$ is an antiderivative of $f$ on $[a, b]$, then:\n> $$\\int_{a}^{b} f(x) \\, dx = F(b) - F(a)$$\n\n***\n\nThird section (using `***` instead of `---` for the rule) with display math immediately following:\n\n$$\\mathcal{F}\\{f(t)\\} = \\hat{f}(\\omega) = \\int_{-\\infty}^{\\infty} f(t) e^{-i\\omega t} \\, dt$$\n\n---\n\n## Scenario 5: Multiple Dollar Signs (Currency vs. LaTeX)\n\n**Pure Currency (Should NOT trigger math mode):**\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575. (Note: Depending on your parser, unescaped `$1,200` and `$300` on the same line might accidentally render as `1,200, monitor ` in math mode if not escaped as `\\$` or handled by smart-dollar logic. Below is the raw, unescaped version to test your parser's heuristic):\n\n*Unescaped test:* Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\n**Mixed Currency and Math on the Same Line:**\nIf an item costs \\$50 (or $c = 50$) and you buy $n$ items, the total cost in dollars is $T(n) = \\$50 \\cdot n$. For $n = 5$, the formula $f(x) = x^2$ evaluates to $f(5) = 25$, saving you \\$25! \n\n*Unescaped mixed test:* If a widget costs $10 and a gadget costs $20, then buying $x$ widgets and $y$ gadgets costs $C = 10x + 20y$ dollars.",
+  "usage": {
+    "prompt_tokens": 474,
+    "completion_tokens": 1394,
+    "total_tokens": 1868,
+    "cost": 0.014888,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.014888,
+      "upstream_inference_prompt_cost": 0.000948,
+      "upstream_inference_completions_cost": 0.01394
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.014888,
+  "actualCost": 0.014888,
+  "timestamp": "2026-11-08T20:25:10.945Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

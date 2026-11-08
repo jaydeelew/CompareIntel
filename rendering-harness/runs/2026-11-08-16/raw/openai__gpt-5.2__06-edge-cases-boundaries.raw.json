@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169666-0SlJVZGykkMGBrH54CdL",
+  "object": "chat.completion",
+  "created": 1794169666,
+  "model": "openai/gpt-5.2",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Delimiter Variants\n\n1. Double dollar display:\n\n$$x^2 + y^2 = r^2$$\n\n2. Bracket display:\n\n\\[\nE = mc^2\n\\]\n\n3. Single dollar inline: $a + b = c$\n\n4. Paren inline: \\(x = 5\\)\n\n---\n\n## Nested Structures\n\n- First item\n- The equation is:  \n  $$\\int_0^1 x\\,dx = \\frac{1}{2}$$  \n  And it evaluates to 0.5\n- Third item\n\n---\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n---\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n---\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n---\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "**Considering delimiter tests**\n\nThe user is asking for a response that tests delimiters and edge cases, possibly to see how math and code are echoed. I need to ensure that equations are output in markdown while keeping literal dollar signs intact. It's essential to escape them appropriately to avoid any misinterpretation as math. For instance, in \"Plain: The price is $100,\" I need to show literal dollars. I'll replicate the exact forms they provided, while also considering other edge cases that might occur.**Testing markdown for dollar signs**\n\nI’m considering how markdown math renderers treat dollar signs, such as in the phrase \"$HOME is set. Price: $99.99.\" This could mistakenly interpret everything as math since it starts with a dollar sign and lacks a closing one. To keep the dollar signs literal, I'd escape them as \"\\$HOME\" and \"\\$99.99.\" However, that wouldn't fully test the raw dollar signs as specified. They asked for a response testing this, so I’ll replicate it as they wrote and provide it in markdown.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Considering delimiter tests**\n\nThe user is asking for a response that tests delimiters and edge cases, possibly to see how math and code are echoed. I need to ensure that equations are output in markdown while keeping literal dollar signs intact. It's essential to escape them appropriately to avoid any misinterpretation as math. For instance, in \"Plain: The price is $100,\" I need to show literal dollars. I'll replicate the exact forms they provided, while also considering other edge cases that might occur.**Testing markdown for dollar signs**\n\nI’m considering how markdown math renderers treat dollar signs, such as in the phrase \"$HOME is set. Price: $99.99.\" This could mistakenly interpret everything as math since it starts with a dollar sign and lacks a closing one. To keep the dollar signs literal, I'd escape them as \"\\$HOME\" and \"\\$99.99.\" However, that wouldn't fully test the raw dollar signs as specified. They asked for a response testing this, so I’ll replicate it as they wrote and provide it in markdown.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NtKXryflo5mBEwl5MRd_2EfFDf7F5NNz9jefv0xrxIkzIJ3yo44fYR4GIuoOQsaRl_4s-PhmGN52qYnrr6HDMcM3CeEPjqJq5c9s3Gox9cSLCGjYWAe_EMwWwhs58iswni7LTVuKbGqIL0V9C1iGXmEmD7ijBHamWkisXppWEWwPqtVKFRp-j9pJelE0x7ZCF1POfmFAetXeYXoFhJZcFwjcxSnnXJrfnj8K4e5QzrFaKgasRR4GIxhZMYBHPckJ-XqIbMPZ-Giw_xOIlBpH-aavvuFEefMOEE1pgzh3dXK0HgD0TRv3W94QXjUDUPk2CBYpeGyN6fOluYidcjd6RXfE4EayU8Ld6z9cDHhjk3rV5hGOi_jjbIAdWuBOTX906mJRZd1b3wq7NfHpLgt6nkXmvEj9EfaaPGjYZqAd_7LZBztjL4NIXbnZRRebrx4v_HSrM0UkP4xKR8yAc8Gg-AHdubbMpUogpeUq7l1Xbkp0PpPVTXF8r-S5rWmCT1-xxjOw7b07Ki7q1V9VIq8KVB7f4-0PWIiqBIqAcNjFp-h_dR2bXuV2-Nugm986YNPyqx6suxYcXbyhNQSpnSbaiwqIcq5gTFuhj44nXUsTEzDNHkR2mCuMWJ_gA9XOhW3D5lT1-jU3iRL6mEQBqgvd6KsvzvrlwCiQFjOekikYg79b97XuWjOUOzxqSGpEcI5VBegkK8VqgZl4YmIUdM1zWOVQmysZ1Dt4N3CAoDVLxiuVWraMzGZ3kqU0YWzFzCxYZNkOXZDp5TQMl2tn5RNU-kwLba44dcQoT8xvq73f0M_nOylgBLT6JWH7S_aQ1vpYrqqFbLw8RZAeFQeMqQgHOQMsDcKlc17TS6PpvwqrHtgspTQVgHPWJfMgOCWi6hs2ND59F9BPe8DEweEp9pancVVVQwmZPi_sePZYnitqnawoW4nGHViGf8aWGoza9hdOV9z2r5UQ8mpDgrOIZllZeWs6ASMuaAqXMuSAabrlOr8vH2Heobe-UVnMsEZzEU7TLBK994bQDIIT63iidr2l_9QY-Y2wYEi35pCfWH9FSqFEYHJ8qXE1XSjER5t_YPHqTbJ_oZYnKY8viFuD_YTIkY-lPa2b5QPpqRuqkKm1U8yTYnQPMidKGg9CQcK1ArOuJAD6h5BQ-eU8OLsO3nAigtVkWaDMHwuYB03TJsO41gYeolTTHwbMrbQ8eie5ueEOS84OHhdT2ZSW-k53eEim_BuR5unLKm1W2hkxFacjFCoy_4rzsGNYT3o2zWibYK5UaG1ajCl54C4Z3VMGRbrljGHBLq8uuzebZwKMd4zs86LtFf9QWf353_9bgcgxV13jh0Qnwb4z6FA73J_ycwbpC7tLRBT_xxRcIL3aRbZsKofBLoLjRzndeKCnHqaChAM8D23tfM5qtGejXFCsR8rdoC7j3rlTQgIhOuy1LuKCOvtzVEBy0oeY-3R1VpU1zbTE7oUvtt9Qe5Ji5Ew6GxypYMmgsTh_beS5iMCfpXtyezjkLOaNXSN4ZF6GXTg0OZJXxYjanA_CWpzl2H0XRNhr-pfFo92Z2xnH1qltqh226DIhopgThKuzrijbz6qVYQYNa8TPtbRaPNoUhem5w0aFGa604Kmo0Dx3BJooPeo5T5FAxF2ZdvHPTg6_3Xny2Iukz_ES8xKPNALmD7v_u3m_HwXwB5kbSKwX_sczlggoeCY3RDcvoQ-rAFZIFJQm2CtBl90z2kJhU9r12YwnT7gypE6QD8mY69hLLjQzHTCWPVAK5OoTrFYVarWThuZrTksV2TZf_yqV78u2IOHpvt_Jjxg-ZWacYOUE1TlyaMlAgR4lYnYS7DPhT0Xd5g09HiOlQgyvAIm3ekRYD3DiOOE_T4_VLnhL8FMSBZDrdle_Yzl3acvWd8MNEUjtXWsupi5d4hbV8ZyVbh5gioMvEa7MXWV38FUQZ8BH1HEBpqoUtDe6fgGw8O2SSOcHZOcFNLbCuQfRbqS2uC7hhdRnnJnhjTEF04dJc76CGNBEABdwL3jusKqNZ6ji9WRoJkrAB1OL6oMxYQcXywE9DfnOmN9m5cXH-ok3hhZ_FPuxmnH-switXb8-KagMMUS7Zgw22d-DTfVs_Sd_4TfWftY5DS5z_6RojTfYxvR6-NtREuUbIAguUs7bqBBG03YVYRzoNieGTd7caDYvEFhTd54WnnCgQaL-rM0BMloF3BSXVccmAqmL3dWUSjAAzp1eijeBY7xhfkBY3LwrNBu8wp-3s8v2uZYWfVTTxF4w0sSLKd69ac05r-ZXIYfW5W5sgPPErS_lHf_5EgfpRDQoBT_t5C5QPCaKhtFInffnTsrDAxEW293yiLiAyV39XjRsB1kaiPPk9w67fFWJa4BmAVuEDt3cOrtepQiXnK3rHBMq5YatIsyzMTvqQ1HGPrPRY-6zTBKOmkaI9apL5nljxgeyRjU6zNaVO-R-1GRikxSkMD_KuL0U7wwIh_YHtHuSIeVOyB4gc5x-2etbuFTjDdTt8l5g_pUOdozlE2iFloTKktHRFK7AteYJVVJRSmhTc1zEFA9SsPXpmZ53LI3knSKYS95d7zSODmAswZN-GzpXsd7kWJXCgNUjBHOz1xDBYSfrniIKjpcWiVpmsJrvdgNOp6PdYnbv-lvdiSfui3EJZK9iwnzW091Gfpxn6pBVSksurhupa_CzPJKzZGD42_yrILL1NVhGP1aQN9KTYUqb__pGFRZhjsE1fsbYTZATVTa3e348oSRW-BsPozV7_J2m75Ds5lXEGCV1FfrdGl6JkgTy6Asn6v1gKU2ZU4eIimRnA1ODLEueLtqD2XpmYtmg0Tode_DmjJEQLUUgFlM70h1NdDw3bl4PYV2jxASvC3mRZ5erQk-KHb4opRLkej-xTTUfYtFoDwMRfrpS428lu13skpE6rJXg0LCsuvsjeyb27Wy7rxS0zPHAVreRGIeHkjGc3OWVsDj83t81G85RDeGVwSGBEibA9Sa65_yn9OXZ5TKIUyJSc_U85kVygBuFzXHGfTjUZA0gwRm1ZW1IdUwijAnTr4M8-2kzB_99-xTNMSPkEtWQTrDBJtUHKqsQiAGLEul7d3402GBhqlyYGxrVbjb28TJyRAFPpqf_jrE6HJ-_SJbvspaZR8om38FmD8p9m-dd6-LXe0ldzeH81aFgcgBUkvnbPOsfIz3pzAH6kM_RJRNII7ph9z-tnLheSv1oeRymfmzj18J1vnD_disFJjQxwEHF8-fXa64seAOUmkTGbC74oGp1b1lcxpU27g3lj8ui3ewcqXHhV8zI3l5_DNpzWBlCihXbANNkM6gqJ5_Nyikh4FhNArnkYwa5g-zJeke04iFU7qV-OOgXn-YzSgtXrv4ltd9eYm4zRsu2BDTWDYfR9n2cG3ayvCXqtP_1aV6SteoEdsKmdugQJ3CAQYXVqr6vWXVKl_vrs11ns4SY_Y778bFn57_y04T3Qt2p_0EZpjUa4FLY8d5Vusvebw2JUYNPw_lIoAkaKZBugig7hsyTn-l4P0Kyrn7cvdBQAZ2NZTvV_jdZMPX3h8B5FStjxeIALxK7V7GsJCeoA8SXC19soWy75CdQjIAs55cIlc34ZZUPXWTRO5h38SDtxrNv5GR1hVc5lxlKwOKdv9qK8C1DBAUQvSMuw2B_ae953r_1l_M7Hng1HQbE4v_T5zlXw3oeWPPVF31IJO4jFC2VNAML5cMdxIqivqfoJxD4LBnN99gxinhJcAd08viKWldpUXIcI0zfxnq_Qo8xrBvRNLzLUxrNGqw0iSB23o33QQop5gKxH1XPi_l-yfAuENOU39tlDTa1npzFaVyrtUTIV6GujLiRk8SOw_Q1VqVGgVw7Zq5VY6C7jPgttkuChLgtuz4qJFPCYJVgZ3Mh24fFwBDau-S0sSj2bA-zK3PEBWOmtmSVfgMkURVi2QK-fG3xOWPdER8UeTH0M-DSpOhRxTR5i4SwLgaTIMQgS7R8oDuZ2OPBND3N9Nc99ceoFaulWwQ-RdyCmNHFlnNxFw9os7GGMVKdWaBCGqU2FqJ0zEIoYLlU0Cw9pqtpGmZvy6LmQHvRLivxPsKjqptf8KTx2b4Z1EqJ5-7wkqoxGQOfoh7fB4HjsDPdLPaH2HhW9tIrJ1rJSNkDqrbJOt5R5Fe9Zxtq7NqneyjjyQGscb6CQmuVdh5g2h0Ot1JM1lT5SnZyEOsXBZ68Ufu6jtiFgqu1Am12R0T2CBf-B9YPwUJftH1zN7O3DVPP6xqmrttkcCsN6wbReJ6_Yv5_SRQm1GgpS94C0y6MTlRuFhz7oHB-3dJKcEAcrVqtYDbbrYpduBzIHZYCreHttoDn-eKPUM_m84yDU37omX-PccT9zrimxk2b3kXDW6CG-DH_Iqq-xeqZr6M--i9nZPt4AXcZNcaJyfubShf5xejVIy8pY8t2lKcxXDpdwt66eELcVgHUCwvHKc66mvxreONuX-rl7VDb4a-lLR-hJRmbeu0U1IMJMGtCZkgPv1kwGjxTbyCPlWTjKHf3A1Dh7_cZpH2bNWkn_rr6GtMMD3-TApYZQoYmzV8ac8wa8HCkYWfWaVrP5HXckwrDJ4xH9b0M80l6LY6IKj6eYz0YdUoS96kvQp_3Qgpxrb1fwwCExwkIE2-2uOv8f8OB8DqjJbduH1mHwGfqK1GMe_Og-SFTbtodipX6Dz7ZwRrKjgWYQYb2-8W7SJcun9I4axYyogadI04ODSAbe_cgHCld5HIoPAJGzPG4C2MrIjrl8eRah1NFsNeekO7WgFB-wkQMTrdHEv8i4cPsYqNZF0SnBnooLa4kq-OudqRFQFDE1gS9YFm9D1DLebgwzMCOJpb0fcCBzGq8rXGdaDwswhyGiuV-PdJ7j8Mu2-QkQdSW3q1NtszVVjNB1QcURhZQoWUSou2uaItJ06nn-XJcOHTa8JAFzyhjJY0m3rNGzNKdgsqer4_CdZFmb74EZxsfUzcmnksrnk2XUtGFeuguJWlO4Xde1mLiT_EYL8TK6PH0Eajdd7Vpp0rrrnS3fl6Vv6HvFzfO5hsBsiQACxSK_Gmfq3fbDxzqsftYvvfERQSMFCsYvK31y2gjRv85eHR9Bpeyx2Mw3BOnVC-P2ZYY-uv6-9brBPJ5Zo-tcXvsKP60oDT0cyK7Lv5Yrth85nfZqNZsJyO_cvEEWa4peOKa0s1OMHkKG3iV7DbXp0-J1u9Ilx2sYq5IDmHEtb_FsNBIT9T5I9_dPlEZLRyibpVnXb2GrUWNzvmgiyD5vkJUlcr0BdW3vOjYO468K0pKZhkANoBQK2ZNbQ9bNVpwgrPfZnMqUcrIOsv6QBTs_AhDyD9EtqBnOH01rhW_bvNKAWZyCOENs9gGna80Su-l5dFTVL4eVLS5flazKIUt7JWMpHLhQUD3p3GbYnnEYiIFvVP1K-Tn6bu-705eUTq9Wt-kn29NEf1A53sT-soHF_Opg==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjItMjAyNTEyMTF8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_08de536e6e191f1b016af0db4336e087d1ab0be4e1adfe18cd",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 342,
+    "completion_tokens": 609,
+    "total_tokens": 951,
+    "cost": 0.0091245,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0091245,
+      "upstream_inference_prompt_cost": 0.0005985,
+      "upstream_inference_completions_cost": 0.008526
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 292,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

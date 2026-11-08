@@ -1,0 +1,1325 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 2.8,
+  "maxTokens": "perModel",
+  "perModelMaxTokens": [
+    {
+      "id": "google/gemini-4-argon",
+      "maxTokens": 8192
+    },
+    {
+      "id": "moonshotai/kimi-k3.1-pro",
+      "maxTokens": 8192
+    },
+    {
+      "id": "openai/gpt-6.1-sol",
+      "maxTokens": 8192
+    },
+    {
+      "id": "openai/gpt-5.2",
+      "maxTokens": 8192
+    }
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+    }
+  ],
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "google/gemini-4-argon",
+    "moonshotai/kimi-k3.1-pro",
+    "openai/gpt-6.1-sol",
+    "openai/gpt-5.2"
+  ],
+  "plannedCalls": 24,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.1805476616,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "google/gemini-4-argon",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:23:31.014Z",
+      "reserveUsd": 0.104425,
+      "reserveRates": {
+        "usd": 0.104425,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.005706,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:23:56.114Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 308,
+        "completion_tokens": 509,
+        "total_tokens": 817,
+        "cost": 0.005706,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.005706,
+          "upstream_inference_prompt_cost": 0.000616,
+          "upstream_inference_completions_cost": 0.00509
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 9.999999999999999e-06
+      }
+    },
+    {
+      "index": 2,
+      "modelId": "google/gemini-4-argon",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:23:56.115Z",
+      "reserveUsd": 0.10402000000000002,
+      "reserveRates": {
+        "usd": 0.10402000000000002,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.002484,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:24:10.338Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 227,
+        "completion_tokens": 203,
+        "total_tokens": 430,
+        "cost": 0.002484,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002484,
+          "upstream_inference_prompt_cost": 0.000454,
+          "upstream_inference_completions_cost": 0.00203
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 3,
+      "modelId": "google/gemini-4-argon",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:24:10.338Z",
+      "reserveUsd": 0.10424000000000001,
+      "reserveRates": {
+        "usd": 0.10424000000000001,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.003196,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:24:21.961Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 288,
+        "completion_tokens": 262,
+        "total_tokens": 550,
+        "cost": 0.003196,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.003196,
+          "upstream_inference_prompt_cost": 0.000576,
+          "upstream_inference_completions_cost": 0.00262
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 4,
+      "modelId": "google/gemini-4-argon",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:24:21.962Z",
+      "reserveUsd": 0.10473250000000002,
+      "reserveRates": {
+        "usd": 0.10473250000000002,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0104,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:24:41.108Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 350,
+        "completion_tokens": 970,
+        "total_tokens": 1320,
+        "cost": 0.0104,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0104,
+          "upstream_inference_prompt_cost": 0.0007,
+          "upstream_inference_completions_cost": 0.0097
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 5,
+      "modelId": "google/gemini-4-argon",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:24:41.109Z",
+      "reserveUsd": 0.1054675,
+      "reserveRates": {
+        "usd": 0.1054675,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.014888,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:25:10.945Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 474,
+        "completion_tokens": 1394,
+        "total_tokens": 1868,
+        "cost": 0.014888,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.014888,
+          "upstream_inference_prompt_cost": 0.000948,
+          "upstream_inference_completions_cost": 0.01394
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 6,
+      "modelId": "google/gemini-4-argon",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:25:10.945Z",
+      "reserveUsd": 0.10504000000000001,
+      "reserveRates": {
+        "usd": 0.10504000000000001,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.006288,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:25:30.223Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 384,
+        "completion_tokens": 552,
+        "total_tokens": 936,
+        "cost": 0.006288,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.006288,
+          "upstream_inference_prompt_cost": 0.000768,
+          "upstream_inference_completions_cost": 0.00552
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 7,
+      "modelId": "moonshotai/kimi-k3.1-pro",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:25:30.223Z",
+      "reserveUsd": 0.104425,
+      "reserveRates": {
+        "usd": 0.104425,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.019071,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:25:49.884Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 335,
+        "completion_tokens": 2052,
+        "total_tokens": 2387,
+        "cost": 0.019071,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.019071,
+          "upstream_inference_prompt_cost": 0.000603,
+          "upstream_inference_completions_cost": 0.018468
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1709,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.8000000000000001e-06,
+        "output": 8.999999999999999e-06
+      }
+    },
+    {
+      "index": 8,
+      "modelId": "moonshotai/kimi-k3.1-pro",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:25:49.885Z",
+      "reserveUsd": 0.10402000000000002,
+      "reserveRates": {
+        "usd": 0.10402000000000002,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.005816308,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:26:07.389Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 575,
+        "total_tokens": 849,
+        "cost": 0.005816308,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.005816308,
+          "upstream_inference_prompt_cost": 6.6308e-05,
+          "upstream_inference_completions_cost": 0.00575
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 393,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.8000000000000001e-06,
+        "output": 9.999999999999999e-06
+      }
+    },
+    {
+      "index": 9,
+      "modelId": "moonshotai/kimi-k3.1-pro",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:26:07.390Z",
+      "reserveUsd": 0.10424000000000001,
+      "reserveRates": {
+        "usd": 0.10424000000000001,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0043407808,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:26:11.300Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 322,
+        "completion_tokens": 506,
+        "total_tokens": 828,
+        "cost": 0.0043407808,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 64,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0043407808,
+          "upstream_inference_prompt_cost": 7.21142e-05,
+          "upstream_inference_completions_cost": 0.0042686666
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 327,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.8000000000000001e-06,
+        "output": 9.999999999999999e-06
+      }
+    },
+    {
+      "index": 10,
+      "modelId": "moonshotai/kimi-k3.1-pro",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:26:11.300Z",
+      "reserveUsd": 0.10473250000000002,
+      "reserveRates": {
+        "usd": 0.10473250000000002,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0136308,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:26:33.754Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 378,
+        "completion_tokens": 1299,
+        "total_tokens": 1677,
+        "cost": 0.0136308,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 64,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0136308,
+          "upstream_inference_prompt_cost": 0.0006408,
+          "upstream_inference_completions_cost": 0.01299
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 856,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.8000000000000001e-06,
+        "output": 9.999999999999999e-06
+      }
+    },
+    {
+      "index": 11,
+      "modelId": "moonshotai/kimi-k3.1-pro",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:26:33.754Z",
+      "reserveUsd": 0.1054675,
+      "reserveRates": {
+        "usd": 0.1054675,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0225954728,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:26:48.312Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 501,
+        "completion_tokens": 2665,
+        "total_tokens": 3166,
+        "cost": 0.0225954728,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 64,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0225954728,
+          "upstream_inference_prompt_cost": 0.0001132663,
+          "upstream_inference_completions_cost": 0.0224822065
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2236,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.8000000000000001e-06,
+        "output": 9.999999999999999e-06
+      }
+    },
+    {
+      "index": 12,
+      "modelId": "moonshotai/kimi-k3.1-pro",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:26:48.313Z",
+      "reserveUsd": 0.10504000000000001,
+      "reserveRates": {
+        "usd": 0.10504000000000001,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0121408,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:01.854Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 413,
+        "completion_tokens": 1143,
+        "total_tokens": 1556,
+        "cost": 0.0121408,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 64,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0121408,
+          "upstream_inference_prompt_cost": 0.0007108,
+          "upstream_inference_completions_cost": 0.01143
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 836,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.8000000000000001e-06,
+        "output": 9.999999999999999e-06
+      }
+    },
+    {
+      "index": 13,
+      "modelId": "openai/gpt-6.1-sol",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:27:01.855Z",
+      "reserveUsd": 0.104425,
+      "reserveRates": {
+        "usd": 0.104425,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.005068,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:07.359Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 452,
+        "total_tokens": 726,
+        "cost": 0.005068,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.005068,
+          "upstream_inference_prompt_cost": 0.000548,
+          "upstream_inference_completions_cost": 0.00452
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 47,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 9.999999999999999e-06
+      }
+    },
+    {
+      "index": 14,
+      "modelId": "openai/gpt-6.1-sol",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:27:07.359Z",
+      "reserveUsd": 0.10402000000000002,
+      "reserveRates": {
+        "usd": 0.10402000000000002,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00216,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:09.174Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 195,
+        "completion_tokens": 177,
+        "total_tokens": 372,
+        "cost": 0.00216,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00216,
+          "upstream_inference_prompt_cost": 0.00039,
+          "upstream_inference_completions_cost": 0.00177
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 15,
+      "modelId": "openai/gpt-6.1-sol",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:27:09.175Z",
+      "reserveUsd": 0.10424000000000001,
+      "reserveRates": {
+        "usd": 0.10424000000000001,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.002732,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:11.494Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 241,
+        "completion_tokens": 225,
+        "total_tokens": 466,
+        "cost": 0.002732,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002732,
+          "upstream_inference_prompt_cost": 0.000482,
+          "upstream_inference_completions_cost": 0.00225
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 16,
+      "modelId": "openai/gpt-6.1-sol",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:27:11.495Z",
+      "reserveUsd": 0.10473250000000002,
+      "reserveRates": {
+        "usd": 0.10473250000000002,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00431,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:14.932Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 310,
+        "completion_tokens": 369,
+        "total_tokens": 679,
+        "cost": 0.00431,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00431,
+          "upstream_inference_prompt_cost": 0.00062,
+          "upstream_inference_completions_cost": 0.00369
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 17,
+      "modelId": "openai/gpt-6.1-sol",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:27:14.933Z",
+      "reserveUsd": 0.1054675,
+      "reserveRates": {
+        "usd": 0.1054675,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.005986,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:19.981Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 513,
+        "total_tokens": 941,
+        "cost": 0.005986,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.005986,
+          "upstream_inference_prompt_cost": 0.000856,
+          "upstream_inference_completions_cost": 0.00513
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 56,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 18,
+      "modelId": "openai/gpt-6.1-sol",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:27:19.982Z",
+      "reserveUsd": 0.10504000000000001,
+      "reserveRates": {
+        "usd": 0.10504000000000001,
+        "inputRate": 2e-06,
+        "outputRate": 1e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.004514,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:25.675Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 383,
+        "total_tokens": 725,
+        "cost": 0.004514,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.004514,
+          "upstream_inference_prompt_cost": 0.000684,
+          "upstream_inference_completions_cost": 0.00383
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 60,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2e-06,
+        "output": 1e-05
+      }
+    },
+    {
+      "index": 19,
+      "modelId": "openai/gpt-5.2",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:27:25.676Z",
+      "reserveUsd": 0.145131875,
+      "reserveRates": {
+        "usd": 0.145131875,
+        "inputRate": 1.75e-06,
+        "outputRate": 1.4e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0049175,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:30.181Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 317,
+        "total_tokens": 591,
+        "cost": 0.0049175,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0049175,
+          "upstream_inference_prompt_cost": 0.0004795,
+          "upstream_inference_completions_cost": 0.004438
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.75e-06,
+        "output": 1.4e-05
+      }
+    },
+    {
+      "index": 20,
+      "modelId": "openai/gpt-5.2",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:27:30.182Z",
+      "reserveUsd": 0.1447775,
+      "reserveRates": {
+        "usd": 0.1447775,
+        "inputRate": 1.75e-06,
+        "outputRate": 1.4e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00281925,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:32.596Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 195,
+        "completion_tokens": 177,
+        "total_tokens": 372,
+        "cost": 0.00281925,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00281925,
+          "upstream_inference_prompt_cost": 0.00034125,
+          "upstream_inference_completions_cost": 0.002478
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.75e-06,
+        "output": 1.4000000000000001e-05
+      }
+    },
+    {
+      "index": 21,
+      "modelId": "openai/gpt-5.2",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:27:32.597Z",
+      "reserveUsd": 0.14497000000000002,
+      "reserveRates": {
+        "usd": 0.14497000000000002,
+        "inputRate": 1.75e-06,
+        "outputRate": 1.4000000000000001e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00355775,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:35.412Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 241,
+        "completion_tokens": 224,
+        "total_tokens": 465,
+        "cost": 0.00355775,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00355775,
+          "upstream_inference_prompt_cost": 0.00042175,
+          "upstream_inference_completions_cost": 0.003136
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.75e-06,
+        "output": 1.4000000000000001e-05
+      }
+    },
+    {
+      "index": 22,
+      "modelId": "openai/gpt-5.2",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:27:35.413Z",
+      "reserveUsd": 0.14540093750000002,
+      "reserveRates": {
+        "usd": 0.14540093750000002,
+        "inputRate": 1.75e-06,
+        "outputRate": 1.4000000000000001e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0077665,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:42.215Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 310,
+        "completion_tokens": 516,
+        "total_tokens": 826,
+        "cost": 0.0077665,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0077665,
+          "upstream_inference_prompt_cost": 0.0005425,
+          "upstream_inference_completions_cost": 0.007224
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.75e-06,
+        "output": 1.4000000000000001e-05
+      }
+    },
+    {
+      "index": 23,
+      "modelId": "openai/gpt-5.2",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:27:42.216Z",
+      "reserveUsd": 0.14604406250000002,
+      "reserveRates": {
+        "usd": 0.14604406250000002,
+        "inputRate": 1.75e-06,
+        "outputRate": 1.4000000000000001e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.007035,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:46.503Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 449,
+        "total_tokens": 877,
+        "cost": 0.007035,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.007035,
+          "upstream_inference_prompt_cost": 0.000749,
+          "upstream_inference_completions_cost": 0.006286
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.75e-06,
+        "output": 1.4000000000000001e-05
+      }
+    },
+    {
+      "index": 24,
+      "modelId": "openai/gpt-5.2",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:27:46.504Z",
+      "reserveUsd": 0.14567000000000002,
+      "reserveRates": {
+        "usd": 0.14567000000000002,
+        "inputRate": 1.75e-06,
+        "outputRate": 1.4000000000000001e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0091245,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:27:54.960Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 609,
+        "total_tokens": 951,
+        "cost": 0.0091245,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0091245,
+          "upstream_inference_prompt_cost": 0.0005985,
+          "upstream_inference_completions_cost": 0.008526
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 292,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.75e-06,
+        "output": 1.4000000000000001e-05
+      }
+    }
+  ],
+  "budgetCaveat": "Estimate guard, not provider hard billing cap; future unobserved routing/pricing may exceed reserve. Rates update after each valid response.",
+  "coverage": "Not assessed: collection only, no rendering or feature validation",
+  "startedAt": "2026-11-08T20:23:31.012Z",
+  "conservativeBatchReserve": 2.7557693750000003,
+  "status": "completed",
+  "finishedAt": "2026-11-08T20:27:54.961Z",
+  "files": [
+    "catalog.json",
+    "manifest.json",
+    "prompts.json",
+    "raw/google__gemini-4-argon__01-math-basics.raw.json",
+    "raw/google__gemini-4-argon__02-markdown-formatting.raw.json",
+    "raw/google__gemini-4-argon__03-code-blocks.raw.json",
+    "raw/google__gemini-4-argon__04-mixed-markdown-latex.raw.json",
+    "raw/google__gemini-4-argon__05-complex-scenarios.raw.json",
+    "raw/google__gemini-4-argon__06-edge-cases-boundaries.raw.json",
+    "raw/moonshotai__kimi-k3.1-pro__01-math-basics.raw.json",
+    "raw/moonshotai__kimi-k3.1-pro__02-markdown-formatting.raw.json",
+    "raw/moonshotai__kimi-k3.1-pro__03-code-blocks.raw.json",
+    "raw/moonshotai__kimi-k3.1-pro__04-mixed-markdown-latex.raw.json",
+    "raw/moonshotai__kimi-k3.1-pro__05-complex-scenarios.raw.json",
+    "raw/moonshotai__kimi-k3.1-pro__06-edge-cases-boundaries.raw.json",
+    "raw/openai__gpt-5.2__01-math-basics.raw.json",
+    "raw/openai__gpt-5.2__02-markdown-formatting.raw.json",
+    "raw/openai__gpt-5.2__03-code-blocks.raw.json",
+    "raw/openai__gpt-5.2__04-mixed-markdown-latex.raw.json",
+    "raw/openai__gpt-5.2__05-complex-scenarios.raw.json",
+    "raw/openai__gpt-5.2__06-edge-cases-boundaries.raw.json",
+    "raw/openai__gpt-6.1-sol__01-math-basics.raw.json",
+    "raw/openai__gpt-6.1-sol__02-markdown-formatting.raw.json",
+    "raw/openai__gpt-6.1-sol__03-code-blocks.raw.json",
+    "raw/openai__gpt-6.1-sol__04-mixed-markdown-latex.raw.json",
+    "raw/openai__gpt-6.1-sol__05-complex-scenarios.raw.json",
+    "raw/openai__gpt-6.1-sol__06-edge-cases-boundaries.raw.json",
+    "replies/google_gemini-4-argon_01-math-basics.json",
+    "replies/google_gemini-4-argon_02-markdown-formatting.json",
+    "replies/google_gemini-4-argon_03-code-blocks.json",
+    "replies/google_gemini-4-argon_04-mixed-markdown-latex.json",
+    "replies/google_gemini-4-argon_05-complex-scenarios.json",
+    "replies/google_gemini-4-argon_06-edge-cases-boundaries.json",
+    "replies/moonshotai_kimi-k3.1-pro_01-math-basics.json",
+    "replies/moonshotai_kimi-k3.1-pro_02-markdown-formatting.json",
+    "replies/moonshotai_kimi-k3.1-pro_03-code-blocks.json",
+    "replies/moonshotai_kimi-k3.1-pro_04-mixed-markdown-latex.json",
+    "replies/moonshotai_kimi-k3.1-pro_05-complex-scenarios.json",
+    "replies/moonshotai_kimi-k3.1-pro_06-edge-cases-boundaries.json",
+    "replies/openai_gpt-5.2_01-math-basics.json",
+    "replies/openai_gpt-5.2_02-markdown-formatting.json",
+    "replies/openai_gpt-5.2_03-code-blocks.json",
+    "replies/openai_gpt-5.2_04-mixed-markdown-latex.json",
+    "replies/openai_gpt-5.2_05-complex-scenarios.json",
+    "replies/openai_gpt-5.2_06-edge-cases-boundaries.json",
+    "replies/openai_gpt-6.1-sol_01-math-basics.json",
+    "replies/openai_gpt-6.1-sol_02-markdown-formatting.json",
+    "replies/openai_gpt-6.1-sol_03-code-blocks.json",
+    "replies/openai_gpt-6.1-sol_04-mixed-markdown-latex.json",
+    "replies/openai_gpt-6.1-sol_05-complex-scenarios.json",
+    "replies/openai_gpt-6.1-sol_06-edge-cases-boundaries.json",
+    "summary.json"
+  ],
+  "sourcePreflight": "/workspace/prism/next-batch-16-preflight.json",
+  "collectorTemplate": "/workspace/prism/collect-approved-batch-template.cjs",
+  "costGuardUtility": "/workspace/prism/collection-cost-guard.cjs"
+}

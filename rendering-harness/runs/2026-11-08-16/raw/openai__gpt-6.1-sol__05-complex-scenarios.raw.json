@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169634-uS7V0qzq0iypIp7eG52q",
+  "object": "chat.completion",
+  "created": 1794169634,
+  "model": "openai/gpt-6.1-sol",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$.\n2. For a *right triangle* with legs $a = 3$ and $b = 4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$.\n   - Therefore, **$c = 5$ units**.\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic ($a \\ne 0$) | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius.\n\nFor $r = 5$, the exact area is $25\\pi$ square units, approximately $78.54$.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x\\,dx = \\frac{1}{2}$.\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\n\n**Prices:** Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. **Total: \\$1,575.**\n\n**Math:** The formula $f(x) = x^2$ evaluates to $f(5) = 25$.",
+        "refusal": null,
+        "reasoning": "**Generating formatted responses**\n\nI need to create a response that reproduces formatted scenarios and includes escaped dollar currency for a LaTeX table. It's essential to deliver the requested content with the necessary formatting, though I might note that having an “a != 0” note could be optional and maybe unnecessary. The user seems to want challenging edge cases, so I'll replicate all scenarios with appropriate headings and math code while ensuring the currency is properly escaped.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Generating formatted responses**\n\nI need to create a response that reproduces formatted scenarios and includes escaped dollar currency for a LaTeX table. It's essential to deliver the requested content with the necessary formatting, though I might note that having an “a != 0” note could be optional and maybe unnecessary. The user seems to want challenging edge cases, so I'll replicate all scenarios with appropriate headings and math code while ensuring the currency is properly escaped.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NsmdNIqol37CYefwets7yROTR8eUPzZuGx407MaJXchHlFZHOiyy00trAY5DkABlHAfDvlYku3UpDsdiBu2TZh9VNJXNycw0SpKE1o2QkebA3Oc1qhlIlGPYBsFYhtOfI9eYlOaj0YKDCHh4OZsr2_jm1h_w39wxUSj8IX9YF5H-F6i4WYQhnmQ62pArt_JaQWYcutDce7MorfbCR92R8-rca4AZokWpe7EY7HPwEo4qrbLDX9v05Tk_E1Q6AtWHf3CDq_ggYyc10PnIMZd0QWzrFE_USe2BRFsipDnQrG_y-PznZQeEgEB7lkNj84lXeYucLjQtMJeVT6uRm01zUQvYgv-bJvp4VNZLd-dEOQErnD7gjk1HxoJcQB1f4kZP0BOo0m04Ri50j-qM5lzSPuDZ7i7lzE47l7sQDahohuzCjlHyeHyuFJrXs_gPfcxAmgQb6lKk7NzMWIeObYoN1Z_wXQoWmimnYBsbECS7c892iffkocrWcGK7t0TNE6UuHYKFHsP6MLUaqqOuMipI3GXcvpG2pop7W-NloS4sd3oNkidv3FC38baH1VJRGbwnRulllhgJLqNg_yoKN_EnhET-noRbHfg1AGFTiui_cI4UdFOwt0pKIwGEdLa_wZb6MhszXl8gepvOymUKDm6EYv9JceXrZ35juBoeWXKbbOFY2seBvW6YEwU94umz5QwC9qt72w8bsheqHVOJYTMg1dh-R9jDj2kH1oWor5LeVysc21weDWMVVTp93M40E8pYEkUjUTLqRaoXJdTEQHsBVfszLRg6Or9TeH5ExX1LlPtNQal1jwiQWQW5E9KF9vA3XeyhzdStETl4OJMkfp--Juu_jXhNHAJmJb065me1ey88_PPiez73qizEueX7Bop-cJ64b5AWCow3L7VwjFtm5tenvrUw_v4J4SVUmv39OazAP6OxeECG63m2ifPU_VT1a5lz84fO3W9oCAxprUIz5VGz9vTqzYvhYKxJ4a0W4YQIt31HeqFFcH3n-s2OeOHg9qgO4Fuh8FjSI3LfAw3-aRb2AxsguikusoN2WMWqbdiYXbJTaJ-q7tc1oWJzBtFpUZ3mPyu8Fe7wRgOVCbbvwL6UKPrjcpa4EASpf9CqVem_ucFb0iHeqn4mWcwBXD0GV9IJ_hgZPi8b_YAh3X9yRxqMAH8Vi31kd2YNofpYCQPRYbCDx2xeXCLAyjp2LUxIqCOYeOb5wVlCw6cZ_1Y9TDXO9T3aUjgOZj7F6GD9e3Rqu9SD_sxcH3lMJQRpGf4SvV14nqyH7SIjblFlhlWmZM34e2xL_9Eo2NnVytmrtNX_kSdPOmTVMcufqN6WWqsdpH91a0EvmopBWnWeLjFIR9QGP7Z6lKAdGkvURGhtmYXeE2QY-UB-I_EbpsotLo7ejt-lj8_KWJb9EscXCrLTNJmnnbFrqXJ63R3RxlYLDkrNucc-pWejMKCffOVZfLddNddP027_vMDBJM0z2OQzkyE_yxPcBcFlftXeb6DDw4qc6avhd58P2W0J7YQdne_P57Sg_UbCevFvSqUHwLGYx3G-CQrNmFqfbbRkLiSFjqa8DonUqNRTmfLJt2mY_NgKuYTVaAhGS7TBCHlWuhR-p_lMxON41iHoJs_cBFvBHy1qrgYUg3BDDfb-urOc25jpwqONrMn2YiBUOH0eaUETmbnVYnaC39KvOnr9bQC5fhXxq2tfQY_1auqVN6wjsbLokkPEuY_-WTW1wWgsJxCyHhLVB41yH0R5zooHjorWE5wey2KEU_5h9r8dUaz-xwdsZ0LvkRh2GboSN1q2S0dfbFYqV98THPYUJ_1zUtOL7sWqxZaqtWrXdpzAZOf_DdKhlsiYBHmtgFghLDM2Plx88f8GH2C8hFZoVPbvmCooKMSTD2Lo1aA4qe3qai7uaUC5gDHCX-uaFUtpPKa4eS7xOwS9YIPuxIfkflnb0Us8ANT2GULJ14XhvkhFDIn9yLu1MGvzEXCVFsa6ZMuQ6xQyukFAnfgoqJjMMgFxtELEGKtw35TSVKsViGnbIRi6teo7akbUAtH4YPwVpQuufYk_jCv0plbcNTNEEZx_NRZt5aRMLvikzaxrkeZYM-mv13nc-f6g1kGfpUrlrcz5aunMqefHxM7zn9VDk4mGdCltYup4reayUhyWnXuQAA8tOkplmq0CyJLvUOl7kS7F1JlG9rH6vjrrvAZ_wgW7JjDYO2eyl9NiOGIess2MYLqI6AcAhEWhr9qhimGdS1IBqZ3Mf0-aN0KJ5qWtwtP5lUWq9Wsfw72mcNnGQNWlPh2g9a2aO0SpgEVkLcoEgZ26g6Y7xNCieeCMgEmqLKzqARTq-JvN3HL052j8aBOLGO2EhupgCru1aNUr0jNL2vAv2q1QGxUttwlknquyW_kfMZ_4kTl5zK-bfjI7rIQU_ZAcf4JHTMPMQL8g3LJkC9v4hrtgwmp0NU5v5bjvPPci-9RBwazonIdpLgGO9BqiG6MbTMATU-fuJNINoCN4e6hg5PBM24CBimw8nx0-TnI1OwPSwATss3pYc1i23th_SEs_QKjf3ZDHz51ppyaQw7v4MFuhALlCOTT5YrLnP88Aiy1ZREiDr4=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LjEtc29sLTIwMjYwOTI5fG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_07c7d2d7b570262e016af0db23ecfc87d1b4991296191976e5",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 513,
+    "total_tokens": 941,
+    "cost": 0.005986,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.005986,
+      "upstream_inference_prompt_cost": 0.000856,
+      "upstream_inference_completions_cost": 0.00513
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 56,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

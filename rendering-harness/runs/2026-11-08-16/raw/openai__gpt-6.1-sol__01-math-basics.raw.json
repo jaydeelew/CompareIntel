@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169621-0JpGnEG97B3zbU2pFMub",
+  "object": "chat.completion",
+  "created": 1794169621,
+  "model": "openai/gpt-6.1-sol",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "### 1. Inline math\n\nThe quadratic formula, $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$, gives the solutions of $ax^2 + bx + c = 0$ when $a \\ne 0$. The discriminant, $b^2 - 4ac$, determines whether there are two distinct real solutions, one repeated real solution, or two complex solutions.\n\n### 2. Display math with aligned equations\n\n$$\n\\begin{aligned}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{aligned}\n$$\n\nAdding the equations gives $3x = 6$, so $x = 2$ and $y = 3$.\n\n### 3. Matrices and cases\n\n$$\nI = \\begin{pmatrix}\n1 & 0 \\\\\n0 & 1\n\\end{pmatrix},\n\\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}\n$$\n\nHere, $I$ is the two-dimensional identity matrix, and $f$ is a piecewise-defined function.\n\n### 4. Multiple equations\n\nMass–energy equivalence:\n\n$$\nE = mc^2\n$$\n\nNewton’s second law:\n\n$$\nF = ma\n$$\n\nThe Pythagorean theorem for a right triangle with hypotenuse $c$:\n\n$$\na^2 + b^2 = c^2\n$$\n\n### 5. Links\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n### 6. Money context\n\nThe item costs \\$5 and the shipping is \\$10, for a total of \\$15. Budget: \\$1000 (escaped dollar).",
+        "refusal": null,
+        "reasoning": "**Aligning equations correctly**\n\nI need to ensure all the equations are rendered accurately and aligned properly. I’m wondering if I should use the \\begin{aligned} standard or just align exactly how the user has it in mind. It's important to keep headings concise while also providing clear explanations for each step. I will focus on using the money escape formatting effectively. Finally, I should consider that having everything aligned will make it easier for the user to follow along!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Aligning equations correctly**\n\nI need to ensure all the equations are rendered accurately and aligned properly. I’m wondering if I should use the \\begin{aligned} standard or just align exactly how the user has it in mind. It's important to keep headings concise while also providing clear explanations for each step. I will focus on using the money escape formatting effectively. Finally, I should consider that having everything aligned will make it easier for the user to follow along!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8Nsaz5c4Dw5h-teziItJdFMgDmYk9BqY4XTeegHfHZlQoj4DzqB7AJq9-mXtVNQn5PAABUsZ1Oc82bTKN-R5rqlTgJ7Ccmn3MUmYqgaJ7rCIIpCj9yePLkRBdiccq9EyypGzdSckEErn5jhETz9GGfKiWBPhOj7kPDkijB5nLZ8MoCnXR65unILzT5XHK2lTGCHW4jCA-yDgb_5PNB-h-yXsgw2Oft4Gx39Pxn3LsAMwYBOfb7sYX7a-OkhYG5oRcybES_kt24BIeG4H1oJ4RfQbREefeEFTGhiGWv0UG2GqneTGzieQtRn-XF_3yjdkrpiK6fuvSIcglXY04C8DNuBFovz143G2f5GbZetoJILAzBBgZ1jtqiJuMZ54rpdsJk7IZJ6lJ2Da2-I8DuVVaGb8J4bdjA4nJ0LpwCHHhJJl4nnzFd5f0yzJ1fAuoawG9l7bmwRt0R5vt-K8EOHpuLQHrEPPeGRvpuX27WR0UDlIU3qFdkSilS0KLGA_O5FIIzsk-jdeQv-LSp2AI2QuSJkV33rbElfao4rsxP7eywfN6hnToi1z2c4xEOjAia9nREnJDuS32vd3ekMVQJEruC8ECGCXK_ZRwIj_jghIYS-0BTs6FPd4K0xn8FiAbUQtqdazCw1eNzwEpW9u6ilHu7pNJoKXC3zBfqg3qdR_CktgwMc2CSRieqNVqfvWGjMIHHwYSnSxtiCzh-1Pbe4bCxbRqkNSK85zdZ3FQFYXc6d5eslv0hThfGeO-tJlMKn1XdSO2DHMTJXqmwQKJBe_eSNm66gCbV86WUXo5wf17EGQC67egYnUWeKOLmTVinoStCkoDjRq_DwyhNE_p3Q7fWBj0dJ4nkL_MR7txhrUH1ffPHbxxpSmZ9D2NuM_bdF0kxwlCl5kd9rHehYn7FxpfdbruNkVBDt7gNd0WE7lbsciB3xvoditq_KmWjovpZQ-Y7u2vcsUM-B5tms54aX8FOh2OKt2_wd8IU9OwuJTWbiwvkzEqcQMCZGL9C8q6ftgKVrxzjjDzlaGp8K5vUOwH2Z8syYouFJT3Sg5ZjVFYQiPjnxgSg2_egdPsEaKHQUzAOSNp3KHRAaBlH6ga98Z5Lkrt0Bg54oLdJbW8z2GXFztt15yv6gdru8U-Rj7mbLfGxp-zOAYriebvaUDIAtEaqJ5WLI9aUJv7reOGOSvIrotvwfDcV52rkdbSyBa8UWws-fCEWNlPoml-WWfGK94MFwoCsPjqtBIhcUcCchUIy4BfCg3DsX1J8yoiiaiGQGiX0L3x4thmhseLlkCdDdrUIJ-YJUECXZIl1lF0807VHkJmvpd6sE1OeCRVMw4OP4HsQa7LE1Lo7-8h9QWrZCXGklGXAyeBT0RDQLIL2qOFK42D4nRx1gRizMGu9J-lIn9J02K1BlfZ0yiNt0Qx92dQfavifwS7cK9CRl5bFGyJQ1MWEYn_tyCgwCfkzheSQQu7sz2EGURO8PBFB1v_QNNURhsAtMCIg2pKLnK1730d9NytWtbI-MQmKzjhBpfe41Skr1SkDat6t2XgLdgDQTfXdZVg0Ume80L0fVA1BlGDzvyZGHX-sOggvk3jTMqnxN94VdKB1G5RWhMQHGMPOt9zvu8snRl1DsWClWks2j544oigrxZ_C4__AAIyf72MWgHbDFHNdsx1GxRbQjb9yTt6S6POWZZO1XSBgLzO51i4K-raBZ3HDuV2cbTsYn0JT2ZxMxmhxPfcnHb0WmWYeb7Cyvmao9aZ3VgyegM05fR0K30OQpDEKtlzduleMHe0_WPnuj7v_Zo6vCeG1Tge1lW8xRmWNt_SXO-2t46N56CMFDU5tha3gDyoJ7L7qLaZOxHVSma_2TCBQCuv_bLykx027lk3VI94taiTTKtSP8r1KoP1x-ggYXZifthPVBszTrKS3OxVw_8sSZqP9mdsQjh2Ewwk6w-naRD9GPgAdYk9StLYRjcDgKTq7AFZTNQVpFJpyBjZAFNZ1OD4rvN_45T6LKd1F9jGyH404IhRxZwz-v9T2nfy_UbzULbKPFUnnrd-elBawnOS29Dgqp8Iq0hh5-8Q1TqORF1_bcXvc1aolUPwFFlzlSu3aQGelrK5F1PURdYNdhE8W5yxJFIvs-vvxxIkVm9uVq8JJydxFjB1mw3vVsNVqdeqk9hOvAw6rVjcoI-qfnfRnOFtE5NdU4A1nGWbZyqOZM7cy-jV4NIuB1ZzeLvjoBuNhKB9dHUJyg8WFN0Gs4UXTy7oc9VpoY9K9QZcs7_Rx8tC-bLnn7S7p1Fo87TFnuSuh4cu4vnrqNBWKjCDVknDEttpKtJJ33Yavo4XomfGPhMwn88j977zA97DAlWenFTD_FojoZ-1hjvKHaHAvLZtC8LFhAzprtcUnnKAzHwkHeeKYVizIHwNjqqj0I=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LjEtc29sLTIwMjYwOTI5fG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_039cffe9654d8c52016af0db16dbac87d19372e2dbea81d529",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 274,
+    "completion_tokens": 452,
+    "total_tokens": 726,
+    "cost": 0.005068,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.005068,
+      "upstream_inference_prompt_cost": 0.000548,
+      "upstream_inference_completions_cost": 0.00452
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 47,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

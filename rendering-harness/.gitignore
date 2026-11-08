@@ -53,6 +53,9 @@ runs/*
 !runs/2026-11-08-15/
 !runs/2026-11-08-15/**
 !runs/2026-11-08-15-artifacts.tar.gz
+!runs/2026-11-08-16/
+!runs/2026-11-08-16/**
+!runs/2026-11-08-16-artifacts.tar.gz
 runs/2026-11-04/debug-rendered.html
 *.log
 .DS_Store

@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169639-XQGKXNU59TeCVypVZO2A",
+  "object": "chat.completion",
+  "created": 1794169639,
+  "model": "openai/gpt-6.1-sol",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Delimiter Variants\n\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x\\,dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "**Clarifying response requirements**\n\nI need to replicate test content accurately. The user wants me to generate responses that match specified content without additional explanations. I should focus on maintaining the original code and math while ensuring that the responses reflect the provided variants. It looks like I can exclude any test prompt introduction and just stick to the content itself. Also, I need to confirm that I'm using the dollar format consistently, with an emphasis on variants.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Clarifying response requirements**\n\nI need to replicate test content accurately. The user wants me to generate responses that match specified content without additional explanations. I should focus on maintaining the original code and math while ensuring that the responses reflect the provided variants. It looks like I can exclude any test prompt introduction and just stick to the content itself. Also, I need to confirm that I'm using the dollar format consistently, with an emphasis on variants.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8Nss3sACruzLZIVrFwR4ToaP7U4VUmfx8wRaqMDHx_4jrfswF2s-tsuGJVA2uKYul493R9c6-auWetAXvq-poU9EFT15BLSv9kpv7MPxT8HKZvm5P60GmDnqadtcypwo4KGFjFrR4pyJ564BDUEajsxh6sF9dSZ66iXoJhokcFeVQcQ-bNQs8S7_PlUPQKqdDVLbiM17bUU00fSf7OxfeWRIdDD7jjuDqb6HnjyQkrBgj4l1jlBTHnai_SrcpB8C-SlBvyVy-obpu74Nd5YgMO_qIaiqZ95ADUHn0bM_ioiQRHtGm0V5Cm9cC7zuZgjGNY4JpCubzeu1GbQjAvmukd2cYQZAnTrotyB73FCLb3ahnXhH8RjIbD8gpnTjBOsToDWlybhON5reUdX4v4FFua2xlF7sKaYb5z23_XewsAD1jkTGuehkxp-aJ2E8GE4lR8F6CRxtSjC8wdGlEZwex54MxmrguoVRXFyG8UPw3BlZErp9o71vK39JsGTu-M-ewNuI_bO-80ZzYC1NnA7E-2KEYbO3eU5ClseoBxwiENAgz5ULKzcEQFHC7QsHE9SAI5i6CsxTT9n5su3tZ6ieCV90WwBwPtvnosoy9TxdZzRLQzq895HKOqqEeLqgAGJZpz0aRBPP4ABvzy0TdHWn7m7tBIKF4BBmWvcJZwuAnLxBm8zdw9UBsSWh7jBPDVVtNCl0kUT8er-4KSuHt5mV2RC6zFzXqE41Oyujzu9lu6sNuf99nhEG30AOtD-4tFXBm_kyQdKrFDo0wOhury0sWG91LrrxRecGUqopsEcVAAekfzG53WAi_QNnyye5L9UKEWy3JcxiiTF64VxWiWwtk84c9bK1Rrp-eZHbRkqurBF4pXp8CE6s3aTN4oanS9Go5YJNqYEDmqOTDmiytpdFLMBDIOd1gmvjSoZKBJe7nNAdyK-sQI0U0N7PFeg7sEDmqsQZaIEOZwB9Rd9v5jBgpdlm87PUTYhguI7BEqwNKv0uOTlXaGL6bd41zLqk_G27nHy6yw9kR4dcJ4_deIsW4eh8yjB_9KCaH8pzsXRSqPcKvmmTr5EKcX3BQ5kyIr_cuJPaOLflCTgik3x2sW_Ool4GBA3CPVO6aWIJDWMKV81esPW4y4KwXGl_eWSZqtOTuctib5XJea0BryUvEg4oKvTbVoqJ2BpupL2m76gbns5f7O_2MJklcJNdLntyBMepBdZvPIPPfB85iqkCfs4uaGjnAP1d2y6R06-m1TJ13ZQSiC2K_o_JDFYnKIvqTKzFktHc1Fg7_IgMzNhURRHKVguuhF5Q63-8T8pISZvwHV033kTX8wEXBhXT4IXbnrI4mMZJS2rMMYR9tVDL4dcyYliJIZoHsVuMudAcjSI3oS9WT2P68YdB9H4_44X9jA7tPDIes0qzn9MBRFzvsZdDczowrlxvuWoX94rhzMoGhL9LnhPjYtlxUhrtCaWEzJ6yOse3eQpgo534x6JnG9JL8Ogo4YT6HWDsuMfxkTLJ8LQWqRxfjyKRIbpYBr1LhwPk-12jNadCSnxHr7TQ8MFliMSwCqq5SUzgr1BcEJxbXJqfVFfefQo4o6900ESGf0AAKwFLrBT1enya2Pdo_Q3Gjm0qd20fhNwEgx8KJk3C49CbbwGQNIDsJ_HuCRzmOoe7pia9RscVmjbl4uVtI75LIx5P5H8uRqsxB69OrXs6o92aG9jmK_nZUB5J-FXBOL_9LxJhwIxd_8u6Dfwvbs52tXqcrhI8F8rb-BoLAlgGARmIVKUKWQJNmyAl38UZx6OzKjND2MFtfBOaSNsp5d0T1ay_cTefX1jRvkS7migkAxKW3-OHdpb6wucPD3pm3Sr2OvxFNS3U-LR5uqssRGHVgL6oexB8rMEN3W8Dkoc87F6HF9kiXAZ9n4o4DFwBx2NPu0T0sC1a3EgJjtQkSRR_qLFCRDuqhLoFPrwc6Py6wuLdl4z7NzlFByAY6pB6ijvYyuZPHOkx3kyYezz3Jjita25OxJ974BmuaYQjjqkz7SeZbLaL5mR-Zc8b9aarbgvVaK6NLj5qpFtIdzAF_Z9vkl5DtCfsmSruvIv05fXQIlvMjK1lLrj9OAOkLK_NNUVw-r3rEjcEYlVndklMFpZzA9yzMJEGxtTTdINmNUIaLSpHWiwFs9P8yCH4lORHW50McUl2wTQZ8Gpt0-uOs3OFwY9YL0fzSxlwdZlHDo7whRxQy9UGPh-RaG39WCx_J0dpfA-eJYWqfxPAygGQbLEJ_7ylNslHKR2Qon3rx_mcWs_LZ3XpJb3YIgyyjsM2IGNNBhWVdiB5tkxM_yAWh7xVRLQxXEvyom_0waaiwOH9AGggV9p9H5hmjnd45UNe65qKIlz7buklZAseBO-375p5VEFAZxIM4z4uO9sw_ntJRpiz3iTxfrCNtYHDxTmbUUoHaQYpmdnBCUB_c8SkwN2xv6tvMqY-mTqKq0MQn2ETzM-r7oPeXAtrV8b3a-eyiZQpMOQ_wIPEWp-Sqt_4u90EqpoeHpBk7aGgoxHIGBOinZVrqgMdjFtK3woVBaQD1S4cLv0HMB4onCYuz8QLmiromBZf4uX_7i4AEMh8hIdEhICd6thbicp2VWd8hIYgiU5c8bWYdH_WCbxHH9fv53S9LHjDgsFPgqXOplLYfnWHmjajMlg=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LjEtc29sLTIwMjYwOTI5fG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_096b3ea939dfd7da016af0db29062887d1b89435728c514e93",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 342,
+    "completion_tokens": 383,
+    "total_tokens": 725,
+    "cost": 0.004514,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.004514,
+      "upstream_inference_prompt_cost": 0.000684,
+      "upstream_inference_completions_cost": 0.00383
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 60,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
