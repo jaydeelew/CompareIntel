@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170499-D1xzmqsQrwjwOXPwwmfm",
+  "object": "chat.completion",
+  "created": 1794170499,
+  "model": "anthropic/claude-opus-5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "## Headers\n\n### This is H3\n\n#### This is H4\n\n---\n\n## Text formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\nYou can also combine formatting with `inline code`, ~~strikethrough~~, and [links](https://example.com).\n\n---\n\n## Lists\n\nNested unordered list:\n\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n    - Level 3 item A2b\n- Level 1 item B\n  - Level 2 item B1\n\nNested ordered list:\n\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n   1. Nested under third\n      1. Deeply nested\n\nTask list:\n\n- [x] Completed task\n- [ ] Pending task\n- [ ] Another pending task\n\n---\n\n## Tables\n\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n| Gemini | 1M | $0.01 |\n\nWith alignment:\n\n| Left | Center | Right |\n|:-----|:------:|------:|\n| a | b | c |\n| longer cell | centered | 1,234.56 |\n\n---\n\n## Blockquotes\n\n> This is a blockquote\n> with multiple lines\n\nNested blockquote:\n\n> Outer level of quotation.\n>\n> > Inner level, nested one deeper.\n> >\n> > — Attribution line\n\n---\n\n## Code\n\nInline: use `npm install` to begin.\n\nFenced block with language:\n\n```python\ndef greet(name: str) -> str:\n    \"\"\"Return a greeting.\"\"\"\n    return f\"Hello, {name}!\"\n\n\nif __name__ == \"__main__\":\n    print(greet(\"world\"))\n```\n\n```json\n{\n  \"model\": \"claude\",\n  \"context\": 200000,\n  \"streaming\": true\n}\n```\n\n---\n\n## Horizontal rules\n\nAbove and below this line are horizontal rules.\n\n---\n\n## Definition-style list\n\n**Term one**\n: A short explanation of the first term.\n\n**Term two**\n: A short explanation of the second term.",
+        "refusal": null,
+        "reasoning": "I'm going to put together a response that shows off the markdown elements, so I'll write a clean document that covers them all.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm going to put together a response that shows off the markdown elements, so I'll write a clean document that covers them all.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAISwwQK4AIIExgCKkBhPRDlXY2UCYmQ0XfwJwzXcCWo7WrWBr3xsPffnwIVqB6W846a2tYPu57gtk3RuTocQRJMw8bgzWN+9OeDVDN0Mg1jbGF1ZGUtb3B1cy01OAFCCHRoaW5raW5nWiQ0YzBmMDQ2Zi0yNWZkLTQ1ZmItYmZiMy1hMDhhOGUyNDljYTd6HnVwcm9mXzAxMUNlVkFvbmlDS0REQUZQOGdWd3QyVJoBDwoNY2xhdWRlLW9wdXMtNagBhb3D1wbCAToIBBAAGgwC2ooDTzcF0JgEJq0gATIEEnHPJToEODMjikIEODMjikoEODMjilAAWgTZBeFWYAJoAXAA2gFgChZwcmVmaXhfYmVmb3JlX2Jsb2NrX3YxEiDzCESytbcHG992bQO3z+n3PkuMtbiE3blFIMsI215S+CIAMiDCwBPIapyS4i+Wbz2GF3aPi3pEyQKtzAl7+h4JivtOH0gDEgwom3wnV+7BMJODZhUaDAx+KuhrsRCKwTG6SiIwkp8hKQUlYXwppcrdQLCuf/QMMqYTC3Uk7xbzUDzlgWygtj4eQhZOyMtglSXlncgSKo8Bixkb0blkU4qIajy6oY+AzdtwmORHCp2YGOW3zFvp8Mdc3JDix+pCX6wIhzvXzpp6Z4VRzDWAscAa2he7Mv5+i75c2rxw+Y/EZgNV7uaCEhI6Nydy5s8U5/TS2KDs2/u36xpz8UC/58hYA70J2jGhEYp3W1SnqXUC82H4vS/G9BvVSjTK7VejC/V6vQn3E+QYAQ==.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1vcHVzLTUtMjAyNjA3MjN8Y2xhdWRlLW9uLWF3cyJ9"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 277,
+    "completion_tokens": 728,
+    "total_tokens": 1005,
+    "cost": 0.019585,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.019585,
+      "upstream_inference_prompt_cost": 0.001385,
+      "upstream_inference_completions_cost": 0.0182
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 40,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

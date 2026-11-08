@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-fable-5",
+  "modelName": "Anthropic: Claude Fable 5",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "# Response: Code Blocks\n\nHere are the requested fenced code blocks:\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n**Output:**\n```\nSolutions: x = 3.0, x = 2.0\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n**Note:** This recursive implementation has O(2^n) time complexity. A memoized or iterative version would be more efficient for larger inputs.\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nAdditional examples of inline code that could be mistaken for other syntax:\n\n- Exponents: `y = x^2 + 2x + 1`\n- Subscripts: `a_b`, `matrix_i_j`\n- Dollar signs: `$price`, `$total = $price * $quantity`\n- Asterisks: `a * b` and `**kwargs`\n- Underscores: `__init__`, `_private_var`\n\nAll of the above should appear in monospace code formatting rather than being interpreted as LaTeX math, bold/italic markdown, or variable interpolation.",
+  "usage": {
+    "prompt_tokens": 338,
+    "completion_tokens": 643,
+    "total_tokens": 981,
+    "cost": 0.03553,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.03553,
+      "upstream_inference_prompt_cost": 0.00338,
+      "upstream_inference_completions_cost": 0.03215
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 54,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.03553,
+  "actualCost": 0.03553,
+  "timestamp": "2026-11-08T20:44:07.314Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

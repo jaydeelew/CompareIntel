@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170647-cReK2rROzueRF4dUNTG8",
+  "object": "chat.completion",
+  "created": 1794170647,
+  "model": "anthropic/claude-fable-5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Calculus and Applications: Mixed Format Examples\n\n## Problem Statement\n**Exercise 2**: Given the function $g(x) = e^x \\sin(x)$, find:\n\n1. The *first derivative* $g'(x)$\n2. The **second derivative** $g''(x)$\n3. The critical points on $[0, 2\\pi]$\n\n### Solution\n\nUsing the *product rule*, the first derivative is:\n$$g'(x) = e^x \\sin(x) + e^x \\cos(x) = e^x(\\sin x + \\cos x)$$\n\nDifferentiating again:\n$$g''(x) = e^x(\\sin x + \\cos x) + e^x(\\cos x - \\sin x) = 2e^x \\cos(x)$$\n\nCritical points occur where $g'(x) = 0$, i.e., where $\\tan(x) = -1$:\n- $x = \\frac{3\\pi}{4}$ (local **maximum**)\n- $x = \\frac{7\\pi}{4}$ (local **minimum**)\n\n## Probability with Tables\n\nFor a random variable $X \\sim N(\\mu, \\sigma^2)$, key properties:\n\n| Property | Formula | Value for $N(0,1)$ |\n|----------|---------|--------------------|\n| Mean | $E[X] = \\mu$ | $0$ |\n| Variance | $\\text{Var}(X) = \\sigma^2$ | $1$ |\n| PDF | $f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}$ | $\\frac{1}{\\sqrt{2\\pi}} e^{-x^2/2}$ |\n\n## Series with Numbered Steps\n\nTo evaluate $\\sum_{n=1}^{\\infty} \\frac{1}{n^2}$:\n\n1. Recognize this as the **Basel problem**\n2. Apply Euler's famous result:\n   $$\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6} \\approx 1.6449$$\n3. Verify convergence via the *p-series test* with $p = 2 > 1$ ✓\n\n## Vectors and Inline Math\n\nGiven vectors $\\vec{u} = \\langle 1, 2, 3 \\rangle$ and $\\vec{v} = \\langle 4, 5, 6 \\rangle$:\n\n- **Dot product**: $\\vec{u} \\cdot \\vec{v} = 4 + 10 + 18 = 32$\n- **Magnitudes**: $|\\vec{u}| = \\sqrt{14}$, $|\\vec{v}| = \\sqrt{77}$\n- **Angle between them**:\n  $$\\cos\\theta = \\frac{\\vec{u} \\cdot \\vec{v}}{|\\vec{u}||\\vec{v}|} = \\frac{32}{\\sqrt{14 \\cdot 77}} \\approx 0.9746$$\n\n## Real World Context\n\n> **Note**: In finance, compound interest follows $A = P\\left(1 + \\frac{r}{n}\\right)^{nt}$, where $P$ is the principal, $r$ is the annual rate, and $n$ is the compounding frequency.\n\nMoney context: Investing $1,000 at a 5% annual rate compounded monthly for 10 years yields:\n$$A = 1000\\left(1 + \\frac{0.05}{12}\\right)^{120} \\approx \\$1{,}647.01$$\n\nThat's $1,000 principal plus roughly $647 in interest — a **64.7% total return**.\n\n---\n\n*Key takeaway*: Inline math like $e^{i\\pi} + 1 = 0$ flows naturally within text, while display math stands alone for emphasis:\n$$\\boxed{e^{i\\pi} + 1 = 0}$$",
+        "refusal": null,
+        "reasoning": "I need to produce a mixed markdown and LaTeX example to show how the two formats combine. I'll write a fresh document in that style rather than reusing the earlier pattern.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I need to produce a mixed markdown and LaTeX example to show how the two formats combine. I'll write a fresh document in that style rather than reusing the earlier pattern.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAISoAUK4gIIExgCKkBI/UK2cz3arCDSja765MwG+IFsnWc5eOy/9vH6EM2QSWD+xdmHH730br0DNJ7d9/Ia3pi7F75RRkfTYMRVZwqtMg5jbGF1ZGUtZmFibGUtNTgBQgh0aGlua2luZ1okNGMwZjA0NmYtMjVmZC00NWZiLWJmYjMtYTA4YThlMjQ5Y2E3eh51cHJvZl8wMTFDZVZBb25pQ0tEREFGUDhnVnd0MlSaARAKDmNsYXVkZS1mYWJsZS01qAGbvsPXBsIBOggEEAAaDALaigNPNwXOIwQmrSABMgQScc8lOgQ4MyOKQgQ4MyOKSgQ4MyOKUABaBNkF4VZgAmgBcADaAWAKFnByZWZpeF9iZWZvcmVfYmxvY2tfdjESIH8B2xWzV4r1vkZKQSwvN6iqzY9ib+czNHt8rEK0ZwWrIgAyIMLAE8hqnJLiL5ZvPYYXdo+LekTJAq3MCXv6HgmK+04fSAMSDGg/JWM44fnlrCaQfhoMqGwKp67h/kPpkOUsIjBFmgc7x/qx+V81fGM6YIt0m3d6gjuPSgO9AT3k3XIM2wYwZDc8igNFEod+QPHLOGEq6gFTTCbDDwiP0jld7NIC0Q9A5IWubwAtlQ7xcmJ7PjesI+G0cXJUuKADt8LcYK+j5WJdiDqvPITAGBKhmqhfzgWFwhr2cjg0bSytO99ysAwrlpQrh2dAJ8KzVH6LfC00RZ1kyqI+zPJMDyN7LMjdW/hRkihUei1fP5YKUFAYeAZaO7/HVDcVI8/ks4vE15S8uLJMI3fKj/Ej3iFMs2aIPeLK6ypMS9A9qHcilJK9RvpPGhvGkXx0zx5Qo/U+mifiy/5o6ZvU8A+gW62UhdGMNPnCT2TOnvy4qcvJ96jNubE8Pup8Z82SGgTPD1UYAQ==.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS01LWZhYmxlLTIwMjYwNjA5fGNsYXVkZS1vbi1hd3MifQ"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 457,
+    "completion_tokens": 1332,
+    "total_tokens": 1789,
+    "cost": 0.07117,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.07117,
+      "upstream_inference_prompt_cost": 0.00457,
+      "upstream_inference_completions_cost": 0.0666
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 69,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

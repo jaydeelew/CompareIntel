@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170679-0kYB4Bn2735Wv801K5VG",
+  "object": "chat.completion",
+  "created": 1794170679,
+  "model": "anthropic/claude-fable-5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Response: Edge Cases and Boundaries Test\n\n## Delimiter Variants\n\n1. Double dollar display:\n\n$$x^2 + y^2 = r^2$$\n\n2. Bracket display (converted to standard delimiters):\n\n$$E = mc^2$$\n\n3. Single dollar inline: $a + b = c$\n4. Paren inline (converted to standard delimiters): $x = 5$\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\nNote: everything inside the code fence remains literal — the `$50` is not treated as math, and `E = mc^2` stays a plain string.\n\n## Currency and Escaped Dollars\n\n- Plain: The price is \\$100\n- Escaped: The budget is \\$500\n- Multiple: Costs \\$25, \\$30, and \\$45\n- In sentence: I spent \\$50 at the store\n\nAll literal currency amounts use escaped dollar signs (`\\$`) to prevent accidental math-mode rendering.\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\nInline math works inside table cells without issue, including fractions like $\\frac{4}{3}$.\n\n## Raw Dollar Signs\n\nThe shell variable `$HOME` is set (wrapped in inline code to keep it literal). Price: \\$99.99 (escaped to avoid opening math mode).\n\n---\n\n### Summary of Handling Rules\n\n| Case | Treatment |\n|------|-----------|\n| `$$...$$` and `\\[...\\]` | Rendered as display math with `$$` |\n| `$...$` and `\\(...\\)` | Rendered as inline math with `$` |\n| Dollar signs in code blocks | Left completely literal |\n| Currency amounts in prose | Escaped as `\\$` |\n| Shell variables like `$HOME` | Wrapped in inline code |\n| Math inside tables/lists | Standard delimiters work normally |",
+        "refusal": null,
+        "reasoning": "I'm treating this as a test of delimiter variants and edge cases for LaTeX and markdown rendering. I'll demonstrate them with $ and $$ delimiters and escape literal dollar signs with \\$.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm treating this as a test of delimiter variants and edge cases for LaTeX and markdown rendering. I'll demonstrate them with $ and $$ delimiters and escape literal dollar signs with \\$.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAISoAYK4gIIExgCKkCOmbDo7SZqQ5NRmgMkiaO9ZJl4Sc0BPw+2Hf+U5H4a19RD9QeNcUfhkiRdIVM1194msF1saJZXY7kEvNhn4PaMMg5jbGF1ZGUtZmFibGUtNTgBQgh0aGlua2luZ1okNGMwZjA0NmYtMjVmZC00NWZiLWJmYjMtYTA4YThlMjQ5Y2E3eh51cHJvZl8wMTFDZVZBb25pQ0tEREFGUDhnVnd0MlSaARAKDmNsYXVkZS1mYWJsZS01qAG7vsPXBsIBOggEEAAaDALaigNPNwWLPwQmrSABMgQScc8lOgQ4MyOKQgQ4MyOKSgQ4MyOKUABaBNkF4VZgAmgBcADaAWAKFnByZWZpeF9iZWZvcmVfYmxvY2tfdjESIKDUJ8ELKc78Uxepkd7ybkWWrnsV/jzwR22I9yKuMs6qIgAyIMLAE8hqnJLiL5ZvPYYXdo+LekTJAq3MCXv6HgmK+04fSAMSDGSitV5gPH3QD0jPfxoMCd+SUHeYXHO6oz2IIjBZ+EYLcaIatdapQmlmHBhyFwKgm8ZGdjLp0cUgHtdlip+6ho4pk2yJBwmpVZM7jXMq6gJCSILFzJOuugybuDBBSg7KSEKROGZHU3WdTkxhynY/2uj/MoywxlEYQ0JNE6CIOy9mmAptQQeYHaMjwmJ/clfn/V5fiz7xrH8Iz0hM5LAyhys3+lNktsnOkohOv7wN8n6BMdvDNt2QEYO/TXCeF6sCtWE3jZmDgd6e4pu+LNAbZaN/EhhG44SNj8MHFIhyAjJTkNtc1+6fqm1xApBXRHdCW7/eurs0k7h+ydGv/4IHlj19pGltYcOhgDefyXCKVL6Wi3nEW1o/82bTQ1YO17TMf5xOnPdbUvJYH5CNXxGmlt+BZQR3WhNNDF5zCHPGK7MHaiWLozsbg23v/Iz58NSFkxwxJF25d9BFmNJEOsJo1wK2tijr9gsyeGja9GQ53zQYfBxXOqUGr5lhYMQdLpLX2aFlbG1iJbBM9ocS3/wLLEtMorHPbLiWAE/EscvVvXR4h1cD4YuuRtqIE+AlW1T+IVR3PH14BpNQeRgB.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS01LWZhYmxlLTIwMjYwNjA5fGNsYXVkZS1vbi1hd3MifQ"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 483,
+    "completion_tokens": 932,
+    "total_tokens": 1415,
+    "cost": 0.05143,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.05143,
+      "upstream_inference_prompt_cost": 0.00483,
+      "upstream_inference_completions_cost": 0.0466
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 117,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -1,0 +1,414 @@
+{
+  "status": "completed",
+  "stopReason": null,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.975895,
+  "unknownCostCalls": 0,
+  "perModelCost": {
+    "anthropic/claude-opus-5": 0.208045,
+    "openai/gpt-5.5": 0.08995,
+    "anthropic/claude-fable-5": 0.32034,
+    "anthropic/claude-fable-5.1": 0.35756
+  },
+  "promptTokens": 9584,
+  "completionTokens": 23021,
+  "reasoningTokensIncludedInCompletion": 2577,
+  "errors": [],
+  "truncated": [],
+  "visibleEmpty": [],
+  "finishReasons": {
+    "stop": 24
+  },
+  "firstCallCST": "2026-11-08T14:41:29.266000-06:00 CST",
+  "lastCallCST": "2026-11-08T14:46:17.968000-06:00 CST",
+  "cumulativeKnownUsd": 3.1612536047,
+  "priorUnknownCharges": 2,
+  "coverage": "Collection only; no new rendering passes",
+  "requestTimeoutSeconds": 600,
+  "dynamicGuardEvidence": [
+    {
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.26106250000000003,
+      "reserveRates": {
+        "usd": 0.26106250000000003,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.4999999999999998e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.26005,
+      "reserveRates": {
+        "usd": 0.26005,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.2606,
+      "reserveRates": {
+        "usd": 0.2606,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.26183125,
+      "reserveRates": {
+        "usd": 0.26183125,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.26366875,
+      "reserveRates": {
+        "usd": 0.26366875,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.2626,
+      "reserveRates": {
+        "usd": 0.2626,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.5",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.3122625,
+      "reserveRates": {
+        "usd": 0.3122625,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.5",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.31125,
+      "reserveRates": {
+        "usd": 0.31125,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.5",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.31179999999999997,
+      "reserveRates": {
+        "usd": 0.31179999999999997,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.5",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.31303125,
+      "reserveRates": {
+        "usd": 0.31303125,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.5",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.31486875,
+      "reserveRates": {
+        "usd": 0.31486875,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.5",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.31379999999999997,
+      "reserveRates": {
+        "usd": 0.31379999999999997,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3.0000000000000004e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.5221250000000001,
+      "reserveRates": {
+        "usd": 0.5221250000000001,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.5201,
+      "reserveRates": {
+        "usd": 0.5201,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.5212,
+      "reserveRates": {
+        "usd": 0.5212,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.5236625,
+      "reserveRates": {
+        "usd": 0.5236625,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.5273375,
+      "reserveRates": {
+        "usd": 0.5273375,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.5252,
+      "reserveRates": {
+        "usd": 0.5252,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.5221250000000001,
+      "reserveRates": {
+        "usd": 0.5221250000000001,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.5201,
+      "reserveRates": {
+        "usd": 0.5201,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.5212,
+      "reserveRates": {
+        "usd": 0.5212,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.5236625,
+      "reserveRates": {
+        "usd": 0.5236625,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.5273375,
+      "reserveRates": {
+        "usd": 0.5273375,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.5252,
+      "reserveRates": {
+        "usd": 0.5252,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    }
+  ]
+}

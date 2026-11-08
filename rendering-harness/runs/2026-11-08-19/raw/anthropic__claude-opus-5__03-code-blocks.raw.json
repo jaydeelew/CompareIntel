@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170510-8Fa6Xy7J9ow4E3Zv4tvn",
+  "object": "chat.completion",
+  "created": 1794170510,
+  "model": "anthropic/claude-opus-5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Code Block Rendering Test\n\nBelow are several fenced code blocks and inline code samples for verifying syntax highlighting and escaping behavior.\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\nExpected output:\n\n```text\nSolutions: x = 3.0, x = 2.0\n```\n\nNote that `discriminant**0.5` returns a complex number automatically only if the base is complex; for negative real discriminants this raises no error in Python 3 but yields a `complex` result only when written as `complex(discriminant)**0.5`.\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\nA memoized variant, to avoid exponential blowup:\n\n```javascript\nconst memoFib = (() => {\n  const cache = new Map([[0, 0n], [1, 1n]]);\n  return function fib(n) {\n    if (cache.has(n)) return cache.get(n);\n    const value = fib(n - 1) + fib(n - 2);\n    cache.set(n, value);\n    return value;\n  };\n})();\n\nconsole.log(memoFib(100).toString()); // 354224848179261915075\n```\n\n## Shell and SQL\n\n```bash\n# Count lines of Python in a repository, excluding vendored code\nfind . -name '*.py' -not -path './vendor/*' | xargs wc -l | tail -n 1\n```\n\n```sql\nSELECT customer_id,\n       SUM(amount) AS total_spend\n  FROM orders\n WHERE created_at >= DATE '2024-01-01'\n GROUP BY customer_id\nHAVING SUM(amount) > 1000\n ORDER BY total_spend DESC;\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nAdditional edge cases worth checking:\n\n- Backslashes: `\\alpha`, `\\frac{1}{2}`, `C:\\Users\\test`\n- Dollar signs: `$100`, `$$TOTAL$$`, `${VAR:-default}`\n- Underscores: `snake_case_name`, `__init__`, `_private`\n- Carets and tildes: `2^31 - 1`, `~/.bashrc`, `a~b~c`\n- Pipes inside tables: `a \\| b`\n- Nested backticks: `` `literal backticks` ``\n\n## A block containing fence-like content\n\n````markdown\nTo show a code block in Markdown, wrap it in three backticks:\n\n```python\nprint(\"hello\")\n```\n\nUse four backticks when the content itself contains three.\n````\n\n## Diff formatting\n\n```diff\n def quadratic_formula(a, b, c):\n-    discriminant = b**2 - 4*a*c\n-    x1 = (-b + discriminant**0.5) / (2*a)\n+    discriminant = complex(b**2 - 4*a*c)\n+    x1 = (-b + discriminant**0.5) / (2*a)\n     x2 = (-b - discriminant**0.5) / (2*a)\n     return x1, x2\n```\n\n## No-language fence\n\n```\nplain preformatted text\n    with preserved    indentation\nand no highlighting\n```",
+        "refusal": null,
+        "reasoning": "I'm going to answer with fenced code blocks, showing the examples in code form and adding a bit of explanation and a few extra samples. I'll keep the formatting clean so it reads well.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm going to answer with fenced code blocks, showing the examples in code form and adding a bit of explanation and a few extra samples. I'll keep the formatting clean so it reads well.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAISrAUK4AIIExgCKkD+9r1YI/Dm8RMSnnK8jTHDuE0eA8qh4Q/3rwDVRjcE2fL8v8GVl3XB9BoSVd9LIIGjSiD3/0Y2/JcnEl0OWv89Mg1jbGF1ZGUtb3B1cy01OAFCCHRoaW5raW5nWiQ0YzBmMDQ2Zi0yNWZkLTQ1ZmItYmZiMy1hMDhhOGUyNDljYTd6HnVwcm9mXzAxMUNlVkFvbmlDS0REQUZQOGdWd3QyVJoBDwoNY2xhdWRlLW9wdXMtNagBkL3D1wbCAToIBBAAGgwC2ooDTzcFE5AEJq0gATIEEnHPJToEODMjikIEODMjikoEODMjilAAWgTZBeFWYAJoAXAA2gFgChZwcmVmaXhfYmVmb3JlX2Jsb2NrX3YxEiCNW02F1V+S2+C2UB/EMXRzaN5Vr+fAF4dcD4vmFiCJiCIAMiDCwBPIapyS4i+Wbz2GF3aPi3pEyQKtzAl7+h4JivtOH0gDEgwSfr05XGlsUbCMutwaDNBUm08lt8L7Yc4iJCIwO6Gi+Hu7hSZTYSVQCfrkzLeZMzKje2yzGOpCGEIWAqxfxb0JhTmZnLepxa61C4qzKvgBcivul1fJFydsbZtEX//5Ma/JWQt5gRAuh05fv4YMdobQBj9cIlgWQr1IKCpt4Xg1exOiFCBYGE7vlifS2kwQJSshDKTVXYnS7rNe/qInNgQ8M05KqQkpMotbPZ2GzbJUrIEauF62awkTV1MkgCrDOUWlrcP7FYDfSIZplcENy5xUIdmPLM7LOLqAwougFOMOcYQonRokF0QukYtsXTqRmtH0NX3q09toHfQxqMOSgksvxM378PkMICeLDVD+rWxGlNIaV78nBbFa3kflOiqnLgR3F8AMDSQ6WwURsg/PTWd7ubl0Fh4ZEwYNbs6oJCJaS5g7rtOq7eQYAQ==.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1vcHVzLTUtMjAyNjA3MjN8Y2xhdWRlLW9uLWF3cyJ9"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 338,
+    "completion_tokens": 1315,
+    "total_tokens": 1653,
+    "cost": 0.034565,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.034565,
+      "upstream_inference_prompt_cost": 0.00169,
+      "upstream_inference_completions_cost": 0.032875
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 70,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

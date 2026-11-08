@@ -1,0 +1,1325 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 9.75,
+  "maxTokens": "perModel",
+  "perModelMaxTokens": [
+    {
+      "id": "anthropic/claude-opus-5",
+      "maxTokens": 8192
+    },
+    {
+      "id": "openai/gpt-5.5",
+      "maxTokens": 8192
+    },
+    {
+      "id": "anthropic/claude-fable-5",
+      "maxTokens": 8192
+    },
+    {
+      "id": "anthropic/claude-fable-5.1",
+      "maxTokens": 8192
+    }
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+    }
+  ],
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "anthropic/claude-opus-5",
+    "openai/gpt-5.5",
+    "anthropic/claude-fable-5",
+    "anthropic/claude-fable-5.1"
+  ],
+  "plannedCalls": 24,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.9758950000000001,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:41:29.266Z",
+      "reserveUsd": 0.26106250000000003,
+      "reserveRates": {
+        "usd": 0.26106250000000003,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.02479,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:41:39.707Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 408,
+        "completion_tokens": 910,
+        "total_tokens": 1318,
+        "cost": 0.02479,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02479,
+          "upstream_inference_prompt_cost": 0.00204,
+          "upstream_inference_completions_cost": 0.02275
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.4999999999999998e-05
+      }
+    },
+    {
+      "index": 2,
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:41:39.708Z",
+      "reserveUsd": 0.26005,
+      "reserveRates": {
+        "usd": 0.26005,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.019585,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:41:50.020Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 277,
+        "completion_tokens": 728,
+        "total_tokens": 1005,
+        "cost": 0.019585,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.019585,
+          "upstream_inference_prompt_cost": 0.001385,
+          "upstream_inference_completions_cost": 0.0182
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 40,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 3,
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:41:50.021Z",
+      "reserveUsd": 0.2606,
+      "reserveRates": {
+        "usd": 0.2606,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.034565,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:42:07.145Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 338,
+        "completion_tokens": 1315,
+        "total_tokens": 1653,
+        "cost": 0.034565,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.034565,
+          "upstream_inference_prompt_cost": 0.00169,
+          "upstream_inference_completions_cost": 0.032875
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 70,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 4,
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:42:07.146Z",
+      "reserveUsd": 0.26183125,
+      "reserveRates": {
+        "usd": 0.26183125,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.03831,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:42:25.659Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 457,
+        "completion_tokens": 1441,
+        "total_tokens": 1898,
+        "cost": 0.03831,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03831,
+          "upstream_inference_prompt_cost": 0.002285,
+          "upstream_inference_completions_cost": 0.036025
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 161,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 5,
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:42:25.659Z",
+      "reserveUsd": 0.26366875,
+      "reserveRates": {
+        "usd": 0.26366875,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.051255,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:42:49.838Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 631,
+        "completion_tokens": 1924,
+        "total_tokens": 2555,
+        "cost": 0.051255,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.051255,
+          "upstream_inference_prompt_cost": 0.003155,
+          "upstream_inference_completions_cost": 0.0481
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 201,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 6,
+      "modelId": "anthropic/claude-opus-5",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:42:49.839Z",
+      "reserveUsd": 0.2626,
+      "reserveRates": {
+        "usd": 0.2626,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.03954,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:43:10.407Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 483,
+        "completion_tokens": 1485,
+        "total_tokens": 1968,
+        "cost": 0.03954,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03954,
+          "upstream_inference_prompt_cost": 0.002415,
+          "upstream_inference_completions_cost": 0.037125
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 130,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 7,
+      "modelId": "openai/gpt-5.5",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:43:10.407Z",
+      "reserveUsd": 0.3122625,
+      "reserveRates": {
+        "usd": 0.3122625,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01355,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:43:14.808Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 406,
+        "total_tokens": 680,
+        "cost": 0.01355,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01355,
+          "upstream_inference_prompt_cost": 0.00137,
+          "upstream_inference_completions_cost": 0.01218
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 132,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "index": 8,
+      "modelId": "openai/gpt-5.5",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:43:14.809Z",
+      "reserveUsd": 0.31125,
+      "reserveRates": {
+        "usd": 0.31125,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.007035,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:43:18.593Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 195,
+        "completion_tokens": 202,
+        "total_tokens": 397,
+        "cost": 0.007035,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.007035,
+          "upstream_inference_prompt_cost": 0.000975,
+          "upstream_inference_completions_cost": 0.00606
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 23,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "index": 9,
+      "modelId": "openai/gpt-5.5",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:43:18.594Z",
+      "reserveUsd": 0.31179999999999997,
+      "reserveRates": {
+        "usd": 0.31179999999999997,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.009455,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:43:21.956Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 241,
+        "completion_tokens": 275,
+        "total_tokens": 516,
+        "cost": 0.009455,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.009455,
+          "upstream_inference_prompt_cost": 0.001205,
+          "upstream_inference_completions_cost": 0.00825
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 49,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "index": 10,
+      "modelId": "openai/gpt-5.5",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:43:21.956Z",
+      "reserveUsd": 0.31303125,
+      "reserveRates": {
+        "usd": 0.31303125,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01904,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:43:27.843Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 310,
+        "completion_tokens": 583,
+        "total_tokens": 893,
+        "cost": 0.01904,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01904,
+          "upstream_inference_prompt_cost": 0.00155,
+          "upstream_inference_completions_cost": 0.01749
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 84,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "index": 11,
+      "modelId": "openai/gpt-5.5",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:43:27.843Z",
+      "reserveUsd": 0.31486875,
+      "reserveRates": {
+        "usd": 0.31486875,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.022,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:43:35.395Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 662,
+        "total_tokens": 1090,
+        "cost": 0.022,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.022,
+          "upstream_inference_prompt_cost": 0.00214,
+          "upstream_inference_completions_cost": 0.01986
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 128,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3e-05
+      }
+    },
+    {
+      "index": 12,
+      "modelId": "openai/gpt-5.5",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:43:35.396Z",
+      "reserveUsd": 0.31379999999999997,
+      "reserveRates": {
+        "usd": 0.31379999999999997,
+        "inputRate": 5e-06,
+        "outputRate": 3e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01887,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:43:41.216Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 572,
+        "total_tokens": 914,
+        "cost": 0.01887,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01887,
+          "upstream_inference_prompt_cost": 0.00171,
+          "upstream_inference_completions_cost": 0.01716
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 244,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4.9999999999999996e-06,
+        "output": 3.0000000000000004e-05
+      }
+    },
+    {
+      "index": 13,
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:43:41.217Z",
+      "reserveUsd": 0.5221250000000001,
+      "reserveRates": {
+        "usd": 0.5221250000000001,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.05113,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:43:51.997Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 408,
+        "completion_tokens": 941,
+        "total_tokens": 1349,
+        "cost": 0.05113,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.05113,
+          "upstream_inference_prompt_cost": 0.00408,
+          "upstream_inference_completions_cost": 0.04705
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 41,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 14,
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:43:51.998Z",
+      "reserveUsd": 0.5201,
+      "reserveRates": {
+        "usd": 0.5201,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.02997,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:43:58.939Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 277,
+        "completion_tokens": 544,
+        "total_tokens": 821,
+        "cost": 0.02997,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02997,
+          "upstream_inference_prompt_cost": 0.00277,
+          "upstream_inference_completions_cost": 0.0272
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 35,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 15,
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:43:58.940Z",
+      "reserveUsd": 0.5212,
+      "reserveRates": {
+        "usd": 0.5212,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.03553,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:44:07.314Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 338,
+        "completion_tokens": 643,
+        "total_tokens": 981,
+        "cost": 0.03553,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03553,
+          "upstream_inference_prompt_cost": 0.00338,
+          "upstream_inference_completions_cost": 0.03215
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 54,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 16,
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:44:07.314Z",
+      "reserveUsd": 0.5236625,
+      "reserveRates": {
+        "usd": 0.5236625,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.07117,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:44:22.282Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 457,
+        "completion_tokens": 1332,
+        "total_tokens": 1789,
+        "cost": 0.07117,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.07117,
+          "upstream_inference_prompt_cost": 0.00457,
+          "upstream_inference_completions_cost": 0.0666
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 69,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 17,
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:44:22.283Z",
+      "reserveUsd": 0.5273375,
+      "reserveRates": {
+        "usd": 0.5273375,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.08111,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:44:39.340Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 631,
+        "completion_tokens": 1496,
+        "total_tokens": 2127,
+        "cost": 0.08111,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.08111,
+          "upstream_inference_prompt_cost": 0.00631,
+          "upstream_inference_completions_cost": 0.0748
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 73,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 18,
+      "modelId": "anthropic/claude-fable-5",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:44:39.340Z",
+      "reserveUsd": 0.5252,
+      "reserveRates": {
+        "usd": 0.5252,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.05143,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:44:50.973Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 483,
+        "completion_tokens": 932,
+        "total_tokens": 1415,
+        "cost": 0.05143,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.05143,
+          "upstream_inference_prompt_cost": 0.00483,
+          "upstream_inference_completions_cost": 0.0466
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 117,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 19,
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:44:50.974Z",
+      "reserveUsd": 0.5221250000000001,
+      "reserveRates": {
+        "usd": 0.5221250000000001,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0697,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:45:06.923Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 410,
+        "completion_tokens": 1312,
+        "total_tokens": 1722,
+        "cost": 0.0697,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0697,
+          "upstream_inference_prompt_cost": 0.0041,
+          "upstream_inference_completions_cost": 0.0656
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 421,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 20,
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:45:06.923Z",
+      "reserveUsd": 0.5201,
+      "reserveRates": {
+        "usd": 0.5201,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01944,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:45:11.946Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 279,
+        "completion_tokens": 333,
+        "total_tokens": 612,
+        "cost": 0.01944,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01944,
+          "upstream_inference_prompt_cost": 0.00279,
+          "upstream_inference_completions_cost": 0.01665
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 76,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 21,
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:45:11.948Z",
+      "reserveUsd": 0.5212,
+      "reserveRates": {
+        "usd": 0.5212,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.042,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:45:23.210Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 340,
+        "completion_tokens": 772,
+        "total_tokens": 1112,
+        "cost": 0.042,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.042,
+          "upstream_inference_prompt_cost": 0.0034,
+          "upstream_inference_completions_cost": 0.0386
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 60,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 22,
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:45:23.210Z",
+      "reserveUsd": 0.5236625,
+      "reserveRates": {
+        "usd": 0.5236625,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.07269,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:45:38.459Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 459,
+        "completion_tokens": 1362,
+        "total_tokens": 1821,
+        "cost": 0.07269,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.07269,
+          "upstream_inference_prompt_cost": 0.00459,
+          "upstream_inference_completions_cost": 0.0681
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 123,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 23,
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:45:38.460Z",
+      "reserveUsd": 0.5273375,
+      "reserveRates": {
+        "usd": 0.5273375,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.09003,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:46:01.623Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 633,
+        "completion_tokens": 1674,
+        "total_tokens": 2307,
+        "cost": 0.09003,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.09003,
+          "upstream_inference_prompt_cost": 0.00633,
+          "upstream_inference_completions_cost": 0.0837
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 139,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    },
+    {
+      "index": 24,
+      "modelId": "anthropic/claude-fable-5.1",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:46:01.624Z",
+      "reserveUsd": 0.5252,
+      "reserveRates": {
+        "usd": 0.5252,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0637,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:46:17.968Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 485,
+        "completion_tokens": 1177,
+        "total_tokens": 1662,
+        "cost": 0.0637,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0637,
+          "upstream_inference_prompt_cost": 0.00485,
+          "upstream_inference_completions_cost": 0.05885
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 72,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1e-05,
+        "output": 5e-05
+      }
+    }
+  ],
+  "budgetCaveat": "Estimate guard, not provider hard billing cap; future unobserved routing/pricing may exceed reserve. Rates update after each valid response.",
+  "coverage": "Not assessed: collection only, no rendering or feature validation",
+  "startedAt": "2026-11-08T20:41:29.264Z",
+  "conservativeBatchReserve": 9.726074999999998,
+  "status": "completed",
+  "finishedAt": "2026-11-08T20:46:17.970Z",
+  "files": [
+    "catalog.json",
+    "manifest.json",
+    "prompts.json",
+    "raw/anthropic__claude-fable-5.1__01-math-basics.raw.json",
+    "raw/anthropic__claude-fable-5.1__02-markdown-formatting.raw.json",
+    "raw/anthropic__claude-fable-5.1__03-code-blocks.raw.json",
+    "raw/anthropic__claude-fable-5.1__04-mixed-markdown-latex.raw.json",
+    "raw/anthropic__claude-fable-5.1__05-complex-scenarios.raw.json",
+    "raw/anthropic__claude-fable-5.1__06-edge-cases-boundaries.raw.json",
+    "raw/anthropic__claude-fable-5__01-math-basics.raw.json",
+    "raw/anthropic__claude-fable-5__02-markdown-formatting.raw.json",
+    "raw/anthropic__claude-fable-5__03-code-blocks.raw.json",
+    "raw/anthropic__claude-fable-5__04-mixed-markdown-latex.raw.json",
+    "raw/anthropic__claude-fable-5__05-complex-scenarios.raw.json",
+    "raw/anthropic__claude-fable-5__06-edge-cases-boundaries.raw.json",
+    "raw/anthropic__claude-opus-5__01-math-basics.raw.json",
+    "raw/anthropic__claude-opus-5__02-markdown-formatting.raw.json",
+    "raw/anthropic__claude-opus-5__03-code-blocks.raw.json",
+    "raw/anthropic__claude-opus-5__04-mixed-markdown-latex.raw.json",
+    "raw/anthropic__claude-opus-5__05-complex-scenarios.raw.json",
+    "raw/anthropic__claude-opus-5__06-edge-cases-boundaries.raw.json",
+    "raw/openai__gpt-5.5__01-math-basics.raw.json",
+    "raw/openai__gpt-5.5__02-markdown-formatting.raw.json",
+    "raw/openai__gpt-5.5__03-code-blocks.raw.json",
+    "raw/openai__gpt-5.5__04-mixed-markdown-latex.raw.json",
+    "raw/openai__gpt-5.5__05-complex-scenarios.raw.json",
+    "raw/openai__gpt-5.5__06-edge-cases-boundaries.raw.json",
+    "replies/anthropic_claude-fable-5.1_01-math-basics.json",
+    "replies/anthropic_claude-fable-5.1_02-markdown-formatting.json",
+    "replies/anthropic_claude-fable-5.1_03-code-blocks.json",
+    "replies/anthropic_claude-fable-5.1_04-mixed-markdown-latex.json",
+    "replies/anthropic_claude-fable-5.1_05-complex-scenarios.json",
+    "replies/anthropic_claude-fable-5.1_06-edge-cases-boundaries.json",
+    "replies/anthropic_claude-fable-5_01-math-basics.json",
+    "replies/anthropic_claude-fable-5_02-markdown-formatting.json",
+    "replies/anthropic_claude-fable-5_03-code-blocks.json",
+    "replies/anthropic_claude-fable-5_04-mixed-markdown-latex.json",
+    "replies/anthropic_claude-fable-5_05-complex-scenarios.json",
+    "replies/anthropic_claude-fable-5_06-edge-cases-boundaries.json",
+    "replies/anthropic_claude-opus-5_01-math-basics.json",
+    "replies/anthropic_claude-opus-5_02-markdown-formatting.json",
+    "replies/anthropic_claude-opus-5_03-code-blocks.json",
+    "replies/anthropic_claude-opus-5_04-mixed-markdown-latex.json",
+    "replies/anthropic_claude-opus-5_05-complex-scenarios.json",
+    "replies/anthropic_claude-opus-5_06-edge-cases-boundaries.json",
+    "replies/openai_gpt-5.5_01-math-basics.json",
+    "replies/openai_gpt-5.5_02-markdown-formatting.json",
+    "replies/openai_gpt-5.5_03-code-blocks.json",
+    "replies/openai_gpt-5.5_04-mixed-markdown-latex.json",
+    "replies/openai_gpt-5.5_05-complex-scenarios.json",
+    "replies/openai_gpt-5.5_06-edge-cases-boundaries.json",
+    "summary.json"
+  ],
+  "sourcePreflight": "/workspace/prism/next-batch-19-preflight.json",
+  "collectorTemplate": "/workspace/prism/collect-approved-batch-template.cjs",
+  "costGuardUtility": "/workspace/prism/collection-cost-guard.cjs"
+}

@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170690-vPMRlvY94WmvMJhoWoZd",
+  "object": "chat.completion",
+  "created": 1794170690,
+  "model": "anthropic/claude-fable-5.1",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Math Basics Demonstration\n\n## 1. Inline Math: The Quadratic Formula\n\nFor any quadratic equation of the form $ax^2 + bx + c = 0$ where $a \\neq 0$, the solutions are given by the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. The expression under the square root, $\\Delta = b^2 - 4ac$, is called the **discriminant**. If $\\Delta > 0$ there are two distinct real roots, if $\\Delta = 0$ there is exactly one repeated root at $x = -\\frac{b}{2a}$, and if $\\Delta < 0$ the roots are complex conjugates.\n\n## 2. Display Math with Aligned Equations\n\nConsider the following system of linear equations:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding the two equations eliminates $y$:\n\n$$\\begin{align}\n3x &= 6 \\\\\nx &= 2 \\\\\ny &= 5 - x = 3\n\\end{align}$$\n\nSo the solution is $(x, y) = (2, 3)$.\n\n## 3. Matrices and Cases\n\nThe $2 \\times 2$ identity matrix and a piecewise-defined function:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\nNote that $f$ is continuous at $x = 0$ since both branches evaluate to $0$ there, and $f(x) \\geq 0$ for all real $x$.\n\n## 4. Multiple Equations\n\nThree famous relations from physics and geometry:\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nThe first is Einstein's mass–energy equivalence, the second is Newton's second law, and the third is the Pythagorean theorem for a right triangle with legs $a$, $b$ and hypotenuse $c$.\n\n## 5. Links\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula, including its derivation by completing the square.\n\n## 6. Money Context (should NOT render as math)\n\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n\nFor comparison, here is a genuine inline expression right after the prices: the total $T$ satisfies $T = 5 + 10 = 15$.",
+        "refusal": null,
+        "reasoning": "I need to make sure dollar amounts like $5 and $10 don't get rendered as math, so I'll include both plain versions and escaped versions with backslashes to be safe.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I need to make sure dollar amounts like $5 and $10 don't get rendered as math, so I'll include both plain versions and escaped versions with backslashes to be safe.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQS+w0KEggTEAIYAjgBQgh0aGlua2luZxIMtjCr8M5JkEz1Bjb1Ggw7MF+B3HR4Zy3BJhsiMG2sR3CviIIwtCuRY0O13Dbm/KZ1LjYgFLSiNVZHK9wZ2/QvRaxiMvrpre4XznnRcCqWDTfQRW+L9jVfbXHvGd3EoehopgdBqt1lgn5VoZvMh1pRNFp87H3NQ2yjdPfM9jABVs8VI8u/kSLJ++wKG/U2TyK8mxX9XBPd46Ksj592Ea0pzFys7ivZavXXMH3WrSoDk9iKdymIoYqFrTSSruhHu9JIdIM6+E9gnzZo7vZ7afd6bmoI+UVZ9Q2AUDK8tbO1AfGBwtF7Ob+wVo0VOaa5PGKhSqOnTnmt/sqgPoy508e4or4a7bfawlWdaQb0SxLbHOorD1WdsNIMK7VkUKu71HAgi7pxxU3kH/0z+uJAHXbIiKvQqPoPcbIPhMjKJAkx7sv19CC7p7dlGrQKkpdh4gwXwR5LdQweeE8JeyEeHSMpmD9xCskEXeYInxMMF7XlP2ypMAS2RUk5KFjoIcAGMYwg7NA8f3iEaijwTaMGOaWWn45Xl6hESN4nNIphKsAk4L3ZTRcbqmo80LWz2Tazx7aGLiZZr1jPK48zj7GnXxFUTvXE5qK3pBGtd4WfSUfrSqCRIzS6v8zsXLrOICMo8q0Iq4llYhspUlwx1j+4HXX8ov6N/E1sb0jN+bIg0e3tm9YVmRdxCPF2jI3yRF4B1E2avo2Q4+AIJ4Qx6mJm/+z2xH0bdBi4mKPwUGWwsJMK11gGKQRwq0TkTnPC7geuVr/hDsFdfU3mTYd0Lhr/ILttgYpsVqZ+L3x/FOsHBjtd6ZZnYozAk4pgRWy45WRk0UCtHNL/zgiPjAWcgh3eK1IFpHKr39FiIbjUFGt6imN5ezoSnJ1m/qWbLd3IFUVUJIMDUu7P7TcGq5MKVHnGDu8s66UlZolTJW5/EiznVMr9d/luSP2JSexqa4ZZ1uZkQyRtSOfGcPgNlcqWOoV6BR1+wiO7zZwzJUIPsWDDujkP/lIGKRAVnc5XHw3LmZqjZokIg21wNVLQDFnbiMCQxmD/C1ee7tOVyUPh/Oc57p2ZP7KBlYcUPjOxw30mNGPTmsvVYtdSkJeVSGIFdlSwlJW5Ro7EJ3EVxnotKwucbfPtnd5rbHLxkqCKSkKS2YnWybOJnIDVL+juEUViD5iNB7wE8GAV5Gtbu8BdC/M4rSYkHwvDDTXP9qzHvobwF6ILJclmpCptKzLbDh0NRQmoUtkzo/ZadqHex3PBndQlU19XP9VjTM0NRyZcoW3s+gTzjRZPCTt81yl4rycaAP3j06BewCTgSOxgYI80hKsWcnl/SOdpwRRheno5y1U0OjgB7A942HFcd1Yxd5pB3eNM/f1ItuDOm/VuCymTn8xiMP/VvHyc+4Vj3I1e2IHuOH8u8PTrON/1kcSx999yS2Jko+yL78H21FWK1oYpL8AX3XzCaXmaPSa06g62hV4PuVky/SRVm8gLcrrx2rDNF57N02hvUpPjFAnJSujsuX3WoPS9KDE02WTzxKtsBNrEgnR0ZSuG9/wxz4ZU+eTLv8OxmMiSADQ1wYA8hTQXv3nm3HRnHyz2AhHlA7S9PXrCiwVyAzyRP+9k9ddRjauEJsC8wEA5TA3UGy2X43J16FAs7MonLsEqj+AwkYBNUO7T42etD0GaFDyVir7txJCyKagp44f3rFRmWLk4gbs/kSIVEcS1NwBsjmk0Q76ZlD3pb0wKevfYKT8dv0nsakef5xQ/4NcIdv+r+dzDkfE2kC0LTRmJMizVS/kDLUaOaXrhIkjbdgoqqZP0CR7+kWxBYmvvbXqdFw3QLE9yHWCcxrtjh4ECW2a1elOJfL2vV9twRcNaVHJHu7FZUUZx7xehdd/1gyqApph0yVunVPLCkj6g7pBRmTCb2lwUCI7PBo2SRaKTanyGF87hcHXAal1RL01nleG5CZBnr0K5vX8tt7LHRtWeD63rudBEXTmCD6Re+0gHJsjU+J81SDelCmJjuEld/6tjMghiwEE49Z3Jckipu6062aIAfUgNwz7+jF7oB1RP5b65ZtQunw4g/p7MIOkjfnL5h+iEIZv0Rg9OI9VH0AW7xO9q6erbfKHo3ibByX0sZQQcFobpUR5XLjzQtBcMriIBSWJZSsFUbVsmKrUvs98KtTKkJzYS1z6hhp5X1Yb/q/ue0n9F3N1jCqC26gQ3sVvGQbu5/cg8DulFJ6FaLFjoQwmyVaRz3q2J6W4nll09t3zVM3RhXaB8ENLrTxPrZihokKExcEIj+RfVaZap1jhybUZjJwmKEqGgbiIyHEDiwBlKO4gb2OekvyIMGX3exR6yM2qPBaKGFE1wVJf2v2bfDv67dYSJNRgB.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1mYWJsZS01LjEtMjAyNjA4MzF8Z29vZ2xlLXZlcnRleC9nbG9iYWwifQ"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 410,
+    "completion_tokens": 1312,
+    "total_tokens": 1722,
+    "cost": 0.0697,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0697,
+      "upstream_inference_prompt_cost": 0.0041,
+      "upstream_inference_completions_cost": 0.0656
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 421,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

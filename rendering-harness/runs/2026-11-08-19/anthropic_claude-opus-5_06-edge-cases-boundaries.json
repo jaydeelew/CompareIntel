@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-opus-5",
+  "modelName": "Anthropic: Claude Opus 5",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "# Edge Case Rendering Test\n\nBelow is each category reproduced with the appropriate handling for math, code, and literal currency.\n\n---\n\n## 1. Delimiter Variants\n\n**Double dollar display:**\n\n$$x^2 + y^2 = r^2$$\n\n**Bracket display:**\n\n$$E = mc^2$$\n\n**Single dollar inline:** the relation $a + b = c$ holds for all reals.\n\n**Paren inline:** we set $x = 5$ and substitute.\n\n> All four forms normalize to just two rendered modes: *inline* and *display*. The choice of `$…$` vs. `\\(…\\)` and `$$…$$` vs. `\\[…\\]` is purely authorial.\n\n---\n\n## 2. Nested Structures\n\n- First item\n- The equation is:\n\n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n\n  And it evaluates to 0.5\n- Third item\n\nNote the continuation line (\"And it evaluates to 0.5\") stays attached to the second bullet because it is indented to the list-item content column. A numbered variant behaves the same:\n\n1. Set up the integrand.\n2. Evaluate:\n\n   $$\\int_0^\\pi \\sin x \\, dx = 2$$\n\n   which is the area under one arch.\n3. Done.\n\n---\n\n## 3. Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\nInside a fenced block nothing is interpreted: `$50` is not math, `E = mc^2` is a string literal, and `**` is exponentiation, not emphasis. The same applies to inline code spans: `x**2 + $y` renders verbatim.\n\n---\n\n## 4. Currency and Escaped Dollars\n\n- Plain: The price is \\$100\n- Escaped: The budget is \\$500\n- Multiple: Costs \\$25, \\$30, and \\$45\n- In sentence: I spent \\$50 at the store\n\nEach dollar sign that denotes currency is escaped (`\\$`) so that a pair like `$25, $30` is not swallowed as inline math containing \"25, \". Compare:\n\n| Written as | Renders as |\n|---|---|\n| `$25, $30` | risky — may parse as math |\n| `\\$25, \\$30` | \\$25, \\$30 |\n\n---\n\n## 5. Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\tfrac{4}{3}\\pi r^3$ | $523.60$ |\n| Circumference | $C = 2\\pi r$ | $31.42$ |\n\nHere the \"Value\" column is intentionally typeset as math (numerals in math mode), not currency. If those were prices, they would be written \\$78.54 and \\$523.60 instead. Note also that `\\frac` inside a table cell is often better as `\\tfrac` to keep row height uniform.\n\n---\n\n## 6. Raw Dollar Signs\n\nThe shell variable `$HOME` is set. Price: \\$99.99.\n\nTwo different strategies appear in that line:\n\n1. `$HOME` → wrapped in a code span, since it is a literal shell token.\n2. `\\$99.99` → backslash-escaped, since it is prose-level currency.\n\n---\n\n## Summary of Rules Applied\n\n| Situation | Treatment |\n|---|---|\n| Intentional math, inline | `$…$` or `\\(…\\)` |\n| Intentional math, display | `$$…$$` or `\\[…\\]` on its own line |\n| Display math inside a list | blank line + indent to content column |\n| Code, any length | fenced block or inline code span — never escaped inside |\n| Currency in prose | `\\$` |\n| Shell/template variables | code span |\n\nEdge cases that remain genuinely ambiguous: a lone `$` at end of a sentence, a regex like `^\\d+$`, and LaTeX inside a table cell containing a pipe (`|`) — the last requires `\\vert` or `\\mid` instead of a raw pipe.",
+  "usage": {
+    "prompt_tokens": 483,
+    "completion_tokens": 1485,
+    "total_tokens": 1968,
+    "cost": 0.03954,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.03954,
+      "upstream_inference_prompt_cost": 0.002415,
+      "upstream_inference_completions_cost": 0.037125
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 130,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.03954,
+  "actualCost": 0.03954,
+  "timestamp": "2026-11-08T20:43:10.407Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

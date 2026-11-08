@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-fable-5.1",
+  "modelName": "Anthropic: Claude Fable 5.1",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here's a response working through each of those edge cases, with notes on how each is handled.\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n3. A ***bold-italic*** check with nested math inside a link-like phrase: see the \"triple $(3, 4, 5)$\" case above\n\nThe main hazard here is indentation: nested bullets under a numbered item need consistent spacing (3 spaces) so the inline math stays in the list context rather than breaking out into a paragraph.\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\dfrac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\dfrac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| Absolute value | $\\lvert x \\rvert$ | $x$ if $x \\geq 0$, else $-x$ |\n\nNote the fourth row: a literal pipe `|` inside a table cell would split the column, so absolute value uses `\\lvert` and `\\rvert` instead of `|x|`. That's the single most common table-plus-math failure.\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")  # Area: 78.53981633974483\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius. For $r = 5$:\n\n$$A = \\pi \\cdot 5^2 = 25\\pi \\approx 78.54$$\n\nInside the code block, `$` and `\\` are literal and must not be parsed as math — the comment `# Formula: A = πr²` uses Unicode rather than LaTeX for that reason. Inline code like `r**2` likewise stays literal.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\n---\n\nThird section\n\nThe rule needs blank lines on both sides; a `---` directly under a line of text is interpreted as a setext H2 heading instead of a rule.\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\nThis is the genuinely tricky one. Without escaping, a renderer would pair \"\\$1,200, monitor \\$\" into a math span and garble the sentence. The fix is `\\$` for every currency sign. A sentence that mixes both:\n\n> The cost function $C(n) = 50n + 200$ gives a total of \\$450 for $n = 5$ units.\n\n## Bonus: A Few More Edge Cases\n\n- **Math adjacent to punctuation:** the value is $\\pi$, roughly $3.14159$; and $e \\approx 2.718$.\n- **Subscripts that look like italics:** $x_1 x_2 x_3$ — underscores inside math must not trigger Markdown emphasis, while *this* should still be italic.\n- **Asterisks in math:** $a * b$ versus convolution $f * g$, with **bold** text in the same line.\n- **Blockquote with math:**\n  > Euler's identity: $e^{i\\pi} + 1 = 0$\n- **Display math in a list:**\n  1. The Gaussian integral:\n     $$\\int_{-\\infty}^{\\infty} e^{-x^2}\\, dx = \\sqrt{\\pi}$$\n  2. The geometric series for $|r| < 1$:\n     $$\\sum_{k=0}^{\\infty} r^k = \\frac{1}{1-r}$$\n\nIf all of the above renders cleanly — currency intact, table columns aligned, no stray italics from subscripts, code block untouched — the renderer is handling the hard cases correctly.",
+  "usage": {
+    "prompt_tokens": 633,
+    "completion_tokens": 1674,
+    "total_tokens": 2307,
+    "cost": 0.09003,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.09003,
+      "upstream_inference_prompt_cost": 0.00633,
+      "upstream_inference_completions_cost": 0.0837
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 139,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.09003,
+  "actualCost": 0.09003,
+  "timestamp": "2026-11-08T20:46:01.623Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

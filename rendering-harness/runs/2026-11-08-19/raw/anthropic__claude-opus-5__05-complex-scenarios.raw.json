@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170545-gMVKNJN9ynUk6NWlWMvA",
+  "object": "chat.completion",
+  "created": 1794170545,
+  "model": "anthropic/claude-opus-5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Complex Formatting Edge Cases\n\nBelow is a rendering of each scenario, with notes on how the tricky parts are handled.\n\n---\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with legs $a = 3$ and $b = 4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n3. Generalizing to $n$ dimensions:\n   - The distance becomes $d = \\sqrt{\\sum_{i=1}^{n} x_i^2}$\n   - For $\\mathbf{x} = (1, 2, 2)$, we get $d = \\sqrt{1 + 4 + 4} = 3$\n\nA display equation nested in list context:\n\n$$\nc = \\sqrt{a^2 + b^2}\n$$\n\n**Note:** Inline math inside list items works cleanly, but display math (`$$...$$`) must be separated by blank lines or it may break the list's continuation.\n\n---\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX Expression | Result |\n|---------|------------------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\dfrac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| Geometric | $\\sum_{i=0}^{\\infty} r^i,\\; \\lvert r \\rvert < 1$ | $\\dfrac{1}{1-r}$ |\n| Pipe caution | $a \\mid b$ | use `\\mid`, not a literal `\\|` |\n\n**Note:** A literal `|` inside a table cell terminates the cell. Inside math, use `\\mid`, `\\vert`, or `\\lvert ... \\rvert`. Outside math, escape it as `\\|`.\n\n---\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius. Evaluating at $r = 5$:\n\n$$\nA = \\pi (5)^2 = 25\\pi \\approx 78.5398\n$$\n\nNote that `r**2` in Python corresponds to $r^2$ in mathematical notation, and `math.pi` corresponds to $\\pi$. Dollar signs inside code are inert: `price = \"$100\"` renders literally, no math parsing applied.\n\n---\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\displaystyle\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n**Note:** `---` immediately following a text line without a blank line is interpreted as a setext H2 underline rather than a horizontal rule. Blank lines on both sides are required.\n\n---\n\n## Scenario 5: Multiple Dollar Signs\n\n**Ambiguous (unescaped):** Computer costs $1,200, monitor $300, keyboard $50, mouse $25.\n\n**Safe (escaped):** Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\n**Safe (code-wrapped):** Computer `$1,200` · monitor `$300` · keyboard `$50` · mouse `$25` · **Total: `$1,575`**\n\n| Item | Price |\n|------|------:|\n| Computer | \\$1,200 |\n| Monitor | \\$300 |\n| Keyboard | \\$50 |\n| Mouse | \\$25 |\n| **Total** | **\\$1,575** |\n\n**Math remains unaffected:** The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n**Note:** Unescaped currency pairs — like `$1,200, monitor $300` — can be swallowed as a math span, which is why the text between them may render in italic serif type. Escaping with `\\$` or wrapping in backticks prevents this.\n\n---\n\n## Summary of Edge-Case Rules\n\n| Edge Case | Risk | Mitigation |\n|-----------|------|------------|\n| Math in nested lists | Display math breaks list | Indent consistently; blank-line separate |\n| Pipes in tables | Premature cell termination | `\\mid` in math, `\\|` in text |\n| `---` after text | Parsed as H2 underline | Surround with blank lines |\n| Currency `$` | Captured as math delimiter | Escape as `\\$` or use backticks |\n| `$` inside code | None — inert | No action needed |\n| Underscores in math | Markdown italics conflict | Keep inside `$...$` delimiters |",
+        "refusal": null,
+        "reasoning": "I'm working out a response that covers all five edge cases, with math in lists and tables, code blocks, horizontal rules, and dollar-sign handling. I'll write a clean, well-formatted answer and add brief notes where they help.\n\nI'm settling on how to handle currency dollar signs, since the math rendering could mistake them for delimiters. The cleanest fix is escaping them as \\$ or writing \"USD\" instead, so I'll show that approach.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm working out a response that covers all five edge cases, with math in lists and tables, code blocks, horizontal rules, and dollar-sign handling. I'll write a clean, well-formatted answer and add brief notes where they help.\n\nI'm settling on how to handle currency dollar signs, since the math rendering could mistake them for delimiters. The cleanest fix is escaping them as \\$ or writing \"USD\" instead, so I'll show that approach.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAISpggK4AIIExgCKkB5seEYHiJ5RRs2aul6o/4TLSsRqAu+oRMXsdzq8p38Gjf5i3dJV+zvpZiEJaaLEzQeGOZcgRfxdi229bLz/WEsMg1jbGF1ZGUtb3B1cy01OAFCCHRoaW5raW5nWiQ0YzBmMDQ2Zi0yNWZkLTQ1ZmItYmZiMy1hMDhhOGUyNDljYTd6HnVwcm9mXzAxMUNlVkFvbmlDS0REQUZQOGdWd3QyVJoBDwoNY2xhdWRlLW9wdXMtNagBtr3D1wbCAToIBBAAGgwC2ooDTzcFiWwEJq0gATIEEnHPJToEODMjikIEODMjikoEODMjilAAWgTZBeFWYAJoAXAA2gFgChZwcmVmaXhfYmVmb3JlX2Jsb2NrX3YxEiAoes6rafm3rdI9tDm5jltukpIXt272OFdE224nqfiUHCIAMiDCwBPIapyS4i+Wbz2GF3aPi3pEyQKtzAl7+h4JivtOH0gDEgyu4xBflGGwxvjyB40aDAQ3p7gAf2kLdx/+FSIwam8Hj9L8uMabFv/0VH2x1CVlXqJ1wt0p3/sV9Cdd9ZcLNThVmOQg8h8hmhKr9I0YKvIEi/9k9qGQMPylULMx6c6MEUvtc9Taq/1Vo+0Oe8Wgb+5LGGkpCSwaxDv4Ymb2WZyuNR/WuuA+bwJkZwM9g2Imn30oumtZKnalUq6p1SGCCAjXNwqk1JgDeAgefsmDMDZfCwWcClCJ3A+/T22rMzIBIrtOCkJ3il3IBDDqK89G9lk9tnFlkkk+uWHU6Zz+MRPSWlZfjYGLZvXEMPFBxaM4+TiQLTJd4QK67lDx6bE9IBFI+EXcmDQEG7hLMdqFEMjPzpm+iO2LeGrLny0REE2JlnOMCiq4ExD57UyOQWaa1ESgKOtQKMemv0VbDCPi/HW7Kn7hEDksBgda4ZPZPGn/YAUPuZS7lyosF+Le4jZNOH5W/W7sInky7/WcFfdTCE1UGj0MRwdZl24h+AUuO4+A6GB+pecDf2kZld5E/MPrFXCY+LBy9XrxQyHc4+aY25JQNOADRVbev3byDDM/4JLzb8UaYFdNupITaENZvdcMhoBvHs2tUKCjhGEQRwbelZktjlH1X8QRHRGlypGS269LVALTvk9kdzb8kw9HkkJRH3r3Tsxzuwm23+xOMKM+U+9MUFEoJ/spkzgeOck5I0HYIqjfE2svvBhW7jVinxWtm4hxRLLJ3UyaAhMP8j4sIKMJpgbR+UHo71tEPEpx8zhjHnZIXHi4t7aOmgayhRSr5LW5E9qc7N0xAHD9DGuNICEIE6brOg5z9Iousj7loMs5Xt9yiPBDpzIEZRvNDY9jtZXH5nPfKzL6NlbgXxhFHC2D9BvqewZX+PnuaRrdPKuNexTdK+B5uUNnR7WtzX/u5k/xdmgwhmtk5/6GmB0b2MopqnMYAQ==.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1vcHVzLTUtMjAyNjA3MjN8Y2xhdWRlLW9uLWF3cyJ9"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 631,
+    "completion_tokens": 1924,
+    "total_tokens": 2555,
+    "cost": 0.051255,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.051255,
+      "upstream_inference_prompt_cost": 0.003155,
+      "upstream_inference_completions_cost": 0.0481
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 201,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "modelId": "openai/gpt-5.5",
+  "modelName": "OpenAI: GPT-5.5",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that \\(a^2 + b^2 = c^2\\).\n2. For a *right triangle* with sides \\(a=3\\) and \\(b=4\\):\n   - Calculate:  \n     \\[\n     c = \\sqrt{3^2 + 4^2}\n       = \\sqrt{9 + 16}\n       = \\sqrt{25}\n       = 5\n     \\]\n   - Therefore, \\(c = 5\\) units.\n\n---\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---|---|---|\n| Quadratic | \\(ax^2 + bx + c = 0\\) | \\(x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\\) |\n| Sum | \\(\\sum_{i=1}^{n} i\\) | \\(\\frac{n(n+1)}{2}\\) |\n| Product | \\(\\prod_{i=1}^{n} i\\) | \\(n!\\) |\n\n---\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is:\n\n\\[\nA = \\pi r^2\n\\]\n\nwhere \\(r\\) is the radius.\n\nFor \\(r = 5\\):\n\n\\[\nA = \\pi \\cdot 5^2 = 25\\pi \\approx 78.54\n\\]\n\n---\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math:\n\n\\[\n\\int_{0}^{1} x \\, dx = \\frac{1}{2}\n\\]\n\n---\n\nThird section\n\n---\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices:\n\n- Computer costs \\$1,200\n- Monitor costs \\$300\n- Keyboard costs \\$50\n- Mouse costs \\$25\n\nTotal:\n\n\\[\n1200 + 300 + 50 + 25 = 1575\n\\]\n\nSo the total cost is **\\$1,575**.\n\nMath expression:\n\n\\[\nf(x) = x^2\n\\]\n\nEvaluating at \\(x = 5\\):\n\n\\[\nf(5) = 5^2 = 25\n\\]",
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 662,
+    "total_tokens": 1090,
+    "cost": 0.022,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.022,
+      "upstream_inference_prompt_cost": 0.00214,
+      "upstream_inference_completions_cost": 0.01986
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 128,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.022,
+  "actualCost": 0.022,
+  "timestamp": "2026-11-08T20:43:35.395Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null
+}

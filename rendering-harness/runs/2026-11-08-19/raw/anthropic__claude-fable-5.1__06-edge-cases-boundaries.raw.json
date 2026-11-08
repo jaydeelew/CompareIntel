@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170761-EBokX24N1VfmyBCagU7W",
+  "object": "chat.completion",
+  "created": 1794170761,
+  "model": "anthropic/claude-fable-5.1",
+  "provider": "Anthropic",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Edge Cases and Boundaries: Delimiter Test Response\n\n## Delimiter Variants\n\n1. **Double dollar display:**\n\n$$x^2 + y^2 = r^2$$\n\n2. **Bracket display:**\n\n\\[E = mc^2\\]\n\n3. **Single dollar inline:** The relation $a + b = c$ holds for all real numbers.\n\n4. **Paren inline:** We set \\(x = 5\\) as the initial value.\n\n## Nested Structures\n\n- First item\n- The equation is:\n\n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n\n  And it evaluates to 0.5\n- Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\nInline code should also stay literal: `$50`, `E = mc^2`, and `x**2`.\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n- Adjacent amounts: Items cost $10 and $20 respectively (should **not** render \"and\" as math)\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n| Circumference | $C = 2\\pi r$ | $31.42$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\nOther shell-style references: `$PATH`, `$USER`, and `${VAR}` in backticks; also $PATH unquoted.\n\n## Additional Boundary Cases\n\n**Math at line boundaries:**\n$x$ starts the line, and the line ends with $y$\n\n**Math with punctuation inside delimiters:** $f(x) = x^2, \\quad g(x) = 2x.$\n\n**Adjacent inline math:** $a$$b$ versus $a$ $b$\n\n**Display math immediately following text:**\nThe result is\n$$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$\nand that concludes the proof.\n\n**Empty-ish and degenerate:** $ $ (space only), $$ $$ (display, space only)\n\n**Dollar followed by digit then space then dollar:** It costs $5 for 2 $items — the second dollar is not a delimiter in intent.\n\n**Escaped inside math:** $\\$x$ should show a literal dollar sign within rendered math.\n\n**Multiline display:**\n\n$$\n\\begin{aligned}\na &= b + c \\\\\n  &= d\n\\end{aligned}\n$$\n\n**Math inside bold/italic:** **The value $v = 3$ is fixed.** *And $w = 4$ is also fixed.*\n\n**Math in headers:**\n\n### Section with $\\alpha + \\beta$\n\n**Blockquote with math:**\n\n> The identity $e^{i\\pi} + 1 = 0$ is often called beautiful.\n>\n> $$\\lim_{n \\to \\infty} \\left(1 + \\frac{1}{n}\\right)^n = e$$",
+        "refusal": null,
+        "reasoning": "I'm going to write a response that covers delimiter variants and edge cases, keeping the code literal, leaving currency unrendered, and rendering the math.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm going to write a response that covers delimiter variants and edge cases, keeping the code literal, leaving currency unrendered, and rendering the math.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQShAcKEAgTGAI4AUIIdGhpbmtpbmcSDJStM70rzULbZ3ORohoMJi4tpG0uWiUFuObpIjAWOznHwKEnTDxP5dSkkMFzHTUEV2LQ1QfRQIjcrbwEhDj/OcYiWRzpND8pIu6zaxwqoQaXCGxVMBpKSKgWJ0Cyj04Z3jOgBI8+rX3P6PV4Fl8ZRXdTDuPIUd1JITu0xUB/4YcHB/XAl78RB3e4DIEeQx1tvQWk9v4ZO8lQro2IJ8fgA2tmhbnALq7WeC0BQBcSO+xwhsuosUwWKIj9jsBVHQnTcTwP0s2I9iIcJL2vaDhwLIrHYu9Zg0YxiBBKlkAe46omtyI36Nf18SnlksNkEhPB00rDQmpiupxif3GaromqS+YYcb4s0mqpOlJC47s+fII0bMAJv3aLjIniyhG29sceVFxj8Wtx5COFollEfUTpyEue/EMf8HBC4kBEUKiXI3Jvh/U7TPByNGF7Fyj83dEtjItCRrnn8oPh6fy3ocZuKmpsMbdC3B8OVsRUayeXyNhuhfkm9cX717v6KVPnqBJ11vZFwc5RBsnyUr8+37iw7JcWcffxfg/XVWDf06Rrhfb2lLLrGDF55jiGPrrs2z1NMQyd8aqaP1nnql/8xVj1Ohz9Apo4lw2IKgmMui5pQW6NV+c1N68/arRhqqglFrSa/cGo8ElCGVfufXJIpN2YzjjYjgiw20QyGEzdoj3UPX4ijkJjSvfDkSrF/uqrcMRaHyIoP/A2NDamdR1zCrD1hFV7rx2qYGFSTPe5RCqgm+lmQ6Ulla3RTlzVwkW8APTeM2sn81QhsQye8gAQgS7SEMZb4CqFy9EmZ5z35XDq2DxobrAOyoqekIWjiMUfviD9cRtKqqHtNQAaAyiPO4zhExW2qs+lz1IpQ/GFtq53nGnjE/WLw/A493iGmUZ8rG7GfpVBA3W8ltbQ7zuxjE0xo7gBWe6Dy7qWzqOt1O41XhnRe3KytkFEQi8aHo53qThWOt+tJ92OOQCiXzBwCPaijXfsQNaLNgBk4I3iHOgD0uEvcaI+yrO5krbIT+IL4FvcCHp5lAucQ0CNsYLYpVkUEPbcRq9+SufI/58Ywdwu4sQ/OJ8r+OBQFB/ykKHba+UZ99qSaeQxq6XpPiuX6yHXGj7OQU4Wzxkb1cAjXAM0Kyz2R0Zl8mCJnnpVL3SvhrhlTxeP1CfYiNA0iAJyls46paQYAQ==.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1mYWJsZS01LjEtMjAyNjA4MzF8YW50aHJvcGljIn0"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 485,
+    "completion_tokens": 1177,
+    "total_tokens": 1662,
+    "cost": 0.0637,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0637,
+      "upstream_inference_prompt_cost": 0.00485,
+      "upstream_inference_completions_cost": 0.05885
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 72,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
