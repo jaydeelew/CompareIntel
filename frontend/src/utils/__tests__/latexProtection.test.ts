@@ -95,6 +95,20 @@ describe('inline code protection', () => {
     expect(text).toContain('$y$')
     expect(restoreInlineCode(text, spans)).toContain('<code class="inline-code">`$x$`</code>')
   })
+
+  it('extracts `$` as a complete span so adjacent amounts are not leftover math (Step 5 Preview 05)', () => {
+    const line = '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs'
+    const { text, spans } = extractInlineCode(line)
+    expect(spans.filter(s => s === '$')).toHaveLength(3)
+    expect(protectCurrencyDollars(text)).not.toContain('$')
+  })
+})
+
+describe('inline-code placeholders are not math spans', () => {
+  it('literalizes leftover $ wrapping only an inline-code placeholder', () => {
+    const placeholder = '\uE0010\uE002'
+    expect(protectCurrencyDollars(`$${placeholder}$`)).toBe(`${L}${placeholder}${L}`)
+  })
 })
 
 describe('blockquotes', () => {

@@ -48,6 +48,8 @@ const TABLE_ROW_RE = /^\s*\|/
 function isValidCurrencyLikeMathSpan(segment: string, open: number, close: number): boolean {
   const content = segment.slice(open + 1, close)
   if (!content.trim()) return false
+  // `$`code`$` leftover after inline-code extraction is not math (Step 5 Preview 05).
+  if (content.includes(INLINE_CODE_OPEN)) return false
   const opensOnDigit = /\d/.test(segment.charAt(open + 1))
   if (/\s$/.test(content) && opensOnDigit) return false
   if (/\d/.test(segment.charAt(close + 1))) return false
@@ -143,6 +145,10 @@ export function extractInlineCode(text: string): InlineCodeExtraction {
     /(``+)((?:(?!\1)[^\n])*?)\1/g,
     (_match, _delim: string, content: string) => pushInlineCodeSpan(spans, content)
   )
+  // `$` is a complete code span. Take it before the generic single-backtick pass
+  // so `$`100`, `$`0.99` does not pair the leftover dollars as math
+  // (Step 5 Preview 05: KaTeX error "0.99, or literal ").
+  processed = processed.replace(/`\$`/g, () => pushInlineCodeSpan(spans, '$'))
   processed = processed.replace(/`([^`\n]+?)`/g, (_match, content: string) =>
     pushInlineCodeSpan(spans, content)
   )

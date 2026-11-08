@@ -399,6 +399,22 @@ describe('bug 18: **$x = 0$** in an ordered-list continuation is bold math, not 
   })
 })
 
+describe('bug 25: `$`100`, `$`0.99` is not a KaTeX error', () => {
+  it('keeps escaped-currency code dollars as code, not math (Step 5 Preview 05)', () => {
+    const el = renderReply(
+      '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs\n- Code span containing single dollar: `` `$` `` and `` `$x$` ``',
+      'stepfun/step-5-preview'
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('KaTeX parse error')
+    const codes = Array.from(el.querySelectorAll('code')).map(c => c.textContent)
+    expect(codes.filter(c => c === '$').length).toBeGreaterThanOrEqual(3)
+    expect(visibleText(el)).toContain('100')
+    expect(visibleText(el)).toContain('0.99')
+    expect(texSources(el).some(t => /0\.99/.test(t))).toBe(false)
+  })
+})
+
 describe('bug 24: double-backtick `` `$x$` `` is inline code, not leaked KaTeX HTML', () => {
   it('does not dump KaTeX HTML for GLM 5 05 delimiter example', () => {
     const el = renderReply(
