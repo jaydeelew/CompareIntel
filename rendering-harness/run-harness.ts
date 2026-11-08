@@ -16,7 +16,7 @@ import path from 'path';
 import { chromium, Browser, Page } from 'playwright';
 import { fileURLToPath } from 'url';
 import { spawn, ChildProcess } from 'child_process';
-import { validateRenderedHTML, type ValidationResult, type AssertionStatus } from './dom-assertions.js';
+import { validateRenderedHTML, type ValidationResult } from './dom-assertions.js';
 import {
   estimateRequestCost,
   estimateTokens,
@@ -24,6 +24,7 @@ import {
   resolveActualCost,
 } from './budget-guard.js';
 import { droppedNameExpectations, getExpectedFeatures } from './expected-features.js';
+import { isTruncatedReply, overallStatus, type OverallStatus } from './overall-status.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,7 +72,10 @@ interface TestResult {
   error?: string;
   featureCoverage?: FeatureCoverageResult;
   validation?: ValidationResult;
-  validationStatus?: AssertionStatus;
+  validationStatus?: OverallStatus;
+  truncated?: boolean;
+  finishReason?: string | null;
+  nativeFinishReason?: string | null;
 }
 
 interface HarnessConfig {
@@ -480,7 +484,7 @@ async function renderOnlyMode(runDir: string): Promise<void> {
   
   // Find all JSON files (saved responses)
   const files = await fs.readdir(fullPath);
-  const jsonFiles = files.filter(f => f.endsWith('.json') && !f.startsWith('results'));
+  const jsonFiles = files.filter(f => f.endsWith('.json') && !f.startsWith('results') && !['summary.json', 'manifest.json', 'catalog.json', 'prompts.json'].includes(f));
   
   if (jsonFiles.length === 0) {
     console.error('ERROR: No saved response JSON files found in directory');
@@ -501,6 +505,10 @@ async function renderOnlyMode(runDir: string): Promise<void> {
       const jsonPath = path.join(fullPath, jsonFile);
       const content = await fs.readFile(jsonPath, 'utf-8');
       const data = JSON.parse(content);
+      if (!data.modelId || typeof data.response !== 'string' || !data.promptName) {
+        console.log(`Skipping non-reply JSON: ${jsonFile}`);
+        continue;
+      }
 
       console.log(`Rendering ${data.modelName || data.modelId} - ${data.promptName}...`);
 
@@ -527,13 +535,16 @@ async function renderOnlyMode(runDir: string): Promise<void> {
           expectedFeatures,
           data.response
         );
+        const truncated = isTruncatedReply(data);
+        const status = overallStatus({ truncated, validation });
         const failedCount = validation.assertions.filter(a => a.status === 'fail').length;
         const notCoveredCount = validation.assertions.filter(a => a.status === 'not-covered').length;
         const mark =
-          validation.status === 'pass' ? '✓' : validation.status === 'not-covered' ? '○' : '✗';
+          status === 'pass' ? '✓' : status === 'not-covered' ? '○' : status === 'truncated' ? '△' : '✗';
         console.log(
-          `  ${mark} Validation: ${validation.status.toUpperCase()}` +
-            (failedCount ? ` (${failedCount} renderer-loss)` : '') +
+          `  ${mark} Validation: ${status.toUpperCase()}` +
+            (truncated ? ' (incomplete finishReason, not comprehensive)' : '') +
+            (failedCount ? ` (${failedCount} DOM fail assertions)` : '') +
             (notCoveredCount ? ` (${notCoveredCount} not-covered)` : '')
         );
 
@@ -544,11 +555,14 @@ async function renderOnlyMode(runDir: string): Promise<void> {
           promptText: data.promptText || '',
           response: data.response,
           usage: data.usage,
-          actualCost: data.cost || 0,
+          actualCost: data.cost || data.actualCost || 0,
           timestamp: data.timestamp,
           featureCoverage: coverage,
           validation,
-          validationStatus: validation.status,
+          validationStatus: status,
+          truncated,
+          finishReason: data.finishReason ?? null,
+          nativeFinishReason: data.nativeFinishReason ?? null,
         });
       } catch (error) {
         console.error(`  ✗ Error rendering: ${error}`);
@@ -603,18 +617,23 @@ async function renderOnlyMode(runDir: string): Promise<void> {
   exitIfValidationFailed(results);
 }
 
-function resultStatus(r: TestResult): AssertionStatus {
-  if (r.error) return 'fail'
-  return r.validation?.status || r.validationStatus || 'fail'
+function resultStatus(r: TestResult): OverallStatus {
+  return overallStatus({
+    truncated: Boolean(r.truncated) || isTruncatedReply(r),
+    error: r.error,
+    validation: r.validation,
+  })
 }
 
 function reportValidationSummary(results: TestResult[]): void {
   const passed = results.filter(r => resultStatus(r) === 'pass').length
   const notCovered = results.filter(r => resultStatus(r) === 'not-covered').length
+  const truncated = results.filter(r => resultStatus(r) === 'truncated').length
   const failed = results.filter(r => resultStatus(r) === 'fail').length
   console.log(`\nValidation Summary:`)
   console.log(`  ✓ Passed: ${passed}`)
   console.log(`  ○ Not covered (source missing feature): ${notCovered}`)
+  console.log(`  △ Truncated / incomplete (not comprehensive): ${truncated}`)
   console.log(`  ✗ Failed (renderer loss / error): ${failed}\n`)
 }
 
@@ -762,6 +781,7 @@ async function generateReviewPage(
     }
     .status-pass { background: #d4edda; color: #155724; }
     .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-truncated { background: #e7e3ff; color: #3d348b; }
     .status-fail { background: #f8d7da; color: #721c24; }
     .error {
       color: red;
@@ -786,6 +806,7 @@ async function generateReviewPage(
     <p><strong>Total Results:</strong> ${results.length}</p>
     <p><strong>Passed:</strong> ${results.filter(r => resultStatus(r) === 'pass').length}
        &nbsp;<strong>Not covered:</strong> ${results.filter(r => resultStatus(r) === 'not-covered').length}
+       &nbsp;<strong>Truncated:</strong> ${results.filter(r => resultStatus(r) === 'truncated').length}
        &nbsp;<strong>Failed:</strong> ${results.filter(r => resultStatus(r) === 'fail').length}</p>
     <p><strong>Total Cost:</strong> $${totalCost.toFixed(4)}</p>
     <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
@@ -802,6 +823,7 @@ async function generateReviewPage(
               Model ID: ${result.modelId}<br>
               ${result.usage ? `Tokens: ${result.usage.total_tokens || result.usage.totalTokens || '?'} (${result.usage.prompt_tokens || result.usage.promptTokens || '?'} in / ${result.usage.completion_tokens || result.usage.completionTokens || '?'} out)<br>` : ''}
               Cost: $${result.actualCost.toFixed(4)}<br>
+              Finish: ${escapeHtml(String(result.finishReason || 'unknown'))}${result.nativeFinishReason ? ` / ${escapeHtml(String(result.nativeFinishReason))}` : ''}${result.truncated ? ' — truncated, not comprehensive' : ''}<br>
               Time: ${new Date(result.timestamp).toLocaleString()}
             </div>
             

@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemma-3-27b-it",
+  "modelName": "Google: Gemma 3 27B",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Okay, here's a response designed to test the prompt's requests regarding delimiters, nested structures, code, currency, and raw dollar signs. I'll render the Markdown as best as possible, and highlight potential problems.  I will *not* try to automatically interpret the Python code as code, but demonstrate how it should be displayed literally.  I'll also comment on how I expect certain parts to render.\n\n---\n\n## Delimiter Variants\n\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n   *(Expect: Equation displayed in a block, centered, larger font)*\n\n2. Bracket display: \\[E = mc^2\\]\n   *(Expect: Equation displayed in a block, centered, larger font)*\n\n3. Single dollar inline: $a + b = c$\n   *(Expect: Equation rendered inline with the text)*\n\n4. Paren inline: \\(x = 5\\)\n   *(Expect: Equation rendered inline with the text - the parentheses should behave like normal text)*\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n   *(Expect: List format showing the displayed equation as a block within the list item. Text following the equation should be on a new line and aligned with the \"And\".)*\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n*(Expect: Code block with syntax highlighting (if supported). Dollar signs within the code should be treated as literal characters, *not* as delimiters.  It should display exactly as written above.)*\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n   *(Expect: Normal text with a dollar sign)*\n\n- Escaped: The budget is \\$500\n   *(Expect: Normal text with a literal dollar sign)*\n\n- Multiple: Costs $25, $30, and $45\n   *(Expect: Normal text with dollar signs)*\n\n- In sentence: I spent $50 at the store\n   *(Expect: Normal text with a dollar sign)*\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n*(Expect: Normal table formatting. The formulas within the \"Formula\" and \"Value\" columns should be rendered as inline equations.)*\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n*(Expect: Normal text. The first dollar sign should be a literal character representing the shell variable. The second dollar sign should represent currency.)*\n\n---\n\n**Important Notes for Testing and Expected Behavior:**\n\n*   **Markdown Engine Dependence:**  The actual rendering will vary significantly depending on the Markdown processor used. Some may handle LaTeX within dollar signs more effectively than others.\n*   **LaTeX Support:**  If the markdown processor supports LaTeX, the `$$...$$` and `$...$` blocks will become properly formatted equations. If not, they will likely be displayed as plain text.\n*   **Code Block Handling:** The critical test is whether the code block preserves the dollar signs as literal characters.\n*   **Escaping:** The `\\$` should reliably display a literal dollar sign.\n*   **Inline vs. Display:**  The differences between inline (`$a + b = c$`) and display (`$$x^2 + y^2 = r^2$$`) equations should be clear.\n*   **Parentheses:**  The `\\(...\\)` test for inline equations is specifically to check if the processor treats the parentheses as standard text instead of trying to interpret it as a LaTeX command for inline math.\n\n\n\n\nThis response provides a comprehensive test case for the prompt's specifications, encompassing various delimiters, nested structures, code snippets, currency, and raw dollar signs.  It also outlines the expected behavior for a Markdown processor with (and without) LaTeX support.  This should give a good indication of how well the system handles different edge cases.",
+  "usage": {
+    "prompt_tokens": 366,
+    "completion_tokens": 966,
+    "total_tokens": 1332,
+    "cost": 0.0003264,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0003264,
+      "upstream_inference_prompt_cost": 0.0000366,
+      "upstream_inference_completions_cost": 0.0002898
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0003264,
+  "actualCost": 0.0003264,
+  "timestamp": "2026-11-08T17:46:25.485Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}
