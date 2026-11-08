@@ -1,0 +1,36 @@
+{
+  "modelId": "openai/gpt-4o-mini",
+  "modelName": "OpenAI: GPT-4o-mini",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here’s a structured response that tests various delimiter variants, nested structures, code with math-like syntax, currency demonstrations, tables incorporating math equations, and instances of raw dollar signs.\n\n## Delimiter Variants\n\n1. **Double dollar display:**\n   The equation of a circle can be represented as: \n   $$\n   x^2 + y^2 = r^2\n   $$\n\n2. **Bracket display:**\n   Einstein's famous equation is given by:\n   \\[\n   E = mc^2\n   \\]\n\n3. **Single dollar inline:**\n   In a simple addition operation, we have $a + b = c$.\n\n4. **Paren inline:**\n   To find the value of \\(x\\), we solve the equation and determine \\(x = 5\\).\n\n## Nested Structures\n\n1. **Display math in a list with continuation:**\n   - First item\n   - The equation is:\n     $$\n     \\int_0^1 x \\, dx = \\frac{1}{2}\n     $$\n     And it evaluates to 0.5.\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\n- **Plain:** The price is $100.\n- **Escaped:** The budget is \\$500.\n- **Multiple:** Costs were $25, $30, and $45.\n- **In sentence:** I spent $50 at the store.\n\n## Tables with Math\n\n| Variable | Formula                  | Value   |\n|----------|--------------------------|---------|\n| Area     | $A = \\pi r^2$           | $78.54$ |\n| Volume   | $V = \\frac{4}{3}\\pi r^3$| $523.60$|\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+  "usage": {
+    "prompt_tokens": 343,
+    "completion_tokens": 431,
+    "total_tokens": 774,
+    "cost": 0.00031005,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00031005,
+      "upstream_inference_prompt_cost": 0.00005145,
+      "upstream_inference_completions_cost": 0.0002586
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00031005,
+  "actualCost": 0.00031005,
+  "timestamp": "2026-11-08T20:48:44.936Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

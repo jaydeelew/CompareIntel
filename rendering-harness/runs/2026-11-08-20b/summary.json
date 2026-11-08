@@ -1,0 +1,123 @@
+{
+  "status": "completed",
+  "stopReason": null,
+  "attemptedCalls": 6,
+  "knownActualCost": 0.390054,
+  "unknownCostCalls": 0,
+  "perModelCost": {
+    "openai/gpt-5.2-pro": 0.390054
+  },
+  "promptTokens": 1790,
+  "completionTokens": 2098,
+  "reasoningTokensIncludedInCompletion": 120,
+  "errors": [],
+  "truncated": [],
+  "visibleEmpty": [],
+  "finishReasons": {
+    "stop": 6
+  },
+  "firstCallCST": "2026-11-08T14:56:23.426000-06:00 CST",
+  "lastCallCST": "2026-11-08T14:58:06.888000-06:00 CST",
+  "cumulativeKnownUsd": 3.7760560956,
+  "priorUnknownCharges": 2,
+  "coverage": "Collection only; no new rendering passes",
+  "requestTimeoutSeconds": 600,
+  "dynamicGuardEvidence": [
+    {
+      "modelId": "openai/gpt-5.2-pro",
+      "promptName": "01-math-basics",
+      "reserveUsd": 1.7415824999999998,
+      "reserveRates": {
+        "usd": 1.7415824999999998,
+        "inputRate": 2.1e-05,
+        "outputRate": 0.000168,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2.1e-05,
+        "output": 0.000168
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.2-pro",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 1.73733,
+      "reserveRates": {
+        "usd": 1.73733,
+        "inputRate": 2.1e-05,
+        "outputRate": 0.000168,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2.1e-05,
+        "output": 0.000168
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.2-pro",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 1.7396399999999999,
+      "reserveRates": {
+        "usd": 1.7396399999999999,
+        "inputRate": 2.1e-05,
+        "outputRate": 0.000168,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2.1000000000000002e-05,
+        "output": 0.000168
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.2-pro",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 1.74481125,
+      "reserveRates": {
+        "usd": 1.74481125,
+        "inputRate": 2.1000000000000002e-05,
+        "outputRate": 0.000168,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2.1000000000000002e-05,
+        "output": 0.000168
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.2-pro",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 1.75252875,
+      "reserveRates": {
+        "usd": 1.75252875,
+        "inputRate": 2.1000000000000002e-05,
+        "outputRate": 0.000168,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2.1000000000000002e-05,
+        "output": 0.000168
+      }
+    },
+    {
+      "modelId": "openai/gpt-5.2-pro",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 1.7480399999999998,
+      "reserveRates": {
+        "usd": 1.7480399999999998,
+        "inputRate": 2.1000000000000002e-05,
+        "outputRate": 0.000168,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2.1000000000000002e-05,
+        "output": 0.00016800000000000002
+      }
+    }
+  ]
+}

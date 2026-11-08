@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794170972-EMj9s1cIBuNuvInXTcry",
+  "object": "chat.completion",
+  "created": 1794170972,
+  "model": "deepseek/deepseek-v4-pro",
+  "provider": "Baidu",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "We need to generate a response with fenced code blocks. The user provided a prompt with examples: Python code block, JavaScript code block, and inline code with math-like content. The instruction: \"Generate a response with fenced code blocks:\" then they show three sections: \"## Python code\" with a fenced python block, \"## JavaScript code\" with a fenced javascript block, and \"## Inline code with math-like content\" with text: \"The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\"\n\nThe user wants us to generate a response that includes fenced code blocks. Possibly they want us to output something similar, or just show that we can output code blocks properly. The prompt says \"Test Prompt: Code Blocks\" and then they give that content. It might be a test for the assistant to output code blocks correctly, maybe to ensure that inline code with special characters like `$`, `^`, `_` doesn't get interpreted as LaTeX math. So they want us to produce a response that includes those code blocks and inline code as shown, ensuring they are properly formatted.\n\nThus, my response should include the exact same structure: a heading \"## Python code\" with a python code block, \"## JavaScript code\" with a javascript code block, and \"## Inline code with math-like content\" with a sentence that has inline code like `x^2`, `a_b`, `$price`. But I should not just replicate the prompt exactly; I should produce a response that demonstrates code block rendering. The user may be testing whether the assistant can output fenced code blocks and inline code without misinterpreting math. I'll output a helpful response that includes the given examples or similar. However, the user message is a test prompt; I should respond accordingly. Usually, as an assistant, I'd say something like: \"Here's a response with fenced code blocks:\" and then show them. I need to ensure that inline code is correctly rendered with backticks, and that the code blocks are correctly fenced.\n\nThus, I'll produce a response that contains:\n\n- A brief introduction.\n- The Python code block, exactly as given, but maybe with a slight explanation? The prompt didn't ask for explanation; it just said \"Generate a response with fenced code blocks:\" and then gave three sections. I'll follow that structure, maybe adding a comment that I've included them.\n\nI must be careful with the backticks: when I write the response, I need to use triple backticks with language. The inline code uses single backticks; they contain `x^2`, `a_b`, `$price`. In my output, I need to show those literally. The user's prompt contains those backticks, but as part of the markdown. I'll just output them with proper escaping in my response? No, I'm writing in markdown. So I'll write:\n\n## Python code\n```python\n... code ...\n```\netc.\n\nFor the inline code section, I'll write:\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nThat will render as inline code exactly as intended.\n\nTherefore, my final answer.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "We need to generate a response with fenced code blocks. The user provided a prompt with examples: Python code block, JavaScript code block, and inline code with math-like content. The instruction: \"Generate a response with fenced code blocks:\" then they show three sections: \"## Python code\" with a fenced python block, \"## JavaScript code\" with a fenced javascript block, and \"## Inline code with math-like content\" with text: \"The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\"\n\nThe user wants us to generate a response that includes fenced code blocks. Possibly they want us to output something similar, or just show that we can output code blocks properly. The prompt says \"Test Prompt: Code Blocks\" and then they give that content. It might be a test for the assistant to output code blocks correctly, maybe to ensure that inline code with special characters like `$`, `^`, `_` doesn't get interpreted as LaTeX math. So they want us to produce a response that includes those code blocks and inline code as shown, ensuring they are properly formatted.\n\nThus, my response should include the exact same structure: a heading \"## Python code\" with a python code block, \"## JavaScript code\" with a javascript code block, and \"## Inline code with math-like content\" with a sentence that has inline code like `x^2`, `a_b`, `$price`. But I should not just replicate the prompt exactly; I should produce a response that demonstrates code block rendering. The user may be testing whether the assistant can output fenced code blocks and inline code without misinterpreting math. I'll output a helpful response that includes the given examples or similar. However, the user message is a test prompt; I should respond accordingly. Usually, as an assistant, I'd say something like: \"Here's a response with fenced code blocks:\" and then show them. I need to ensure that inline code is correctly rendered with backticks, and that the code blocks are correctly fenced.\n\nThus, I'll produce a response that contains:\n\n- A brief introduction.\n- The Python code block, exactly as given, but maybe with a slight explanation? The prompt didn't ask for explanation; it just said \"Generate a response with fenced code blocks:\" and then gave three sections. I'll follow that structure, maybe adding a comment that I've included them.\n\nI must be careful with the backticks: when I write the response, I need to use triple backticks with language. The inline code uses single backticks; they contain `x^2`, `a_b`, `$price`. In my output, I need to show those literally. The user's prompt contains those backticks, but as part of the markdown. I'll just output them with proper escaping in my response? No, I'm writing in markdown. So I'll write:\n\n## Python code\n```python\n... code ...\n```\netc.\n\nFor the inline code section, I'll write:\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nThat will render as inline code exactly as intended.\n\nTherefore, my final answer.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 240,
+    "completion_tokens": 915,
+    "total_tokens": 1155,
+    "cost": 0.0004302909,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0004302909,
+      "upstream_inference_prompt_cost": 0.0000498888,
+      "upstream_inference_completions_cost": 0.0003804021
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 693,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

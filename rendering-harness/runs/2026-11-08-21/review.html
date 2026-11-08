@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Model Rendering QA Review</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .summary {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .prompt-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .model-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafafa;
+    }
+    .model-card h4 {
+      margin-top: 0;
+    }
+    .screenshot {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .raw-response {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+    .feedback {
+      margin-top: 10px;
+    }
+    .feature-coverage {
+      font-size: 0.85em;
+      margin: 10px 0;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .feature-coverage .feature {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .feature-coverage .feature.yes {
+      background: #d4edda;
+      color: #155724;
+    }
+    .feature-coverage .feature.no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .feature-coverage .math-error {
+      color: #d32f2f;
+      font-weight: bold;
+      display: block;
+      margin-top: 4px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+    .export-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .export-btn:hover {
+      background: #0056b3;
+    }
+    .status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      text-transform: uppercase;
+    }
+    .status-pass { background: #d4edda; color: #155724; }
+    .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-source-issue { background: #ffe8cc; color: #9a3412; }
+    .status-truncated { background: #e7e3ff; color: #3d348b; }
+    .status-incomplete { background: #ede7f6; color: #4a148c; }
+    .status-fail { background: #f8d7da; color: #721c24; }
+    .error {
+      color: red;
+      background: #fee;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .meta {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Model Rendering QA Review</h1>
+  
+  <div class="summary">
+    <h2>Summary</h2>
+    <p><strong>Run Date:</strong> 2026-11-08-21</p>
+    <p><strong>Models Tested:</strong> 4</p>
+    <p><strong>Prompts:</strong> 6</p>
+    <p><strong>API history records:</strong> 24
+       &nbsp;<strong>Unique coverage cells:</strong> 24</p>
+    <p><strong>History:</strong>
+       Passed 24
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 0
+       / Failed 0</p>
+    <p><strong>Unique coverage:</strong>
+       Passed 24
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 0
+       / Failed 0
+       (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $0.085248</p>
+    <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
+  </div>
+  
+  
+    <div class="prompt-section">
+      <h2>01-math-basics</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Sonnet 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-sonnet-4.6<br>
+              Attempt: original · anthropic_claude-sonnet-4.6_01-math-basics.json<br>
+              Tokens: 885 (319 in / 566 out)<br>
+              Cost: $0.009447<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:53:39 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-sonnet-4.6_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Math Basics Demonstration
+
+## 1. The Quadratic Formula
+
+For any quadratic equation of the form $ax^2 + bx + c = 0$, the solutions are given by $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$. The term $b^2 - 4ac$ is called the **discriminant** — when it&#039;s positive you get two real roots, zero gives one repeated root, and negative yields complex roots.
+
+---
+
+## 2. Solving a System of Equations
+
+We can solve the following system by elimination:
+
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+Adding both equations eliminates $y$, giving $3x = 6$, so $x = 2$ and $y = 3$.
+
+---
+
+## 3. Matrices and Piecewise Functions
+
+The identity matrix and a piecewise function are shown below:
+
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad f(x) = \begin{cases} x^2 &amp; \text{if } x \geq 0 \\ -x &amp; \text{if } x &lt; 0 \end{cases}$$
+
+Multiplying any matrix $A$ by $I$ leaves it unchanged: $AI = IA = A$.
+
+---
+
+## 4. Fundamental Physics &amp; Geometry
+
+Three of the most iconic equations in science and mat...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-sonnet-4.6"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>DeepSeek: DeepSeek V4 Pro 0423 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: deepseek/deepseek-v4-pro<br>
+              Attempt: original · deepseek_deepseek-v4-pro_01-math-basics.json<br>
+              Tokens: 2080 (329 in / 1751 out)<br>
+              Cost: $0.002955<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:49:18 PM
+            </div>
+            
+            
+              <img src="deepseek_deepseek-v4-pro_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">The quadratic formula is used to find the roots of a quadratic equation $ax^2 + bx + c = 0$. The solutions are given by $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$, where the expression under the square root, $b^2 - 4ac$, is called the discriminant. Using this formula, you can solve any quadratic equation, even those that do not factor easily.
+
+Below is an example of a system of linear equations aligned in display math:
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+Matrices and piecewise functions can be written using environments like `pmatrix` and `cases`:
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}$$
+
+Here are some famous equations from physics and mathematics:
+$$E = mc^2$$
+$$F = ma$$
+$$a^2 + b^2 = c^2$$
+
+For further reading, see [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula).
+
+Finally, a note about currency: The item costs \$5 and the shipping is \$10, for a total...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="deepseek/deepseek-v4-pro"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Google: Gemini 2.5 Flash <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-2.5-flash<br>
+              Attempt: original · google_gemini-2.5-flash_01-math-basics.json<br>
+              Tokens: 828 (280 in / 548 out)<br>
+              Cost: $0.001454<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 8:53:21 PM
+            </div>
+            
+            
+              <img src="google_gemini-2.5-flash_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Let&#039;s explore some math basics!
+
+The **quadratic formula** is a fundamental tool for solving quadratic equations of the form $ax^2 + bx + c = 0$. The solutions for $x$ are given by the formula $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$. Here, $a$, $b$, and $c$ are coefficients, and the $\pm$ symbol indicates that there are two possible solutions: one where you add the square root term and one where you subtract it. The term $b^2 - 4ac$ is called the discriminant, and its value tells us about the nature of the roots (real or complex, distinct or repeated).
+
+Consider a system of linear equations that can be solved using various methods, including substitution or elimination:
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+Adding the two equations eliminates $y$, giving $3x = 6$, so $x = 2$. Substituting $x=2$ into the first equation yields $2+y=5$, so $y=3$.
+
+In linear algebra, an **identity matrix** $I$ is a square matrix where all the elements on the main diagonal are ones and al...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-2.5-flash"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-4o-mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-4o-mini<br>
+              Attempt: original · openai_gpt-4o-mini_01-math-basics.json<br>
+              Tokens: 623 (275 in / 348 out)<br>
+              Cost: $0.000250<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:48:05 PM
+            </div>
+            
+            
+              <img src="openai_gpt-4o-mini_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">The quadratic formula, used to find the roots of a quadratic equation, is expressed as \( x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} \). Here, \( a \), \( b \), and \( c \) are coefficients from the quadratic equation in the standard form \( ax^2 + bx + c = 0 \). The term \( b^2 - 4ac \) is known as the discriminant, which determines the nature of the roots.
+
+For systems of equations, consider the following aligned equations:
+
+\[
+\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}
+\]
+
+Next, we can represent the identity matrix and a piecewise function using cases:
+
+\[
+I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}
+\]
+
+In addition, here are several fundamental equations:
+
+\[
+E = mc^2
+\]
+\[
+F = ma
+\]
+\[
+a^2 + b^2 = c^2
+\]
+
+For further reading on the quadratic formula, you can visit [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula).
+
+In a practical money context, the item costs $5 and the s...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-4o-mini"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>02-markdown-formatting</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Sonnet 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-sonnet-4.6<br>
+              Attempt: original · anthropic_claude-sonnet-4.6_02-markdown-formatting.json<br>
+              Tokens: 473 (222 in / 251 out)<br>
+              Cost: $0.004431<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:53:43 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-sonnet-4.6_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Markdown Formatting Demo
+
+## Headers
+### This is H3
+#### This is H4
+
+---
+
+## Text Formatting
+
+**Bold text** and *italic text* and ***bold italic***
+
+---
+
+## Lists
+
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+---
+
+## Tables
+
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+---
+
+## Blockquotes
+
+&gt; This is a blockquote
+&gt; with multiple lines
+
+---
+
+&gt; **Note:** All markdown elements above are rendering correctly, including **nested lists**, *formatted text*, tables with aligned columns, and properly styled blockquotes.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-sonnet-4.6"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>DeepSeek: DeepSeek V4 Pro 0423 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: deepseek/deepseek-v4-pro<br>
+              Attempt: original · deepseek_deepseek-v4-pro_02-markdown-formatting.json<br>
+              Tokens: 1013 (280 in / 733 out)<br>
+              Cost: $0.001380<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:49:32 PM
+            </div>
+            
+            
+              <img src="deepseek_deepseek-v4-pro_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="deepseek/deepseek-v4-pro"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Google: Gemini 2.5 Flash <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-2.5-flash<br>
+              Attempt: original · google_gemini-2.5-flash_02-markdown-formatting.json<br>
+              Tokens: 381 (201 in / 180 out)<br>
+              Cost: $0.000510<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 8:53:22 PM
+            </div>
+            
+            
+              <img src="google_gemini-2.5-flash_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+3. Second item
+4. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-2.5-flash"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-4o-mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-4o-mini<br>
+              Attempt: original · openai_gpt-4o-mini_02-markdown-formatting.json<br>
+              Tokens: 379 (196 in / 183 out)<br>
+              Cost: $0.000139<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:48:07 PM
+            </div>
+            
+            
+              <img src="openai_gpt-4o-mini_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+Here is some **bold text** and *italic text* and ***bold italic*** for emphasis.
+
+## Lists
+### Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+### Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k    | $0.03 |
+| Claude | 200k   | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote  
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-4o-mini"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>03-code-blocks</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Sonnet 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-sonnet-4.6<br>
+              Attempt: original · anthropic_claude-sonnet-4.6_03-code-blocks.json<br>
+              Tokens: 722 (277 in / 445 out)<br>
+              Cost: $0.007506<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:53:50 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-sonnet-4.6_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Code Block Test Response
+
+## Python code
+
+Here&#039;s the quadratic formula implementation:
+
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+**Expected output:** `Solutions: x = 3.0, x = 2.0`
+
+---
+
+## JavaScript code
+
+A recursive Fibonacci implementation:
+
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+**Note:** This is a naive recursive approach with O(2ⁿ) time complexity. A memoized version would be more efficient.
+
+---
+
+## Inline code with math-like content
+
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.
+
+Additional inline examples:
+- Use `n^2` to denote quadratic complexity
+- ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-sonnet-4.6"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>DeepSeek: DeepSeek V4 Pro 0423 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: deepseek/deepseek-v4-pro<br>
+              Attempt: original · deepseek_deepseek-v4-pro_03-code-blocks.json<br>
+              Tokens: 1155 (240 in / 915 out)<br>
+              Cost: $0.000430<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:49:45 PM
+            </div>
+            
+            
+              <img src="deepseek_deepseek-v4-pro_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="deepseek/deepseek-v4-pro"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Google: Gemini 2.5 Flash <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-2.5-flash<br>
+              Attempt: original · google_gemini-2.5-flash_03-code-blocks.json<br>
+              Tokens: 517 (262 in / 255 out)<br>
+              Cost: $0.000716<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 8:53:23 PM
+            </div>
+            
+            
+              <img src="google_gemini-2.5-flash_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here are the code blocks and inline code as requested:
+
+## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-2.5-flash"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-4o-mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-4o-mini<br>
+              Attempt: original · openai_gpt-4o-mini_03-code-blocks.json<br>
+              Tokens: 487 (242 in / 245 out)<br>
+              Cost: $0.000183<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:48:11 PM
+            </div>
+            
+            
+              <img src="openai_gpt-4o-mini_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Sure! Here&#039;s a response that includes fenced code blocks for Python, JavaScript, and some inline code formatted as specified.
+
+## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly, `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-4o-mini"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>04-mixed-markdown-latex</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Sonnet 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-sonnet-4.6<br>
+              Attempt: original · anthropic_claude-sonnet-4.6_04-mixed-markdown-latex.json<br>
+              Tokens: 1246 (357 in / 889 out)<br>
+              Cost: $0.014406<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:54:02 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-sonnet-4.6_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Mixed Markdown and LaTeX: A Mathematical Reference
+
+## Problem Statement
+
+**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:
+
+1. The *derivative* $f&#039;(x)$
+2. The **integral** $\int f(x) \, dx$
+
+---
+
+### Solution
+
+Notice that $f(x) = x^2 + 2x + 1 = (x+1)^2$, which simplifies our work.
+
+**Part 1 — Derivative:**
+
+Applying the *power rule* to each term:
+
+$$f&#039;(x) = 2x + 2 = 2(x + 1)$$
+
+&gt; The critical point occurs at $f&#039;(x) = 0$, giving $x = -1$.
+
+**Part 2 — Integral:**
+
+$$\int f(x) \, dx = \int (x^2 + 2x + 1) \, dx = \frac{x^3}{3} + x^2 + x + C$$
+
+---
+
+## Linear Algebra with Lists
+
+Properties of the matrix $A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$:
+
+- **Determinant**: $\det(A) = ad - bc$
+- **Trace**: $\text{tr}(A) = a + d$
+- **Eigenvalue equation**: $\lambda^2 - \text{tr}(A)\lambda + \det(A) = 0$
+- **Inverse** (exists *if and only if* $\det(A) \neq 0$):
+
+$$A^{-1} = \frac{1}{ad - bc}\begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}$$
+
+### Key Identities
+
+| Property | Form...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-sonnet-4.6"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>DeepSeek: DeepSeek V4 Pro 0423 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: deepseek/deepseek-v4-pro<br>
+              Attempt: original · deepseek_deepseek-v4-pro_04-mixed-markdown-latex.json<br>
+              Tokens: 748 (293 in / 455 out)<br>
+              Cost: $0.000946<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:49:49 PM
+            </div>
+            
+            
+              <img src="deepseek_deepseek-v4-pro_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Problem Statement
+**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:
+
+1. The *derivative* $f&#039;(x)$
+2. The **integral** $\int f(x) dx$
+
+### Solution
+The derivative is:
+$$f&#039;(x) = 2x + 2$$
+
+The integral is:
+$$\int f(x) dx = \frac{x^3}{3} + x^2 + x + C$$
+
+## Linear Algebra with Lists
+Properties of the matrix $A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$:
+- Determinant: $\det(A) = ad - bc$
+- Trace: $\text{tr}(A) = a + d$
+- Inverse (if exists):
+  $$A^{-1} = \frac{1}{ad - bc}\begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}$$
+
+## Real World Context
+&gt; **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.
+
+Money context: If you buy 10 units, that&#039;s $100 fixed plus $50 variable = $150 total.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="deepseek/deepseek-v4-pro"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Google: Gemini 2.5 Flash <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-2.5-flash<br>
+              Attempt: original · google_gemini-2.5-flash_04-mixed-markdown-latex.json<br>
+              Tokens: 1109 (318 in / 791 out)<br>
+              Cost: $0.002073<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 8:53:26 PM
+            </div>
+            
+            
+              <img src="google_gemini-2.5-flash_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Problem Statement
+**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:
+
+1. The *derivative* $f&#039;(x)$
+2. The **integral** $\int f(x) dx$
+
+### Solution
+To find the derivative $f&#039;(x)$, we apply the power rule and sum rule for differentiation:
+$$f&#039;(x) = \frac{d}{dx}(x^2) + \frac{d}{dx}(2x) + \frac{d}{dx}(1)$$
+$$f&#039;(x) = 2x^{2-1} + 2x^{1-1} + 0$$
+$$f&#039;(x) = 2x + 2$$
+
+For the integral $\int f(x) dx$, we use the power rule for integration and the sum rule:
+$$\int f(x) dx = \int (x^2 + 2x + 1) dx$$
+$$\int f(x) dx = \int x^2 dx + \int 2x dx + \int 1 dx$$
+$$\int f(x) dx = \frac{x^{2+1}}{2+1} + 2\frac{x^{1+1}}{1+1} + x + C$$
+$$\int f(x) dx = \frac{x^3}{3} + 2\frac{x^2}{2} + x + C$$
+$$\int f(x) dx = \frac{x^3}{3} + x^2 + x + C$$
+
+## Linear Algebra with Lists
+Properties of the matrix $A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$:
+- Determinant: The determinant of a $2 \times 2$ matrix is calculated as the product of the diagonal elements minus the product of the off-diagonal element...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-2.5-flash"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-4o-mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-4o-mini<br>
+              Attempt: original · openai_gpt-4o-mini_04-mixed-markdown-latex.json<br>
+              Tokens: 696 (311 in / 385 out)<br>
+              Cost: $0.000278<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:48:20 PM
+            </div>
+            
+            
+              <img src="openai_gpt-4o-mini_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Problem Statement
+**Exercise 1**: Given the function \( f(x) = x^2 + 2x + 1 \), find:
+
+1. The *derivative* \( f&#039;(x) \)
+2. The **integral** \( \int f(x) \, dx \)
+
+### Solution
+The derivative is:
+\[
+f&#039;(x) = 2x + 2
+\]
+
+The integral is:
+\[
+\int f(x) \, dx = \frac{1}{3}x^3 + x^2 + x + C
+\]
+
+## Linear Algebra with Lists
+Properties of the matrix \( A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix} \):
+- **Determinant**: 
+  \[
+  \det(A) = ad - bc
+  \]
+- **Trace**: 
+  \[
+  \text{tr}(A) = a + d
+  \]
+- **Inverse** (if it exists):
+  \[
+  A^{-1} = \frac{1}{ad - bc} \begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}
+  \]
+
+## Real World Context
+&gt; **Note**: In economics, the cost function \( C(q) = 100 + 5q \) indicates that fixed costs are $100 and variable costs are $5 per unit.
+
+**Money Context**: If you buy 10 units, the cost calculation is:
+- Fixed costs: $100
+- Variable costs: \( 5 \times 10 = 50 \)
+
+Thus, the **total cost** is:
+\[
+C(10) = 100 + 50 = 150
+\] 
+
+This demonstrates how mathematical fun...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-4o-mini"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>05-complex-scenarios</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Sonnet 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-sonnet-4.6<br>
+              Attempt: original · anthropic_claude-sonnet-4.6_05-complex-scenarios.json<br>
+              Tokens: 955 (484 in / 471 out)<br>
+              Cost: $0.008517<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:54:06 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-sonnet-4.6_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Complex Scenario Responses
+
+## Scenario 1: Math in Lists with Formatting
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+## Scenario 2: Tables with Math
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+## Scenario 3: Code and Math Mixed
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+```
+
+The mathematical formula is $A = \pi r^2$ where $r$ is the radius.
+
+## Scenario 4: Horizontal Rules
+
+First section
+
+---
+
+Second section with math: $\int_{0}^{1} x \, dx = \frac{1}{2}$
+
+---
+
+Third section
+
+## Scenario 5: Multiple Dollar Signs
+...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-sonnet-4.6"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>DeepSeek: DeepSeek V4 Pro 0423 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: deepseek/deepseek-v4-pro<br>
+              Attempt: original · deepseek_deepseek-v4-pro_05-complex-scenarios.json<br>
+              Tokens: 10734 (496 in / 10238 out)<br>
+              Cost: $0.015853<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:52:49 PM
+            </div>
+            
+            
+              <img src="deepseek_deepseek-v4-pro_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Scenario 1: Math in Lists with Formatting
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+## Scenario 2: Tables with Math
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+## Scenario 3: Code and Math Mixed
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+```
+
+The mathematical formula is $A = \pi r^2$ where $r$ is the radius.
+
+## Scenario 4: Horizontal Rules
+First section
+
+---
+
+Second section with math: $\int_{0}^{1} x dx = \frac{1}{2}$
+
+---
+
+Third section
+
+## Scenario 5: Multiple Dollar Signs
+Prices: Computer costs \$1,200, mo...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="deepseek/deepseek-v4-pro"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Google: Gemini 2.5 Flash <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-2.5-flash<br>
+              Attempt: original · google_gemini-2.5-flash_05-complex-scenarios.json<br>
+              Tokens: 872 (447 in / 425 out)<br>
+              Cost: $0.001197<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 8:53:28 PM
+            </div>
+            
+            
+              <img src="google_gemini-2.5-flash_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Scenario 1: Math in Lists with Formatting
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+## Scenario 2: Tables with Math
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+## Scenario 3: Code and Math Mixed
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+```
+
+The mathematical formula is $A = \pi r^2$ where $r$ is the radius.
+
+## Scenario 4: Horizontal Rules
+First section
+
+---
+
+Second section with math: $\int_{0}^{1} x dx = \frac{1}{2}$
+
+---
+
+Third section
+
+## Scenario 5: Multiple Dollar Signs
+Prices: Computer costs $1,200, mon...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-2.5-flash"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-4o-mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-4o-mini<br>
+              Attempt: original · openai_gpt-4o-mini_05-complex-scenarios.json<br>
+              Tokens: 1389 (429 in / 960 out)<br>
+              Cost: $0.000640<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:48:36 PM
+            </div>
+            
+            
+              <img src="openai_gpt-4o-mini_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Certainly! Let&#039;s examine each scenario in detail, introducing edge cases that add complexity or challenge.
+
+## Scenario 1: Math in Lists with Formatting
+1. The **Pythagorean theorem** is expressed as \( a^2 + b^2 = c^2 \).
+2. For a *right triangle* with sides \( a = 3 \) and \( b = 4 \):
+   - Calculate \( c \):
+     - \( c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5 \)
+   - Therefore, \( c = 5 \) units.
+3. **Edge Case**: What if \( a \) or \( b \) were negative? Since the sides represent lengths, this would be invalid in our context. Instead, if \( a = -3 \) and \( b = 4 \) (which practically doesn’t make sense), the theorem would still yield \( c = 5 \) by working with absolute values: \( c = \sqrt{|-3|^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5 \).
+
+## Scenario 2: Tables with Math
+| Formula                  | LaTeX                              | Result                                          |
+|-------------------------|------------------------------------|---------------------...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-4o-mini"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>06-edge-cases-boundaries</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Sonnet 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-sonnet-4.6<br>
+              Attempt: original · anthropic_claude-sonnet-4.6_06-edge-cases-boundaries.json<br>
+              Tokens: 738 (376 in / 362 out)<br>
+              Cost: $0.006558<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:54:10 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-sonnet-4.6_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Test Response: Edge Cases and Boundaries
+
+## Delimiter Variants
+
+1. Double dollar display: $$x^2 + y^2 = r^2$$
+2. Bracket display: \[E = mc^2\]
+3. Single dollar inline: $a + b = c$
+4. Paren inline: \(x = 5\)
+
+## Nested Structures
+
+1. Display math in a list with continuation:
+   - First item
+   - The equation is:
+     $$\int_0^1 x\, dx = \frac{1}{2}$$
+     And it evaluates to 0.5
+   - Third item
+
+## Code with Math-like Syntax
+
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+## Currency and Escaped Dollars
+
+- Plain: The price is $100
+- Escaped: The budget is \$500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+## Tables with Math
+
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+
+## Raw Dollar Signs
+
+The shell variable $HOME is set. Price: $99.99.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-sonnet-4.6"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>DeepSeek: DeepSeek V4 Pro 0423 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: deepseek/deepseek-v4-pro<br>
+              Attempt: original · deepseek_deepseek-v4-pro_06-edge-cases-boundaries.json<br>
+              Tokens: 2836 (334 in / 2502 out)<br>
+              Cost: $0.004054<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:53:18 PM
+            </div>
+            
+            
+              <img src="deepseek_deepseek-v4-pro_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here’s a demonstration of how I process the delimiter variants and edge cases you provided, ensuring correct rendering and no unintended interpretation.
+
+**Delimiter Variants**  
+1. Double dollar display: $$x^2 + y^2 = r^2$$  
+2. Bracket display: \[E = mc^2\]  
+3. Single dollar inline: $a + b = c$  
+4. Paren inline: \(x = 5\)
+
+All four are correctly recognised: the first two as display math, the last two as inline math.
+
+**Nested Structures**  
+- First item  
+- The equation is:  
+  $$\int_0^1 x dx = \frac{1}{2}$$  
+  And it evaluates to 0.5  
+- Third item  
+
+The integral stays inside the list item, and the plain text “And it evaluates to 0.5” continues the same list item without being swallowed by the math.
+
+**Code with Math-like Syntax**  
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+Inside a fenced code block, nothing is treated as math. Dollar signs, carets, and backslashes are all literal.
+
+**Cur...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="deepseek/deepseek-v4-pro"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Google: Gemini 2.5 Flash <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-2.5-flash<br>
+              Attempt: original · google_gemini-2.5-flash_06-edge-cases-boundaries.json<br>
+              Tokens: 721 (358 in / 363 out)<br>
+              Cost: $0.001015<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 8:53:30 PM
+            </div>
+            
+            
+              <img src="google_gemini-2.5-flash_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here&#039;s a response demonstrating the handling of your specified delimiter variants, nested structures, code, currency, and raw dollar signs:
+
+## Delimiter Variants
+1. Double dollar display:
+   $$x^2 + y^2 = r^2$$
+2. Bracket display:
+   \[E = mc^2\]
+3. Single dollar inline: $a + b = c$
+4. Paren inline: \(x = 5\)
+
+## Nested Structures
+1. Display math in a list with continuation:
+   - First item
+   - The equation is:
+     $$\int_0^1 x dx = \frac{1}{2}$$
+     And it evaluates to 0.5
+   - Third item
+
+## Code with Math-like Syntax
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+## Currency and Escaped Dollars
+- Plain: The price is $100
+- Escaped: The budget is $500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+## Tables with Math
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+
+## R...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-2.5-flash"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-4o-mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-4o-mini<br>
+              Attempt: original · openai_gpt-4o-mini_06-edge-cases-boundaries.json<br>
+              Tokens: 774 (343 in / 431 out)<br>
+              Cost: $0.000310<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 8:48:44 PM
+            </div>
+            
+            
+              <img src="openai_gpt-4o-mini_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here’s a structured response that tests various delimiter variants, nested structures, code with math-like syntax, currency demonstrations, tables incorporating math equations, and instances of raw dollar signs.
+
+## Delimiter Variants
+
+1. **Double dollar display:**
+   The equation of a circle can be represented as: 
+   $$
+   x^2 + y^2 = r^2
+   $$
+
+2. **Bracket display:**
+   Einstein&#039;s famous equation is given by:
+   \[
+   E = mc^2
+   \]
+
+3. **Single dollar inline:**
+   In a simple addition operation, we have $a + b = c$.
+
+4. **Paren inline:**
+   To find the value of \(x\), we solve the equation and determine \(x = 5\).
+
+## Nested Structures
+
+1. **Display math in a list with continuation:**
+   - First item
+   - The equation is:
+     $$
+     \int_0^1 x \, dx = \frac{1}{2}
+     $$
+     And it evaluates to 0.5.
+   - Third item
+
+## Code with Math-like Syntax
+
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-4o-mini"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+  
+  <script>
+    function exportFeedback() {
+      const feedback = {};
+      document.querySelectorAll('textarea[data-feedback-model]').forEach(textarea => {
+        const modelId = textarea.dataset.feedbackModel;
+        const promptName = textarea.dataset.feedbackPrompt;
+        const value = textarea.value.trim();
+        
+        if (value) {
+          if (!feedback[modelId]) {
+            feedback[modelId] = {};
+          }
+          feedback[modelId][promptName] = value;
+        }
+      });
+      
+      const json = JSON.stringify(feedback, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rendering-feedback-2026-11-08-21.json';
+      a.click();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "id": "gen-1794171223-3FQ8tLM2k5ij8G2jpPOC",
+  "object": "chat.completion",
+  "created": 1794171223,
+  "model": "anthropic/claude-sonnet-4.6",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Code Block Test Response\n\n## Python code\n\nHere's the quadratic formula implementation:\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n**Expected output:** `Solutions: x = 3.0, x = 2.0`\n\n---\n\n## JavaScript code\n\nA recursive Fibonacci implementation:\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n**Note:** This is a naive recursive approach with O(2ⁿ) time complexity. A memoized version would be more efficient.\n\n---\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nAdditional inline examples:\n- Use `n^2` to denote quadratic complexity\n- Access with `obj_key` or `obj_value`\n- The `$total` and `$discount` variables are placeholders\n- The expression `a_1 + a_2` is rendered as inline code\n\n---\n\n## Bonus: Mixed language block\n\n```bash\n# Run the Python script\npython3 quadratic.py\n\n# Install dependencies\nnpm install && node fibonacci.js\n```",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 277,
+    "completion_tokens": 445,
+    "total_tokens": 722,
+    "cost": 0.007506,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.007506,
+      "upstream_inference_prompt_cost": 0.000831,
+      "upstream_inference_completions_cost": 0.006675
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

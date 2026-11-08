@@ -1,0 +1,414 @@
+{
+  "status": "completed",
+  "stopReason": null,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.0852484909,
+  "unknownCostCalls": 0,
+  "perModelCost": {
+    "openai/gpt-4o-mini": 0.0018006,
+    "deepseek/deepseek-v4-pro": 0.0256180909,
+    "google/gemini-2.5-flash": 0.0069648,
+    "anthropic/claude-sonnet-4.6": 0.050865
+  },
+  "promptTokens": 7669,
+  "completionTokens": 24692,
+  "reasoningTokensIncludedInCompletion": 15011,
+  "errors": [],
+  "truncated": [],
+  "visibleEmpty": [],
+  "finishReasons": {
+    "stop": 24
+  },
+  "firstCallCST": "2026-11-08T14:47:57.825000-06:00 CST",
+  "lastCallCST": "2026-11-08T14:54:10.412000-06:00 CST",
+  "cumulativeKnownUsd": 3.2465020956,
+  "priorUnknownCharges": 2,
+  "coverage": "Collection only; no new rendering passes",
+  "requestTimeoutSeconds": 600,
+  "dynamicGuardEvidence": [
+    {
+      "modelId": "openai/gpt-4o-mini",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.0016878750000000001,
+      "reserveRates": {
+        "usd": 0.0016878750000000001,
+        "inputRate": 1.5e-07,
+        "outputRate": 6e-07,
+        "inputByteAllowance": 810,
+        "completionCap": 2048
+      },
+      "observedRateAfterResponse": {
+        "input": 1.5e-07,
+        "output": 6e-07
+      }
+    },
+    {
+      "modelId": "openai/gpt-4o-mini",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.0016575,
+      "reserveRates": {
+        "usd": 0.0016575,
+        "inputRate": 1.5e-07,
+        "outputRate": 6e-07,
+        "inputByteAllowance": 648,
+        "completionCap": 2048
+      },
+      "observedRateAfterResponse": {
+        "input": 1.5e-07,
+        "output": 6e-07
+      }
+    },
+    {
+      "modelId": "openai/gpt-4o-mini",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.0016740000000000001,
+      "reserveRates": {
+        "usd": 0.0016740000000000001,
+        "inputRate": 1.5e-07,
+        "outputRate": 6e-07,
+        "inputByteAllowance": 736,
+        "completionCap": 2048
+      },
+      "observedRateAfterResponse": {
+        "input": 1.5e-07,
+        "output": 6e-07
+      }
+    },
+    {
+      "modelId": "openai/gpt-4o-mini",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.0017109375,
+      "reserveRates": {
+        "usd": 0.0017109375,
+        "inputRate": 1.5e-07,
+        "outputRate": 6e-07,
+        "inputByteAllowance": 933,
+        "completionCap": 2048
+      },
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-07,
+        "output": 6e-07
+      }
+    },
+    {
+      "modelId": "openai/gpt-4o-mini",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.0017660625,
+      "reserveRates": {
+        "usd": 0.0017660625,
+        "inputRate": 1.5000000000000002e-07,
+        "outputRate": 6e-07,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048
+      },
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-07,
+        "output": 6e-07
+      }
+    },
+    {
+      "modelId": "openai/gpt-4o-mini",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.0017339999999999999,
+      "reserveRates": {
+        "usd": 0.0017339999999999999,
+        "inputRate": 1.5000000000000002e-07,
+        "outputRate": 6e-07,
+        "inputByteAllowance": 1056,
+        "completionCap": 2048
+      },
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-07,
+        "output": 6e-07
+      }
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.004487634,
+      "reserveRates": {
+        "usd": 0.004487634,
+        "inputRate": 2.088e-07,
+        "outputRate": 4.176e-07,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-06,
+        "output": 1.5e-06
+      }
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.01617,
+      "reserveRates": {
+        "usd": 0.01617,
+        "inputRate": 1e-06,
+        "outputRate": 1.5e-06,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-06,
+        "output": 1.5e-06
+      }
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.016280000000000003,
+      "reserveRates": {
+        "usd": 0.016280000000000003,
+        "inputRate": 1e-06,
+        "outputRate": 1.5e-06,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-06,
+        "output": 1.5e-06
+      }
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.01652625,
+      "reserveRates": {
+        "usd": 0.01652625,
+        "inputRate": 1e-06,
+        "outputRate": 1.5e-06,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-06,
+        "output": 1.5e-06
+      }
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.016893750000000003,
+      "reserveRates": {
+        "usd": 0.016893750000000003,
+        "inputRate": 1e-06,
+        "outputRate": 1.5e-06,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-06,
+        "output": 1.5e-06
+      }
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.01668,
+      "reserveRates": {
+        "usd": 0.01668,
+        "inputRate": 1e-06,
+        "outputRate": 1.5e-06,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 1e-06,
+        "output": 1.5e-06
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-flash",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.025903750000000003,
+      "reserveRates": {
+        "usd": 0.025903750000000003,
+        "inputRate": 3e-07,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3e-07,
+        "output": 2.4999999999999998e-06
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-flash",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.025843000000000005,
+      "reserveRates": {
+        "usd": 0.025843000000000005,
+        "inputRate": 3e-07,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3e-07,
+        "output": 2.4999999999999998e-06
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-flash",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.025876000000000003,
+      "reserveRates": {
+        "usd": 0.025876000000000003,
+        "inputRate": 3e-07,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3e-07,
+        "output": 2.5e-06
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-flash",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.025949875,
+      "reserveRates": {
+        "usd": 0.025949875,
+        "inputRate": 3e-07,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3e-07,
+        "output": 2.5e-06
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-flash",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.026060125000000003,
+      "reserveRates": {
+        "usd": 0.026060125000000003,
+        "inputRate": 3e-07,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3.0000000000000004e-07,
+        "output": 2.5e-06
+      }
+    },
+    {
+      "modelId": "google/gemini-2.5-flash",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.025996000000000002,
+      "reserveRates": {
+        "usd": 0.025996000000000002,
+        "inputRate": 3.0000000000000004e-07,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3.0000000000000004e-07,
+        "output": 2.5e-06
+      }
+    },
+    {
+      "modelId": "anthropic/claude-sonnet-4.6",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.1566375,
+      "reserveRates": {
+        "usd": 0.1566375,
+        "inputRate": 3e-06,
+        "outputRate": 1.5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 2.9999999999999997e-06,
+        "output": 1.4999999999999999e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-sonnet-4.6",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.15603,
+      "reserveRates": {
+        "usd": 0.15603,
+        "inputRate": 3e-06,
+        "outputRate": 1.5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3e-06,
+        "output": 1.5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-sonnet-4.6",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.15636,
+      "reserveRates": {
+        "usd": 0.15636,
+        "inputRate": 3e-06,
+        "outputRate": 1.5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3e-06,
+        "output": 1.5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-sonnet-4.6",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.15709875,
+      "reserveRates": {
+        "usd": 0.15709875,
+        "inputRate": 3e-06,
+        "outputRate": 1.5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3e-06,
+        "output": 1.5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-sonnet-4.6",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.15820125000000002,
+      "reserveRates": {
+        "usd": 0.15820125000000002,
+        "inputRate": 3e-06,
+        "outputRate": 1.5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3e-06,
+        "output": 1.5e-05
+      }
+    },
+    {
+      "modelId": "anthropic/claude-sonnet-4.6",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.15755999999999998,
+      "reserveRates": {
+        "usd": 0.15755999999999998,
+        "inputRate": 3e-06,
+        "outputRate": 1.5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 3e-06,
+        "output": 1.5e-05
+      }
+    }
+  ]
+}

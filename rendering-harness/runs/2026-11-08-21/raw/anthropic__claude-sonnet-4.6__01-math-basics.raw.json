@@ -1,0 +1,46 @@
+{
+  "id": "gen-1794171210-3g33W4nwop2GhLEufXOp",
+  "object": "chat.completion",
+  "created": 1794171210,
+  "model": "anthropic/claude-sonnet-4.6",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Math Basics Demonstration\n\n## 1. The Quadratic Formula\n\nFor any quadratic equation of the form $ax^2 + bx + c = 0$, the solutions are given by $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. The term $b^2 - 4ac$ is called the **discriminant** — when it's positive you get two real roots, zero gives one repeated root, and negative yields complex roots.\n\n---\n\n## 2. Solving a System of Equations\n\nWe can solve the following system by elimination:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding both equations eliminates $y$, giving $3x = 6$, so $x = 2$ and $y = 3$.\n\n---\n\n## 3. Matrices and Piecewise Functions\n\nThe identity matrix and a piecewise function are shown below:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad f(x) = \\begin{cases} x^2 & \\text{if } x \\geq 0 \\\\ -x & \\text{if } x < 0 \\end{cases}$$\n\nMultiplying any matrix $A$ by $I$ leaves it unchanged: $AI = IA = A$.\n\n---\n\n## 4. Fundamental Physics & Geometry\n\nThree of the most iconic equations in science and mathematics:\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nThese represent mass-energy equivalence, Newton's second law, and the Pythagorean theorem, respectively.\n\n---\n\n## 5. Further Reading\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula, including its historical derivation and geometric interpretation.\n\n---\n\n## 6. Pricing (Plain Currency — No Math Rendering)\n\nThe item costs $5 and the shipping is $10, for a total of $15. The overall budget is \\$1000 (escaped dollar sign).\n\n> **Note:** Dollar signs used for currency in prose context should **not** trigger math rendering, while isolated or paired `$...$` delimiters around expressions should.",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 319,
+    "completion_tokens": 566,
+    "total_tokens": 885,
+    "cost": 0.009447,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.009447,
+      "upstream_inference_prompt_cost": 0.000957,
+      "upstream_inference_completions_cost": 0.00849
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

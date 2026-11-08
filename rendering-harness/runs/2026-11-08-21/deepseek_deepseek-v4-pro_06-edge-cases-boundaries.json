@@ -1,0 +1,36 @@
+{
+  "modelId": "deepseek/deepseek-v4-pro",
+  "modelName": "DeepSeek: DeepSeek V4 Pro 0423",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here’s a demonstration of how I process the delimiter variants and edge cases you provided, ensuring correct rendering and no unintended interpretation.\n\n**Delimiter Variants**  \n1. Double dollar display: $$x^2 + y^2 = r^2$$  \n2. Bracket display: \\[E = mc^2\\]  \n3. Single dollar inline: $a + b = c$  \n4. Paren inline: \\(x = 5\\)\n\nAll four are correctly recognised: the first two as display math, the last two as inline math.\n\n**Nested Structures**  \n- First item  \n- The equation is:  \n  $$\\int_0^1 x dx = \\frac{1}{2}$$  \n  And it evaluates to 0.5  \n- Third item  \n\nThe integral stays inside the list item, and the plain text “And it evaluates to 0.5” continues the same list item without being swallowed by the math.\n\n**Code with Math-like Syntax**  \n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\nInside a fenced code block, nothing is treated as math. Dollar signs, carets, and backslashes are all literal.\n\n**Currency and Escaped Dollars**  \n- Plain: The price is $100 – no math because there’s no valid closing delimiter.  \n- Escaped: The budget is \\$500 – the backslash ensures a literal dollar sign.  \n- Multiple: Costs $25, $30, and $45 – again, plain text.  \n- In sentence: I spent $50 at the store – plain text.\n\n**Tables with Math**  \n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\nThe formulas are rendered as inline math inside the table cells; the numbers ($78.54$, $523.60$) are also treated as inline math because they are valid LaTeX expressions (just numbers). If you wanted them as plain text, you’d escape the dollar signs.\n\n**Raw Dollar Signs**  \nThe shell variable $HOME is set. Price: $99.99.  \nThese remain plain text: no opening/closing pair is found for inline math, and the pattern doesn’t match display math delimiters.\n\nEverything stays in its appropriate lane—math stays math, code stays code, and literal dollar signs are not misinterpreted.",
+  "usage": {
+    "prompt_tokens": 334,
+    "completion_tokens": 2502,
+    "total_tokens": 2836,
+    "cost": 0.0040536,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0040536,
+      "upstream_inference_prompt_cost": 0.0003006,
+      "upstream_inference_completions_cost": 0.003753
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2243,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0040536,
+  "actualCost": 0.0040536,
+  "timestamp": "2026-11-08T20:53:18.122Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}
