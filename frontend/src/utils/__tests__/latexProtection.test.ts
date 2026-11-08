@@ -47,6 +47,12 @@ describe('protectCurrencyDollars', () => {
   it('ignores $$ display delimiters', () => {
     expect(protectCurrencyDollars('$$x$$ costs $5')).toBe(`$$x$$ costs ${L}5`)
   })
+
+  it('does not pair $HOME with a later currency $', () => {
+    expect(protectCurrencyDollars('The shell variable $HOME is set. Price: $99.99.')).toBe(
+      `The shell variable ${L}HOME is set. Price: ${L}99.99.`
+    )
+  })
 })
 
 describe('escaped dollars', () => {

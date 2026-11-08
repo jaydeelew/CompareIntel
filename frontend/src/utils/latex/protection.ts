@@ -79,8 +79,7 @@ function protectSegmentDollars(segment: string): string {
       literal.add(open)
       break
     }
-    const opensWithDigit = /\d/.test(segment.charAt(open + 1))
-    if (opensWithDigit && !isValidCurrencyLikeMathSpan(segment, open, close)) {
+    if (!isValidCurrencyLikeMathSpan(segment, open, close)) {
       literal.add(open)
       k += 1
       continue

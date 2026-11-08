@@ -300,6 +300,30 @@ describe('bug 10: Unicode × in prose stays literal', () => {
   })
 })
 
+describe('bug 12: $HOME must not pair with a later currency dollar', () => {
+  it.each(['anthropic/claude-haiku-5.5', 'google/gemma-3-27b-it', 'qwen/qwen3-coder-flash'])(
+    'keeps "$HOME ... $99.99" as prose (%s)',
+    modelId => {
+      const el = renderReply('The shell variable $HOME is set. Price: $99.99.', modelId)
+      expect(el.querySelector('.katex')).toBeNull()
+      expect(visibleText(el)).toBe('The shell variable $HOME is set. Price: $99.99.')
+    }
+  )
+})
+
+describe('bug 13: \\[...\\] display math is recognized even when a JSON config omitted it', () => {
+  it.each(['anthropic/claude-haiku-5.5', 'google/gemma-3-27b-it', 'qwen/qwen3-coder-flash'])(
+    'renders same-line bracket display math (%s)',
+    modelId => {
+      const el = renderReply('2. **Bracket display:** \\[E = mc^2\\]', modelId)
+      expectNoKatexErrors(el)
+      expect(el.querySelector('.katex-display')).not.toBeNull()
+      expect(texSources(el.querySelector('.katex-display')!)).toEqual(['E = mc^2'])
+      expect(el.innerHTML).not.toContain('\\[E = mc^2\\]')
+    }
+  )
+})
+
 describe('bug 11: display math at a bullet’s indent stays inside the list', () => {
   const reply =
     '## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that for any right triangle, the relationship between the lengths of the sides is given by the formula:\n   \\[\n   a^2 + b^2 = c^2\n   \\]\n2. Let’s consider a *right triangle* with side lengths \\(a = 3\\) and \\(b = 4\\):\n   - To find the hypotenuse \\(c\\):\n   \\[\n   c = \\sqrt{a^2 + b^2} = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\n   \\]\n   - Therefore, the length of the hypotenuse \\(c\\) is \\(5\\) units.\n\n## Scenario 2: Tables with Math'
