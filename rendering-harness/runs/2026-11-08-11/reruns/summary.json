@@ -1,0 +1,60 @@
+{
+  "status": "stopped",
+  "attemptedCalls": 2,
+  "actualCost": 0.02212727,
+  "unknownCosts": 1,
+  "promptTokens": 268,
+  "completionTokens": 8758,
+  "reasoningTokensIncludedInCompletion": 8494,
+  "firstCallCST": "11/8/2026, 1:39:00 PM CST",
+  "lastCallCST": "11/8/2026, 1:43:45 PM CST",
+  "truncated": [],
+  "coverage": "Unassessed; no rendering",
+  "visibleEmptySuccessful": [],
+  "unattempted": [
+    {
+      "modelId": "z-ai/glm-5.2",
+      "promptName": "01-math-basics",
+      "reason": "Prior request timeout stopped batch"
+    }
+  ],
+  "perCall": [
+    {
+      "id": "tencent/hy4-preview",
+      "prompt": "01-math-basics",
+      "cost": 0.02212727,
+      "finish": "stop",
+      "error": null,
+      "completion": 8758,
+      "reasoning": 8494,
+      "visibleChars": 797
+    },
+    {
+      "id": "tencent/hy4-preview",
+      "prompt": "06-edge-cases-boundaries",
+      "cost": null,
+      "finish": null,
+      "error": "The operation was aborted due to timeout",
+      "completion": null,
+      "reasoning": null,
+      "visibleChars": null
+    }
+  ],
+  "errors": [
+    {
+      "modelId": "tencent/hy4-preview",
+      "promptName": "06-edge-cases-boundaries",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-11/replies/tencent_hy4-preview_06-edge-cases-boundaries.json",
+      "originalFinishReason": "length",
+      "requestOutputLimit": 32768,
+      "requestOutputLimitField": "max_tokens",
+      "promptSha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51",
+      "reserveUsd": 0.10354184000000001,
+      "startedAt": "2026-11-08T19:40:44.995Z",
+      "actualCost": null,
+      "error": "The operation was aborted due to timeout",
+      "finishedAt": "2026-11-08T19:43:45.003Z"
+    }
+  ],
+  "noRawResponseForTimedOutAttempt": true
+}

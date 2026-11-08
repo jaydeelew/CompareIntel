@@ -137,22 +137,22 @@
     <p><strong>Run Date:</strong> 2026-11-08-11</p>
     <p><strong>Models Tested:</strong> 4</p>
     <p><strong>Prompts:</strong> 6</p>
-    <p><strong>API history records:</strong> 24
+    <p><strong>API history records:</strong> 26
        &nbsp;<strong>Unique coverage cells:</strong> 24</p>
     <p><strong>History:</strong>
-       Passed 21
+       Passed 23
        / Not covered 0
        / Truncated 0
        / Incomplete 3
        / Failed 0</p>
     <p><strong>Unique coverage:</strong>
-       Passed 21
+       Passed 23
        / Not covered 0
        / Truncated 0
-       / Incomplete 3
+       / Incomplete 1
        / Failed 0
        (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
-    <p><strong>Cumulative actual cost (all records):</strong> $0.211381</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $0.236670</p>
     <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
   </div>
   
@@ -349,6 +349,175 @@ The item costs $5 and the shipping is $10, for a total of $15. Budget: \$1000.</
             
             
               <div class="error">No visible assistant text (completion tokens were reasoning-only or truncated before content). Incomplete — not a renderer failure.</div>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.2"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Tencent: Hy4 preview <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-32768</span></h4>
+            <div class="meta">
+              Model ID: tencent/hy4-preview<br>
+              Attempt: rerun-32768 · tencent_hy4-preview_01-math-basics.json<br>
+              Tokens: 9026 (268 in / 8758 out)<br>
+              Cost: $0.022127<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:40:44 PM
+            </div>
+            
+            
+              <img src="reruns/tencent_hy4-preview_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">1. **Inline math**
+
+The quadratic formula $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ gives the solutions to the equation $ax^2 + bx + c = 0$.
+
+2. **Display math with aligned equations**
+
+$$
+\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}
+$$
+
+3. **Matrices and cases**
+
+$$
+I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}
+$$
+
+4. **Multiple equations**
+
+$$
+E = mc^2
+$$
+
+$$
+F = ma
+$$
+
+$$
+a^2 + b^2 = c^2
+$$
+
+5. **Links**
+
+See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.
+
+6. **Money context (escaped dollar signs, so this does NOT render as math)**
+
+The item costs \$5 and the shipping is \$10, for a total of \$15. Budget: \$1000 (escaped dollar).</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="tencent/hy4-preview"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.2 <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-16384</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.2<br>
+              Attempt: rerun-16384 · z-ai_glm-5.2_01-math-basics.json<br>
+              Tokens: 1514 (279 in / 1235 out)<br>
+              Cost: $0.003162<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:45:50 PM
+            </div>
+            
+            
+              <img src="reruns/z-ai_glm-5.2_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is a response demonstrating the requested math and formatting basics:
+
+### 1. Inline Math
+To find the roots of a quadratic equation $ax^2 + bx + c = 0$, we use the quadratic formula $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$. The term inside the square root, $b^2 - 4ac$, is called the discriminant, and it tells us how many real roots the equation has.
+
+### 2. Display Math with Aligned Equations
+Consider the following system of linear equations:
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+By adding the two equations together, we can easily solve for $x$ and $y$, yielding the solution $x = 2$ and $y = 3$.
+
+### 3. Matrices and Cases
+In linear algebra and piecewise functions, we often use matrices and cases to define structures and conditions. Here are examples of both:
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}$$
+
+### 4. Multiple Equations
+Here are a few of the most famous for...</div>
+              </details>
             
             
             <div class="feedback">

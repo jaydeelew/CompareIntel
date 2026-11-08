@@ -61,9 +61,9 @@
   ],
   "modelCount": 44,
   "statusCounts": {
-    "pass": 248,
+    "pass": 250,
     "not-covered": 9,
-    "incomplete": 4
+    "incomplete": 2
   },
   "recoveredBatch08_32x6": {
     "uniqueCells": 192,
@@ -75,8 +75,8 @@
     "models": 32,
     "source": "rendering-harness/runs/2026-11-08-08/unique-32x6-rollup.json"
   },
-  "cumulativeKnownPaidAllBatches": 0.5823470335,
-  "unknownFailedCharges": 1,
+  "cumulativeKnownPaidAllBatches": 0.6076359835,
+  "unknownFailedCharges": 2,
   "batch08": {
     "originalCalls": 24,
     "originalCost": 0.10367572,
@@ -154,14 +154,14 @@
   "batch11": {
     "originalCalls": 24,
     "originalCost": 0.211380929,
-    "windowCST": "11/8/2026, 1:27:53 PM \u2013 1:37:17 PM CST",
+    "windowCST": "11/8/2026, 1:27:53 PM \u2013 1:45:50 PM CST (original + Tencent 01 rerun + GLM 01 rerun; Tencent 06 timeout 1:40:44\u20131:43:45)",
     "unique": {
-      "pass": 21,
-      "incomplete": 3,
+      "pass": 23,
+      "incomplete": 1,
       "not-covered": 0,
       "fail": 0
     },
-    "historyRecords": 24,
+    "historyRecords": 26,
     "truncated": [
       "tencent/hy4-preview 01-math-basics",
       "tencent/hy4-preview 06-edge-cases-boundaries"
@@ -180,11 +180,11 @@
     "skippedEmptyRenders": 3,
     "fullModels": [
       "openai/gpt-5.1-codex-mini",
-      "google/gemini-3.1-pro-preview"
+      "google/gemini-3.1-pro-preview",
+      "z-ai/glm-5.2"
     ],
     "partialModels": [
-      "tencent/hy4-preview",
-      "z-ai/glm-5.2"
+      "tencent/hy4-preview"
     ],
     "uniqueCoverageConcluded": false,
     "largerAllowanceRerunPending": [
@@ -210,15 +210,53 @@
         "visibleChars": 0
       }
     ],
-    "note": "Do not paid-retry from this agent. Box preparing larger-allowance rerun preflight."
+    "note": "Empty originals preserved. Overlay only complete Tencent 01 and GLM 5.2 01. Tencent 06 remains incomplete. No paid retry.",
+    "rerunKnownCost": 0.02528895,
+    "rerunUnknownCostCalls": 1,
+    "truncatedOriginalsPreserved": [
+      "tencent/hy4-preview 01-math-basics",
+      "tencent/hy4-preview 06-edge-cases-boundaries"
+    ],
+    "visibleEmptyOriginalsPreserved": [
+      "tencent/hy4-preview 01-math-basics",
+      "tencent/hy4-preview 06-edge-cases-boundaries",
+      "z-ai/glm-5.2 01-math-basics"
+    ],
+    "overlays": [
+      {
+        "modelId": "tencent/hy4-preview",
+        "promptName": "01-math-basics",
+        "attempt": "rerun-32768",
+        "status": "pass",
+        "visibleChars": 797,
+        "cost": 0.02212727
+      },
+      {
+        "modelId": "z-ai/glm-5.2",
+        "promptName": "01-math-basics",
+        "attempt": "rerun-16384",
+        "status": "pass",
+        "visibleChars": 1564,
+        "cost": 0.00316168
+      }
+    ],
+    "stillIncomplete": [
+      {
+        "modelId": "tencent/hy4-preview",
+        "promptName": "06-edge-cases-boundaries",
+        "original": "length+empty 8192 reasoning",
+        "rerun": "local_transport_timeout 180s; no generationId/usage/cost; no retry"
+      }
+    ],
+    "screenshotsOriginal": 21,
+    "screenshotsRerun": 2
   },
-  "completeCollections": 41,
+  "completeCollections": 42,
   "partialModels": [
     "x-ai/grok-4.3",
-    "tencent/hy4-preview",
-    "z-ai/glm-5.2"
+    "tencent/hy4-preview"
   ],
-  "note": "One cell per (modelId, promptName). Not a single paid 44-model suite and not a complete 44\u00d76 grid (would be 264; have 261). Recovered Batch 08 unique 32\u00d76 is 183 pass / 9 not-covered / 0 fail. Batch 09 not concluded: Grok 03 incomplete, Grok 04\u201306 unattempted; no Grok retry. Batch 11: 21 stop nonempty rendered pass; 3 empty-visible incomplete (Tencent 01/06 length+empty, GLM 5.2 01 empty despite stop); skip render, not pass, not renderer-fail. Original JSON hashes 0 mismatch. 41 complete collections + partial Grok/Tencent/GLM 5.2.",
+  "note": "One cell per (modelId, promptName). Not a single paid 44-model suite and not a complete 44\u00d76 grid (would be 264; have 261). Recovered Batch 08 unique 32\u00d76 is 183 pass / 9 not-covered / 0 fail. Batch 09 not concluded: Grok 03 incomplete, Grok 04\u201306 unattempted; no Grok retry. Batch 11 unique after reruns: 23 pass / 1 incomplete (Tencent 06 empty+length; timeout has no generation). Tencent 01 rerun-32768 and GLM 5.2 01 rerun-16384 overlay empty originals. Original JSON hashes 0 mismatch. 42 complete collections + partial Grok/Tencent HY4.",
   "cells": [
     {
       "batch": "2026-11-08-08",
@@ -2792,12 +2830,13 @@
       "batch": "2026-11-08-11",
       "modelId": "tencent/hy4-preview",
       "promptName": "01-math-basics",
-      "validationStatus": "incomplete",
-      "attempt": "original",
+      "validationStatus": "pass",
+      "attempt": "rerun-32768",
       "sourceFile": "tencent_hy4-preview_01-math-basics.json",
-      "truncated": true,
-      "finishReason": "length",
-      "actualCost": 0.020711704,
+      "screenshotRelpath": "reruns/tencent_hy4-preview_01-math-basics.png",
+      "truncated": false,
+      "finishReason": "stop",
+      "actualCost": 0.02212727,
       "provenance": "uniqueCoverage overlay; complete later attempt replaces truncated/empty; originals stay in batch history"
     },
     {
@@ -3283,12 +3322,13 @@
       "batch": "2026-11-08-11",
       "modelId": "z-ai/glm-5.2",
       "promptName": "01-math-basics",
-      "validationStatus": "incomplete",
-      "attempt": "original",
+      "validationStatus": "pass",
+      "attempt": "rerun-16384",
       "sourceFile": "z-ai_glm-5.2_01-math-basics.json",
+      "screenshotRelpath": "reruns/z-ai_glm-5.2_01-math-basics.png",
       "truncated": false,
       "finishReason": "stop",
-      "actualCost": 0.001288329,
+      "actualCost": 0.00316168,
       "provenance": "uniqueCoverage overlay; complete later attempt replaces truncated/empty; originals stay in batch history"
     },
     {
