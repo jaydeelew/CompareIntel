@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3.1-pro-preview",
+  "modelName": "Google: Gemini 3.1 Pro Preview",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here is a complete test response containing all the requested delimiter variants, edge cases, and nested structures to evaluate your Markdown and MathJax/KaTeX rendering engine. \n\n### 1. Delimiter Variants\n\n**Display Math (Double Dollar):**\nThe equation for a circle is:\n$$x^2 + y^2 = r^2$$\n\n**Display Math (Brackets):**\nThe mass-energy equivalence formula is:\n\\[E = mc^2\\]\n\n**Inline Math:**\nUsing single dollars: Let $a + b = c$ be our first assumption.\nUsing parentheses: Let \\(x = 5\\) be our second assumption.\n\n---\n\n### 2. Nested Structures\n\n1. Display math in a list with continuation:\n   - First item in the nested list.\n   - The equation is:\n     \n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     \n     And it evaluates to 0.5. (This text should align with the bullet point above).\n   - Third item in the nested list.\n\n---\n\n### 3. Code with Math-like Syntax\n\nThe following block tests if your parser incorrectly identifies dollars or exponents inside code blocks as math delimiters. It should render purely as monospaced code.\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n---\n\n### 4. Currency and Escaped Dollars\n\nThese should render as standard text without triggering inline math mode:\n- **Plain:** The price is $100 and the tax is $5.\n- **Escaped:** The budget is \\$500.\n- **Multiple in one line:** The items cost $25, $30, and $45 respectively.\n- **In sentence:** I spent $50 at the store yesterday.\n\n---\n\n### 5. Tables with Math\n\nTable cells testing inline math rendering boundaries:\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n---\n\n### 6. Raw Dollar Signs\n\nThese are common programming and everyday text edge cases:\nThe shell variable $HOME is set to `/users/admin`. \nThe product's final Price: $99.99. \nCan you lend me $10? I'll pay you back $15.",
+  "usage": {
+    "prompt_tokens": 357,
+    "completion_tokens": 1573,
+    "total_tokens": 1930,
+    "cost": 0.01959,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01959,
+      "upstream_inference_prompt_cost": 0.000714,
+      "upstream_inference_completions_cost": 0.018876
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 994,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.01959,
+  "actualCost": 0.01959,
+  "timestamp": "2026-11-08T19:37:17.814Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794166529-M5kp2gBetlwBviB0KCsS",
+  "object": "chat.completion",
+  "created": 1794166529,
+  "model": "z-ai/glm-5.2",
+  "provider": "CoreWeave",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "Here is the processed response handling the various delimiter variants and edge cases, maintaining proper Markdown rendering for math, code, text, and tables:\n\n## Delimiter Variants\n1. Double dollar display:\n   $$x^2 + y^2 = r^2$$\n2. Bracket display:\n   \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "1.  **Analyze the Request:**\n    *   Input contains various math delimiters (`$$`, `\\[`, `$`, `\\(`), nested structures (math in lists), code with math-like syntax, currency/escaped dollars, tables with math, and raw dollar signs.\n    *   Goal: Generate a response that reflects/echoes or processes these edge cases and boundary conditions, showing how they should be handled (e.g., properly formatting them in Markdown without breaking anything).\n\n2.  **Formulate the Output:**\n    *   The prompt asks to \"Generate a response testing delimiter variants and edge cases\". I will reproduce the provided sections with correct markdown rendering and add some commentary/confirmation that the edge cases are preserved, or simply format it cleanly to demonstrate correct handling of each case.\n    *   Let's just echo the input but ensure all math renders beautifully, code blocks remain untouched, and text/tables are cleanly formatted.\n\n    *Section 1: Delimiter Variants*\n    $$x^2 + y^2 = r^2$$\n    \\[E = mc^2\\]\n    $a + b = c$\n    \\(x = 5\\)\n\n    *Section 2: Nested Structures*\n    - First item\n    - The equation is:\n      $$\\int_0^1 x dx = \\frac{1}{2}$$\n      And it evaluates to 0.5\n    - Third item\n\n    *Section 3: Code with Math-like Syntax*\n    (Keep as code block)\n\n    *Section 4: Currency and Escaped Dollars*\n    (Keep text as is)\n\n    *Section 5: Tables with Math*\n    (Render table properly)\n\n    *Section 6: Raw Dollar Signs*\n    (Keep text as is)\n\n3.  **Refining the response:**\n    I'll structure the response to explicitly acknowledge and display the parsed/rendered versions of these edge cases, demonstrating robustness.\n\n    *Drafting response:*\n    Here is the processed response handling the various delimiter variants and edge cases:\n\n    ## Delimiter Variants\n    1. Double dollar display:\n       $$x^2 + y^2 = r^2$$\n    2. Bracket display:\n       \\[E = mc^2\\]\n    3. Single dollar inline: $a + b = c$\n    4. Paren inline: \\(x = 5\\)\n\n    ## Nested Structures\n    1. Display math in a list with continuation:\n       - First item\n       - The equation is:\n         $$\\int_0^1 x dx = \\frac{1}{2}$$\n         And it evaluates to 0.5\n       - Third item\n\n    ## Code with Math-like Syntax\n    ```python\n    # This should stay as literal code\n    price = $50\n    formula = \"E = mc^2\"\n    result = a**2 + b**2\n    def calc(x):\n        return x**2\n    ```\n\n    ## Currency and Escaped Dollars\n    - Plain: The price is $100\n    - Escaped: The budget is \\$500\n    - Multiple: Costs $25, $30, and $45\n    - In sentence: I spent $50 at the store\n\n    ## Tables with Math\n    | Variable | Formula | Value |\n    |----------|---------|-------|\n    | Area | $A = \\pi r^2$ | $78.54$ |\n    | Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n    ## Raw Dollar Signs\n    The shell variable $HOME is set. Price: $99.99.\n\n    Wait, should I add Markdown tables and actual math rendering? The prompt just says \"Generate a response testing delimiter variants and edge cases\". I will output the formatted text, confirming that these edge cases are handled correctly.\n\n    Let's output exactly the rendered markdown.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "1.  **Analyze the Request:**\n    *   Input contains various math delimiters (`$$`, `\\[`, `$`, `\\(`), nested structures (math in lists), code with math-like syntax, currency/escaped dollars, tables with math, and raw dollar signs.\n    *   Goal: Generate a response that reflects/echoes or processes these edge cases and boundary conditions, showing how they should be handled (e.g., properly formatting them in Markdown without breaking anything).\n\n2.  **Formulate the Output:**\n    *   The prompt asks to \"Generate a response testing delimiter variants and edge cases\". I will reproduce the provided sections with correct markdown rendering and add some commentary/confirmation that the edge cases are preserved, or simply format it cleanly to demonstrate correct handling of each case.\n    *   Let's just echo the input but ensure all math renders beautifully, code blocks remain untouched, and text/tables are cleanly formatted.\n\n    *Section 1: Delimiter Variants*\n    $$x^2 + y^2 = r^2$$\n    \\[E = mc^2\\]\n    $a + b = c$\n    \\(x = 5\\)\n\n    *Section 2: Nested Structures*\n    - First item\n    - The equation is:\n      $$\\int_0^1 x dx = \\frac{1}{2}$$\n      And it evaluates to 0.5\n    - Third item\n\n    *Section 3: Code with Math-like Syntax*\n    (Keep as code block)\n\n    *Section 4: Currency and Escaped Dollars*\n    (Keep text as is)\n\n    *Section 5: Tables with Math*\n    (Render table properly)\n\n    *Section 6: Raw Dollar Signs*\n    (Keep text as is)\n\n3.  **Refining the response:**\n    I'll structure the response to explicitly acknowledge and display the parsed/rendered versions of these edge cases, demonstrating robustness.\n\n    *Drafting response:*\n    Here is the processed response handling the various delimiter variants and edge cases:\n\n    ## Delimiter Variants\n    1. Double dollar display:\n       $$x^2 + y^2 = r^2$$\n    2. Bracket display:\n       \\[E = mc^2\\]\n    3. Single dollar inline: $a + b = c$\n    4. Paren inline: \\(x = 5\\)\n\n    ## Nested Structures\n    1. Display math in a list with continuation:\n       - First item\n       - The equation is:\n         $$\\int_0^1 x dx = \\frac{1}{2}$$\n         And it evaluates to 0.5\n       - Third item\n\n    ## Code with Math-like Syntax\n    ```python\n    # This should stay as literal code\n    price = $50\n    formula = \"E = mc^2\"\n    result = a**2 + b**2\n    def calc(x):\n        return x**2\n    ```\n\n    ## Currency and Escaped Dollars\n    - Plain: The price is $100\n    - Escaped: The budget is \\$500\n    - Multiple: Costs $25, $30, and $45\n    - In sentence: I spent $50 at the store\n\n    ## Tables with Math\n    | Variable | Formula | Value |\n    |----------|---------|-------|\n    | Area | $A = \\pi r^2$ | $78.54$ |\n    | Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n    ## Raw Dollar Signs\n    The shell variable $HOME is set. Price: $99.99.\n\n    Wait, should I add Markdown tables and actual math rendering? The prompt just says \"Generate a response testing delimiter variants and edge cases\". I will output the formatted text, confirming that these edge cases are handled correctly.\n\n    Let's output exactly the rendered markdown.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 347,
+    "completion_tokens": 1175,
+    "total_tokens": 1522,
+    "cost": 0.00305864,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00305864,
+      "upstream_inference_prompt_cost": 0.00021514,
+      "upstream_inference_completions_cost": 0.0028435
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 828,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -46,6 +46,24 @@ test.describe('Truncation vs renderer loss', () => {
     ).toBe('incomplete')
   })
 
+  test('empty visible with stop finish is incomplete (GLM 5.2 01 reasoning-only)', () => {
+    expect(isEmptyVisibleReply('')).toBe(true)
+    expect(
+      isIncompleteReply({
+        finishReason: 'stop',
+        nativeFinishReason: 'stop',
+        response: '',
+      })
+    ).toBe(true)
+    expect(
+      overallStatus({
+        truncated: false,
+        emptyVisible: true,
+        validation: { status: 'pass', assertions: [] },
+      })
+    ).toBe('incomplete')
+  })
+
   test('provider_unavailable empty reply is incomplete, not pass and not renderer fail', () => {
     expect(
       overallStatus({

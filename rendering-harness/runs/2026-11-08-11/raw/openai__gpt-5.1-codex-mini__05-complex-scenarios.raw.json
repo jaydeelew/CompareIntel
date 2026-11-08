@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794166466-MG2jc7RjaeHS1UwKoYcX",
+  "object": "chat.completion",
+  "created": 1794166466,
+  "model": "openai/gpt-5.1-codex-mini",
+  "provider": "Azure",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "Here's a walkthrough that tests the limits of each scenario:\n\n---\n\n### Scenario 1: Math in Lists with Formatting (Edge Cases)\n- The Pythagorean theorem \\( a^2 + b^2 = c^2 \\) is standard, but when \\( a = 3 \\) and \\( b = 4 \\), we get \\( c = \\sqrt{9 + 16} = \\sqrt{25} = 5 \\).  \n  **Edge case:** if either leg were negative or non-integer (e.g., \\( a = -3 \\) or \\( b = 4.5 \\)), \\( c \\) would still be \\( \\sqrt{a^2 + b^2} \\) and positive; showing the theorem’s invariance under sign changes.  \n  **Formatting note:** ensure the list remains clear even when nested calculations or nonstandard spacing are introduced.\n\n---\n\n### Scenario 2: Tables with Math (Edge Cases)\n| Formula    | LaTeX                              | Result |\n|------------|------------------------------------|--------|\n| Quadratic  | \\( ax^2 + bx + c = 0 \\)           | \\( x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} \\) |\n| Sum        | \\( \\sum_{i=1}^{n} i \\)             | \\( \\frac{n(n+1)}{2} \\) |\n| Product    | \\( \\prod_{i=1}^{n} i \\)            | \\( n! \\) |\n\n- **Edge case:** Quadratic formula breaks if \\( a = 0 \\), so the table could note that it degenerates to a linear equation.\n- **Edge case:** Summation/product not defined (or requires convention) for \\( n < 1 \\); we might mention how summing from \\( i = 1 \\) to \\( 0 \\) could default to 0 by convention.\n- **Formatting:** When mixing LaTeX with tables, watch out for escaping characters (e.g., ensure `%` isn’t interpreted as Markdown comment).\n\n---\n\n### Scenario 3: Code and Math Mixed (Edge Cases)\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n- Formula \\( A = \\pi r^2 \\) is correctly implemented.  \n- **Edge cases:** Negative radius or non-numeric input; the function would still return a positive area for negative \\( r \\) because \\( r^2 \\geq 0 \\), but conceptually radius should be \\( r \\geq 0 \\). If \\( r \\) were complex, `math.pi` and `r**2` would raise a `TypeError`.  \n- **Challenge:** In a mixed content structure, keep the LaTeX formula aligned with the code’s comment to avoid ambiguity.\n\n---\n\n### Scenario 4: Horizontal Rules (Edge Cases)\nFirst section\n\n---\n\nSecond section with math: \\( \\int_{0}^{1} x \\, dx = \\frac{1}{2} \\)\n\n- **Edge case:** Display a definite integral result alongside the surrounding sections to ensure inline math is rendered without being mistaken for new sections.  \n- **Edge case:** If the integral were improper or had more complex bounds, keep the presentation consistent (e.g., \\( \\int_{a}^{b} \\) or \\( \\int_{0}^{\\infty} \\)).\n\n---\n\nThird section\n\n---\n\n### Scenario 5: Multiple Dollar Signs (Edge Cases)\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\n- **Edge case:** When literal dollar amounts collide with inline math \\( \\$...\\$ \\), escape or separate them (as done above with a backslash) to prevent Markdown from treating them as math delimiters.\n- Math: The formula \\( f(x) = x^2 \\) evaluates to \\( f(5) = 25 \\).  \n  **Edge case:** If one sticks to \\( f(x) = x^2 \\) but computes \\( f(-5) \\), the output remains positive, reinforcing the function’s even symmetry.\n\n---\n\nLet me know if you’d like these scenarios embedded into a single cohesive explanation or if you’d like additional challenging edge cases per section!",
+        "refusal": null,
+        "reasoning": "**Considering edge cases and calculations**\n\nI need to respond with challenging edge cases, mentioning various scenarios and perhaps summarizing. It would help to verify calculations and formatting while including explanations. I should craft a response that addresses edge cases, validates what I find, and discusses complex situations involving lists, tables, and specific formatting.\n\nIt seems important to highlight potential pitfalls as well, like handling multiple dollar signs or negative values. I’ll aim for a step-by-step message that references formulas clearly.**Crafting final response**\n\nI should highlight each scenario in my final response and clearly show the verification process. It’s also important to mention potential edge cases, like the possibility of non-integer values that may come up. I want to ensure my response is thorough and addresses all aspects effectively. Let's focus on making it clear and well-structured while covering these important points. Getting this right is key for the user's understanding!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Considering edge cases and calculations**\n\nI need to respond with challenging edge cases, mentioning various scenarios and perhaps summarizing. It would help to verify calculations and formatting while including explanations. I should craft a response that addresses edge cases, validates what I find, and discusses complex situations involving lists, tables, and specific formatting.\n\nIt seems important to highlight potential pitfalls as well, like handling multiple dollar signs or negative values. I’ll aim for a step-by-step message that references formulas clearly.**Crafting final response**\n\nI should highlight each scenario in my final response and clearly show the verification process. It’s also important to mention potential edge cases, like the possibility of non-integer values that may come up. I want to ensure my response is thorough and addresses all aspects effectively. Let's focus on making it clear and well-structured while covering these important points. Getting this right is key for the user's understanding!",
+            "format": "azure-openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8M7G3XzSv1QctQ5_8b7A-0RBjPCUf6u4u3YXtVdgxVSARphML5p2sIY1jm2QyR15psYwgth5mepLlWRVm6GpVjkxtesfsj-vnYaYKPKpODqQv2eB0bSFjvZFrys4oM3hehYWKHeq5nKgI9nP8MbP_Yta5mzd2vmVVxb6RqgB__rpi7X89fCQ5x5PI7-KDTYv__SoFCjX5gk_pZT3_xF1rx_c3pjmpDxxbpU1uZ7q_09cVRLlF5tp6KrPE1i-XMsGxZhWO5jJ3AnrIsRCFdBQLvSh3_GLKFoUlaeIG_q3mKVNGA5fJ377IqlCxDoyW_6aepkyLuGz-VXuYhQi6zhb1MuJ_f_n_pphe0bqLC0RyroqhlZ_ziTAsKWyr7wHnYxclKJTY2MZm2NVEadonWQy6I6kQi1Z1CChKNiZuA1PPiYQNpd-uPPbdLjiAbmXyrYXDyT3-f7S78Pt3-eBTAaHERid8eirfOBWuyxU818Uq6XQ4KKoxZwCaq0XrkDf4nj_ZlnJZZvVfDc1kQWadRiwek7BsA-7B-pQGepkheEG7ON2PdADNTeKjR3feigqfOHBRWB_UxKrqCLPb8VlwFtTbMTZpFmMMdPJ0TYM-4Z3IwDrdBz2S2HjNVoJ_7vCfL-Wtm3KrseLTT64EtO0x6nuW8zihQM4gVsbyEOprIMDjBQtpb4jl29KYemKIWqDD7hIILZBLVwIZlqznEHOPKdlMpMzpRhsiBrKj_GwaR1ERq4aiUqjDm2C_5vNJODQx_4I3TUxx2g-EQHFC43_NW3AXKNlGDPVGoSmplhqa1thOUFUHVKpzE61khWm7aWYH0lMyUMV2etILVuaoIte_HcivzOD5yw7t09ccBlsMpEAzH7LTPRF7d67DEUZdKIa8hrHYtQNQBcJJ0DINvYsMZ-bibMgPPFcxqQkaDrCXmoBJ9u3QuYmfnYBM0ZbpeaeNjoM30qVXGGp46G_qXKNPx1F59_LszmHRt_KlZWtJq6lqt0Xch9aR5-RUNY0X9Lba2lHEfzNMBl0TeNHl2TYfZCLgBxcybj3ATHfaREtBI8Qullw_dvPyG8CfsO56oZGLLwcpe2aEBvWj889SdQMsjSqWYJye8WklTknI6stEsp__XnGW9PZyGKqvcBgzbIsCraWcQ8E-jwtyHu5gmSZ9jIz1qMLf-tvae-Fjp9mZbODboKJeZBYemwBPxU24_qUFYt3B1NF4BX6n7aDPYYP19iu8lEJmX1hGVM2fAUCV_jQBaEN1DpUzBjwMtNYX-8w9maKk5RhLTMu0F57ZHTGqXf2zMTny9OlEI28zS7eWOrbnvC6zFURcHtAFp0_G7XEC1pXhUWR3hk2sA3bVSsUBUUhoybMlL0JrNazY8n0cvpCMamAUDLNSc3j5PnGmLOpHPKwzfe0b72Ff2xcdLpXL75uEs6RPqWjdUpTvkZOA8s_wZUAER85QzMP8CLsjoBEwkigCbQRjUMP7q0XcJSirvOPmLJ-W1DW5WZEgpZXDRKlxJTXCk8JV6oUu2j5CiTsL5W0fjsdg1uxhxwZTqEytu0yzGserke6jjjToLGgr2_ThHdDsuyUBWC_9B3g2wqhw0jpp1Pt9_a_xC8syFlPX6jO0hQS4TEXLroKSr2k9pg3h-3X6JQA6zG_VZTey_REtjreBItx66vf1vHSR1hWR92UGCDrG9o-z9NokeVt9Mu4o5Eqy7jjaJuFJ864XUoPnrz1xkbDzVot66urewKSEYkGnYbwICymmgfUXQpd_29DPdhf5FmsJJzJHhDn7xYYcUVJPP-CnLuI39XPrcseH9q70gJ5LZm6sbnHXnFDaZInuJzQmm1S-dz5f_yxxwQiopAlTlnLG3M9n3t43d7_PP8oQyv8eK-hBGVgBfpdSxKip9PFxCp10WUMkUduLvQuzfGzPbsTHHuSzfGxMGf3xLqbM4JJquDoeodJB9eGyZtnsCaPZdkVch-KNr8FwT3thmFM9a37c8QW8N2zHYxVHgcl76RjlOHA3N_xP9gjzlAXaX1P-TpciSQl7U3-Z_UQvdLJt3gYyA4-EK90fdV_c2QI75qXewCaTQRooRLgAPxjz53ESbKxBf0qQ0bmAAPnyzZndfkdDIgjc1gj4rTeq3s4dC0WW2yw8NrhT52uprvazx8B0ex_En0FPrlE-arMPR2mFjo8EJJ13WMAVbSLfiLrN3JQ_JLvPhnr16T5ZA4JLpFLlMVGp84iNIfYZd4trhbDYOOv_jOXj9ZjnpmsuWcQ2h5Uwabt8w53p2kzi6PWkMRaA1xRB-PlBDq2cgzr9Y3VLQTGlBg507oxxqvyrnxus0BMCUE5Q08gHkgQ2FscWJ47o0UYj-dwtr33yL7Qh5kzjwPx0vc_gL52Q5A6ysmJ7HN5BOQ13VtKGJKGc7eV5t-Znb0kl-wibe-IJhwUo3i14ryvrv29YKGUdjCGaqE2RyKW-h3E7sUl3DyDAl1IVCXqmqUXSjtE2LczV8VK36AT_OiRatptGqNVS-9rLyR98hbBa517X13H_HnWVNyWUKpetH7M_UUm8D_xukrEv5oTPuEwc9uUhVsIwJmBHXeMZGUZlSpsmEJcSbX6s-O1rpElZwAcoSB9m7Hn9xsNCjaLtxWwxnOtrFQK3DKdAuYe80L0-w4GHHuSYQCLlpE255aLqAGeHfPgUxuSGc2ebamDuGTuW21VN1dKmSDgVuBxdbqFnXAdFOXqB6g19J9mV7Rt61JS25xk7Nvlx0GiFuOAWByMZE1jwDKLdcx4NsqK47b65x6lm5brLUyAMiwVADPwjxDGvAl_Sl5WYNka7Ii38T9bNKUVXXyobxC6D-_svvo1CsCNIp-Pr-LDH_DMWIzx2hb0dhL8NtlvwvnAA7N5ra2N3xWaMb4t2uKVLhJQeaHEsjlecAQVnKwHcUHiA2QgT15RtCpq5vod0t69LDLyq-HaT-GFt95jCuqMRuOaUxF0Ans8Lh4VZBsndTLOTTEV3-IrJGJrCbujBQPTReI28c2RTP-5oBIQEPftagSwgkgLbdRVsX4g1WcZZvlqvrXQKns2UT7QJPcy_sLBBdI0UckAOgNAX6iXmkpKjeg_LoHrgQ-Owyo0maI7jJwaIEDeXwBnygO0X4I-l0_nVCejwUkeXvhe8WztmJbNIDd5rrN5GIyETlCSnofPlJ9qTx_Ifxc4lECa-nWdMMRpn5qvrb2RVlLnJWuqFB1wOjcHsQUzgxKPhZXNeo6sQpHD10yyefbsIHLryK0-7XPfQHazIMPc3ZRDa74AZFFci20duWiXxIAGJDbsJBWOh_xZOAm8rpOvjsFOY1uVSkrbi7ncvVxDCq_AOzOuOJMzW6-hcJ0DwgLagKPwLS31T7xT4ZBzXXEM01zBssOUoPjYog--0EcbCER1K_O_V0FxY7ZMyCZrwXX-XsM9E6dQd7K7AGrfKWtSVXOiG-7Y73LJlFMWmL7M_J4Oy5m3L1YOHlr7RKtXZT6s4RMC4tuJu-uA6iqI3pQtBR_yTmEt3zVISBSjm7S_oxlRQPgt1xRQI25OY0XjdXmkyJIfEstgGlWZSR-BpKB6YEd9AoZWZ3gUdkoGmXzG6ORiAg1-V07LYMGhTccDvE6XjIB1KKAizHv0KDkF50CG9j0blXxGQUR8R1UeOg4KG5uSXFOh49KOkiy1uk4UB33nXRYL3CEmmGS01PKbYMVgHupNYTgdsAoOHgYJnz0a3qEJzICeG_kmItqkfhvk4YOnEf9sjCMUuhG0W4BqUbnGaf2pdWgWyJIMWOaFHkvIYwg8ZHIz8BaH8-bKALRopgFoAYYkxHOIgudVkm5ffLG2vmoDebyyXtPR27PiBhogw_NIEg3gaaXaP7VhMHJydGOigh5Ntb93swMZ2gbqrYQ-7mVxCOL1DXPcHZPCit8G7ES5jIvgd8gnVD1CRKtolD1QiogRxVviV6OU1PnyYZme6V7FcaaE2uK62cltx1-YKV4uIgShD50z5O22u6ma5OQrTHdC14R_m5anv2QfFY9WUa4RrE-AuQ2o18-nxvYRDx44hQ5CFJU4oaB0SZzGXo_JvsbY7KV9Sa5HIBrB7nbnN_uEjdg7dmMyDUso1OQRwqnaMZ9Rs03kQLCb-1cy_mYdeQlIpT3vg-nktTY0GCPoZrOJArZ3Mnk8ocEbX_vFNAk-1iGfcsP3KkRqTsm8p4qasIT51ixZYGplzSJQedXx18Iv5JF4FDdm9lwGJmTiSVa-ZKh7ySmBJzU46BMtkjl-MJ9nGqtf4_-P7D6mSwhse8v3XAKnNsGg83xryuuPGKMvo9xDiweJhWQPPT5zbJsXQuSXH9COjEF3HiKN7ONVWIXUMYgz49gZOydZ7qt76Zt0uncYResw_ENtmxOhfk0-UDr-Sz3QqzfZq5JAQY34xQotEzh-OfEh-n-9YW2Nq1ZNx-jx-Y4Yzt1BTSDw0Reh18PIy-yp4GbfbHKa3_pe7gRrVWDJFz5Seqc3IWHsgu669VXpozgfIz-1D0dtPWauuUSpFqkPvXKDZT4qoBH1c7m5Jg1KSUqDaKS67AIx_enyn2sHRGjQJw4V6u06lbnX9LDc1764BiMvvjIeLKDhBKE7P5pj0unn4tN1AvFr9pK1Cd9ffJX2FGsSE0P-GkAUdHnAGRAPUhL3UEg_l3S-bxNSTikVgUbeWt7h3g1BrY6kkftJzCGvtCzhSpUDVAH7YSg7cIFo5_9llL6x5Vg1CDr3fEw4pLdxXwNRgvG9tQS2lhA2e8oPD19jeQ8DttUFlGH4tdJS-fCqdvdhwyJkoNbxC0XkVM_IeJ2Dpb3lcoskphdVNPWy18a-ON0Abjo63hbbu81JswnCFKTY887t9HSbFMjH1ihO_SHq-86t.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjEtY29kZXgtbWluaS0yMDI1MTExM3xhenVyZSJ9",
+            "format": "azure-openai-responses-v1",
+            "id": "rs_03ad5ed157e96b01016af0cec2f76c819397a80fe9afaba5ea",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 1169,
+    "total_tokens": 1597,
+    "cost": 0.002445,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.002445,
+      "upstream_inference_prompt_cost": 0.000107,
+      "upstream_inference_completions_cost": 0.002338
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 192,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
