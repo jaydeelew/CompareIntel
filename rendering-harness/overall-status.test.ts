@@ -46,6 +46,17 @@ test.describe('Truncation vs renderer loss', () => {
     ).toBe('incomplete')
   })
 
+  test('provider_unavailable empty reply is incomplete, not pass and not renderer fail', () => {
+    expect(
+      overallStatus({
+        truncated: false,
+        emptyVisible: true,
+        error:
+          '{"message":"capacity","code":502,"metadata":{"error_type":"provider_unavailable"}}',
+      })
+    ).toBe('incomplete')
+  })
+
   test('truncated + screenshot/readiness error is truncated, not renderer fail', () => {
     expect(
       overallStatus({

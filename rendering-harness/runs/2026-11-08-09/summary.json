@@ -1,0 +1,64 @@
+{
+  "status": "stopped",
+  "stopReason": "API error; halted without retry",
+  "attemptedCalls": 15,
+  "successfulReplies": 14,
+  "unattemptedCalls": 9,
+  "knownActualCost": 0.0422084722,
+  "unknownCostCalls": 1,
+  "errors": [
+    {
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "03-code-blocks",
+      "httpStatus": 200,
+      "error": {
+        "message": "The model is currently at capacity due to high demand. Please try again in a few minutes, or use a higher service tier for priority processing: https://docs.x.ai/developers/advanced-api-usage/priority-processing",
+        "code": 502,
+        "metadata": {
+          "error_type": "provider_unavailable"
+        }
+      },
+      "startedAt": "2026-11-08T19:12:31.308Z",
+      "finishedAt": "2026-11-08T19:12:31.918Z"
+    }
+  ],
+  "promptTokensKnown": 4412,
+  "completionTokensKnown": 15879,
+  "totalTokensKnown": 20291,
+  "reasoningTokensIncludedInCompletionKnown": 10632,
+  "firstCallCST": "11/8/2026, 1:07:15 PM CST",
+  "lastCallCST": "11/8/2026, 1:12:31 PM CST",
+  "finishReasonCounts": {
+    "stop": 14,
+    "unknown/error": 1
+  },
+  "truncated": [],
+  "visibleEmptySuccessful": [],
+  "perModel": [
+    {
+      "id": "xiaomi/mimo-v2.5",
+      "knownCost": 0.0068768,
+      "attempts": 6,
+      "successful": 6
+    },
+    {
+      "id": "moonshotai/kimi-k2.6",
+      "knownCost": 0.031664272199999996,
+      "attempts": 6,
+      "successful": 6
+    },
+    {
+      "id": "x-ai/grok-4.3",
+      "knownCost": 0.0036674000000000003,
+      "attempts": 3,
+      "successful": 2
+    },
+    {
+      "id": "cohere/command-a",
+      "knownCost": 0,
+      "attempts": 0,
+      "successful": 0
+    }
+  ],
+  "coverage": "Collection only; provider capacity error halted batch;failed attempt is not renderer failure;no retry"
+}

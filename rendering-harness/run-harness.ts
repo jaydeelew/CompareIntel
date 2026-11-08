@@ -542,11 +542,20 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
       const truncated = isTruncatedReply(data);
       const emptyVisible = isEmptyVisibleReply(data.response);
 
-      if (emptyVisible) {
+      const providerError =
+        data.error == null
+          ? undefined
+          : typeof data.error === 'string'
+            ? data.error
+            : JSON.stringify(data.error);
+      // Provider/API errors and empty replies are incomplete coverage: never
+      // pass, never a renderer-loss fail, and never screenshot/render.
+      if (emptyVisible || providerError) {
         const status = overallStatus({ truncated, emptyVisible: true });
-        console.log(
-          `  △ Validation: ${status.toUpperCase()} (empty visible text; reasoning-only / truncated, not pass, not renderer-fail)`
-        );
+        const why = providerError
+          ? 'provider/API error; skip render, not pass, not renderer-fail'
+          : 'empty visible text; reasoning-only / truncated, not pass, not renderer-fail';
+        console.log(`  △ Validation: ${status.toUpperCase()} (${why})`);
         results.push({
           modelId: data.modelId,
           modelName: data.modelName,
@@ -556,6 +565,7 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
           usage: data.usage,
           actualCost: data.cost || data.actualCost || 0,
           timestamp: data.timestamp,
+          error: providerError,
           validationStatus: status,
           truncated,
           emptyVisible: true,

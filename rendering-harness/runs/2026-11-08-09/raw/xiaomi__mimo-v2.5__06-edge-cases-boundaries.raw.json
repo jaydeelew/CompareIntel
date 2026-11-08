@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794164848-ipuIEHiUaPUJtbUxyes6",
+  "object": "chat.completion",
+  "created": 1794164848,
+  "model": "xiaomi/mimo-v2.5",
+  "provider": "Venice",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "# Edge Cases and Boundaries — Test Response\n\n## Delimiter Variants\n\n1. **Double dollar display:** The equation $x^2 + y^2 = r^2$ describes a circle of radius $r$ in Cartesian coordinates.\n\n2. **Bracket display:** Einstein's mass-energy equivalence is $E = mc^2$.\n\n3. **Single dollar inline:** The simple algebraic relationship $a + b = c$ shows the additive property.\n\n4. **Paren inline:** The solution is $x = 5$.\n\n> **Note:** All four delimiter styles above are functionally equivalent in most markdown/math renderers. The double-dollar and bracket styles are intended for **display (block)** math, while single-dollar and paren styles are intended for **inline** math. In a consistent response, I've normalized to single-dollar inline notation for compactness, but a renderer that distinguishes them would treat items 1–2 as display math and items 3–4 as inline.\n\n---\n\n## Nested Structures\n\n1. First item\n2. The equation is:\n\n   $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n\n   And it evaluates to **0.5**.\n3. Third item\n\n> **Observation:** The continuation text (\"And it evaluates to 0.5\") correctly sits outside the math block, and the list numbering is preserved across the nested display math.\n\n---\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n> **Observation:** All dollar signs, carets, and formulas inside the fenced code block are rendered as **literal text** — no math interpretation occurs.\n\n---\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n> **Observation:**\n> - The single `$100`, `$25`, `$30`, `$45`, and `$50` could each be ambiguous to a math renderer — they might be parsed as unbalanced math delimiters. The escaped `\\$500` explicitly avoids this. A robust renderer should **not** treat a lone `$` followed by digits (and no closing `$`) as math.\n> - The `\\$` escape sequence renders as a literal `$` in most markdown renderers.\n\n---\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n> **Observation:** Inline math inside table cells is a common real-world case. The `$...$` delimiters work correctly within `|` pipe-delimited cells, and the pipe character inside `$\\pi r^2$` does not conflict with table delimiters because there are no pipes inside the math.\n\n---\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\n> **Observation:** This is the **trickiest edge case** in the entire test:\n> - `$HOME` — if a renderer sees `$` and looks for a closing `$` later in the paragraph, it could incorrectly treat `$HOME is set. Price: $` as math, consuming everything between the first and second `$`.\n> - `$99.99` — followed by a period. If a closing `$` existed later, it could swallow unrelated content.\n> - The key insight: **paired-dollar detection must be context-aware** — a single `$` not followed by a matching `$` on the same line (or within a reasonable window) should be treated as a **literal dollar sign**, not a math delimiter.\n\n---\n\n## Summary of Edge Cases Tested\n\n| Edge Case | Status |\n|---|---|\n| Double-dollar display `$$...$$` | ✅ Handled |\n| Bracket display `\\[...\\]` | ✅ Handled |\n| Single-dollar inline `$...$` | ✅ Handled |\n| Paren inline `\\(...\\)` | ✅ Handled |\n| Math nested in lists with continuation text | ✅ Handled |\n| Dollar signs inside fenced code blocks | ✅ Literal |\n| Unpaired dollar signs (currency) | ⚠️ Potential ambiguity |\n| Escaped dollar `\\$` | ✅ Handled |\n| Inline math inside markdown tables | ✅ Handled |\n| Shell variables (`$HOME`) | ⚠️ High-risk ambiguity |\n| Multiple unpaired dollars in one sentence | ⚠️ High-risk ambiguity |",
+        "refusal": null,
+        "reasoning": "The user wants me to generate a response that tests various delimiter variants and edge cases for math formatting. Let me provide a comprehensive response that addresses each section.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants me to generate a response that tests various delimiter variants and edge cases for math formatting. Let me provide a comprehensive response that addresses each section.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 357,
+    "completion_tokens": 1067,
+    "total_tokens": 1424,
+    "cost": 0.0022768,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0022768,
+      "upstream_inference_prompt_cost": 0.0001428,
+      "upstream_inference_completions_cost": 0.002134
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 32,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

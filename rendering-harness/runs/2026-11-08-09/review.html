@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Model Rendering QA Review</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .summary {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .prompt-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .model-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafafa;
+    }
+    .model-card h4 {
+      margin-top: 0;
+    }
+    .screenshot {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .raw-response {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+    .feedback {
+      margin-top: 10px;
+    }
+    .feature-coverage {
+      font-size: 0.85em;
+      margin: 10px 0;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .feature-coverage .feature {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .feature-coverage .feature.yes {
+      background: #d4edda;
+      color: #155724;
+    }
+    .feature-coverage .feature.no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .feature-coverage .math-error {
+      color: #d32f2f;
+      font-weight: bold;
+      display: block;
+      margin-top: 4px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+    .export-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .export-btn:hover {
+      background: #0056b3;
+    }
+    .status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      text-transform: uppercase;
+    }
+    .status-pass { background: #d4edda; color: #155724; }
+    .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-truncated { background: #e7e3ff; color: #3d348b; }
+    .status-incomplete { background: #ede7f6; color: #4a148c; }
+    .status-fail { background: #f8d7da; color: #721c24; }
+    .error {
+      color: red;
+      background: #fee;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .meta {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Model Rendering QA Review</h1>
+  
+  <div class="summary">
+    <h2>Summary</h2>
+    <p><strong>Run Date:</strong> 2026-11-08-09</p>
+    <p><strong>Models Tested:</strong> 3</p>
+    <p><strong>Prompts:</strong> 6</p>
+    <p><strong>API history records:</strong> 15
+       &nbsp;<strong>Unique coverage cells:</strong> 15</p>
+    <p><strong>History:</strong>
+       Passed 14
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 1
+       / Failed 0</p>
+    <p><strong>Unique coverage:</strong>
+       Passed 14
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 1
+       / Failed 0
+       (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $0.042208</p>
+    <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
+  </div>
+  
+  
+    <div class="prompt-section">
+      <h2>01-math-basics</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>MoonshotAI: Kimi K2.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: moonshotai/kimi-k2.6<br>
+              Attempt: original · moonshotai_kimi-k2.6_01-math-basics.json<br>
+              Tokens: 3458 (258 in / 3200 out)<br>
+              Cost: $0.011080<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:07:45 PM
+            </div>
+            
+            
+              <img src="moonshotai_kimi-k2.6_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is a demonstration of the requested formatting:
+
+**1. Inline math:** The quadratic formula $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ gives the two roots of any quadratic equation written as $ax^2 + bx + c = 0$.
+
+**2. Display math with aligned equations:**
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+**3. Matrices and cases:**
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}$$
+
+**4. Multiple equations:**
+$$E = mc^2$$
+$$F = ma$$
+$$a^2 + b^2 = c^2$$
+
+**5. Links:** See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.
+
+**6. Money context (these should NOT render as math):** The item costs $5 and the shipping is $10, for a total of $15. Budget: \$1000 (escaped dollar).</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="moonshotai/kimi-k2.6"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>SpaceXAI: Grok 4.3 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: x-ai/grok-4.3<br>
+              Attempt: original · x-ai_grok-4.3_01-math-basics.json<br>
+              Tokens: 1389 (434 in / 955 out)<br>
+              Cost: $0.002527<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 7:11:57 PM
+            </div>
+            
+            
+              <img src="x-ai_grok-4.3_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">The quadratic formula \(x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}\) provides the roots of any quadratic equation \(ax^2 + bx + c = 0\).
+
+To solve the following linear system we can add the equations after multiplying the second by an appropriate factor:
+
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+The 2-by-2 identity matrix together with a simple piecewise function are written as
+
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}$$
+
+Three well-known physics and geometry relations appear below:
+
+$$E = mc^2$$
+$$F = ma$$
+$$a^2 + b^2 = c^2$$
+
+See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.
+
+The item costs $5 and the shipping is $10, for a total of $15. Budget: \$1000 (escaped dollar).</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="x-ai/grok-4.3"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.5 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.5<br>
+              Attempt: original · xiaomi_mimo-v2.5_01-math-basics.json<br>
+              Tokens: 706 (278 in / 428 out)<br>
+              Cost: $0.000967<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:07:19 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.5_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Math Formatting Demo
+
+## 1. Inline Math
+
+The quadratic formula $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ gives us the solutions of any quadratic equation $ax^2 + bx + c = 0$. The discriminant $b^2 - 4ac$ determines whether the roots are real or complex.
+
+## 2. Display Math with Aligned Equations
+
+We can solve this system by elimination:
+
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+Adding the two equations gives $3x = 6$, so $x = 2$ and $y = 3$.
+
+## 3. Matrices and Cases
+
+The identity matrix and a piecewise function are both expressed beautifully with LaTeX:
+
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}$$
+
+## 4. Multiple Equations
+
+Three fundamental equations of physics and geometry:
+
+$$E = mc^2$$
+
+$$F = ma$$
+
+$$a^2 + b^2 = c^2$$
+
+## 5. Links
+
+See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.
+
+## 6. Money Context (No Mat...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.5"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>02-markdown-formatting</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>MoonshotAI: Kimi K2.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: moonshotai/kimi-k2.6<br>
+              Attempt: original · moonshotai_kimi-k2.6_02-markdown-formatting.json<br>
+              Tokens: 663 (197 in / 466 out)<br>
+              Cost: $0.000798<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:07:49 PM
+            </div>
+            
+            
+              <img src="moonshotai_kimi-k2.6_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="moonshotai/kimi-k2.6"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>SpaceXAI: Grok 4.3 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: x-ai/grok-4.3<br>
+              Attempt: original · x-ai_grok-4.3_02-markdown-formatting.json<br>
+              Tokens: 700 (380 in / 320 out)<br>
+              Cost: $0.001141<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 7:12:31 PM
+            </div>
+            
+            
+              <img src="x-ai_grok-4.3_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="x-ai/grok-4.3"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.5 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.5<br>
+              Attempt: original · xiaomi_mimo-v2.5_02-markdown-formatting.json<br>
+              Tokens: 414 (203 in / 211 out)<br>
+              Cost: $0.000503<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:07:20 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.5_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.5"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>03-code-blocks</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>MoonshotAI: Kimi K2.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: moonshotai/kimi-k2.6<br>
+              Attempt: original · moonshotai_kimi-k2.6_03-code-blocks.json<br>
+              Tokens: 776 (245 in / 531 out)<br>
+              Cost: $0.000911<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:07:53 PM
+            </div>
+            
+            
+              <img src="moonshotai_kimi-k2.6_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="moonshotai/kimi-k2.6"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>SpaceXAI: Grok 4.3 <span class="status status-incomplete">incomplete</span></h4>
+            <div class="meta">
+              Model ID: x-ai/grok-4.3<br>
+              Attempt: original · x-ai_grok-4.3_03-code-blocks.json<br>
+              
+              Cost: $0.000000<br>
+              Finish: unknown — empty visible (reasoning-only), incomplete<br>
+              Time: 11/8/2026, 7:12:31 PM
+            </div>
+            
+            
+              <div class="error">Error: {"message":"The model is currently at capacity due to high demand. Please try again in a few minutes, or use a higher service tier for priority processing: https://docs.x.ai/developers/advanced-api-usage/priority-processing","code":502,"metadata":{"error_type":"provider_unavailable"}}</div>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="x-ai/grok-4.3"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.5 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.5<br>
+              Attempt: original · xiaomi_mimo-v2.5_03-code-blocks.json<br>
+              Tokens: 514 (244 in / 270 out)<br>
+              Cost: $0.000638<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:07:23 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.5_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here are the requested code blocks:
+
+## Python code
+
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+
+
+## JavaScript code
+
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.5"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>04-mixed-markdown-latex</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>MoonshotAI: Kimi K2.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: moonshotai/kimi-k2.6<br>
+              Attempt: original · moonshotai_kimi-k2.6_04-mixed-markdown-latex.json<br>
+              Tokens: 3020 (301 in / 2719 out)<br>
+              Cost: $0.006697<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:08:53 PM
+            </div>
+            
+            
+              <img src="moonshotai_kimi-k2.6_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"> ## Problem Statement
+**Exercise 1**: Consider the function $g(x) = e^{2x} + \sin(x)$. Determine:
+
+1. The *first derivative* $g&#039;(x)$
+2. The **definite integral** $\int_{0}^{\pi} g(x) \, dx$
+
+### Solution
+Differentiating term by term:
+$$g&#039;(x) = 2e^{2x} + \cos(x)$$
+
+Evaluating the definite integral:
+$$\int_{0}^{\pi} \left(e^{2x} + \sin(x)\right) dx = \left[\frac{1}{2}e^{2x} - \cos(x)\right]_{0}^{\pi} = \frac{1}{2}e^{2\pi} + \frac{3}{2}$$
+
+## Linear Transformations
+For the linear transformation $T: \mathbb{R}^2 \to \mathbb{R}^2$ represented by matrix $B = \begin{pmatrix} 3 &amp; 1 \\ 0 &amp; 2 \end{pmatrix}$:
+- Eigenvalues: solve $\det(B - \lambda I) = (3-\lambda)(2-\lambda) = 0$, so $\lambda_1 = 3, \lambda_2 = 2$
+- Eigenvectors: for $\lambda_1 = 3$, solve $(B - 3I)\mathbf{v} = \mathbf{0}$ yielding $\mathbf{v}_1 = \begin{pmatrix} 1 \\ 0 \end{pmatrix}$; for $\lambda_2 = 2$, $\mathbf{v}_2 = \begin{pmatrix} -1 \\ 1 \end{pmatrix}$
+- Diagonalization: $B = PDP^{-1}$ where $D = \begin{pmatrix} 3 &amp; 0 \\ ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="moonshotai/kimi-k2.6"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.5 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.5<br>
+              Attempt: original · xiaomi_mimo-v2.5_04-mixed-markdown-latex.json<br>
+              Tokens: 944 (316 in / 628 out)<br>
+              Cost: $0.001382<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:07:26 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.5_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Mixed Markdown and LaTeX Demo
+
+Below is a demonstration of combining **markdown formatting** with *mathematical* expressions.
+
+---
+
+### **Exercise 1**: Find derivatives and integrals
+
+Given the quadratic function:
+
+$$f(x) = x^2 + 2x + 1$$
+
+1. The *derivative* $f&#039;(x)$ is:
+
+$$f&#039;(x) = \frac{d}{dx}(x^2 + 2x + 1) = 2x + 2$$
+
+2. The **indefinite integral** $\int f(x)\,dx$ is:
+
+$$\int f(x)\,dx = \frac{x^3}{3} + x^2 + x + C$$
+
+&gt; ✅ **Quick check**: Notice that $f(x) = (x+1)^2$, a perfect square.
+
+---
+
+### Linear Algebra: Properties of a $2 \times 2$ Matrix
+
+Consider the matrix:
+
+$$A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$$
+
+Its key properties are:
+
+- **Determinant**:
+$$\det(A) = ad - bc$$
+  &gt; ⚠️ If $\det(A) = 0$, the matrix is *singular* (non-invertible).
+
+- **Trace**:
+$$\text{tr}(A) = a + d$$
+
+- **Inverse** (when $\det(A) \neq 0$):
+$$A^{-1} = \frac{1}{ad - bc} \begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}$$
+
+---
+
+### Real-World Context: Economics
+
+&gt; 📌 In economics, the linear cost...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.5"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>05-complex-scenarios</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>MoonshotAI: Kimi K2.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: moonshotai/kimi-k2.6<br>
+              Attempt: original · moonshotai_kimi-k2.6_05-complex-scenarios.json<br>
+              Tokens: 3019 (424 in / 2595 out)<br>
+              Cost: $0.004328<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:09:19 PM
+            </div>
+            
+            
+              <img src="moonshotai_kimi-k2.6_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Complex Markdown &amp; LaTeX Stress Test
+
+## Scenario 1: Math in Lists with Formatting
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+## Scenario 2: Tables with Math
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+## Scenario 3: Code and Math Mixed
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+```
+
+The mathematical formula is $A = \pi r^2$ where $r$ is the radius.
+
+## Scenario 4: Horizontal Rules
+First section
+
+---
+
+Second section with math: $\int_{0}^{1} x dx = \frac{1}{2}$
+
+---
+
+Third section
+
+## Scenario 5: Multiple Dollar ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="moonshotai/kimi-k2.6"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.5 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.5<br>
+              Attempt: original · xiaomi_mimo-v2.5_05-complex-scenarios.json<br>
+              Tokens: 906 (439 in / 467 out)<br>
+              Cost: $0.001110<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:07:28 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.5_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Complex Scenarios
+
+## Scenario 1: Math in Lists with Formatting
+
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+## Scenario 2: Tables with Math
+
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+## Scenario 3: Code and Math Mixed
+
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+```
+
+The mathematical formula is $A = \pi r^2$ where $r$ is the radius.
+
+## Scenario 4: Horizontal Rules
+
+First section
+
+---
+
+Second section with math: $\int_{0}^{1} x dx = \frac{1}{2}$
+
+---
+
+Third section
+
+## Scenario 5: Multiple Dollar Signs
+
+Prices: ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.5"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>06-edge-cases-boundaries</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>MoonshotAI: Kimi K2.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: moonshotai/kimi-k2.6<br>
+              Attempt: original · moonshotai_kimi-k2.6_06-edge-cases-boundaries.json<br>
+              Tokens: 2358 (336 in / 2022 out)<br>
+              Cost: $0.007851<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:09:35 PM
+            </div>
+            
+            
+              <img src="moonshotai_kimi-k2.6_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"> ## Delimiter Variants
+1. Double dollar display: $$x^2 + y^2 = r^2$$
+2. Bracket display: \[E = mc^2\]
+3. Single dollar inline: $a + b = c$
+4. Paren inline: \(x = 5\)
+
+## Nested Structures
+1. Display math in a list with continuation:
+   - First item
+   - The equation is:
+     $$\int_0^1 x dx = \frac{1}{2}$$
+     And it evaluates to 0.5
+   - Third item
+
+## Code with Math-like Syntax
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+## Currency and Escaped Dollars
+- Plain: The price is $100
+- Escaped: The budget is \$500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+## Tables with Math
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+
+## Raw Dollar Signs
+The shell variable $HOME is set. Price: $99.99.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="moonshotai/kimi-k2.6"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.5 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.5<br>
+              Attempt: original · xiaomi_mimo-v2.5_06-edge-cases-boundaries.json<br>
+              Tokens: 1424 (357 in / 1067 out)<br>
+              Cost: $0.002277<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:07:33 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.5_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Edge Cases and Boundaries — Test Response
+
+## Delimiter Variants
+
+1. **Double dollar display:** The equation $x^2 + y^2 = r^2$ describes a circle of radius $r$ in Cartesian coordinates.
+
+2. **Bracket display:** Einstein&#039;s mass-energy equivalence is $E = mc^2$.
+
+3. **Single dollar inline:** The simple algebraic relationship $a + b = c$ shows the additive property.
+
+4. **Paren inline:** The solution is $x = 5$.
+
+&gt; **Note:** All four delimiter styles above are functionally equivalent in most markdown/math renderers. The double-dollar and bracket styles are intended for **display (block)** math, while single-dollar and paren styles are intended for **inline** math. In a consistent response, I&#039;ve normalized to single-dollar inline notation for compactness, but a renderer that distinguishes them would treat items 1–2 as display math and items 3–4 as inline.
+
+---
+
+## Nested Structures
+
+1. First item
+2. The equation is:
+
+   $$\int_0^1 x \, dx = \frac{1}{2}$$
+
+   And it evaluates to **0.5**.
+...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.5"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+  
+  <script>
+    function exportFeedback() {
+      const feedback = {};
+      document.querySelectorAll('textarea[data-feedback-model]').forEach(textarea => {
+        const modelId = textarea.dataset.feedbackModel;
+        const promptName = textarea.dataset.feedbackPrompt;
+        const value = textarea.value.trim();
+        
+        if (value) {
+          if (!feedback[modelId]) {
+            feedback[modelId] = {};
+          }
+          feedback[modelId][promptName] = value;
+        }
+      });
+      
+      const json = JSON.stringify(feedback, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rendering-feedback-2026-11-08-09.json';
+      a.click();
+    }
+  </script>
+</body>
+</html>
