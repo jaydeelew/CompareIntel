@@ -1,0 +1,36 @@
+{
+  "modelId": "meta/muse-spark-1.3",
+  "modelName": "Meta: Muse Spark 1.3",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Thanks for these great edge-cases! Here's how I parse and verify each one:\n\n### 1. Math in Lists with Formatting\n\nYou nailed the nesting — bold + math, italic + math, and math inside sub-bullets:\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\nVerified: $3^2 + 4^2 = 25$, so $c = 5$ is correct.\n\n### 2. Tables with Math\n\nMath inside table cells should still render as math, not break the `|` pipes:\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\nAll three formulas are correct.\n\n### 3. Code and Math Mixed\n\nInside a code block, `$`, `\\`, `^` should **not** be parsed as math:\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nOutside the block, this is real math: The mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\nFor $r=5$, $A = 25\\pi \\approx 78.54$.\n\n### 4. Horizontal Rules\n\nA `---` on its own line is a rule, not minus signs:\n\nFirst section\n\n---\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\nThird section\n\nVerified: $\\int_{0}^{1} x dx = \\left[ \\frac{x^2}{2} \\right]_{0}^{1} = \\frac{1}{2}$ is correct.\n\n### 5. Multiple Dollar Signs - Currency vs. Math\n\nThis is the trickiest one. Currency should NOT be parsed as math:\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\nRule I use:\n- `$` + digit like `$1` = currency, not a math opener\n- `$` + letter / `\\` / `(` like `$f`, `$\\sum`, `$a^2` = math opener with a matching closer `$`\n\nLet me know if you want me to stress-test any other cases like display math, `$$...$$`, escaped dollars, or pipes inside math!",
+  "usage": {
+    "prompt_tokens": 417,
+    "completion_tokens": 1841,
+    "total_tokens": 2258,
+    "cost": 0.0083455,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0083455,
+      "upstream_inference_prompt_cost": 0.00052125,
+      "upstream_inference_completions_cost": 0.00782425
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1110,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0083455,
+  "actualCost": 0.0083455,
+  "timestamp": "2026-11-08T19:49:42.597Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null
+}

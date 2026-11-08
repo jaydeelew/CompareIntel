@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794167225-e8LNyVzUDxWkgnGe1dbL",
+  "object": "chat.completion",
+  "created": 1794167225,
+  "model": "anthropic/claude-sonnet-5.5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Complex Scenarios: Rendered Response\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$.\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units.\n\n## Scenario 2: Tables with Math\n\n| Formula   | LaTeX                      | Result                                  |\n|-----------|----------------------------|-----------------------------------------|\n| Quadratic | $ax^2 + bx + c = 0$        | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$  |\n| Sum       | $\\sum_{i=1}^{n} i$         | $\\frac{n(n+1)}{2}$                      |\n| Product   | $\\prod_{i=1}^{n} i$        | $n!$                                    |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius.\n\nFor $r = 5$, the code prints `Area: 78.53981633974483`, which matches $A = 25\\pi \\approx 78.54$.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x\\,dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\nCheck: $1200 + 300 + 50 + 25 = 1575$ ✓\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n---\n\n### Notes on the edge cases\n\n- **Currency vs. math:** In Scenario 5, unescaped `$` signs can be misread as math delimiters. For example, `$1,200, monitor $` could be parsed as a formula. Escaping them as `\\$` avoids this.\n- **Tables:** Pipes inside math (such as `|x|`) can break table columns. Use `\\vert` or `\\mid` instead.\n- **Code blocks:** The `²` and `π` in the comment are plain Unicode, so no math rendering applies inside the fence.\n- **Horizontal rules:** A `---` directly under a line of text can turn that text into a heading. The blank lines around each rule prevent that.",
+        "refusal": null,
+        "reasoning": "The user has sent a test prompt with challenging edge cases, so I need to address each scenario. I'm checking that the arithmetic in scenario 5 adds up to 1575, and I'm planning to escape the dollar signs so they render correctly. Next I'll set up the scenario 2 table with its formula column.\n\nI'm putting together a well-formatted response and checking the computations, including the value of pi times 25. I'm also planning to add a few extra edge cases, keeping it fairly concise, and escaping the currency signs to avoid math rendering issues.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user has sent a test prompt with challenging edge cases, so I need to address each scenario. I'm checking that the arithmetic in scenario 5 adds up to 1575, and I'm planning to escape the dollar signs so they render correctly. Next I'll set up the scenario 2 table with its formula column.\n\nI'm putting together a well-formatted response and checking the computations, including the value of pi times 25. I'm also planning to add a few extra edge cases, keeping it fairly concise, and escaping the currency signs to avoid math rendering issues.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQS5QkKEAgTGAI4AUIIdGhpbmtpbmcSDB7m4EYIfl4SDEtSthoMuL9HncxNpbZevQx6IjCGFH9z/FDSYabugBohzh0aP/i8PUcR0dOpUjYYkE7QFfdWCNukFOtfaDf7MBJZ5zIqggnQ1OQKsfeOkz1QfKqT9H5ByIbXEEjON7O9RfyQ5jwyRshcMmf51R7ALP2ZiZoUQztnu5lr4+sDfa+2xvfW5QcZN+QdhdaIbiSJKtwsD/FhP2PxBZRufdP47XdCLPryhMeLlo/7DMTtgCSp4oV/+wk6td51d4NLh05//tAXOA0soOwybwZYvxC8/3/rpO1DX8ZXo0NB4tR8R1oOeWPuM0ijnyDagKynZtYFAhZesJ+/71E2SWOxukxT75ZsQnXEqHhDspJbT+dBlln0apuqXqn3sqHFROOp7fypmg4Vwu8Tdzr0YzQKnmfbcmEFB9AHZg1iii6+zaW3UchbrZfsuV80oxGbahH4cG6kCAEz3OLondnrzcMm0KXGJKsmm1zRjf/2yqKNHVwkzeVxPyUjO7RGa6M0M33ptBhgaEqonYc10HMIe/aW6VN7AoN4tO33C6NV4S++E2+EKoTmvidiideWWqQwASyBvH/TjkDVIH7H/Z8/+VbbZd/vyIZAQoxstFrwB1IiGSYehQf8JX/RhgnTyY2DoTnpBvyFClDDGUe89p75tOmlUm/YwA7QZuOseaZ6T4LQHkJ3KRmiIbpKLa83vreG/bkaLH7Urb7cIO9kl0o4uoGfC1K2qAXdu1TIzjx/Sj7XAkJk9dL6ajxERDftsjnEHe0nsyTVSo5EYGLcT/RaldxMdo9xI11KKWjrMMtfIfjVDLvf9BS3sCxQoVIk/hsFi7VtlLjnUOnERcERchqFuoOelPVhOiG4nzUwVkCN45vj3tFQmh7nJXS3LPh7L7LdujFn/fx/MwWdxZI2l2QBYkPEtzuczu80PSrw+ahjBa9Ks2I5PhU2HZGNr/p+SQa0OIDE7gWf/1SdyjA4l6soYUIB775xHzLIYqXK/n9XN45H0uXDC29yIkjb98BcNnouprXFmyOHWUZs5QsH/4ypVU16ICelgrUzVmtDzeaC8SyTqoDtY10lJHokBFt5WE5El5xa29MKdwVMHVMEnMckC5LAvRuynHx2M9Cg7a289tgFO1wbcXaQDaXomC7dkTYhuuFqjXBkFP6JSiUAQ8Zwy4jvSEBepdK3fqLWfDuO96tJys0MVcJFre3F4U0L1j+A3HHreDr5EdCzD/abu2VkVBtI+XhjPZEvhdpWKdqcrtrUEcS8eq5+K+kAr0vPjo63jiHe4hSRBeCBmY5wbPGmBjE4UFvacgs7mjBfVitVdsbrCY1W/arLF++RV5DFaVqgXNwU5kz4lYBujLFLWp/Ig1L3fRZ1hj2tY7GDgrJQXVPU26VNa5QedVJv5qD0Xu/+953qgl7V0QX0DSNIO/AZ8ZYbt5aUl5reLm5KfPfY2ogd7cThuRhebFNIaY9P59B68FwlGfVolEPnkiwTCqhIyYN7TYNVStrlO8Mrokg07r+gMBMIfYR0OczSnSlyOOAKI1y2ypPAe/ndPIw52pQHK6qhkQIe62r4OanSCuoJKTlOnj0knj8nzT6ArB/XzTM5L/MygCk0aRYjqk6WOE6y1JeJdwjpAIfnZeUHpHKNCxgB.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1zb25uZXQtNS41LTIwMjYwOTI4fGNsYXVkZS1vbi1hd3MifQ"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 633,
+    "completion_tokens": 1187,
+    "total_tokens": 1820,
+    "cost": 0.013136,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.013136,
+      "upstream_inference_prompt_cost": 0.001266,
+      "upstream_inference_completions_cost": 0.01187
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 240,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

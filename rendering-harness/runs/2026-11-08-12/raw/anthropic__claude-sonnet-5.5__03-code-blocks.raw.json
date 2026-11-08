@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794167210-8oFcF8p0qeYP3PjP9E3M",
+  "object": "chat.completion",
+  "created": 1794167210,
+  "model": "anthropic/claude-sonnet-5.5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Code Block Test Response\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\nExpected output:\n\n```text\nSolutions: x = 3.0, x = 2.0\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\nThis version runs in exponential time. A memoized version is much faster for larger `n`:\n\n```javascript\nconst fibMemo = (n, memo = new Map()) => {\n  if (n <= 1) return n;\n  if (memo.has(n)) return memo.get(n);\n  const value = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);\n  memo.set(n, value);\n  return value;\n};\n\nconsole.log(fibMemo(50)); // 12586269025\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nMore examples: `$a + $b`, `snake_case_name`, `2^10`, and `${variable}`.\n\n## Other fenced block types\n\n```bash\necho \"Total: $100\"\npython3 script.py --input data_file.csv\n```\n\n```json\n{\n  \"equation\": \"x^2 - 5x + 6 = 0\",\n  \"roots\": [2, 3]\n}\n```\n\n```\nA plain block with no language specified.\nSpecial characters: * _ ~ # $ \\ |\n```",
+        "refusal": null,
+        "reasoning": "The user gave a test prompt asking for a response with fenced code blocks, and the content they want is already in the prompt itself. I'm weighing whether to reproduce those blocks, improve them, and add a short explanation, while keeping it useful. One point I'm checking is the quadratic formula's behavior with a negative discriminant in Python.\n\nI'm going to answer with the code blocks, the expected output, and some notes on the code inline.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user gave a test prompt asking for a response with fenced code blocks, and the content they want is already in the prompt itself. I'm weighing whether to reproduce those blocks, improve them, and add a short explanation, while keeping it useful. One point I'm checking is the quadratic formula's behavior with a negative discriminant in Python.\n\nI'm going to answer with the code blocks, the expected output, and some notes on the code inline.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQSiAoKEAgTGAI4AUIIdGhpbmtpbmcSDJnIRqDuChYNpTn3hBoMW2J9QnUBOOG4gNn5IjByobLWUtbhrMGSC+LKZV5JJMSnjSJBival26J57WYCyiqx9NRB0812ZXyj9l2/ESoqpQljQWuZHWouph8lKMay6gvPhyeN/WpQvIiiUh4zEq8g0+aXyoOJzCz9yzOMpWlKWdGGkQIHTjWjDjR1wvtz+6HNiuFBZwhcyOTO32EREo0DCoWO4SWyLOoplFl9obQPv4rZc+aN4Evx+x185Fdqx3TUqPpL/5iqQVu9WBPxPgmvcoodpV/z4qAc2qP/G6YnB40Ar9Exwn3f6EP/nfTRNp83/je/+L0eO+uAzGXTUmmoOUGxaScZibu2+7pP9oWJqmx2pkxEz3F8pTPFwZX4d7MKXoRZ7UV/tIGEpvhgQosb75qshBKezN87y3xrq/T5MJcTkd7Fvltr4Jym6GGLOzR9kQj+n04/hQQRgnwW7hHDb5dJ+GmCnw2al+RpVL/x6z8IFdKgGQ7fHdPN4+qaf3G7Yx/ujvtkhX//oiJ3IiuT8gGXU7hz2LrRnEm18lfXAdZ7FM6cMyvA1tAUFrOL1zmd6Hhf3bc7GbCxBSxM6HOEEUFrpF9TGwp5peV4pVwomIKMum2zUx4Qarlu2pUsDZRBXwZjSwbTXT1q3Sq9AqRJ0jWbdbhgtwZ+HrA9EPBL7SsctqpjgT2SFBtmVIzFsgIcSu+K25O4hZhR+ltPjEVyCYa9MY6gFCqUHm+PIlZtgVlJXYg0ZY5MQ44dzSZRDeQSzzMVIAyqnDxgH2Z+yf3PWP1Kw412M3XXZuA8ToTXX1J9zfroajmwQDtFzrUgmNXCMBPwJi7sxb2hVzyBFIcD9JJ43zpy739hwPZD+3GoHaNlWFk4WrrG5TKb8pPbHbyDRCd/Ztl9RNBRXdlrOz9tJWWOsxwjh2415+W05xnHW4p2m4IxRWgK1G89e5doIAdpsXc7QCZbafaE7AMSZlbrnVHk7+384aE038nUyPpSEAw1ckjSZqVgdEx/Cjd9RJfRbkGF5TfZ2Ql2R2NOpL3UVHfumIwklP6FT1CDKSVRHNa0sZnfKRxpPj9dwCW9LMkUtMT31eraRbMo8e752a2Fmj/ZlZUOWOG2QBQdHExThttrnJUi74kdvE7rJlHoHy4qAUFG1h/4VZboZkaIqnF9AG4rbG1ywrNOlJQxvscB6X8GNT29myzAWlAdFf8vhDgFsJ0LQCzS2V7Z5cT/Faw3H78HCK0Hgh9+si4fQlB2DAY4W5Fo8itz/gbwkuROQHI+f95+nAA/4z5G1WVjGB5u8j17xZ9s/eGSmZRaAYKi2S8mBAF+oDwwmchmFVLvDHY51N7ZqbgXiUDwopa8rmUGNqOqTmVFWEChqSCTq6AxZMDv6yKuF9yW8yvDFUYMXl+EwguQ2NAHvAMp9qdkoAWlQauy+xV18kSDfu8OyqObjaU41HPJEeyLH8ML1uY+uqF6bY9Qfl87XWDqvwpMWu6tLYRD6SQA6EzSGFaJ07M2LQuocO0oB6Kq+m0w0D3FA/k1cM8OQNWkMyhBQDJcI9WNdPfNvtJCwWffUDvIokJ6+ZaJZgt+6qBA5/9A4crK4fgBbUGns+sjb6hgUk8TqKrENliXXe+W5IAWkykNrb6ND0om0IT3+OMiDLLBFCudEcr6pPyR+rKUP07NKpz0RRWupBvKJHwAGAE=.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1zb25uZXQtNS41LTIwMjYwOTI4fGNsYXVkZS1vbi1hd3MifQ"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 340,
+    "completion_tokens": 883,
+    "total_tokens": 1223,
+    "cost": 0.00951,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00951,
+      "upstream_inference_prompt_cost": 0.00068,
+      "upstream_inference_completions_cost": 0.00883
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 226,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

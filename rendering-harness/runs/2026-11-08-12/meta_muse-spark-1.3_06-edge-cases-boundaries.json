@@ -1,0 +1,36 @@
+{
+  "modelId": "meta/muse-spark-1.3",
+  "modelName": "Meta: Muse Spark 1.3",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here is a breakdown of those edge cases — what *should* render as math vs. what should stay as literal text:\n\n### 1. Delimiter Variants\n\nThese 4 should all render as math:\n\n**1. Double dollar display:**\n$$x^2 + y^2 = r^2$$\n\n**2. Bracket display:**\n\\[E = mc^2\\]\n\n**3. Single dollar inline:** $a + b = c$\n\n**4. Paren inline:** \\(x = 5\\)\n\n> `$$...$$` and `\\[...\\]` = display / block, `$...$` and `\\(...\\)` = inline.\n\n### 2. Nested Structures\n\nDisplay math inside a list should still work when indented as a continuation:\n\n- First item\n- The equation is:\n  $$\\int_0^1 x dx = \\frac{1}{2}$$\n  And it evaluates to 0.5\n- Third item\n\n### 3. Code with Math-like Syntax\n\nFenced code must stay literal — no math parsing inside:\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n### 4. Currency and Escaped Dollars\n\nThese should **NOT** become math — they stay as plain text:\n\n- Plain: The price is \\$100\n- Escaped: The budget is \\$500\n- Multiple: Costs \\$25, \\$30, and \\$45\n- In sentence: I spent \\$50 at the store\n\n> A lone `$` followed by a number with no closing `$` is not math. `\\$` is always literal `$`.\n\n### 5. Tables with Math\n\nInline math inside table cells should still render:\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n### 6. Raw Dollar Signs\n\nShell variables and prices should stay literal, best handled with code spans or escapes:\n\nThe shell variable `$HOME` is set. Price: \\$99.99.\n",
+  "usage": {
+    "prompt_tokens": 335,
+    "completion_tokens": 3119,
+    "total_tokens": 3454,
+    "cost": 0.0136745,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0136745,
+      "upstream_inference_prompt_cost": 0.00041875,
+      "upstream_inference_completions_cost": 0.01325575
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2564,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0136745,
+  "actualCost": 0.0136745,
+  "timestamp": "2026-11-08T19:50:10.174Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null
+}

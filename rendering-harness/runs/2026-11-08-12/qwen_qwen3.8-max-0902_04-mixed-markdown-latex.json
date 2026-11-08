@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3.8-max-0902",
+  "modelName": "Qwen: Qwen3.8 Max (0902)",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "## Mixed Markdown and LaTeX Example\n\n**Exercise 1**: Given the function\n\n\\[\nf(x) = x^2 + 2x + 1\n\\]\n\nfind:\n\n1. The *derivative* \\(f'(x)\\)  \n2. The **integral** \\(\\int f(x)\\,dx\\)\n\n### Solution\n\nUsing the power rule, the derivative is\n\n\\[\nf'(x) = 2x + 2\n\\]\n\nThe indefinite integral is\n\n\\[\n\\int f(x)\\,dx\n=\n\\int \\left(x^2 + 2x + 1\\right) dx\n=\n\\frac{x^3}{3} + x^2 + x + C\n\\]\n\n---\n\n## Linear Algebra with Lists\n\nFor the matrix\n\n\\[\nA =\n\\begin{pmatrix}\na & b \\\\\nc & d\n\\end{pmatrix}\n\\]\n\nsome important properties are:\n\n- **Determinant**:\n\n\\[\n\\det(A) = ad - bc\n\\]\n\n- **Trace**:\n\n\\[\n\\operatorname{tr}(A) = a + d\n\\]\n\n- **Inverse**, if \\(\\det(A) \\neq 0\\):\n\n\\[\nA^{-1}\n=\n\\frac{1}{ad - bc}\n\\begin{pmatrix}\nd & -b \\\\\n-c & a\n\\end{pmatrix}\n\\]\n\n---\n\n## Real-World Context\n\n> **Note**: In economics, a cost function such as  \n> \\[\n> C(q) = 100 + 5q\n> \\]\n> means fixed costs are \\$100 and variable costs are \\$5 per unit.\n\nIf you buy \\(10\\) units, then\n\n\\[\nC(10) = 100 + 5(10) = 150\n\\]\n\nSo the total cost is **\\$150**.",
+  "usage": {
+    "prompt_tokens": 380,
+    "completion_tokens": 1026,
+    "total_tokens": 1406,
+    "cost": 0.006916,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.006916,
+      "upstream_inference_prompt_cost": 0.00076,
+      "upstream_inference_completions_cost": 0.006156
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 599,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.006916,
+  "actualCost": 0.006916,
+  "timestamp": "2026-11-08T19:53:27.154Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}
