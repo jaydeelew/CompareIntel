@@ -152,22 +152,48 @@ export class DurableStore {
     }
   }
 
+  /**
+   * Exclusive lock around read → callback → atomic write.
+   * Logical/pre-write callback (or read) failure: original file unchanged, lock released.
+   * IO/atomic write failure: lock kept so later paid calls fail closed.
+   */
   mutate<T>(fn: (state: GuardGlobalState) => T): T {
     this.io.mkdirSync(this.lockFile)
+    let writeAttempted = false
     let committed = false
     try {
       const state = this.read()
       const result = fn(state)
       state.revision = (state.revision || 0) + 1
-      this.atomicWrite(state)
+      writeAttempted = true
+      try {
+        this.atomicWrite(state)
+      } catch (err) {
+        throw new DurableIoError(err instanceof Error ? err.message : String(err))
+      }
       committed = true
       return result
     } finally {
-      if (committed) this.io.rmdirSync(this.lockFile)
+      if (committed || !writeAttempted) {
+        try {
+          this.io.rmdirSync(this.lockFile)
+        } catch {
+          /* leftover lock remains fail-closed */
+        }
+      }
     }
   }
 }
 
 export function unresolvedBlocksPaid(state: GuardGlobalState): boolean {
   return state.unknownCharges.length > 0 || state.pendingRequests.length > 0
+}
+
+/** Thrown when atomic write/fsync/rename fails. Leftover lock must stay. */
+export class DurableIoError extends Error {
+  readonly kind = 'io' as const
+  constructor(message: string) {
+    super(message)
+    this.name = 'DurableIoError'
+  }
 }

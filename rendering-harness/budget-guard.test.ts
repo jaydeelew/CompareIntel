@@ -15,7 +15,6 @@ import {
   observedRatesFromUsage,
   preRequestBudgetDecision,
   remainingBudget,
-  resolveActualCost,
   type PricingInfo,
 } from './budget-guard.js'
 
@@ -110,25 +109,27 @@ test.describe('Budget Guard (production module)', () => {
   })
 
   test('FAIL: missing usage data throws (cost unknowable)', () => {
-    expect(() => resolveActualCost(null, pricing, 'test/model')).toThrow(
-      /No usage data returned/
-    )
-    expect(() => resolveActualCost({}, pricing, 'test/model')).toThrow(/No usage data returned/)
+    const guard = new SharedCostGuard(1)
+    expect(() => guard.observe('test/model', null)).toThrow(/Unknown spend/)
+    expect(() => guard.observe('test/model', {})).toThrow(/Unknown spend/)
   })
 
-  test('FAIL: usage without cost and without pricing throws', () => {
+  test('FAIL: usage without cost does not catalog-guess', () => {
+    const guard = new SharedCostGuard(1)
     expect(() =>
-      resolveActualCost({ prompt_tokens: 100, completion_tokens: 200 }, undefined, 'test/model')
-    ).toThrow(/No pricing data/)
+      guard.observe('test/model', { prompt_tokens: 100, completion_tokens: 200 })
+    ).toThrow(/Unknown spend/)
+    expect(guard.actual).toBe(0)
   })
 
   test('PASS: usage.cost is billed as-is', () => {
-    const cost = resolveActualCost(
-      { prompt_tokens: 100, completion_tokens: 200, cost: 0.0042 },
-      pricing,
-      'test/model'
-    )
-    expect(cost).toBe(0.0042)
+    const guard = new SharedCostGuard(1)
+    guard.observe('test/model', {
+      prompt_tokens: 100,
+      completion_tokens: 200,
+      cost: 0.0042,
+    })
+    expect(guard.actual).toBe(0.0042)
   })
 
   test('FAIL: a refused request must not spend, so a later request is not unbudgeted', () => {

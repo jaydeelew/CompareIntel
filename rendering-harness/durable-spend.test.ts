@@ -354,6 +354,60 @@ try {
     ).toThrow(/unresolved/)
   })
 
+  test('logical unmatched observe releases lock and does not hide pending settlement', () => {
+    const x = fixture()
+    try {
+      const g = x.guard(1, 'A')
+      const real = { callId: 'cell-real', modelId, promptName: '01' }
+      g.beginRequest(g.reserve({ modelId, prompt, completionCap: 10, catalog }), real)
+      const before = x.read()
+      expect(before.pendingRequests).toHaveLength(1)
+      expect(before.knownActualUsd).toBe(0)
+      expect(() =>
+        g.observe(modelId, usage, true, {
+          callId: 'cell-other',
+          modelId,
+          promptName: '02',
+        })
+      ).toThrow(/Unmatched pending/)
+      expect(fs.existsSync(x.stateFile + '.lock')).toBe(false)
+      const afterThrow = x.read()
+      expect(afterThrow.pendingRequests).toEqual(before.pendingRequests)
+      expect(afterThrow.knownActualUsd).toBe(0)
+      expect(afterThrow.unknownCharges).toHaveLength(0)
+      g.observe(modelId, usage, true, real)
+      expect(fs.existsSync(x.stateFile + '.lock')).toBe(false)
+      expect(x.read().pendingRequests).toHaveLength(0)
+      expect(x.read().knownActualUsd).toBe(0.0041)
+      expect(x.read().unknownCharges).toHaveLength(0)
+    } finally {
+      fs.rmSync(x.dir, { recursive: true, force: true })
+    }
+  })
+
+  test('logical duplicate observe releases lock without resetting known spend', () => {
+    const x = fixture()
+    try {
+      const g = x.guard(1, 'A')
+      const first = { callId: 'cell1', modelId, promptName: '01' }
+      g.beginRequest(g.reserve({ modelId, prompt, completionCap: 10, catalog }), first)
+      g.observe(modelId, usage, true, first)
+      expect(x.read().knownActualUsd).toBe(0.0041)
+      expect(() => g.observe(modelId, usage, true, first)).toThrow(/Duplicate settlement/)
+      expect(fs.existsSync(x.stateFile + '.lock')).toBe(false)
+      expect(x.read().knownActualUsd).toBe(0.0041)
+      expect(x.read().pendingRequests).toHaveLength(0)
+      const second = { callId: 'cell2', modelId, promptName: '02' }
+      g.beginRequest(g.reserve({ modelId, prompt, completionCap: 10, catalog }), second)
+      g.observe(modelId, usage, true, second)
+      expect(x.read().knownActualUsd).toBeCloseTo(0.0082, 12)
+      expect(x.read().pendingRequests).toHaveLength(0)
+      expect(x.read().unknownCharges).toHaveLength(0)
+    } finally {
+      fs.rmSync(x.dir, { recursive: true, force: true })
+    }
+  })
+
   test('cap-once + 25% is the live reserve; 3x is not applied', () => {
     const x = fixture()
     try {

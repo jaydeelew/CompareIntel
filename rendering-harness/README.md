@@ -109,9 +109,10 @@ Logic is in `budget-guard.ts` (imported by the runner and by tests):
 
 - **Pre-request guard**: `SharedCostGuard.reserve` + `gate` (dry-run and live use the same formula)
 - **Unknown pricing**: refused (no $1/1M fallback)
-- **Actual cost**: `usage.cost` only. Missing cost is persisted as unknown (`actualCost`/`resolution` null) and fail-closes later paid calls. Not guessed from catalog tokens, not treated as $0.
+- **Actual cost**: `usage.cost` only. Missing cost is persisted as unknown (`actualCost`/`resolution` null) and fail-closes later paid calls. Not guessed from catalog tokens, not treated as $0. There is no catalog-token `resolveActualCost` helper.
 - **Thinking / reasoning**: completion cap includes visible + reasoning once, plus 25% margin. Not a blind 3× multiplier.
-- **Durable state**: `guard-global-state.json` is global (not per-batch). Interrupted pending POSTs and historical unknowns block every batch until explicit resolution/approval.
+- **`--max-usd` is per-batch**: approved remaining budget for that run/batch ID, not lifetime remaining. A new batch still needs an explicit approved remaining budget. Global `knownActualUsd` is accounting only.
+- **Durable unknown/pending state**: `guard-global-state.json` is global (not per-batch). Interrupted pending POSTs and historical unknowns block every batch until explicit resolution/approval. Logical pre-write errors release `.lock`; IO/atomic failures keep it.
 
 See `BUDGET_GUARD_AUDIT.md` for limits (not a provider hard cap).
 

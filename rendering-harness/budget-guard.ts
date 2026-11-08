@@ -5,6 +5,7 @@
 
 import crypto from 'node:crypto'
 import {
+  DurableIoError,
   type DurableStore,
   unresolvedBlocksPaid,
 } from './durable-spend.js'
@@ -108,32 +109,6 @@ export function preRequestBudgetDecision(opts: {
     }
   }
   return { action: 'proceed', estimatedCost }
-}
-
-/**
- * Resolve billed cost after a response. Throws when the cost cannot be known,
- * so a later request is never charged against a guessed amount.
- */
-export function resolveActualCost(
-  usage: UsageLike | null | undefined,
-  pricing: PricingInfo | undefined,
-  modelId: string
-): number {
-  if (usage && typeof usage.cost === 'number') {
-    return usage.cost
-  }
-  if (usage && usage.prompt_tokens != null && usage.completion_tokens != null) {
-    if (!pricing) {
-      throw new Error(
-        `No pricing data for ${modelId} and usage.cost not provided by OpenRouter`
-      )
-    }
-    return (
-      usage.prompt_tokens * pricing.inputCostPerToken +
-      usage.completion_tokens * pricing.outputCostPerToken
-    )
-  }
-  throw new Error(`No usage data returned from OpenRouter for ${modelId}`)
 }
 
 /** 25% headroom on max(catalog, observed) rates. Same margin as the collection CostGuard. */
@@ -248,6 +223,7 @@ export interface GuardOptions {
  * no acknowledge/reset API — resumption needs explicit reviewed resolution.
  */
 export class SharedCostGuard {
+  /** Approved remaining budget for this batch only — not lifetime/global remaining. */
   readonly budget: number
   readonly batchId: string
   readonly store?: DurableStore
@@ -418,10 +394,12 @@ export class SharedCostGuard {
         }
       })
     } catch (err) {
-      this.localHalt =
-        'Settlement/state write failed: stop; ' +
-        (err instanceof Error ? err.message : String(err))
-      throw new Error(this.localHalt)
+      if (err instanceof DurableIoError) {
+        this.localHalt =
+          'Settlement/state write failed: stop; ' + err.message
+        throw new Error(this.localHalt)
+      }
+      throw err
     }
     this.refresh()
     return this.rates.get(modelId)!
@@ -525,10 +503,12 @@ export class SharedCostGuard {
         })
       })
     } catch (err) {
-      this.localHalt =
-        'Cannot persist pre-request intent: stop; ' +
-        (err instanceof Error ? err.message : String(err))
-      throw new Error(this.localHalt)
+      if (err instanceof DurableIoError) {
+        this.localHalt =
+          'Cannot persist pre-request intent: stop; ' + err.message
+        throw new Error(this.localHalt)
+      }
+      throw err
     }
     return true
   }
