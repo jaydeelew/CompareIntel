@@ -1,10 +1,10 @@
 {
   "status": "stopped",
-  "stopReason": "API error; halted without retry",
-  "attemptedCalls": 15,
-  "successfulReplies": 14,
-  "unattemptedCalls": 9,
-  "knownActualCost": 0.0422084722,
+  "stopReason": "Grok 03 provider_unavailable 502; Grok 04-06 unattempted; no Grok retry; Cohere 6 completed",
+  "attemptedCalls": 21,
+  "successfulReplies": 20,
+  "unattemptedCalls": 3,
+  "knownActualCost": 0.0757709722,
   "unknownCostCalls": 1,
   "errors": [
     {
@@ -22,14 +22,14 @@
       "finishedAt": "2026-11-08T19:12:31.918Z"
     }
   ],
-  "promptTokensKnown": 4412,
-  "completionTokensKnown": 15879,
-  "totalTokensKnown": 20291,
+  "promptTokensKnown": 6313,
+  "completionTokensKnown": 18760,
+  "totalTokensKnown": 25073,
   "reasoningTokensIncludedInCompletionKnown": 10632,
   "firstCallCST": "11/8/2026, 1:07:15 PM CST",
-  "lastCallCST": "11/8/2026, 1:12:31 PM CST",
+  "lastCallCST": "11/8/2026, 1:18:23 PM CST",
   "finishReasonCounts": {
-    "stop": 14,
+    "stop": 20,
     "unknown/error": 1
   },
   "truncated": [],
@@ -55,10 +55,21 @@
     },
     {
       "id": "cohere/command-a",
-      "knownCost": 0,
-      "attempts": 0,
-      "successful": 0
+      "knownCost": 0.0335625,
+      "attempts": 6,
+      "successful": 6
     }
   ],
-  "coverage": "Collection only; provider capacity error halted batch;failed attempt is not renderer failure;no retry"
+  "coverage": "Collection only; Grok 03 provider_unavailable preserved; no Grok retry; Cohere 6 merged",
+  "cohere": {
+    "attemptedCalls": 6,
+    "actualCost": 0.0335625,
+    "windowCST": "11/8/2026, 1:13:43 PM \u2013 1:18:23 PM CST",
+    "promptTokens": 1901,
+    "completionTokens": 2881,
+    "reasoningTokens": 0,
+    "finishReasonCounts": {
+      "stop": 6
+    }
+  }
 }

@@ -1,0 +1,36 @@
+{
+  "modelId": "cohere/command-a",
+  "modelName": "Cohere: Command A",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here’s a response with fenced code blocks and inline code as requested:\n\n## Python Code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript Code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline Code with Math-Like Content  \nThe variable `x^2` should render as code, not math. Similarly, `a_b` and `$price` should be treated as inline code:  \n- `x^2`  \n- `a_b`  \n- `$price`  \n\nThese are rendered as code blocks to ensure they are not interpreted as mathematical expressions or special syntax.",
+  "usage": {
+    "prompt_tokens": 263,
+    "completion_tokens": 310,
+    "total_tokens": 573,
+    "cost": 0.0037575,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0037575,
+      "upstream_inference_prompt_cost": 0.0006575,
+      "upstream_inference_completions_cost": 0.0031
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0037575,
+  "actualCost": 0.0037575,
+  "timestamp": "2026-11-08T19:15:18.854Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "complete",
+  "error": null
+}

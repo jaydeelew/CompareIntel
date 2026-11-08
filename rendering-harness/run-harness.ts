@@ -503,6 +503,7 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
     'coverage.json',
     'unique-coverage.json',
     'next-batch-preflight.json',
+    'summary-partial.json',
   ]);
   const jsonFiles = files.filter(
     f =>

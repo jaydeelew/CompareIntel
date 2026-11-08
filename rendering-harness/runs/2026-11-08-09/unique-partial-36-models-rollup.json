@@ -10,10 +10,11 @@
     "2026-11-08-08",
     "2026-11-08-09"
   ],
-  "uniqueCells": 207,
+  "uniqueCells": 213,
   "models": [
     "anthropic/claude-haiku-4.5",
     "anthropic/claude-haiku-5.5",
+    "cohere/command-a",
     "deepseek/deepseek-v3.2",
     "deepseek/deepseek-v4-flash",
     "deepseek/deepseek-v4.1-flash",
@@ -48,13 +49,23 @@
     "z-ai/glm-5-turbo",
     "z-ai/glm-5.3-flash"
   ],
-  "modelCount": 35,
+  "modelCount": 36,
   "statusCounts": {
-    "pass": 197,
+    "pass": 203,
     "not-covered": 9,
     "incomplete": 1
   },
-  "cumulativeKnownPaidAllBatches": 0.2727142923,
+  "recoveredBatch08_32x6": {
+    "uniqueCells": 192,
+    "statusCounts": {
+      "pass": 183,
+      "not-covered": 9,
+      "fail": 0
+    },
+    "models": 32,
+    "source": "rendering-harness/runs/2026-11-08-08/unique-32x6-rollup.json"
+  },
+  "cumulativeKnownPaidAllBatches": 0.3062767923,
   "unknownFailedCharges": 1,
   "batch08": {
     "originalCalls": 24,
@@ -70,31 +81,41 @@
   },
   "batch09": {
     "plannedCalls": 24,
-    "attemptedCalls": 15,
-    "successfulReplies": 14,
-    "knownActualCost": 0.0422084722,
+    "attemptedCalls": 21,
+    "successfulReplies": 20,
+    "knownActualCost": 0.0757709722,
+    "partialKnownCost": 0.0422084722,
+    "cohereCost": 0.0335625,
     "unknownCostCalls": 1,
-    "windowCST": "11/8/2026, 1:07:15 PM \u2013 1:12:31 PM CST",
+    "windowCST": "11/8/2026, 1:07:15 PM \u2013 1:18:23 PM CST",
+    "cohereWindowCST": "11/8/2026, 1:13:43 PM \u2013 1:18:23 PM CST",
     "unique": {
-      "pass": 14,
+      "pass": 20,
       "not-covered": 0,
       "incomplete": 1,
       "fail": 0
     },
-    "historyRecords": 15,
+    "historyRecords": 21,
     "providerUnavailable": [
       "x-ai/grok-4.3 03-code-blocks"
     ],
     "unattempted": [
       "x-ai/grok-4.3 04-mixed-markdown-latex",
       "x-ai/grok-4.3 05-complex-scenarios",
-      "x-ai/grok-4.3 06-edge-cases-boundaries",
-      "cohere/command-a \u00d7 6"
+      "x-ai/grok-4.3 06-edge-cases-boundaries"
     ],
     "uniqueCoverageConcluded": false,
-    "originalJsonHashMismatches": 0
+    "originalJsonHashMismatches": 0,
+    "fullModels": [
+      "xiaomi/mimo-v2.5",
+      "moonshotai/kimi-k2.6",
+      "cohere/command-a"
+    ],
+    "partialModels": [
+      "x-ai/grok-4.3"
+    ]
   },
-  "note": "One cell per (modelId, promptName). Each row names its batch manifest. Not a single paid 35-model suite and not a complete 35\u00d76 grid. Batch 09 is partial: 14 stop replies rendered; Grok 03 provider_unavailable 502 skipped (incomplete, not pass, not renderer-fail); Grok 04\u201306 and Cohere Command A \u00d76 unattempted. Original JSON hashes 0 mismatch.",
+  "note": "One cell per (modelId, promptName). Each row names its batch manifest. Not a single paid 36-model suite and not a complete 36\u00d76 grid. Recovered Batch 08 unique 32\u00d76 is 183 pass / 9 not-covered / 0 fail. Batch 09: 20 stop replies rendered (MiMo, Kimi, Cohere \u00d76 plus Grok 01\u201302); Grok 03 provider_unavailable 502 skipped (incomplete, not pass, not renderer-fail); Grok 04\u201306 unattempted; no Grok retry. Original JSON hashes 0 mismatch.",
   "cells": [
     {
       "batch": "2026-11-08-01",
@@ -2447,6 +2468,84 @@
       "actualCost": 0.008232,
       "provenance": "uniqueCoverage overlay; complete later attempt replaces truncated/empty; originals stay in batch history",
       "screenshotRelpath": "z-ai_glm-5-turbo_06-edge-cases-boundaries.png"
+    },
+    {
+      "batch": "2026-11-08-09",
+      "modelId": "cohere/command-a",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "attempt": "original",
+      "sourceFile": "cohere_command-a_01-math-basics.json",
+      "truncated": false,
+      "finishReason": "stop",
+      "actualCost": 0.0066875,
+      "provenance": "uniqueCoverage overlay; complete later attempt replaces truncated/empty; originals stay in batch history",
+      "screenshotRelpath": "cohere_command-a_01-math-basics.png"
+    },
+    {
+      "batch": "2026-11-08-09",
+      "modelId": "cohere/command-a",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "attempt": "original",
+      "sourceFile": "cohere_command-a_02-markdown-formatting.json",
+      "truncated": false,
+      "finishReason": "stop",
+      "actualCost": 0.0026375,
+      "provenance": "uniqueCoverage overlay; complete later attempt replaces truncated/empty; originals stay in batch history",
+      "screenshotRelpath": "cohere_command-a_02-markdown-formatting.png"
+    },
+    {
+      "batch": "2026-11-08-09",
+      "modelId": "cohere/command-a",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "attempt": "original",
+      "sourceFile": "cohere_command-a_03-code-blocks.json",
+      "truncated": false,
+      "finishReason": "stop",
+      "actualCost": 0.0037575,
+      "provenance": "uniqueCoverage overlay; complete later attempt replaces truncated/empty; originals stay in batch history",
+      "screenshotRelpath": "cohere_command-a_03-code-blocks.png"
+    },
+    {
+      "batch": "2026-11-08-09",
+      "modelId": "cohere/command-a",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "attempt": "original",
+      "sourceFile": "cohere_command-a_04-mixed-markdown-latex.json",
+      "truncated": false,
+      "finishReason": "stop",
+      "actualCost": 0.0054775,
+      "provenance": "uniqueCoverage overlay; complete later attempt replaces truncated/empty; originals stay in batch history",
+      "screenshotRelpath": "cohere_command-a_04-mixed-markdown-latex.png"
+    },
+    {
+      "batch": "2026-11-08-09",
+      "modelId": "cohere/command-a",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "pass",
+      "attempt": "original",
+      "sourceFile": "cohere_command-a_05-complex-scenarios.json",
+      "truncated": false,
+      "finishReason": "stop",
+      "actualCost": 0.006985,
+      "provenance": "uniqueCoverage overlay; complete later attempt replaces truncated/empty; originals stay in batch history",
+      "screenshotRelpath": "cohere_command-a_05-complex-scenarios.png"
+    },
+    {
+      "batch": "2026-11-08-09",
+      "modelId": "cohere/command-a",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "pass",
+      "attempt": "original",
+      "sourceFile": "cohere_command-a_06-edge-cases-boundaries.json",
+      "truncated": false,
+      "finishReason": "stop",
+      "actualCost": 0.0080175,
+      "provenance": "uniqueCoverage overlay; complete later attempt replaces truncated/empty; originals stay in batch history",
+      "screenshotRelpath": "cohere_command-a_06-edge-cases-boundaries.png"
     },
     {
       "batch": "2026-11-08-09",

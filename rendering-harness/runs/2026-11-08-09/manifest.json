@@ -54,8 +54,8 @@
     "cohere/command-a"
   ],
   "plannedCalls": 24,
-  "attemptedCalls": 15,
-  "knownActualCost": 0.0422084722,
+  "attemptedCalls": 21,
+  "knownActualCost": 0.0757709722,
   "unknownCostCalls": 1,
   "calls": [
     {
@@ -120,7 +120,7 @@
         },
         "cost_details": {
           "upstream_inference_cost": 0.0005032,
-          "upstream_inference_prompt_cost": 0.0000812,
+          "upstream_inference_prompt_cost": 8.12e-05,
           "upstream_inference_completions_cost": 0.000422
         },
         "completion_tokens_details": {
@@ -157,7 +157,7 @@
         },
         "cost_details": {
           "upstream_inference_cost": 0.0006376,
-          "upstream_inference_prompt_cost": 0.0000976,
+          "upstream_inference_prompt_cost": 9.76e-05,
           "upstream_inference_completions_cost": 0.00054
         },
         "completion_tokens_details": {
@@ -342,7 +342,7 @@
         },
         "cost_details": {
           "upstream_inference_cost": 0.0007978928,
-          "upstream_inference_prompt_cost": 0.0000336528,
+          "upstream_inference_prompt_cost": 3.36528e-05,
           "upstream_inference_completions_cost": 0.00076424
         },
         "completion_tokens_details": {
@@ -379,7 +379,7 @@
         },
         "cost_details": {
           "upstream_inference_cost": 0.0009108806,
-          "upstream_inference_prompt_cost": 0.0000400406,
+          "upstream_inference_prompt_cost": 4.00406e-05,
           "upstream_inference_completions_cost": 0.00087084
         },
         "completion_tokens_details": {
@@ -453,7 +453,7 @@
         },
         "cost_details": {
           "upstream_inference_cost": 0.0043276648,
-          "upstream_inference_prompt_cost": 0.0000718648,
+          "upstream_inference_prompt_cost": 7.18648e-05,
           "upstream_inference_completions_cost": 0.0042558
         },
         "completion_tokens_details": {
@@ -596,14 +596,236 @@
           "error_type": "provider_unavailable"
         }
       }
+    },
+    {
+      "index": 16,
+      "modelId": "cohere/command-a",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:13:43.085Z",
+      "reserveUsd": 0.02813125,
+      "actualCost": 0.0066875,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:13:51.011Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 287,
+        "completion_tokens": 597,
+        "total_tokens": 884,
+        "cost": 0.0066875,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0066875,
+          "upstream_inference_prompt_cost": 0.0007175,
+          "upstream_inference_completions_cost": 0.00597
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 17,
+      "modelId": "cohere/command-a",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:13:51.011Z",
+      "reserveUsd": 0.027625000000000004,
+      "actualCost": 0.0026375,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:14:15.039Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 199,
+        "completion_tokens": 214,
+        "total_tokens": 413,
+        "cost": 0.0026375,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0026375,
+          "upstream_inference_prompt_cost": 0.0004975,
+          "upstream_inference_completions_cost": 0.00214
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 18,
+      "modelId": "cohere/command-a",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:14:15.040Z",
+      "reserveUsd": 0.027900000000000005,
+      "actualCost": 0.0037575,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:15:18.854Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 263,
+        "completion_tokens": 310,
+        "total_tokens": 573,
+        "cost": 0.0037575,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0037575,
+          "upstream_inference_prompt_cost": 0.0006575,
+          "upstream_inference_completions_cost": 0.0031
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 19,
+      "modelId": "cohere/command-a",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:15:18.855Z",
+      "reserveUsd": 0.028515625000000003,
+      "actualCost": 0.0054775,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:15:51.085Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 331,
+        "completion_tokens": 465,
+        "total_tokens": 796,
+        "cost": 0.0054775,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0054775,
+          "upstream_inference_prompt_cost": 0.0008275,
+          "upstream_inference_completions_cost": 0.00465
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 20,
+      "modelId": "cohere/command-a",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:15:51.085Z",
+      "reserveUsd": 0.029434375000000002,
+      "actualCost": 0.006985,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:17:52.407Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 462,
+        "completion_tokens": 583,
+        "total_tokens": 1045,
+        "cost": 0.006985,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.006985,
+          "upstream_inference_prompt_cost": 0.001155,
+          "upstream_inference_completions_cost": 0.00583
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 21,
+      "modelId": "cohere/command-a",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:17:52.407Z",
+      "reserveUsd": 0.028900000000000002,
+      "actualCost": 0.0080175,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:18:23.955Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 359,
+        "completion_tokens": 712,
+        "total_tokens": 1071,
+        "cost": 0.0080175,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0080175,
+          "upstream_inference_prompt_cost": 0.0008975,
+          "upstream_inference_completions_cost": 0.00712
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
     }
   ],
   "coverage": "Not assessed: collection only, no rendering or feature validation",
   "startedAt": "2026-11-08T19:07:15.385Z",
   "conservativeBatchReserve": 0.6720504,
   "status": "stopped",
-  "stopReason": "API error; halted without retry",
-  "finishedAt": "2026-11-08T19:12:31.919Z",
+  "stopReason": "Grok 03 provider_unavailable 502; Grok 04-06 unattempted; no Grok retry; Cohere 6 completed",
+  "finishedAt": "2026-11-08T19:18:23.956Z",
   "files": {
     "replies": [
       "replies/moonshotai_kimi-k2.6_01-math-basics.json",

@@ -1,0 +1,305 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.2,
+  "maxTokens": "perModel",
+  "perModelMaxTokens": [
+    {
+      "id": "xiaomi/mimo-v2.5",
+      "maxTokens": 8192
+    },
+    {
+      "id": "moonshotai/kimi-k2.6",
+      "maxTokens": 8192
+    },
+    {
+      "id": "x-ai/grok-4.3",
+      "maxTokens": 8192
+    },
+    {
+      "id": "cohere/command-a",
+      "maxTokens": 2048
+    }
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+    }
+  ],
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "cohere/command-a"
+  ],
+  "plannedCalls": 6,
+  "attemptedCalls": 6,
+  "knownActualCost": 0.033562499999999995,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "cohere/command-a",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:13:43.085Z",
+      "reserveUsd": 0.02813125,
+      "actualCost": 0.0066875,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:13:51.011Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 287,
+        "completion_tokens": 597,
+        "total_tokens": 884,
+        "cost": 0.0066875,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0066875,
+          "upstream_inference_prompt_cost": 0.0007175,
+          "upstream_inference_completions_cost": 0.00597
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 2,
+      "modelId": "cohere/command-a",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:13:51.011Z",
+      "reserveUsd": 0.027625000000000004,
+      "actualCost": 0.0026375,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:14:15.039Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 199,
+        "completion_tokens": 214,
+        "total_tokens": 413,
+        "cost": 0.0026375,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0026375,
+          "upstream_inference_prompt_cost": 0.0004975,
+          "upstream_inference_completions_cost": 0.00214
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 3,
+      "modelId": "cohere/command-a",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:14:15.040Z",
+      "reserveUsd": 0.027900000000000005,
+      "actualCost": 0.0037575,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:15:18.854Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 263,
+        "completion_tokens": 310,
+        "total_tokens": 573,
+        "cost": 0.0037575,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0037575,
+          "upstream_inference_prompt_cost": 0.0006575,
+          "upstream_inference_completions_cost": 0.0031
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 4,
+      "modelId": "cohere/command-a",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:15:18.855Z",
+      "reserveUsd": 0.028515625000000003,
+      "actualCost": 0.0054775,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:15:51.085Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 331,
+        "completion_tokens": 465,
+        "total_tokens": 796,
+        "cost": 0.0054775,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0054775,
+          "upstream_inference_prompt_cost": 0.0008275,
+          "upstream_inference_completions_cost": 0.00465
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 5,
+      "modelId": "cohere/command-a",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:15:51.085Z",
+      "reserveUsd": 0.029434375000000002,
+      "actualCost": 0.006985,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:17:52.407Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 462,
+        "completion_tokens": 583,
+        "total_tokens": 1045,
+        "cost": 0.006985,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.006985,
+          "upstream_inference_prompt_cost": 0.001155,
+          "upstream_inference_completions_cost": 0.00583
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 6,
+      "modelId": "cohere/command-a",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:17:52.407Z",
+      "reserveUsd": 0.028900000000000002,
+      "actualCost": 0.0080175,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:18:23.955Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 359,
+        "completion_tokens": 712,
+        "total_tokens": 1071,
+        "cost": 0.0080175,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0080175,
+          "upstream_inference_prompt_cost": 0.0008975,
+          "upstream_inference_completions_cost": 0.00712
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed: collection only, no rendering or feature validation",
+  "startedAt": "2026-11-08T19:13:43.082Z",
+  "conservativeBatchReserve": 0.17050625000000003,
+  "status": "completed",
+  "finishedAt": "2026-11-08T19:18:23.956Z",
+  "parentBatch": "/workspace/prism/paid-batch-2026-11-08-09",
+  "files": {
+    "replies": [
+      "replies/cohere_command-a_01-math-basics.json",
+      "replies/cohere_command-a_02-markdown-formatting.json",
+      "replies/cohere_command-a_03-code-blocks.json",
+      "replies/cohere_command-a_04-mixed-markdown-latex.json",
+      "replies/cohere_command-a_05-complex-scenarios.json",
+      "replies/cohere_command-a_06-edge-cases-boundaries.json"
+    ],
+    "raw": [
+      "raw/cohere__command-a__01-math-basics.raw.json",
+      "raw/cohere__command-a__02-markdown-formatting.raw.json",
+      "raw/cohere__command-a__03-code-blocks.raw.json",
+      "raw/cohere__command-a__04-mixed-markdown-latex.raw.json",
+      "raw/cohere__command-a__05-complex-scenarios.raw.json",
+      "raw/cohere__command-a__06-edge-cases-boundaries.raw.json"
+    ]
+  }
+}
