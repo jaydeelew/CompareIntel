@@ -35,6 +35,47 @@ test.describe('Source feature detection vs renderer loss', () => {
     expect(detectSourceFeatures('- a\n  - b\n    - c').hasNestedLists).toBe(true)
   })
 
+  test('currency $5 … $10 on one line is not swallowed as a math span (GLM 01 / Gemini 01)', () => {
+    const glm = [
+      'The quadratic formula is $x = 1$.',
+      '',
+      'The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).',
+      'Note that $5 and the shipping is $10$ would look like math to a naive parser.',
+    ].join('\n')
+    const glmSrc = detectSourceFeatures(glm)
+    expect(glmSrc.hasCurrency).toBe(true)
+    expect(glmSrc.hasInlineMath).toBe(true)
+
+    const gemini =
+      'When writing about currency, we avoid using single dollar signs. The item costs $5 and the shipping is $10, for a total of $15. Budget: $1000.'
+    const geminiSrc = detectSourceFeatures(gemini)
+    expect(geminiSrc.hasCurrency).toBe(true)
+    expect(geminiSrc.hasInlineMath).toBe(false)
+  })
+
+  test('$5x+3$ remains inline math, not currency', () => {
+    const src = detectSourceFeatures('Solve $5x+3$ for x.')
+    expect(src.hasInlineMath).toBe(true)
+    expect(src.hasCurrency).toBe(false)
+  })
+
+  test('missing currency in source stays not-covered, not a forced pass', () => {
+    const html = '<div>The quadratic is <span class="katex">x</span></div>'
+    const result = validateRenderedHTML(
+      html,
+      { currency: true, noKatexErrors: true },
+      'The quadratic formula is $x = 1$. No prices mentioned.'
+    )
+    expect(detectSourceFeatures('The quadratic formula is $x = 1$. No prices mentioned.').hasCurrency).toBe(
+      false
+    )
+    expect(result.status).toBe('not-covered')
+    expect(result.assertions.some(a => a.status === 'not-covered' && /currency/.test(a.message))).toBe(
+      true
+    )
+    expect(result.assertions.some(a => a.status === 'fail')).toBe(false)
+  })
+
   test('missing source feature is not-covered, not fail', () => {
     const html = '<div>plain text, no math</div>'
     const result = validateRenderedHTML(

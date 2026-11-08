@@ -385,10 +385,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
     // Links (both inline and reference-style, if enabled)
     if (markdownRules.processLinks !== false) {
-      processed = processed.replace(
-        /\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g,
-        renderMarkdownLink
-      )
+      processed = processed.replace(/\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g, renderMarkdownLink)
 
       // Reference-style links
       processed = processed.replace(/\[([^\]]+)\]\[([^\]]*)\]/g, (match, text, ref) => {
@@ -465,10 +462,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // List items were MDPH-protected during the first link pass (Phi-4 prompt 01:
     // `[Wikipedia](https://…/Quadratic_formula)` stayed raw inside `__OL__`).
     if (markdownRules.processLinks !== false) {
-      processed = processed.replace(
-        /\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g,
-        renderMarkdownLink
-      )
+      processed = processed.replace(/\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g, renderMarkdownLink)
     }
     // Same restore window: `**$x = 0$**` in OL continuations (Gemini 04) stayed
     // as leftover asterisks around restored KaTeX.

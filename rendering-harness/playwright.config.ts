@@ -9,13 +9,13 @@ export default defineConfig({
   workers: 1,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:5174',
+    baseURL: 'http://127.0.0.1:5174',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:5174',
+    url: 'http://127.0.0.1:5174',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

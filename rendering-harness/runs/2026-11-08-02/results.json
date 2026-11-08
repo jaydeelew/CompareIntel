@@ -1534,7 +1534,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -1566,10 +1566,10 @@
           },
           {
             "pass": true,
-            "status": "not-covered",
+            "status": "pass",
             "expected": "preserved currency ($N)",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain preserved currency (not-covered, not a renderer failure)"
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
           },
           {
             "pass": true,
@@ -1597,7 +1597,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered",
+      "validationStatus": "pass",
       "truncated": false,
       "emptyVisible": false,
       "finishReason": "stop",
@@ -3298,7 +3298,7 @@
     {
       "modelId": "z-ai/glm-5.3-flash",
       "promptName": "01-math-basics",
-      "validationStatus": "not-covered",
+      "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
       "attempt": "original",
@@ -3364,7 +3364,7 @@
   ],
   "historyRecords": 34,
   "uniqueCells": 24,
-  "freshRendered": "2026-11-08T18:03:02.073Z",
+  "freshRendered": "2026-11-08T18:28:53.238Z",
   "uniqueCoverageConcluded": true,
   "pendingReruns": {
     "count": 0,

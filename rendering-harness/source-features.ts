@@ -4,6 +4,12 @@
  * from "the model wrote it and the renderer dropped it" (fail).
  */
 
+import {
+  LITERAL_DOLLAR,
+  protectCurrencyDollars,
+  protectEscapedDollars,
+} from '../frontend/src/utils/latex/protection.ts'
+
 export interface SourceFeatures {
   hasDisplayMath: boolean
   hasInlineMath: boolean
@@ -14,6 +20,8 @@ export interface SourceFeatures {
   hasCurrency: boolean
   hasCodeDollars: boolean
 }
+
+const CURRENCY_AFTER_LITERAL = new RegExp(`${LITERAL_DOLLAR}\\d`)
 
 function stripFencedCode(markdown: string): string {
   return markdown.replace(/```[\s\S]*?```/g, '')
@@ -71,16 +79,19 @@ export function detectSourceFeatures(markdown: string): SourceFeatures {
   const fenced = extractFencedBlocks(markdown)
   const withoutFences = stripFencedCode(markdown)
   const prose = stripInlineCode(withoutFences)
-  const proseNoMath = stripMathSpans(prose)
+  // Match the renderer: currency `$5 … $10` must not be stripped as one `$...$`
+  // math span (GLM 01 / Gemini 01 false not-covered).
+  const proseProtected = protectCurrencyDollars(protectEscapedDollars(prose))
+  const proseNoMath = stripMathSpans(proseProtected)
 
   return {
-    hasDisplayMath: hasDisplayMath(prose),
-    hasInlineMath: hasInlineMath(prose),
+    hasDisplayMath: hasDisplayMath(proseProtected),
+    hasInlineMath: hasInlineMath(proseProtected),
     hasCodeBlocks: fenced.length > 0 || /```/.test(markdown),
     hasTables: /^\s*\|.+\|/m.test(prose),
     hasLinks: /\[[^\]]+\]\([^)\s]+\)/.test(prose),
     hasNestedLists: hasNestedLists(prose),
-    hasCurrency: /\$\d/.test(proseNoMath),
+    hasCurrency: CURRENCY_AFTER_LITERAL.test(proseProtected) || /\$\d/.test(proseNoMath),
     hasCodeDollars: fenced.some(block => block.includes('$')),
   }
 }

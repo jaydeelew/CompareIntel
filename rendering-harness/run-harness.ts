@@ -244,7 +244,7 @@ function stopOwnedVite(): void {
 async function waitForServer(maxAttempts = 60): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      const response = await fetch('http://localhost:5174/')
+      const response = await fetch('http://127.0.0.1:5174/')
       if (response.ok) return
     } catch {
       /* not up yet */
@@ -261,7 +261,7 @@ async function waitForServer(maxAttempts = 60): Promise<void> {
  */
 async function startViteServer(): Promise<ViteHandle | null> {
   try {
-    const response = await fetch('http://localhost:5174/')
+    const response = await fetch('http://127.0.0.1:5174/')
     if (response.ok) {
       console.log('✓ Vite already listening on 5174 (not owned by this process; will not kill it)')
       return null
@@ -272,7 +272,7 @@ async function startViteServer(): Promise<ViteHandle | null> {
 
   const viteBin = path.join(__dirname, 'node_modules', '.bin', 'vite')
   console.log('Starting Vite dev server...')
-  const child = spawn(viteBin, ['--port', '5174', '--strictPort'], {
+  const child = spawn(viteBin, ['--host', '127.0.0.1', '--port', '5174', '--strictPort'], {
     cwd: __dirname,
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: true,
@@ -434,7 +434,7 @@ async function renderResponse(
 ): Promise<{ coverage: FeatureCoverageResult; renderedHTML: string }> {
   // Navigate to harness with model ID and content as query params
   const encodedContent = encodeURIComponent(response);
-  const url = `http://localhost:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
+  const url = `http://127.0.0.1:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(url, { waitUntil: 'domcontentloaded' });

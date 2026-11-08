@@ -65,7 +65,7 @@
       },
       "validation": {
         "pass": true,
-        "status": "not-covered",
+        "status": "pass",
         "assertions": [
           {
             "pass": true,
@@ -97,10 +97,10 @@
           },
           {
             "pass": true,
-            "status": "not-covered",
+            "status": "pass",
             "expected": "preserved currency ($N)",
-            "actual": "not present in source markdown",
-            "message": "Source reply does not contain preserved currency (not-covered, not a renderer failure)"
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
           },
           {
             "pass": true,
@@ -128,7 +128,7 @@
           "hasUnsafeLinks": false
         }
       },
-      "validationStatus": "not-covered",
+      "validationStatus": "pass",
       "truncated": false,
       "emptyVisible": false,
       "finishReason": "stop",
@@ -2649,7 +2649,7 @@
     {
       "modelId": "google/gemini-3.1-flash-lite-preview",
       "promptName": "01-math-basics",
-      "validationStatus": "not-covered",
+      "validationStatus": "pass",
       "truncated": false,
       "finishReason": "stop",
       "attempt": "original",
@@ -2913,7 +2913,7 @@
   ],
   "historyRecords": 24,
   "uniqueCells": 24,
-  "freshRendered": "2026-11-08T18:20:58.967Z",
+  "freshRendered": "2026-11-08T18:28:53.238Z",
   "uniqueCoverageConcluded": true,
   "batchCost": 0.011130825,
   "cumulativePaidAllBatches": 0.0328424584
