@@ -1023,9 +1023,18 @@ jobs:
 
       - name: TypeScript check (harness core)
         working-directory: rendering-harness
-        run: npx tsc --project tsconfig.check.json --noEmit
+        run: npm run typecheck
 
-      - name: Run offline fixture tests
+      - name: Isolated Playwright suites
+        working-directory: rendering-harness
+        run: |
+          npx playwright test budget-guard.test.ts
+          npx playwright test source-features.test.ts
+          npx playwright test production-validation.test.ts
+          npx playwright test dom-assertions.test.ts
+          npx playwright test test-with-fixtures.test.ts
+
+      - name: Run full offline fixture suite
         working-directory: rendering-harness
         run: npm test
 

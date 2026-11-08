@@ -10,6 +10,12 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5174, // Different port from main frontend
+    port: 5174,
+    strictPort: true,
+    // Writing screenshots/HTML into runs/ must not restart Vite (that dropped
+    // the connection after the first screenshot: ERR_CONNECTION_REFUSED).
+    watch: {
+      ignored: ['**/runs/**', '**/test-results/**', '**/*.png', '**/*.log'],
+    },
   },
 });

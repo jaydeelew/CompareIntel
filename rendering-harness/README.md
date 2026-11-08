@@ -80,8 +80,8 @@ Each run creates a timestamped directory under `runs/`:
 
 - `*.json`: Saved model responses with provenance (timestamp, usage, cost)
 - `*.png`: Cropped screenshots of rendered output
-- `results.json`: Fresh manifest with feature coverage and metadata
-- `review.html`: Interactive review page with feature badges
+- `results.json`: Manifest with per-reply `validation.status` (`pass` | `not-covered` | `fail`)
+- `review.html`: Review page; screenshot `src` is a relative filename next to the HTML
 
 ## Offline Fixture Tests
 
@@ -105,22 +105,14 @@ Tests verify:
 
 ## Budget and Cost Tracking
 
-- **Pre-request guard**: Estimates cost before each API call using token counts and pricing map
-- **Conservative fallback**: When pricing unavailable, assumes $1 per 1M tokens
-- **Cumulative tracking**: Updates `config.cumulativeCostUsd` after each successful request
-- **Actual cost**: Uses `usage.cost` from OpenRouter when provided, falls back to estimated pricing
+Logic is in `budget-guard.ts` (imported by the runner and by tests):
 
-### ⚠️ Budget Guard Limitations
+- **Pre-request guard**: `preRequestBudgetDecision` estimates cost and refuses the request when it would exceed remaining budget
+- **Unknown pricing**: refused (no $1/1M fallback)
+- **Actual cost**: `usage.cost` when OpenRouter sends it; otherwise tokens × catalog rates; throws if neither is known
+- **Thinking models**: 3× output token reservation
 
-**NOT a hard billing ceiling** - this is a best-effort guard based on estimates:
-- Actual cost may exceed estimate if model returns more tokens than requested
-- Can overspend by ~1 request worth (typically $0.05-$0.50) due to estimation variance
-- No provider-side enforcement - OpenRouter will charge actual usage
-- Not safe for parallel execution (sequential only)
-
-**Recommendation**: Set OpenRouter account-level spending limits for true hard caps.
-
-See `BUDGET_GUARD_AUDIT.md` for detailed analysis.
+See `BUDGET_GUARD_AUDIT.md` for limits (not a provider hard cap).
 
 ## CI Integration
 

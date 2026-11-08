@@ -1,198 +1,175 @@
 /**
- * Budget guard boundary tests
- * Tests cost reservation logic without making paid API calls
+ * Budget guard boundary tests — import the production module, do not copy the logic.
+ * No paid API calls.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test'
+import {
+  THINKING_MODEL_OUTPUT_MULTIPLIER,
+  canAffordRequest,
+  estimateRequestCost,
+  estimateTokens,
+  preRequestBudgetDecision,
+  remainingBudget,
+  resolveActualCost,
+  type PricingInfo,
+} from './budget-guard.js'
 
-test.describe('Budget Guard Boundary Tests', () => {
-  test('PASS: request within budget allowed', async () => {
-    // Simulate budget check logic
-    const maxUsd = 10.00;
-    const actualTotalCost = 5.00;
-    const estimatedRequestCost = 2.00;
-    const remainingBudget = maxUsd - actualTotalCost;
-    
-    const shouldProceed = estimatedRequestCost <= remainingBudget;
-    
-    expect(shouldProceed).toBe(true);
-    expect(remainingBudget).toBe(5.00);
-    expect(estimatedRequestCost).toBeLessThanOrEqual(remainingBudget);
-  });
-  
-  test('FAIL: request exceeds remaining budget', async () => {
-    // Simulate budget exhaustion
-    const maxUsd = 10.00;
-    const actualTotalCost = 9.50;
-    const estimatedRequestCost = 1.00;
-    const remainingBudget = maxUsd - actualTotalCost;
-    
-    const shouldProceed = estimatedRequestCost <= remainingBudget;
-    
-    expect(shouldProceed).toBe(false);
-    expect(remainingBudget).toBe(0.50);
-    expect(estimatedRequestCost).toBeGreaterThan(remainingBudget);
-  });
-  
-  test('FAIL: exact boundary exceeded by smallest amount', async () => {
-    // Edge case: request cost exactly equals remaining + $0.0001
-    const maxUsd = 10.00;
-    const actualTotalCost = 8.00;
-    const estimatedRequestCost = 2.0001; // Exceeds by 0.0001
-    const remainingBudget = maxUsd - actualTotalCost;
-    
-    const shouldProceed = estimatedRequestCost <= remainingBudget;
-    
-    expect(shouldProceed).toBe(false);
-    expect(estimatedRequestCost).toBeGreaterThan(remainingBudget);
-  });
-  
-  test('PASS: exact boundary match allowed', async () => {
-    // Edge case: request cost exactly equals remaining budget
-    const maxUsd = 10.00;
-    const actualTotalCost = 8.00;
-    const estimatedRequestCost = 2.00; // Exactly remaining
-    const remainingBudget = maxUsd - actualTotalCost;
-    
-    const shouldProceed = estimatedRequestCost <= remainingBudget;
-    
-    expect(shouldProceed).toBe(true);
-    expect(estimatedRequestCost).toBe(remainingBudget);
-  });
-  
-  test('FAIL: missing pricing data - conservative estimate required', async () => {
-    // Simulate missing pricing data scenario
-    const modelPricing = null; // No pricing data available
-    const estimatedPromptTokens = 500;
-    const estimatedOutputTokens = 1024;
-    
-    let estimatedCost;
-    if (modelPricing) {
-      // Would use actual pricing
-      estimatedCost = 0;
-    } else {
-      // Conservative fallback: $1 per 1M tokens
-      estimatedCost = (estimatedPromptTokens + estimatedOutputTokens) / 1_000_000;
+const pricing: PricingInfo = {
+  inputCostPerToken: 0.000001,
+  outputCostPerToken: 0.000002,
+}
+
+test.describe('Budget Guard (production module)', () => {
+  test('PASS: request within remaining budget is allowed', () => {
+    const decision = preRequestBudgetDecision({
+      pricing,
+      modelId: 'test/model',
+      promptTokens: 500,
+      maxTokens: 1024,
+      isThinkingModel: false,
+      maxUsd: 10,
+      spentUsd: 5,
+    })
+    expect(decision.action).toBe('proceed')
+    if (decision.action === 'proceed') {
+      expect(decision.estimatedCost).toBeLessThanOrEqual(5)
+      expect(canAffordRequest(decision.estimatedCost, remainingBudget(10, 5))).toBe(true)
     }
-    
-    expect(modelPricing).toBeNull();
-    expect(estimatedCost).toBeGreaterThan(0);
-    expect(estimatedCost).toBe(0.001524); // (500 + 1024) / 1M
-  });
-  
-  test('FAIL: no usage data returned - should throw error', async () => {
-    // Simulate missing usage data
-    const usage: any = null; // No usage data from API
-    const modelPricing = { inputCost: 0.01, outputCost: 0.03 };
-    
-    const calculateCost = () => {
-      if (usage?.cost) {
-        return usage.cost;
-      } else if (usage && 'prompt_tokens' in usage) {
-        return 0; // Would calculate
-      } else {
-        throw new Error('No usage data returned');
+  })
+
+  test('FAIL: request that exceeds remaining budget is refused', () => {
+    const estimated = estimateRequestCost(500, 1024, pricing, false)!
+    const decision = preRequestBudgetDecision({
+      pricing,
+      modelId: 'test/model',
+      promptTokens: 500,
+      maxTokens: 1024,
+      isThinkingModel: false,
+      maxUsd: estimated * 0.5,
+      spentUsd: 0,
+    })
+    expect(decision.action).toBe('refuse')
+    if (decision.action === 'refuse') {
+      expect(decision.reason).toMatch(/estimated cost/)
+    }
+  })
+
+  test('FAIL: exceeding remaining by the smallest amount is refused', () => {
+    const estimated = estimateRequestCost(100, 100, pricing, false)!
+    const decision = preRequestBudgetDecision({
+      pricing,
+      modelId: 'test/model',
+      promptTokens: 100,
+      maxTokens: 100,
+      isThinkingModel: false,
+      maxUsd: estimated,
+      spentUsd: 0.0001,
+    })
+    expect(decision.action).toBe('refuse')
+  })
+
+  test('PASS: exact remaining budget match is allowed', () => {
+    const estimated = estimateRequestCost(100, 100, pricing, false)!
+    const decision = preRequestBudgetDecision({
+      pricing,
+      modelId: 'test/model',
+      promptTokens: 100,
+      maxTokens: 100,
+      isThinkingModel: false,
+      maxUsd: estimated,
+      spentUsd: 0,
+    })
+    expect(decision.action).toBe('proceed')
+    if (decision.action === 'proceed') {
+      expect(decision.estimatedCost).toBe(estimated)
+    }
+  })
+
+  test('FAIL: missing pricing is refused — never guessed', () => {
+    const estimated = estimateRequestCost(500, 1024, undefined, false)
+    expect(estimated).toBeNull()
+    const decision = preRequestBudgetDecision({
+      pricing: undefined,
+      modelId: 'unknown/model',
+      promptTokens: 500,
+      maxTokens: 1024,
+      isThinkingModel: false,
+      maxUsd: 10,
+      spentUsd: 0,
+    })
+    expect(decision.action).toBe('refuse')
+    if (decision.action === 'refuse') {
+      expect(decision.reason).toMatch(/No pricing data/)
+      expect(decision.reason).not.toMatch(/1M/)
+    }
+  })
+
+  test('FAIL: missing usage data throws (cost unknowable)', () => {
+    expect(() => resolveActualCost(null, pricing, 'test/model')).toThrow(
+      /No usage data returned/
+    )
+    expect(() => resolveActualCost({}, pricing, 'test/model')).toThrow(/No usage data returned/)
+  })
+
+  test('FAIL: usage without cost and without pricing throws', () => {
+    expect(() =>
+      resolveActualCost({ prompt_tokens: 100, completion_tokens: 200 }, undefined, 'test/model')
+    ).toThrow(/No pricing data/)
+  })
+
+  test('PASS: usage.cost is billed as-is', () => {
+    const cost = resolveActualCost(
+      { prompt_tokens: 100, completion_tokens: 200, cost: 0.0042 },
+      pricing,
+      'test/model'
+    )
+    expect(cost).toBe(0.0042)
+  })
+
+  test('FAIL: a refused request must not spend, so a later request is not unbudgeted', () => {
+    const pricey: PricingInfo = { inputCostPerToken: 0.001, outputCostPerToken: 0.002 }
+    const maxUsd = 5
+    let spent = 0
+    const outcomes: { action: 'proceed' | 'refuse'; spentAfter: number }[] = []
+
+    for (let i = 0; i < 4; i++) {
+      const spentBefore = spent
+      const decision = preRequestBudgetDecision({
+        pricing: pricey,
+        modelId: 'test/model',
+        promptTokens: 500,
+        maxTokens: 1024,
+        isThinkingModel: false,
+        maxUsd,
+        spentUsd: spent,
+      })
+      if (decision.action === 'refuse') {
+        expect(spent).toBe(spentBefore)
+        outcomes.push({ action: 'refuse', spentAfter: spent })
+        continue
       }
-    };
-    
-    expect(() => calculateCost()).toThrow('No usage data returned');
-  });
-  
-  test('FAIL: usage data present but no cost and no pricing', async () => {
-    // Simulate usage data without cost field and missing pricing
-    const usage: any = { prompt_tokens: 100, completion_tokens: 200 };
-    const modelPricing = null; // No pricing data
-    
-    const calculateCost = () => {
-      if (usage.cost) {
-        return usage.cost;
-      } else if (usage && usage.prompt_tokens) {
-        if (modelPricing) {
-          return 0; // Would calculate
-        } else {
-          throw new Error('No pricing data and usage.cost not provided');
-        }
-      }
-      throw new Error('No usage data');
-    };
-    
-    expect(() => calculateCost()).toThrow('No pricing data and usage.cost not provided');
-  });
-  
-  test('PASS: usage.cost provided - use actual cost', async () => {
-    // Simulate OpenRouter providing actual cost
-    const usage = { 
-      prompt_tokens: 100, 
-      completion_tokens: 200,
-      cost: 0.0042 // Actual cost from OpenRouter
-    };
-    const modelPricing = { inputCost: 0.01, outputCost: 0.03 }; // Not used
-    
-    type Usage = typeof usage & { cost?: number };
-    const usageWithCost = usage as Usage;
-    
-    let actualCost;
-    if (usageWithCost.cost) {
-      actualCost = usageWithCost.cost;
-    } else if (modelPricing) {
-      // Would estimate
-      actualCost = (usage.prompt_tokens * modelPricing.inputCost + 
-                    usage.completion_tokens * modelPricing.outputCost) / 1_000_000;
+      spent += decision.estimatedCost
+      outcomes.push({ action: 'proceed', spentAfter: spent })
     }
-    
-    expect(actualCost).toBe(0.0042);
-    expect(actualCost).toBe(usageWithCost.cost);
-  });
-  
-  test('FAIL: failed request - no subsequent calls after limit', async () => {
-    // Simulate request failure and budget tracking
-    const requests: { cost: number; success: boolean }[] = [];
-    const maxUsd = 5.00;
-    let actualTotalCost = 0;
-    
-    // First request succeeds
-    const req1Cost = 2.00;
-    if (req1Cost <= (maxUsd - actualTotalCost)) {
-      actualTotalCost += req1Cost;
-      requests.push({ cost: req1Cost, success: true });
-    }
-    
-    // Second request succeeds
-    const req2Cost = 2.50;
-    if (req2Cost <= (maxUsd - actualTotalCost)) {
-      actualTotalCost += req2Cost;
-      requests.push({ cost: req2Cost, success: true });
-    }
-    
-    // Third request blocked by budget guard
-    const req3Cost = 1.00;
-    const shouldProceed = req3Cost <= (maxUsd - actualTotalCost);
-    if (shouldProceed) {
-      actualTotalCost += req3Cost;
-      requests.push({ cost: req3Cost, success: true });
-    } else {
-      requests.push({ cost: 0, success: false });
-    }
-    
-    expect(requests.length).toBe(3);
-    expect(requests[0].success).toBe(true);
-    expect(requests[1].success).toBe(true);
-    expect(requests[2].success).toBe(false);
-    expect(actualTotalCost).toBe(4.50);
-    expect(actualTotalCost).toBeLessThan(maxUsd);
-  });
-  
-  test('PASS: conservative token estimation', async () => {
-    // Test token estimation heuristic
-    const estimateTokens = (text: string) => Math.ceil(text.length / 4);
-    
-    const shortText = "Hello world";
-    const mediumText = "The quick brown fox jumps over the lazy dog";
-    const longText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
-                     "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-    
-    expect(estimateTokens(shortText)).toBe(3); // 11 chars / 4 = 2.75 -> 3
-    expect(estimateTokens(mediumText)).toBe(11); // 44 chars / 4 = 11
-    expect(estimateTokens(longText)).toBe(31); // 122 chars / 4 = 30.5 -> 31
-  });
-});
+
+    expect(outcomes.some(o => o.action === 'proceed')).toBe(true)
+    expect(outcomes.some(o => o.action === 'refuse')).toBe(true)
+    expect(spent).toBeLessThanOrEqual(maxUsd)
+    const firstRefuse = outcomes.findIndex(o => o.action === 'refuse')
+    expect(outcomes.slice(firstRefuse).every(o => o.action === 'refuse')).toBe(true)
+  })
+
+  test('PASS: thinking models reserve 3x output tokens', () => {
+    const normal = estimateRequestCost(100, 1000, pricing, false)!
+    const thinking = estimateRequestCost(100, 1000, pricing, true)!
+    const extraOutput =
+      1000 * (THINKING_MODEL_OUTPUT_MULTIPLIER - 1) * pricing.outputCostPerToken
+    expect(thinking - normal).toBeCloseTo(extraOutput, 12)
+  })
+
+  test('PASS: token estimate is ceil(chars/4)', () => {
+    expect(estimateTokens('Hello world')).toBe(3)
+    expect(estimateTokens('The quick brown fox jumps over the lazy dog')).toBe(11)
+  })
+})

@@ -1,222 +1,250 @@
 /**
- * DOM assertion validation for rendered responses
- * Checks if expected features are present based on prompt requirements
+ * DOM assertion validation for rendered responses.
+ * Distinguishes renderer loss (source had the feature, DOM does not) from
+ * not-covered (the model never wrote the feature).
  */
 
-import { JSDOM } from 'jsdom';
+import { JSDOM } from 'jsdom'
+import { detectSourceFeatures, type SourceFeatures } from './source-features.js'
+
+export type AssertionStatus = 'pass' | 'fail' | 'not-covered'
 
 export interface AssertionResult {
-  pass: boolean;
-  expected: string;
-  actual: string;
-  message: string;
+  pass: boolean
+  status: AssertionStatus
+  expected: string
+  actual: string
+  message: string
 }
 
 export interface ValidationResult {
-  pass: boolean;
-  assertions: AssertionResult[];
+  /** False only on renderer loss, KaTeX errors, or unsafe links. */
+  pass: boolean
+  status: AssertionStatus
+  assertions: AssertionResult[]
   coverage: {
-    hasDisplayMath: boolean;
-    hasInlineMath: boolean;
-    hasCodeBlocks: boolean;
-    hasTables: boolean;
-    hasLinks: boolean;
-    hasNestedLists: boolean;
-    mathErrors: string[];
-    preservedCurrency: boolean;
-    preservedCodeDollars: boolean;
-    linkDestinations: string[];
-    tableCellCount: number;
-    codeBlockLanguages: string[];
-    hasUnsafeLinks: boolean;
-  };
+    hasDisplayMath: boolean
+    hasInlineMath: boolean
+    hasCodeBlocks: boolean
+    hasTables: boolean
+    hasLinks: boolean
+    hasNestedLists: boolean
+    mathErrors: string[]
+    preservedCurrency: boolean
+    preservedCodeDollars: boolean
+    linkDestinations: string[]
+    tableCellCount: number
+    codeBlockLanguages: string[]
+    hasUnsafeLinks: boolean
+  }
+}
+
+export interface ExpectedFeatures {
+  displayMath?: boolean
+  inlineMath?: boolean
+  codeBlocks?: boolean
+  tables?: boolean
+  links?: boolean
+  nestedLists?: boolean
+  currency?: boolean
+  noKatexErrors?: boolean
+  safeLinksOnly?: boolean
+}
+
+function presentAssertion(
+  expected: boolean | undefined,
+  sourceHas: boolean | undefined,
+  domHas: boolean,
+  labels: { feature: string; expectedYes: string; expectedNo: string; actualYes: string; actualNo: string }
+): AssertionResult | null {
+  if (expected === undefined) return null
+  if (expected === false) {
+    const ok = !domHas
+    return {
+      pass: ok,
+      status: ok ? 'pass' : 'fail',
+      expected: labels.expectedNo,
+      actual: domHas ? labels.actualYes : labels.actualNo,
+      message: ok
+        ? `${labels.feature} assertion passed`
+        : `Did not expect ${labels.feature} but found it`,
+    }
+  }
+  if (sourceHas === false) {
+    return {
+      pass: true,
+      status: 'not-covered',
+      expected: labels.expectedYes,
+      actual: 'not present in source markdown',
+      message: `Source reply does not contain ${labels.feature} (not-covered, not a renderer failure)`,
+    }
+  }
+  const ok = domHas
+  return {
+    pass: ok,
+    status: ok ? 'pass' : 'fail',
+    expected: labels.expectedYes,
+    actual: domHas ? labels.actualYes : labels.actualNo,
+    message: ok
+      ? `${labels.feature} assertion passed`
+      : `Source included ${labels.feature} but rendered DOM lost it`,
+  }
 }
 
 /**
- * Validate rendered HTML against expected features
+ * Validate rendered HTML against expected features.
+ * Pass `sourceMarkdown` (the model reply) to classify missing features as
+ * not-covered instead of fail. Synthetic HTML tests omit it.
  */
 export function validateRenderedHTML(
   html: string,
-  expectedFeatures: {
-    displayMath?: boolean;
-    inlineMath?: boolean;
-    codeBlocks?: boolean;
-    tables?: boolean;
-    links?: boolean;
-    nestedLists?: boolean;
-    currency?: boolean;
-    noKatexErrors?: boolean;
-    safeLinksOnly?: boolean;
-  }
+  expectedFeatures: ExpectedFeatures,
+  sourceMarkdown?: string
 ): ValidationResult {
-  const dom = new JSDOM(html);
-  const container = dom.window.document.body;
-  
-  const assertions: AssertionResult[] = [];
-  
-  // Check display math
-  const displayMath = container.querySelectorAll('.katex-display');
-  const hasDisplayMath = displayMath.length > 0;
-  if (expectedFeatures.displayMath !== undefined) {
-    assertions.push({
-      pass: hasDisplayMath === expectedFeatures.displayMath,
-      expected: expectedFeatures.displayMath ? 'display math present' : 'no display math',
-      actual: hasDisplayMath ? `${displayMath.length} display math blocks` : 'no display math',
-      message: expectedFeatures.displayMath && !hasDisplayMath 
-        ? 'Expected display math ($$...$$) but none found'
-        : !expectedFeatures.displayMath && hasDisplayMath
-        ? 'Did not expect display math but found it'
-        : 'Display math assertion passed',
-    });
-  }
-  
-  // Check inline math
-  const inlineMath = container.querySelectorAll('.katex:not(.katex-display)');
-  const hasInlineMath = inlineMath.length > 0;
-  if (expectedFeatures.inlineMath !== undefined) {
-    assertions.push({
-      pass: hasInlineMath === expectedFeatures.inlineMath,
-      expected: expectedFeatures.inlineMath ? 'inline math present' : 'no inline math',
-      actual: hasInlineMath ? `${inlineMath.length} inline math expressions` : 'no inline math',
-      message: expectedFeatures.inlineMath && !hasInlineMath
-        ? 'Expected inline math ($...$) but none found'
-        : !expectedFeatures.inlineMath && hasInlineMath
-        ? 'Did not expect inline math but found it'
-        : 'Inline math assertion passed',
-    });
-  }
-  
-  // Check code blocks
-  const codeBlocks = container.querySelectorAll('pre code');
-  const hasCodeBlocks = codeBlocks.length > 0;
-  const codeBlockLanguages = Array.from(codeBlocks).map(block => {
-    const classes = Array.from(block.classList);
-    const langClass = classes.find(c => c.startsWith('language-'));
-    return langClass ? langClass.replace('language-', '') : 'plain';
-  }).filter((v, i, a) => a.indexOf(v) === i);
-  
-  if (expectedFeatures.codeBlocks !== undefined) {
-    assertions.push({
-      pass: hasCodeBlocks === expectedFeatures.codeBlocks,
-      expected: expectedFeatures.codeBlocks ? 'code blocks present' : 'no code blocks',
-      actual: hasCodeBlocks ? `${codeBlocks.length} code blocks (${codeBlockLanguages.join(', ')})` : 'no code blocks',
-      message: expectedFeatures.codeBlocks && !hasCodeBlocks
-        ? 'Expected code blocks (```...```) but none found'
-        : !expectedFeatures.codeBlocks && hasCodeBlocks
-        ? 'Did not expect code blocks but found them'
-        : 'Code blocks assertion passed',
-    });
-  }
-  
-  // Check tables
-  const tables = container.querySelectorAll('table');
-  const hasTables = tables.length > 0;
-  const tableCellCount = container.querySelectorAll('td, th').length;
-  
-  if (expectedFeatures.tables !== undefined) {
-    assertions.push({
-      pass: hasTables === expectedFeatures.tables,
-      expected: expectedFeatures.tables ? 'tables present' : 'no tables',
-      actual: hasTables ? `${tables.length} tables (${tableCellCount} cells)` : 'no tables',
-      message: expectedFeatures.tables && !hasTables
-        ? 'Expected tables but none found'
-        : !expectedFeatures.tables && hasTables
-        ? 'Did not expect tables but found them'
-        : 'Tables assertion passed',
-    });
-  }
-  
-  // Check links
-  const links = container.querySelectorAll('a[href]');
-  const hasLinks = links.length > 0;
+  const dom = new JSDOM(html)
+  const container = dom.window.document.body
+  const source = sourceMarkdown ? detectSourceFeatures(sourceMarkdown) : undefined
+  const assertions: AssertionResult[] = []
+
+  const displayMath = container.querySelectorAll('.katex-display')
+  const hasDisplayMath = displayMath.length > 0
+  const display = presentAssertion(expectedFeatures.displayMath, source?.hasDisplayMath, hasDisplayMath, {
+    feature: 'display math',
+    expectedYes: 'display math present',
+    expectedNo: 'no display math',
+    actualYes: `${displayMath.length} display math blocks`,
+    actualNo: 'no display math',
+  })
+  if (display) assertions.push(display)
+
+  const inlineMath = container.querySelectorAll('.katex:not(.katex-display)')
+  const hasInlineMath = inlineMath.length > 0
+  const inline = presentAssertion(expectedFeatures.inlineMath, source?.hasInlineMath, hasInlineMath, {
+    feature: 'inline math',
+    expectedYes: 'inline math present',
+    expectedNo: 'no inline math',
+    actualYes: `${inlineMath.length} inline math expressions`,
+    actualNo: 'no inline math',
+  })
+  if (inline) assertions.push(inline)
+
+  const codeBlocks = container.querySelectorAll('pre code')
+  const hasCodeBlocks = codeBlocks.length > 0
+  const codeBlockLanguages = Array.from(codeBlocks)
+    .map(block => {
+      const classes = Array.from(block.classList)
+      const langClass = classes.find(c => c.startsWith('language-'))
+      return langClass ? langClass.replace('language-', '') : 'plain'
+    })
+    .filter((v, i, a) => a.indexOf(v) === i)
+
+  const code = presentAssertion(expectedFeatures.codeBlocks, source?.hasCodeBlocks, hasCodeBlocks, {
+    feature: 'code blocks',
+    expectedYes: 'code blocks present',
+    expectedNo: 'no code blocks',
+    actualYes: `${codeBlocks.length} code blocks (${codeBlockLanguages.join(', ')})`,
+    actualNo: 'no code blocks',
+  })
+  if (code) assertions.push(code)
+
+  const tables = container.querySelectorAll('table')
+  const hasTables = tables.length > 0
+  const tableCellCount = container.querySelectorAll('td, th').length
+  const table = presentAssertion(expectedFeatures.tables, source?.hasTables, hasTables, {
+    feature: 'tables',
+    expectedYes: 'tables present',
+    expectedNo: 'no tables',
+    actualYes: `${tables.length} tables (${tableCellCount} cells)`,
+    actualNo: 'no tables',
+  })
+  if (table) assertions.push(table)
+
+  const links = container.querySelectorAll('a[href]')
+  const hasLinks = links.length > 0
   const linkDestinations = Array.from(links)
-    .map((a: any) => a.href)
-    .slice(0, 10);
-  const unsafeLinks = linkDestinations.filter(href => href.startsWith('javascript:'));
-  const hasUnsafeLinks = unsafeLinks.length > 0;
-  
-  if (expectedFeatures.links !== undefined) {
-    assertions.push({
-      pass: hasLinks === expectedFeatures.links,
-      expected: expectedFeatures.links ? 'links present' : 'no links',
-      actual: hasLinks ? `${links.length} links` : 'no links',
-      message: expectedFeatures.links && !hasLinks
-        ? 'Expected links but none found'
-        : !expectedFeatures.links && hasLinks
-        ? 'Did not expect links but found them'
-        : 'Links assertion passed',
-    });
-  }
-  
-  if (expectedFeatures.safeLinksOnly !== undefined && expectedFeatures.safeLinksOnly) {
+    .map(a => (a as HTMLAnchorElement).href)
+    .slice(0, 10)
+  const unsafeLinks = linkDestinations.filter(href => href.startsWith('javascript:'))
+  const hasUnsafeLinks = unsafeLinks.length > 0
+
+  const link = presentAssertion(expectedFeatures.links, source?.hasLinks, hasLinks, {
+    feature: 'links',
+    expectedYes: 'links present',
+    expectedNo: 'no links',
+    actualYes: `${links.length} links`,
+    actualNo: 'no links',
+  })
+  if (link) assertions.push(link)
+
+  if (expectedFeatures.safeLinksOnly) {
     assertions.push({
       pass: !hasUnsafeLinks,
+      status: hasUnsafeLinks ? 'fail' : 'pass',
       expected: 'all links safe (no javascript:)',
       actual: hasUnsafeLinks ? `${unsafeLinks.length} unsafe links: ${unsafeLinks.join(', ')}` : 'all links safe',
       message: hasUnsafeLinks
         ? `Found unsafe javascript: links: ${unsafeLinks.join(', ')}`
         : 'All links are safe',
-    });
+    })
   }
-  
-  // Check nested lists
-  const nestedLists = container.querySelectorAll('ul ul ul, ol ol ol, ul ol ul, ol ul ol');
-  const hasNestedLists = nestedLists.length > 0;
-  
-  if (expectedFeatures.nestedLists !== undefined) {
-    assertions.push({
-      pass: hasNestedLists === expectedFeatures.nestedLists,
-      expected: expectedFeatures.nestedLists ? '3+ level nested lists' : 'no nested lists',
-      actual: hasNestedLists ? `${nestedLists.length} nested list structures` : 'no nested lists',
-      message: expectedFeatures.nestedLists && !hasNestedLists
-        ? 'Expected 3+ level nested lists but none found'
-        : !expectedFeatures.nestedLists && hasNestedLists
-        ? 'Did not expect nested lists but found them'
-        : 'Nested lists assertion passed',
-    });
-  }
-  
-  // Check preserved currency
-  const allText = container.textContent || '';
-  const preservedCurrency = /\$\d+/.test(allText);
-  
-  if (expectedFeatures.currency !== undefined) {
-    assertions.push({
-      pass: preservedCurrency === expectedFeatures.currency,
-      expected: expectedFeatures.currency ? 'preserved currency ($N)' : 'no currency',
-      actual: preservedCurrency ? 'found $N patterns' : 'no currency found',
-      message: expectedFeatures.currency && !preservedCurrency
-        ? 'Expected preserved currency ($5, $10, etc.) but none found'
-        : !expectedFeatures.currency && preservedCurrency
-        ? 'Did not expect currency but found it'
-        : 'Currency assertion passed',
-    });
-  }
-  
-  // Check for KaTeX errors
-  const mathErrors = container.querySelectorAll('.katex-error');
-  const hasMathErrors = mathErrors.length > 0;
-  
-  if (expectedFeatures.noKatexErrors !== undefined && expectedFeatures.noKatexErrors) {
+
+  const nestedLists = container.querySelectorAll('ul ul ul, ol ol ol, ul ol ul, ol ul ol')
+  const hasNestedLists = nestedLists.length > 0
+  const nested = presentAssertion(
+    expectedFeatures.nestedLists,
+    source?.hasNestedLists,
+    hasNestedLists,
+    {
+      feature: '3+ level nested lists',
+      expectedYes: '3+ level nested lists',
+      expectedNo: 'no nested lists',
+      actualYes: `${nestedLists.length} nested list structures`,
+      actualNo: 'no nested lists',
+    }
+  )
+  if (nested) assertions.push(nested)
+
+  const allText = container.textContent || ''
+  const preservedCurrency = /\$\d+/.test(allText)
+  const currency = presentAssertion(
+    expectedFeatures.currency,
+    source?.hasCurrency,
+    preservedCurrency,
+    {
+      feature: 'preserved currency',
+      expectedYes: 'preserved currency ($N)',
+      expectedNo: 'no currency',
+      actualYes: 'found $N patterns',
+      actualNo: 'no currency found',
+    }
+  )
+  if (currency) assertions.push(currency)
+
+  const mathErrors = container.querySelectorAll('.katex-error')
+  const hasMathErrors = mathErrors.length > 0
+  if (expectedFeatures.noKatexErrors) {
     assertions.push({
       pass: !hasMathErrors,
+      status: hasMathErrors ? 'fail' : 'pass',
       expected: 'no KaTeX errors',
       actual: hasMathErrors ? `${mathErrors.length} KaTeX errors` : 'no errors',
       message: hasMathErrors
         ? `Found ${mathErrors.length} KaTeX rendering errors`
         : 'No KaTeX errors',
-    });
+    })
   }
-  
-  // Check code dollar preservation
-  const preservedCodeDollars = Array.from(codeBlocks).some(block => 
+
+  const preservedCodeDollars = Array.from(codeBlocks).some(block =>
     block.textContent?.includes('$')
-  );
-  
-  const allPass = assertions.every(a => a.pass);
-  
+  )
+
+  const hasFail = assertions.some(a => a.status === 'fail')
+  const hasNotCovered = assertions.some(a => a.status === 'not-covered')
+  const status: AssertionStatus = hasFail ? 'fail' : hasNotCovered ? 'not-covered' : 'pass'
+
   return {
-    pass: allPass,
+    pass: !hasFail,
+    status,
     assertions,
     coverage: {
       hasDisplayMath,
@@ -233,5 +261,7 @@ export function validateRenderedHTML(
       codeBlockLanguages,
       hasUnsafeLinks,
     },
-  };
+  }
 }
+
+export type { SourceFeatures }

@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { waitForHarnessRender } from './test-helpers';
 
 test.describe('DOM Assertions - Pass/Fail Validation', () => {
   test('PASS: detects expected display math', async ({ page }) => {
     await page.goto('/?modelId=test&content=' + encodeURIComponent('$$x^2 + y^2 = 1$$'));
-    await page.waitForSelector('[data-render-complete]', { timeout: 10000 });
+    await waitForHarnessRender(page);
     
     const validation = await page.evaluate(() => {
       const container = document.querySelector('[data-render-container]');
@@ -23,7 +24,7 @@ test.describe('DOM Assertions - Pass/Fail Validation', () => {
   
   test('FAIL: missing expected display math', async ({ page }) => {
     await page.goto('/?modelId=test&content=' + encodeURIComponent('Just plain text'));
-    await page.waitForSelector('[data-render-complete]', { timeout: 10000 });
+    await waitForHarnessRender(page);
     
     const validation = await page.evaluate(() => {
       const container = document.querySelector('[data-render-container]');
@@ -47,7 +48,7 @@ test.describe('DOM Assertions - Pass/Fail Validation', () => {
   test('FAIL: KaTeX errors present', async ({ page }) => {
     // Genuinely invalid LaTeX
     await page.goto('/?modelId=test&content=' + encodeURIComponent('$$\\frac{a{b}$$'));
-    await page.waitForSelector('[data-render-complete]', { timeout: 10000 });
+    await waitForHarnessRender(page);
     
     const validation = await page.evaluate(() => {
       const container = document.querySelector('[data-render-container]');
@@ -70,7 +71,7 @@ test.describe('DOM Assertions - Pass/Fail Validation', () => {
   test('PASS: expected table structure present', async ({ page }) => {
     const content = '| A | B |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |';
     await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
-    await page.waitForSelector('[data-render-complete]', { timeout: 10000 });
+    await waitForHarnessRender(page);
     
     const validation = await page.evaluate(() => {
       const container = document.querySelector('[data-render-container]');
@@ -97,7 +98,7 @@ test.describe('DOM Assertions - Pass/Fail Validation', () => {
     // Only 2 levels - not 3+
     const content = '- L1\n  - L2';
     await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
-    await page.waitForSelector('[data-render-complete]', { timeout: 10000 });
+    await waitForHarnessRender(page);
     
     const validation = await page.evaluate(() => {
       const container = document.querySelector('[data-render-container]');
@@ -122,7 +123,7 @@ test.describe('DOM Assertions - Pass/Fail Validation', () => {
   test('FAIL: unsafe javascript: links present', async ({ page }) => {
     const content = '[Click me](javascript:alert(1))';
     await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
-    await page.waitForSelector('[data-render-complete]', { timeout: 10000 });
+    await waitForHarnessRender(page);
     
     const validation = await page.evaluate(() => {
       const container = document.querySelector('[data-render-container]');
@@ -149,7 +150,7 @@ test.describe('DOM Assertions - Pass/Fail Validation', () => {
   test('PASS: currency preserved in plain text', async ({ page }) => {
     const content = 'Price is $5 and $10';
     await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
-    await page.waitForSelector('[data-render-complete]', { timeout: 10000 });
+    await waitForHarnessRender(page);
     
     const validation = await page.evaluate(() => {
       const container = document.querySelector('[data-render-container]');
@@ -171,7 +172,7 @@ test.describe('DOM Assertions - Pass/Fail Validation', () => {
   test('PASS: code block dollar signs preserved', async ({ page }) => {
     const content = '```python\nprice = $50\n```';
     await page.goto('/?modelId=test&content=' + encodeURIComponent(content));
-    await page.waitForSelector('[data-render-complete]', { timeout: 10000 });
+    await waitForHarnessRender(page);
     
     const validation = await page.evaluate(() => {
       const container = document.querySelector('[data-render-container]');

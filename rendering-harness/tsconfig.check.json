@@ -6,7 +6,8 @@
   "include": [
     "run-harness.ts",
     "dom-assertions.ts",
-    "budget-guard.test.ts"
+    "budget-guard.ts",
+    "source-features.ts"
   ],
   "exclude": [
     "node_modules",

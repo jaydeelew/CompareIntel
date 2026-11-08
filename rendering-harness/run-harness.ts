@@ -16,14 +16,19 @@ import path from 'path';
 import { chromium, Browser, Page } from 'playwright';
 import { fileURLToPath } from 'url';
 import { spawn, ChildProcess } from 'child_process';
-import { validateRenderedHTML, type ValidationResult } from './dom-assertions.js';
+import { validateRenderedHTML, type ValidationResult, type AssertionStatus } from './dom-assertions.js';
+import {
+  estimateRequestCost,
+  estimateTokens,
+  preRequestBudgetDecision,
+  resolveActualCost,
+} from './budget-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const DEFAULT_MAX_TOKENS = 2048;
-const THINKING_MODEL_OUTPUT_MULTIPLIER = 3; // Conservative 3x for thinking models
 
 interface ModelEntry {
   id: string;
@@ -65,6 +70,7 @@ interface TestResult {
   error?: string;
   featureCoverage?: FeatureCoverageResult;
   validation?: ValidationResult;
+  validationStatus?: AssertionStatus;
 }
 
 interface HarnessConfig {
@@ -149,35 +155,6 @@ async function loadPrompts(): Promise<Map<string, string>> {
 }
 
 /**
- * Estimate cost for a single request
- * Returns null if pricing unavailable
- */
-function estimateRequestCost(
-  modelId: string,
-  promptTokens: number,
-  maxTokens: number,
-  pricing: PricingInfo | undefined,
-  isThinkingModel: boolean
-): number | null {
-  if (!pricing) {
-    return null;
-  }
-  
-  const outputTokens = maxTokens * (isThinkingModel ? THINKING_MODEL_OUTPUT_MULTIPLIER : 1);
-  const inputCost = promptTokens * pricing.inputCostPerToken;
-  const outputCost = outputTokens * pricing.outputCostPerToken;
-  
-  return inputCost + outputCost;
-}
-
-/**
- * Rough token estimation (chars / 4)
- */
-function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 4);
-}
-
-/**
  * Get expected features for a prompt based on its name
  */
 function getExpectedFeatures(promptName: string): {
@@ -195,12 +172,13 @@ function getExpectedFeatures(promptName: string): {
     '01-math-basics': {
       displayMath: true,
       inlineMath: true,
+      links: true,
+      currency: true,
       noKatexErrors: true,
       safeLinksOnly: true,
     },
     '02-markdown-formatting': {
       tables: true,
-      links: true,
       nestedLists: true,
       safeLinksOnly: true,
       noKatexErrors: true,
@@ -282,108 +260,101 @@ async function callOpenRouter(
   const content = data.choices[0]?.message?.content || '';
   const usage = data.usage;
   
-  // Use OpenRouter's actual cost if provided, otherwise estimate from pricing
-  let cost = 0;
-  if (usage?.cost) {
-    // OpenRouter returned actual cost
-    cost = usage.cost;
-  } else if (usage && usage.prompt_tokens && usage.completion_tokens) {
-    // Estimate from pricing map when cost not provided
-    const modelPricing = pricing.get(modelId);
-    if (modelPricing) {
-      cost = (usage.prompt_tokens * modelPricing.inputCostPerToken) +
-             (usage.completion_tokens * modelPricing.outputCostPerToken);
-    } else {
-      // No pricing data - cannot calculate cost
-      throw new Error(`No pricing data for ${modelId} and usage.cost not provided by OpenRouter`);
-    }
-  } else {
-    // No usage data at all
-    throw new Error(`No usage data returned from OpenRouter for ${modelId}`);
-  }
-  
+  const cost = resolveActualCost(usage, pricing.get(modelId), modelId);
   return { response: content, usage, cost };
 }
 
-/**
- * Start Vite dev server
- */
-async function startViteServer(): Promise<ChildProcess | null> {
-  // Check if server is already running
-  try {
-    const response = await fetch('http://localhost:5174/');
-    if (response.ok) {
-      console.log('✓ Vite dev server already running on port 5174');
-      return null; // Server already running, no process to manage
-    }
-  } catch (e) {
-    // Server not running, start it
-  }
-  
-  return new Promise((resolve, reject) => {
-    console.log('Starting Vite dev server...');
-    const vite = spawn('npm', ['run', 'dev'], {
-      cwd: __dirname,
-      stdio: 'pipe',
-      detached: false,
-    });
-    
-    let output = '';
-    let resolved = false;
-    
-    vite.stdout?.on('data', (data) => {
-      output += data.toString();
-      if (!resolved && output.includes('Local:') && output.includes('5174')) {
-        resolved = true;
-        // Give it a moment to fully initialize
-        setTimeout(() => {
-          console.log('✓ Vite dev server started on port 5174');
-          resolve(vite);
-        }, 2000);
-      }
-    });
-    
-    vite.stderr?.on('data', (data) => {
-      const msg = data.toString();
-      if (!resolved && msg.includes('EADDRINUSE')) {
-        resolved = true;
-        console.log('✓ Vite dev server already running on port 5174');
-        resolve(vite);
-      }
-    });
-    
-    vite.on('error', (err) => {
-      if (!resolved) {
-        resolved = true;
-        reject(err);
-      }
-    });
-    
-    // Timeout after 60s
-    setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        reject(new Error('Vite server failed to start within 60s'));
-      }
-    }, 60000);
-  });
+interface ViteHandle {
+  process: ChildProcess
+  pid: number
 }
 
-/**
- * Wait for server to be ready
- */
+let ownedVite: ViteHandle | null = null
+let viteCleaned = false
+
+function stopOwnedVite(): void {
+  if (viteCleaned) return
+  viteCleaned = true
+  const handle = ownedVite
+  ownedVite = null
+  if (!handle?.pid) return
+  try {
+    process.kill(-handle.pid, 'SIGTERM')
+  } catch {
+    try {
+      handle.process.kill('SIGTERM')
+    } catch {
+      /* already gone */
+    }
+  }
+}
+
 async function waitForServer(maxAttempts = 60): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      const response = await fetch('http://localhost:5174/');
-      if (response.ok) {
-        return;
-      }
-    } catch (e) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('http://localhost:5174/')
+      if (response.ok) return
+    } catch {
+      /* not up yet */
     }
+    await new Promise(resolve => setTimeout(resolve, 250))
   }
-  throw new Error('Server did not become ready within 60 seconds');
+  throw new Error('Server did not become ready within 15 seconds')
+}
+
+/**
+ * Start Vite as its own process group so SIGTERM/timeout on the harness
+ * can kill the actual vite binary (npm-spawned grandchildren were surviving
+ * as PID-1 orphans, then getting reused and later killed mid-run).
+ */
+async function startViteServer(): Promise<ViteHandle | null> {
+  try {
+    const response = await fetch('http://localhost:5174/')
+    if (response.ok) {
+      console.log('✓ Vite already listening on 5174 (not owned by this process; will not kill it)')
+      return null
+    }
+  } catch {
+    /* start our own */
+  }
+
+  const viteBin = path.join(__dirname, 'node_modules', '.bin', 'vite')
+  console.log('Starting Vite dev server...')
+  const child = spawn(viteBin, ['--port', '5174', '--strictPort'], {
+    cwd: __dirname,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
+    env: { ...process.env },
+  })
+
+  if (child.pid == null) {
+    throw new Error('Failed to spawn Vite (no pid)')
+  }
+
+  const handle: ViteHandle = { process: child, pid: child.pid }
+  ownedVite = handle
+  viteCleaned = false
+
+  let output = ''
+  const onOut = (buf: Buffer) => {
+    output += buf.toString()
+  }
+  child.stdout?.on('data', onOut)
+  child.stderr?.on('data', onOut)
+  child.on('exit', (code, signal) => {
+    if (!viteCleaned) {
+      console.error(`Vite exited unexpectedly (code=${code}, signal=${signal})`)
+    }
+  })
+
+  try {
+    await waitForServer(80)
+    console.log(`✓ Vite dev server started on port 5174 (pid ${child.pid})`)
+    return handle
+  } catch (err) {
+    stopOwnedVite()
+    throw new Error(`Vite failed to start: ${err}\n--- vite output ---\n${output.slice(-2000)}`)
+  }
 }
 
 interface FeatureCoverageResult {
@@ -404,7 +375,9 @@ interface FeatureCoverageResult {
 /**
  * Analyze DOM for feature coverage
  */
-async function analyzeFeatureCoverage(page: Page): Promise<FeatureCoverageResult> {
+async function analyzeFeatureCoverage(
+  page: Page
+): Promise<{ coverage: FeatureCoverageResult; renderedHTML: string }> {
   return await page.evaluate(() => {
     const container = document.querySelector('[data-render-container]');
     if (!container) {
@@ -511,27 +484,32 @@ async function renderResponse(
   const encodedContent = encodeURIComponent(response);
   const url = `http://localhost:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
   
-  // Navigate without waiting for network idle (renderer-driven readiness)
   await page.goto(url, { waitUntil: 'domcontentloaded' });
-  
-  // Wait for rendering to complete via data-render-complete attribute
+
   await page.waitForFunction(
     () => {
-      const container = document.querySelector('[data-render-container]');
-      return container?.hasAttribute('data-render-complete');
+      const failed = document.querySelector('[data-render-failed]');
+      const complete = document.querySelector('[data-render-complete]');
+      return !!(failed || complete);
     },
     { timeout: 30000 }
   );
-  
-  // Analyze feature coverage and get rendered HTML
+
+  const failReason = await page.evaluate(() => {
+    const el = document.querySelector('[data-render-failed]');
+    return el?.getAttribute('data-render-failed') || null;
+  });
+  if (failReason) {
+    throw new Error(`Render readiness failed: ${failReason}`);
+  }
+
   const result = await analyzeFeatureCoverage(page);
-  
-  // Take screenshot of the rendered content
+
   const element = await page.$('[data-render-container]');
   if (element) {
     await element.screenshot({ path: outputPath });
   }
-  
+
   return result;
 }
 
@@ -572,46 +550,48 @@ async function renderOnlyMode(runDir: string): Promise<void> {
   
   console.log(`Found ${jsonFiles.length} saved responses\n`);
   
-  // Start Vite server
-  const viteProcess = await startViteServer();
+  await startViteServer();
   await waitForServer();
-  
+
   const browser = await chromium.launch();
   const page = await browser.newPage();
   const results: TestResult[] = [];
-  
+
   try {
     for (const jsonFile of jsonFiles) {
       const jsonPath = path.join(fullPath, jsonFile);
       const content = await fs.readFile(jsonPath, 'utf-8');
       const data = JSON.parse(content);
-      
+
       console.log(`Rendering ${data.modelName || data.modelId} - ${data.promptName}...`);
-      
-      // Generate screenshot path
+
       const screenshotPath = path.join(fullPath, jsonFile.replace('.json', '.png'));
-      
+
       try {
-        const { coverage, renderedHTML } = await renderResponse(page, data.modelId, data.response, screenshotPath);
+        const { coverage, renderedHTML } = await renderResponse(
+          page,
+          data.modelId,
+          data.response,
+          screenshotPath
+        );
         console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
-        
-        // DEBUG: Save first rendered HTML to inspect
-        if (data.modelId === 'anthropic/claude-sonnet-4.6' && data.promptName === '01-math-basics') {
-          const debugPath = path.join(fullPath, 'debug-rendered.html');
-          await fs.writeFile(debugPath, renderedHTML);
-          console.log(`  [DEBUG] Saved rendered HTML to ${debugPath}`);
-          console.log(`  [DEBUG] Rendered HTML length: ${renderedHTML.length} chars`);
-          console.log(`  [DEBUG] Contains 'katex': ${renderedHTML.includes('katex')}`);
-          console.log(`  [DEBUG] First 500 chars: ${renderedHTML.substring(0, 500)}`);
-        }
-        
-        // Validate RENDERED HTML against expected features
+
         const expectedFeatures = getExpectedFeatures(data.promptName);
-        const validation = validateRenderedHTML(renderedHTML, expectedFeatures);
-        const validationStatus = validation.pass ? '✓' : '✗';
-        const failedCount = validation.assertions.filter(a => !a.pass).length;
-        console.log(`  ${validationStatus} Validation: ${validation.pass ? 'PASS' : `FAIL (${failedCount} assertions)`}`);
-        
+        const validation = validateRenderedHTML(
+          renderedHTML,
+          expectedFeatures,
+          data.response
+        );
+        const failedCount = validation.assertions.filter(a => a.status === 'fail').length;
+        const notCoveredCount = validation.assertions.filter(a => a.status === 'not-covered').length;
+        const mark =
+          validation.status === 'pass' ? '✓' : validation.status === 'not-covered' ? '○' : '✗';
+        console.log(
+          `  ${mark} Validation: ${validation.status.toUpperCase()}` +
+            (failedCount ? ` (${failedCount} renderer-loss)` : '') +
+            (notCoveredCount ? ` (${notCoveredCount} not-covered)` : '')
+        );
+
         results.push({
           modelId: data.modelId,
           modelName: data.modelName,
@@ -623,19 +603,27 @@ async function renderOnlyMode(runDir: string): Promise<void> {
           timestamp: data.timestamp,
           featureCoverage: coverage,
           validation,
+          validationStatus: validation.status,
         });
       } catch (error) {
         console.error(`  ✗ Error rendering: ${error}`);
+        results.push({
+          modelId: data.modelId,
+          modelName: data.modelName,
+          promptName: data.promptName,
+          promptText: data.promptText || '',
+          response: data.response || '',
+          actualCost: data.cost || 0,
+          timestamp: data.timestamp || new Date().toISOString(),
+          error: String(error),
+          validationStatus: 'fail',
+        });
       }
     }
   } finally {
     await page.close();
     await browser.close();
-    
-    // Stop Vite server if we started it
-    if (viteProcess) {
-      viteProcess.kill();
-    }
+    stopOwnedVite();
   }
   
   // Regenerate review page with fresh state
@@ -666,19 +654,30 @@ async function renderOnlyMode(runDir: string): Promise<void> {
   console.log(`Screenshots regenerated: ${results.length}`);
   console.log(`Review page updated: ${path.join(fullPath, 'review.html')}`);
   
-  // Report validation summary
-  const validationPassed = results.filter(r => r.validation?.pass).length;
-  const validationFailed = results.filter(r => r.validation && !r.validation.pass).length;
-  const noValidation = results.filter(r => !r.validation).length;
-  
-  console.log(`\nValidation Summary:`);
-  console.log(`  ✓ Passed: ${validationPassed}`);
-  console.log(`  ✗ Failed: ${validationFailed}`);
-  console.log(`  - No validation: ${noValidation}\n`);
-  
-  // Exit with error if any validations failed
-  if (validationFailed > 0) {
-    process.exit(1);
+  reportValidationSummary(results);
+  exitIfValidationFailed(results);
+}
+
+function resultStatus(r: TestResult): AssertionStatus {
+  if (r.error) return 'fail'
+  return r.validation?.status || r.validationStatus || 'fail'
+}
+
+function reportValidationSummary(results: TestResult[]): void {
+  const passed = results.filter(r => resultStatus(r) === 'pass').length
+  const notCovered = results.filter(r => resultStatus(r) === 'not-covered').length
+  const failed = results.filter(r => resultStatus(r) === 'fail').length
+  console.log(`\nValidation Summary:`)
+  console.log(`  ✓ Passed: ${passed}`)
+  console.log(`  ○ Not covered (source missing feature): ${notCovered}`)
+  console.log(`  ✗ Failed (renderer loss / error): ${failed}\n`)
+}
+
+function exitIfValidationFailed(results: TestResult[]): void {
+  const failed = results.filter(r => resultStatus(r) === 'fail')
+  if (failed.length > 0) {
+    console.error(`Harness failed with ${failed.length} renderer-loss or render errors`)
+    process.exit(1)
   }
 }
 
@@ -808,6 +807,17 @@ async function generateReviewPage(
     .export-btn:hover {
       background: #0056b3;
     }
+    .status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      text-transform: uppercase;
+    }
+    .status-pass { background: #d4edda; color: #155724; }
+    .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-fail { background: #f8d7da; color: #721c24; }
     .error {
       color: red;
       background: #fee;
@@ -829,6 +839,9 @@ async function generateReviewPage(
     <p><strong>Models Tested:</strong> ${config.modelIds.length}</p>
     <p><strong>Prompts:</strong> ${byPrompt.size}</p>
     <p><strong>Total Results:</strong> ${results.length}</p>
+    <p><strong>Passed:</strong> ${results.filter(r => resultStatus(r) === 'pass').length}
+       &nbsp;<strong>Not covered:</strong> ${results.filter(r => resultStatus(r) === 'not-covered').length}
+       &nbsp;<strong>Failed:</strong> ${results.filter(r => resultStatus(r) === 'fail').length}</p>
     <p><strong>Total Cost:</strong> $${totalCost.toFixed(4)}</p>
     <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
   </div>
@@ -839,7 +852,7 @@ async function generateReviewPage(
       <div class="model-grid">
         ${promptResults.map(result => `
           <div class="model-card">
-            <h4>${result.modelName}</h4>
+            <h4>${result.modelName} <span class="status status-${resultStatus(result)}">${resultStatus(result)}</span></h4>
             <div class="meta">
               Model ID: ${result.modelId}<br>
               ${result.usage ? `Tokens: ${result.usage.total_tokens || result.usage.totalTokens || '?'} (${result.usage.prompt_tokens || result.usage.promptTokens || '?'} in / ${result.usage.completion_tokens || result.usage.completionTokens || '?'} out)<br>` : ''}
@@ -993,7 +1006,6 @@ async function main() {
     for (const [promptName, promptText] of prompts) {
       const promptTokens = estimateTokens(promptText);
       const cost = estimateRequestCost(
-        model.id,
         promptTokens,
         maxTokens,
         modelPricing,
@@ -1079,8 +1091,7 @@ async function main() {
     cumulativeCostUsd: 0,
   };
   
-  // Start Vite server
-  const viteProcess = await startViteServer();
+  await startViteServer();
   await waitForServer();
   
   const browser = await chromium.launch();
@@ -1098,14 +1109,17 @@ async function main() {
         console.log(`  Prompt: ${promptName}`);
         
         try {
-          // Pre-request budget guard: Estimate cost and check against remaining budget
-          const estimatedPromptTokens = estimateTokens(promptText);
-          const estimatedOutputTokens = maxTokens * (model.is_thinking_model ? THINKING_MODEL_OUTPUT_MULTIPLIER : 1);
-          const modelPricing = pricing.get(model.id);
-          
-          if (!modelPricing) {
-            // Refuse request when pricing unavailable - cannot safely estimate budget impact
-            console.log(`    ⚠ Skipping: No pricing data for ${model.id} (cannot estimate cost)`);
+          const decision = preRequestBudgetDecision({
+            pricing: pricing.get(model.id),
+            modelId: model.id,
+            promptTokens: estimateTokens(promptText),
+            maxTokens,
+            isThinkingModel: model.is_thinking_model || false,
+            maxUsd,
+            spentUsd: actualTotalCost,
+          });
+          if (decision.action === 'refuse') {
+            console.log(`    ⚠ Skipping: ${decision.reason}`);
             results.push({
               modelId: model.id,
               modelName: model.name,
@@ -1114,28 +1128,7 @@ async function main() {
               response: '',
               actualCost: 0,
               timestamp: new Date().toISOString(),
-              error: 'No pricing data available for model',
-            });
-            continue;
-          }
-          
-          const estimatedRequestCost = 
-            (estimatedPromptTokens * modelPricing.inputCostPerToken) +
-            (estimatedOutputTokens * modelPricing.outputCostPerToken);
-          
-          const remainingBudget = maxUsd - actualTotalCost;
-          
-          if (estimatedRequestCost > remainingBudget) {
-            console.log(`    ⚠ Skipping: Estimated cost $${estimatedRequestCost.toFixed(4)} exceeds remaining budget $${remainingBudget.toFixed(4)}`);
-            results.push({
-              modelId: model.id,
-              modelName: model.name,
-              promptName,
-              promptText,
-              response: '',
-              actualCost: 0,
-              timestamp: new Date().toISOString(),
-              error: `Budget guard: estimated cost $${estimatedRequestCost.toFixed(4)} > remaining $${remainingBudget.toFixed(4)}`,
+              error: decision.reason,
             });
             continue;
           }
@@ -1174,11 +1167,17 @@ async function main() {
           
           // Validate RENDERED HTML against expected features
           const expectedFeatures = getExpectedFeatures(promptName);
-          const validation = validateRenderedHTML(renderedHTML, expectedFeatures);
-          const validationStatus = validation.pass ? '✓' : '✗';
-          const failedCount = validation.assertions.filter(a => !a.pass).length;
-          console.log(`    ${validationStatus} Validation: ${validation.pass ? 'PASS' : `FAIL (${failedCount} assertions)`}`);
-          
+          const validation = validateRenderedHTML(renderedHTML, expectedFeatures, response);
+          const failedCount = validation.assertions.filter(a => a.status === 'fail').length;
+          const notCoveredCount = validation.assertions.filter(a => a.status === 'not-covered').length;
+          const mark =
+            validation.status === 'pass' ? '✓' : validation.status === 'not-covered' ? '○' : '✗';
+          console.log(
+            `    ${mark} Validation: ${validation.status.toUpperCase()}` +
+              (failedCount ? ` (${failedCount} renderer-loss)` : '') +
+              (notCoveredCount ? ` (${notCoveredCount} not-covered)` : '')
+          );
+
           results.push({
             modelId: model.id,
             modelName: model.name,
@@ -1190,6 +1189,7 @@ async function main() {
             timestamp: new Date().toISOString(),
             featureCoverage: coverage,
             validation,
+            validationStatus: validation.status,
           });
           
         } catch (error) {
@@ -1214,10 +1214,7 @@ async function main() {
     await page.close();
     await browser.close();
     
-    // Stop Vite server if we started it
-    if (viteProcess) {
-      viteProcess.kill();
-    }
+    stopOwnedVite();
   }
   
   // Generate review page
@@ -1240,23 +1237,21 @@ async function main() {
   console.log(`\nResults saved to: ${outputDir}`);
   console.log(`Review page: ${path.join(outputDir, 'review.html')}`);
   
-  // Report validation summary
-  const validationPassed = results.filter(r => r.validation?.pass).length;
-  const validationFailed = results.filter(r => r.validation && !r.validation.pass).length;
-  const noValidation = results.filter(r => !r.validation).length;
-  const renderErrors = results.filter(r => r.error).length;
-  
-  console.log(`\nValidation Summary:`);
-  console.log(`  ✓ Passed: ${validationPassed}`);
-  console.log(`  ✗ Failed: ${validationFailed}`);
-  console.log(`  - No validation: ${noValidation}`);
-  console.log(`  ! Render errors: ${renderErrors}\n`);
-  
-  // Exit with error if any validations or renders failed
-  if (validationFailed > 0 || renderErrors > 0) {
-    console.error(`Harness failed with ${validationFailed} validation failures and ${renderErrors} render errors`);
-    process.exit(1);
-  }
+  reportValidationSummary(results);
+  exitIfValidationFailed(results);
 }
 
-main().catch(console.error);
+process.once('SIGTERM', () => {
+  stopOwnedVite();
+  process.exit(143);
+});
+process.once('SIGINT', () => {
+  stopOwnedVite();
+  process.exit(130);
+});
+
+main().catch(err => {
+  console.error(err);
+  stopOwnedVite();
+  process.exit(1);
+});
