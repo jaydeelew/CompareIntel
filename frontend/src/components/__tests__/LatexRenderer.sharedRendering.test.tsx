@@ -619,6 +619,49 @@ describe('bug 26: multiline `$ \\begin{cases} $` is display math, not leftover r
   })
 })
 
+describe('bug 29: parenthesized ($$) / ($ ) / (\\[ \\]) labels are not math (Grok 4.3 06)', () => {
+  const grok06Snippet = [
+    '**Display math ($$):**',
+    '$$x^2 + y^2 = r^2$$',
+    '',
+    '**Display math (\\[ \\]):**',
+    '\\[E = mc^2\\]',
+    '',
+    '**Inline math ($):**',
+    'The equation \\(a + b = c\\) is simple.',
+    '',
+    '**Inline math (\\( \\)):**',
+    'We have \\(x = 5\\).',
+    '',
+    '- First item',
+    '- The equation is:',
+    '  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$',
+    '  And it evaluates to 0.5',
+    '- Third item',
+  ].join('\n')
+
+  it.each(['x-ai/grok-4.3', GPT_MINI])(
+    'renders labeled delimiter examples and the real math, without leftover lists (%s)',
+    modelId => {
+      const el = renderReply(grok06Snippet, modelId)
+      expectNoKatexErrors(el)
+      expect(el.innerHTML).not.toContain('__UL_')
+      expect(visibleText(el)).not.toContain('__UL_')
+      expect(visibleText(el)).not.toContain('KaTeX parse error')
+      const tex = texSources(el)
+      expect(tex.some(t => /x\^2\s*\+\s*y\^2\s*=\s*r\^2/.test(t))).toBe(true)
+      expect(tex.some(t => /E\s*=\s*mc\^2/.test(t))).toBe(true)
+      expect(tex.some(t => /a\s*\+\s*b\s*=\s*c/.test(t))).toBe(true)
+      expect(tex.some(t => /x\s*=\s*5/.test(t))).toBe(true)
+      expect(tex.some(t => /\\int/.test(t) && /\\frac\{1\}\{2\}/.test(t))).toBe(true)
+      expect(el.querySelectorAll('.katex-display').length).toBeGreaterThanOrEqual(2)
+      expect(visibleText(el)).toContain('First item')
+      expect(visibleText(el)).toContain('Third item')
+      expect(visibleText(el)).toMatch(/\$\$/)
+    }
+  )
+})
+
 describe('bug 28: array row-skip \\[6pt] is not a display-math delimiter', () => {
   const o3Cases = [
     '$$',

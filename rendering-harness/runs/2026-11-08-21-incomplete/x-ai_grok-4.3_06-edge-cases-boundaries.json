@@ -1,0 +1,40 @@
+{
+  "modelId": "x-ai/grok-4.3",
+  "modelName": "SpaceXAI: Grok 4.3",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "**Response: Delimiter & Edge Case Handling Test**\n\n### 1. Math Delimiters\n\n**Display math ($$):**\n$$x^2 + y^2 = r^2$$\n\n**Display math (\\[ \\]):**\n\\[E = mc^2\\]\n\n**Inline math ($):**\nThe equation \\(a + b = c\\) is simple.\n\n**Inline math (\\( \\)):**\nWe have \\(x = 5\\).\n\n### 2. Nested Structures\n\n- First item\n- The equation is:\n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n  And it evaluates to 0.5\n- Third item\n\n### 3. Code Block (Math-like syntax preserved literally)\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n### 4. Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n### 5. Tables with Math\n\n| Variable | Formula              | Value   |\n|----------|----------------------|---------|\n| Area     | \\(A = \\pi r^2\\)      | 78.54   |\n| Volume   | \\(V = \\frac{4}{3}\\pi r^3\\) | 523.60 |\n\n### 6. Raw Dollar Signs\n\nThe shell variable `$HOME` is set. Price: $99.99.\n\n---\n\nAll delimiter variants, nested content, code blocks, currency usage, and raw `$` characters are rendered above. The math expressions use proper LaTeX delimiters while currency and code remain literal.",
+  "usage": {
+    "prompt_tokens": 518,
+    "completion_tokens": 726,
+    "total_tokens": 1244,
+    "cost": 0.0023281,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 128,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0023281,
+      "upstream_inference_prompt_cost": 0.0005131,
+      "upstream_inference_completions_cost": 0.001815
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 339,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0023281,
+  "actualCost": 0.0023281,
+  "timestamp": "2026-11-09T03:23:24.403Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null,
+  "promptHash": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51",
+  "truncated": false,
+  "reasoning_tokens": 339,
+  "note": "reasoning tokens are a subset of completion_tokens; billed once via usage.cost"
+}

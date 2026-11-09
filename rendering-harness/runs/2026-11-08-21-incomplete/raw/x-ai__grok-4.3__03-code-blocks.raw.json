@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794194566-9zKeS3pYnGrVmejtCPw4",
+  "object": "chat.completion",
+  "created": 1794194566,
+  "model": "x-ai/grok-4.3",
+  "provider": "xAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": null,
+        "reasoning_details": [
+          {
+            "type": "reasoning.encrypted",
+            "data": "wjRLrtxEmr6yR0WzeoyCgB6LWGuwydnzmNEGojNnAQ6xRXD6/5baga+iCWKmMLOh+eCiPhpEgBE+Ba/p35J3H4RK+MstCTFL2KIvk2TPDzTuMOUSPE6blkNGSiNyAYGcrwbi+dGZa9rMWlNrrbxNtpcx8u20BxgmiahjJgmGzy6LrdtqmrcTc21FSsK+Ip0Ag2AiBJBQiFTUAdmIPB0GRydrfIKdwccdiDSWHNSqs0F48hZT4qpRlPwiarrs1pYMLNWPWbnOzy06FTCwmm2bQYamwlrxw7eMLpEiu9+QPFePLGImiN1uxGjstiK8MB+7Ivm9+6ihXCyya/gr1ycp+ktPdBUQUsIpBF27tE85WCZJsNsZuX+SUIXfps8Parej+v28n7ogTdw5FGRepjHFn9RY3ohpKtxgQxCPa0iM9+VzFlD3U18tVjhlhRA+fK9sUxGD+U/AjF9yK4soivBeZlnHdArrQrFLOGbKWQQHMaLbPIOBvhaUXn8ErxFd7FfkUdCfGtgliTzMOKk9qdrEXt9hgLdGDNLWJMdkmUmH6eeKb2NA7yIenSiliPSC31rUM8nmZdR7BaQ6ozkjb2d3/IQSv+gZWUPTGAGB8Fu+yA2lGYqZj3DhAY/62vwt5R8DhKGDJlS7gjUv0AY+sk+eN3ASsCFdDmuO+Ta/MqGJ2vafxWBFp+Ai+n/IYPR3K59Kq5mVcPb3TK9MkesdZYGRZ4H9Z8oFR5Ty2z9twKRmscEdaGQ04l+QPq0MYBgy3BjUsoEvpGTGN09uqQcZvhDO7SrpCmckEV5Brqx+ErXTWwGCePgANl6fx7bLIPRMuKfTxMCJIScCibn3MTVrVQLzhc0WYl9oVuYudd3nAA.eyJlbmRwb2ludF9zbHVnIjoieC1haS9ncm9rLTQuMy0yMDI2MDQzMHx4YWkifQ",
+            "format": "xai-responses-v1",
+            "id": "rs_6f86dd63-1ed9-93f3-9b22-a6291ef8878f",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 423,
+    "completion_tokens": 498,
+    "total_tokens": 921,
+    "cost": 0.00163935,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 128,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00163935,
+      "upstream_inference_prompt_cost": 0.00039435,
+      "upstream_inference_completions_cost": 0.001245
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 282,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

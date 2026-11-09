@@ -74,9 +74,14 @@ runs/*
 !runs/2026-11-08-21/
 !runs/2026-11-08-21/**
 !runs/2026-11-08-21-artifacts.tar.gz
+!runs/2026-11-08-21-incomplete/
+!runs/2026-11-08-21-incomplete/**
+!runs/2026-11-08-21-incomplete-artifacts.tar.gz
 !runs/2026-11-08-20c/
 !runs/2026-11-08-20c/**
-!runs/2026-11-08-20c-artifacts.tar.gz
+# 20c screenshots and tarball are generated run artifacts (not committed)
+runs/2026-11-08-20c/*.png
+runs/2026-11-08-20c-artifacts.tar.gz
 runs/2026-11-04/debug-rendered.html
 *.log
 .DS_Store

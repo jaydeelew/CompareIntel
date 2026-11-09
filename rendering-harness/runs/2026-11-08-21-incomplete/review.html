@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Model Rendering QA Review</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .summary {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .prompt-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .model-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafafa;
+    }
+    .model-card h4 {
+      margin-top: 0;
+    }
+    .screenshot {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .raw-response {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+    .feedback {
+      margin-top: 10px;
+    }
+    .feature-coverage {
+      font-size: 0.85em;
+      margin: 10px 0;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .feature-coverage .feature {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .feature-coverage .feature.yes {
+      background: #d4edda;
+      color: #155724;
+    }
+    .feature-coverage .feature.no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .feature-coverage .math-error {
+      color: #d32f2f;
+      font-weight: bold;
+      display: block;
+      margin-top: 4px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+    .export-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .export-btn:hover {
+      background: #0056b3;
+    }
+    .status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      text-transform: uppercase;
+    }
+    .status-pass { background: #d4edda; color: #155724; }
+    .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-source-issue { background: #ffe8cc; color: #9a3412; }
+    .status-truncated { background: #e7e3ff; color: #3d348b; }
+    .status-incomplete { background: #ede7f6; color: #4a148c; }
+    .status-fail { background: #f8d7da; color: #721c24; }
+    .error {
+      color: red;
+      background: #fee;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .meta {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Model Rendering QA Review</h1>
+  
+  <div class="summary">
+    <h2>Summary</h2>
+    <p><strong>Run Date:</strong> 2026-11-08-21-incomplete</p>
+    <p><strong>Models Tested:</strong> 2</p>
+    <p><strong>Prompts:</strong> 4</p>
+    <p><strong>API history records:</strong> 5
+       &nbsp;<strong>Unique coverage cells:</strong> 5</p>
+    <p><strong>History:</strong>
+       Passed 5
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 0
+       / Failed 0</p>
+    <p><strong>Unique coverage:</strong>
+       Passed 5
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 0
+       / Failed 0
+       (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $0.028425</p>
+    <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
+  </div>
+  
+  
+    <div class="prompt-section">
+      <h2>06-edge-cases-boundaries</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Tencent: Hy4 preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: tencent/hy4-preview<br>
+              Attempt: original · tencent_hy4-preview_06-edge-cases-boundaries.json<br>
+              Tokens: 7750 (350 in / 7400 out)<br>
+              Cost: $0.018799<br>
+              Finish: stop / stop<br>
+              Time: 11/9/2026, 3:24:38 AM
+            </div>
+            
+            
+              <img src="tencent_hy4-preview_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Delimiter Variants
+1. Double dollar display: $$x^2 + y^2 = r^2$$
+2. Bracket display: \[E = mc^2\]
+3. Single dollar inline: $a + b = c$
+4. Paren inline: \(x = 5\)
+
+## Nested Structures
+1. Display math in a list with continuation:
+   - First item
+   - The equation is:
+     $$\int_0^1 x dx = \frac{1}{2}$$
+     And it evaluates to 0.5
+   - Third item
+
+## Code with Math-like Syntax
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+## Currency and Escaped Dollars
+- Plain: The price is $100
+- Escaped: The budget is \$500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+## Tables with Math
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+
+## Raw Dollar Signs
+The shell variable $HOME is set. Price: $99.99.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="tencent/hy4-preview"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>SpaceXAI: Grok 4.3 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: x-ai/grok-4.3<br>
+              Attempt: original · x-ai_grok-4.3_06-edge-cases-boundaries.json<br>
+              Tokens: 1244 (518 in / 726 out)<br>
+              Cost: $0.002328<br>
+              Finish: stop / completed<br>
+              Time: 11/9/2026, 3:23:24 AM
+            </div>
+            
+            
+              <img src="x-ai_grok-4.3_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">**Response: Delimiter &amp; Edge Case Handling Test**
+
+### 1. Math Delimiters
+
+**Display math ($$):**
+$$x^2 + y^2 = r^2$$
+
+**Display math (\[ \]):**
+\[E = mc^2\]
+
+**Inline math ($):**
+The equation \(a + b = c\) is simple.
+
+**Inline math (\( \)):**
+We have \(x = 5\).
+
+### 2. Nested Structures
+
+- First item
+- The equation is:
+  $$\int_0^1 x \, dx = \frac{1}{2}$$
+  And it evaluates to 0.5
+- Third item
+
+### 3. Code Block (Math-like syntax preserved literally)
+
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+### 4. Currency and Escaped Dollars
+
+- Plain: The price is $100
+- Escaped: The budget is \$500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+### 5. Tables with Math
+
+| Variable | Formula              | Value   |
+|----------|----------------------|---------|
+| Area     | \(A = \pi r^2\)      | 78.54   |
+| Volume   | \(V = \frac{4}{3}\pi r^3\) | 523.60 |
+
+### 6. Raw Dollar Signs...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="x-ai/grok-4.3"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>03-code-blocks</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>SpaceXAI: Grok 4.3 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: x-ai/grok-4.3<br>
+              Attempt: original · x-ai_grok-4.3_03-code-blocks.json<br>
+              Tokens: 921 (423 in / 498 out)<br>
+              Cost: $0.001639<br>
+              Finish: stop / completed<br>
+              Time: 11/9/2026, 3:22:50 AM
+            </div>
+            
+            
+              <img src="x-ai_grok-4.3_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="x-ai/grok-4.3"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>04-mixed-markdown-latex</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>SpaceXAI: Grok 4.3 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: x-ai/grok-4.3<br>
+              Attempt: original · x-ai_grok-4.3_04-mixed-markdown-latex.json<br>
+              Tokens: 1432 (476 in / 956 out)<br>
+              Cost: $0.002851<br>
+              Finish: stop / completed<br>
+              Time: 11/9/2026, 3:23:04 AM
+            </div>
+            
+            
+              <img src="x-ai_grok-4.3_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Calculus Extensions
+
+**Exercise 2**: For $g(x) = e^{x} \sin x$, compute the second derivative.
+
+### Solution
+First derivative:
+$$g&#039;(x) = e^{x} \sin x + e^{x} \cos x = e^{x}(\sin x + \cos x)$$
+
+Second derivative:
+$$g&#039;&#039;(x) = e^{x}(\sin x + \cos x) + e^{x}(\cos x - \sin x) = 2e^{x} \cos x$$
+
+## Vector Operations
+Given vectors $\mathbf{u} = \begin{pmatrix} 1 \\ 2 \\ 3 \end{pmatrix}$ and $\mathbf{v} = \begin{pmatrix} 4 \\ -1 \\ 0 \end{pmatrix}$:
+
+- Dot product: $\mathbf{u} \cdot \mathbf{v} = 4 - 2 + 0 = 2$
+- Cross product:
+  $$\mathbf{u} \times \mathbf{v} = \begin{pmatrix} 3 \\ 12 \\ -9 \end{pmatrix}$$
+
+## Physics Note
+&gt; In kinematics, the position function $s(t) = -4.9t^2 + 20t + 5$ describes an object under gravity.  
+&gt; Velocity at $t = 2$ s is $s&#039;(2) = 0.4$ m/s.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="x-ai/grok-4.3"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>05-complex-scenarios</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>SpaceXAI: Grok 4.3 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: x-ai/grok-4.3<br>
+              Attempt: original · x-ai_grok-4.3_05-complex-scenarios.json<br>
+              Tokens: 1479 (604 in / 875 out)<br>
+              Cost: $0.002808<br>
+              Finish: stop / completed<br>
+              Time: 11/9/2026, 3:23:12 AM
+            </div>
+            
+            
+              <img src="x-ai_grok-4.3_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">**Response to Complex Scenarios Test**
+
+Here&#039;s a consolidated example that incorporates all the edge cases you listed, while keeping the content readable and properly formatted.
+
+### 1. Math in Lists with Formatting
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+### 2. Tables with Math
+| Formula     | LaTeX                                      | Result                                      |
+|-------------|--------------------------------------------|---------------------------------------------|
+| Quadratic   | $ax^2 + bx + c = 0$                        | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$      |
+| Sum         | $\sum_{i=1}^{n} i$                         | $\frac{n(n+1)}{2}$                          |
+| Product     | $\prod_{i=1}^{n} i$                        | $n!$                                        |
+
+### 3. ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="x-ai/grok-4.3"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+  
+  <script>
+    function exportFeedback() {
+      const feedback = {};
+      document.querySelectorAll('textarea[data-feedback-model]').forEach(textarea => {
+        const modelId = textarea.dataset.feedbackModel;
+        const promptName = textarea.dataset.feedbackPrompt;
+        const value = textarea.value.trim();
+        
+        if (value) {
+          if (!feedback[modelId]) {
+            feedback[modelId] = {};
+          }
+          feedback[modelId][promptName] = value;
+        }
+      });
+      
+      const json = JSON.stringify(feedback, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rendering-feedback-2026-11-08-21-incomplete.json';
+      a.click();
+    }
+  </script>
+</body>
+</html>

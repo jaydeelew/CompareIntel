@@ -1,0 +1,40 @@
+{
+  "modelId": "x-ai/grok-4.3",
+  "modelName": "SpaceXAI: Grok 4.3",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "## Calculus Extensions\n\n**Exercise 2**: For $g(x) = e^{x} \\sin x$, compute the second derivative.\n\n### Solution\nFirst derivative:\n$$g'(x) = e^{x} \\sin x + e^{x} \\cos x = e^{x}(\\sin x + \\cos x)$$\n\nSecond derivative:\n$$g''(x) = e^{x}(\\sin x + \\cos x) + e^{x}(\\cos x - \\sin x) = 2e^{x} \\cos x$$\n\n## Vector Operations\nGiven vectors $\\mathbf{u} = \\begin{pmatrix} 1 \\\\ 2 \\\\ 3 \\end{pmatrix}$ and $\\mathbf{v} = \\begin{pmatrix} 4 \\\\ -1 \\\\ 0 \\end{pmatrix}$:\n\n- Dot product: $\\mathbf{u} \\cdot \\mathbf{v} = 4 - 2 + 0 = 2$\n- Cross product:\n  $$\\mathbf{u} \\times \\mathbf{v} = \\begin{pmatrix} 3 \\\\ 12 \\\\ -9 \\end{pmatrix}$$\n\n## Physics Note\n> In kinematics, the position function $s(t) = -4.9t^2 + 20t + 5$ describes an object under gravity.  \n> Velocity at $t = 2$ s is $s'(2) = 0.4$ m/s.",
+  "usage": {
+    "prompt_tokens": 476,
+    "completion_tokens": 956,
+    "total_tokens": 1432,
+    "cost": 0.0028506,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 128,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0028506,
+      "upstream_inference_prompt_cost": 0.0004606,
+      "upstream_inference_completions_cost": 0.00239
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 672,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0028506,
+  "actualCost": 0.0028506,
+  "timestamp": "2026-11-09T03:23:04.221Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null,
+  "promptHash": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f",
+  "truncated": false,
+  "reasoning_tokens": 672,
+  "note": "reasoning tokens are a subset of completion_tokens; billed once via usage.cost"
+}

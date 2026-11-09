@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794194592-YsUKvjN7ZCaBgWL2VB9U",
+  "object": "chat.completion",
+  "created": 1794194592,
+  "model": "x-ai/grok-4.3",
+  "provider": "xAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "**Response: Delimiter & Edge Case Handling Test**\n\n### 1. Math Delimiters\n\n**Display math ($$):**\n$$x^2 + y^2 = r^2$$\n\n**Display math (\\[ \\]):**\n\\[E = mc^2\\]\n\n**Inline math ($):**\nThe equation \\(a + b = c\\) is simple.\n\n**Inline math (\\( \\)):**\nWe have \\(x = 5\\).\n\n### 2. Nested Structures\n\n- First item\n- The equation is:\n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n  And it evaluates to 0.5\n- Third item\n\n### 3. Code Block (Math-like syntax preserved literally)\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n### 4. Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n### 5. Tables with Math\n\n| Variable | Formula              | Value   |\n|----------|----------------------|---------|\n| Area     | \\(A = \\pi r^2\\)      | 78.54   |\n| Volume   | \\(V = \\frac{4}{3}\\pi r^3\\) | 523.60 |\n\n### 6. Raw Dollar Signs\n\nThe shell variable `$HOME` is set. Price: $99.99.\n\n---\n\nAll delimiter variants, nested content, code blocks, currency usage, and raw `$` characters are rendered above. The math expressions use proper LaTeX delimiters while currency and code remain literal.",
+        "refusal": null,
+        "reasoning": "The prompt requests a response testing LaTeX delimiter variants and edge cases. It includes display and inline math, nested structures, code blocks with math-like syntax, currency symbols, tables, and raw dollar signs.\n\nI will generate a response that cleanly incorporates all listed examples to test delimiter parsing and formatting.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "The prompt requests a response testing LaTeX delimiter variants and edge cases. It includes display and inline math, nested structures, code blocks with math-like syntax, currency symbols, tables, and raw dollar signs.\n\nI will generate a response that cleanly incorporates all listed examples to test delimiter parsing and formatting.",
+            "format": "xai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "A3VvGKG+7nQgx1fkUmBpvgBgZ17aMIJAR586OrZGh3zHj8dc19FCC0lUyFnMekEYrW1L/TRBzjUSbElPtKUsWzvyrAPgnaRR9o4K1NNermtec5sQfATeERAwZAcTekhn+p2e1oXyhh6xroQOeeCaEzBxzH/zHugfQBrdFhCdJMpQ6Ic/Xe2nJkBvYAizagu7mOl3ZApXTukzGXYGbPirNUwbTjQIIeLtAy9JOhJg/wb0KdcufqNk+PraPxKPfXKWLd8E2VeGtuq/mfCs5Ng+MG9KtXIThcOxsedM5QWYuDojXpPplVcuHjCTGzSTjgQZyVeRZQkM2hyjXTYty+sz79Uhk323FOJunXNtpZijJA70BwBQoI2UeNkZ+GEC5rmn64pPmBzN9aN/I0oIjeaEzUda+ESd6hmg411WD7zkLjmc4Db0NEFcIqOsca+U+CC3lZADCEXL3JSJeV2a6X85LpEXQ0CsiIko9hdFHcXGLfx6re1VK/RCLLTpQ6rjKpKBnHbbXtWKq+7vMp8Kwb+oh5lJpMQVkW0uUkoeq/gA7ALnp+nKRiCC5+Jw8oSWA9/e8vaL+r75VgoCJGvymkRlutRPK/xdwXLSZTJTvaXpPjN/AEs8+fPEIyipS3W7hrX88qNZGTP9RGqVVMOrTmAhFXS/R6mB6270Ai+SUIgXzcMaPwQIjzGPGN+F4o17gc7P/PIvq3g+X9gS+BAZbBuBk5/TO+akZfdwk9SxfTn/rb3vGxPJ+cqnLyzf+m9+GAhPzQu4qd7eXKPh/7YYiKYuhj5ovIYf7WvL49IhjEC66lLRhXTbpMi9eejjIyWSgzkO+PoZxOud5uedP4AYD2O2cHVcOlHbaKASK0XQI+IWv1Jk9Gj3b5i5N6RW0jyO8Zq2obgVkLR4zIj/ocN8QNxkcP10UKMnWgkxR0dWk47zgzpMSnvsYjxndPjUm9sZ7C785VqolpECg08LfzKOCm1CD6pxxml8+QpKA1TUYQfg2HQ56j8DH2CpWFBKiVmPfNDNEEQzfub3Oqk8fK0HYSrAdvkNFAKBNtLEVILyqqRfA1n/SefklZE3NRZKep7W8N+ftPnQOFtyQD2ZzFQONdED7hwfyj2/u0CI9FhJmnzvnBgsXv5aQKNXJ9p04eOfbT5T0XMd8SwC+kN9VaH8JIVUw8KOVP1FL1s07rSlX2osbtlztpDdhxTBNTOPXxBpGouBFhiA37s.eyJlbmRwb2ludF9zbHVnIjoieC1haS9ncm9rLTQuMy0yMDI2MDQzMHx4YWkifQ",
+            "format": "xai-responses-v1",
+            "id": "rs_5bfd2a39-aea3-949a-8f7b-dae6c6e003d2",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 518,
+    "completion_tokens": 726,
+    "total_tokens": 1244,
+    "cost": 0.0023281,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 128,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0023281,
+      "upstream_inference_prompt_cost": 0.0005131,
+      "upstream_inference_completions_cost": 0.001815
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 339,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
