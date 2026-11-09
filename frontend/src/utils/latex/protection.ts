@@ -154,8 +154,24 @@ function protectSegmentDollars(segment: string): string {
  *
  * A mid-line leftover `$$` must not pair with the next line's opener:
  * `use $$ as delimiter.\n\n$$E=mc^2$$` keeps two prose dollars and one
- * display equation. Same-line `$$E=mc^2$$` and block `$$\nE\n$$` stay math.
+ * display equation. Same-line `$$E=mc^2$$`, block `$$\nE\n$$`, and a
+ * mid-line opener with a fence closer (`The formula is $$\nE\n$$`) stay math.
  */
+function leftoverMidLineDoubleDollar(
+  text: string,
+  _open: number,
+  close: number,
+  midLine: boolean,
+  inner: string
+): boolean {
+  if (!midLine || !inner.includes('\n')) return false
+  const closeLineEnd = text.indexOf('\n', close)
+  const restOfCloseLine = text.slice(close + 2, closeLineEnd === -1 ? text.length : closeLineEnd)
+  // A real closer sits alone at the end of its line (`\n$$`).
+  // A later opener still has content on that line (`$$E=mc^2$$`).
+  return /\S/.test(restOfCloseLine)
+}
+
 export function literalizeUnpairedDoubleDollars(text: string): string {
   if (!text.includes('$$')) return text
   let out = ''
@@ -171,7 +187,11 @@ export function literalizeUnpairedDoubleDollars(text: string): string {
         continue
       }
       const inner = text.slice(i + 2, close)
-      if (close === i + 2 || inner.includes('$') || (midLine && inner.includes('\n'))) {
+      if (
+        close === i + 2 ||
+        inner.includes('$') ||
+        leftoverMidLineDoubleDollar(text, i, close, midLine, inner)
+      ) {
         out += `${LITERAL_DOLLAR}${LITERAL_DOLLAR}`
         i += 2
         continue
@@ -299,4 +319,23 @@ export function restoreInlineCode(text: string, spans: string[]): string {
     const content = spans[parseInt(index, 10)]
     return content === undefined ? match : renderInlineCodeSpan(content)
   })
+}
+
+/**
+ * GFM table cells unescape `\|` to `|` even inside code (spec example 200).
+ * CommonMark code spans keep the backslash; only table cells strip it.
+ */
+export function unescapeGfmTableCellCodePipes(html: string): string {
+  return html.replace(
+    /<(td|th)(\s[^>]*)?>([\s\S]*?)<\/\1>/gi,
+    (_full: string, tag: string, attrs: string | undefined, inner: string) => {
+      const fixed = inner.replace(
+        /<code\b([^>]*)>([\s\S]*?)<\/code>/gi,
+        (_m: string, codeAttrs: string, content: string) => {
+          return `<code${codeAttrs}>${content.replace(/\\\|/g, '|')}</code>`
+        }
+      )
+      return `<${tag}${attrs || ''}>${fixed}</${tag}>`
+    }
+  )
 }

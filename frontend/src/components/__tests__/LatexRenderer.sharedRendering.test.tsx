@@ -358,6 +358,19 @@ The formula $A = \\pi r^2$ stays outside the table.
     expect(texSources(el).some(t => t.includes('\\pi r^2'))).toBe(true)
   })
 
+  it('unescapes \\| inside table-cell code (GFM example 200)', () => {
+    const el = renderReply(
+      '| Feature | Challenge | Solution |\n|---------|-----------|----------|\n| Tables with math | `\\|` conflicts, complex fractions | Escape pipes |\n',
+      'z-ai/glm-5.3-flash'
+    )
+    const cell = Array.from(el.querySelectorAll('td')).find(td =>
+      (td.textContent ?? '').includes('conflicts')
+    )
+    expect(cell).toBeTruthy()
+    expect(cell!.querySelector('code')?.textContent).toBe('|')
+    expect(visibleText(cell!)).toContain('| conflicts')
+  })
+
   it('keeps U+2014 em dashes in table-adjacent prose (not ASCII hyphen)', () => {
     const el = renderReply(
       'and \\frac with a multi-character numerator — all inside table cells',
@@ -630,6 +643,15 @@ describe('bug 16: $...$ / $$...$$ delimiter examples are not math', () => {
     expect(visibleText(el)).toContain('use $$ as delimiter.')
     expect(texSources(el)).toEqual(expect.arrayContaining([expect.stringMatching(/E\s*=\s*mc\^2/)]))
     expect(texSources(el).some(t => /as delimiter/.test(t))).toBe(false)
+  })
+
+  it('renders The formula is $$ / E=mc^2 / $$ as one display equation', () => {
+    const el = renderReply('The formula is $$\nE=mc^2\n$$', CLAUDE)
+    expectNoKatexErrors(el)
+    expect(el.querySelectorAll('.katex-display')).toHaveLength(1)
+    expect(texSources(el)).toEqual(expect.arrayContaining([expect.stringMatching(/E\s*=\s*mc\^2/)]))
+    expect(visibleText(el)).toContain('The formula is')
+    expect(visibleText(el)).not.toMatch(/\$\$/)
   })
 })
 

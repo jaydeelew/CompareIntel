@@ -68,4 +68,36 @@ describe('compareSignatures mutation detection', () => {
       true
     )
   })
+
+  it('fails when bold is removed', () => {
+    const ref = signatureFromHtml('<p><strong>hello</strong> world</p>')
+    const actual = signatureFromHtml('<p>hello world</p>')
+    const result = compareSignatures(ref, actual)
+    expect(result.pass).toBe(false)
+    expect(result.diffs.some(d => d.field === 'strongTexts')).toBe(true)
+  })
+
+  it('fails when italic is changed to bold', () => {
+    const ref = signatureFromHtml('<p><em>hello</em> world</p>')
+    const actual = signatureFromHtml('<p><strong>hello</strong> world</p>')
+    const result = compareSignatures(ref, actual)
+    expect(result.pass).toBe(false)
+    expect(result.diffs.some(d => d.field === 'emTexts' || d.field === 'strongTexts')).toBe(true)
+  })
+
+  it('fails when a blockquote is removed', () => {
+    const ref = signatureFromHtml('<blockquote>quoted text</blockquote>')
+    const actual = signatureFromHtml('<p>quoted text</p>')
+    const result = compareSignatures(ref, actual)
+    expect(result.pass).toBe(false)
+    expect(result.diffs.some(d => d.field === 'blockquoteCount')).toBe(true)
+  })
+
+  it('fails when an ordered list is changed to bullets', () => {
+    const ref = signatureFromHtml('<ol><li>alpha</li><li>beta</li></ol>')
+    const actual = signatureFromHtml('<ul><li>alpha</li><li>beta</li></ul>')
+    const result = compareSignatures(ref, actual)
+    expect(result.pass).toBe(false)
+    expect(result.diffs.some(d => d.field === 'listTags')).toBe(true)
+  })
 })

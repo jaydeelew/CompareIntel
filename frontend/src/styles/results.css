@@ -1792,6 +1792,26 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   line-height: 1.5;
 }
 
+/* Display math as the first block of a list item shares the marker line
+   instead of sitting below an empty bullet (bug 20). */
+.latex-content li > .katex-display:first-child,
+.latex-content li > .katex-display:first-of-type,
+.latex-content li > p:first-child > .katex-display:first-child {
+  margin-top: 0;
+}
+
+.latex-content li > p:first-child:has(> .katex-display:first-child) {
+  margin-top: 0;
+}
+
+.latex-content li > br:first-child:has(+ .katex-display) {
+  display: none;
+}
+
+.latex-content li > br:first-child + .katex-display {
+  margin-top: 0;
+}
+
 /* Ensure content within list items is properly indented */
 .latex-content li > * {
   margin-left: 0;

@@ -6,21 +6,20 @@
  *   - `$$...$$`, `\[...\]`, `\(...\)` → KaTeX (skip empty/ellipsis/list-crossing)
  *   - `$...$` that is not currency → KaTeX (allowed enhancement vs CommonMark)
  *   - leftover mid-line `$$` does not pair with the next opener
+ *   - a mid-line opener with a fence closer (`The formula is $$\nE\n$$`) is math
  *   - `($$)` / `($)` / `(\[ \])` / `(\( \))` are labels, not math
- * Structure (lists, tables, emphasis, backtick pairing, backslash escapes)
- * comes from markdown-it (GFM tables, html/typographer off).
+ * Structure (lists, emphasis, backtick pairing, backslash escapes) comes from
+ * markdown-it. GFM tables are a markdown-it block rule that splits unescaped
+ * pipes, unescapes `\|`, then delegates cell inlines to markdown-it's parser
+ * (html/typographer off).
  */
 import katex from 'katex'
 import MarkdownIt from 'markdown-it'
-
-const md = new MarkdownIt({ html: false, linkify: false, breaks: false, typographer: false })
+import type StateBlock from 'markdown-it/lib/rules_block/state_block.mjs'
+import type StateInline from 'markdown-it/lib/rules_inline/state_inline.mjs'
 
 const LITERAL = '\uE000'
 const FENCE_PH = (i: number) => `%%F${i}%%`
-const TABLE_PH = (i: number) => `%%T${i}%%`
-const DISPLAY_PH = (i: number) => `%%D${i}%%`
-const INLINE_PH = (i: number) => `%%I${i}%%`
-const CODE_PH = (i: number) => `%%C${i}%%`
 
 function renderKatex(tex: string, displayMode: boolean): string {
   const source = tex.split(LITERAL).join('\\$').trim()
@@ -70,57 +69,6 @@ function leaveExample(full: string): string {
     .replace(/\\\)/g, ')')
 }
 
-/** CommonMark §6.1 pairing, one line at a time. */
-function extractInlineCode(text: string): { text: string; spans: string[] } {
-  const spans: string[] = []
-  const out = text
-    .split('\n')
-    .map(line => {
-      let s = ''
-      let i = 0
-      while (i < line.length) {
-        if (line.charCodeAt(i) !== 96) {
-          s += line[i]
-          i += 1
-          continue
-        }
-        let n = 1
-        while (i + n < line.length && line.charCodeAt(i + n) === 96) n += 1
-        const contentStart = i + n
-        let j = contentStart
-        let found = -1
-        while (j < line.length) {
-          if (line.charCodeAt(j) !== 96) {
-            j += 1
-            continue
-          }
-          let m = 1
-          while (j + m < line.length && line.charCodeAt(j + m) === 96) m += 1
-          if (m === n) {
-            found = j
-            break
-          }
-          j += m
-        }
-        if (found === -1) {
-          s += line.slice(i, i + n)
-          i += n
-          continue
-        }
-        let content = line.slice(contentStart, found)
-        if (content.length >= 2 && content.startsWith(' ') && content.endsWith(' ')) {
-          content = content.slice(1, -1)
-        }
-        spans.push(content)
-        s += CODE_PH(spans.length - 1)
-        i = found + n
-      }
-      return s
-    })
-    .join('\n')
-  return { text: out, spans }
-}
-
 interface Fence {
   language: string
   content: string
@@ -138,50 +86,29 @@ function extractFences(markdown: string): { text: string; fences: Fence[] } {
   return { text, fences }
 }
 
-function isTableRow(line: string): boolean {
-  return /^\s*\|.+\|\s*$/.test(line)
+function isEscaped(src: string, i: number): boolean {
+  let n = 0
+  for (let j = i - 1; j >= 0 && src[j] === '\\'; j--) n += 1
+  return n % 2 === 1
 }
 
-function isSeparator(line: string): boolean {
-  return /^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(line)
-}
-
-function splitCells(line: string): string[] {
-  const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, '')
-  return trimmed.split('|').map(c => c.trim())
-}
-
-function tablesToPlaceholders(text: string): { text: string; tables: string[] } {
-  const lines = text.split('\n')
-  const tables: string[] = []
-  const out: string[] = []
-  let i = 0
-  while (i < lines.length) {
-    if (isTableRow(lines[i]) && i + 1 < lines.length && isSeparator(lines[i + 1])) {
-      const rows = [splitCells(lines[i])]
-      i += 2
-      while (i < lines.length && isTableRow(lines[i])) {
-        rows.push(splitCells(lines[i]))
-        i += 1
-      }
-      const header = rows[0]
-      const body = rows.slice(1)
-      const html = [
-        '<table>',
-        '<thead><tr>',
-        ...header.map(c => `<th>${c}</th>`),
-        '</tr></thead><tbody>',
-        ...body.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`),
-        '</tbody></table>',
-      ].join('')
-      tables.push(html)
-      out.push(TABLE_PH(tables.length - 1))
-      continue
-    }
-    out.push(lines[i])
-    i += 1
+function hasUnescapedDollar(inner: string): boolean {
+  for (let i = 0; i < inner.length; i++) {
+    if (inner[i] === '$' && !isEscaped(inner, i)) return true
   }
-  return { text: out.join('\n'), tables }
+  return false
+}
+
+function leftoverMidLineDoubleDollar(
+  text: string,
+  close: number,
+  midLine: boolean,
+  inner: string
+): boolean {
+  if (!midLine || !inner.includes('\n')) return false
+  const closeLineEnd = text.indexOf('\n', close)
+  const restOfCloseLine = text.slice(close + 2, closeLineEnd === -1 ? text.length : closeLineEnd)
+  return /\S/.test(restOfCloseLine)
 }
 
 function literalizeLeftoverDollars(text: string): string {
@@ -199,7 +126,11 @@ function literalizeLeftoverDollars(text: string): string {
         continue
       }
       const inner = text.slice(i + 2, close)
-      if (close === i + 2 || inner.includes('$') || (midLine && inner.includes('\n'))) {
+      if (
+        close === i + 2 ||
+        hasUnescapedDollar(inner) ||
+        leftoverMidLineDoubleDollar(text, close, midLine, inner)
+      ) {
         out += LITERAL + LITERAL
         i += 2
         continue
@@ -226,8 +157,6 @@ function protectParenthesizedLabels(text: string): string {
 function isCurrencyLikeSpan(segment: string, open: number, close: number): boolean {
   const content = segment.slice(open + 1, close)
   if (!content.trim()) return true
-  // `$`code`$` leftover after inline-code extraction is not math.
-  if (/%%C\d+%%/.test(content)) return true
   const opensOnDigit = /\d/.test(segment.charAt(open + 1))
   if (/\s$/.test(content) && opensOnDigit) return true
   if (/\d/.test(segment.charAt(close + 1))) return true
@@ -236,109 +165,221 @@ function isCurrencyLikeSpan(segment: string, open: number, close: number): boole
   return false
 }
 
-function extractInlineDollarMath(text: string, inlineMath: string[]): string {
-  return text
-    .split('\n')
-    .map(line => {
-      if (!line.includes('$')) return line
-      const positions: number[] = []
-      for (let i = 0; i < line.length; i++) {
-        if (line[i] === '$' && line[i - 1] !== '$' && line[i + 1] !== '$') positions.push(i)
+function getLine(
+  state: { src: string; bMarks: number[]; eMarks: number[]; tShift: number[] },
+  line: number
+): string {
+  return state.src.slice(state.bMarks[line] + state.tShift[line], state.eMarks[line])
+}
+
+function isSeparatorRow(line: string): boolean {
+  return /^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(line)
+}
+
+function looksLikeTableRow(line: string): boolean {
+  const trimmed = line.trim()
+  if (!trimmed || trimmed.startsWith('```')) return false
+  return trimmed.includes('|')
+}
+
+/** GFM spec: split on unescaped `|`, then unescape `\|` even inside code. */
+function splitGfmTableCells(line: string): string[] {
+  const cells: string[] = []
+  let buf = ''
+  const t = line.trim()
+  let i = 0
+  while (i < t.length) {
+    if (t[i] === '\\' && t[i + 1] === '|') {
+      buf += '\\|'
+      i += 2
+      continue
+    }
+    if (t[i] === '|') {
+      cells.push(buf)
+      buf = ''
+      i += 1
+      continue
+    }
+    buf += t[i]
+    i += 1
+  }
+  cells.push(buf)
+  if (cells.length && cells[0].trim() === '') cells.shift()
+  if (cells.length && cells[cells.length - 1].trim() === '') cells.pop()
+  return cells.map(c => c.replace(/\\\|/g, '|').trim())
+}
+
+type MarkdownItInstance = InstanceType<typeof MarkdownIt>
+
+function registerGfmTables(md: MarkdownItInstance): void {
+  md.block.ruler.before(
+    'paragraph',
+    'gfm_table',
+    (state: StateBlock, startLine: number, endLine: number, silent: boolean) => {
+      if (state.sCount[startLine] - state.blkIndent >= 4) return false
+      const headerLine = getLine(state, startLine)
+      if (startLine + 1 >= endLine) return false
+      const sepLine = getLine(state, startLine + 1)
+      if (!looksLikeTableRow(headerLine) || !isSeparatorRow(sepLine)) return false
+      if (silent) return true
+
+      const rows: string[][] = [splitGfmTableCells(headerLine)]
+      let next = startLine + 2
+      while (next < endLine) {
+        if (state.isEmpty(next)) break
+        if (state.sCount[next] - state.blkIndent >= 4) break
+        const line = getLine(state, next)
+        if (!looksLikeTableRow(line) || isSeparatorRow(line)) break
+        rows.push(splitGfmTableCells(line))
+        next += 1
       }
-      const literal = new Set<number>()
-      const math: Array<{ open: number; close: number }> = []
-      let k = 0
-      while (k < positions.length) {
-        const open = positions[k]
-        const close = positions[k + 1]
-        if (close === undefined) {
-          literal.add(open)
+
+      const tableOpen = state.push('table_open', 'table', 1)
+      tableOpen.map = [startLine, next]
+      state.push('thead_open', 'thead', 1)
+      state.push('tr_open', 'tr', 1)
+      for (const cell of rows[0]) {
+        state.push('th_open', 'th', 1)
+        const inline = state.push('inline', '', 0)
+        inline.content = cell
+        inline.children = []
+        state.push('th_close', 'th', -1)
+      }
+      state.push('tr_close', 'tr', -1)
+      state.push('thead_close', 'thead', -1)
+      if (rows.length > 1) {
+        state.push('tbody_open', 'tbody', 1)
+        for (const row of rows.slice(1)) {
+          state.push('tr_open', 'tr', 1)
+          for (const cell of row) {
+            state.push('td_open', 'td', 1)
+            const inline = state.push('inline', '', 0)
+            inline.content = cell
+            inline.children = []
+            state.push('td_close', 'td', -1)
+          }
+          state.push('tr_close', 'tr', -1)
+        }
+        state.push('tbody_close', 'tbody', -1)
+      }
+      state.push('table_close', 'table', -1)
+      state.line = next
+      return true
+    }
+  )
+}
+
+/**
+ * Consume TeX before markdown-it's escape rule so `\,` / `\\` stay TeX, while
+ * backticks still win at a leading `` ` `` (code spans are not math).
+ */
+function registerTexMath(md: MarkdownItInstance): void {
+  md.inline.ruler.before('escape', 'tex_math', (state: StateInline, silent: boolean) => {
+    const src = state.src
+    const pos = state.pos
+    const max = state.posMax
+    if (pos >= max) return false
+
+    const pushHtml = (html: string) => {
+      const tok = state.push('html_inline', '', 0)
+      tok.content = html
+    }
+    const pushText = (value: string) => {
+      const tok = state.push('text', '', 0)
+      tok.content = value
+    }
+
+    if (src.startsWith('$$', pos) && !isEscaped(src, pos)) {
+      let close = -1
+      for (let i = pos + 2; i < max - 1; i++) {
+        if (src.startsWith('$$', i) && !isEscaped(src, i)) {
+          close = i
           break
         }
-        const full = line.slice(open, close + 1)
-        if (isEllipsisExample(full) || isCurrencyLikeSpan(line, open, close)) {
-          literal.add(open)
-          k += 1
+      }
+      if (close === -1) return false
+      const inner = src.slice(pos + 2, close)
+      const full = src.slice(pos, close + 2)
+      if (close === pos + 2 || hasUnescapedDollar(inner)) return false
+      if (!silent) {
+        if (crossesListItem(full) || isEllipsisExample(full)) pushText(leaveExample(full))
+        else pushHtml(renderKatex(inner, true))
+      }
+      state.pos = close + 2
+      return true
+    }
+
+    if (src.startsWith('\\[', pos)) {
+      const close = src.indexOf('\\]', pos + 2)
+      if (close === -1 || close > max) return false
+      const inner = src.slice(pos + 2, close)
+      const full = src.slice(pos, close + 2)
+      if (!silent) {
+        if (crossesListItem(full) || isEllipsisExample(full)) pushText(leaveExample(full))
+        else pushHtml(renderKatex(inner, true))
+      }
+      state.pos = close + 2
+      return true
+    }
+
+    if (src.startsWith('\\(', pos)) {
+      const close = src.indexOf('\\)', pos + 2)
+      if (close === -1 || close > max) return false
+      const inner = src.slice(pos + 2, close)
+      const full = src.slice(pos, close + 2)
+      if (!silent) {
+        if (isEllipsisExample(full)) pushText(leaveExample(full))
+        else pushHtml(renderKatex(inner, false))
+      }
+      state.pos = close + 2
+      return true
+    }
+
+    if (src[pos] === '$' && src[pos + 1] !== '$') {
+      let close = -1
+      for (let i = pos + 1; i < max; i++) {
+        if (src[i] === '\n') {
+          const rest = src.slice(pos, max)
+          if (!/\\begin\{(?:cases|align\*?|pmatrix|bmatrix|matrix|array)\}/.test(rest)) break
           continue
         }
-        math.push({ open, close })
-        k += 2
-      }
-      let out = ''
-      let i = 0
-      const mathAt = new Map(math.map(m => [m.open, m]))
-      while (i < line.length) {
-        const span = mathAt.get(i)
-        if (span) {
-          inlineMath.push(line.slice(span.open + 1, span.close))
-          out += INLINE_PH(inlineMath.length - 1)
-          i = span.close + 1
-          continue
+        if (src[i] === '$' && src[i + 1] !== '$' && !isEscaped(src, i)) {
+          close = i
+          break
         }
-        out += literal.has(i) ? LITERAL : line[i]
-        i += 1
       }
-      return out
-    })
-    .join('\n')
+      if (close === -1) return false
+      const inner = src.slice(pos + 1, close)
+      const full = src.slice(pos, close + 1)
+      if (
+        isEllipsisExample(full) ||
+        isCurrencyLikeSpan(src.slice(pos, Math.min(max, close + 2)), 0, close - pos)
+      ) {
+        return false
+      }
+      const isMultilineEnv =
+        full.includes('\n') &&
+        /\\begin\{(?:cases|align\*?|pmatrix|bmatrix|matrix|array)\}/.test(inner)
+      if (full.includes('\n') && !isMultilineEnv) return false
+      if (!silent) pushHtml(renderKatex(inner, isMultilineEnv))
+      state.pos = close + 1
+      return true
+    }
+
+    return false
+  })
 }
+
+const md = new MarkdownIt({ html: false, linkify: false, breaks: false, typographer: false })
+registerGfmTables(md)
+registerTexMath(md)
 
 export function renderReferenceHtml(markdown: string): string {
   const { text: fenced, fences } = extractFences(markdown)
-  const inline = extractInlineCode(fenced)
-  let text = inline.text.replace(/(?<!\\)\\\$/g, LITERAL)
-  text = protectParenthesizedLabels(text)
+  let text = protectParenthesizedLabels(fenced)
   text = literalizeLeftoverDollars(text)
 
-  const display: string[] = []
-  text = text.replace(/\$\$([^$]+?)\$\$/gs, (full, inner: string) => {
-    if (crossesListItem(full) || isEllipsisExample(full)) return leaveExample(full)
-    display.push(inner)
-    return DISPLAY_PH(display.length - 1)
-  })
-  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (full, inner: string) => {
-    if (crossesListItem(full) || isEllipsisExample(full)) return leaveExample(full)
-    display.push(inner)
-    return DISPLAY_PH(display.length - 1)
-  })
-
-  const inlineMath: string[] = []
-  text = text.replace(/\\\(([\s\S]*?)\\\)/g, (full, inner: string) => {
-    if (isEllipsisExample(full)) return leaveExample(full)
-    inlineMath.push(inner)
-    return INLINE_PH(inlineMath.length - 1)
-  })
-
-  // Multiline `$ f(x) = \begin{cases}...\end{cases} $` is display math (GPT-5 05).
-  // Same-line `$A = \begin{pmatrix}...\end{pmatrix}$` stays inline.
-  text = text.replace(
-    /(?<!\$)\$(?!\$)((?:[^\n$]|\n[ \t]*)*?)(\\begin\{(?:cases|align\*?|pmatrix|bmatrix|matrix|array)\}[\s\S]*?\\end\{(?:cases|align\*?|pmatrix|bmatrix|matrix|array)\})[ \t]*(?:\n[ \t]*)?\$(?!\$)/g,
-    (full, prefix: string, env: string) => {
-      if (!full.includes('\n')) return full
-      if (/\n[ \t]*\n/.test(prefix)) return full
-      display.push(`${prefix}${env}`)
-      return DISPLAY_PH(display.length - 1)
-    }
-  )
-
-  text = extractInlineDollarMath(text, inlineMath)
-
-  const tabled = tablesToPlaceholders(text)
-  text = tabled.text
-
   let html = md.render(text)
-  html = html.replace(/<p>%%T(\d+)%%<\/p>/g, (_m, i: string) => tabled.tables[Number(i)] || '')
-  html = html.replace(/%%T(\d+)%%/g, (_m, i: string) => tabled.tables[Number(i)] || '')
-  html = html.replace(/%%C(\d+)%%/g, (_m, i: string) => {
-    const content = inline.spans[Number(i)] ?? ''
-    const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    return `<code>${escaped}</code>`
-  })
-
-  html = html.replace(/%%D(\d+)%%/g, (_m, i: string) => renderKatex(display[Number(i)] || '', true))
-  html = html.replace(/%%I(\d+)%%/g, (_m, i: string) =>
-    renderKatex(inlineMath[Number(i)] || '', false)
-  )
 
   const fenceHtml = (i: string) => {
     const block = fences[Number(i)]

@@ -13,6 +13,8 @@ import {
   restoreInlineCode,
   restoreLiteralDollars,
   safeRenderKatex,
+  unescapeGfmTableCellCodePipes,
+  literalizeUnpairedDoubleDollars,
 } from '../latex'
 
 const L = LITERAL_DOLLAR
@@ -70,6 +72,12 @@ describe('protectCurrencyDollars', () => {
     const out = protectCurrencyDollars(input)
     expect(out).toContain(`use ${L}${L} as delimiter.`)
     expect(out).toContain('$$E=mc^2$$')
+  })
+
+  it('keeps The formula is $$ / E=mc^2 / $$ as a real display pair', () => {
+    const input = 'The formula is $$\nE=mc^2\n$$'
+    expect(literalizeUnpairedDoubleDollars(input)).toBe(input)
+    expect(protectCurrencyDollars(input)).toBe(input)
   })
 
   it('does not pair $HOME with a later currency $', () => {
@@ -221,5 +229,15 @@ describe('lists', () => {
     expect(out).toContain('<strong>$x = 0$</strong>')
     expect(out).toContain('<strong>$x = 2$</strong>')
     expect(out).not.toContain('**$x = 0$**')
+  })
+})
+
+describe('GFM table-cell code pipes', () => {
+  it('unescapes \\| inside <code> in table cells only', () => {
+    const html =
+      '<table><tr><td><code>\\|</code> conflicts</td></tr></table><p>keep <code>\\|</code></p>'
+    const out = unescapeGfmTableCellCodePipes(html)
+    expect(out).toContain('<td><code>|</code> conflicts</td>')
+    expect(out).toContain('<p>keep <code>\\|</code></p>')
   })
 })

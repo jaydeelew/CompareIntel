@@ -134,3 +134,9 @@ certs/
 # Browser extension build artifacts
 extension/dist/
 extension/compareintel-extension.zip
+
+# Full-section audit PNGs and ZIP are generated artifacts, not source
+/full-section-audit-wide.zip
+rendering-harness/full-section-audit/screenshots/*.png
+rendering-harness/full-section-audit/before-after/*.png
+rendering-harness/full-section-audit/*.zip

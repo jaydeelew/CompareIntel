@@ -62,8 +62,36 @@ import {
   extractInlineCode,
   restoreInlineCode,
   renderInlineCodeSpan,
+  unescapeGfmTableCellCodePipes,
 } from '../utils/latex'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
+
+/** GFM table cells split on unescaped `|` (spec example 200). */
+function splitUnescapedTableCells(row: string): string[] {
+  const cells: string[] = []
+  let buf = ''
+  const t = row.trim()
+  let i = 0
+  while (i < t.length) {
+    if (t[i] === '\\' && t[i + 1] === '|') {
+      buf += '\\|'
+      i += 2
+      continue
+    }
+    if (t[i] === '|') {
+      cells.push(buf)
+      buf = ''
+      i += 1
+      continue
+    }
+    buf += t[i]
+    i += 1
+  }
+  cells.push(buf)
+  if (cells.length && cells[0].trim() === '') cells.shift()
+  if (cells.length && cells[cells.length - 1].trim() === '') cells.pop()
+  return cells
+}
 
 interface LatexRendererProps {
   children: string
@@ -190,9 +218,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
             return
           }
 
-          const cells = cleanRow
-            .split('|')
-            .map(cell => cell.trim())
+          const cells = splitUnescapedTableCells(cleanRow)
+            .map(cell => cell.replace(/\\\|/g, '|').trim())
             .filter(cell => cell)
           if (cells.length > 0) {
             const tag = isHeader ? 'th' : 'td'
@@ -1112,6 +1139,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // above can modify it
         processed = restoreLiteralDollars(processed)
         processed = restoreInlineCode(processed, inlineCodeExtraction.spans)
+        processed = unescapeGfmTableCellCodePipes(processed)
         processed = processed.replace(/__CODE_BLOCK_(\d+)__/g, (_match, index) => {
           const block = codeBlockExtraction.blocks[parseInt(index, 10)]
           return block ? renderCodeBlock(block.language, block.content) : ''

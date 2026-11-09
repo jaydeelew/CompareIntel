@@ -138,5 +138,22 @@ export function compareSignatures(ref: HtmlSignature, actual: HtmlSignature): Co
     diffs.push({ field: 'linkHrefs', expected: ref.linkHrefs, actual: actual.linkHrefs })
   }
 
+  if (!sameStringArrays(ref.strongTexts, actual.strongTexts)) {
+    diffs.push({ field: 'strongTexts', expected: ref.strongTexts, actual: actual.strongTexts })
+  }
+  if (!sameStringArrays(ref.emTexts, actual.emTexts)) {
+    diffs.push({ field: 'emTexts', expected: ref.emTexts, actual: actual.emTexts })
+  }
+  if (ref.blockquoteCount !== actual.blockquoteCount) {
+    diffs.push({
+      field: 'blockquoteCount',
+      expected: ref.blockquoteCount,
+      actual: actual.blockquoteCount,
+    })
+  }
+  if (!sameStringArrays(ref.listTags, actual.listTags)) {
+    diffs.push({ field: 'listTags', expected: ref.listTags, actual: actual.listTags })
+  }
+
   return { pass: diffs.length === 0, diffs }
 }

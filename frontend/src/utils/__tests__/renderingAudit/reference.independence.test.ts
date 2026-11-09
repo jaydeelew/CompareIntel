@@ -19,6 +19,10 @@ describe('independent reference', () => {
     expect(src).not.toMatch(
       /from ['"][^'"]*(?:protection|codeBlockPreservation|mathRenderer|lists)['"]/
     )
+    expect(src).not.toMatch(/function extractInlineCode/)
+    expect(src).not.toMatch(/tablesToPlaceholders/)
+    expect(src).toMatch(/block\.ruler/)
+    expect(src).toMatch(/push\('inline'/)
   })
 
   it('does not pair a ($$) label with the next real $$ equation (bug 29)', () => {
@@ -38,5 +42,24 @@ describe('independent reference', () => {
     expect(sig.texSources.some(t => /E\s*=\s*mc\^2/.test(t))).toBe(true)
     expect(sig.texSources.some(t => /as delimiter/.test(t))).toBe(false)
     expect(sig.visibleText).toContain('$$')
+    expect(sig.displayMathCount).toBe(1)
+  })
+
+  it('renders The formula is $$ / E=mc^2 / $$ as one display equation', () => {
+    const html = renderReferenceHtml('The formula is $$\nE=mc^2\n$$')
+    const sig = signatureFromHtml(html)
+    expect(sig.displayMathCount).toBe(1)
+    expect(sig.texSources.some(t => /E\s*=\s*mc\^2/.test(t))).toBe(true)
+    expect(sig.visibleText).not.toMatch(/\$\$/)
+  })
+
+  it('unescapes \\| inside table-cell code (GFM example 200)', () => {
+    const html = renderReferenceHtml(
+      '| Feature | Challenge | Solution |\n|---------|-----------|----------|\n| Tables with math | `\\|` conflicts, complex fractions | Escape pipes |\n'
+    )
+    const sig = signatureFromHtml(html)
+    expect(sig.codeSpans).toContain('|')
+    expect(sig.codeSpans.some(s => s.includes('\\|'))).toBe(false)
+    expect(sig.tableCells[0]?.some(c => c.includes('| conflicts'))).toBe(true)
   })
 })

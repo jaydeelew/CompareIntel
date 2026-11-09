@@ -39,4 +39,5 @@ export {
   extractInlineCode,
   restoreInlineCode,
   renderInlineCodeSpan,
+  unescapeGfmTableCellCodePipes,
 } from './protection'

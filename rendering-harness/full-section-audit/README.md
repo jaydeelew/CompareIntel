@@ -18,6 +18,5 @@ See `verdicts.md` for pass / reopened-fixed.
 - `report.json` / `report.md` — current HEAD vs markdown-it+KaTeX
 - `verdicts.md` — independent-rejection follow-up table
 - `sections/*.md` — raw source excerpt per bug
-- `screenshots/*.png` — 960 CSS × DPR 2 full-section shots of current HEAD (all 29 bugs plus 20-synthetic)
-- `before-after/*-wide.png` — stacked Before (`master` renderer) above After (HEAD) for every bug, including 25 and 20-synthetic
 - `visual.json` — no katex-error / leftover placeholders
+- Screenshots, wide Before/After PNGs, and the audit ZIP are **generated artifacts** (not committed). Rebuild them into `/opt/cursor/artifacts/` from HEAD.

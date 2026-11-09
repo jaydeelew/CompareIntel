@@ -18,6 +18,10 @@ export interface HtmlSignature {
   displayMathCount: number
   inlineMathCount: number
   blockCodeCount: number
+  strongTexts: string[]
+  emTexts: string[]
+  blockquoteCount: number
+  listTags: string[]
 }
 
 const PLACEHOLDER_RE = /__(?:DISPLAY_MATH|INLINE_MATH|CODE_BLOCK|UL|OL|HR_PLACEHOLDER)_\d+__/g
@@ -28,7 +32,7 @@ function visibleTextOf(el: Element): string {
   const clone = el.cloneNode(true) as Element
   clone.querySelectorAll(CODE_CHROME_SEL).forEach(n => n.remove())
   clone
-    .querySelectorAll('p,h1,h2,h3,h4,h5,h6,li,blockquote,pre,div,tr,br,hr,table,ul,ol')
+    .querySelectorAll('p,h1,h2,h3,h4,h5,h6,li,blockquote,pre,div,tr,th,td,br,hr,table,ul,ol')
     .forEach(n => {
       n.insertAdjacentText('beforebegin', ' ')
       n.insertAdjacentText('afterend', ' ')
@@ -84,6 +88,17 @@ export function signatureFromElement(el: Element): HtmlSignature {
     n => !n.closest('.katex-display')
   ).length
   const listItems = Array.from(el.querySelectorAll('li')).map(li => visibleTextOf(li))
+  const structureRoot = (n: Element) =>
+    !n.closest('.katex, .katex-mathml, code, pre, .code-block-direct, .code-block')
+  const strongTexts = Array.from(el.querySelectorAll('strong, b'))
+    .filter(structureRoot)
+    .map(n => (n.textContent ?? '').replace(/\s+/g, ' ').trim())
+  const emTexts = Array.from(el.querySelectorAll('em, i'))
+    .filter(structureRoot)
+    .map(n => (n.textContent ?? '').replace(/\s+/g, ' ').trim())
+  const listTags = Array.from(el.querySelectorAll('ul, ol'))
+    .filter(structureRoot)
+    .map(n => n.tagName.toLowerCase())
 
   const literalDollars: string[] = []
   const dollarRuns: string[] = []
@@ -130,6 +145,10 @@ export function signatureFromElement(el: Element): HtmlSignature {
     displayMathCount,
     inlineMathCount,
     blockCodeCount: outermostBlockCode(el).length,
+    strongTexts,
+    emTexts,
+    blockquoteCount: Array.from(el.querySelectorAll('blockquote')).filter(structureRoot).length,
+    listTags,
   }
 }
 
