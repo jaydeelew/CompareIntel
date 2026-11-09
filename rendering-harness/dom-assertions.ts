@@ -71,7 +71,12 @@ function visibleUnrenderedMathEnvs(container: Element, envNames: string[]): stri
 
 /** Visible leftover `\[` (e.g. `\\[6pt]` collapsed to a fake display open). */
 function visibleLeftoverDisplayBrackets(container: Element): boolean {
-  return visibleMathText(container).includes('\\[')
+  // Parenthesized empty `(\[ \])` and ellipsis `\[...\]` are delimiter
+  // documentation (Grok 4.3 06, Phi-4 05), not unrendered display math.
+  const text = visibleMathText(container)
+    .replace(/\(\\\[\s*\\\]\)/g, '')
+    .replace(/\\\[\s*(?:\.{2,}|…)\s*\\\]/g, '')
+  return text.includes('\\[')
 }
 
 function presentAssertion(

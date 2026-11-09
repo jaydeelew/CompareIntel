@@ -55,6 +55,7 @@ import {
   renderBlockquoteMarkers,
   protectEscapedDollars,
   protectCurrencyDollars,
+  protectParenthesizedDelimiterExamples,
   restoreLiteralDollars,
   extractInlineCode,
   restoreInlineCode,
@@ -712,6 +713,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
           /\\\\(?=(?:frac|sqrt|left|right|boxed|pm|mp|neq|leq|geq|cdot|times|div|Rightarrow|Leftarrow|rightarrow|leftarrow|alpha|beta|gamma|delta|theta|pi|infty|displaystyle)\b)/g,
           '\\'
         )
+
+        // Stage 0.35: `($$)` / `($)` / `(\[ \])` / `(\( \))` labels are not math
+        processed = protectParenthesizedDelimiterExamples(processed)
 
         // Stage 0.4: Wrap bare LaTeX blocks (commands without delimiters) in $$
         // Some models output \frac{}{}, \sqrt{}, etc. without any math delimiters.

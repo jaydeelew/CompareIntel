@@ -26,8 +26,13 @@ export {
 export { markBlockquotes, renderBlockquoteMarkers } from './blockquotes'
 export {
   LITERAL_DOLLAR,
+  LITERAL_DISPLAY_OPEN,
+  LITERAL_DISPLAY_CLOSE,
+  LITERAL_INLINE_OPEN,
+  LITERAL_INLINE_CLOSE,
   protectEscapedDollars,
   protectCurrencyDollars,
+  protectParenthesizedDelimiterExamples,
   restoreLiteralDollars,
   extractInlineCode,
   restoreInlineCode,

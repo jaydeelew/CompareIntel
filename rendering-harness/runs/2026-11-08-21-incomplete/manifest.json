@@ -1,0 +1,356 @@
+{
+  "sourceHead": "438004e5",
+  "batchId": "paid-batch-2026-11-08-21-incomplete",
+  "maxUsd": 0.25,
+  "historicalAcceptancePath": "historical-risk-acceptance-active.json",
+  "historicalAcceptanceId": "hist-risk-acc-2026-11-08-grok-tencent-global",
+  "plannedCalls": 5,
+  "attemptedCalls": 5,
+  "knownActualCost": 0.02842545,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-09T03:22:46.365Z",
+      "reserveUsd": 0.026750000000000003,
+      "reserveRates": {
+        "usd": 0.026750000000000003,
+        "inputRate": 1.25e-06,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 736,
+        "completionCap": 8192,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00163935,
+      "callId": "paid-batch-2026-11-08-21-incomplete:1:x-ai/grok-4.3:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T03:22:50.568Z",
+      "reportedUsageCost": 0.00163935,
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 423,
+        "completion_tokens": 498,
+        "total_tokens": 921,
+        "cost": 0.00163935,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00163935,
+          "upstream_inference_prompt_cost": 0.00039435,
+          "upstream_inference_completions_cost": 0.001245
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 282,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 9.322695035460994e-07,
+        "output": 2.5e-06
+      }
+    },
+    {
+      "index": 2,
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-09T03:22:50.571Z",
+      "reserveUsd": 0.027057812500000004,
+      "reserveRates": {
+        "usd": 0.027057812500000004,
+        "inputRate": 1.25e-06,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 933,
+        "completionCap": 8192,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0028506,
+      "callId": "paid-batch-2026-11-08-21-incomplete:2:x-ai/grok-4.3:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T03:23:04.221Z",
+      "reportedUsageCost": 0.0028506,
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 476,
+        "completion_tokens": 956,
+        "total_tokens": 1432,
+        "cost": 0.0028506,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0028506,
+          "upstream_inference_prompt_cost": 0.0004606,
+          "upstream_inference_completions_cost": 0.00239
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 672,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 9.676470588235294e-07,
+        "output": 2.5e-06
+      }
+    },
+    {
+      "index": 3,
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-09T03:23:04.224Z",
+      "reserveUsd": 0.0275171875,
+      "reserveRates": {
+        "usd": 0.0275171875,
+        "inputRate": 1.25e-06,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0028081,
+      "callId": "paid-batch-2026-11-08-21-incomplete:3:x-ai/grok-4.3:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T03:23:12.820Z",
+      "reportedUsageCost": 0.0028081,
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 604,
+        "completion_tokens": 875,
+        "total_tokens": 1479,
+        "cost": 0.0028081,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0028081,
+          "upstream_inference_prompt_cost": 0.0006206,
+          "upstream_inference_completions_cost": 0.0021875
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 410,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.0274834437086092e-06,
+        "output": 2.5e-06
+      }
+    },
+    {
+      "index": 4,
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-09T03:23:12.822Z",
+      "reserveUsd": 0.027250000000000003,
+      "reserveRates": {
+        "usd": 0.027250000000000003,
+        "inputRate": 1.25e-06,
+        "outputRate": 2.5e-06,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0023281,
+      "callId": "paid-batch-2026-11-08-21-incomplete:4:x-ai/grok-4.3:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T03:23:24.403Z",
+      "reportedUsageCost": 0.0023281,
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 518,
+        "completion_tokens": 726,
+        "total_tokens": 1244,
+        "cost": 0.0023281,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0023281,
+          "upstream_inference_prompt_cost": 0.0005131,
+          "upstream_inference_completions_cost": 0.001815
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 339,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.0274834437086092e-06,
+        "output": 2.5e-06
+      }
+    },
+    {
+      "index": 5,
+      "modelId": "tencent/hy4-preview",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-09T03:23:24.405Z",
+      "reserveUsd": 0.10354189612240237,
+      "reserveRates": {
+        "usd": 0.10354189612240237,
+        "inputRate": 8.340000000000001e-07,
+        "outputRate": 2.5010013701758393e-06,
+        "inputByteAllowance": 1056,
+        "completionCap": 32768,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 32768,
+      "actualCost": 0.0187993,
+      "callId": "paid-batch-2026-11-08-21-incomplete:5:tencent/hy4-preview:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T03:24:38.987Z",
+      "reportedUsageCost": 0.0187993,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 350,
+        "completion_tokens": 7400,
+        "total_tokens": 7750,
+        "cost": 0.0187993,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0187993,
+          "upstream_inference_prompt_cost": 0.0002919,
+          "upstream_inference_completions_cost": 0.0185074
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 7087,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 8.340000000000001e-07,
+        "output": 2.5010000000000003e-06
+      }
+    }
+  ],
+  "noRetries": true,
+  "onePromptOnce": true,
+  "cells": [
+    {
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "03-code-blocks",
+      "maxTokens": 8192,
+      "outputLimitField": "max_tokens"
+    },
+    {
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "04-mixed-markdown-latex",
+      "maxTokens": 8192,
+      "outputLimitField": "max_tokens"
+    },
+    {
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "05-complex-scenarios",
+      "maxTokens": 8192,
+      "outputLimitField": "max_tokens"
+    },
+    {
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "06-edge-cases-boundaries",
+      "maxTokens": 8192,
+      "outputLimitField": "max_tokens"
+    },
+    {
+      "modelId": "tencent/hy4-preview",
+      "promptName": "06-edge-cases-boundaries",
+      "maxTokens": 32768,
+      "outputLimitField": "max_tokens"
+    }
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+      "bytes": 778,
+      "assetFile": "22ee13c9eacaba94b86f9a7b156e1d423700c38bb35d7602851bc39f8bb2d77d.txt"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad",
+      "bytes": 616,
+      "assetFile": "5e1077e23676db86444c784ffc88eb20a2537a0df86bfbfd52a762753dfafcde.txt"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167",
+      "bytes": 704,
+      "assetFile": "098a0bd65269a9c5533ee51bddcdecfc40c14109c99f0fa4adff48c27034e869.txt"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f",
+      "bytes": 901,
+      "assetFile": "b4a0382530dc520bb67bb764bde35b528e504f6d2685fdcac77b2100c08cba79.txt"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+      "bytes": 1195,
+      "assetFile": "3bac80cdff355fa9b27ecf9fcef525eeababd3be08816a40ebb350db6fa90d65.txt"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51",
+      "bytes": 1024,
+      "assetFile": "dbbd2cdd7152eb22e2b48d07c3177b1a3f378b38f182009326158c9a5b2e2d46.txt"
+    }
+  ],
+  "budgetCaveat": "Estimate guard, not provider hard billing cap",
+  "coverage": "Not assessed: collection only",
+  "startedAt": "2026-11-09T03:22:46.362Z",
+  "conservativeBatchReserve": 0.21211689612240237,
+  "status": "completed",
+  "finishedAt": "2026-11-09T03:24:38.991Z"
+}
