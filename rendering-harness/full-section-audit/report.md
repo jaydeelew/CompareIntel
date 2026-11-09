@@ -1,0 +1,31 @@
+| bug | id | verdict | visual | what differed |
+| --- | --- | --- | --- | --- |
+| 01 | 01-currency | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 02 | 02-table-currency | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 03 | 03-escaped-dollar | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 04 | 04-blockquotes | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 05 | 05-nested-lists | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 06 | 06-headings | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 07 | 07-fenced-code | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 08 | 08-inline-code | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 09 | 09-dollar-in-display | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 10 | 10-unicode-times | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 11 | 11-list-display-math | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 12 | 12-home-dollar | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 13 | 13-bracket-display | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 14 | 14-table-swallow | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 15 | 15-list-link | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 16 | 16-placeholder-leak | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 17 | 17-heading-after-table | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 18 | 18-bold-math | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 19 | 19-unicode-codepoint | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 20 | 20-list-prefixed-closer | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 21 | 21-padded-dollar | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 22 | 22-hyphen-nonmath | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 23 | 23-align-placeholder | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 24 | 24-double-backtick | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 25 | 25-escaped-currency-code | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 26 | 26-multiline-cases | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 27 | 27-indented-align | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 28 | 28-row-skip | pass | pass | whole section matches CommonMark/GFM + KaTeX |
+| 29 | 29-empty-delimiter-labels | pass | pass | whole section matches CommonMark/GFM + KaTeX |

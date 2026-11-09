@@ -1,0 +1,5 @@
+export { BUG_CASES, type BugCase } from './catalog'
+export { loadBugSection, REPO_ROOT } from './section'
+export { renderReferenceHtml } from './reference'
+export { signatureFromElement, signatureFromHtml, type HtmlSignature } from './signature'
+export { compareSignatures, type CompareResult, type Diff } from './compare'

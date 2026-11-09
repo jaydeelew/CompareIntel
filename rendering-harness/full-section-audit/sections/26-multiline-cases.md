@@ -1,0 +1,5 @@
+Third section with a piecewise function: 
+$f(x) = \begin{cases}
+x^2, & x \ge 0 \\
+-\,|x|, & x < 0
+\end{cases}$

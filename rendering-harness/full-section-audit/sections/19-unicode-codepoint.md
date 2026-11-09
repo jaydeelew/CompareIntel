@@ -1,0 +1,2 @@
+- `r²` uses superscript 2 (U+00B2), which may render poorly or cause syntax errors in some parsers.
+- If the code is in a **LaTeX-rendered environment**, the `π` might be misinterpreted.

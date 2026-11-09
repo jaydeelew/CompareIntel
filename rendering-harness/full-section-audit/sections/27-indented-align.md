@@ -1,0 +1,7 @@
+**Multiline display:**
+$$
+\begin{aligned}
+f(x) &= x^2 + 2x + 1 \\
+     &= (x+1)^2
+\end{aligned}
+$$

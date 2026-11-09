@@ -7,6 +7,7 @@ import { render } from '@testing-library/react'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { initializeRegistry } from '../../config/loadModelConfigs'
+import { BUG_CASES, loadBugSection } from '../../utils/renderingAudit'
 import LatexRenderer from '../LatexRenderer'
 
 const CLAUDE = 'anthropic/claude-sonnet-4.6'
@@ -751,4 +752,17 @@ describe('bug 11: display math at a bullet’s indent stays inside the list', ()
     expect(el.querySelector('li .katex-display')).toBeNull()
     expect(el.querySelectorAll('.katex-display')).toHaveLength(1)
   })
+})
+
+describe('full fixture sections for bugs 01–29', () => {
+  it.each(BUG_CASES.map(c => [c.id, c] as const))(
+    '%s has no KaTeX errors or leaked placeholders',
+    (_id, bug) => {
+      const { section } = loadBugSection(bug)
+      const el = renderReply(section, bug.modelId)
+      expectNoKatexErrors(el)
+      expect(el.innerHTML).not.toMatch(/__(?:DISPLAY_MATH|INLINE_MATH|CODE_BLOCK|UL|OL)_\d+__/)
+      expect(visibleText(el)).not.toContain('KaTeX parse error')
+    }
+  )
 })
