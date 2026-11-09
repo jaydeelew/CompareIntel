@@ -1,8 +1,8 @@
 {
   "version": 1,
   "revision": 0,
-  "knownActualUsd": 3.7760560956,
-  "knownCostBasis": "Actual provider usage.cost through 20b; 2 unknown explicitly excluded",
+  "knownActualUsd": 4.8008560956,
+  "knownCostBasis": "Actual provider usage.cost through 20c; 2 unknown explicitly excluded",
   "unknownCharges": [
     {
       "batch": "09",
