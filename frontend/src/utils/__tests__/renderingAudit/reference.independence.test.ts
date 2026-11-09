@@ -21,8 +21,9 @@ describe('independent reference', () => {
     )
     expect(src).not.toMatch(/function extractInlineCode/)
     expect(src).not.toMatch(/tablesToPlaceholders/)
-    expect(src).toMatch(/block\.ruler/)
-    expect(src).toMatch(/push\('inline'/)
+    expect(src).not.toMatch(/gfm_table/)
+    expect(src).not.toMatch(/registerGfmTables/)
+    expect(src).toMatch(/new MarkdownIt/)
   })
 
   it('does not pair a ($$) label with the next real $$ equation (bug 29)', () => {

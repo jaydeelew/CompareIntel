@@ -968,6 +968,7 @@
 .latex-content ol {
   margin: 1rem 0;
   padding-left: 1.5rem;
+  list-style-position: outside;
 }
 
 .latex-content li {
@@ -1432,6 +1433,7 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
 .message-content .latex-content ol {
   margin: 0.75rem 0;
   padding-left: 1.5rem;
+  list-style-position: outside;
 }
 
 .message-content .latex-content li {
@@ -1780,11 +1782,15 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
 .latex-content ul {
   margin: 0.5rem 0;
   padding-left: 1.5rem;
+  /* Override base.css `ul, ol { list-style-position: inside }` so a display
+     equation that is the first child of an li shares the marker line (bug 20). */
+  list-style-position: outside;
 }
 
 .latex-content ol {
   margin: 0.5rem 0;
   padding-left: 1.5rem;
+  list-style-position: outside;
 }
 
 .latex-content li {
@@ -1792,15 +1798,10 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   line-height: 1.5;
 }
 
-/* Display math as the first block of a list item shares the marker line
-   instead of sitting below an empty bullet (bug 20). */
+/* Only collapse the display-math top gap when the equation is the first child
+   of the list item. `:first-of-type` also matched mid-item displays (bug 13). */
 .latex-content li > .katex-display:first-child,
-.latex-content li > .katex-display:first-of-type,
 .latex-content li > p:first-child > .katex-display:first-child {
-  margin-top: 0;
-}
-
-.latex-content li > p:first-child:has(> .katex-display:first-child) {
   margin-top: 0;
 }
 

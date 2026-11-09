@@ -8,14 +8,13 @@
  *   - leftover mid-line `$$` does not pair with the next opener
  *   - a mid-line opener with a fence closer (`The formula is $$\nE\n$$`) is math
  *   - `($$)` / `($)` / `(\[ \])` / `(\( \))` are labels, not math
- * Structure (lists, emphasis, backtick pairing, backslash escapes) comes from
- * markdown-it. GFM tables are a markdown-it block rule that splits unescaped
- * pipes, unescapes `\|`, then delegates cell inlines to markdown-it's parser
- * (html/typographer off).
+ * Structure (lists, emphasis, backtick pairing, GFM tables, backslash escapes)
+ * comes from markdown-it's built-in rules (html/typographer off). TeX is an
+ * inline rule registered before markdown-it's escape so `\,` / `\(` stay TeX
+ * while a leading backtick still wins as a code span.
  */
 import katex from 'katex'
 import MarkdownIt from 'markdown-it'
-import type StateBlock from 'markdown-it/lib/rules_block/state_block.mjs'
 import type StateInline from 'markdown-it/lib/rules_inline/state_inline.mjs'
 
 const LITERAL = '\uE000'
@@ -165,109 +164,7 @@ function isCurrencyLikeSpan(segment: string, open: number, close: number): boole
   return false
 }
 
-function getLine(
-  state: { src: string; bMarks: number[]; eMarks: number[]; tShift: number[] },
-  line: number
-): string {
-  return state.src.slice(state.bMarks[line] + state.tShift[line], state.eMarks[line])
-}
-
-function isSeparatorRow(line: string): boolean {
-  return /^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(line)
-}
-
-function looksLikeTableRow(line: string): boolean {
-  const trimmed = line.trim()
-  if (!trimmed || trimmed.startsWith('```')) return false
-  return trimmed.includes('|')
-}
-
-/** GFM spec: split on unescaped `|`, then unescape `\|` even inside code. */
-function splitGfmTableCells(line: string): string[] {
-  const cells: string[] = []
-  let buf = ''
-  const t = line.trim()
-  let i = 0
-  while (i < t.length) {
-    if (t[i] === '\\' && t[i + 1] === '|') {
-      buf += '\\|'
-      i += 2
-      continue
-    }
-    if (t[i] === '|') {
-      cells.push(buf)
-      buf = ''
-      i += 1
-      continue
-    }
-    buf += t[i]
-    i += 1
-  }
-  cells.push(buf)
-  if (cells.length && cells[0].trim() === '') cells.shift()
-  if (cells.length && cells[cells.length - 1].trim() === '') cells.pop()
-  return cells.map(c => c.replace(/\\\|/g, '|').trim())
-}
-
 type MarkdownItInstance = InstanceType<typeof MarkdownIt>
-
-function registerGfmTables(md: MarkdownItInstance): void {
-  md.block.ruler.before(
-    'paragraph',
-    'gfm_table',
-    (state: StateBlock, startLine: number, endLine: number, silent: boolean) => {
-      if (state.sCount[startLine] - state.blkIndent >= 4) return false
-      const headerLine = getLine(state, startLine)
-      if (startLine + 1 >= endLine) return false
-      const sepLine = getLine(state, startLine + 1)
-      if (!looksLikeTableRow(headerLine) || !isSeparatorRow(sepLine)) return false
-      if (silent) return true
-
-      const rows: string[][] = [splitGfmTableCells(headerLine)]
-      let next = startLine + 2
-      while (next < endLine) {
-        if (state.isEmpty(next)) break
-        if (state.sCount[next] - state.blkIndent >= 4) break
-        const line = getLine(state, next)
-        if (!looksLikeTableRow(line) || isSeparatorRow(line)) break
-        rows.push(splitGfmTableCells(line))
-        next += 1
-      }
-
-      const tableOpen = state.push('table_open', 'table', 1)
-      tableOpen.map = [startLine, next]
-      state.push('thead_open', 'thead', 1)
-      state.push('tr_open', 'tr', 1)
-      for (const cell of rows[0]) {
-        state.push('th_open', 'th', 1)
-        const inline = state.push('inline', '', 0)
-        inline.content = cell
-        inline.children = []
-        state.push('th_close', 'th', -1)
-      }
-      state.push('tr_close', 'tr', -1)
-      state.push('thead_close', 'thead', -1)
-      if (rows.length > 1) {
-        state.push('tbody_open', 'tbody', 1)
-        for (const row of rows.slice(1)) {
-          state.push('tr_open', 'tr', 1)
-          for (const cell of row) {
-            state.push('td_open', 'td', 1)
-            const inline = state.push('inline', '', 0)
-            inline.content = cell
-            inline.children = []
-            state.push('td_close', 'td', -1)
-          }
-          state.push('tr_close', 'tr', -1)
-        }
-        state.push('tbody_close', 'tbody', -1)
-      }
-      state.push('table_close', 'table', -1)
-      state.line = next
-      return true
-    }
-  )
-}
 
 /**
  * Consume TeX before markdown-it's escape rule so `\,` / `\\` stay TeX, while
@@ -371,7 +268,6 @@ function registerTexMath(md: MarkdownItInstance): void {
 }
 
 const md = new MarkdownIt({ html: false, linkify: false, breaks: false, typographer: false })
-registerGfmTables(md)
 registerTexMath(md)
 
 export function renderReferenceHtml(markdown: string): string {

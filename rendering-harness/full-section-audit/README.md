@@ -19,4 +19,5 @@ See `verdicts.md` for pass / reopened-fixed.
 - `verdicts.md` — independent-rejection follow-up table
 - `sections/*.md` — raw source excerpt per bug
 - `visual.json` — no katex-error / leftover placeholders
-- Screenshots, wide Before/After PNGs, and the audit ZIP are **generated artifacts** (not committed). Rebuild them into `/opt/cursor/artifacts/` from HEAD.
+- Screenshots, wide Before/After PNGs, and the audit ZIP are **generated artifacts** (not committed). Rebuild them into `/opt/cursor/artifacts/` from HEAD. The ZIP includes `before-after/`, `screenshots/`, `sections/*.md`, and `report.json`.
+- Playwright: a first-child `.katex-display` in a list item must share the marker's line (`rendering-harness/full-section-marker.test.ts`).
