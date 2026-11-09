@@ -399,19 +399,36 @@ describe('bug 18: **$x = 0$** in an ordered-list continuation is bold math, not 
   })
 })
 
-describe('bug 25: `$`100`, `$`0.99` is not a KaTeX error', () => {
-  it('keeps escaped-currency code dollars as code, not math (Step 5 Preview 05)', () => {
-    const el = renderReply(
-      '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs\n- Code span containing single dollar: `` `$` `` and `` `$x$` ``',
-      'stepfun/step-5-preview'
-    )
+describe('bug 25: `$`100`, `$`0.99` follows CommonMark code-span pairing', () => {
+  const STEP5_ESCAPED_SECTION = [
+    '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs',
+    '- Inline code with math: `` `f(x) = $x^2$` `` should not parse as math inside code',
+    '- Dollar in code: `` `price = $19.99` `` and `` `formula = $E=mc^2$` ``',
+    '- Math with escaped dollar inside: $\\text{Cost: }\\$100 \\times n$',
+    '- Code span containing single dollar: `` `$` `` and `` `$x$` ``',
+  ].join('\n')
+
+  it('keeps the Step 5 Preview 05 currency line as CommonMark code + literal $ (not math)', () => {
+    const el = renderReply(STEP5_ESCAPED_SECTION, 'stepfun/step-5-preview')
     expectNoKatexErrors(el)
     expect(visibleText(el)).not.toContain('KaTeX parse error')
     const codes = Array.from(el.querySelectorAll('code')).map(c => c.textContent)
-    expect(codes.filter(c => c === '$').length).toBeGreaterThanOrEqual(3)
+    expect(codes.slice(0, 3)).toEqual(['$', ', ', '0.99, or literal '])
+    expect(codes).toContain('`f(x) = $x^2$`')
+    expect(codes).toContain('`price = $19.99`')
+    expect(codes).toContain('`formula = $E=mc^2$`')
+    expect(codes).toContain('`$`')
+    expect(codes).toContain('`$x$`')
+    const firstLi = el.querySelector('li')
+    expect(firstLi).toBeTruthy()
+    const firstHtml = firstLi!.innerHTML
+    expect(firstHtml).toContain('>100<')
+    expect(firstHtml).toMatch(/<\/code>\$<code/)
+    expect(firstLi!.textContent).toMatch(/\$` signs/)
     expect(visibleText(el)).toContain('100')
     expect(visibleText(el)).toContain('0.99')
     expect(texSources(el).some(t => /0\.99/.test(t))).toBe(false)
+    expect(texSources(el).some(t => /Cost:/.test(t))).toBe(true)
   })
 })
 

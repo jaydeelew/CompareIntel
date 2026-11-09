@@ -117,11 +117,17 @@ describe('inline code protection', () => {
     expect(restoreInlineCode(text, spans)).toContain('<code class="inline-code">`$x$`</code>')
   })
 
-  it('extracts `$` as a complete span so adjacent amounts are not leftover math (Step 5 Preview 05)', () => {
+  it('pairs `$`100`, `$`0.99` as CommonMark code spans, leaving bare $ literal (Step 5 Preview 05)', () => {
     const line = '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs'
     const { text, spans } = extractInlineCode(line)
-    expect(spans.filter(s => s === '$')).toHaveLength(3)
-    expect(protectCurrencyDollars(text)).not.toContain('$')
+    expect(spans).toEqual(['$', ', ', '0.99, or literal '])
+    expect(text).toContain('100')
+    expect(text).toMatch(/\$` signs$/)
+    const protectedText = protectCurrencyDollars(text)
+    expect(protectedText).not.toMatch(/(?<!\uE000)\$/)
+    expect(restoreLiteralDollars(restoreInlineCode(protectedText, spans))).toBe(
+      '- Escaped currency: <code class="inline-code">$</code>100<code class="inline-code">, </code>$<code class="inline-code">0.99, or literal </code>$` signs'
+    )
   })
 })
 

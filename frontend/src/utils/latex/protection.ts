@@ -172,23 +172,64 @@ function pushInlineCodeSpan(spans: string[], content: string): string {
   return `${INLINE_CODE_OPEN}${spans.length - 1}${INLINE_CODE_CLOSE}`
 }
 
-/** Replace single-line backtick spans with placeholders. `spans` holds the raw content. */
+/**
+ * CommonMark spec 0.31 §6.1 pairing on one inline context: a backtick
+ * string of length n closes at the next backtick string of equal length.
+ * Preferring `` `$` `` before the rest of the line is not CommonMark —
+ * `$`100`, `$`0.99` pairs as
+ * <code>$</code>100<code>, </code>$<code>0.99, or literal </code>$`
+ * with leftover `$` and a trailing unmatched backtick left literal.
+ *
+ * Pairing is per line so a list item cannot swallow the next item (block
+ * structure already split those inlines in CommonMark).
+ */
+function extractInlineCodeLine(line: string, spans: string[]): string {
+  let out = ''
+  let i = 0
+  while (i < line.length) {
+    if (line.charCodeAt(i) !== 96) {
+      out += line[i]
+      i += 1
+      continue
+    }
+    let n = 1
+    while (i + n < line.length && line.charCodeAt(i + n) === 96) n += 1
+    const contentStart = i + n
+    let j = contentStart
+    let found = -1
+    while (j < line.length) {
+      if (line.charCodeAt(j) !== 96) {
+        j += 1
+        continue
+      }
+      let m = 1
+      while (j + m < line.length && line.charCodeAt(j + m) === 96) m += 1
+      if (m === n) {
+        found = j
+        break
+      }
+      j += m
+    }
+    if (found === -1) {
+      out += line.slice(i, i + n)
+      i += n
+      continue
+    }
+    const content = line.slice(contentStart, found)
+    out += pushInlineCodeSpan(spans, content)
+    i = found + n
+  }
+  return out
+}
+
+/** Replace inline code spans with placeholders. `spans` holds the raw content. */
 export function extractInlineCode(text: string): InlineCodeExtraction {
   const spans: string[] = []
-  // Double-or-more backticks first so `` `$x$` `` is one code span (GLM 5 05).
-  // A single-backtick pass would close on the inner ` and leave `$x$` as math.
-  let processed = text.replace(
-    /(``+)((?:(?!\1)[^\n])*?)\1/g,
-    (_match, _delim: string, content: string) => pushInlineCodeSpan(spans, content)
-  )
-  // `$` is a complete code span. Take it before the generic single-backtick pass
-  // so `$`100`, `$`0.99` does not pair the leftover dollars as math
-  // (Step 5 Preview 05: KaTeX error "0.99, or literal ").
-  processed = processed.replace(/`\$`/g, () => pushInlineCodeSpan(spans, '$'))
-  processed = processed.replace(/`([^`\n]+?)`/g, (_match, content: string) =>
-    pushInlineCodeSpan(spans, content)
-  )
-  return { text: processed, spans }
+  const textOut = text
+    .split('\n')
+    .map(line => extractInlineCodeLine(line, spans))
+    .join('\n')
+  return { text: textOut, spans }
 }
 
 export function escapeHtml(text: string): string {
