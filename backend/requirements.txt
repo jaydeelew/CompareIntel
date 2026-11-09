@@ -232,5 +232,5 @@ uvicorn==0.54.0
     # via -r requirements.in
 uvloop==0.23.0
     # via -r requirements.in
-websockets==16.0
+websockets==17.4
     # via -r requirements.in
