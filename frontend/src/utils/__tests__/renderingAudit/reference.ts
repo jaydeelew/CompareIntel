@@ -335,9 +335,7 @@ export function renderReferenceHtml(markdown: string): string {
     return `<code>${escaped}</code>`
   })
 
-  html = html.replace(/%%D(\d+)%%/g, (_m, i: string) =>
-    renderKatex(display[Number(i)] || '', true)
-  )
+  html = html.replace(/%%D(\d+)%%/g, (_m, i: string) => renderKatex(display[Number(i)] || '', true))
   html = html.replace(/%%I(\d+)%%/g, (_m, i: string) =>
     renderKatex(inlineMath[Number(i)] || '', false)
   )

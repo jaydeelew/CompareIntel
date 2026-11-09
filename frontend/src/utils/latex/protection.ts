@@ -171,11 +171,7 @@ export function literalizeUnpairedDoubleDollars(text: string): string {
         continue
       }
       const inner = text.slice(i + 2, close)
-      if (
-        close === i + 2 ||
-        inner.includes('$') ||
-        (midLine && inner.includes('\n'))
-      ) {
+      if (close === i + 2 || inner.includes('$') || (midLine && inner.includes('\n'))) {
         out += `${LITERAL_DOLLAR}${LITERAL_DOLLAR}`
         i += 2
         continue

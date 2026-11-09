@@ -83,9 +83,7 @@ export function signatureFromElement(el: Element): HtmlSignature {
   const inlineMathCount = Array.from(el.querySelectorAll('.katex')).filter(
     n => !n.closest('.katex-display')
   ).length
-  const listItems = Array.from(el.querySelectorAll('li')).map(li =>
-    visibleTextOf(li)
-  )
+  const listItems = Array.from(el.querySelectorAll('li')).map(li => visibleTextOf(li))
 
   const literalDollars: string[] = []
   const dollarRuns: string[] = []
