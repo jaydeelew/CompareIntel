@@ -1,3 +1,5 @@
+## Python code
+
 ```python
 def quadratic_formula(a, b, c):
     discriminant = b**2 - 4*a*c

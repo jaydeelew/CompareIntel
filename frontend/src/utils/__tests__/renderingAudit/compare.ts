@@ -31,16 +31,11 @@ export function compareSignatures(ref: HtmlSignature, actual: HtmlSignature): Co
   }
 
   const extraDelims = actual.leftoverDelimiters.filter(d => !ref.leftoverDelimiters.includes(d))
-  // `\[...\]` / `(\[ \])` delimiter examples are intentionally left as text.
-  const exampleDelims = extraDelims.filter(
-    d => d === '\\[' || d === '\\]' || d === '\\(' || d === '\\)'
-  )
-  const realDelims = extraDelims.filter(d => !exampleDelims.includes(d))
-  if (realDelims.length) {
+  if (extraDelims.length) {
     diffs.push({
       field: 'leftoverDelimiters',
       expected: ref.leftoverDelimiters,
-      actual: realDelims,
+      actual: extraDelims,
     })
   }
 
@@ -48,16 +43,42 @@ export function compareSignatures(ref: HtmlSignature, actual: HtmlSignature): Co
     diffs.push({ field: 'codeSpans', expected: ref.codeSpans, actual: actual.codeSpans })
   }
 
-  const refDollars = ref.literalDollars.filter(s => s.length > 1)
-  const actDollars = actual.literalDollars.filter(s => s.length > 1)
-  const extraDollars = actDollars.filter(s => !refDollars.includes(s))
-  const missingDollars = refDollars.filter(s => !actDollars.includes(s))
-  // Extra KaTeX that consumes `$f(x)` / padded `$ ... $` is an allowed math enhancement.
-  const missingAreMathLike = missingDollars.every(s => /^\$[A-Za-z\\]/.test(s) || s === '$')
+  const refDouble = ref.dollarRuns.filter(s => s === '$$').length
+  const actDouble = actual.dollarRuns.filter(s => s === '$$').length
+  if (refDouble !== actDouble) {
+    diffs.push({
+      field: 'dollarRuns.$$',
+      expected: ref.dollarRuns,
+      actual: actual.dollarRuns,
+    })
+  }
+  const extraDollars = actual.literalDollars.filter(
+    s => s.length > 1 && !ref.literalDollars.includes(s)
+  )
+  const missingDollars = ref.literalDollars.filter(
+    s => s.length > 1 && !actual.literalDollars.includes(s)
+  )
+  const missingAreMathLike = missingDollars.every(s => /^\$[A-Za-z\\]/.test(s))
   if (extraDollars.length) {
-    diffs.push({ field: 'literalDollars.extra', expected: refDollars, actual: extraDollars })
+    diffs.push({
+      field: 'literalDollars.extra',
+      expected: ref.literalDollars,
+      actual: extraDollars,
+    })
   } else if (missingDollars.length && !missingAreMathLike) {
-    diffs.push({ field: 'literalDollars.missing', expected: missingDollars, actual: actDollars })
+    diffs.push({
+      field: 'literalDollars.missing',
+      expected: missingDollars,
+      actual: actual.literalDollars,
+    })
+  }
+
+  if (ref.emDashCount !== actual.emDashCount) {
+    diffs.push({
+      field: 'emDashCount',
+      expected: ref.emDashCount,
+      actual: actual.emDashCount,
+    })
   }
 
   if (!sameStringArrays(ref.strayBackticks, actual.strayBackticks)) {

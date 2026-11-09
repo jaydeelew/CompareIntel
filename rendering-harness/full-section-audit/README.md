@@ -4,17 +4,20 @@ Jack’s bar: a fix counts only if the **whole affected section** is correct, no
 
 ## How it runs
 
-1. Load the fixture (or synthetic source) for each bug and slice the heading range in `frontend/src/utils/__tests__/renderingAudit/catalog.ts`.
-2. Build a reference: CommonMark code spans + fenced code, then KaTeX for `$` / `$$` / `\[` / `\(` that are not currency, then markdown-it (GFM tables).
-3. Render the same markdown with `LatexRenderer`.
-4. Compare code spans, literal `$`, stray backticks, leftover placeholders/delimiters, headings, tables, links, KaTeX errors.
-5. Extra math vs CommonMark-as-text is an allowed enhancement.
+1. Load the original reply and slice **heading → next same/higher ATX heading** (fenced code ignored). Numbered list items are not headings; no heading → whole reply.
+2. Independent reference: CommonMark inline-code pairing, then KaTeX for real `$$` / `\[` / `\(` / non-currency `$...$`, then **markdown-it** (GFM tables, no typographer). Empty/ellipsis `\[...\]` and spans that cross a new list item are left for CommonMark unescape (`\[` → `[`).
+3. Same markdown through `LatexRenderer`. Compare code spans, `$` / `$$` runs, em dashes, leftover placeholders/delimiters, headings, tables, links, KaTeX errors.
+4. Extra `$...$` math vs CommonMark-as-text is an allowed enhancement. Bare `\frac` wrapping is not.
 
 Vitest: `cd frontend && npx vitest run src/utils/__tests__/fullSectionAudit.test.tsx`
 
+See `verdicts.md` for pass / reopened-fixed.
+
 ## Artifacts
 
-- `report.json` / `report.md` — verdicts
+- `report.json` / `report.md` — current HEAD vs markdown-it+KaTeX
+- `verdicts.md` — independent-rejection follow-up table
 - `sections/*.md` — raw source excerpt per bug
 - `screenshots/*.png` — 960 CSS × DPR 2 full-section shots of current HEAD
+- `before-after/*-wide.png` — stacked Before (pre-fix) / After for reopened bugs
 - `visual.json` — no katex-error / leftover placeholders

@@ -25,9 +25,7 @@ export function wrapBareLatexBlocks(text: string): string {
     }
     if (insideMathBlock && /^(?:[-*+]\s+|\d+\.\s+)?\\\]\s*$/.test(trimmed)) {
       insideMathBlock = false
-      // List marker on a closer is not math. Leaving `- \]` in source makes
-      // extractDisplayMath capture a trailing minus (`= 5 -`).
-      result.push(lines[i].replace(/^(\s*)(?:[-*+]\s+|\d+\.\s+)(\\\]\s*)$/, '$1$2'))
+      result.push(lines[i])
       i++
       continue
     }
@@ -39,7 +37,7 @@ export function wrapBareLatexBlocks(text: string): string {
     }
     if (insideMathBlock && /^(?:[-*+]\s+|\d+\.\s+)?\$\$\s*$/.test(trimmed)) {
       insideMathBlock = false
-      result.push(lines[i].replace(/^(\s*)(?:[-*+]\s+|\d+\.\s+)(\$\$\s*)$/, '$1$2'))
+      result.push(lines[i])
       i++
       continue
     }
@@ -73,11 +71,9 @@ export function wrapBareLatexBlocks(text: string): string {
         }
       }
 
-      const block = blockLines
-        .map(l => l.trim())
-        .join('\n')
-        .trim()
-      result.push(`$$${normalizeUnicodeMath(block)}$$`)
+      // Bare `\frac` / `\sqrt` lines stay as CommonMark text. Wrapping them in
+      // `$$` is custom recovery, not a `$...$` math enhancement.
+      result.push(...blockLines)
     } else {
       result.push(lines[i])
       i++
@@ -430,10 +426,10 @@ export function fixLatexIssues(text: string): string {
     math.replace(/×/g, '\\times').replace(/\((\d+)\\times(\d+)\)/g, '($1 \\times $2)')
   )
 
+  // Math minus (U+2212) and figure dash may appear in leftover TeX.
+  // Typographic en/em dashes in prose are CommonMark text, not hyphens.
   fixed = fixed.replace(/−/g, '-')
   fixed = fixed.replace(/‒/g, '-')
-  fixed = fixed.replace(/–/g, '-')
-  fixed = fixed.replace(/—/g, '-')
 
   fixed = fixed.replace(/fracdx\[([^\]]+)\]/g, '\\frac{d}{dx}[$1]')
   fixed = fixed.replace(/fracd([a-z])\[([^\]]+)\]/g, '\\frac{d}{d$1}[$2]')

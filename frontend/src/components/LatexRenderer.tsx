@@ -56,6 +56,7 @@ import {
   protectEscapedDollars,
   protectCurrencyDollars,
   protectParenthesizedDelimiterExamples,
+  unescapeLeftoverBracketParenDelimiters,
   restoreLiteralDollars,
   extractInlineCode,
   restoreInlineCode,
@@ -735,6 +736,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // This protects inline math content from being modified by preprocessing stages
         const inlineMathExtraction = extractInlineMath(processed, config.inlineMathDelimiters)
         processed = inlineMathExtraction.text
+        processed = unescapeLeftoverBracketParenDelimiters(processed)
 
         // Stage 0.7: Process horizontal rules VERY EARLY (before any preprocessing)
         // This ensures horizontal rules are converted before any text modification
@@ -933,7 +935,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Final cleanup - only unescape markdown characters, not LaTeX commands
         // Don't remove backslashes that are part of LaTeX commands
-        processed = processed.replace(/\\([`*_#+\-.!|])/g, '$1')
+        processed = processed.replace(/\\([`*_#+\-.!|[\]()])/g, '$1')
 
         // Render any remaining \\( \\) delimited math (double-escaped variant)
         processed = processed.replace(/\\\\\(\s*([\s\S]*?)\s*\\\\\)/g, (_match, math) => {

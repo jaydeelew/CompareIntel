@@ -3,9 +3,9 @@ import type { MathDelimiterPattern, ModelRendererConfig } from '../../types/rend
 import { safeRenderKatex, looksMathematical, looksProse } from './helpers'
 import { LITERAL_DOLLAR } from './protection'
 
-/** `$...$` / `$$...$$` / `\[...\]` used as delimiter examples, not real math. */
-function isEllipsisDelimiterExample(fullMatch: string): boolean {
-  const inner = fullMatch
+/** Inner of `$...$` / `$$...$$` / `\[...\]` / `\(...\)` after stripping delimiters. */
+export function delimiterExampleInner(fullMatch: string): string {
+  return fullMatch
     .replace(/^\$\$/, '')
     .replace(/\$\$$/, '')
     .replace(/^\\\[/, '')
@@ -14,18 +14,37 @@ function isEllipsisDelimiterExample(fullMatch: string): boolean {
     .replace(/\\\)$/, '')
     .replace(/^\$/, '')
     .replace(/\$$/, '')
-    .trim()
-  return /^(\.{2,}|…)$/.test(inner)
 }
 
-/** Keep the example visible as literal delimiters; do not extract or render it as math. */
-function leaveDelimiterExample(fullMatch: string): string {
+/** `$...$` / `$$...$$` / `\[...\]` used as delimiter examples, not real math. */
+export function isEllipsisDelimiterExample(fullMatch: string): boolean {
+  const inner = delimiterExampleInner(fullMatch).trim()
+  return inner === '' || /^(\.{2,}|…)$/.test(inner)
+}
+
+/**
+ * A `\[...\]` / `$$...$$` span that contains a new list item is two CommonMark
+ * list items, not one display-math block. Matching them anyway leaves an
+ * orphan `-` from `- \[` and swallows `- \]`.
+ */
+export function displaySpanCrossesListItem(fullMatch: string): boolean {
+  return fullMatch
+    .split('\n')
+    .slice(1)
+    .some(line => /^(?:[-*+]\s+|\d+\.\s+)/.test(line))
+}
+
+/**
+ * Keep the example visible as CommonMark text: dollars stay `$`,
+ * `\[ \]` / `\(...\)` unescape to `[ ]` / `( )`.
+ */
+export function leaveDelimiterExample(fullMatch: string): string {
   return fullMatch
     .replace(/\$/g, LITERAL_DOLLAR)
-    .replace(/\\\[/g, '&#92;[')
-    .replace(/\\\]/g, '&#92;]')
-    .replace(/\\\(/g, '&#92;(')
-    .replace(/\\\)/g, '&#92;)')
+    .replace(/\\\[/g, '[')
+    .replace(/\\\]/g, ']')
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
 }
 
 export interface MathRendererConfig {
@@ -266,6 +285,7 @@ export function extractDisplayMath(
 
   delimiters.forEach(({ pattern, name }) => {
     processed = processed.replace(pattern, (fullMatch, ...rest) => {
+      if (displaySpanCrossesListItem(fullMatch)) return fullMatch
       if (isEllipsisDelimiterExample(fullMatch)) return leaveDelimiterExample(fullMatch)
       const offset = rest[rest.length - 2]
       if (typeof offset === 'number' && shouldSkipDisplayDelimiterMatch(processed, offset, name)) {
@@ -316,6 +336,7 @@ export function extractInlineMath(
 
   delimiters.forEach(({ pattern }) => {
     processed = processed.replace(pattern, fullMatch => {
+      if (displaySpanCrossesListItem(fullMatch)) return fullMatch
       if (isEllipsisDelimiterExample(fullMatch)) return leaveDelimiterExample(fullMatch)
       const index = mathBlocks.length
       mathBlocks.push(fullMatch)
@@ -631,94 +652,8 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
     }
   )
 
-  const findMatchingBrace = (t: string, openPos: number): number => {
-    let depth = 1
-    let pos = openPos + 1
-    while (depth > 0 && pos < t.length) {
-      if (t[pos] === '{') depth++
-      else if (t[pos] === '}') depth--
-      pos++
-    }
-    return depth === 0 ? pos - 1 : -1
-  }
-
-  const isInsideKatex = (t: string, pos: number): boolean => {
-    const before = t.substring(0, pos)
-    return before.lastIndexOf('<span class="katex">') > before.lastIndexOf('</span>')
-  }
-
-  const cleanHtmlFromLatex = (s: string): string =>
-    s
-      .replace(/<[^>]*>/g, '')
-      .replace(/style="[^"]*"/g, '')
-      .replace(/\bclass="[^"]*"/g, '')
-      .trim()
-
-  const processSqrt = (t: string): string => {
-    let result = ''
-    let i = 0
-    while (i < t.length) {
-      if (t.substring(i).startsWith('\\sqrt{') && !isInsideKatex(t, i)) {
-        const braceStart = i + 5
-        const braceEnd = findMatchingBrace(t, braceStart)
-        if (braceEnd !== -1) {
-          const content = t.substring(braceStart + 1, braceEnd)
-          result += safeRenderKatex(
-            `\\sqrt{${cleanHtmlFromLatex(content)}}`,
-            false,
-            config.katexOptions
-          )
-          i = braceEnd + 1
-        } else {
-          result += t[i]
-          i++
-        }
-      } else {
-        result += t[i]
-        i++
-      }
-    }
-    return result
-  }
-
-  rendered = processSqrt(rendered)
-
-  const processFrac = (t: string): string => {
-    let result = ''
-    let i = 0
-    while (i < t.length) {
-      if (t.substring(i).startsWith('\\frac{') && !isInsideKatex(t, i)) {
-        const numBraceStart = i + 5
-        const numBraceEnd = findMatchingBrace(t, numBraceStart)
-        if (numBraceEnd !== -1 && numBraceEnd + 1 < t.length && t[numBraceEnd + 1] === '{') {
-          const denBraceStart = numBraceEnd + 1
-          const denBraceEnd = findMatchingBrace(t, denBraceStart)
-          if (denBraceEnd !== -1) {
-            const num = t.substring(numBraceStart + 1, numBraceEnd)
-            const den = t.substring(denBraceStart + 1, denBraceEnd)
-            result += safeRenderKatex(
-              `\\frac{${cleanHtmlFromLatex(num)}}{${cleanHtmlFromLatex(den)}}`,
-              false,
-              config.katexOptions
-            )
-            i = denBraceEnd + 1
-          } else {
-            result += t[i]
-            i++
-          }
-        } else {
-          result += t[i]
-          i++
-        }
-      } else {
-        result += t[i]
-        i++
-      }
-    }
-    return result
-  }
-
-  rendered = processFrac(rendered)
+  // Undelimited `\sqrt` / `\frac` stay as CommonMark text. Wrapping them as
+  // KaTeX is a custom recovery, not `$...$` math enhancement.
 
   const processBoxed = (t: string): string => {
     let result = ''

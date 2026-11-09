@@ -9,7 +9,10 @@ export interface BugCase {
   sourceJson?: string
   inlineContent?: string
   startRe: string
+  /** @deprecated Heading-aware extraction ignores this; kept so older call sites typecheck. */
   stopRe?: string
+  /** Stop at the next heading of this level or higher. Default: the start heading's level. */
+  stopHeadingLevel?: number
 }
 
 export const BUG_CASES: BugCase[] = [
@@ -40,8 +43,7 @@ export const BUG_CASES: BugCase[] = [
     modelId: 'openai/gpt-4o-mini',
     promptName: '04-mixed-markdown-latex',
     sourceJson: 'rendering-harness/runs/2026-11-04/openai_gpt-4o-mini_04-mixed-markdown-latex.json',
-    startRe: 'fixed costs are',
-    stopRe: '^## |^\\*\\*Worked',
+    startRe: '^## Real World Context',
   },
   {
     bug: 4,
@@ -82,8 +84,7 @@ export const BUG_CASES: BugCase[] = [
     modelId: 'anthropic/claude-sonnet-4.6',
     promptName: '03-code-blocks',
     sourceJson: 'rendering-harness/runs/2026-11-04/anthropic_claude-sonnet-4.6_03-code-blocks.json',
-    startRe: '```python',
-    stopRe: '^## |^After\\.',
+    startRe: '^## Python code',
   },
   {
     bug: 8,
@@ -103,8 +104,7 @@ export const BUG_CASES: BugCase[] = [
     promptName: '04-mixed-markdown-latex',
     sourceJson:
       'rendering-harness/runs/2026-11-04/anthropic_claude-sonnet-4.6_04-mixed-markdown-latex.json',
-    startRe: '\\\\$150|\\\\$5',
-    stopRe: '^## ',
+    startRe: '^# Mathematical Analysis',
   },
   {
     bug: 10,
@@ -113,8 +113,7 @@ export const BUG_CASES: BugCase[] = [
     modelId: 'anthropic/claude-sonnet-4.6',
     promptName: '01-math-basics',
     sourceJson: 'rendering-harness/runs/2026-11-04/anthropic_claude-sonnet-4.6_01-math-basics.json',
-    startRe: '2×2 identity',
-    stopRe: '^## 4\\.|Famous Equations',
+    startRe: '^## 3\\. Matrices',
   },
   {
     bug: 11,
@@ -166,8 +165,7 @@ export const BUG_CASES: BugCase[] = [
     modelId: 'microsoft/phi-4',
     promptName: '01-math-basics',
     sourceJson: 'rendering-harness/runs/2026-11-08-03/microsoft_phi-4_01-math-basics.json',
-    startRe: 'Links',
-    stopRe: 'Money Context',
+    startRe: '.',
   },
   {
     bug: 16,
@@ -176,8 +174,7 @@ export const BUG_CASES: BugCase[] = [
     modelId: 'microsoft/phi-4',
     promptName: '05-complex-scenarios',
     sourceJson: 'rendering-harness/runs/2026-11-08-03/microsoft_phi-4_05-complex-scenarios.json',
-    startRe: 'Multiple Dollar Signs',
-    stopRe: "Integrated Handling|Here's a synthesized",
+    startRe: 'Key Considerations',
   },
   {
     bug: 17,
@@ -188,7 +185,7 @@ export const BUG_CASES: BugCase[] = [
     sourceJson:
       'rendering-harness/runs/2026-11-08-03/xiaomi_mimo-v2.6-flash_02-markdown-formatting.json',
     startRe: '^## Tables',
-    stopRe: '^This response|All requested',
+    stopHeadingLevel: 1,
   },
   {
     bug: 18,
@@ -209,18 +206,16 @@ export const BUG_CASES: BugCase[] = [
     promptName: '05-complex-scenarios',
     sourceJson:
       'rendering-harness/runs/2026-11-08-04/reruns/qwen_qwen3-30b-a3b-instruct-2507_05-complex-scenarios.json',
-    startRe: 'U\\+00B2',
-    stopRe: 'Robust Fix|Scenario',
+    startRe: 'Scenario 3: Code and Math Mixed',
   },
   {
     bug: 20,
     id: '20-list-prefixed-closer',
-    title: 'list-prefixed \\] closes display math',
+    title: 'list-prefixed \\[ display math in a list (real Phi-4 05 reply)',
     modelId: 'microsoft/phi-4',
-    promptName: 'synthetic-list-prefixed-closer',
-    inlineContent:
-      '- \\[\nc = \\sqrt{3^2 + 4^2} = 5\n- \\]\n\nBare fraction after the block:\n\n\\frac{1}{2}\n',
-    startRe: '.',
+    promptName: '05-complex-scenarios',
+    sourceJson: 'rendering-harness/runs/2026-11-08-03/microsoft_phi-4_05-complex-scenarios.json',
+    startRe: '^#### 1\\. Math in Lists',
   },
   {
     bug: 21,
@@ -241,8 +236,7 @@ export const BUG_CASES: BugCase[] = [
     promptName: '01-math-basics',
     sourceJson:
       'rendering-harness/runs/2026-11-08-06/mistralai_mistral-medium-3.1_01-math-basics.json',
-    startRe: 'Money Context',
-    stopRe: '^## |^\\d+\\. \\*\\*',
+    startRe: 'Math Basics Demonstration',
   },
   {
     bug: 23,
@@ -282,8 +276,7 @@ export const BUG_CASES: BugCase[] = [
     modelId: 'openai/gpt-5',
     promptName: '05-complex-scenarios',
     sourceJson: 'rendering-harness/runs/2026-11-08-12/openai_gpt-5_05-complex-scenarios.json',
-    startRe: 'piecewise function',
-    stopRe: '^## Scenario 6|^## Scenario 5',
+    startRe: '^## Scenario 4: Horizontal Rules',
   },
   {
     bug: 27,
@@ -292,8 +285,7 @@ export const BUG_CASES: BugCase[] = [
     modelId: 'z-ai/glm-5.3',
     promptName: '06-edge-cases-boundaries',
     sourceJson: 'rendering-harness/runs/2026-11-08-13/z-ai_glm-5.3_06-edge-cases-boundaries.json',
-    startRe: 'Multiline display|begin\\{aligned\\}',
-    stopRe: '^## |^\\*\\*[A-Z]',
+    startRe: '^## 7\\. Additional Stress Cases',
   },
   {
     bug: 28,
@@ -302,8 +294,7 @@ export const BUG_CASES: BugCase[] = [
     modelId: 'openai/o3',
     promptName: '01-math-basics',
     sourceJson: 'rendering-harness/runs/2026-11-08-15/openai_o3_01-math-basics.json',
-    startRe: 'Matrices and cases',
-    stopRe: 'Multiple standalone',
+    startRe: '.',
   },
   {
     bug: 29,

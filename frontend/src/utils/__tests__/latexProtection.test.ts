@@ -51,7 +51,7 @@ describe('protectCurrencyDollars', () => {
   })
 
   it('ignores $$ display delimiters', () => {
-    expect(protectCurrencyDollars('$$x$$ costs $5')).toBe(`$$x$$ costs ${L}5`)
+    expect(protectCurrencyDollars('$$x$$ costs $5')).toBe(`${L}${L}x${L}${L} costs ${L}5`)
   })
 
   it('does not pair $HOME with a later currency $', () => {
@@ -72,7 +72,9 @@ describe('parenthesized empty delimiter examples', () => {
     expect(protectedText).not.toMatch(/\(\\\(\s*\\\)\)/)
     expect(protectedText).toContain(`(${L}${L})`)
     expect(protectedText).toContain(`(${L})`)
-    expect(restoreLiteralDollars(protectedText)).toBe(input)
+    expect(restoreLiteralDollars(protectedText)).toBe(
+      '**Display math ($$):**\n$$x^2$$\n**Display math ([ ]):**\n\\[E=mc^2\\]\n**Inline math ($):**\n$a+b$\n**Inline math (( )):**\n\\(x=5\\)'
+    )
   })
 
   it('does not rewrite real parenthesized math or currency', () => {

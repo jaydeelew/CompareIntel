@@ -106,14 +106,19 @@ describe('full-section CommonMark+KaTeX audit', () => {
     }
     fs.writeFileSync(path.join(outDir, 'report.json'), JSON.stringify(payload, null, 2) + '\n')
     const lines = [
-      '| bug | id | verdict | visual | what differed |',
+      '| bug | id | verdict | visual | parser diff |',
       '| --- | --- | --- | --- | --- |',
       ...reportsWithVisual.map(r => {
         const diff = r.diffs.length
-          ? r.diffs.map(d => d.field).join(', ')
-          : 'whole section matches CommonMark/GFM + KaTeX'
+          ? r.diffs
+              .map(
+                d =>
+                  `${d.field}: expected ${JSON.stringify(d.expected).slice(0, 120)} / actual ${JSON.stringify(d.actual).slice(0, 120)}`
+              )
+              .join('; ')
+          : 'none (markdown-it + KaTeX signatures match)'
         const vis = r.visualPass === true ? 'pass' : r.visualPass === false ? 'fail' : 'n/a'
-        return `| ${String(r.bug).padStart(2, '0')} | ${r.id} | ${r.verdict} | ${vis} | ${diff} |`
+        return `| ${String(r.bug).padStart(2, '0')} | ${r.id} | ${r.verdict} | ${vis} | ${diff.replace(/\|/g, '/')} |`
       }),
     ]
     fs.writeFileSync(path.join(outDir, 'report.md'), lines.join('\n') + '\n')

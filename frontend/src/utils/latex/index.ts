@@ -33,6 +33,7 @@ export {
   protectEscapedDollars,
   protectCurrencyDollars,
   protectParenthesizedDelimiterExamples,
+  unescapeLeftoverBracketParenDelimiters,
   restoreLiteralDollars,
   extractInlineCode,
   restoreInlineCode,

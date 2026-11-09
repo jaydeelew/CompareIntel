@@ -1,17 +1,30 @@
 /**
- * CommonMark/GFM + KaTeX reference for a source section.
- * Fences and code spans follow CommonMark; remaining math delimiters that are
- * not currency become KaTeX. Markdown structure is markdown-it (GFM tables).
+ * Independent CommonMark/GFM + KaTeX reference for a source section.
+ *
+ * 1. Fences and CommonMark inline-code pairing (same rules as the spec).
+ * 2. Escaped `\$` → literal `$`.
+ * 3. Real math delimiters become KaTeX: `$$...$$`, `\[...\]`, `\(...\)`,
+ *    and `$...$` that is not currency. Empty / ellipsis / list-crossing
+ *    `\[...\]` is left for markdown-it to unescape (`\[` → `[`).
+ * 4. markdown-it (GFM tables, no typographer) for structure and backslash
+ *    escapes.
+ *
+ * This pipeline does not call LatexRenderer, wrapBareLatexBlocks, or
+ * leftover `\frac` recovery.
  */
 import MarkdownIt from 'markdown-it'
 
 import { renderCodeBlock } from '../../latex/codeBlocks'
 import { safeRenderKatex } from '../../latex/helpers'
 import {
+  displaySpanCrossesListItem,
+  isEllipsisDelimiterExample,
+  leaveDelimiterExample,
+} from '../../latex/mathRenderer'
+import {
   extractInlineCode,
   protectCurrencyDollars,
   protectEscapedDollars,
-  protectParenthesizedDelimiterExamples,
   restoreInlineCode,
   restoreLiteralDollars,
 } from '../../latex/protection'
@@ -29,7 +42,7 @@ interface Fence {
 function extractFences(markdown: string): { text: string; fences: Fence[] } {
   const fences: Fence[] = []
   const text = markdown.replace(
-    /```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```/g,
+    /^[ \t]*```([a-zA-Z0-9+#-]*)\n([\s\S]*?)^[ \t]*```/gm,
     (_m, language: string, content: string) => {
       fences.push({ language: (language || '').trim(), content: content.replace(/^\n+|\n+$/g, '') })
       return `__CODE_BLOCK_${fences.length - 1}__`
@@ -42,27 +55,34 @@ export function renderReferenceHtml(markdown: string): string {
   const { text: fenced, fences } = extractFences(markdown)
   const inline = extractInlineCode(fenced)
   let text = protectEscapedDollars(inline.text)
-  text = protectParenthesizedDelimiterExamples(text)
 
   const display: string[] = []
-  text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_m, inner: string) => {
+  // `[^$]` so a leftover `$$` cannot swallow `$...$` / later `$$...$$`.
+  text = text.replace(/\$\$([^$]+?)\$\$/gs, (full, inner: string) => {
+    if (displaySpanCrossesListItem(full) || isEllipsisDelimiterExample(full)) {
+      return leaveDelimiterExample(full)
+    }
     display.push(inner)
     return DISPLAY_PH(display.length - 1)
   })
-  text = text.replace(/\\\[([\s\S]+?)\\\]/g, (_m, inner: string) => {
+  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (full, inner: string) => {
+    if (displaySpanCrossesListItem(full) || isEllipsisDelimiterExample(full)) {
+      return leaveDelimiterExample(full)
+    }
     display.push(inner)
     return DISPLAY_PH(display.length - 1)
   })
 
   const inlineMath: string[] = []
-  text = text.replace(/\\\(([\s\S]+?)\\\)/g, (_m, inner: string) => {
+  text = text.replace(/\\\(([\s\S]*?)\\\)/g, (full, inner: string) => {
+    if (isEllipsisDelimiterExample(full)) return leaveDelimiterExample(full)
     inlineMath.push(inner)
     return INLINE_PH(inlineMath.length - 1)
   })
 
   text = protectCurrencyDollars(text)
   text = text.replace(/\$(?!\$)([^$\n]+?)\$/g, (full, inner: string) => {
-    if (!inner.trim()) return full
+    if (!inner.trim() || isEllipsisDelimiterExample(full)) return leaveDelimiterExample(full)
     inlineMath.push(inner)
     return INLINE_PH(inlineMath.length - 1)
   })

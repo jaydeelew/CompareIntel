@@ -6,6 +6,9 @@ export interface HtmlSignature {
   tableCells: string[][]
   linkHrefs: string[]
   literalDollars: string[]
+  dollarRuns: string[]
+  emDashCount: number
+  listItemCount: number
   strayBackticks: string[]
   leftoverPlaceholders: string[]
   leftoverDelimiters: string[]
@@ -57,7 +60,9 @@ export function signatureFromElement(el: Element): HtmlSignature {
   const inlineMathCount = el.querySelectorAll('.katex:not(.katex-display)').length
 
   const literalDollars: string[] = []
+  const dollarRuns: string[] = []
   const strayBackticks: string[] = []
+  let emDashCount = 0
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
   let node: Node | null
   while ((node = walker.nextNode())) {
@@ -65,7 +70,9 @@ export function signatureFromElement(el: Element): HtmlSignature {
     if (!parent) continue
     if (parent.closest('.katex, .katex-mathml, pre, code')) continue
     const t = node.textContent || ''
+    emDashCount += [...t].filter(c => c === '\u2014').length
     for (const m of t.matchAll(/\$[A-Za-z0-9.,]*/g)) literalDollars.push(m[0])
+    for (const m of t.matchAll(/\$+/g)) dollarRuns.push(m[0])
     for (const m of t.matchAll(/`+/g)) strayBackticks.push(m[0])
   }
   const prose = visibleTextOf(proseClone(el))
@@ -85,6 +92,9 @@ export function signatureFromElement(el: Element): HtmlSignature {
     tableCells,
     linkHrefs,
     literalDollars,
+    dollarRuns,
+    emDashCount,
+    listItemCount: el.querySelectorAll('li').length,
     strayBackticks,
     leftoverPlaceholders,
     leftoverDelimiters,

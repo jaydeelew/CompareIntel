@@ -39,18 +39,31 @@ export function literalDollarsToLatex(latex: string): string {
 }
 
 /** Convert literal-dollar tokens in final output back into `$`. */
+/**
+ * CommonMark-unescape leftover `\[` `\]` `\(` `\)` that were not extracted as
+ * math (empty labels, ellipsis examples, list-prefixed markers). Run after
+ * display/inline extraction so later list/HTML passes cannot pair them.
+ */
+export function unescapeLeftoverBracketParenDelimiters(text: string): string {
+  return text
+    .replace(/\\\[/g, '[')
+    .replace(/\\\]/g, ']')
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
+}
+
 export function restoreLiteralDollars(text: string): string {
   return text
     .split(LITERAL_DOLLAR)
     .join('$')
     .split(LITERAL_DISPLAY_OPEN)
-    .join('\\[')
+    .join('[')
     .split(LITERAL_DISPLAY_CLOSE)
-    .join('\\]')
+    .join(']')
     .split(LITERAL_INLINE_OPEN)
-    .join('\\(')
+    .join('(')
     .split(LITERAL_INLINE_CLOSE)
-    .join('\\)')
+    .join(')')
 }
 
 /**
@@ -142,7 +155,11 @@ function protectSegmentDollars(segment: string): string {
  */
 export function protectCurrencyDollars(text: string): string {
   if (!text.includes('$')) return text
-  return text
+  // Leftover `$$` after display extraction is a delimiter example, not an
+  // opener. Literalizing both dollars keeps "and $$ for display math" as two
+  // dollar signs instead of pairing into a later `$$...$$` and dropping one.
+  const processed = text.replace(/\$\$/g, `${LITERAL_DOLLAR}${LITERAL_DOLLAR}`)
+  return processed
     .split('\n')
     .map(line => {
       if (!line.includes('$')) return line

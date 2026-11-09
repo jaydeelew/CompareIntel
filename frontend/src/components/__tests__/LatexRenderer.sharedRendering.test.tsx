@@ -357,6 +357,17 @@ The formula $A = \\pi r^2$ stays outside the table.
     expect(el.querySelector('td pre')).toBeNull()
     expect(texSources(el).some(t => t.includes('\\pi r^2'))).toBe(true)
   })
+
+  it('keeps U+2014 em dashes in table-adjacent prose (not ASCII hyphen)', () => {
+    const el = renderReply(
+      'and \\frac with a multi-character numerator — all inside table cells',
+      'z-ai/glm-5.3-flash'
+    )
+    const clone = el.cloneNode(true) as HTMLElement
+    clone.querySelectorAll('.katex-mathml').forEach(n => n.remove())
+    expect(clone.textContent ?? '').toContain('\u2014')
+    expect((clone.textContent ?? '').includes('numerator - all')).toBe(false)
+  })
 })
 
 describe('bug 17: ## after a markdown table becomes a heading, not leftover #', () => {
@@ -534,20 +545,50 @@ describe("bug 21: padded `$ f'(x) $` is inline math, not leftover dollars", () =
     expect(visibleText(el)).not.toMatch(/\$\s*f'/)
     expect(visibleText(el)).not.toContain('$ 2')
   })
+
+  it('keeps the U+2014 em dash before “a crucial reminder”', () => {
+    const el = renderReply(
+      'where C is the constant of integration — a crucial reminder that antiderivatives are families of functions!',
+      'qwen/qwen3-next-80b-a3b-instruct'
+    )
+    const clone = el.cloneNode(true) as HTMLElement
+    clone.querySelectorAll('.katex-mathml').forEach(n => n.remove())
+    expect(clone.textContent ?? '').toContain('\u2014')
+  })
 })
 
-describe('bug 20: list-prefixed \\] closes display math without a trailing minus', () => {
-  it('renders \\sqrt and a following bare fraction; no dangling minus (phi-4 config)', () => {
+describe('bug 20: list-prefixed \\] is two CommonMark list items, not recovered math', () => {
+  it('does not treat - \\[ ... - \\] as one display span or wrap a following bare \\frac', () => {
     const el = renderReply(
       '- \\[\nc = \\sqrt{3^2 + 4^2} = 5\n- \\]\n\nBare fraction after the block:\n\n\\frac{1}{2}\n',
       'microsoft/phi-4'
     )
     expectNoKatexErrors(el)
-    const tex = texSources(el)
-    expect(tex.some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
-    expect(tex.some(t => /=\s*5\s*-/.test(t))).toBe(false)
-    expect(tex.some(t => t.includes('\\frac{1}{2}'))).toBe(true)
-    expect(visibleText(el)).not.toContain('\\frac')
+    expect(el.querySelectorAll('li').length).toBe(2)
+    expect(visibleText(el)).toContain('[')
+    expect(visibleText(el)).toContain(']')
+    expect(visibleText(el)).toContain('\\frac{1}{2}')
+    expect(texSources(el).some(t => t.includes('\\frac{1}{2}'))).toBe(false)
+    expect(texSources(el).some(t => /=\s*5\s*-/.test(t))).toBe(false)
+  })
+
+  it('still renders a real Phi-4 05 list item whose closer is indented \\]', () => {
+    const el = renderReply(
+      `#### 1. Math in Lists with Formatting
+
+For a **right triangle** with sides $a=3$ and $b=4$, the hypotenuse $c$ can be calculated using the Pythagorean theorem \\( a^2 + b^2 = c^2 \\):
+
+- \\[
+  c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5
+  \\]
+- Therefore, \\( c = 5 \\) units.
+`,
+      'microsoft/phi-4'
+    )
+    expectNoKatexErrors(el)
+    expect(texSources(el).some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
+    expect(el.querySelector('.katex-display')).not.toBeNull()
+    expect(el.querySelectorAll('li').length).toBe(2)
   })
 })
 
@@ -571,6 +612,10 @@ describe('bug 16: $...$ / $$...$$ delimiter examples are not math', () => {
     expect(el.innerHTML).not.toContain('__DISPLAY_MATH_')
     expect(visibleText(el)).toContain('$...$')
     expect(visibleText(el)).toContain('$$...$$')
+    expect(visibleText(el)).toContain('and $$ for display math')
+    expect(visibleText(el)).not.toMatch(/and \$ for display math/)
+    expect(visibleText(el)).toContain('[...]')
+    expect(visibleText(el)).not.toContain('\\[...\\]')
     expect(texSources(el).some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
   })
 })
@@ -676,6 +721,10 @@ describe('bug 29: parenthesized ($$) / ($ ) / (\\[ \\]) labels are not math (Gro
       expect(visibleText(el)).toContain('First item')
       expect(visibleText(el)).toContain('Third item')
       expect(visibleText(el)).toMatch(/\$\$/)
+      expect(visibleText(el)).toContain('Display math ([ ])')
+      expect(visibleText(el)).toContain('Inline math (( ))')
+      expect(visibleText(el)).not.toMatch(/Display math \(\\\[/)
+      expect(visibleText(el)).not.toMatch(/Inline math \(\\\(/)
     }
   )
 })

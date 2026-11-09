@@ -1,3 +1,4 @@
+## Real World Context
 > **Note**: In economics, the cost function \( C(q) = 100 + 5q \) indicates that the fixed costs are \$100 and the variable costs are \$5 per unit produced.
 
 ### Money Context
