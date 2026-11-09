@@ -32,6 +32,7 @@ export {
   LITERAL_INLINE_CLOSE,
   protectEscapedDollars,
   protectCurrencyDollars,
+  literalizeUnpairedDoubleDollars,
   protectParenthesizedDelimiterExamples,
   unescapeLeftoverBracketParenDelimiters,
   restoreLiteralDollars,

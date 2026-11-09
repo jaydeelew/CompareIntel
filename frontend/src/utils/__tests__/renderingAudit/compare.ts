@@ -16,6 +16,10 @@ function sameStringArrays(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i])
 }
 
+function norm(s: string): string {
+  return s.replace(/\s+/g, ' ').trim()
+}
+
 export function compareSignatures(ref: HtmlSignature, actual: HtmlSignature): CompareResult {
   const diffs: Diff[] = []
 
@@ -30,6 +34,67 @@ export function compareSignatures(ref: HtmlSignature, actual: HtmlSignature): Co
     diffs.push({ field: 'katexErrors', expected: [], actual: actual.katexErrors })
   }
 
+  if (norm(ref.visibleText) !== norm(actual.visibleText)) {
+    diffs.push({
+      field: 'visibleText',
+      expected: norm(ref.visibleText),
+      actual: norm(actual.visibleText),
+    })
+  }
+
+  if (!sameStringArrays(ref.fencedCode.map(norm), actual.fencedCode.map(norm))) {
+    diffs.push({ field: 'fencedCode', expected: ref.fencedCode, actual: actual.fencedCode })
+  }
+
+  if (ref.blockCodeCount !== actual.blockCodeCount) {
+    diffs.push({
+      field: 'blockCodeCount',
+      expected: ref.blockCodeCount,
+      actual: actual.blockCodeCount,
+    })
+  }
+
+  if (!sameStringArrays(ref.codeSpans, actual.codeSpans)) {
+    diffs.push({ field: 'codeSpans', expected: ref.codeSpans, actual: actual.codeSpans })
+  }
+
+  if (ref.listItemCount !== actual.listItemCount) {
+    diffs.push({
+      field: 'listItemCount',
+      expected: ref.listItemCount,
+      actual: actual.listItemCount,
+    })
+  }
+
+  if (!sameStringArrays(ref.listItems.map(norm), actual.listItems.map(norm))) {
+    diffs.push({ field: 'listItems', expected: ref.listItems, actual: actual.listItems })
+  }
+
+  const refTables = JSON.stringify(ref.tableCells)
+  const actTables = JSON.stringify(actual.tableCells)
+  if (refTables !== actTables) {
+    diffs.push({ field: 'tableCells', expected: ref.tableCells, actual: actual.tableCells })
+  }
+
+  if (!sameStringArrays(ref.texSources.map(norm), actual.texSources.map(norm))) {
+    diffs.push({ field: 'texSources', expected: ref.texSources, actual: actual.texSources })
+  }
+
+  if (ref.displayMathCount !== actual.displayMathCount) {
+    diffs.push({
+      field: 'displayMathCount',
+      expected: ref.displayMathCount,
+      actual: actual.displayMathCount,
+    })
+  }
+  if (ref.inlineMathCount !== actual.inlineMathCount) {
+    diffs.push({
+      field: 'inlineMathCount',
+      expected: ref.inlineMathCount,
+      actual: actual.inlineMathCount,
+    })
+  }
+
   const extraDelims = actual.leftoverDelimiters.filter(d => !ref.leftoverDelimiters.includes(d))
   if (extraDelims.length) {
     diffs.push({
@@ -39,10 +104,6 @@ export function compareSignatures(ref: HtmlSignature, actual: HtmlSignature): Co
     })
   }
 
-  if (!sameStringArrays(ref.codeSpans, actual.codeSpans)) {
-    diffs.push({ field: 'codeSpans', expected: ref.codeSpans, actual: actual.codeSpans })
-  }
-
   const refDouble = ref.dollarRuns.filter(s => s === '$$').length
   const actDouble = actual.dollarRuns.filter(s => s === '$$').length
   if (refDouble !== actDouble) {
@@ -50,26 +111,6 @@ export function compareSignatures(ref: HtmlSignature, actual: HtmlSignature): Co
       field: 'dollarRuns.$$',
       expected: ref.dollarRuns,
       actual: actual.dollarRuns,
-    })
-  }
-  const extraDollars = actual.literalDollars.filter(
-    s => s.length > 1 && !ref.literalDollars.includes(s)
-  )
-  const missingDollars = ref.literalDollars.filter(
-    s => s.length > 1 && !actual.literalDollars.includes(s)
-  )
-  const missingAreMathLike = missingDollars.every(s => /^\$[A-Za-z\\]/.test(s))
-  if (extraDollars.length) {
-    diffs.push({
-      field: 'literalDollars.extra',
-      expected: ref.literalDollars,
-      actual: extraDollars,
-    })
-  } else if (missingDollars.length && !missingAreMathLike) {
-    diffs.push({
-      field: 'literalDollars.missing',
-      expected: missingDollars,
-      actual: actual.literalDollars,
     })
   }
 
@@ -89,24 +130,13 @@ export function compareSignatures(ref: HtmlSignature, actual: HtmlSignature): Co
     })
   }
 
-  const missingHeadings = ref.headings.filter(h => !actual.headings.includes(h))
-  if (missingHeadings.length) {
-    diffs.push({ field: 'headings', expected: missingHeadings, actual: actual.headings })
-  }
-
-  const refTables = JSON.stringify(ref.tableCells)
-  const actTables = JSON.stringify(actual.tableCells)
-  if (refTables !== actTables) {
-    diffs.push({ field: 'tableCells', expected: ref.tableCells, actual: actual.tableCells })
+  if (!sameStringArrays(ref.headings, actual.headings)) {
+    diffs.push({ field: 'headings', expected: ref.headings, actual: actual.headings })
   }
 
   if (!sameStringArrays(ref.linkHrefs, actual.linkHrefs)) {
     diffs.push({ field: 'linkHrefs', expected: ref.linkHrefs, actual: actual.linkHrefs })
   }
-
-  // Fewer math spans than the naive $ / \[ extractor is OK when those spans were
-  // delimiter examples (`$...$`, `\[...\]`) or when currency protection applies.
-  // More math than CommonMark (which leaves `$x$` as text) is an allowed enhancement.
 
   return { pass: diffs.length === 0, diffs }
 }

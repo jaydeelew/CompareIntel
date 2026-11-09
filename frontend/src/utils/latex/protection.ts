@@ -151,7 +151,10 @@ function protectSegmentDollars(segment: string): string {
 /**
  * Literalize leftover empty/unpaired `$$` (delimiter examples like
  * "and $$ for display math") without touching real `$$content$$` pairs.
- * A later `$$...$$` must not steal the first half of an unpaired `$$`.
+ *
+ * A mid-line leftover `$$` must not pair with the next line's opener:
+ * `use $$ as delimiter.\n\n$$E=mc^2$$` keeps two prose dollars and one
+ * display equation. Same-line `$$E=mc^2$$` and block `$$\nE\n$$` stay math.
  */
 export function literalizeUnpairedDoubleDollars(text: string): string {
   if (!text.includes('$$')) return text
@@ -159,8 +162,20 @@ export function literalizeUnpairedDoubleDollars(text: string): string {
   let i = 0
   while (i < text.length) {
     if (text.startsWith('$$', i)) {
+      const lineStart = text.lastIndexOf('\n', i - 1) + 1
+      const midLine = /\S/.test(text.slice(lineStart, i))
       const close = text.indexOf('$$', i + 2)
-      if (close === -1 || close === i + 2 || text.slice(i + 2, close).includes('$')) {
+      if (close === -1) {
+        out += `${LITERAL_DOLLAR}${LITERAL_DOLLAR}`
+        i += 2
+        continue
+      }
+      const inner = text.slice(i + 2, close)
+      if (
+        close === i + 2 ||
+        inner.includes('$') ||
+        (midLine && inner.includes('\n'))
+      ) {
         out += `${LITERAL_DOLLAR}${LITERAL_DOLLAR}`
         i += 2
         continue

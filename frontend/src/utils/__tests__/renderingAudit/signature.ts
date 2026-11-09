@@ -9,6 +9,7 @@ export interface HtmlSignature {
   dollarRuns: string[]
   emDashCount: number
   listItemCount: number
+  listItems: string[]
   strayBackticks: string[]
   leftoverPlaceholders: string[]
   leftoverDelimiters: string[]
@@ -16,20 +17,39 @@ export interface HtmlSignature {
   texSources: string[]
   displayMathCount: number
   inlineMathCount: number
+  blockCodeCount: number
 }
 
 const PLACEHOLDER_RE = /__(?:DISPLAY_MATH|INLINE_MATH|CODE_BLOCK|UL|OL|HR_PLACEHOLDER)_\d+__/g
+const BLOCK_CODE_SEL = '.code-block-direct, .preformatted-text, .code-block, pre'
+const CODE_CHROME_SEL = '.katex-mathml, button, .code-language-label, svg'
 
 function visibleTextOf(el: Element): string {
   const clone = el.cloneNode(true) as Element
-  clone.querySelectorAll('.katex-mathml').forEach(n => n.remove())
+  clone.querySelectorAll(CODE_CHROME_SEL).forEach(n => n.remove())
+  clone
+    .querySelectorAll('p,h1,h2,h3,h4,h5,h6,li,blockquote,pre,div,tr,br,hr,table,ul,ol')
+    .forEach(n => {
+      n.insertAdjacentText('beforebegin', ' ')
+      n.insertAdjacentText('afterend', ' ')
+    })
   return (clone.textContent ?? '').replace(/\s+/g, ' ').trim()
+}
+
+function outermostBlockCode(el: Element): Element[] {
+  return Array.from(el.querySelectorAll(BLOCK_CODE_SEL)).filter(
+    n => !n.parentElement?.closest(BLOCK_CODE_SEL)
+  )
 }
 
 function proseClone(el: Element): Element {
   const clone = el.cloneNode(true) as Element
-  clone.querySelectorAll('.katex, .katex-mathml, pre, code').forEach(n => n.remove())
+  clone.querySelectorAll(`.katex, .katex-mathml, ${BLOCK_CODE_SEL}, code`).forEach(n => n.remove())
   return clone
+}
+
+function inBlockCode(c: Element): boolean {
+  return Boolean(c.closest(BLOCK_CODE_SEL))
 }
 
 export function signatureFromElement(el: Element): HtmlSignature {
@@ -39,9 +59,12 @@ export function signatureFromElement(el: Element): HtmlSignature {
     (n.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 160)
   )
   const codeSpans = Array.from(el.querySelectorAll('code'))
-    .filter(c => !c.closest('pre'))
+    .filter(c => !inBlockCode(c))
     .map(c => c.textContent ?? '')
-  const fencedCode = Array.from(el.querySelectorAll('pre code')).map(c => c.textContent ?? '')
+  const fencedCode = outermostBlockCode(el).map(n => {
+    const code = n.querySelector('code')
+    return (code?.textContent ?? n.textContent ?? '').replace(/^\s+|\s+$/g, '')
+  })
   const headings = Array.from(el.querySelectorAll('h1,h2,h3,h4,h5,h6')).map(
     h => `${h.tagName.toLowerCase()}:${(h.textContent ?? '').trim()}`
   )
@@ -55,9 +78,14 @@ export function signatureFromElement(el: Element): HtmlSignature {
   )
   const texSources = Array.from(
     el.querySelectorAll('annotation[encoding="application/x-tex"]')
-  ).map(n => n.textContent ?? '')
+  ).map(n => (n.textContent ?? '').replace(/\s+/g, ' ').trim())
   const displayMathCount = el.querySelectorAll('.katex-display').length
-  const inlineMathCount = el.querySelectorAll('.katex:not(.katex-display)').length
+  const inlineMathCount = Array.from(el.querySelectorAll('.katex')).filter(
+    n => !n.closest('.katex-display')
+  ).length
+  const listItems = Array.from(el.querySelectorAll('li')).map(li =>
+    visibleTextOf(li)
+  )
 
   const literalDollars: string[] = []
   const dollarRuns: string[] = []
@@ -68,7 +96,7 @@ export function signatureFromElement(el: Element): HtmlSignature {
   while ((node = walker.nextNode())) {
     const parent = (node as Text).parentElement
     if (!parent) continue
-    if (parent.closest('.katex, .katex-mathml, pre, code')) continue
+    if (parent.closest(`.katex, .katex-mathml, ${BLOCK_CODE_SEL}, code`)) continue
     const t = node.textContent || ''
     emDashCount += [...t].filter(c => c === '\u2014').length
     for (const m of t.matchAll(/\$[A-Za-z0-9.,]*/g)) literalDollars.push(m[0])
@@ -95,6 +123,7 @@ export function signatureFromElement(el: Element): HtmlSignature {
     dollarRuns,
     emDashCount,
     listItemCount: el.querySelectorAll('li').length,
+    listItems,
     strayBackticks,
     leftoverPlaceholders,
     leftoverDelimiters,
@@ -102,6 +131,7 @@ export function signatureFromElement(el: Element): HtmlSignature {
     texSources,
     displayMathCount,
     inlineMathCount,
+    blockCodeCount: outermostBlockCode(el).length,
   }
 }
 

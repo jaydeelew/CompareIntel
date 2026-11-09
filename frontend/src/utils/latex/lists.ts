@@ -5,6 +5,20 @@ const ANY_LIST_ITEM_RE = /^[ \t]*(?:[-*•][ \t]|\d+\.[ \t])/
 const BLOCK_PLACEHOLDER_RE = /__(?:DISPLAY_MATH|CODE_BLOCK|HR_PLACEHOLDER)_\d+__|<hr/
 const DISPLAY_MATH_LINE_RE = /^[ \t]*__DISPLAY_MATH_\d+__[ \t]*$/
 
+/** CommonMark lazy continuation stops at a new block, not at indent 0. */
+function isInterruptingBlock(line: string): boolean {
+  const t = line.trim()
+  if (!t) return true
+  if (ANY_LIST_ITEM_RE.test(line)) return true
+  if (/^#{1,6}(?:\s|$)/.test(t)) return true
+  if (/^```/.test(t)) return true
+  if (/^(?:-{3,}|\*{3,}|_{3,})\s*$/.test(t)) return true
+  if (/^\s*\|.+\|\s*$/.test(line)) return true
+  if (/^>/.test(t)) return true
+  if (/[\uE010\uE011]/.test(t)) return true
+  return false
+}
+
 /**
  * Fold lazily indented continuation lines into the bullet item above them, e.g.
  * `- Calculate:  ` followed by `     $c = 5$`. A trailing double space keeps the line break.
@@ -24,8 +38,7 @@ function mergeBulletContinuationLines(text: string): string {
     if (
       bullet &&
       line.trim() &&
-      indent > bullet[1].length &&
-      !ANY_LIST_ITEM_RE.test(line) &&
+      !isInterruptingBlock(line) &&
       !BLOCK_PLACEHOLDER_RE.test(line) &&
       !BLOCK_PLACEHOLDER_RE.test(previous)
     ) {

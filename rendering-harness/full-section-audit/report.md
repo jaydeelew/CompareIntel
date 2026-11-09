@@ -20,6 +20,7 @@
 | 18 | 18-bold-math | pass | pass | none (markdown-it + KaTeX signatures match) |
 | 19 | 19-unicode-codepoint | pass | pass | none (markdown-it + KaTeX signatures match) |
 | 20 | 20-list-prefixed-closer | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 20 | 20-synthetic | pass | n/a | none (markdown-it + KaTeX signatures match) |
 | 21 | 21-padded-dollar | pass | pass | none (markdown-it + KaTeX signatures match) |
 | 22 | 22-hyphen-nonmath | pass | pass | none (markdown-it + KaTeX signatures match) |
 | 23 | 23-align-placeholder | pass | pass | none (markdown-it + KaTeX signatures match) |

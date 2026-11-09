@@ -97,6 +97,14 @@ describe('codeBlockPreservation', () => {
       expect(result.blocks.length).toBe(0)
     })
 
+    it('does not treat inline ``` ``` in a table cell as a fenced block (bug 27)', () => {
+      const text = '| `` ``` ``` blocks | Content stays literal |'
+      const result = extractCodeBlocks(text)
+      expect(result.blocks).toHaveLength(0)
+      expect(result.text).toContain('``` ```')
+      expect(result.text).not.toContain('__CODE_BLOCK_')
+    })
+
     it('does not steal indented align continuations from $$...$$ (GLM 5.3 06)', () => {
       const text = [
         '**Multiline display:**',

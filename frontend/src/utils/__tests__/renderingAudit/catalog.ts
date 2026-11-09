@@ -156,7 +156,7 @@ export const BUG_CASES: BugCase[] = [
     sourceJson:
       'rendering-harness/runs/2026-11-08-02/reruns/z-ai_glm-5.3-flash_05-complex-scenarios.json',
     startRe: 'Scenario 2: Tables',
-    stopRe: 'Scenario 3',
+    stopHeadingLevel: 1,
   },
   {
     bug: 15,
@@ -216,6 +216,16 @@ export const BUG_CASES: BugCase[] = [
     promptName: '05-complex-scenarios',
     sourceJson: 'rendering-harness/runs/2026-11-08-03/microsoft_phi-4_05-complex-scenarios.json',
     startRe: '^#### 1\\. Math in Lists',
+  },
+  {
+    bug: 20,
+    id: '20-synthetic',
+    title: 'list-prefixed \\[ … - \\] is two list items; inner ^2 stays literal',
+    modelId: 'microsoft/phi-4',
+    promptName: '05-complex-scenarios',
+    inlineContent:
+      '- \\[\nc = \\sqrt{3^2 + 4^2} = 5\n- \\]\n\nBare fraction after the block:\n\n\\frac{1}{2}\n',
+    startRe: '.',
   },
   {
     bug: 21,

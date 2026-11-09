@@ -65,6 +65,13 @@ describe('protectCurrencyDollars', () => {
     expect(out).toContain('$$...$$')
   })
 
+  it('does not pair a leftover mid-line $$ with the next $$E=mc^2$$ opener', () => {
+    const input = 'For display math use $$ as delimiter.\n\n$$E=mc^2$$'
+    const out = protectCurrencyDollars(input)
+    expect(out).toContain(`use ${L}${L} as delimiter.`)
+    expect(out).toContain('$$E=mc^2$$')
+  })
+
   it('does not pair $HOME with a later currency $', () => {
     expect(protectCurrencyDollars('The shell variable $HOME is set. Price: $99.99.')).toBe(
       `The shell variable ${L}HOME is set. Price: ${L}99.99.`

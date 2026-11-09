@@ -867,55 +867,8 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
     return safeRenderKatex(`\\frac{d}{d${variable}}`, false, config.katexOptions)
   })
 
-  const supMap: Record<string, string> = {
-    '²': '2',
-    '³': '3',
-    '⁴': '4',
-    '⁵': '5',
-    '⁶': '6',
-    '⁷': '7',
-    '⁸': '8',
-    '⁹': '9',
-    '⁰': '0',
-    '¹': '1',
-  }
-  const superscriptRegex = /([a-zA-Z0-9])([²³⁴⁵⁶⁷⁸⁹⁰¹])/g
-  let superscriptMatch
-  const superscriptReplacements: Array<{ start: number; end: number; replacement: string }> = []
-  while ((superscriptMatch = superscriptRegex.exec(rendered)) !== null) {
-    const start = superscriptMatch.index
-    const end = start + superscriptMatch[0].length
-    const base = superscriptMatch[1]
-    const sup = superscriptMatch[2]
-    const beforeMatch = rendered.substring(0, start)
-    const lastKatexStart = beforeMatch.lastIndexOf('<span class="katex">')
-    const lastKatexEnd = beforeMatch.lastIndexOf('</span>')
-    if (lastKatexStart > lastKatexEnd) continue
-    if (isInsideAnnotation(rendered, start)) continue
-    const backticksBefore = (beforeMatch.match(/`/g) || []).length
-    if (backticksBefore % 2 === 1) continue
-    const afterMatch = rendered.substring(end)
-    if (afterMatch.startsWith('^{')) continue
-    superscriptReplacements.push({
-      start,
-      end,
-      replacement: safeRenderKatex(`${base}^{${supMap[sup]}}`, false, config.katexOptions),
-    })
-  }
-  superscriptReplacements.reverse().forEach(({ start, end, replacement }) => {
-    rendered = rendered.substring(0, start) + replacement + rendered.substring(end)
-  })
-
-  rendered = rendered.replace(/([a-zA-Z0-9)\]])\^\{([^}]+)\}/g, (match, base, exp, offset) => {
-    if (match.includes('<span') || match.includes('katex')) return match
-    if (isInsideAnnotation(rendered, offset)) return match
-    return safeRenderKatex(`${base}^{${exp}}`, false, config.katexOptions)
-  })
-  rendered = rendered.replace(/([a-zA-Z0-9])\^(\d+|[a-zA-Z])/g, (match, base, exp, offset) => {
-    if (match.includes('<span') || match.includes('katex')) return match
-    if (isInsideAnnotation(rendered, offset)) return match
-    return safeRenderKatex(`${base}^{${exp}}`, false, config.katexOptions)
-  })
+  // Leftover `x^2` / Unicode superscripts stay CommonMark text. Wrapping them
+  // as KaTeX is not a `$...$` enhancement (list-prefixed `\[`…`- \]`).
 
   // Restore protected KaTeX annotations.
   rendered = rendered.replace(/__KATEX_ANNOTATION_(\d+)__/g, (_match, index) => {

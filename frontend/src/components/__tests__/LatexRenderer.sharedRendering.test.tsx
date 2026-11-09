@@ -565,11 +565,16 @@ describe('bug 20: list-prefixed \\] is two CommonMark list items, not recovered 
     )
     expectNoKatexErrors(el)
     expect(el.querySelectorAll('li').length).toBe(2)
+    const first = el.querySelector('li')
+    expect(first?.textContent ?? '').toContain('c = \\sqrt{3^2 + 4^2} = 5')
+    expect(first?.textContent ?? '').toContain('^2')
+    expect(first?.textContent ?? '').not.toContain('²')
     expect(visibleText(el)).toContain('[')
     expect(visibleText(el)).toContain(']')
     expect(visibleText(el)).toContain('\\frac{1}{2}')
     expect(texSources(el).some(t => t.includes('\\frac{1}{2}'))).toBe(false)
     expect(texSources(el).some(t => /=\s*5\s*-/.test(t))).toBe(false)
+    expect(texSources(el).some(t => t.includes('\\sqrt'))).toBe(false)
   })
 
   it('still renders a real Phi-4 05 list item whose closer is indented \\]', () => {
@@ -618,9 +623,38 @@ describe('bug 16: $...$ / $$...$$ delimiter examples are not math', () => {
     expect(visibleText(el)).not.toContain('\\[...\\]')
     expect(texSources(el).some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
   })
+
+  it('does not pair leftover $$ as delimiter. with the next $$E=mc^2$$ opener', () => {
+    const el = renderReply('For display math use $$ as delimiter.\n\n$$E=mc^2$$', CLAUDE)
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).toContain('use $$ as delimiter.')
+    expect(texSources(el)).toEqual(expect.arrayContaining([expect.stringMatching(/E\s*=\s*mc\^2/)]))
+    expect(texSources(el).some(t => /as delimiter/.test(t))).toBe(false)
+  })
 })
 
 describe('bug 27: indented align continuation is not a leaked __CODE_BLOCK__ KaTeX error', () => {
+  it('keeps `` ``` ``` blocks as two ticks plus an inline space span in the table cell', () => {
+    const el = renderReply(
+      [
+        '| Case | Expected Behavior |',
+        '|------|-------------------|',
+        '| `` ``` ``` blocks | Content stays literal |',
+      ].join('\n'),
+      'z-ai/glm-5.3'
+    )
+    expectNoKatexErrors(el)
+    expect(el.querySelector('.code-block, .code-block-direct, pre')).toBeNull()
+    const cell = Array.from(el.querySelectorAll('td')).find(td =>
+      (td.textContent ?? '').includes('blocks')
+    )
+    expect(cell).toBeTruthy()
+    expect(cell!.querySelector('code')?.textContent).toBe(' ')
+    const clone = cell!.cloneNode(true) as HTMLElement
+    clone.querySelectorAll('code').forEach(n => n.remove())
+    expect((clone.textContent ?? '').replace(/\s+/g, ' ')).toMatch(/``\s*blocks/)
+  })
+
   it('renders GLM 5.3 06 $$\\begin{aligned}$$ without placeholder errors', () => {
     const el = renderReply(
       [

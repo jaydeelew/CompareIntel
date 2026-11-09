@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-09T04:58:09.262Z",
+  "generatedAt": "2026-11-09T07:15:05.642Z",
   "standard": "whole affected section vs CommonMark/GFM + KaTeX",
   "reports": [
     {
@@ -192,7 +192,7 @@
       "promptName": "05-complex-scenarios",
       "verdict": "pass",
       "diffs": [],
-      "sectionChars": 488,
+      "sectionChars": 2719,
       "usedFullDocumentFallback": false,
       "visualPass": true,
       "screenshot": "screenshots/14-table-swallow.png",
@@ -281,6 +281,20 @@
       "visualPass": true,
       "screenshot": "screenshots/20-list-prefixed-closer.png",
       "sourceExcerpt": "sections/20-list-prefixed-closer.md"
+    },
+    {
+      "bug": 20,
+      "id": "20-synthetic",
+      "title": "list-prefixed \\[ … - \\] is two list items; inner ^2 stays literal",
+      "modelId": "microsoft/phi-4",
+      "promptName": "05-complex-scenarios",
+      "verdict": "pass",
+      "diffs": [],
+      "sectionChars": 80,
+      "usedFullDocumentFallback": false,
+      "visualPass": null,
+      "screenshot": "screenshots/20-synthetic.png",
+      "sourceExcerpt": "sections/20-synthetic.md"
     },
     {
       "bug": 21,

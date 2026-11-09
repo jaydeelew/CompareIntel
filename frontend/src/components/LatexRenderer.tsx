@@ -55,6 +55,7 @@ import {
   renderBlockquoteMarkers,
   protectEscapedDollars,
   protectCurrencyDollars,
+  literalizeUnpairedDoubleDollars,
   protectParenthesizedDelimiterExamples,
   unescapeLeftoverBracketParenDelimiters,
   restoreLiteralDollars,
@@ -717,6 +718,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Stage 0.35: `($$)` / `($)` / `(\[ \])` / `(\( \))` labels are not math
         processed = protectParenthesizedDelimiterExamples(processed)
+
+        // Stage 0.36: leftover mid-line `$$` must not pair with the next opener
+        processed = literalizeUnpairedDoubleDollars(processed)
 
         // Stage 0.4: Wrap bare LaTeX blocks (commands without delimiters) in $$
         // Some models output \frac{}{}, \sqrt{}, etc. without any math delimiters.
