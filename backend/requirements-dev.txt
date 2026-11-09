@@ -46,4 +46,4 @@ freezegun>=1.5.5         # Time mocking for testing
 locust>=2.29.0           # Load testing framework
 
 # Optional: parallel pytest (local only)
-pytest-xdist>=3.6.0
+pytest-xdist>=3.8.0
