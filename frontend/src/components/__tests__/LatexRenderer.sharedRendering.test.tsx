@@ -7,7 +7,7 @@ import { render } from '@testing-library/react'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { initializeRegistry } from '../../config/loadModelConfigs'
-import { BUG_CASES, loadBugSection } from '../../utils/renderingAudit'
+import { BUG_CASES, loadBugSection } from '../../utils/__tests__/renderingAudit'
 import LatexRenderer from '../LatexRenderer'
 
 const CLAUDE = 'anthropic/claude-sonnet-4.6'

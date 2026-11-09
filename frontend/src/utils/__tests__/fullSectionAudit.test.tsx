@@ -10,6 +10,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import LatexRenderer from '../../components/LatexRenderer'
 import { initializeRegistry } from '../../config/loadModelConfigs'
+
 import {
   BUG_CASES,
   compareSignatures,
@@ -19,7 +20,7 @@ import {
   signatureFromElement,
   signatureFromHtml,
   type CompareResult,
-} from '../renderingAudit'
+} from './renderingAudit'
 
 beforeAll(async () => {
   await initializeRegistry()
@@ -84,9 +85,12 @@ describe('full-section CommonMark+KaTeX audit', () => {
     const visualPath = path.join(outDir, 'visual.json')
     const visualById = fs.existsSync(visualPath)
       ? Object.fromEntries(
-          (JSON.parse(fs.readFileSync(visualPath, 'utf8')) as Array<{ id: string; visualPass: boolean }>).map(
-            v => [v.id, v]
-          )
+          (
+            JSON.parse(fs.readFileSync(visualPath, 'utf8')) as Array<{
+              id: string
+              visualPass: boolean
+            }>
+          ).map(v => [v.id, v])
         )
       : {}
     const reportsWithVisual = reports.map(r => ({

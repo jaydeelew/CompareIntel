@@ -5,8 +5,8 @@
  */
 import MarkdownIt from 'markdown-it'
 
-import { renderCodeBlock } from '../latex/codeBlocks'
-import { safeRenderKatex } from '../latex/helpers'
+import { renderCodeBlock } from '../../latex/codeBlocks'
+import { safeRenderKatex } from '../../latex/helpers'
 import {
   extractInlineCode,
   protectCurrencyDollars,
@@ -14,7 +14,7 @@ import {
   protectParenthesizedDelimiterExamples,
   restoreInlineCode,
   restoreLiteralDollars,
-} from '../latex/protection'
+} from '../../latex/protection'
 
 const md = new MarkdownIt({ html: false, linkify: false, breaks: false, typographer: false })
 

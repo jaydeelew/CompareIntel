@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import type { BugCase } from './catalog'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
-export const REPO_ROOT = path.resolve(here, '../../../..')
+export const REPO_ROOT = path.resolve(here, '../../../../..')
 
 export function loadSourceMarkdown(bug: BugCase): string {
   if (bug.inlineContent) return bug.inlineContent
