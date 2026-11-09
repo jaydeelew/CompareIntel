@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170662-ajrKLEJ75mAIxl0EWGTz",
+  "object": "chat.completion",
+  "created": 1794170662,
+  "model": "anthropic/claude-fable-5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Response: Complex Scenarios Handled\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a = 3$ and $b = 4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n3. Extended case with ***bold-italic*** emphasis and nested math:\n   - If $a = 5$ and $b = 12$, then:\n     - $c = \\sqrt{25 + 144} = \\sqrt{169} = 13$\n     - This forms the **5-12-13** Pythagorean triple\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| Euler's Identity | $e^{i\\pi} + 1 = 0$ | $0$ |\n| Geometric Series | $\\sum_{k=0}^{\\infty} r^k$ | $\\frac{1}{1-r}, \\quad \\lvert r \\rvert < 1$ |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\ndef circle_circumference(r):\n    # Formula: C = 2πr\n    return 2 * math.pi * r\n\nprint(f\"Area: {circle_area(5):.4f}\")           # 78.5398\nprint(f\"Circumference: {circle_circumference(5):.4f}\")  # 31.4159\n```\n\nThe mathematical formulas are:\n\n$$A = \\pi r^2 \\qquad \\text{and} \\qquad C = 2\\pi r$$\n\nwhere $r$ is the radius. Note that inline code like `math.pi` renders differently from inline math like $\\pi \\approx 3.14159$.\n\n## Scenario 4: Horizontal Rules\n\nFirst section — introducing the definite integral.\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\left[\\frac{x^2}{2}\\right]_0^1 = \\frac{1}{2}$\n\n---\n\nThird section with a display equation between rules:\n\n$$\\int_{0}^{\\pi} \\sin(x) \\, dx = 2$$\n\n---\n\nFinal section after the last rule.\n\n## Scenario 5: Multiple Dollar Signs\n\n**Currency context (not math):**\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: **\\$1,575**.\n\n**Math context (actual LaTeX):**\nThe formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n**Mixed on one line (the hardest case):**\nThe item costs \\$25, and coincidentally $5^2 = 25$ as well.\n\n| Item | Price | Related Math |\n|------|-------|--------------|\n| Computer | \\$1,200 | $1200 = 2^4 \\cdot 75$ |\n| Monitor | \\$300 | $300 = 10 \\cdot 30$ |\n| Total | \\$1,575 | $\\sum = 1575$ |\n\n---\n\n### Edge Case Summary\n\n| Challenge | Handling Strategy |\n|-----------|-------------------|\n| Math inside list items | Inline `$...$` works within nested bullets |\n| Math inside table cells | Avoid `\\|` conflicts; use `\\lvert \\rvert` for absolute values |\n| Code vs. math | Backticks for code, dollar signs for math — never mixed |\n| Currency vs. math | Escape literal dollar signs as `\\$` to prevent false math parsing |\n| Display math between rules | Blank lines around `$$...$$` and `---` prevent ambiguity |",
+        "refusal": null,
+        "reasoning": "I'm working out how to build a response that covers markdown formatting, math, tables, code, horizontal rules, and the dollar-sign edge cases, all in one clean answer.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm working out how to build a response that covers markdown formatting, math, tables, code, horizontal rules, and the dollar-sign edge cases, all in one clean answer.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAISpgUK4gIIExgCKkAFyrmDpwVnFw324rkM1yiw8KKCn6Lml/IydCqa6La7ZJeq0qdc22ngP/UTQxj6tfHiwbUOrBb8HJ7oYEPTsyKlMg5jbGF1ZGUtZmFibGUtNTgBQgh0aGlua2luZ1okNGMwZjA0NmYtMjVmZC00NWZiLWJmYjMtYTA4YThlMjQ5Y2E3eh51cHJvZl8wMTFDZVZBb25pQ0tEREFGUDhnVnd0MlSaARAKDmNsYXVkZS1mYWJsZS01qAGpvsPXBsIBOggEEAAaDALaigNPNwWJbAQmrSABMgQScc8lOgQ4MyOKQgQ4MyOKSgQ4MyOKUABaBNkF4VZgAmgBcADaAWAKFnByZWZpeF9iZWZvcmVfYmxvY2tfdjESICh6zqtp+bet0j20ObmOW26Skhe3bvY4V0Tbbiep+JQcIgAyIMLAE8hqnJLiL5ZvPYYXdo+LekTJAq3MCXv6HgmK+04fSAMSDLkVAONO2OazW/eO4RoMIuhc4vNxnt0UfJ3KIjC7jSxqUHexYv2RhVb0tY9lU8kr6gDG6PBhJ9/wBEcVIqhQp384cl3lLS1ZTYU2Fi0q8AEHTugS0+GvzkbKoC8We15u4iHXtSUL6WRGQYQsQq0g33PIHdVfmOay0SmkuPKhkeGFUKnktopKXSs4p/3rExnHVivNlqGXIeeSc/j8uTox6m274wsD5AgeSFudJr6Pk0uRl0yOzW2wmhB8qnfT5ms7zADLIdBFEsW3uBEYX8Tk8MbOtRP3F70QyXNrzC2yb0TCBNlyTWdxECJPqMLVZfJZDdPey1QV6Z64EAQVQbZN8F84fkTvxliw7DSxd/kh3/6dPvzDeacjGWe8uMJNzyuJAWNzI0Zg1hQrGX9Yff4eMGXOKfvT57UHrCb7FmwYK9UYAQ==.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS01LWZhYmxlLTIwMjYwNjA5fGNsYXVkZS1vbi1hd3MifQ"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 631,
+    "completion_tokens": 1496,
+    "total_tokens": 2127,
+    "cost": 0.08111,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.08111,
+      "upstream_inference_prompt_cost": 0.00631,
+      "upstream_inference_completions_cost": 0.0748
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 73,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

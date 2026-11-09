@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/mistral-large-4-0",
+  "modelName": "Mistral: Mistral Large 4",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "Here is a response continuing that style—mixing **Markdown** structure with $\\LaTeX$ mathematics, while verifying your calculations:\n\n## Verification of Exercise 1\nSince $f(x) = x^2 + 2x + 1 = (x+1)^2$, both results check out via alternative methods:\n\n1. **Derivative** (chain rule): $f'(x) = 2(x+1)\\cdot 1 = 2x + 2$ ✓\n2. **Integral** (substitution $u=x+1$):\n   $$\\int (x+1)^2 \\, dx = \\frac{(x+1)^3}{3} + C = \\frac{x^3}{3} + x^2 + x + C \\checkmark$$\n\n## Vector Calculus & Differential Operators\nFor a scalar field $\\phi$ and vector field $\\mathbf{F} = \\langle P, Q, R \\rangle$:\n\n- **Gradient**: $\\nabla \\phi = \\left\\langle \\frac{\\partial \\phi}{\\partial x}, \\frac{\\partial \\phi}{\\partial y}, \\frac{\\partial \\phi}{\\partial z} \\right\\rangle$\n- **Divergence**: $\\nabla \\cdot \\mathbf{F} = \\frac{\\partial P}{\\partial x} + \\frac{\\partial Q}{\\partial y} + \\frac{\\partial R}{\\partial z}$\n- **Curl**:\n  $$\\nabla \\times \\mathbf{F} = \\begin{vmatrix} \\mathbf{i} & \\mathbf{j} & \\mathbf{k} \\\\ \\frac{\\partial}{\\partial x} & \\frac{\\partial}{\\partial y} & \\frac{\\partial}{\\partial z} \\\\ P & Q & R \\end{vmatrix} = \\left\\langle \\frac{\\partial R}{\\partial y} - \\frac{\\partial Q}{\\partial z}, \\frac{\\partial P}{\\partial z} - \\frac{\\partial R}{\\partial x}, \\frac{\\partial Q}{\\partial x} - \\frac{\\partial P}{\\partial y} \\right\\rangle$$\n\n## Series & Special Functions\n\n| Function | Series Representation | Radius of Convergence |\n|----------|----------------------|----------------------|\n| $e^x$ | $\\displaystyle\\sum_{n=0}^{\\infty} \\frac{x^n}{n!}$ | $\\infty$ |\n| $\\sin(x)$ | $\\displaystyle\\sum_{n=0}^{\\infty} \\frac{(-1)^n x^{2n+1}}{(2n+1)!}$ | $\\infty$ |\n| $\\ln(1+x)$ | $\\displaystyle\\sum_{n=1}^{\\infty} \\frac{(-1)^{n+1} x^n}{n}$ | $1$ |\n| $(1+x)^\\alpha$ | $\\displaystyle\\sum_{n=0}^{\\infty} \\binom{\\alpha}{n} x^n$ | $1$ |\n\nwhere the binomial coefficient is:\n$$\\binom{\\alpha}{n} = \\frac{\\alpha(\\alpha-1)\\cdots(\\alpha-n+1)}{n!}$$\n\n## Nested Markdown with Math\n> ### Optimization (KKT Conditions)\n> To solve:\n> $$\\min_{x \\in \\mathbb{R}^n} f(x) \\quad \\text{s.t.} \\quad g_i(x) \\leq 0, \\; h_j(x) = 0$$\n>\n> we require **stationarity**:\n> $$\\nabla f(x) + \\sum_{i} \\lambda_i \\nabla g_i(x) + \\sum_{j} \\mu_j \\nabla h_j(x) = \\mathbf{0}$$\n>\n> along with the constraints:\n> 1. *Primal feasibility*: $g_i(x) \\leq 0$ and $h_j(x) = 0$\n> 2. **Dual feasibility**: $\\lambda_i \\geq 0$\n> 3. *Complementary slackness*: $\\lambda_i \\cdot g_i(x) = 0$\n\n## Definite Integrals & Inequalities\nThe **Cauchy-Schwarz inequality** for integrals:\n$$\\left| \\int_a^b f(x)g(x) \\, dx \\right| \\leq \\sqrt{\\int_a^b [f(x)]^2 \\, dx} \\cdot \\sqrt{\\int_a^b [g(x)]^2 \\, dx}$$\n\n**Example**: With $f(x) = x$ and $g(x) = e^x$ on $[0,1]$:\n$$\\int_0^1 x e^x \\, dx = \\left[ x e^x - e^x \\right]_0^1 = 1$$\nwhich satisfies the bound since $\\sqrt{\\int_0^1 x^2 dx} \\cdot \\sqrt{\\int_0^1 e^{2x} dx} = \\sqrt{\\frac{1}{3}} \\cdot \\sqrt{\\frac{e^2-1}{2}} \\approx 1.17 > 1$.\n\n---\n\n**Inline mixing**: The Laplace transform $\\mathcal{L}\\{f(t)\\}(s) = \\int_0^\\infty f(t)e^{-st}dt$ converts `differential equations` in $t$ into `algebraic equations` in $s$, where $\\mathcal{L}\\{f'(t)\\} = sF(s) - f(0)$.",
+  "usage": {
+    "prompt_tokens": 301,
+    "completion_tokens": 3953,
+    "total_tokens": 4254,
+    "cost": 0.008512,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.008512,
+      "upstream_inference_prompt_cost": 0.0002107,
+      "upstream_inference_completions_cost": 0.0083013
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2868,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.008512,
+  "actualCost": 0.008512,
+  "timestamp": "2026-11-08T19:23:47.357Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

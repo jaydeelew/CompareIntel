@@ -1,0 +1,60 @@
+{
+  "id": "gen-1794166560-rJMMdO1FBRhmSM09MBYq",
+  "object": "chat.completion",
+  "created": 1794166560,
+  "model": "google/gemini-3.1-pro-preview",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": "provisioned",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+        "refusal": null,
+        "reasoning": "**Understanding Formatting Needs**\n\nI'm currently focused on dissecting the core requirements, particularly how to integrate H3 and H4 headers, along with various text styles like bold, italic, and bold italic. The nested unordered list structure is also a key area of analysis for this next step.\n\n**Crafting Markdown Output**\n\nI'm refining the generation of specific Markdown elements. This involves meticulously implementing H3 and H4 headers, various text formatting like bold and italic, and carefully constructing nested lists with correct indentation. The aim is to precisely mirror the requested structure.\n\n**Implementing Advanced Formatting**\n\nI'm now prioritizing the precise implementation of nested unordered and ordered lists, focusing on correct indentation with two spaces for ULs and varied spacing for OLs. I'm also incorporating tables and blockquotes, ensuring they render accurately to match the desired output structure.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Understanding Formatting Needs**\n\nI'm currently focused on dissecting the core requirements, particularly how to integrate H3 and H4 headers, along with various text styles like bold, italic, and bold italic. The nested unordered list structure is also a key area of analysis for this next step.\n\n**Crafting Markdown Output**\n\nI'm refining the generation of specific Markdown elements. This involves meticulously implementing H3 and H4 headers, various text formatting like bold and italic, and carefully constructing nested lists with correct indentation. The aim is to precisely mirror the requested structure.\n\n**Implementing Advanced Formatting**\n\nI'm now prioritizing the precise implementation of nested unordered and ordered lists, focusing on correct indentation with two spaces for ULs and varied spacing for OLs. I'm also incorporating tables and blockquotes, ensuring they render accurately to match the desired output structure.\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "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",
+            "format": "google-gemini-v1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 200,
+    "completion_tokens": 1095,
+    "total_tokens": 1295,
+    "cost": 0.01354,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01354,
+      "upstream_inference_prompt_cost": 0.0004,
+      "upstream_inference_completions_cost": 0.01314
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 911,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

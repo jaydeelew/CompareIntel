@@ -1,0 +1,46 @@
+{
+  "id": "gen-1794170877-wP5tr8XyfHKJ6IyXRr0J",
+  "object": "chat.completion",
+  "created": 1794170877,
+  "model": "openai/gpt-4o-mini",
+  "provider": "OpenAI",
+  "system_fingerprint": "fp_c8a50cb3d4",
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "The quadratic formula, used to find the roots of a quadratic equation, is expressed as \\( x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} \\). Here, \\( a \\), \\( b \\), and \\( c \\) are coefficients from the quadratic equation in the standard form \\( ax^2 + bx + c = 0 \\). The term \\( b^2 - 4ac \\) is known as the discriminant, which determines the nature of the roots.\n\nFor systems of equations, consider the following aligned equations:\n\n\\[\n\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}\n\\]\n\nNext, we can represent the identity matrix and a piecewise function using cases:\n\n\\[\nI = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}\n\\]\n\nIn addition, here are several fundamental equations:\n\n\\[\nE = mc^2\n\\]\n\\[\nF = ma\n\\]\n\\[\na^2 + b^2 = c^2\n\\]\n\nFor further reading on the quadratic formula, you can visit [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula).\n\nIn a practical money context, the item costs $5 and the shipping is $10, for a total of $15. Given a budget of \\$1000, you can easily afford this purchase.",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 275,
+    "completion_tokens": 348,
+    "total_tokens": 623,
+    "cost": 0.00025005,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00025005,
+      "upstream_inference_prompt_cost": 0.00004125,
+      "upstream_inference_completions_cost": 0.0002088
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-opus-4.8",
+  "modelName": "Anthropic: Claude Opus 4.8",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "# Edge Cases and Boundaries Test\n\n## Delimiter Variants\n\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n\n2. Bracket display: $$E = mc^2$$\n\n3. Single dollar inline: $a + b = c$\n\n4. Paren inline: $x = 5$\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\n- Plain: The price is \\$100\n- Escaped: The budget is \\$500\n- Multiple: Costs \\$25, \\$30, and \\$45\n- In sentence: I spent \\$50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable `$HOME` is set. Price: \\$99.99.\n\n---\n\n### Notes on the Rendering Choices\n\n- **Display delimiters** (`$$...$$` and `\\[...\\]`) both produce centered block equations; I normalized `\\[...\\]` to `$$...$$`.\n- **Inline delimiters** (`$...$` and `\\(...\\)`) both produce inline math; I normalized `\\(...\\)` to `$...$`.\n- **Code blocks** preserve literal syntax — `$50`, `a**2`, and `\"E = mc^2\"` are untouched because they're inside fenced code.\n- **Currency** uses escaped dollars (`\\$`) in prose to prevent accidental math-mode activation between two dollar signs.\n- **Shell variables** like `$HOME` are wrapped in inline code to keep them literal.\n- **Table cells** that contain genuine math (e.g. `$A = \\pi r^2$`) are kept as math; note that numeric values like `$78.54$` will render as math (italicized digits) — if you want them as plain currency, write `\\$78.54` instead.",
+  "usage": {
+    "prompt_tokens": 483,
+    "completion_tokens": 802,
+    "total_tokens": 1285,
+    "cost": 0.022465,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.022465,
+      "upstream_inference_prompt_cost": 0.002415,
+      "upstream_inference_completions_cost": 0.02005
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.022465,
+  "actualCost": 0.022465,
+  "timestamp": "2026-11-08T20:40:13.540Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

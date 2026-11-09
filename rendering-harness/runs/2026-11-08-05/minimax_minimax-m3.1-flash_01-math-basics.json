@@ -1,0 +1,36 @@
+{
+  "modelId": "minimax/minimax-m3.1-flash",
+  "modelName": "MiniMax: MiniMax M3.1 Flash",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+  "response": "# Math Basics Test\n\n## 1. Inline math\n\nThe quadratic formula is $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$, where $a$, $b$, and $c$ are the coefficients of the equation $ax^2 + bx + c = 0$. The two roots $x_1 = \\frac{-b + \\sqrt{b^2 - 4ac}}{2a}$ and $x_2 = \\frac{-b - \\sqrt{b^2 - 4ac}}{2a}$ exist in the real numbers whenever the discriminant $\\Delta = b^2 - 4ac$ is non-negative, so $\\Delta \\geq 0$.\n\nInline math also supports symbols like $\\alpha$, $\\beta$, $\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$, and $\\int_a^b f(x)\\,dx$.\n\n## 2. Aligned equations\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding the two equations gives $3x = 6$, so $x = 2$ and $y = 3$.\n\n> **Note:** In strict LaTeX/MathJax, an `align` environment is normally used on its own rather than nested inside `$$`. The equivalent single-block form is:\n> $$\\begin{aligned}\n> x + y &= 5 \\\\\n> 2x - y &= 1\n> \\end{aligned}$$\n\n## 3. Matrices and cases\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\nThe matrix $I$ above is the $2 \\times 2$ identity matrix, and $f(x)$ is a piecewise-defined function.\n\n## 4. Multiple display equations\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\n## 5. Links\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\nOther useful references: [Khan Academy — Quadratic formula](https://www.khanacademy.org/math/algebra/x2f8bb11595b5c8693:quadratic-formula) and [Desmos Graphing Calculator](https://www.desmos.com/calculator).\n\n## 6. Money context (rendered as plain text)\n\nThe item costs \\$5 and the shipping is \\$10, for a total of \\$15. Budget: \\$1000 (escaped dollar).\n\nBecause the dollar signs are escaped with a backslash, none of the amounts above are interpreted as math delimiters — they display literally as currency values. Compare with the inline math in earlier sections, where `$x = ...$` *is* rendered as a formula.",
+  "usage": {
+    "prompt_tokens": 436,
+    "completion_tokens": 1125,
+    "total_tokens": 1561,
+    "cost": 0.00072312,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 128,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00072312,
+      "upstream_inference_prompt_cost": 0.00004812,
+      "upstream_inference_completions_cost": 0.000675
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 495,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00072312,
+  "actualCost": 0.00072312,
+  "timestamp": "2026-11-08T18:34:31.057Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

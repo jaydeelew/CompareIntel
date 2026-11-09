@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169296-9MxGOA4gBYKmNgCwOoDw",
+  "object": "chat.completion",
+  "created": 1794169296,
+  "model": "openai/gpt-5.1-codex-max",
+  "provider": "Azure",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula  | LaTeX                         | Result                                        |\n|----------|-------------------------------|-----------------------------------------------|\n| Quadratic| $ax^2 + bx + c = 0$           | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$        |\n| Sum      | $\\sum_{i=1}^{n} i$            | $\\frac{n(n+1)}{2}$                            |\n| Product  | $\\prod_{i=1}^{n} i$           | $n!$                                          |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1{,}200, monitor $300, keyboard $50, mouse $25. Total: $1{,}575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.",
+        "refusal": null,
+        "reasoning": "**Generating edge case responses**\n\nThe user wants me to generate a response that includes challenging edge cases, particularly with math in formatted lists. I need to ensure I output the content accurately, preserving all formatting like dollar signs and LaTeX. I’ll include \"First section,\" a horizontal rule, and other necessary elements. I have to remember that the last scenario about prices, like \"Computer costs $1,200,\" should be treated as currency, not math, but it’s still safe to output. So I’ll get started on that!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Generating edge case responses**\n\nThe user wants me to generate a response that includes challenging edge cases, particularly with math in formatted lists. I need to ensure I output the content accurately, preserving all formatting like dollar signs and LaTeX. I’ll include \"First section,\" a horizontal rule, and other necessary elements. I have to remember that the last scenario about prices, like \"Computer costs $1,200,\" should be treated as currency, not math, but it’s still safe to output. So I’ll get started on that!",
+            "format": "azure-openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NnV2TTpMrEgm9zMcbi7bGvmlTbH7Sn7dWCUi33vAf--eNHxgXzHex8ahzbjA05A1IJ_4C9OAZ3AgtaNoXsJb7DvTl9uY5ixqLXFn6YiVFl7W63uauFsjjkebWAtd9Ru5sbT12a7t8W36uIw4GrueUHv0XesfDf4A0gkuP3JneVcKYi3OKU4NDu8cFZMe9zWrq7R_aVCqru1YEr0299Q6QA1jn73NYCyWjmpm2TpmL1oCgN3LVvcmG4KHO8dQ81T9xp7MVpH3gtcxBLWBRNNFkrQWiPHD50l1rFEHqQMlRYX5dbI1aaoAtsI2MBIaTfVOBk3IarXcQZWSu7j9mjSauS4Aptgb3tygj72xoiloR1DgKZAwMxM3MN3b6DCxf2YutuIOhtMcUm3aXZcwnAVeN7i0knZpHmOBo9CTy-N3LXzLfFV83C6hgGX278D7VQbI5PsgvH45b1nW9A_JajdaRbEVyJyjWvteB_7vy27Xk1iSoS-w6Bn6exeNmTwbYfIj1Uouuu7GBRBCDMTHC2aSqjN7YsHgqjKBer4kUPZVVynLokgwIBw9_nacnljHLmjPH24Ruq_t1DE7KlNRanaD9lcuT5G8guylwwSY7FSeMVeaAG3HEhNd1omfkExA_pU0gJ1NfRmqBWEe70QwojVY5F58jxcANVaD3ZXR9Grx4pyMkS94uWfl0VkaDvkaiyYIuVErfayn7fDc8wYtuPmOfC2hjF835BrMoFEuiDThbW7uLckRleYzARG61Wcl2c6D1Cvsi4sUSwl5SJ1v9XTiUXNyWGLK1G1tMnwjz7r65DjNmdO9q3Zhf5c3cQnZXn5dlC8BsaYhgNO84ZQ2500JPcm_aivJL3HAZPPn0vBkIa9245bONXMgVzLc_oISTD_PaGhphSuq8coujHRG7Qcxn8_6EOiNN21h5r4-MGUprxfi-5snmFbYSzoQXZn943U9cpsDlIEu3Fv17NLRYsPE_5rIfddXlqcMbrNL593h2t0SSleItJzcihN1wAEJBSU-m81RedoUo_q6hmdBX3pOLO-KZlRU7tR4W1btJerwZKMeGh9EakvZ8MjMmCASn8FrqGXJe2sY52EekgGIe1YMv5iQFnTC8T6F4mPv8jSN-S0HncR5wu9CKpAqxajrAE16A-oY_bS4BJWLRMNAlaaujLMWeYlbKZM4Ho-HGPv0HZBQTw0COXf9ElRajZEvkbBorDK8kE0FPC7f8vLKlXhYuf2B4cdQNanYg5yZBYR8nCrsDNJ-nzHnSPs4D1qBvBnpJEnpALkvxPJ0jDk2sX4L-XwyT6ce1cfQpnkW9fSc0f3VvVS8NlVHjCSJwdMAJwd6-E4Mvu6S7aELPSI9CO806936tabw_D8lIZW69_0Qd1GmHMhudEd0TQt2GfaNyMFalR9hcMwEmMutSzgmoXZ4zNWTThj7xdxPCjKPGZ7338QZSDCHOJ0QmX9OxR03edpe-cPPJsxQrOjQAKFysWusFB7IUTpmAT_fm1U8mPxx1Fsa_KLHGH5x-fP5FaL1BkWiaWMpBFX9om8RloTWAPt12UXrNbvTPA6YKBXFViJECqsQ3cbhCeA0YcARFwr4NPng4A6LGkOQ7BlHPDsDYD5u8YFiKO7gXaAZiKMch_0ZICJTfwDfHCeYPAxdKFI6-j-T8sTVPwlEDUbWrWpSE6OsRQ23wca8bekCpDrIyaR6eHJAxXlcNpFVfkAZX3wayl9MXfJv5OKmYzlrUTU_a-pB6V9j4bbynPKOHUA4qUb2EmoO7vLA09iIXD2VCJyZK9fSYyvq5WDeYYUdsQmCHjCmrtIhSN5sTPnTk_rRh82QPP-mSxxrTUOunTIt0kwoTnakZDl7CdY9x5ueyrH_55cqP04p2bmUySw2OPg_Cj5BStCaxApb_5-Ttw_5YoIvItG7tf8a0z9fP_uolQYMsppP4FyTH_tUJFWZtRmr_XWh2kEM7C1RNT1t-x-2DJb3ICi3Ef6TIMMzHLOfhS8tdYxOi-Ceat5K_D9UWiKEw9wFc5JUpNi88wryR2KnaXACNr3heE16D3nqjpup4upkI4_sUIS79wwLLyg0TQLwZUcCeLf2ctzcLk-YIkhb4qDgPGUopr4b0qEcZi8FgdUHSUajg3YYjtpRjq2mUsRCSr97Y9oJ0HPcxlXWynvJoieTHZvJOrA10ZMdI7khVPU5drIz86Q5pwSBlPhlzo3HjWh0-blYcb5DY3gW9lEiB8gIA8wVsrUNUlcZ73sGMEc5De_QtqUxmpQ7tyvXX9M3BFS0NcXUf8IQ6RKRSA3jmCCQ-7AYfJHnnFVnruSML5fXFWCcyQqm4ZgMaErPQ30s0f_FK5Q6J5cy2x7Ri83yK3QzlVOvRy24PxzmOEo5Yy434QkOaMFcmjRDLzuXMqpiEieKpApw82VSv30X9JMk0Qf6ZT6-1H7yYqOUFaxZIElMelg_maur-S9z3q5832nKRh83ruktcW6xryOFmQpYRrMYSeaHnUYpXQmgJNWM3Hew_cAa-miFxl6Z0GclXpo_hWgTHcEhoiHN0J95Vc-urA5xvxestIBkYnRqdER2o6e9X_ySImA-pMWLqioSapbv5wbJ8EeW3eXI8rvPQ5uCok5UbPFQnna13pLptjayfIBYvx5SeRTuxSUS_aIvlHGSJXFRITMOfrQj8WOggznuIxiPSD2q8HeMKcQpx2DczoBxa0FCpov3ofb9u18J0QwJUJJ09BoVoPbbpW-Cn-oPdD87fW3pxHG2ETSSfeU9UwnvWT3267lUICwxtWsloTnaukteHt9PbJ0qbJ2zkQ4Fsy2roKpxTuLMZkWF6SkNUnzOYjBfdji6lMDVjCC92GGCjnEG1idiFD5D3Lfv2kl9-plEK7PjghNkZwGdvReztqtCIDh_N-QTEW7JwSxKk6F83CXv3OfWFCQSCGJcDo0sEdeXr-VmPM4N_l1jw2CNWJVj_3ZRryV2rdMErxx4zpIpvmqlK1fkqntjSWo3atMwSlUN4Cxm96TUge7ya1NtNJGkn06UDVhwiWwB8jo7BOs0aWdvsOasd6DosJg1PUFYAlz2iCnlFsZhnmlAI8SjsitxBUDVnPgDXnJMuGOUwGHeSi6WvkB2yVNj7t14DqAdvaCxBPAjWTud-h_KbMr28WvdfcIUEdOY8buzbbWT9PPteOY_Cnt92uhVILYCtJN81AfaG05ybX5zt7cLMiq0eWP8BM2uJGzW-I9e99oLQWAnVfwvdZxFYTX6Lm2GutZrbK_zbZLRH93tPwsUJ8VzKSJ7NCo6f3eb15W74oOlqcYxUMYQfQkE4KOv-4Sj1v2Kcn-nbGbriITY5ODH63100JiW_6BS0ZYgaI-CHU-DyhvH0CuJWBPVdVRQc0Xh0SKp7viJfwRPicsvEbhvgFPl3f32OI6fcOYHI4P-4fiw3gIK6x44ZxixkXT0IWGyQyRdJa_AoRZ07yovdSftItZHLN_jiy-vEpK7wUr7tyOTrDwBoG2vWqvFoOREGzMNgaL-s4dTBYaahrOMjpaMBXVyAnkRCyimcS5h4EH14HHrkrV5PV_Qdr5hURlFNWjSnU2Tg0BwO3XrxolJ8gqxrGzkDKPOc-1Q3c86-5Dd87xRco_i7q66vFIebEJm0ePrrLp5-L_eupwzhYFrR8ZSPOpjOq3pd-bfoftQjz5ouRuMqVP9dn2v7gm9X5_SD-Yz1uJfoSOu5DxVaaBficqn_g8xGQwTQ-6qOE3IpFTHQy7ToYVwiJkhyl-O3ZmxGxz8Oa7dkMAYUuQ3C3OZIu7Q6tB0kl8GRTUqbnmsjdG-Che-MXKm6UgdlhGoMMizeXSoFr83uUlDIthPn32CoZyNdcC_TsAXwJPDNeK0rdsCZdB28Kf_z4mzkzrPkGfq5q13qFIho9dxMZPoWiSDXNfgmC2zEewwTDYdb-dSCUEvU8yPYpLfiShd2mxP0ZFwBq5pVY1LyzUNyGFen6PEUH0pg_wDUX5lnF7y48UX9rv_6YjdtPnAU7353Lnfo_c8CvmWJ7a08kZjKWbthO_OO3i-Ry-VdA8zGOsTo5qu5bfc4aa6ITJqQpsTNPjgb5aAZ_KrlbcETWhqMIJNjaW2i2YwnLZO2_ZNTV6FRWhPyIZM7L7mCb3uuCMuDxz7yWHJtPZh4kLFt-x0mDHcdFkLfDoHCsFdMhVLYHU3n8HBKrJsds_uCEGT9pRp3nC8obDw5r_zp6duwJEAb1v-Dwry4xdLHzHdD_0aCeOUliFG0ftz-sqH2SPxjcYwgRnO1YoRsJgLvjlN1FQyKti21O1uHuUY5G-5BY-z0yQrUH1E33zVt35hSQfsl1Z4qEKHFldpc0sVKGVjV_SDywESTz-9A9rRyYbak-qv3dvq8lRvMaL9K-r75wPRh2fB973FKojL3pOjgnZXzNBeAXvo7SKtA-GioqBe3JHdBa8ATqT8_PRGNSKGA1sk82yMn5aabrksG1L804McDBOfGTf25kXTbA-0qK-1_9fnARzm1vibnD7AjRtSIPBmq7hXUVwzfs5b_99ijhggk94drU2fcYCAae9vsZny-aCduCz0cor3ASXktFLInMa5DPZTm3sPbmqL2W6GojWWuxaK7UD9wnS-8luDkpiakyo3j4ZhInNTyI4i07H6uA8cTvS_it69uJF8xaUzfIr0r696nm8Z1CTdKgAelj7KnrQIvYhm-bcUrERL_B04kEZTyBiRXU8mR7TiQqrljumqIoph96e0lTSqypOkfuqwm_HhaUa6l42KQwdP2aQx7JcZCuZnu9S2bxEoqXEy2nJ_9MHWXA8x6yQoNADelxyaysc2s1Cc6DI4LgGHpWeR71ptr2fXlTTgDPoSk-ssMdtckMohsvZmy3uTvAZ4HUIpD65qoeTmW6jJT4aPZzKNeiCkUCBr57retuR9T90Fd2n6CW9F3tvV9Gs8VktzGSCLEZiMFgWeXsALIHi6nAFQyfQy6CdFuRpk3EV8ik2EY1LdrZr7_e94aPNkDJ_s8WmapODohAYnYajfLFCo4VF_W0b6jbuoMpPq3P7TFIP1dONArGbAt32-6A1H1_oY7-o163yuFrWrS9tu7JfkbcJHQPlGcczTeGtr9dHxj7M-rdDjAKsW8m1UGBjHG0tlUvnIUZ79Lk7dw6qfbwGUAlTKrrxqoPTegAPujlxLkCWfWWOCl9L9lshDmKYztT02ChVQyBzV_4PCjVQMU5dYCs8VmLLoC0WLdoS0-eYxr0XkmeXICOClovgwNV2kTC1xY3Spzw-2wVg6K1Kj8EhXCaytewEJ-9dZWGBqaYPvZTmYw4oysSUbVDKnEGVryXeEbrLqOoJxtgz7qIPRicITN9R53USLFseZurNv6pzlyTaR3IKXCsNzCRRJZtVIdhxvbpRYCJ3MeGPzKEQcw==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjEtY29kZXgtbWF4LTIwMjUxMjA0fGF6dXJlIn0",
+            "format": "azure-openai-responses-v1",
+            "id": "rs_0e07adb9899a11f0016af0d9d1a2548190a033974cd1466ddd",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 735,
+    "total_tokens": 1163,
+    "cost": 0.007885,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.007885,
+      "upstream_inference_prompt_cost": 0.000535,
+      "upstream_inference_completions_cost": 0.00735
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 256,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

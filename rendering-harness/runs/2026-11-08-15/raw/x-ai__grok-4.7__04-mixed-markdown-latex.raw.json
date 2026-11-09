@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169145-mKCoy5s4tG6t5Yy0Air5",
+  "object": "chat.completion",
+  "created": 1794169145,
+  "model": "x-ai/grok-4.7",
+  "provider": "xAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Problem Statement\n**Exercise 1**: Given the function \\(f(x) = x^2 + 2x + 1\\), find:\n\n1. The *derivative* \\(f'(x)\\)\n2. The **integral** \\(\\int f(x)\\, dx\\)\n\n### Solution\nThe derivative is:\n\\[\nf'(x) = 2x + 2\n\\]\n\nThe integral is:\n\\[\n\\int f(x)\\, dx = \\frac{x^3}{3} + x^2 + x + C\n\\]\n\n## Linear Algebra with Lists\nProperties of the matrix \\(A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}\\):\n- Determinant: \\(\\det(A) = ad - bc\\)\n- Trace: \\(\\operatorname{tr}(A) = a + d\\)\n- Inverse (if it exists):\n  \\[\n  A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}\n  \\]\n\n## Real World Context\n> **Note**: In economics, the cost function \\(C(q) = 100 + 5q\\) means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.",
+        "refusal": null,
+        "reasoning": "The user sent a test prompt mixing markdown formatting with mathematical expressions.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "The user sent a test prompt mixing markdown formatting with mathematical expressions.",
+            "format": "xai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "p6V7l3gpsdAIAoZUlvFkWbFOMfMfrxt1Pdr0krydTsKApH/q3bjoKnx52ZZye1HoyS+NPg87tOv7FIXrjbzniIORi3RMzNnqmf+8fzIlQuwRitFivlL6EBOgf0KNy1vv4QBxzNmf07//TQAYyQMYUebTBGO8HtR1UCSu1CF6QH+Kes7yG8A06ZfG9bVajhJ1eYprQa2+LP4F43zNq4KqYd/JK8j7zMcWNNYP8k3SZFpN0ME+Y+RRf/lLDQOgvaVoklU0jN79w5CPg+ltWWcJviPHIZMYwV1Ag+GQ1VmxKKn1gCPqGHkxq4mbhTcMhNbp2jWjmyTY3rYcTvdwOdB8/tVg8RAErFKsagubkqib/SC4exYTAzgS3G3/90mrvg5E6x0fMrF0PmCP2Fy+dUJbGnZ4E9dZaWvdzDi4w2kk44p5bwwlr7IZGUaHcf5/JbRxtebOYmu+K9ZH86hiaqnrVM56lBDMIxDN9Yfil4eX4xVjDIdzecLEvXi8TJaW5BO3GV+UYkV0Ufe2nmFecDBfxaVIPf1T4ht8z/PsQPC+.eyJlbmRwb2ludF9zbHVnIjoieC1haS9ncm9rLTQuNy0yMDI2MDkxNnx4YWkifQ",
+            "format": "xai-responses-v1",
+            "id": "rs_5f4c8ffc-dfc6-94d2-a07c-7bd61343c3ca",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1546,
+    "completion_tokens": 420,
+    "total_tokens": 1966,
+    "cost": 0.003884,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 1152,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.003884,
+      "upstream_inference_prompt_cost": 0.001364,
+      "upstream_inference_completions_cost": 0.00252
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 126,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

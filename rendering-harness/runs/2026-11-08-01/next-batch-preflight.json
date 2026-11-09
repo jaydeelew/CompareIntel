@@ -1,0 +1,70 @@
+{
+  "registrySource": "master/backend/data/models_registry.json (read-only current master)",
+  "registrySha256": "5fae3d228956525c0a088cea5b7ff23fddc97363305695c0ab55e8b8be4b4699",
+  "maxTokens": 1024,
+  "prompts": 6,
+  "paidCallsMade": 0,
+  "estimation": "Expected assumes ceil(prompt chars/4) input and 650 output tokens; max-output estimate 1024 inclusive of reasoning. Conservative reserve uses UTF-8 bytes+32 input and 1024 output; thinking3x sensitivity reported separately, not double-counted actual billing.",
+  "models": [
+    {
+      "id": "deepseek/deepseek-v4-flash",
+      "registryPresent": true,
+      "category": "Language",
+      "isThinkingModel": true,
+      "inputPerMillion": 0.091,
+      "outputPerMillion": 0.182,
+      "estimatedInputTokens": 1306,
+      "expectedOutputTokens": 3900,
+      "expectedCost": 0.0008286459999999999,
+      "maxOutputCost": 0.0012370539999999998,
+      "conservativeReserve": 0.0016105179999999998,
+      "thinking3xHarnessReserve": 0.0034734699999999998
+    },
+    {
+      "id": "openai/gpt-5-nano",
+      "registryPresent": true,
+      "category": "Language",
+      "isThinkingModel": true,
+      "inputPerMillion": 0.049999999999999996,
+      "outputPerMillion": 0.39999999999999997,
+      "estimatedInputTokens": 1306,
+      "expectedOutputTokens": 3900,
+      "expectedCost": 0.0016252999999999999,
+      "maxOutputCost": 0.0025229,
+      "conservativeReserve": 0.0027281,
+      "thinking3xHarnessReserve": 0.0074381
+    },
+    {
+      "id": "meta-llama/llama-4-scout",
+      "registryPresent": true,
+      "category": "Multimodal",
+      "isThinkingModel": false,
+      "inputPerMillion": 0.09999999999999999,
+      "outputPerMillion": 0.3,
+      "estimatedInputTokens": 1306,
+      "expectedOutputTokens": 3900,
+      "expectedCost": 0.0013006,
+      "maxOutputCost": 0.0019738,
+      "conservativeReserve": 0.0023842,
+      "thinking3xHarnessReserve": 0.0019738
+    },
+    {
+      "id": "z-ai/glm-5.3-flash",
+      "registryPresent": true,
+      "category": "Language",
+      "isThinkingModel": true,
+      "inputPerMillion": 0.0335,
+      "outputPerMillion": 0.083,
+      "estimatedInputTokens": 1306,
+      "expectedOutputTokens": 3900,
+      "expectedCost": 0.00036745100000000003,
+      "maxOutputCost": 0.000553703,
+      "conservativeReserve": 0.000691187,
+      "thinking3xHarnessReserve": 0.001573607
+    }
+  ],
+  "expectedCost": 0.0041219970000000005,
+  "maxOutputCost": 0.006287456999999999,
+  "conservativeReserve": 0.007414005,
+  "thinking3xHarnessReserve": 0.014458976999999998
+}

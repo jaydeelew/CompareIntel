@@ -1,0 +1,26 @@
+{
+  "status": "completed",
+  "attemptedCalls": 1,
+  "actualCost": 0.00316168,
+  "unknownCosts": 0,
+  "promptTokens": 279,
+  "completionTokens": 1235,
+  "reasoningTokensIncludedInCompletion": 782,
+  "firstCallCST": "11/8/2026, 1:45:45 PM CST",
+  "lastCallCST": "11/8/2026, 1:45:50 PM CST",
+  "truncated": [],
+  "coverage": "Unassessed; no rendering",
+  "perCall": [
+    {
+      "id": "z-ai/glm-5.2",
+      "prompt": "01-math-basics",
+      "cost": 0.00316168,
+      "finish": "stop",
+      "error": null,
+      "completion": 1235,
+      "reasoning": 782,
+      "visibleChars": 1564
+    }
+  ],
+  "visibleEmpty": []
+}

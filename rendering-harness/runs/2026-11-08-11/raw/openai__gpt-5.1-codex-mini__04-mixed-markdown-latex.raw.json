@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794166463-rkKzNUINcWKHIzyhQ2IA",
+  "object": "chat.completion",
+  "created": 1794166463,
+  "model": "openai/gpt-5.1-codex-mini",
+  "provider": "Azure",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "Here’s a mixed Markdown + LaTeX response:\n\n---\n\n### ✅ Exercise 1: Calculus Review\n\nWe start with the quadratic function \\( f(x) = x^2 + 2x + 1 \\).\n\n1. **Derivative**:\n   \\[\n   f'(x) = \\frac{d}{dx}(x^2 + 2x + 1) = 2x + 2.\n   \\]\n\n2. **Indefinite Integral**:\n   \\[\n   \\int f(x)\\,dx = \\int (x^2 + 2x + 1)\\,dx = \\frac{x^3}{3} + x^2 + x + C.\n   \\]\n\n---\n\n### 🧮 Linear Algebra Facts for \\( A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\)\n\n- **Determinant**: \\( \\det(A) = ad - bc \\)\n- **Trace**: \\( \\text{tr}(A) = a + d \\)\n- **Inverse** (when \\( \\det(A) \\neq 0 \\)):\n  \\[\n  A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}.\n  \\]\n\n---\n\n### 🏭 Real-World Interpretation\n\n> **Note**: In economics, the cost function \\( C(q) = 100 + 5q \\) captures \\( \\$100 \\) in fixed costs plus \\( \\$5 \\) in variable costs per unit.\n\nSo, buying 10 units gives \\( C(10) = 100 + 5 \\cdot 10 = 150 \\), meaning \\( \\$150 \\) total.\n\nLet me know if you’d like graphing or further exploration!",
+        "refusal": null,
+        "reasoning": "**Planning my response format**\n\nI think I need to mix markdown and math in my response. It might be helpful to restate the solutions and include a note about the escape from the $100. I should aim to summarize without repeating too much. Also, I'll need to provide clear explanations to ensure the math is consistent and accurate. Mentioning the context could clarify things, and then I can provide the final answer.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Planning my response format**\n\nI think I need to mix markdown and math in my response. It might be helpful to restate the solutions and include a note about the escape from the $100. I should aim to summarize without repeating too much. Also, I'll need to provide clear explanations to ensure the math is consistent and accurate. Mentioning the context could clarify things, and then I can provide the final answer.",
+            "format": "azure-openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8M7AojczQGnPQzvupxGpeLWnFFHybfxwMr6GgGm7Lth20t5HS-RwyPbVpu8V15JMntM_yv6TYTDKthnmaOyZk4ELPYVj4eiZA_9wn5pi0sJRSwlBPo152d10qhl4-eaV8okssEKUnI6BeHvVwGv4Xf6zyXYUa5_irleylnYLzbpF8XmtsKAnOZHJYQiJrKgcy9FXLQPmo6gZEND4vcnzqbO3PGfQpGxJcjvMb4GMzobJGqJqKvrmY-VzHciKUUHftlzhAVQDaHNZnkehPX7ANu1fkmA5dUj0J1_CDC7h-rMp52X6BS9gJ0UBBObu32E7dT5EyNtGPKskKbENjIMlUCZCjoyELY-AaOWQXLH8zWbRoxX2e7nBoHMuXMf-RFFMv5PMRyi5xEMVUQyApkGpqkCuTEU6v7wAr-wERiRjmfUHdqAX_xmCR3x6nJs92RkELsKfun1z1RPlfTXnJ4E6TOQ9y81eglbD3hjWnbdby8wFeMLHscDYYEBo2T6HxqEV-_qzw2NfPnyNF6_mjojjhOvjbo3COJYi6UMBOkHAAieb1-kyRxwfMT6avcpaiPKHeVL5J8vWViYUR_TO1w-yeD9kn4Dr0myDWkdD8oFIR0KpUUaPjaYoeCATZ4lLbkE8B2ZxXQrmhMHWce8sIm66qXk4hr_I4lc0vRMebi-mGxltb17hYExe1Kl5pQuhKzVvZBHlJu--CbySiiwovyEejARqbMhAM5z1loCWRvnq9EgAjLnk5GVdT_E8wQgs1mEdzcvoGS7OAK7HgQvTUTpluZtnMm7YS0FORER8svHvY6oDWYEtyLWPQQm06Zruj2TrXPNPgYn4dP0Sne6SN6XT7Lx1OdR740Zwb0uoIvTirO2OHTyebNvEzLRxlJ4hyfQg_GeLHl01-FOntBaf1L2QDRsiFoRpIX6A5zDudpY1PZ6_bX098npj2nU8mPvP_g_K0VGhyxc_00D6FpSwi9K5G66ZQWU8qMyGc9Fw0K86rmeyOQIyT3BeXScP3900BNIyCCunHDhJNv0EPoNiKlPzN_7-l3bmtb-HrRQSKkI5zsXa-MNwixolWVeMWD1ElPL6d6Rxk8tka_QyRXaYpdOJQ0mXBY6g4hqBJzsrwMD8-nyFoOu4kTiX3oyb7j8oyd3l-uHzweKnHUOO04wZX1bca3OihVWuzLuoEit0gKlmi2mkVBsD912f-up4k6CTJWQZUvZY9AvgIbwsz2L-lMGMTcbK7BKzRa4TzqD-tdko33RUs_Tw5TZV1To5hUSFNnv02C5arjcrSuiG74ouSEqoNE6ZIEh_FNFL79ifKue_aifSRJeL7zYELTVo7z1_yyPZDNEKFY415ZXLWaCLQcQPm8JRU-JuEQZBPFuqj-4DLxgnUZ2Lzh4iw-zqS0mLeK7IbOBTs_SVdoF4FfZzqNOG7PrsjK8gNkHsldZfAVjM8dZdmhQfVcJeR6so85WOPpqRt6QxP3zWA-xplE6UNqSWmHCTH3Z569H8Qz6RVxAqcSYAqbxdYynPI44fJiweR3m3qelTu-zWmK4pyZHgjTXKYcY-d22sudH_OGcR5FOX7ZzOITiE5epTBejSyp7Moy3CGleZxNXtTyxfJhZcA1_MigUp5cgxrIEq96It1tFXNPv7ZGAIs4NWlnYGDymS3-R8yjX8OyYFNo4VdpK2WcMJsJqogSIzwmXhDBU-2WkM2dJOd5C8Zssl9gWTB_8pRzxUm65ptdQa5TXIrauSHyBledRj9i8zQ8thVJoRuOceniGhkxrgg-MgixPlIFXo_MOpxLDE3wul7oWWg8AAQkT4OA9kcFGTCi1AIp2k2ZZ4XpoKIkuIUdLOBJaXDlO5dAOSmDqFxG9bqUg-XsKWhnKgyWNkC6ewGPbYmlHYpK7R9Ra1CR1ZMn2HmbsCdnF7Sbst10-zCB9iVR9eIHkLEwON0OTnXEUiWG5x3AtpFlu27NYP5dCqMZ53ox_yLo9XWkF-qk4TO5yXEtwWPiXt0dQ8Tq9U5-vDKNPJuwTjuwLYVwlu1iDBRyumd0E9caFpoAaCR8mh.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjEtY29kZXgtbWluaS0yMDI1MTExM3xhenVyZSJ9",
+            "format": "azure-openai-responses-v1",
+            "id": "rs_0bcd6912ec473651016af0cebfa4348197bcfcda3b4305477f",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 310,
+    "completion_tokens": 432,
+    "total_tokens": 742,
+    "cost": 0.0009415,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0009415,
+      "upstream_inference_prompt_cost": 0.0000775,
+      "upstream_inference_completions_cost": 0.000864
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 105,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

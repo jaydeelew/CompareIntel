@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+  "modelName": "Qwen: Qwen3 Next 80B A3B Instruct",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "Here's a mixed Markdown and LaTeX response that blends formatting, mathematical notation, and real-world context seamlessly:\n\n---\n\n## 📌 Exercise 1: Calculus Foundations\n\nGiven the function:  \n$$ f(x) = x^2 + 2x + 1 $$\n\nWe are to compute:\n\n1. The ***derivative*** $ f'(x) $  \n2. The ***integral*** $ \\int f(x) \\, dx $\n\n### ✅ Solution\n\nThe derivative is obtained using the power rule:  \n$$\nf'(x) = \\frac{d}{dx}(x^2) + \\frac{d}{dx}(2x) + \\frac{d}{dx}(1) = 2x + 2\n$$\n\nThe indefinite integral is:  \n$$\n\\int f(x) \\, dx = \\int (x^2 + 2x + 1) \\, dx = \\frac{x^3}{3} + x^2 + x + C\n$$  \nwhere $ C $ is the **constant of integration** — a crucial reminder that antiderivatives are families of functions!\n\n---\n\n## 🧮 Linear Algebra with Lists\n\nConsider the $ 2 \\times 2 $ matrix:  \n$$\nA = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}\n$$\n\nIts key properties are:\n\n- **Determinant**: $ \\det(A) = ad - bc $  \n- **Trace**: $ \\text{tr}(A) = a + d $  \n- **Inverse** (when $ \\det(A) \\ne 0 $):  \n  $$\n  A^{-1} = \\frac{1}{ad - bc} \\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}\n  $$\n\n> 💡 *Tip*: The inverse only exists if the determinant is **non-zero** — otherwise, the matrix is *singular* and has no inverse.\n\n---\n\n## 💰 Real-World Context: Economics & Cost Functions\n\n> **Note**: In microeconomics, the **cost function**  \n> $$ C(q) = 100 + 5q $$  \n> models total cost as a function of quantity $ q $ produced.  \n> - $ 100 $: **Fixed costs** (e.g., rent, salaries)  \n> - $ 5q $: **Variable costs** (e.g., materials per unit)\n\n### 💸 Practical Example:\nIf you produce $ q = 10 $ units:  \n$$\nC(10) = 100 + 5 \\cdot 10 = 100 + 50 = \\boxed{150}\n$$  \nSo, total cost = **$150** — $100 fixed + $50 variable.\n\nThis linear model is foundational in **break-even analysis**, where you solve $ C(q) = R(q) $ (cost = revenue) to find profitability thresholds.\n\n---\n\n✅ **Summary**:  \n- Derivatives measure *rates of change* → critical for optimization.  \n- Integrals measure *accumulation* → essential for total cost, area, etc.  \n- Matrix algebra underpins systems of equations → used in econometrics, machine learning, and engineering.\n\n*Master these tools — they’re the language of quantitative reasoning.*",
+  "usage": {
+    "prompt_tokens": 317,
+    "completion_tokens": 704,
+    "total_tokens": 1021,
+    "cost": 0.00080293,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00080293,
+      "upstream_inference_prompt_cost": 0.00002853,
+      "upstream_inference_completions_cost": 0.0007744
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00080293,
+  "actualCost": 0.00080293,
+  "timestamp": "2026-11-08T18:33:04.178Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

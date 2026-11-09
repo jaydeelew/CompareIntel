@@ -1,0 +1,866 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.7,
+  "maxTokens": "perModel",
+  "perModelMaxTokens": [
+    {
+      "id": "xiaomi/mimo-v2.5",
+      "maxTokens": 8192
+    },
+    {
+      "id": "moonshotai/kimi-k2.6",
+      "maxTokens": 8192
+    },
+    {
+      "id": "x-ai/grok-4.3",
+      "maxTokens": 8192
+    },
+    {
+      "id": "cohere/command-a",
+      "maxTokens": 2048
+    }
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+    }
+  ],
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "xiaomi/mimo-v2.5",
+    "moonshotai/kimi-k2.6",
+    "x-ai/grok-4.3",
+    "cohere/command-a"
+  ],
+  "plannedCalls": 24,
+  "attemptedCalls": 21,
+  "knownActualCost": 0.0757709722,
+  "unknownCostCalls": 1,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "xiaomi/mimo-v2.5",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:07:15.389Z",
+      "reserveUsd": 0.020885,
+      "actualCost": 0.0009672,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:07:19.316Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 278,
+        "completion_tokens": 428,
+        "total_tokens": 706,
+        "cost": 0.0009672,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009672,
+          "upstream_inference_prompt_cost": 0.0001112,
+          "upstream_inference_completions_cost": 0.000856
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 26,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 2,
+      "modelId": "xiaomi/mimo-v2.5",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:07:19.316Z",
+      "reserveUsd": 0.020804,
+      "actualCost": 0.0005032,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:07:20.701Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 203,
+        "completion_tokens": 211,
+        "total_tokens": 414,
+        "cost": 0.0005032,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005032,
+          "upstream_inference_prompt_cost": 8.12e-05,
+          "upstream_inference_completions_cost": 0.000422
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 28,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 3,
+      "modelId": "xiaomi/mimo-v2.5",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:07:20.701Z",
+      "reserveUsd": 0.020848,
+      "actualCost": 0.0006376,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:07:23.003Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 244,
+        "completion_tokens": 270,
+        "total_tokens": 514,
+        "cost": 0.0006376,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0006376,
+          "upstream_inference_prompt_cost": 9.76e-05,
+          "upstream_inference_completions_cost": 0.00054
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 40,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 4,
+      "modelId": "xiaomi/mimo-v2.5",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:07:23.003Z",
+      "reserveUsd": 0.0209465,
+      "actualCost": 0.0013824,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:07:26.303Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 316,
+        "completion_tokens": 628,
+        "total_tokens": 944,
+        "cost": 0.0013824,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0013824,
+          "upstream_inference_prompt_cost": 0.0001264,
+          "upstream_inference_completions_cost": 0.001256
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 38,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 5,
+      "modelId": "xiaomi/mimo-v2.5",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:07:26.304Z",
+      "reserveUsd": 0.021093499999999998,
+      "actualCost": 0.0011096,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:07:28.483Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 439,
+        "completion_tokens": 467,
+        "total_tokens": 906,
+        "cost": 0.0011096,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0011096,
+          "upstream_inference_prompt_cost": 0.0001756,
+          "upstream_inference_completions_cost": 0.000934
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 47,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 6,
+      "modelId": "xiaomi/mimo-v2.5",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:07:28.483Z",
+      "reserveUsd": 0.021008,
+      "actualCost": 0.0022768,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:07:33.963Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 357,
+        "completion_tokens": 1067,
+        "total_tokens": 1424,
+        "cost": 0.0022768,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0022768,
+          "upstream_inference_prompt_cost": 0.0001428,
+          "upstream_inference_completions_cost": 0.002134
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 32,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 7,
+      "modelId": "moonshotai/kimi-k2.6",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:07:33.964Z",
+      "reserveUsd": 0.035576525,
+      "actualCost": 0.0110797,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:07:45.432Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 258,
+        "completion_tokens": 3200,
+        "total_tokens": 3458,
+        "cost": 0.0110797,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0110797,
+          "upstream_inference_prompt_cost": 0.0001677,
+          "upstream_inference_completions_cost": 0.010912
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2927,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 8,
+      "modelId": "moonshotai/kimi-k2.6",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:07:45.433Z",
+      "reserveUsd": 0.0354449,
+      "actualCost": 0.0007978928,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:07:49.607Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 197,
+        "completion_tokens": 466,
+        "total_tokens": 663,
+        "cost": 0.0007978928,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 133,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007978928,
+          "upstream_inference_prompt_cost": 3.36528e-05,
+          "upstream_inference_completions_cost": 0.00076424
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 292,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 9,
+      "modelId": "moonshotai/kimi-k2.6",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:07:49.607Z",
+      "reserveUsd": 0.035516400000000004,
+      "actualCost": 0.0009108806,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:07:53.984Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 245,
+        "completion_tokens": 531,
+        "total_tokens": 776,
+        "cost": 0.0009108806,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 171,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0009108806,
+          "upstream_inference_prompt_cost": 4.00406e-05,
+          "upstream_inference_completions_cost": 0.00087084
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 307,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 10,
+      "modelId": "moonshotai/kimi-k2.6",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:07:53.984Z",
+      "reserveUsd": 0.0356764625,
+      "actualCost": 0.00669717,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:08:53.928Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 301,
+        "completion_tokens": 2719,
+        "total_tokens": 3020,
+        "cost": 0.00669717,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00669717,
+          "upstream_inference_prompt_cost": 0.00017157,
+          "upstream_inference_completions_cost": 0.0065256
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2149,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 11,
+      "modelId": "moonshotai/kimi-k2.6",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:08:53.928Z",
+      "reserveUsd": 0.0359153375,
+      "actualCost": 0.0043276648,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:09:19.022Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 424,
+        "completion_tokens": 2595,
+        "total_tokens": 3019,
+        "cost": 0.0043276648,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 288,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0043276648,
+          "upstream_inference_prompt_cost": 7.18648e-05,
+          "upstream_inference_completions_cost": 0.0042558
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2183,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 12,
+      "modelId": "moonshotai/kimi-k2.6",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:09:19.023Z",
+      "reserveUsd": 0.0357764,
+      "actualCost": 0.007850964,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:09:35.881Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 336,
+        "completion_tokens": 2022,
+        "total_tokens": 2358,
+        "cost": 0.007850964,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.007850964,
+          "upstream_inference_prompt_cost": 0.000268464,
+          "upstream_inference_completions_cost": 0.0075825
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1712,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 13,
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:09:35.882Z",
+      "reserveUsd": 0.026865625,
+      "actualCost": 0.0025268,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:11:57.728Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 434,
+        "completion_tokens": 955,
+        "total_tokens": 1389,
+        "cost": 0.0025268,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 384,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0025268,
+          "upstream_inference_prompt_cost": 0.0001393,
+          "upstream_inference_completions_cost": 0.0023875
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 703,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 14,
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:11:57.729Z",
+      "reserveUsd": 0.026612500000000004,
+      "actualCost": 0.0011406,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:12:31.308Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 380,
+        "completion_tokens": 320,
+        "total_tokens": 700,
+        "cost": 0.0011406,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 128,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0011406,
+          "upstream_inference_prompt_cost": 0.0003406,
+          "upstream_inference_completions_cost": 0.0008
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 148,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 15,
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:12:31.308Z",
+      "reserveUsd": 0.026750000000000003,
+      "actualCost": null,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:12:31.918Z",
+      "finishReason": null,
+      "nativeFinishReason": null,
+      "usage": null,
+      "truncated": false,
+      "error": {
+        "message": "The model is currently at capacity due to high demand. Please try again in a few minutes, or use a higher service tier for priority processing: https://docs.x.ai/developers/advanced-api-usage/priority-processing",
+        "code": 502,
+        "metadata": {
+          "error_type": "provider_unavailable"
+        }
+      }
+    },
+    {
+      "index": 16,
+      "modelId": "cohere/command-a",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:13:43.085Z",
+      "reserveUsd": 0.02813125,
+      "actualCost": 0.0066875,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:13:51.011Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 287,
+        "completion_tokens": 597,
+        "total_tokens": 884,
+        "cost": 0.0066875,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0066875,
+          "upstream_inference_prompt_cost": 0.0007175,
+          "upstream_inference_completions_cost": 0.00597
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 17,
+      "modelId": "cohere/command-a",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:13:51.011Z",
+      "reserveUsd": 0.027625000000000004,
+      "actualCost": 0.0026375,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:14:15.039Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 199,
+        "completion_tokens": 214,
+        "total_tokens": 413,
+        "cost": 0.0026375,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0026375,
+          "upstream_inference_prompt_cost": 0.0004975,
+          "upstream_inference_completions_cost": 0.00214
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 18,
+      "modelId": "cohere/command-a",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:14:15.040Z",
+      "reserveUsd": 0.027900000000000005,
+      "actualCost": 0.0037575,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:15:18.854Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 263,
+        "completion_tokens": 310,
+        "total_tokens": 573,
+        "cost": 0.0037575,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0037575,
+          "upstream_inference_prompt_cost": 0.0006575,
+          "upstream_inference_completions_cost": 0.0031
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 19,
+      "modelId": "cohere/command-a",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:15:18.855Z",
+      "reserveUsd": 0.028515625000000003,
+      "actualCost": 0.0054775,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:15:51.085Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 331,
+        "completion_tokens": 465,
+        "total_tokens": 796,
+        "cost": 0.0054775,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0054775,
+          "upstream_inference_prompt_cost": 0.0008275,
+          "upstream_inference_completions_cost": 0.00465
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 20,
+      "modelId": "cohere/command-a",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:15:51.085Z",
+      "reserveUsd": 0.029434375000000002,
+      "actualCost": 0.006985,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:17:52.407Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 462,
+        "completion_tokens": 583,
+        "total_tokens": 1045,
+        "cost": 0.006985,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.006985,
+          "upstream_inference_prompt_cost": 0.001155,
+          "upstream_inference_completions_cost": 0.00583
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 21,
+      "modelId": "cohere/command-a",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:17:52.407Z",
+      "reserveUsd": 0.028900000000000002,
+      "actualCost": 0.0080175,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:18:23.955Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "complete",
+      "usage": {
+        "prompt_tokens": 359,
+        "completion_tokens": 712,
+        "total_tokens": 1071,
+        "cost": 0.0080175,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0080175,
+          "upstream_inference_prompt_cost": 0.0008975,
+          "upstream_inference_completions_cost": 0.00712
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed: collection only, no rendering or feature validation",
+  "startedAt": "2026-11-08T19:07:15.385Z",
+  "conservativeBatchReserve": 0.6720504,
+  "status": "stopped",
+  "stopReason": "Grok 03 provider_unavailable 502; Grok 04-06 unattempted; no Grok retry; Cohere 6 completed",
+  "finishedAt": "2026-11-08T19:18:23.956Z",
+  "files": {
+    "replies": [
+      "replies/moonshotai_kimi-k2.6_01-math-basics.json",
+      "replies/moonshotai_kimi-k2.6_02-markdown-formatting.json",
+      "replies/moonshotai_kimi-k2.6_03-code-blocks.json",
+      "replies/moonshotai_kimi-k2.6_04-mixed-markdown-latex.json",
+      "replies/moonshotai_kimi-k2.6_05-complex-scenarios.json",
+      "replies/moonshotai_kimi-k2.6_06-edge-cases-boundaries.json",
+      "replies/x-ai_grok-4.3_01-math-basics.json",
+      "replies/x-ai_grok-4.3_02-markdown-formatting.json",
+      "replies/x-ai_grok-4.3_03-code-blocks.json",
+      "replies/xiaomi_mimo-v2.5_01-math-basics.json",
+      "replies/xiaomi_mimo-v2.5_02-markdown-formatting.json",
+      "replies/xiaomi_mimo-v2.5_03-code-blocks.json",
+      "replies/xiaomi_mimo-v2.5_04-mixed-markdown-latex.json",
+      "replies/xiaomi_mimo-v2.5_05-complex-scenarios.json",
+      "replies/xiaomi_mimo-v2.5_06-edge-cases-boundaries.json"
+    ],
+    "raw": [
+      "raw/moonshotai__kimi-k2.6__01-math-basics.raw.json",
+      "raw/moonshotai__kimi-k2.6__02-markdown-formatting.raw.json",
+      "raw/moonshotai__kimi-k2.6__03-code-blocks.raw.json",
+      "raw/moonshotai__kimi-k2.6__04-mixed-markdown-latex.raw.json",
+      "raw/moonshotai__kimi-k2.6__05-complex-scenarios.raw.json",
+      "raw/moonshotai__kimi-k2.6__06-edge-cases-boundaries.raw.json",
+      "raw/x-ai__grok-4.3__01-math-basics.raw.json",
+      "raw/x-ai__grok-4.3__02-markdown-formatting.raw.json",
+      "raw/x-ai__grok-4.3__03-code-blocks.raw.json",
+      "raw/xiaomi__mimo-v2.5__01-math-basics.raw.json",
+      "raw/xiaomi__mimo-v2.5__02-markdown-formatting.raw.json",
+      "raw/xiaomi__mimo-v2.5__03-code-blocks.raw.json",
+      "raw/xiaomi__mimo-v2.5__04-mixed-markdown-latex.raw.json",
+      "raw/xiaomi__mimo-v2.5__05-complex-scenarios.raw.json",
+      "raw/xiaomi__mimo-v2.5__06-edge-cases-boundaries.raw.json"
+    ]
+  },
+  "reservePolicy": "Per-model max completion;max catalog/timeoverride/same-model observed preflight rates;UTF8 bytes+32 input;25%margin;USD .70 guard"
+}

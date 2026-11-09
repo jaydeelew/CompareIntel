@@ -1,0 +1,19 @@
+{
+  "status": "completed",
+  "attemptedCalls": 6,
+  "actualCost": 0.033562499999999995,
+  "unknownCosts": 0,
+  "errors": [],
+  "promptTokens": 1901,
+  "completionTokens": 2881,
+  "totalTokens": 4782,
+  "reasoningTokensIncludedInCompletion": 0,
+  "firstCallCST": "11/8/2026, 1:13:43 PM CST",
+  "lastCallCST": "11/8/2026, 1:18:23 PM CST",
+  "finishReasonCounts": {
+    "stop": 6
+  },
+  "truncated": [],
+  "visibleEmpty": [],
+  "coverage": "Collection only; no Grok retry"
+}

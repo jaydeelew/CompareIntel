@@ -96,6 +96,21 @@ describe('codeBlockPreservation', () => {
       // Should not extract as code block if it looks like prose
       expect(result.blocks.length).toBe(0)
     })
+
+    it('does not steal indented align continuations from $$...$$ (GLM 5.3 06)', () => {
+      const text = [
+        '**Multiline display:**',
+        '$$',
+        '\\begin{aligned}',
+        'f(x) &= x^2 + 2x + 1 \\\\',
+        '     &= (x+1)^2',
+        '\\end{aligned}',
+        '$$',
+      ].join('\n')
+      const result = extractCodeBlocks(text)
+      expect(result.text).not.toContain('__CODE_BLOCK_')
+      expect(result.text).toContain('&= (x+1)^2')
+    })
   })
 
   describe('restoreCodeBlocks', () => {

@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3.6-flash",
+  "modelName": "Google: Gemini 3.6 Flash",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+  "response": "Here is a demonstration covering all requested formatting elements:\n\n---\n\n### 1. Inline Math\nThe quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ is used to find the roots of any quadratic equation in the form $ax^2 + bx + c = 0$, provided that $a \\neq 0$.\n\n---\n\n### 2. Display Math with Aligned Equations\nWe can represent a system of linear equations using the `align` environment:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n---\n\n### 3. Matrices and Cases\nHere is the standard $2 \\times 2$ identity matrix $I$ alongside a piecewise function $f(x)$:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n---\n\n### 4. Multiple Equations\nHere are three fundamental equations in physics and mathematics displayed on separate lines:\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\n---\n\n### 5. Links\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n---\n\n### 6. Money Context\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).",
+  "usage": {
+    "prompt_tokens": 279,
+    "completion_tokens": 1291,
+    "total_tokens": 1570,
+    "cost": 0.0050505,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0050505,
+      "upstream_inference_prompt_cost": 0.00020925,
+      "upstream_inference_completions_cost": 0.00484125
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 914,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0050505,
+  "actualCost": 0.0050505,
+  "timestamp": "2026-11-08T20:14:51.160Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

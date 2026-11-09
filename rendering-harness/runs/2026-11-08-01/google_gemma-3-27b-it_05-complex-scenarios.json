@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemma-3-27b-it",
+  "modelName": "Google: Gemma 3 27B",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "\nOkay, here's a response designed to test a system's ability to handle the complex scenarios you've presented.  I'm aiming to accurately represent the math *and* the surrounding text/formatting.  This tests a model's ability to discern mathematical expressions from natural language, handle LaTeX, code snippets, and understand how to properly render formatting like lists, tables, and horizontal rules.\n\n**Scenario 1: Math in Lists with Formatting**\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n**Scenario 2: Tables with Math**\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n**Scenario 3: Code and Math Mixed**\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n**Scenario 4: Horizontal Rules**\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n**Scenario 5: Multiple Dollar Signs**\n\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n**Important Considerations for Evaluating the Response (Things a system might struggle with):**\n\n*   **LaTeX Rendering:** Does the system correctly render the LaTeX expressions into mathematical notation?  ($a^2$, $\\sqrt{}$, $\\sum$, $\\prod$, $\\int$, etc.)\n*   **Code Block Preservation:**  Is the Python code block formatted correctly (indentation, syntax highlighting, etc.)?  It should be presented as code and not treated as plain text.\n*   **Dollar Sign Context:**  Can the system differentiate between dollar signs used as currency symbols versus those used to delimit LaTeX math expressions?  This is a tricky edge case.\n*   **List and Table Formatting:** Are the lists and tables properly structured and readable?\n*   **Horizontal Rule Rendering:** Does the system recognize and render the \"---\" as a horizontal line/separator?\n*   **Overall Structure:**  Is the response organized in a way that preserves the original intent of the prompt – separating each scenario?\n* **Bold and Italics:** The bold and italic text formatting should be correctly rendered.\n\n\n\nThis response provides a solid base for testing a language model's ability to handle a wide range of formatting and mathematical content.  It targets common areas where LLMs often falter.",
+  "usage": {
+    "prompt_tokens": 455,
+    "completion_tokens": 782,
+    "total_tokens": 1237,
+    "cost": 0.0003101,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0003101,
+      "upstream_inference_prompt_cost": 0.0000364,
+      "upstream_inference_completions_cost": 0.0002737
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0003101,
+  "actualCost": 0.0003101,
+  "timestamp": "2026-11-08T17:46:04.905Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

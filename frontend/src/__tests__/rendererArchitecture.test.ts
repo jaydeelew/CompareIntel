@@ -58,7 +58,26 @@ describe('rendererArchitecture', () => {
       const retrieved = getModelConfig('test/model-2')
 
       expect(retrieved.modelId).toBe('test/model-2')
-      expect(retrieved.displayMathDelimiters).toEqual(config.displayMathDelimiters)
+      expect(retrieved.displayMathDelimiters[0]).toEqual(config.displayMathDelimiters[0])
+      expect(retrieved.displayMathDelimiters.map(d => d.name)).toEqual(['double-dollar', 'bracket'])
+      expect(retrieved.inlineMathDelimiters[0]).toEqual(config.inlineMathDelimiters[0])
+      expect(retrieved.inlineMathDelimiters.map(d => d.name)).toEqual(['single-dollar', 'paren'])
+    })
+
+    it('fills missing standard \\[ / \\( delimiters on a $$/$ JSON config', () => {
+      registerModelConfig({
+        modelId: 'test/incomplete-delimiters',
+        displayMathDelimiters: [{ pattern: /\$\$([^$]+?)\$\$/gs, name: 'double-dollar' }],
+        inlineMathDelimiters: [{ pattern: /(?<!\$)\$([^$\n]+?)\$(?!\$)/g, name: 'single-dollar' }],
+        codeBlockPreservation: {
+          enabled: true,
+          extractBeforeProcessing: true,
+          restoreAfterProcessing: true,
+        },
+      })
+      const retrieved = getModelConfig('test/incomplete-delimiters')
+      expect(retrieved.displayMathDelimiters.map(d => d.name)).toContain('bracket')
+      expect(retrieved.inlineMathDelimiters.map(d => d.name)).toContain('paren')
     })
 
     it('should return default configuration for unknown model', () => {

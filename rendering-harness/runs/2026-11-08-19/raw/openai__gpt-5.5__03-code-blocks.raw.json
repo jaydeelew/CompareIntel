@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794170598-KlXsTsooNbUBnYk4mDib",
+  "object": "chat.completion",
+  "created": 1794170598,
+  "model": "openai/gpt-5.5",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "**Generating response with code blocks**\n\nI see the user wants a response using fenced code blocks, specifically mentioning “Test Prompt: Code Blocks.” I’ll make sure to generate a response that properly includes the content within these code fences without extra details. The focus should be on clarity and compliance with their request. It sounds straightforward enough, but I want to keep it precise and clean! So, I’ll prepare it accordingly.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Generating response with code blocks**\n\nI see the user wants a response using fenced code blocks, specifically mentioning “Test Prompt: Code Blocks.” I’ll make sure to generate a response that properly includes the content within these code fences without extra details. The focus should be on clarity and compliance with their request. It sounds straightforward enough, but I want to keep it precise and clean! So, I’ll prepare it accordingly.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8N7pSXt01sNU4Zb_3bPXgw-DFtUE2JGEnff2cJmrHrx2zXGJDqsqcWEx113QYzo0BmHOytu5FX3JVPutnl-S8kZat1pktOT9bpccyPLKhXG9nEyDgM5hfsZ-YCWQDUAQU1mVfY165RoTiHNmG-eA_Zid1a-6mO2kUh33lrTRV9Ynz3Z8zEXuJwUz5avgXf9LVBx-3tJttvOvOUGpUB9I3GJD9lKlK0mXFPb2_h0sRmLyp-qrKK_c0FR95s6dN0unGvsjta5IsHnizG86DpfqIWQb1W9C73cO0QPAnJl0kDnZfdy_eouMPo1yS19sRGCM9DQjAnKm_gHbgzJR_Qo2rwgik2WBoLynkdQDUwo780vnXNJo0LZAszyhXCt_yajgaqa6pQnJL-0X4WwFTNXnquMaZsdSEf74mhEX_PVUxR6W0h1ctZCHhCGz0a9rc52rxuKqWF7foTik7XGAoTTD0yuQtmG_2pgmotp1q2BUsjNNPQ2UACdInZi95yaMO-POYzXLAmYDb4hZ0Tx5GGq-vOYfcnnwk3b12sgFSlPo9AQNoha3b1B0ef4s2LWqSWy1QGe3kmICeaPWJHty9dJ5W-nIYn4VviLJop0Y4GD6D_uovLnVTGOQ4D4kMtHUFD0u27hqRqWJ5rn62_bSyl4ox1bRHWDuAB9hItQxztWU4NS0OMX9HfYrNcUgmhmKQ7WgBWHb7MtEtUAynBX_eVmYdO9fOdbQdhsjTD3dHXm0HOjBQEYhFZCwcfbLkc7phey1DPdf0nhTDJul_UyYAFSiSpddqUkfj8YgUwUl5bzZvdZ_WCMOLG2d512l9mop4DbYCjcraDnlErj0Zc0s4mEZIy8t2g69fPI3m6ZAd5D8rU5eXcDInuj4gIRgZAXGG-cwEGuRuH-pXz0_7l81kmH89YdK1i0zOUvusWUV8xBUC5-p5QI02iq3db4P23HFeKxO635qPax2rZT6HwM8BRnLCoOZ_fslyEYij8uBhE_TvHTA1F4y950gz8rtKXHFviw4GS1xnvFxysplDH_GaJ304mSINlRW4NTCVQ8Pu6h_M-dWEXPt8t8wVqHqRL_C530rZDxuYJtVIwGG_pIIa_ESFzWxqsxwbhxrznLPjmymmsPI9x35riDaQNbdmzEO6SeXS_LnPhCEhJ0FT0mUmvgKZAgk0-spib2qe3PyHD1CfaAA2DC4_MG7zLjvZ83IQoRW8-dmI_wMHeqnzfXJe2Wi9Q9mODUjm3Qw0TM8iM8qAw8HPkRSwTwVMcefmuhKmr_gsRBP1LPkyQzIoVREYKuOYMYE8ETO63_SWUQ99WuVyuToLexKWioSekyIinr7FS152gUW7sn8XtIM07e1d3Y3dPqK1Vr6CJgPp8E-D0yXOdcApxaLDjlx1srqiMkliJIbey9QIQ-0meBuNUESRflz6cW6EW_FwuLYdQQKlbHJbTCbROcJPkSan6XGtPyGCDpI5RJzLrJQkYq-BSt7P1KYO5cFReMcN7W7hVah_L6TbBqmww_3hKM5-MS4H39Ykd5FalPfmoQfWWt4D1kLnFAGUv7UDiCufGHR6TdqYRuifQyA06Xw055i463keft66px-EGRo12WYQlpe2VQsGWQSUrjx6oCm75aL1hdZsAj0QuAIP8GSdrGBsiEiRbK3k2T3afqX2ve8vHFFo5A5NDyUasL2ymqmzAB_s79SEsdPnmvQ6hyCtDGgk4bG210g24zp23Puh3Mp--CKTLhrPFN8VBVtWuk_OeVMmygdlT-HS0bAOgn7FUslb86_mfgUjRcYaeSV0DOeI9jIN35reDXWKdVfyKO-ZhLsSvAzF_vwLXRAWFyF1c767IEyOcBIM__c_CGjeEHX-uzIjCVTk-3rJJCrPgvv66-XJU0-GakgVdsjkXnsyqHVYbjvawCSbJrHysxxtlf3pCErpAlo1c7SllrsJDWkT4bLnMD-UD6SOMpmidEJWI0XueHg54D-OM_gHlBsxncHQsB1SvOuC7A876Q0ynkmv7Px4wOrRahY0bMS9xmiDNgfOb5AxBdQC55XRHrYzgIn7f5ftf410HVuHjVOaBTPar-ZCYJpzyVnQBDJQGNjt0_LUM32u_i_qxlAeem8mCopLCVLVkJJ1_uGQwF9JbuPNXFhADT3ss66ZVOuNWS3fwptbntniNgZckTiWcEeK9Cm-faUUtDoXQKkeChgnmFbAd7jzCHpnsNVxsLOkmGmTGkurHqO1k3_ORgAyJ8ytKwD212fE0YtLAvBfk4NEhkziiIQuxdr4mp96Esffi88MdxGNYOJyXWqpArCkfliWOc_o81VqCG9Xs38OEZNgAmaYbjt3mqaOMxJK0h9GO_eg-hugcsnotP7Y2VsvgUJvTY4e94kz6K-O8Ogejuo86t6LRJudnhtX8ok_AXhMRxACDr2fFfRC15kTTX_H_1G.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjUtMjAyNjA0MjN8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0128b89e977296cd016af0dee7464c87d196926248430b100a",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 241,
+    "completion_tokens": 275,
+    "total_tokens": 516,
+    "cost": 0.009455,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.009455,
+      "upstream_inference_prompt_cost": 0.001205,
+      "upstream_inference_completions_cost": 0.00825
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 49,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794166473-3iARIKRIYXAvJNUeVqJC",
+  "object": "chat.completion",
+  "created": 1794166473,
+  "model": "openai/gpt-5.1-codex-mini",
+  "provider": "Azure",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "Thanks for the thorough edge-case prompt! Here’s a response that mirrors the structure you provided while ensuring each kind of delimiter and scenario is handled cleanly:\n\n---\n\n### Delimiter Variants\n- Display with double dollars: $$x^2 + y^2 = r^2$$  \n- Bracket display: \\[E = mc^2\\]  \n- Inline single dollar: $a + b = c$  \n- Inline parentheses: \\(x = 5\\)\n\n### Nested Structures\n- First item  \n- The equation is:  \n  $$\\int_0^1 x\\,dx = \\frac{1}{2}$$  \n  And it evaluates to 0.5  \n- Third item\n\n### Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n### Currency and Escaped Dollars\n- Plain: The price is $100  \n- Escaped: The budget is \\$500  \n- Multiple: Costs $25, $30, and $45  \n- In sentence: I spent $50 at the store\n\n### Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n### Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n\n---\n\nLet me know if you’d like variations or further edge cases covered!",
+        "refusal": null,
+        "reasoning": null,
+        "reasoning_details": [
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8M7Ly-BSr95Sv0F9_eGhfQ7aN7V6k7mFXWRo8SwzjSSWoxKdou9BcpRK9cIfvmUegHg9MeEeD3TOzwd_P0zBSMbb9WqURiRMbihBMwnbBty2nvgOo5slvZz7pheH7qqn_OyeLkiM1SKLDP2fiuYEb7kNNRGuLJkNfItgrn8dC7yb5Kf9kHYjBZreZjGlNp9IQWd59vNQK-pcmmZW0sOcLJ0IFKeefD2HZ6AnOyJ4lUX_o02gEOFpROBhpzZhYNWgmAuLq-8Ewf2E0ULbuAN6Xt20LFSHrX7UwLEmoMQLLJJTlzhm9BqTjr4hY2AGf_7LT6oeM5ppvEzDAwRjBTkIq8Yq4e3hR7BNb_95WnNNrt66pbywHw82PV2dezKNxJlNQq3paHHGAfPqv03ZUMybrvnNAYkbBa7KFM9IFIjfXdFpt14MQTupoz3MdncSTKnQnfx_Mvdj0BfJKUbUO7rj16EDBbtHyFx3K3Hj8b7bawZYa5QoWemUu44HA3BoPdejtvemuK6QuKVyBu-8PzQmkCHapKekq0umTISr23KdYedmDRVgl--TBH2T0X8P6tMa40vH4dbrQD06rrjULv27PP3OgbMk0PwtCDe76HJK7tL3WFynyZwPI26JtS_GYewQdn6ikCGZ9pe7WmrZ-xsAJ-uXgvZPaN7I_92OUeRVw2kvLxT_9AXRcYcgGvioNgSnpvOaTQw_qod2ysV3_pHGyN76AreoTlY3LPGYJZtq1jJuqikwhEMPG87jsd1jc96lexLYjZjz0wSl6nDfVM2t5mCUtyYfDQ2KtvZoCU6-EIc2ZlgGs4rJcttcEIc45IJo50YSaXq05dmzBPKhbSjcg792-wwx3Djfh16VY1-xwPf-TeEFRdFok6UdsI-TR7OQxP1SKvq88quNeFOTSChYSCLpLqhlRsH7nM38XrrcKkkT8pYJ0wCI-2YQ7dK4M2UIbHgqkORrxJa2ALaLIEt0Sa5K9ws0iyBbiwhag8fohgZ9vjEYZCnPVZwP7phhGXj9Bx35qO9JWu29aX90h5EXYhQJ9j1IdTudLg3Nppti_Bfb3psAoe25c5HIXES_0l2CzdBbFMy17HMPzazWkQE3ihYyzMoTChQHW22bf_aPwmI-KTVVIXj_RRtdxoHhIpOkPEOStzdrQk1ek0j_nNsB1KnM5sCbVNJ1ToYDuV1m0xT2eF3tYEJijhNf9wE6CUmI1QAMlQN-IQRuLx_1VdkvQ3iBlft9zBKl62YSenPVfMaXDxrUY4HzsMLETEO4KPOaoZX5TM_lqWWwBxl2Ww9zQoPlZTdXm-mJR6aaYa1WDoMh5HNUfQYlb0ax6NIU8FHh76pjGK16SQdEIwL2tjp5johIZH-UyO1WYAWb6N6eX-lgX_HSKR2E5kw9fSckQBJaTmubfrv-YhLksAOX-bDUHMS5kHu6C7Lv0YnHqHg-QbsF3m6wn3Vw_raDNGKuasbTXeg3wj1q_lbcXgxVZJ6NRH9GgHS4vkUUximng-Jd32mBoZ3qZ5eQPTOw_ax-prGr2FT8P228RKooTI0rFvYksG8ZTgDRCVABGsCQjy2yBt9tINzvRpc6xmXt72CKXNzhG-6Fbsj3GWpCsMd1t3mtV12fhGzxCl1MEejwSttaNSlr3BdcZf1OS0xch-l5jkIfuOV0t3Q7s6AsdfCnSNld6tARcQ2_ta8Dm6iAMcdRV1QdeX0a3T4VHYzCOA1IQBFQPjh3nvQavyeOrBrunIVUu1jLK3sdFkrnRGR4Tia8M2h3nT_dIwdScCuLuZESCcazZd3MB5vQMH1NTV-qx_sew8Xu6FiMVSooCWCskO8OwAM_UflelcP4LxBuvxto3f4hRAkyE6c14bSexTXhFpY-M_tjWo0OlootQD3Z2lbgi7WtR2VTXbRsAlEQoR7xc7Ar3zbQr4Xp3UErxvNpKAE0vRHO-PW6eSbCdMUm7hdA_d03N1K-M7j0zFVKQ7f__vEU0_OFaRCd-RdGXf5QwtZWqPxzjugcY0ZMylIXgB1Qtuv7_d-O6D_M1c4FPojun8XXJNaum_Qe2zTA15zXXCcY8s0F9PmdR0CxNOJPuJkhKdJ9NdafqnhrKgw0wIO98JshPOix8g1dvWsWBsA1p4ScDzO5IbGxzT3hcEALD4IFtjh6Nrilsr_8frCpocRxKGO0frK1BA8e2uFs8e_tarJkGVCJaXnvfUFp8m2f92QQeVdpSNVhc8_084xfpmdm2nI4CdI0WawxWzXASa_CY-K-uC9eaoFBP03bpwbdcFPYD_vWMjb_ZWo3ZBokZbdWHSYBZ0kmVjZBXaQSO09dGMWLHiPMC7KnIvRp1S5Fg4Vue_B9HzjIMbPNafVD8EbP_IbabwLQfQ5-C_y8-QaBgc0M3oFUSv7QmxDM7ig4RuDjhHxUSEfV_wyljNoLRZD5TCtF4UEMSf2QIgQLhi9T-WE2JsaYhSsQ3-JvZzoM-ZcizvrwMfWQiS5yflQDw0NuM2jLHBi1D8470nhpmUQoMeKJUG0cvsUUyoK7L8ivN_UUUACZqiL3xHdFdV6hkT25Yd6SF9LQUnYC8YkQDnL162N4lE1P8TI6q1kXYdERT-dYhxxMQUrPD-Tr0xQOso2ut44JjX2LsEFEhu8Iknk8OxRoXY_zI8esyiZ2k8gvUVOMjwMLJhouyGWoaR-cnTr-MrX2b5dk8vlSio5b4PRuyPOkqas48XHXr66hBfX1kaiBrinOnrOorHSn1Gl0UrMYLuyJ_BQQyVaBH--ncT1Y8IFyB-uCOQ==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjEtY29kZXgtbWluaS0yMDI1MTExM3xhenVyZSJ9",
+            "format": "azure-openai-responses-v1",
+            "id": "rs_0b9b8fb1ce8c2882016af0ceca777481938345a399c198f484",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 342,
+    "completion_tokens": 447,
+    "total_tokens": 789,
+    "cost": 0.0009795,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0009795,
+      "upstream_inference_prompt_cost": 0.0000855,
+      "upstream_inference_completions_cost": 0.000894
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 64,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

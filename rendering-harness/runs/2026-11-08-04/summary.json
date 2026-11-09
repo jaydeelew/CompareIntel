@@ -1,0 +1,43 @@
+{
+  "status": "completed",
+  "attemptedCalls": 24,
+  "actualCost": 0.0114798184,
+  "unknownCosts": 0,
+  "errors": [],
+  "promptTokens": 7537,
+  "completionTokens": 19918,
+  "totalTokens": 27455,
+  "reasoningTokensIncludedInCompletion": 8610,
+  "firstCallCST": "11/8/2026, 12:06:42 PM CST",
+  "lastCallCST": "11/8/2026, 12:12:10 PM CST",
+  "truncated": [
+    {
+      "modelId": "qwen/qwen3-30b-a3b-instruct-2507",
+      "promptName": "05-complex-scenarios"
+    }
+  ],
+  "visibleEmpty": [],
+  "perModel": [
+    {
+      "id": "qwen/qwen3-30b-a3b-instruct-2507",
+      "cost": 0.0013603200000000001,
+      "calls": 6
+    },
+    {
+      "id": "meta-llama/llama-3.3-70b-instruct",
+      "cost": 0.0034662599999999997,
+      "calls": 6
+    },
+    {
+      "id": "mistralai/codestral-2508",
+      "cost": 0.0027819,
+      "calls": 6
+    },
+    {
+      "id": "deepseek/deepseek-v3.2",
+      "cost": 0.0038713383999999995,
+      "calls": 6
+    }
+  ],
+  "coverage": "Collection only; rendering/feature coverage unassessed"
+}

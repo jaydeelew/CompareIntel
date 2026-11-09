@@ -2,83 +2,167 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import LatexRenderer from '../frontend/src/components/LatexRenderer';
 import { initializeRegistry } from '../frontend/src/config/loadModelConfigs';
-import '../frontend/src/index.css';
+import '../frontend/src/styles/variables.css';
+import '../frontend/src/styles/base.css';
+import '../frontend/src/styles/results.css';
 
 interface RenderRequest {
   modelId: string;
   content: string;
 }
 
+const SKIP_PRISM_LANGS = new Set([
+  '',
+  'none',
+  'plain',
+  'plaintext',
+  'text',
+  // Prism's markdown grammar often emits no .token spans (and nested ```
+  // inside a markdown fence can throw). Do not block screenshots on it.
+  'markdown',
+  'md',
+]);
+
+function markFailed(reason: string) {
+  const root = document.getElementById('root');
+  root?.setAttribute('data-render-failed', reason);
+  const container = document.querySelector('[data-render-container]');
+  container?.setAttribute('data-render-failed', reason);
+  container?.removeAttribute('data-render-complete');
+}
+
+function languageFromCode(block: Element): string {
+  const cls = Array.from(block.classList).find(c => c.startsWith('language-'));
+  return cls ? cls.replace('language-', '').toLowerCase() : '';
+}
+
 function HarnessApp() {
   const [ready, setReady] = useState(false);
   const [renderData, setRenderData] = useState<RenderRequest | null>(null);
-  
+  const [renderComplete, setRenderComplete] = useState(false);
+
   useEffect(() => {
-    // Initialize the model renderer registry
-    initializeRegistry().then(() => {
-      // Wait for fonts to load
-      document.fonts.ready.then(() => {
+    initializeRegistry()
+      .then(() => document.fonts.ready)
+      .then(() => {
         setReady(true);
-        
-        // Listen for render requests from parent
+
         window.addEventListener('message', (event) => {
-          if (event.data.type === 'render') {
+          if (event.data?.type === 'render') {
             setRenderData({
               modelId: event.data.modelId,
               content: event.data.content,
             });
           }
         });
-        
-        // Signal ready
+
         if (window.opener) {
           window.opener.postMessage({ type: 'harness-ready' }, '*');
         }
-        
-        // Check URL params for inline render request
+
         const params = new URLSearchParams(window.location.search);
         const modelId = params.get('modelId');
         const content = params.get('content');
-        
         if (modelId && content) {
-          setRenderData({ modelId, content: decodeURIComponent(content) });
+          // URLSearchParams already decodes. A second decodeURIComponent throws
+          // URI malformed on replies that contain a literal `%` (Qwen 05 8192 rerun).
+          setRenderData({ modelId, content });
         }
+      })
+      .catch((err: unknown) => {
+        markFailed(`registry-or-fonts: ${err instanceof Error ? err.message : String(err)}`);
       });
-    });
   }, []);
-  
+
   useEffect(() => {
-    if (ready && renderData) {
-      // Mark container as ready after a short delay for Prism highlighting
-      setTimeout(() => {
-        const container = document.querySelector('[data-render-container]');
-        if (container) {
-          container.setAttribute('data-render-complete', 'true');
+    if (!ready || !renderData || renderComplete) return;
+
+    let attempts = 0;
+    const maxAttempts = 50;
+    let cancelled = false;
+
+    const checkRenderState = () => {
+      if (cancelled) return;
+      const container = document.querySelector('[data-render-container]');
+      if (!container) {
+        retry('render-container-missing');
+        return;
+      }
+
+      const katexProcessing = container.querySelectorAll('.katex-html[style*="visibility: hidden"]');
+      if (katexProcessing.length > 0) {
+        retry('katex-processing');
+        return;
+      }
+
+      const codeBlocks = container.querySelectorAll('pre code[class*="language-"]');
+      const prism = (window as Window & { Prism?: { languages?: Record<string, unknown> } }).Prism;
+      for (const block of Array.from(codeBlocks)) {
+        const lang = languageFromCode(block);
+        if (SKIP_PRISM_LANGS.has(lang)) continue;
+        if (!prism) {
+          retry('prism-not-loaded');
+          return;
         }
-      }, 1000);
-    }
-  }, [ready, renderData]);
-  
+        if (!prism.languages || !prism.languages[lang]) {
+          // Unknown language, or Prism has no grammar: do not wait for .token
+          continue;
+        }
+        const isEmpty = block.textContent?.trim() === '';
+        if (!isEmpty && block.querySelectorAll('.token').length === 0) {
+          retry('prism-highlighting');
+          return;
+        }
+      }
+
+      const images = container.querySelectorAll('img');
+      for (const img of Array.from(images)) {
+        if (!img.complete) {
+          retry('images-loading');
+          return;
+        }
+      }
+
+      container.setAttribute('data-render-complete', 'true');
+      container.removeAttribute('data-render-failed');
+      document.getElementById('root')?.removeAttribute('data-render-failed');
+      setRenderComplete(true);
+    };
+
+    const retry = (reason: string) => {
+      attempts += 1;
+      if (attempts >= maxAttempts) {
+        markFailed(reason);
+        return;
+      }
+      window.setTimeout(checkRenderState, 200);
+    };
+
+    window.setTimeout(checkRenderState, 50);
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, renderData, renderComplete]);
+
   if (!ready) {
     return <div>Initializing renderer...</div>;
   }
-  
+
   if (!renderData) {
     return <div>Waiting for render request...</div>;
   }
-  
+
   return (
-    <div 
-      data-render-container
-      style={{
-        padding: '20px',
-        maxWidth: '900px',
-        margin: '0 auto',
-      }}
-    >
-      <LatexRenderer modelId={renderData.modelId}>
-        {renderData.content}
-      </LatexRenderer>
+    <div data-render-container className="results-section">
+      <div className="results-grid">
+        <article className="result-card conversation-card">
+          <div className="message-content">
+            <LatexRenderer className="result-output" modelId={renderData.modelId}>
+              {renderData.content}
+            </LatexRenderer>
+          </div>
+        </article>
+      </div>
     </div>
   );
 }

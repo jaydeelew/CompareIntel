@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-coder",
+  "modelName": "Qwen: Qwen3 Coder 480B A35B",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here's a comprehensive test of delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n\n## Additional Edge Cases\n\n### Mixed delimiters in paragraph\nThis paragraph contains multiple math expressions: $ax^2 + bx + c = 0$ for inline, and $$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$ for display. Also bracket notation: \\[F = G\\frac{m_1m_2}{r^2}\\].\n\n### Complex nested structures\n1. Mathematical list:\n   - Quadratic formula: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$\n   - Integral result: $$\\int e^x dx = e^x + C$$\n\n### Code blocks with mathematical appearance\n```javascript\n// These look like math but are code\nvar equation = \"x^2 + y^2 = z^2\";\nlet price = $100;\nconst formula = `E = mc^2`;\n```\n\n### Special characters and boundaries\nCurrency examples: \n- Dollar amounts: $15, $100, $1000.50\n- Escaped sequences: \\$75, \\$\\$double\n- Sentence context: Each apple costs $2.50 in today's market.\n\nTable with mixed content:\n| Description | Expression | Result |\n|-------------|------------|--------|\n| Simple addition | $1 + 2$ | $3$ |\n| Complex formula | $e^{i\\pi} + 1 = 0$ | $0$ |\n| Price check | Item cost | $25.99 |\n\nAll these cases demonstrate proper handling of mathematical delimiters versus currency symbols and literal text.",
+  "usage": {
+    "prompt_tokens": 358,
+    "completion_tokens": 694,
+    "total_tokens": 1052,
+    "cost": 0.0008014,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0008014,
+      "upstream_inference_prompt_cost": 0.0001074,
+      "upstream_inference_completions_cost": 0.000694
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0008014,
+  "actualCost": 0.0008014,
+  "timestamp": "2026-11-08T18:50:49.761Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

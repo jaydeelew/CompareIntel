@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170105-imLDK9EkL1GF84cJIFu4",
+  "object": "chat.completion",
+  "created": 1794170105,
+  "model": "anthropic/claude-opus-5.5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Mixed Markdown and LaTeX Demonstration\n\n## Problem Statement\n\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x)\\,dx$\n\n### Solution\n\n**Part 1: Derivative**\n\nUsing the power rule $\\frac{d}{dx}x^n = nx^{n-1}$ term by term:\n\n$$f'(x) = 2x + 2$$\n\n> 💡 **Tip**: Since $f(x) = (x+1)^2$, the chain rule gives the same result: $f'(x) = 2(x+1) = 2x + 2$.\n\n**Part 2: Integral**\n\nUsing $\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C$ for $n \\neq -1$:\n\n$$\\int f(x)\\,dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n**Verification**: Differentiating the result returns the original function:\n\n$$\\frac{d}{dx}\\left(\\frac{x^3}{3} + x^2 + x + C\\right) = x^2 + 2x + 1 \\checkmark$$\n\n---\n\n## Linear Algebra with Lists\n\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n\n- **Determinant**: $\\det(A) = ad - bc$\n- **Trace**: $\\text{tr}(A) = a + d$\n- **Inverse** (exists only if $\\det(A) \\neq 0$):\n\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n### Quick Example\n\n| Matrix | Determinant | Trace | Invertible? |\n|--------|-------------|-------|-------------|\n| $\\begin{pmatrix} 2 & 1 \\\\ 1 & 3 \\end{pmatrix}$ | $5$ | $5$ | ✅ Yes |\n| $\\begin{pmatrix} 1 & 2 \\\\ 2 & 4 \\end{pmatrix}$ | $0$ | $5$ | ❌ No |\n\n---\n\n## Real World Context\n\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are \\$100 and variable costs are \\$5 per unit.\n\n**Money context**: If you buy 10 units, that's \\$100 fixed plus \\$50 variable = **\\$150 total**.\n\nMathematically:\n\n$$C(10) = 100 + 5(10) = 150$$\n\nThe **marginal cost** is the derivative of the cost function:\n\n$$C'(q) = 5$$\n\nThis means each additional unit always costs \\$5, regardless of quantity.\n\n---\n\n### ⚠️ Formatting Note\n\nCurrency dollar signs are escaped as `\\$` so they aren't interpreted as LaTeX delimiters. Without escaping, text like \"costs are \\$100 and variable costs are \\$5\" could cause a renderer to treat `100 and variable costs are ` as a math expression.",
+        "refusal": null,
+        "reasoning": "I need to check that dollar signs used for money don't get read as LaTeX delimiters, so I'll escape the currency amounts. I also want to confirm the derivative of f(x) = x² + 2x + 1, which should come out to 2x + 2.\n\nI'm checking the remaining math: the integral and the cost figure both hold up. I also want to note that f(x) = x² + 2x + 1 factors as (x + 1)², and I'll mention escaping the currency signs.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I need to check that dollar signs used for money don't get read as LaTeX delimiters, so I'll escape the currency amounts. I also want to confirm the derivative of f(x) = x² + 2x + 1, which should come out to 2x + 2.\n\nI'm checking the remaining math: the integral and the cost figure both hold up. I also want to note that f(x) = x² + 2x + 1 factors as (x + 1)², and I'll mention escaping the currency signs.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQSvwkKEAgTGAI4AUIIdGhpbmtpbmcSDFS0jFHuNwXr3YHvyhoM+GvR6k0ZWQxfM9GfIjCCdIOYnsQaIJaHWwhICsdFvdFWb1VlXWiPTczE1NdxhdudXE214u9l2zNoEx86+vMq3AgWxBC1t6CPoYH9amYMGT4VenoyS6H3wjQUWkW5EVmHwYzbxiTQ+fN6tW0uIWPFKpFSL9DvnPcgG88y37QreM9nhDwR7Z561oX9ZTE6S1oMLBrflieMphmEbVT+bhj7bruHD0bhJ+bk0PlGLC2OCtnAJE5nfDNVGsYRTmJi9B03aAmBj3LpyAjH1x8ROLIOXyKHREJSXODeJt+XUviPcJPrnBtLmsEFvPPAr7efKRfc9mMs18BHlfUX8itZRqiVpMO7IX0J8fNGx6AxIpr+qUoaLK6K3x1CRNbIzOWxcCt3x0N7KJyYIoqoWuKFTqDuiw38Aj8P5jbkv7yGL/1wHNoUo/VX4cGl7MnnoWUEAX/vpBpUZazymd1DwoSOPirekUyIwTpy/No1Z27Hw21tmTzKleBphTAN4XDAWve7NRB3vRaBr4f1Nq5HGUSDop7qIqdle2mS3EhvYlHjR6o4x+SDJqC0RFZDaxjwFOQumbRNZkMzvbkyVehLUNn5G00AnJuxjxTr1+HEmzdbtD5yR5hBQSpfKgkAoLcvJfOsrf2iakG4IV7Fd25wEahj3iKTHk1bFXczxdl6xqaCvD3h658N8zztptOq0brMshx56/+sNksCoMRfUpVPrCmxui1qiY/S0wg5lx0TI9vZTqGWdk73ayjw8cPnAxbWVvZGXZZUUL/s6Vg8HSfM60p2aP+E6+KaoW9G5l8fjI4jzIO4ztliSWimJwGhO3Fx5RVFFXNvPmVGqqDD/N7w36RYOv74yiH10AKpsNEIppi/Y/pXwL0YnDX964ya7XeLZl0ei5CkRm3DqwdqUWe97saksLEPZ++2ndedQ1OcDwBnBwxhtmtycTaEFfhGf7bW9q5sw/YIN8A7KCss6vxkWdoBhP6bTec1CiIZEQ8kfZ7n9XTSmIeULndRCETfN6dOxxqz4YilwkPqEaVQKngE1tPK5OEp5J/QDZrFSFbWyep5b5hQYbPdT42FOuvXRgzAzpEf3SZ4FPNrnw5LKVG9iRuEEaXkHYU4HDv+JeTWTWrSgz9QuoiCi3MHEz6R1Uk/+Oh48RzcAOCGV9hjNp6hHLw2WEL4q4snENZAhEe0VbV4pFKYcD57fYQ5n4fnZq6TQuC5TK4y/yoDay+PKYXsrM5tEWm5zVc321Or8stUTwoGowfNp6VmMb2fV9QIRl05LIxEFPMDZOAJbm3jYpGIO2N6VSwIcVinplFagK4MYmST09j5y4yMw5PXra3cIAJOGrw6hCFXSXjtmpdcEbsycgvS0JBY1sK+Ynx14FIe+G8VHGsRBnlu82T2Cuhfi7ZoQMconKRpJ8fEhLxFfA1eg0rVkKhapm6U/95jpCAy4i9XunuJSLPDS0dOhV+oDmK2Ivb4WVR7l58jL6WkNW+HY+DK8itd0sVaAdzMADMc/f8RaNfzqSiJb1ZqrB46UormE7TAYlBYXdJseEL/4icvoccL7u7ef6lIZhAynvxT+RbO3CQYAQ==.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1vcHVzLTUuNS0yMDI2MDkyMXxjbGF1ZGUtb24tYXdzIn0"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 459,
+    "completion_tokens": 1297,
+    "total_tokens": 1756,
+    "cost": 0.027776,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.027776,
+      "upstream_inference_prompt_cost": 0.001836,
+      "upstream_inference_completions_cost": 0.02594
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 247,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

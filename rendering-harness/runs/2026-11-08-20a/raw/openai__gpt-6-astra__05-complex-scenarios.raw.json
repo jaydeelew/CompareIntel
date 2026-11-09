@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794171328-Znfky4KU1VeYuLb8ZVl5",
+  "object": "chat.completion",
+  "created": 1794171328,
+  "model": "openai/gpt-6-astra",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$.\n2. For a *right triangle* with legs $a=3$ and $b=4$:\n   - **Calculate:** $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$.\n   - Therefore, $c = 5$ units.\n3. **Edge case — zero-length side:**\n   - If $a=0$ and $b=4$, then $c=4$.\n   - However, these lengths form a *degenerate triangle*, not a right triangle.\n\n## Scenario 2: Tables with Math\n\n| Formula | Expression | Result or condition |\n|---------|------------|---------------------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$, provided $a \\ne 0$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ for integers $n \\ge 0$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ for integers $n \\ge 0$ |\n| Empty product | $\\prod_{i=1}^{0} i$ | $1 = 0!$ |\n| Absolute value | $\\lvert -5 \\rvert$ | $5$ |\n\n**Edge case:** If $a=0$, the quadratic formula does not apply. When $b \\ne 0$, the equation becomes linear, with solution $x=-c/b$.\n\n## Scenario 3: Code and Math Mixed\n\n```python\nimport math\n\ndef circle_area(r):\n    \"\"\"Return A = πr² for a finite, nonnegative radius.\"\"\"\n    if not math.isfinite(r) or r < 0:\n        raise ValueError(\"Radius must be finite and nonnegative.\")\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5):.2f}\")\nprint(f\"Zero-radius area: {circle_area(0):.2f}\")\n\n# Literal math notation in code stays unchanged: $A = \\pi r^2$\n```\n\nOutput:\n\n```text\nArea: 78.54\nZero-radius area: 0.00\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius.\n\n**Formatting edge case:** Inline code such as `r**2` or `$A = \\pi r^2$` should remain code rather than render as mathematics.\n\n## Scenario 4: Horizontal Rules\n\nFirst section: **Integration**\n\nFor $f(x)=x$, an antiderivative is $F(x)=\\frac{x^2}{2}$.\n\n---\n\nSecond section with math:\n\n$$\n\\int_{0}^{1} x\\,dx\n= \\left[\\frac{x^2}{2}\\right]_{0}^{1}\n= \\frac{1}{2}.\n$$\n\n---\n\nThird section: **Reversed limits**\n\nReversing the bounds changes the sign:\n\n$$\n\\int_{1}^{0} x\\,dx = -\\frac{1}{2}.\n$$\n\n## Scenario 5: Multiple Dollar Signs\n\n**Prices:** Computer costs \\$1,200, monitor \\$300, keyboard \\$50, and mouse \\$25. **Total: \\$1,575.**\n\n**Math:** The formula $f(x)=x^2$ evaluates to $f(5)=25$.\n\n**Mixed currency and math:** At \\$25 per mouse, buying $n=4$ mice costs $25 \\times 4 = 100$ dollars, or **\\$100**.\n\n**Literal delimiters in code:** `$` is a dollar sign, while `$$` is used by some renderers to delimit display math.",
+        "refusal": null,
+        "reasoning": "**Creating scenarios with math formatting**\n\nI need to create a response similar to the examples while focusing on edge cases. It seems like I should reproduce the supplied formatted scenarios, ensuring prices are escaped and that I retain the dollar signs in LaTeX to avoid adding unnecessary complexity. I guess I could provide five scenarios with the same improved quadratic equation where \\( a \\neq 0 \\). This means I should write the code in a consistent manner while ensuring math formatting is correct.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Creating scenarios with math formatting**\n\nI need to create a response similar to the examples while focusing on edge cases. It seems like I should reproduce the supplied formatted scenarios, ensuring prices are escaped and that I retain the dollar signs in LaTeX to avoid adding unnecessary complexity. I guess I could provide five scenarios with the same improved quadratic equation where \\( a \\neq 0 \\). This means I should write the code in a consistent manner while ensuring math formatting is correct.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8OHFzOjCIdyygGlhvN84JaWIJanAPdAzRrP07FQquQW23c7kq-5MJdxs_Y6sug48Cj1mWhSqa50G7MKdcokBj8UYmIDVbNdZDlJSUPjwhWKhSpsHYCPCt2_tnC6cqneu5BZFJvjdS2x6a-Fx3zOufWI4GauOUeeOrv6ghM-irveZUYLbHEw4yiXtYAQ1wZO2jLoKUAqdoJilzlJ5zJSN2YxTnKYKyX8iXwKdjz32MHo_g3rOSY-g0iDjPqRIdPf96SjAPKt3ZKojBaSsv8t-sTwGHa8p1Vlg9yE-tFqLFQU1Zev38AnP-2slxcsaKB2DnN-GCJxPhecz7QAOO2x_pqCaJADl1V4G7G4Jo2eSleCo5N74-R8c4ja1MAnYqLumEIxXYcneuI_dWqntUwWuHcmYG1UoeIGpQqyzbg8GA2T_16TLz0KxA-YKdINPZ8va6rTY49HiOeZv6C2admzTwS_bBSO1MRMT25rpvVgArXJLWsOCqBE8UEpQQG9dFy38PulBlo-5ABrcqGHiC0N3SWnSOxS-CNlJfkuFMjoMh6Qi6Yavr_RrLAjf8AwvQnl2i-LE9FCQqL4eW896W_HDvK08yoPN_A5e9pHxQzgXkzIcpWcLs1-ErLqV3kO32hx_4-imJiB-nTAbvgh6ShTaleX9uzeVbhH49AaJB1c8bqcyC0v-em39LZIeFmp7pZLrE-idnRMVnBKmKCqHaoeWTHqm7ky23bSel_eI4UdjTMwcXdH96hQK_dJsjoruJLZ3KCni1TxSfjzpANl0wKSsFb-XB6793s5mah6ejs4NETNFzQ3MG0rY2JHppNEmsyR6uLiO4-zs_OIgHfRNezXKIalohnLi3aAaCe-5PtVvy8fGJ-nra3LUQ3qXCiEJFxH5oDQZazZP1cC8ulM_8i8WQpPV86x8aPX29mm_vJS1acLLhZpEJHsEIYYyVe4wi6xFqWtJzRNT27YPD-RsCMW-SZTmVHa58S4NHDuisxdIdXA537H2iHX0sumawLIboKk_ALhP9tsp5QXLZDHpnnIejDypCRCWmo5qKRJlJFFu31KiXgzk5s0NCY42ymJKgXkjYqskM0LkrcKEL1MUupHtfqR9zCpIJDfxsZUteQC3Zv1DFmOiwY957BJ7KIEUZFfDBkxUVTRBvUE-uciWtVGXprMPznWwyqr8jv8eMPw_Heg02LpSCbY1LWR5Xo9VI-3_ZjJBx_m1ufe0Ui4Vv1CYJT1YQZBdkkdI6XMW3xCvCt_MsmUsIiIw81HD2RrvuSQo2xGd93GyWVj82dWKfNIhqQQwbrfp-co72YpsXSeRm-IVhSs98dcZEJuHiT2fcJXpbo8WfMYlzQECq-7kPlsoRmw_8oydp39Azl88_kSShl_6xw3TXKTCifw21BRih1MVZp1fiKLEm1oQAVVYnEjfTG0pvCz7tOHib9eblYGehq68bdeL19Sil0rLHihHbXrPs8Wg181AFKCO8gZCtE3B6sGtsxNaOxQsuSbnZKKUx--8VDBNgjVCj_lwjqXD2nXLfwW86VyNVwkxCgCHYlP3NHT_ZDn27fzuwdS_eatI7M9ETvQD3opouKN82kwg3h3wDMykPVcdWBRXeV38n5pCcCbJ1Jwlp4SEOyuwQWK0jV3xmi5HOofBBdFBjyLTveFivBgz2MJ4e3d8sloDybcW9kTj-OqNBR6zYl5NoMeUVEm8MnR6XqL73Q3_vOcLMe8aPT_gmXX_BaUY8HTR0zwZtFf5B5hFqrAvTZuqoDmhK9oy0j17m9CjxV81CYHxhOHEBkxe_CCV6WTGXfjBbwSZD1psRdwFfTpHPnxwcVn6ev-0a85qesbio9sDcYu7hUbrtRqWq4cRxtPKuFmfBL0lWh_Q42Xs6jK_pomQYM-TQTEjsrNF3Tcwz314fFZynrbvWZ3711mWXALq52agm0eV-I0GmHu7H8ydmBN8x713PUF37I4L8n-5yT-ZoG9i8ycjk46MROt6BuS5zhuCmAYjxpbvxhcII_CMB1BrV2HY2BEPUg_mfMsDEtTf5F8KM5PbDQ7pQhU2CFP-5_W226VEXKVgca5OzSs1QdREwpC3Tmfyxec7MGekW1sEdrOV6LFWBhL-NoHhwoJ9Hr1cKkLsZzcmBGKns3lm2JBzBA0emCfeZw-2rDIn5AwayzFSljBmBdtzCyRaRJ7cWCdtzHv4tlQ_EzB0L2qW9W7Nx9t-baFm00Vzg6WG5cUWL6oP1mNOnLIT-obmr_uu2azJ7Zva-e_fl9lerlEbyFuU1dg11KODBi-xkx_KhZ_XwTUAlRbX8tQlWqmf2WAAViU9m9GB846uO-sdgY5lvE_CZTcONYRQa3gTXwVhIlLiGcDmmeGZBh5HXrH3B92-5wOuTVdei1K_ejKgsVk1myw39RCXLyjDQaToT9z8g4BjgHLz5NpN77kaUfcW-YV_-HXajfJP-ebk226T3lSTPxMLa_efUG0ph6heKMFgehHL4PG5-AA-tscO.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LWFzdHJhLTIwMjYwOTAzfG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_0e194b2cd9470693016af0e1c19f6487d1830b78c34ba83f44",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 902,
+    "total_tokens": 1330,
+    "cost": 0.04938,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.04938,
+      "upstream_inference_prompt_cost": 0.00428,
+      "upstream_inference_completions_cost": 0.0451
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 52,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

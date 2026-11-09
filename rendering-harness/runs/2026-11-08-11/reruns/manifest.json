@@ -1,0 +1,80 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.35,
+  "maxTokens": "per-pair plan",
+  "temperature": "omitted, unchanged",
+  "attemptedCalls": 2,
+  "knownActualCost": 0.02212727,
+  "unknownCostCalls": 1,
+  "calls": [
+    {
+      "modelId": "tencent/hy4-preview",
+      "promptName": "01-math-basics",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-11/replies/tencent_hy4-preview_01-math-basics.json",
+      "originalFinishReason": "length",
+      "requestOutputLimit": 32768,
+      "requestOutputLimitField": "max_tokens",
+      "promptSha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+      "reserveUsd": 0.10328538500000001,
+      "startedAt": "2026-11-08T19:39:00.066Z",
+      "actualCost": 0.02212727,
+      "finishedAt": "2026-11-08T19:40:44.994Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 268,
+        "completion_tokens": 8758,
+        "total_tokens": 9026,
+        "cost": 0.02212727,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02212727,
+          "upstream_inference_prompt_cost": 0.000223512,
+          "upstream_inference_completions_cost": 0.021903758
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 8494,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "tencent/hy4-preview",
+      "promptName": "06-edge-cases-boundaries",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-11/replies/tencent_hy4-preview_06-edge-cases-boundaries.json",
+      "originalFinishReason": "length",
+      "requestOutputLimit": 32768,
+      "requestOutputLimitField": "max_tokens",
+      "promptSha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51",
+      "reserveUsd": 0.10354184000000001,
+      "startedAt": "2026-11-08T19:40:44.995Z",
+      "actualCost": null,
+      "error": "The operation was aborted due to timeout",
+      "finishedAt": "2026-11-08T19:43:45.003Z"
+    }
+  ],
+  "coverage": "Not assessed; collection only",
+  "batchReserve": 0.34679997500000004,
+  "reservePolicy": "Per-pair32768Tencent/16384GLM;max catalog/timeoverride/same-modelobserved rates;UTF8bytes+32;25%margin;.35guard",
+  "status": "stopped",
+  "stopReason": "Request failed, no retries: The operation was aborted due to timeout",
+  "finishedAt": "2026-11-08T19:43:45.004Z",
+  "files": {
+    "replies": [
+      "replies/tencent_hy4-preview_01-math-basics.json"
+    ],
+    "raw": [
+      "raw/tencent_hy4-preview_01-math-basics.json"
+    ]
+  }
+}

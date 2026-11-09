@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794170255-Qsisum7zgsCbwkUiVP9W",
+  "object": "chat.completion",
+  "created": 1794170255,
+  "model": "openai/gpt-5.6-sol",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Delimiter Variants\n\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n\n- First item\n- The equation is:\n\n  $$\\int_0^1 x\\,dx = \\frac{1}{2}$$\n\n  And it evaluates to 0.5.\n- Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "**Generating response tests**\n\nI need to respond to the user's request for generating response testing variants and edge cases. It’s important to ensure I preserve delimiters and structure properly. I should be cautious about rendering correct outputs, especially with potential currency symbols like the dollar sign to avoid ambiguity. I'll create a test suite that follows exact delimiter variants, maintaining indentation and separation in markdown format. Let’s be sure to include the necessary elements while crafting this response!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Generating response tests**\n\nI need to respond to the user's request for generating response testing variants and edge cases. It’s important to ensure I preserve delimiters and structure properly. I should be cautious about rendering correct outputs, especially with potential currency symbols like the dollar sign to avoid ambiguity. I'll create a test suite that follows exact delimiter variants, maintaining indentation and separation in markdown format. Let’s be sure to include the necessary elements while crafting this response!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8N2Vi5oPWIYYxZ-uyABGKFLzo7lPzff4-SlGwWXJwJLZ_d8tMtaDiOF8BMtbWPVIVsuidAUk24OZMF5pXXMutIVbt7o7n7kqjVhykfQ2nhfAOVasz4wC10MQGglJPIa_xhe8094x7Ko3StCuKtT6fhfJ1hq8SIuagtqwtM4VnIRLcdttZot766poou2W6ApcTLzreeggt7AvwhfaojkX-PN3T3IPq-r0ynYMoEePk06bmrfpt2gWVMZR-93EwMfyq77q7f6QKOl6BCHlrQk_jpaZTQVMzLBoDN8RqjvAMIymA1PHn7PL1WbRHzHGOQ8ZeDdU9tdXqKtDwXg83UDX-SSAagnA9TdAqjK2Zm6ica6pFobq5rBGRR0PpYjs-ytLokQWoqNaEs9d_nVqR_Nm_b8WumXtzmzrJZ2MyYX_DWkR4L0ObWJJy5yjfcvy2itkVNSkRvOQp6kvabv_HYzqCSD2Vo7GIKvId6-CqzRPzdfKP1sFdnawW9wOB2vmLjgZAvyOqeR2Vm0sB7bpiM1mbZzizCELqzN74CdLYRW8NvcdP9jDXLDPxpN_6K8ljEbtIG7-WlJqybZyPi3CVBZfiKwFBtt38NxeE17lW9Duvvf5e1APOvqvFGNcBOw4DhfemOSW9v9dO43aaHbv2k08woEB6ceIZ9eMuddx_cQck7LHNxxPUwbsB3ie0Gbk7SgiB9kXXrJTVEoOUSHl2BZcdZDCfdYZVx_afyGrk3qNmY8NHbBwW0GOCnfpJrxKCBXBk5tXhvG68_E1a6sj9C-j-lTEgEIjWlXpI0UkUj0kQMutEnuIwd-Z8fqIKE7KuQkVuokonCv_eGWUKYgbFFB91cz9jl6WW9Z8Ad4sS9BPsZ8JkpKm8qI3fbekTPqFNgSQeM9nI2E2Hdb7Dhm1xu8y0gLZPzIwyR6rJY60MjPZGzsHwjeMCPTzR1OvTSzQ3M2Ps4AMCWZ4LZ5NdVUTYNer-HUCgP6Db_vZsDE6fvlBbnQfemeJcxqMumXQCL9RPzQH58hrCFxQ0P9jZJslqLN7Xuls8GW4CFuLdjgM8eo0985A3yy0JX3gZJZ6BByyp1g3u0V0ds6gwB9SQHhoPhuC2VevCXOQda51jn-R32YJWAk2kyb-CYCLSsxAtiua9PrqVN_v-x6nmpGlyxQwZlIyCMy09ENQ3ul7dJEPaLv-xKSWbo4yEZHoi2wrZ3l31PLgAfiJ_NOygk8ca-BOrOgw_sG9xaTw-Prh5866q6ola2TTiRgGlX_bfxI1EqDM1DTuu0n5vbe-onOLX91GwhIQpDXhPaGW6H4EI8O_zfDd7HVvGE_kNPODzbIaKQPC5hrtAO0qAylhJmFHFATe7F93jls-8JuOUxKonvq3J6cgWMCLaIIzjarCs48FTTXvJYZfxSzYN-ZlZPu7Pobnlqx9TJsfHFCxg6_39goXdd2r34Ib2VVzw9Kqbu9pSP03t5yTeVTVFAfmt3VROCBcs7BQThbeEyyFFWGOVEi_tsGDJ4wzj_JF16Z3cHEXe4OK8Iy5Ze4dZBJdlzk3vgZ7UDGYQsaQRaAg1pz1eNDKJ-Dw3KBTl0Ecp5sE-b9xSAhyw_tuZkUJRUp8zSosreNWWKDwhbCDZc5MTnAzkhJuJEqVcJD4Kptv1HsFPnCZsSbdJDiTXKlImE5naKByMutVg18CMo-BmOglFqHhyNomb5jqhX_jIk_890-YQWIEnzc4o4FVcKh3WXF-sPhNnISN8En47153nUnSnNSTzXrCNyzPM_jzkww01sj-V-ZfmStJOE1LBqotj_wUYB8GlF67VtxcdMIaGc6h3_K0l2skOQ04Iq4wYF6ooJGon9U0wielBb1fWZIkDDsM4GsagrYrmgXBTqiIuEc87Ek35oyQGsyzgmODGuo6SNGNRiAs0iEFLrhwu1T-wH118SC5jG_nontv3j9rLm_H3T9slhjfDQwBeSgwFIa-CE0SrZD8bztCTs9hJ6X9xznOcoPAp4AolHYvMsSXa6vfm7s67IcjvUch4OrCEMLLif_FSCMBYboypQRflsAcBEZfMd5aJ5jDpPv2YNJxNJ-pAy3ssfXNuX7VOYw_GR6h-DyJ2vGdL_yC9lLp1NIBuRJFACVoapQkjMUmwHT-EaIFsUh5f009XTFlF8vCGBHi-gfXEyD8fDXlGx6jq5W8kZOq0eQjgAnlpsJ2z6S5FOnq8wkVqKqgewVvk-VZfhjl9SEuX_rdeZ0GvQ3ZIyoFWPamotVfnw3hC-F36TfpsI3bV8lxYRImENgfHTn9qDUiO1LgCtqFM5vB2HZ08Zz8aBmWK_k8Xn0TnXNLQ6OYPTm0R6GI1WXSkUHwFdVQDDJkD7HXJWt-AGrzdGZDzsIm4jb31BA59PsOtrxo2nL6QxRDbb1F-NsSyrR45wbbfssbSl8qvZNx3mNShg6dn4ZVkwCeD7LRM-2lCmIfU8x1vUEwpzokg_jntYgkt7fgsXiTJ9GJ3W6cmzNIxKgoi_vne0FYG9A3WqpFZbKE2SNJXYDfpWsTIULMF8escZGB0x7jkiYs5bm6VaWco9-Nxpuc9_IxCrTYGpn30O6GW2SNEr_y7q6JhyDLLYFkFwR3-jC7zEHcWMoz2fQuP8zepdtM1JMkwV630aEgP-0FLsSH4jOj3kLG6MfbztX8PkyvlydXVYdZNxHKVf1WCVB_XLj7tPcmSmGeHEFq3Jq6s5bQsmIriq0Yx7wI93NyMeMHyj-w4knMRtg5zM_efK3aH-eXdNCaECj9PA8nsyiMRj2dhgmSfvOUsusP-0ZD6XBHFmVUpyDwsRuvifFY86UP2NYU6dhAqMNkAg9_5xCTfsyGogEPZievKEL7NrnBOVFuaoVpcZuILqCrVJ1TZaQO3AJ9TOyAr_JSiXnUBLeojgMQmm3JMCRux7maddZhnM_FUUl4H_ToDmtwDCa_i9g7d7-CH1OULJUyl0RWh-w4o_3QLadgqfsK7P_Gl3F6x4Gb5MigZJ9MawN47avs--NSZcC0DP85TG8ES2KMnONuEPYrI2AOIlWLkfWiQB-8EPVJSCdBJjbzRiBiFN9Zq4oqr6SzKlM5plaVae6kOo_aWrAdypdD48EU2otr_rzNS0E6eAqgDKWRY0zaWlJqVm-ZNgacej4WoaczUTCEtXijd950MZAw0sEEym1BrU_TVitsU98WNftT45kNJZu0uGGq-l43TjZKjkrCQjyIIKha7y-TSe7KVmq-nYtw3NfIgcgS64ON3Wg6jd8yzXJk0I8oNLGsWni3jlnIKv5Sti4JbQ3dVBixfuL-JfpG1Sfv07R1HZ3HlhSpU2hmNtTEECM_fquOsMUjb0wkQ-GMAmPFpkKYZvAXoCkHLan9wJkoQvjeseQFvOoOlLfseWg1XufFW8oZhG5vbcIRJRC1ih3bHMXU2PMmWcEje3pNzGpTnxsQxDqsEIGTrZmEdzBfDd4SMOvVGfP58LlDpPe79rUOrOGZhxI0U-la7souQ34nHJQulmuk--6PWNiExk2dKbRIhQqJUi88ZgG4A93-uQ8KBRUHNeMxdxl8D14aq16asTef_7VuY-yW9btb4SN5fwU2bP33Bl3WoAWMN1VSR-31gKGpUGgmzzjRH-168mPOSKnG7qAZOMsVEsQhf0zp4M7Fbe-QCpIGRHZ0qb0tKXNqTGEZreXvIctbgSGAmZxtaaleMCXfJoett17XnYy0DjhgnxuY6O1CfTrGK_xiLmrMFAz7l7afvbooVbX9hKmsR2d-zYNsPLBbaVudI8BRAycKDH8PoWBI58wwz9nCchyjZ8JEuAOfvsvzVF8sS7Q-_LiZQBmannpAvbBARtspdGb26MdiAWoX332jER0S8P1S7qxQwmuYVvSi9ZU6JTb33_foeU_enp-IExnLByDp5NzPNNxuiCw8hhLctidC7yvj-QMZzGgQEM1-BBQUMTnoTABrPL_TBhQPqUlPPKIxVR5SObtTlaRbf6D-QMqmAHsEdUm5Mn9Dt3WVD9uHUOvHA8L9yimODYcqqIrmiWyei0UYKcVzHpmdHfZoPZ1WCG8eChD3ALL77gJ0YJeWMIWxKznQr4sf2VqGk9i-wz9D7YIeqlLB8zCbtga4ZdrQA5OCGwGHKAAZ42bJpErjbycxSY4baTiEQJPuKPL1QfrdGsFxbB8RUHxA7ALBdCryaTFdF-ubtkXERKL5-lKF1XHEYLN92d-pOrxC090SjFA92TcnFXzIK9uOK_8234EVZr8xSzEvhpHm25_vd5Zgr0D7oxIH7klvcDDYWPcHxzow1pW59XBnGfPgsPkiIoEwgM5vG6TQkfXJm4Q7XuJcDEwhyiPjAWo6BDdbfvo-Qep4yG4jmbcmM9lSLU3t_3lmROhzgI_AOFYQ8JTVHdthoyDH-bK7tF570a6dw866YBs1UYeNE8fPi8UnKMlWKgCeAiki33SLuhIsyCfTPdAputSuTWyEZdDR21qLiw8h1ypaFi95XAu3S6rSRuCzIemsnsQJCa0N6aBreSKBgGdEQ3KINAShzt0=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtc29sLTIwMjYwNzA5fG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_0a8f31f3678ce820016af0dd90457887d1832e8e866c1b6bea",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 342,
+    "completion_tokens": 509,
+    "total_tokens": 851,
+    "cost": 0.011548,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.011548,
+      "upstream_inference_prompt_cost": 0.001368,
+      "upstream_inference_completions_cost": 0.01018
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 199,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

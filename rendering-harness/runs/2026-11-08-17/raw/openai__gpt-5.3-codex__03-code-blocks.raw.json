@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794169983-dKDTK4K5JT0HzV8OkTFb",
+  "object": "chat.completion",
+  "created": 1794169983,
+  "model": "openai/gpt-5.3-codex",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "Sure—here’s a response using fenced code blocks and inline code exactly as requested.\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": null,
+        "reasoning_details": [
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NyA_mhgz9gUfDGBXzWu-AmN8Sn3EaPjCinvoCWTzDOkgFt6kc_JEdJ0vWWHWv-YCdKodBnociIKQCmKiX2JnCDtdet_mcYjGef5af9-rqLHL_L7NZzaOH0EijFIaZ_sufWeywQvgqiyAxfN6II5df_IMh5bnCWTGiCGbeW3ZyZDVvA5JBw2g9LFLz45-Vr3Ve_WagveJcEaD0ZdwArA84-dYcQzeT5ix4Xq3Vw5_wO8oX7VhNSA2jAu5r2pCX5eN-I39VoLKJhKX-SI5AdhJoRDrET_VMZOVs1V0nveivqthbR7aO_d7ca-JResQZL1BSmHnm3A0Q9AjTZMsvN8egPm-2N81vDienWWOBxldcEdMRY5iy8FVOkuUxR8Q47c0xlKUGIAY_1625Un7bhFDE8Aufd0di0Gs-zFymDjiaHk1F2n1lwdVFdyJhNroC83j7maE8x4uSDXGqtnsq9kOBQW34_IeW0E7mCjIAb9-s7anGhg2gMe2dlNOEkdRzk5Lnpcji6413d76mmlF6Phd0-sc1xYhaBgoegY-uNI9K6SMh3pIXaRb0kynO_kNFb_WsJ3KdxYe4NMZTdlShoNqF2WqHZ0G5YyIe56qhTj8BkxdqoOZBkhEA_QkrVKH_TzKENYPXAojI3lW8ivMx4BM2Jz3N0PJ-ZzMEOlaX7G4-EJyuL1U3NQdjlGVIfl3usvbGYr6OOZVWDFQoK2BfqSFdJJLJ0AV85IH1O-YL55D_JwtNWLPR1xC5Fx4hO9rUa0p3_iiHbH_YC5sQn53XLEhQ3budJbASdcMyzySZxnC4gOvgWNBgw2E2IZ7WMKoJRLI3FwWX2d_6JOMbhpxo9MSStE0GQKeviKUNagf4DXq7kYIeAJUzYs9FO-tCM2kZeRcn6UelsD-5kdtbDzpb6EnyoLO3LpoTu7Djf-AE4dXa2CpVNuycKd2ahOcKcIaW30_nOAVm1Mfw15Ns6B_Mdn2LSg9--pSzkqgfk8ySgVhlOOMtSqJyYYamTZrL4c06p1xUupu44IIpHZwjhJOAfEzNxNph5VHMTDNdggbGgrhUTuNM3YMSqN--VGnRiHz58R9wq6dzSjIFIPrbeN7wszJ7O_wVuz0-qiJ-hVwUDZHXUU7d6RpvcrNbs6SjcDQpA0DDN6jXgIXrb8clSb0to0sPLU4EIrYsQnHtCAXX_NGx6Z3grT36USBVxECzn-hX3BJtI_mw30FUBpqi5BmR_ebffOMu57CPWug2GTFL2X5k89ninjJ_aBT_oexBdqfyV4wDHg-sMz-byXY83JIq8TxihaFTDBmx1YPz7pd9rAibKlPdPCtJPMSkmTxQ5usSrGrPoiRzcsGt9HjbT5qzBxKs7BloVTaUPmoaeR2M-hA0u146ASsQjcCQf5-KSu5rKM0r5q72GgotidLmHrUW9DFBTJKPZ8fQ042UPEckyn8Zc2QsdkqrNLHaWl20XVcc-ychz19b8eQ9L8ExN_4DYhrCzsKT0Zljt4k0v-9JcAxOuw4wQYmwtx2T0LNhKpFsMbfBBb4BWBMZq6WZDHYM-7icfe_Qx4SJSA7Cn8NpJhdsdzo0f80bPbTAdpDgOk8j2VnDuKPRzHRDFmqwnzqwXHRdMMBQbW-ucqfmFo2KeiGOs2GBI5ICxv2eqzLeKynmOEphamxlZS8mMw6GR68aMi7aDvlmB1ioOGmkqeJ9nT8A9FQgr0GaxPKxw5wtqR-nUnBN9P01d-krDdZ_LKpTLa8VXfv4HWriHy5MlShNtu03HV43VLbnRlrdfn5Sq-q57C9RV25GL55H-16_Cw-z8Y63mxeG4130NczsogsqgBrkpObw3rBjONFsBsx5SESPXAQ2OCjO7a0Sy8JHI6XmUwbMAN4hM63hgyozig0BvcMGaKQVmp-I6YMupqFMkS7l2uM2gRiZ5omraTC-M-DPcGOww_kfLvTTW6N_geNBRebLmsix4=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjMtY29kZXgtMjAyNjAyMjR8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_08e5fa6d59119bf4016af0dc8095ac87d1b9413ba1a8ba9448",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 241,
+    "completion_tokens": 257,
+    "total_tokens": 498,
+    "cost": 0.00401975,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00401975,
+      "upstream_inference_prompt_cost": 0.00042175,
+      "upstream_inference_completions_cost": 0.003598
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 14,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

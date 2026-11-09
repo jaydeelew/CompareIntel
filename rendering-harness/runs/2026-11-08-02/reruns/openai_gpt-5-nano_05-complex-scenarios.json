@@ -1,0 +1,45 @@
+{
+  "modelId": "openai/gpt-5-nano",
+  "modelName": "OpenAI: GPT-5 Nano",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = \u03c0r\u00b2\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here are concise results for each scenario, plus a note on potential edge cases and formatting considerations.\n\nScenario 1: Math in Lists with Formatting\n- Given a right triangle with a = 3 and b = 4:\n  - c = sqrt(3^2 + 4^2) = sqrt(9 + 16) = sqrt(25) = 5\n  - Therefore, c = 5 units\n- Edge notes:\n  - This is the classic 3-4-5 triangle; no ambiguity in the calculation.\n  - If formatting is parsed, ensure the superscripts and square root are properly rendered.\n\nScenario 2: Tables with Math\n- Quadratic: x = (-b \u00b1 sqrt(b^2 - 4ac)) / (2a)\n  - Conditions: a \u2260 0; discriminant \u0394 = b^2 - 4ac\n  - Real roots when \u0394 \u2265 0; two real roots if \u0394 > 0; one real root if \u0394 = 0; complex roots if \u0394 < 0\n- Sum: \u2211_{i=1}^n i = n(n+1)/2\n  - Valid for positive integers n; for other n, the interpretation may differ (e.g., empty sum, negative n, etc.)\n- Product: \u220f_{i=1}^n i = n!\n  - Valid for nonnegative integers n; note n = 0 gives 0! = 1\n- Edge notes:\n  - In a rendered table, ensure proper alignment and that inline math stays readable across platforms.\n\nScenario 3: Code and Math Mixed\n- Python snippet computes area of a circle with radius r:\n  - A = \u03c0 r^2\n  - For r = 5: A = \u03c0 * 25 \u2248 78.53981633974483\n- Output example: Area: 78.53981633974483\n- Edge notes:\n  - If you display with fewer decimals, common choices are 2 decimals: 78.54\n  - There\u2019s no issue with the formula itself; just beware of printing precision.\n\nScenario 4: Horizontal Rules\n- Text structure:\n  - First section\n  - ---\n  - Second section with math: \u222b0^1 x dx = 1/2\n  - ---\n  - Third section\n- Result for the math: \u222b0^1 x dx = 1/2\n- Edge notes:\n  - Horizontal rules (---) are formatting markers in Markdown. Some renderers require specific spacing or line breaks. In plain text, they may appear as a separator line; in others, they may be interpreted as a horizontal rule.\n  - If you\u2019re programmatically parsing sections, you may want to treat lines consisting of three or more hyphens as separators.\n\nScenario 5: Multiple Dollar Signs\n- Prices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n- Math: f(x) = x^2 evaluates to f(5) = 25.\n- Edges and formatting concerns:\n  - Currency vs. math: The $ symbol is used both for currency and, in some Markdown contexts, as a delimiter for LaTeX math (inline math). If you\u2019re rendering, escaping or choosing a math-friendly delimiter helps (e.g., \\$ for literal dollars or using code blocks: `Prices: $1,200` or Prices: $1,200).\n  - Thousand separators: In some locales, 1,200 might be written as 1.200; ensure consistent interpretation in code or UX.\n  - The total given matches the sum 1200 + 300 + 50 + 25 = 1575, i.e., $1,575.\n\nIf you want, I can reformat these scenarios into a single clean example set (plain text, or Markdown with safe math escaping) or provide alternate representations (e.g., all results with 2 decimal places, or with explicit units).",
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 2912,
+    "total_tokens": 3340,
+    "cost": 0.0011862,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0011862,
+      "upstream_inference_prompt_cost": 2.14e-05,
+      "upstream_inference_completions_cost": 0.0011648
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2048,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0011862,
+  "actualCost": 0.0011862,
+  "timestamp": "2026-11-08T18:01:09.227Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null,
+  "provenance": {
+    "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/openai_gpt-5-nano_05-complex-scenarios.json",
+    "promptSha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+    "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd"
+  },
+  "attempt": "rerun-8192",
+  "maxTokens": 8192,
+  "replacesCoverageFor": "openai_gpt-5-nano_05-complex-scenarios.json",
+  "truncated": false
+}

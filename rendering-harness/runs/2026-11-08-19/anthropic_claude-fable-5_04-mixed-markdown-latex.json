@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-fable-5",
+  "modelName": "Anthropic: Claude Fable 5",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "# Calculus and Applications: Mixed Format Examples\n\n## Problem Statement\n**Exercise 2**: Given the function $g(x) = e^x \\sin(x)$, find:\n\n1. The *first derivative* $g'(x)$\n2. The **second derivative** $g''(x)$\n3. The critical points on $[0, 2\\pi]$\n\n### Solution\n\nUsing the *product rule*, the first derivative is:\n$$g'(x) = e^x \\sin(x) + e^x \\cos(x) = e^x(\\sin x + \\cos x)$$\n\nDifferentiating again:\n$$g''(x) = e^x(\\sin x + \\cos x) + e^x(\\cos x - \\sin x) = 2e^x \\cos(x)$$\n\nCritical points occur where $g'(x) = 0$, i.e., where $\\tan(x) = -1$:\n- $x = \\frac{3\\pi}{4}$ (local **maximum**)\n- $x = \\frac{7\\pi}{4}$ (local **minimum**)\n\n## Probability with Tables\n\nFor a random variable $X \\sim N(\\mu, \\sigma^2)$, key properties:\n\n| Property | Formula | Value for $N(0,1)$ |\n|----------|---------|--------------------|\n| Mean | $E[X] = \\mu$ | $0$ |\n| Variance | $\\text{Var}(X) = \\sigma^2$ | $1$ |\n| PDF | $f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}$ | $\\frac{1}{\\sqrt{2\\pi}} e^{-x^2/2}$ |\n\n## Series with Numbered Steps\n\nTo evaluate $\\sum_{n=1}^{\\infty} \\frac{1}{n^2}$:\n\n1. Recognize this as the **Basel problem**\n2. Apply Euler's famous result:\n   $$\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6} \\approx 1.6449$$\n3. Verify convergence via the *p-series test* with $p = 2 > 1$ ✓\n\n## Vectors and Inline Math\n\nGiven vectors $\\vec{u} = \\langle 1, 2, 3 \\rangle$ and $\\vec{v} = \\langle 4, 5, 6 \\rangle$:\n\n- **Dot product**: $\\vec{u} \\cdot \\vec{v} = 4 + 10 + 18 = 32$\n- **Magnitudes**: $|\\vec{u}| = \\sqrt{14}$, $|\\vec{v}| = \\sqrt{77}$\n- **Angle between them**:\n  $$\\cos\\theta = \\frac{\\vec{u} \\cdot \\vec{v}}{|\\vec{u}||\\vec{v}|} = \\frac{32}{\\sqrt{14 \\cdot 77}} \\approx 0.9746$$\n\n## Real World Context\n\n> **Note**: In finance, compound interest follows $A = P\\left(1 + \\frac{r}{n}\\right)^{nt}$, where $P$ is the principal, $r$ is the annual rate, and $n$ is the compounding frequency.\n\nMoney context: Investing $1,000 at a 5% annual rate compounded monthly for 10 years yields:\n$$A = 1000\\left(1 + \\frac{0.05}{12}\\right)^{120} \\approx \\$1{,}647.01$$\n\nThat's $1,000 principal plus roughly $647 in interest — a **64.7% total return**.\n\n---\n\n*Key takeaway*: Inline math like $e^{i\\pi} + 1 = 0$ flows naturally within text, while display math stands alone for emphasis:\n$$\\boxed{e^{i\\pi} + 1 = 0}$$",
+  "usage": {
+    "prompt_tokens": 457,
+    "completion_tokens": 1332,
+    "total_tokens": 1789,
+    "cost": 0.07117,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.07117,
+      "upstream_inference_prompt_cost": 0.00457,
+      "upstream_inference_completions_cost": 0.0666
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 69,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.07117,
+  "actualCost": 0.07117,
+  "timestamp": "2026-11-08T20:44:22.282Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

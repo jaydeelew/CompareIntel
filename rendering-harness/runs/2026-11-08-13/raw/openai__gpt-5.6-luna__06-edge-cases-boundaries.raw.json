@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794167871-DJewT6Xe0lJhRvjF9JPc",
+  "object": "chat.completion",
+  "created": 1794167871,
+  "model": "openai/gpt-5.6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Delimiter Variants\n\n1. Double dollar display:\n\n$$x^2 + y^2 = r^2$$\n\n2. Bracket display:\n\n\\[E = mc^2\\]\n\n3. Single dollar inline: $a + b = c$\n\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n\n     $$\\int_0^1 x\\,dx = \\frac{1}{2}$$\n\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "**Generating Response to User's Request**\n\nI need to create a response that tests various delimiters while carefully handling how dollar signs are interpreted in math. The user is asking, \"Generate a response testing...,\" so I should highlight all necessary aspects, including examples. It's tricky because single dollar signs might be parsed as math instead. I'll use headings and include code blocks for clarity, ensuring that I escape dollar literals to avoid confusion. Let’s get it right!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Generating Response to User's Request**\n\nI need to create a response that tests various delimiters while carefully handling how dollar signs are interpreted in math. The user is asking, \"Generate a response testing...,\" so I should highlight all necessary aspects, including examples. It's tricky because single dollar signs might be parsed as math instead. I'll use headings and include code blocks for clarity, ensuring that I escape dollar literals to avoid confusion. Let’s get it right!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NRE9Ns4Cm5jjNsvvAajcdzKL9wl4K7dMHkrDZCpW7PpouhZG1vbmkfPE_vAgd9zxBNCWNccE9jq6y0faEvccbIN4QDeUt009pI0AgSWZma4RnVZ2WMUUc2nLu4AT89vnDFGdV_tfBnibVBwLJ0NgBLdHkeVjF19bFdKB62SpssrBvDFbE98fx63EjbP2SxBe6rTRowqGgX1dkGybKGHWaB4d0n8pDjGoWPCcAFXQJcoR6hHAXXoFxXtXRZ5OM8jr6K7X_qQ5zTlRC_rLv_YL4FYCm9SsfmJI6ftc6uzH6kP9d4LW6m0YGb-E0DUbzekmEWd38JBDpqqyDtrMxKaFuwyetG5ZjTCCX7VTX4teA5GSy3SfAQiFDfJaZ9n55xd4LeD0LOqn2Jm4rNt32wlKrDWDUcf3U4melaboIC2M7g87AZ0UNj_ielX_HDOO93oD4Q9OFnTBIbLjEXqMBV2dt7nxELohhkD1zid1SM4EPfS8d8wLvghdPGXlpxaPQjYBgKQCr9jXk9khOSb8hDiJFvLRzk4PD4khmxLWsbfYnbf3bd7pKptW2wqllDapdgaJpqlKQ0m6tq6kB4EtC_W5f4aN767BOKXVI0vtjU4mwSIwzQ0Okqve7X4EYQhbqs1dhvIl36VhkLN_kknAPT0hjyexC2_VIHAH2eqALqAVtG1cDog-Y96SXUXEhUXus2khV31hk0qfa1bjCM19NMbgPS_ON-lA2SjWLrdW4S3YfIxI6Dk3pDKi0yEXNq9ddQ79q0MUmCjAvbvOgX9emMlo-6uS799e0QdANwAZCmAwSDxz5H85BjPTPA_-84canmcMD8CviaKL4_E3rTWj9SKXEJeC1lM2S5OCVo-WuPXAfCwotHw49z6Bi_eT9Fnr_xzF7w4Bfbh0SkjKGLQm1IhZRTYKYYWPc5lKo-zm53oNcYuBSS_8hGAUG62RHDa5bsHOfxh00R4UFRk7Dk9zuyiIHvL9VW1UoMX5RJs5fcCuADie3b8xjoiVF9G1CKsIMVFlUzcrRWeJJvxK1wnA-XMQlOd36qDl2_5hzr04Oi8jNz4jCiNSrQeOolnEKug5s9-RXcgpIksLiMmWt-aKsRZ6hWCadLn45MDNbhbnL4ZDkweZE9CyF-B2AFomMgLJmxTMcmKQLEuL7wCrlpodjds6Quc_1Td4RiXMrUuNL-J5jCC_t6jxaynSCQIkHgwG5HjGSXMZUp4HXCcoqC3eEMa5w6bNVrxInw4ehdgXN_lgmzuo7LNf1pJDfrI_mEeJCKeXAET4sFF3HQa6hl79tWcGYfKiq5kKZ0HLRm3qQxc1qET3iwievWsS4npPmPfJmGEbgHrXEfXoMge4cD4X9n_i6ryfB7cm0uvsEhV16J6FqENeJ704LbcNdEHKVPOoTsh33WfTQoamJC81Rudu7PUwtcsJidEmeC0K4PBkzEIWzpBfLj7rmEapKhzHuAn-lv0sfg1Wmx8_w3sEAObB7C8vTMamwjSJZHG1MV0NQCtZTpC-WVkEfKcseRffvlefpR3at2L_7Nk6WAJl-DiRE5sdGj6R0VdDQ0Pn0h7qqxjTOlnfwARIs4VzvHy_j0J9gWzr-xO81blF1nO5yvjKLs8BIKS9yy24Wc2LgY659SlZXBQEaBtQq22wzVM2x4vxM9z9TTlpYZwto8dYZ-l5348FFLSrfXkKT8Y6RMuAq6OlfN14Rju7HjLU9dLZ-zMCQclyPPYL1TzPhkJRXpIwPVQ1JrcpvA4O5HUjPl8AJqyTlOuEFaKR2R75zOh4eZUQI7-hbcVV4XuH-J6l0uIXy8EBjv6o01CtVc1dCijbSUomaZVrjzghK7_ZMUe48_Mlzb1jtIzsw3ov9A-z79d9eWDL509pUSdRJ3lWqwZ9gcRC_aFjyEiDL38sbSYqdo_M9fM4zM4ZIqsz4xsgCzvMom4Jw2Vv2VRd30Q2iYeZcH2OgTYTjqpr74Qj3J1J-xzomh01duU9AEHnWLoQjkDQdzRsqhumODkaea4wzfl3N0qKjpck8UgfFPuNn1H2v88Q5tgEbsNua652wdQoMMl5f0Wu0cK4_H35exgzOPBOkyqy2w072T4XLSCUHQ7AHYxZctilUtIBettpa-oD4fBtJkTWlS4GJ4wbuWcy-STtV6FI8H4qEZRbOcCT7kcqdqdDfPNupf9eQoPq6-Pz7HgadRdconLkDj4hYLqb4IplYS1XCjVQnS5kaTuYwt9aUEqAbN4rEUHFX0USNdo4JeuRTCuorcxaXu52baVS6YR3HSIJwrYVmKLLU4ZKkgi40xS0VKU7WVoByZpVOtis-vr9wG2uHcxasseZG6RZZil6VShGxyREKE_EbS4TahTXViqZcglAC0Gj9MJTo7Y7lAd9954ODrz9s3KSWIRQAlsGxk2l-YnJSu78N_LTQhj6AmXQKN-ppuccnDfnRpmuX4UlwEcuzrwM6R4CoRfvvj2nelRJyrwwcn839ErdcCp2BrR0yGkxvSmyUrVk68euIG4ndPTRzBroM55jDxLFCggIOhbaOepdsJtIuGHNfVexMHy7ilxifvodUpOonJf8fMbVizaO4Ames_InQ6GCkObu-HRtb9SmNZLrqT5YLDJAR4z6eW6ipit09u1yzFipz7_ixjtiRaAnhlJmYxn2zroewIY4HJqL_tP8RLIp8sSAgKncvDAQOC7TkQ0zeug-4mbKDcC_rAo_WZoM-7UFaZA-MJ7UcjCHgG9Xrcn4A4NNZRu8ZuN6P-OKDQ1XPoUmOfBzZFobXYsoeOAnpZxMhIKlz8nOR-uVQOnmnyO0nhboSFCNMBdO-sPQIqLoqhe-JKvmm3aFLaZ5ZFiCxPSaXqeYtAYu-CFwOvVUxHelJ1WZMPhRVgA6VfcEu576ySUBSkMDIrs6zTAy8IF3LlgE1iPvDn8owHMRDEGap30TeNKWxAAz1luv4ZmTld7TWKA_TGEbsY_2wi-NnY45PGEWnBHwLRpLoCeBTJkEUVpv3mrA_JlMu36MEVRIuH8bA9V2j5knjbQ37Dypvg9SlocPPrcQYOQsUCl2uSXfxjAVLmSM_w-Nn4ea_p4666hduzPII1ULzbgBBEWZIrwy_4DgtTWWh7ZPCHa2EjoGrAhJ8WoDX6GtXoiy64iDh6dzM3cQbVCQid91xOy9o6KFW6Stoww2Sg79GBpUzt_cLrz_Hme2Ioz5IgXfVsEQ7ABZ03PHPYS1f9N-RwFLv-m0SWuDo757vSUu3swDZs3jgTChHvq71lHTIuI2blykm-fyxwBLcuSNl9JpCBP_euBvHgKga-CALR0mO_zkum90DVDwNDtZhhv73SY5yPbfNQlylAMQoIMVeQG1suela2H_WUT7ItP9_UlUFGGk3Z2SrkW-7DRBUysHndhs_Gkdm0j3E-9qXkvfgHHNyTaqw==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
+            "format": "openai-responses-v1",
+            "id": "rs_0e9fa0518f289f54016af0d441145087d1aeddc8915e4f453f",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 342,
+    "completion_tokens": 440,
+    "total_tokens": 782,
+    "cost": 0.0005964,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0005964,
+      "upstream_inference_prompt_cost": 0.0000684,
+      "upstream_inference_completions_cost": 0.000528
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 118,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

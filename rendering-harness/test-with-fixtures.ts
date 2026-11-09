@@ -97,7 +97,7 @@ async function waitForServer(maxAttempts = 60): Promise<void> {
   console.log('Waiting for Vite server to be ready...');
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      const response = await fetch('http://localhost:5174/');
+      const response = await fetch('http://127.0.0.1:5174/');
       if (response.ok) {
         console.log('✓ Vite server is ready');
         return;
@@ -122,7 +122,7 @@ async function renderResponse(
   outputPath: string
 ): Promise<void> {
   const encodedContent = encodeURIComponent(response);
-  const url = `http://localhost:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
+  const url = `http://127.0.0.1:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
   
   await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
   

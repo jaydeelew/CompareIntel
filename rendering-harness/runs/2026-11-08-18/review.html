@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Model Rendering QA Review</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .summary {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .prompt-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .model-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafafa;
+    }
+    .model-card h4 {
+      margin-top: 0;
+    }
+    .screenshot {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .raw-response {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+    .feedback {
+      margin-top: 10px;
+    }
+    .feature-coverage {
+      font-size: 0.85em;
+      margin: 10px 0;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .feature-coverage .feature {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .feature-coverage .feature.yes {
+      background: #d4edda;
+      color: #155724;
+    }
+    .feature-coverage .feature.no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .feature-coverage .math-error {
+      color: #d32f2f;
+      font-weight: bold;
+      display: block;
+      margin-top: 4px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+    .export-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .export-btn:hover {
+      background: #0056b3;
+    }
+    .status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      text-transform: uppercase;
+    }
+    .status-pass { background: #d4edda; color: #155724; }
+    .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-source-issue { background: #ffe8cc; color: #9a3412; }
+    .status-truncated { background: #e7e3ff; color: #3d348b; }
+    .status-incomplete { background: #ede7f6; color: #4a148c; }
+    .status-fail { background: #f8d7da; color: #721c24; }
+    .error {
+      color: red;
+      background: #fee;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .meta {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Model Rendering QA Review</h1>
+  
+  <div class="summary">
+    <h2>Summary</h2>
+    <p><strong>Run Date:</strong> 2026-11-08-18</p>
+    <p><strong>Models Tested:</strong> 4</p>
+    <p><strong>Prompts:</strong> 6</p>
+    <p><strong>API history records:</strong> 24
+       &nbsp;<strong>Unique coverage cells:</strong> 24</p>
+    <p><strong>History:</strong>
+       Passed 24
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 0
+       / Failed 0</p>
+    <p><strong>Unique coverage:</strong>
+       Passed 24
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 0
+       / Failed 0
+       (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $0.404955</p>
+    <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
+  </div>
+  
+  
+    <div class="prompt-section">
+      <h2>01-math-basics</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.6<br>
+              Attempt: original · anthropic_claude-opus-4.6_01-math-basics.json<br>
+              Tokens: 1144 (319 in / 825 out)<br>
+              Cost: $0.022220<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:37:56 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.6_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula, https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:quadratic-functions-equations, https://mathworld.wolfram.com/QuadraticFormula.html</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Math Basics Demonstration
+
+## 1. Inline Math: The Quadratic Formula
+
+The quadratic formula is used to find the roots of any quadratic equation of the form $ax^2 + bx + c = 0$, where $a \neq 0$. The solution is given by $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$. Here, the term $b^2 - 4ac$ is called the **discriminant** — when it&#039;s positive, there are two distinct real roots; when it equals zero, there&#039;s exactly one real root; and when it&#039;s negative, the roots are complex. For example, if $a = 1$, $b = -3$, and $c = 2$, then $x = \frac{3 \pm \sqrt{9 - 8}}{2} = \frac{3 \pm 1}{2}$, giving us $x = 2$ or $x = 1$.
+
+## 2. Display Math with Aligned Equations
+
+We can solve a system of linear equations using elimination:
+
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+Adding both equations eliminates $y$:
+
+$$\begin{align}
+3x &amp;= 6 \\
+x &amp;= 2 \\
+y &amp;= 5 - x = 3
+\end{align}$$
+
+## 3. Matrices and Cases
+
+The $2 \times 2$ identity matrix and a piecewise function:
+
+$$I = \begin{pmatrix} 1 &amp; 0 \...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.6"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.7 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.7<br>
+              Attempt: original · anthropic_claude-opus-4.7_01-math-basics.json<br>
+              Tokens: 1058 (413 in / 645 out)<br>
+              Cost: $0.018190<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:38:36 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.7_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Math Basics Demonstration
+
+## 1. The Quadratic Formula
+
+The quadratic formula is used to solve equations of the form $ax^2 + bx + c = 0$, where $a \neq 0$. The solutions are given by $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$, which produces two roots based on the discriminant $b^2 - 4ac$. If the discriminant is positive, there are two real solutions; if zero, one real solution; if negative, two complex solutions.
+
+## 2. System of Linear Equations
+
+Consider the following system, which can be solved using substitution or elimination:
+
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+Adding the two equations gives $3x = 6$, so $x = 2$ and $y = 3$.
+
+## 3. Identity Matrix and Piecewise Function
+
+The $2 \times 2$ identity matrix and a common piecewise function are shown below:
+
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}$$
+
+## 4. Famous Equations in Physics and Mathematics
+
+Einstein&#039;s m...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.7"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.8 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.8<br>
+              Attempt: original · anthropic_claude-opus-4.8_01-math-basics.json<br>
+              Tokens: 964 (408 in / 556 out)<br>
+              Cost: $0.015940<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:39:34 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.8_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Math Basics
+
+## 1. The Quadratic Formula
+
+For any quadratic equation of the form $ax^2 + bx + c = 0$ (where $a \neq 0$), the solutions are given by the quadratic formula $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$. The expression under the radical, $b^2 - 4ac$, is called the **discriminant** and tells us how many real roots exist.
+
+## 2. Solving a System with Aligned Equations
+
+Consider the following system of linear equations:
+
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+Adding the two equations eliminates $y$, giving $3x = 6$, so $x = 2$ and $y = 3$.
+
+## 3. Matrices and Piecewise Functions
+
+The identity matrix and a piecewise function are shown below:
+
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}$$
+
+## 4. Famous Equations
+
+$$E = mc^2$$
+$$F = ma$$
+$$a^2 + b^2 = c^2$$
+
+## 5. Further Reading
+
+See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.8"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.6 Sol <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.6-sol<br>
+              Attempt: original · openai_gpt-5.6-sol_01-math-basics.json<br>
+              Tokens: 893 (274 in / 619 out)<br>
+              Cost: $0.013476<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 8:37:21 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.6-sol_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">### 1. Quadratic formula
+
+The quadratic formula \(x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}\) gives the solutions to \(ax^2 + bx + c = 0\), where \(a \ne 0\). The discriminant \(b^2 - 4ac\) determines the number and type of solutions.
+
+### 2. Aligned equations
+
+\[
+\begin{aligned}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{aligned}
+\]
+
+Solving the system gives \(x = 2\) and \(y = 3\).
+
+### 3. Matrices and cases
+
+\[
+I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}
+\]
+
+Here, \(I\) is the \(2 \times 2\) identity matrix, while \(f(x)\) is defined piecewise.
+
+### 4. Multiple equations
+
+\[
+E = mc^2
+\]
+
+\[
+F = ma
+\]
+
+\[
+a^2 + b^2 = c^2
+\]
+
+### 5. Link
+
+See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.
+
+### 6. Money context
+
+The item costs \$5 and the shipping is \$10, for a total of \$15. Budget: \$1000.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.6-sol"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>02-markdown-formatting</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.6<br>
+              Attempt: original · anthropic_claude-opus-4.6_02-markdown-formatting.json<br>
+              Tokens: 514 (222 in / 292 out)<br>
+              Cost: $0.008410<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:38:00 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.6_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://example.com/</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">
+
+# Test Response: Markdown Formatting
+
+## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines
+
+## Bonus Elements
+
+Here&#039;s a `code snippet` inline, and a fenced code block:
+
+```python
+def hello_world():
+    print(&quot;Hello, Markdown!&quot;)
+```
+
+And a horizontal rule:
+
+---
+
+A [hyperlink example](https://example.com) and a task list:
+
+- [x] Completed task
+- [ ] Incomplete task</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.6"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.7 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.7<br>
+              Attempt: original · anthropic_claude-opus-4.7_02-markdown-formatting.json<br>
+              Tokens: 527 (282 in / 245 out)<br>
+              Cost: $0.007535<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:38:39 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.7_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+
+### This is H3
+#### This is H4
+
+## Text formatting
+
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.7"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.8 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.8<br>
+              Attempt: original · anthropic_claude-opus-4.8_02-markdown-formatting.json<br>
+              Tokens: 532 (277 in / 255 out)<br>
+              Cost: $0.007760<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:39:37 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.8_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Markdown Formatting Demo
+
+## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.8"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.6 Sol <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.6-sol<br>
+              Attempt: original · openai_gpt-5.6-sol_02-markdown-formatting.json<br>
+              Tokens: 372 (195 in / 177 out)<br>
+              Cost: $0.004320<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 8:37:23 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.6-sol_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+
+### This is H3
+
+#### This is H4
+
+## Text formatting
+
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+
+Nested unordered list:
+
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.6-sol"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>03-code-blocks</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.6<br>
+              Attempt: original · anthropic_claude-opus-4.6_03-code-blocks.json<br>
+              Tokens: 550 (277 in / 273 out)<br>
+              Cost: $0.008210<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:38:03 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.6_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Test Prompt: Code Blocks
+
+Generate a response with fenced code blocks:
+
+## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.6"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.7 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.7<br>
+              Attempt: original · anthropic_claude-opus-4.7_03-code-blocks.json<br>
+              Tokens: 1297 (343 in / 954 out)<br>
+              Cost: $0.025565<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:38:51 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.7_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Code Blocks Response
+
+Here are the code examples with explanations:
+
+## Python: Quadratic Formula
+
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+This function solves equations of the form `ax² + bx + c = 0`. For the example `x² - 5x + 6 = 0`, it returns `(3.0, 2.0)`.
+
+**Note:** This implementation doesn&#039;t handle complex roots (when `discriminant &lt; 0`). To support those, you&#039;d use the `cmath` module:
+
+```python
+import cmath
+
+def quadratic_formula_complex(a, b, c):
+    discriminant = cmath.sqrt(b**2 - 4*a*c)
+    return ((-b + discriminant) / (2*a), (-b - discriminant) / (2*a))
+```
+
+## JavaScript: Fibonacci
+
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.l...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.7"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.8 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.8<br>
+              Attempt: original · anthropic_claude-opus-4.8_03-code-blocks.json<br>
+              Tokens: 880 (338 in / 542 out)<br>
+              Cost: $0.015240<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:39:43 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.8_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here&#039;s a response demonstrating fenced code blocks:
+
+## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.
+
+---
+
+All three sections render correctly:
+
+- **Python block** — The `quadratic_formula` function uses syntax highlighting for keywords (`def`, `return`), the comment, and the f-string.
+- **JavaScript block** — The arrow function, `const`, and inline comment are highlighted per JS conventions.
+- **Inline code** — Th...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.8"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.6 Sol <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.6-sol<br>
+              Attempt: original · openai_gpt-5.6-sol_03-code-blocks.json<br>
+              Tokens: 482 (241 in / 241 out)<br>
+              Cost: $0.005784<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 8:37:25 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.6-sol_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Python code
+
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+
+The variable `x^2` should render as code, not math. Similarly, `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.6-sol"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>04-mixed-markdown-latex</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.6<br>
+              Attempt: original · anthropic_claude-opus-4.6_04-mixed-markdown-latex.json<br>
+              Tokens: 702 (357 in / 345 out)<br>
+              Cost: $0.010410<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:38:07 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.6_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Test Prompt: Mixed Markdown and LaTeX
+
+## Problem Statement
+**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:
+
+1. The *derivative* $f&#039;(x)$
+2. The **integral** $\int f(x) dx$
+
+### Solution
+The derivative is:
+$$f&#039;(x) = 2x + 2$$
+
+The integral is:
+$$\int f(x) dx = \frac{x^3}{3} + x^2 + x + C$$
+
+## Linear Algebra with Lists
+Properties of the matrix $A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$:
+- Determinant: $\det(A) = ad - bc$
+- Trace: $\text{tr}(A) = a + d$
+- Inverse (if exists):
+  $$A^{-1} = \frac{1}{ad - bc}\begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}$$
+
+## Real World Context
+&gt; **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are \$100 and variable costs are \$5 per unit.
+
+Money context: If you buy 10 units, that&#039;s \$100 fixed plus \$50 variable = \$150 total.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.6"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.7 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.7<br>
+              Attempt: original · anthropic_claude-opus-4.7_04-mixed-markdown-latex.json<br>
+              Tokens: 1658 (462 in / 1196 out)<br>
+              Cost: $0.032210<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:39:03 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.7_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Calculus and Linear Algebra Review
+
+## Problem Statement
+**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, we need to find:
+
+1. The *derivative* $f&#039;(x)$
+2. The **indefinite integral** $\int f(x)\, dx$
+
+### Solution
+
+**Part 1: Derivative**
+
+Applying the power rule term by term:
+$$f&#039;(x) = \frac{d}{dx}(x^2) + \frac{d}{dx}(2x) + \frac{d}{dx}(1) = 2x + 2$$
+
+Note that we can factor this as $f&#039;(x) = 2(x+1)$, which makes sense since $f(x) = (x+1)^2$.
+
+**Part 2: Integral**
+
+Using the power rule for integration $\int x^n\, dx = \frac{x^{n+1}}{n+1} + C$:
+$$\int f(x)\, dx = \int (x^2 + 2x + 1)\, dx = \frac{x^3}{3} + x^2 + x + C$$
+
+---
+
+## Linear Algebra with Lists
+
+Consider the $2 \times 2$ matrix:
+$$A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$$
+
+Key properties include:
+
+- **Determinant**: $\det(A) = ad - bc$
+- **Trace**: $\text{tr}(A) = a + d$
+- **Characteristic polynomial**: $\lambda^2 - \text{tr}(A)\lambda + \det(A) = 0$
+- **Inverse** (exists iff $\det(A) \neq 0$):
+  $$A^{-1} = \...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.7"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.8 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.8<br>
+              Attempt: original · anthropic_claude-opus-4.8_04-mixed-markdown-latex.json<br>
+              Tokens: 1365 (457 in / 908 out)<br>
+              Cost: $0.024985<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:39:53 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.8_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Calculus and Linear Algebra Review
+
+## Problem Statement
+**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:
+
+1. The *derivative* $f&#039;(x)$
+2. The **integral** $\int f(x)\, dx$
+
+### Solution
+
+**Part 1 — Derivative**
+
+Applying the power rule term by term to $f(x) = x^2 + 2x + 1$:
+
+$$f&#039;(x) = 2x + 2$$
+
+Notice that we can factor this as $f&#039;(x) = 2(x + 1)$, which reveals the *critical point* at $x = -1$.
+
+**Part 2 — Integral**
+
+Integrating term by term:
+
+$$\int f(x)\, dx = \frac{x^3}{3} + x^2 + x + C$$
+
+where $C$ is the constant of integration.
+
+## Linear Algebra with Lists
+Properties of the matrix $A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$:
+
+- **Determinant**: $\det(A) = ad - bc$
+- **Trace**: $\text{tr}(A) = a + d$
+- **Inverse** (exists only when $\det(A) \neq 0$):
+  $$A^{-1} = \frac{1}{ad - bc}\begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}$$
+
+A quick verification: multiplying $A \cdot A^{-1}$ should yield the identity matrix $I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pma...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.8"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.6 Sol <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.6-sol<br>
+              Attempt: original · openai_gpt-5.6-sol_04-mixed-markdown-latex.json<br>
+              Tokens: 699 (310 in / 389 out)<br>
+              Cost: $0.009020<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 8:37:28 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.6-sol_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Exercise 1
+
+Given the function \(f(x) = x^2 + 2x + 1\):
+
+1. The *derivative* is
+   \[
+   f&#039;(x) = 2x + 2.
+   \]
+
+2. The **indefinite integral** is
+   \[
+   \int f(x)\,dx
+   = \frac{x^3}{3} + x^2 + x + C.
+   \]
+
+## Linear Algebra
+
+For the matrix
+\[
+A =
+\begin{pmatrix}
+a &amp; b \\
+c &amp; d
+\end{pmatrix},
+\]
+its properties include:
+
+- **Determinant:** \(\det(A) = ad - bc\)
+- **Trace:** \(\operatorname{tr}(A) = a + d\)
+- **Inverse:** If \(ad-bc \ne 0\), then
+  \[
+  A^{-1}
+  = \frac{1}{ad-bc}
+  \begin{pmatrix}
+  d &amp; -b \\
+  -c &amp; a
+  \end{pmatrix}.
+  \]
+
+## Real-World Context
+
+&gt; **Note:** In economics, the cost function \(C(q) = 100 + 5q\) represents a fixed cost of **\$100** and a variable cost of **\$5 per unit**.
+
+For \(q=10\) units:
+\[
+C(10) = 100 + 5(10) = 150.
+\]
+
+Thus, the total cost is **\$150**: **\$100 fixed** plus **\$50 variable**.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.6-sol"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>05-complex-scenarios</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.6<br>
+              Attempt: original · anthropic_claude-opus-4.6_05-complex-scenarios.json<br>
+              Tokens: 1336 (484 in / 852 out)<br>
+              Cost: $0.023720<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:38:19 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.6_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Response to Complex Scenarios
+
+## Scenario 1: Math in Lists with Formatting
+
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+This is one of the most fundamental results in Euclidean geometry, and the triple $(3, 4, 5)$ is the most well-known **Pythagorean triple**.
+
+## Scenario 2: Tables with Math
+
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+A few notes on these:
+
+- The **quadratic formula** gives real solutions when the discriminant $b^2 - 4ac \geq 0$
+- The sum formula is famously attributed to Gauss: $1 + 2 + 3 + \cdots + n = \frac{n(n+1)}{2}$
+- The factorial grows extremely fast — Stirling&#039;s approximation gives us $n! \approx \sqrt{2\p...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.6"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.7 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.7<br>
+              Attempt: original · anthropic_claude-opus-4.7_05-complex-scenarios.json<br>
+              Tokens: 1864 (636 in / 1228 out)<br>
+              Cost: $0.033880<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:39:18 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.7_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Response to Complex Scenarios Test
+
+Here&#039;s my handling of each challenging edge case:
+
+## Scenario 1: Math in Lists with Formatting
+
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+This demonstrates nested lists with inline math, bold, and italic formatting working together.
+
+## Scenario 2: Tables with Math
+
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+| Euler | $e^{i\pi} + 1 = 0$ | $0$ |
+
+Tables with LaTeX expressions in cells require careful pipe handling since `|` is a table delimiter.
+
+## Scenario 3: Code and Math Mixed
+
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.7"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.8 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.8<br>
+              Attempt: original · anthropic_claude-opus-4.8_05-complex-scenarios.json<br>
+              Tokens: 1706 (631 in / 1075 out)<br>
+              Cost: $0.030030<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:40:05 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.8_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Test Prompt Response: Complex Scenarios
+
+Here&#039;s my rendering of each challenging scenario:
+
+## Scenario 1: Math in Lists with Formatting
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+## Scenario 2: Tables with Math
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+## Scenario 3: Code and Math Mixed
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+```
+
+The mathematical formula is $A = \pi r^2$ where $r$ is the radius.
+
+## Scenario 4: Horizontal Rules
+First section
+
+---
+
+Second section with math: $\int_{0}^{1} x \, dx = \frac{1}...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.8"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.6 Sol <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.6-sol<br>
+              Attempt: original · openai_gpt-5.6-sol_05-complex-scenarios.json<br>
+              Tokens: 1067 (428 in / 639 out)<br>
+              Cost: $0.014492<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 8:37:35 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.6-sol_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Scenario 1: Math in Lists with Formatting
+
+1. The **Pythagorean theorem** states that \(a^2+b^2=c^2\).
+2. For a *right triangle* with sides \(a=3\) and \(b=4\):
+   - Calculate:
+     \[
+     c=\sqrt{3^2+4^2}
+      =\sqrt{9+16}
+      =\sqrt{25}
+      =5
+     \]
+   - Therefore, \(c=5\) units.
+
+## Scenario 2: Tables with Math
+
+| Formula | LaTeX | Result |
+|---|---|---|
+| Quadratic | \(ax^2+bx+c=0\) | \(x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}\) |
+| Sum | \(\sum_{i=1}^{n}i\) | \(\frac{n(n+1)}{2}\) |
+| Product | \(\prod_{i=1}^{n}i\) | \(n!\) |
+
+## Scenario 3: Code and Math Mixed
+
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+```
+
+The mathematical formula is \(A=\pi r^2\), where \(r\) is the radius. For \(r=5\), the area is \(25\pi\), approximately \(78.54\).
+
+## Scenario 4: Horizontal Rules
+
+First section
+
+---
+
+Second section with math:
+
+\[
+\int_0^1 x\,dx
+=\left[\frac{x^2}{2}\r...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.6-sol"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>06-edge-cases-boundaries</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.6 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.6<br>
+              Attempt: original · anthropic_claude-opus-4.6_06-edge-cases-boundaries.json<br>
+              Tokens: 948 (376 in / 572 out)<br>
+              Cost: $0.016180<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:38:29 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.6_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Testing Edge Cases and Boundaries
+
+## Delimiter Variants
+
+1. Double dollar display:
+
+$$x^2 + y^2 = r^2$$
+
+2. Bracket display:
+
+$$E = mc^2$$
+
+3. Single dollar inline: $a + b = c$
+
+4. Paren inline: $x = 5$
+
+## Nested Structures
+
+1. Display math in a list with continuation:
+   - First item
+   - The equation is:
+
+$$\int_0^1 x\, dx = \frac{1}{2}$$
+
+     And it evaluates to 0.5
+   - Third item
+
+## Code with Math-like Syntax
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+## Currency and Escaped Dollars
+- Plain: The price is $100
+- Escaped: The budget is \$500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+## Tables with Math
+
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+
+## Raw Dollar Signs
+
+The shell variable $HOME is set. Price: $99.99.
+
+---
+
+## Notes on Rendering Behavior
+
+-...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.6"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.7 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.7<br>
+              Attempt: original · anthropic_claude-opus-4.7_06-edge-cases-boundaries.json<br>
+              Tokens: 1325 (488 in / 837 out)<br>
+              Cost: $0.023365<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:39:28 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.7_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Test Response: Edge Cases and Boundaries
+
+## Delimiter Variants
+
+1. Double dollar display:
+$$x^2 + y^2 = r^2$$
+
+2. Bracket display:
+$$E = mc^2$$
+
+3. Single dollar inline: $a + b = c$
+
+4. Paren inline: \(x = 5\)
+
+## Nested Structures
+
+1. Display math in a list with continuation:
+   - First item
+   - The equation is:
+     $$\int_0^1 x \, dx = \frac{1}{2}$$
+     And it evaluates to 0.5
+   - Third item
+
+## Code with Math-like Syntax
+
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+## Currency and Escaped Dollars
+
+- Plain: The price is \$100
+- Escaped: The budget is \$500
+- Multiple: Costs \$25, \$30, and \$45
+- In sentence: I spent \$50 at the store
+
+## Tables with Math
+
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | 78.54 |
+| Volume | $V = \frac{4}{3}\pi r^3$ | 523.60 |
+
+## Raw Dollar Signs
+
+The shell variable `$HOME` is set. Price: \$99.99.
+
+---
+
+### Notes on Edg...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.7"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Anthropic: Claude Opus 4.8 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: anthropic/claude-opus-4.8<br>
+              Attempt: original · anthropic_claude-opus-4.8_06-edge-cases-boundaries.json<br>
+              Tokens: 1285 (483 in / 802 out)<br>
+              Cost: $0.022465<br>
+              Finish: stop / end_turn<br>
+              Time: 11/8/2026, 8:40:13 PM
+            </div>
+            
+            
+              <img src="anthropic_claude-opus-4.8_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Edge Cases and Boundaries Test
+
+## Delimiter Variants
+
+1. Double dollar display: $$x^2 + y^2 = r^2$$
+
+2. Bracket display: $$E = mc^2$$
+
+3. Single dollar inline: $a + b = c$
+
+4. Paren inline: $x = 5$
+
+## Nested Structures
+
+1. Display math in a list with continuation:
+   - First item
+   - The equation is:
+     $$\int_0^1 x \, dx = \frac{1}{2}$$
+     And it evaluates to 0.5
+   - Third item
+
+## Code with Math-like Syntax
+
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+## Currency and Escaped Dollars
+
+- Plain: The price is \$100
+- Escaped: The budget is \$500
+- Multiple: Costs \$25, \$30, and \$45
+- In sentence: I spent \$50 at the store
+
+## Tables with Math
+
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+
+## Raw Dollar Signs
+
+The shell variable `$HOME` is set. Price: \$99.99.
+
+---
+
+### Notes on the Renderi...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="anthropic/claude-opus-4.8"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.6 Sol <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.6-sol<br>
+              Attempt: original · openai_gpt-5.6-sol_06-edge-cases-boundaries.json<br>
+              Tokens: 851 (342 in / 509 out)<br>
+              Cost: $0.011548<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 8:37:42 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.6-sol_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Delimiter Variants
+
+1. Double dollar display: $$x^2 + y^2 = r^2$$
+2. Bracket display: \[E = mc^2\]
+3. Single dollar inline: $a + b = c$
+4. Paren inline: \(x = 5\)
+
+## Nested Structures
+
+- First item
+- The equation is:
+
+  $$\int_0^1 x\,dx = \frac{1}{2}$$
+
+  And it evaluates to 0.5.
+- Third item
+
+## Code with Math-like Syntax
+
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+## Currency and Escaped Dollars
+
+- Plain: The price is $100
+- Escaped: The budget is \$500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+## Tables with Math
+
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+
+## Raw Dollar Signs
+
+The shell variable $HOME is set. Price: $99.99.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.6-sol"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+  
+  <script>
+    function exportFeedback() {
+      const feedback = {};
+      document.querySelectorAll('textarea[data-feedback-model]').forEach(textarea => {
+        const modelId = textarea.dataset.feedbackModel;
+        const promptName = textarea.dataset.feedbackPrompt;
+        const value = textarea.value.trim();
+        
+        if (value) {
+          if (!feedback[modelId]) {
+            feedback[modelId] = {};
+          }
+          feedback[modelId][promptName] = value;
+        }
+      });
+      
+      const json = JSON.stringify(feedback, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rendering-feedback-2026-11-08-18.json';
+      a.click();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "modelId": "openai/gpt-4o-mini",
+  "modelName": "OpenAI: GPT-4o-mini",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Certainly! Let's examine each scenario in detail, introducing edge cases that add complexity or challenge.\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** is expressed as \\( a^2 + b^2 = c^2 \\).\n2. For a *right triangle* with sides \\( a = 3 \\) and \\( b = 4 \\):\n   - Calculate \\( c \\):\n     - \\( c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5 \\)\n   - Therefore, \\( c = 5 \\) units.\n3. **Edge Case**: What if \\( a \\) or \\( b \\) were negative? Since the sides represent lengths, this would be invalid in our context. Instead, if \\( a = -3 \\) and \\( b = 4 \\) (which practically doesn’t make sense), the theorem would still yield \\( c = 5 \\) by working with absolute values: \\( c = \\sqrt{|-3|^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5 \\).\n\n## Scenario 2: Tables with Math\n| Formula                  | LaTeX                              | Result                                          |\n|-------------------------|------------------------------------|------------------------------------------------|\n| Quadratic               | \\( ax^2 + bx + c = 0 \\)          | \\( x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} \\)  |\n| Sum                     | \\( \\sum_{i=1}^{n} i \\)            | \\( \\frac{n(n+1)}{2} \\)                        |\n| Product                 | \\( \\prod_{i=1}^{n} i \\)          | \\( n! \\)                                      |\n| Edge Case (Negative $n$)| Not applicable                     | N/A                                            |\n| Special Case (Sum)      | \\( \\sum_{i=1}^{0} i \\)            | \\( 0 \\)                                       |\n| Infinite Product        | \\( \\prod_{i=1}^{\\infty} (1 - r^i) \\) for \\( |r| < 1 \\) | \\( \\frac{1}{1-r} \\)                          |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    # Edge case: If r is negative\n    if r < 0:\n        raise ValueError(\"Radius cannot be negative\")\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\nThe mathematical formula is \\( A = \\pi r^2 \\) where \\( r \\) is the radius. **Edge Case**: If \\( r = -5 \\), the code will raise a ValueError: \"Radius cannot be negative\". \n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: \n\\[\n\\int_{0}^{1} x \\, dx = \\left[ \\frac{x^2}{2} \\right]_{0}^{1} = \\frac{1}{2}\n\\]\n\n---\n\nThird section\n\n**Edge Case**: What if the bounds of the integral were switched? \n\\[\n\\int_{1}^{0} x \\, dx = -\\frac{1}{2}\n\\]\nThis changes the context and could yield a negative area (if we are interpreting \"area\" strictly).\n\n## Scenario 5: Multiple Dollar Signs\nPrices: \n- Computer costs $1,200\n- Monitor costs $300\n- Keyboard costs $50\n- Mouse costs $25 \n- **Total**: $1,575\n\nMath: The function \\( f(x) = x^2 \\) evaluates to:\n- \\( f(5) = 25 \\)\n- **Edge Case**: What if \\( x \\) is not defined? For example, if \\( x = -5 \\), then \\( f(-5) = 25 \\) even though we might expect a change in context (loss, perhaps).\n\n**Special Case**: In a tax context, total price includes a sales tax of 10%. Thus:\n- Total with tax = \\( 1,575 \\times 1.1 = 1,732.5 \\).\n\nThese scenarios incorporate not only the fundamental aspects of the mathematical principles discussed but also challenge the assumptions typically made about the input and outputs in various mathematical contexts.",
+  "usage": {
+    "prompt_tokens": 429,
+    "completion_tokens": 960,
+    "total_tokens": 1389,
+    "cost": 0.00064035,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00064035,
+      "upstream_inference_prompt_cost": 0.00006435,
+      "upstream_inference_completions_cost": 0.000576
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00064035,
+  "actualCost": 0.00064035,
+  "timestamp": "2026-11-08T20:48:36.960Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

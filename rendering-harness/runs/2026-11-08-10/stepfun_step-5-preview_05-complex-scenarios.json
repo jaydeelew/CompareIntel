@@ -1,0 +1,36 @@
+{
+  "modelId": "stepfun/step-5-preview",
+  "modelName": "StepFun: Step 5 Preview",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "# Complex Markdown & LaTeX Edge Cases\n\n## 1. Deeply Nested Lists with Mixed Math\n\n1. **Fundamental theorem** for right triangles\n   - Statement: In any *right triangle* with legs $a$, $b$ and hypotenuse $c$:\n     $$a^2 + b^2 = c^2$$\n   - Example with $a=3$, $b=4$:\n     - Substitution: $c^2 = 3^2 + 4^2 = 9 + 16 = 25$\n     - Result: $c = \\sqrt{25} = 5$\n       * Application: $\\text{Area} = \\frac{1}{2}ab = \\frac{1}{2}(3)(4) = 6$\n         1. **Nested ordered item** with matrix math: $\\begin{pmatrix} 3 & 0 \\\\ 0 & 4 \\end{pmatrix} \\mathbf{v} = \\begin{pmatrix} 3v_1 \\\\ 4v_2 \\end{pmatrix}$\n\n## 2. Advanced Tables with Complex LaTeX\n\n| Category | LaTeX Construct | Result / Notes |\n|:--------:|:----------------|:---------------|\n| Cases | $\\begin{cases} 2x + y = 7 \\\\ x - y = 2 \\end{cases}$ | $x=3$, $y=1$ |\n| Nested Fractions | $\\cfrac{1}{2 + \\cfrac{1}{3 + \\cfrac{1}{4}}}$ | Converges to $\\frac{7}{10}$ |\n| Matrix Multiplication | $\\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix} \\begin{bmatrix} x \\\\ y \\end{bmatrix} = \\begin{bmatrix} 5 \\\\ 11 \\end{bmatrix}$ | $x=1$, $y=2$ |\n| Underbrace/Overbrace | $\\underbrace{a+b+c}_{\\text{sum}} = \\overbrace{\\frac{(a+b+c)^2}{3}}^{\\text{identity}}$ | Tension: $\\sigma = \\frac{F}{A}$ |\n\n## 3. Code Blocks with Math Comments and Currency\n\n```python\n# Calculate: A = πr²\nimport math\n\ndef area(radius):\n    # Using formula: A = math.pi * radius**2\n    # Price for radius r=5: $25\n    return math.pi * (radius ** 2)\n\n# Expected output for r=5: $78.54\nprint(f\"Area = ${area(5):.2f}\")\n```\n\nThe inline formula $A = \\pi r^2$ contains no dollar signs, but the code above mixes currency `$25` and `$78.54` with mathematical logic.\n\n## 4. Horizontal Rules Adjacent to Math\n\nImmediate math before rule: $\\int_0^\\infty e^{-x}dx = 1$\n---\nImmediate math after rule: $\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1$\n\n---\n\nTriple rule test:\n\n---\n\n$$\n\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}\n$$\n\n---\n\nText immediately after display math.\n\n## 5. Currency vs. Math Delimiter Chaos\n\nThe laptop costs **$1,299** and the formula is $y = 2x + 1$ where $x$ is units sold.\nAt $5$ per unit, revenue is $R(x) = 5x$. For $x = 100$, $R(100) = 500$.\nCompare: $50$ dollars versus $x = 50$ versus $\\$50$ escaped.\nMixed sentence: He has $10, she has $20, and together they have $x$ where $x = 30$.\nThe total is $1,575 but $f(25) = 25^2 = 625$.\n\n## 6. Escaped Delimiters and Inline Code\n\n- Escaped currency: `$`100`, `$`0.99, or literal `$` signs\n- Inline code with math: `` `f(x) = $x^2$` `` should not parse as math inside code\n- Dollar in code: `` `price = $19.99` `` and `` `formula = $E=mc^2$` ``\n- Math with escaped dollar inside: $\\text{Cost: }\\$100 \\times n$\n- Code span containing single dollar: `` `$` `` and `` `$x$` ``\n\n## 7. Blockquotes with Nested Math\n\n> **Theorem:** If $f$ is continuous on $[a,b]$, then\n> $$ \\int_a^b f(x)\\,dx = F(b) - F(a) $$\n> where $F'(x) = f(x)$.\n>\n> > **Corollary:** For the specific case $f(x) = x^2$ on $[0,1]$:\n> > $$ \\int_0^1 x^2\\,dx = \\left. \\frac{x^3}{3} \\right|_0^1 = \\frac{1}{3} $$\n\n## 8. Task Lists with Mathematical Content\n\n- [x] Prove $e^{i\\pi} + 1 = 0$\n- [ ] Compute $\\nabla^2 \\phi = \\frac{\\partial^2 \\phi}{\\partial x^2} + \\frac{\\partial^2 \\phi}{\\partial y^2}$\n- [x] Verify matrix identity $\\mathbf{I}\\mathbf{A} = \\mathbf{A}\\mathbf{I} = \\mathbf{A}$\n  - [x] Test with $\\mathbf{A} = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$\n\n## 9. Math in Headings\n\n### Euler's Identity: $e^{i\\pi} + 1 = 0$\n\n#### Derivative Rule: $\\frac{d}{dx}[f(x)g(x)] = f'(x)g(x) + f(x)g'(x)$\n\n##### Price Formula: $P = C + M$ where $C = \\$50$ and $M = \\$25$\n\n## 10. Ambiguous Underscores and Asterisks\n\nText with_underscores and math $a_b$ and_bold_ and $x_{long\\_index}$.\nAsterisks: *italic* and math $a*b$ and *more italic* and $c*d$.\nMixed: The variable $x_i$ uses _subscripts_, while $y_{i+1}$ uses _{braces}_.\nBold math: **$E = mc^2$** versus $**not bold**$ versus $\\mathbf{E} = \\mathbf{mc}^2$.\n\n## 11. Multi-line Inline Math and Wrapping\n\nThis is a long paragraph containing the equation $\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ which should wrap\nacross lines without breaking the math rendering, even though the line\nbreak occurs in the middle of the prose surrounding $x = \\frac{1}{y}$.\nThe sum $\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$ appears here.\n\n## 12. HTML and Math Mix\n\n<div align=\"center\">\n\n$$ \\text{Centered Math: } \\oint_C \\mathbf{F} \\cdot d\\mathbf{r} = 0 $$\n\n</div>\n\nInline HTML: <b>Bold text</b> with math $y = mx + b$ and currency $100.\n\n## 13. Definition-style Lists with Math\n\nTerm\n:   Definition with math: $ \\mathcal{L}\\{f(t)\\} = \\int_0^\\infty e^{-st}f(t)\\,dt $\n\nAnother\n:   Second definition with $\\Re(s) > 0$ for convergence.",
+  "usage": {
+    "prompt_tokens": 424,
+    "completion_tokens": 3376,
+    "total_tokens": 3800,
+    "cost": 0.0095392,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0095392,
+      "upstream_inference_prompt_cost": 0.000424,
+      "upstream_inference_completions_cost": 0.0091152
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0095392,
+  "actualCost": 0.0095392,
+  "timestamp": "2026-11-08T19:21:09.640Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

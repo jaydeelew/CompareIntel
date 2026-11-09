@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794165712-tepNC6dGgfRBHE1fpgS8",
+  "object": "chat.completion",
+  "created": 1794165712,
+  "model": "xiaomi/mimo-v2.5-pro",
+  "provider": "DigitalOcean",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "Hey there! 👋\n\nI see you've shared some code examples with nice formatting. That's a great way to demonstrate how code blocks and inline code work!\n\nTo give you another example, here's some simple Python code:\n\n```python\ndef greet_user(name):\n    \"\"\"A simple function to greet the user\"\"\"\n    greeting = f\"Hello, {name}! Nice to meet you.\"\n    return greeting\n\n# Let's try it out\nuser_name = \"Alex\"\nprint(greet_user(user_name))\n```\n\nAnd if I mention variables like `greeting` or `user_name` in my text, they should appear nicely as inline code.\n\nThanks for sharing those examples - they were perfectly formatted! Is there something specific you'd like help with related to coding or programming? I'm happy to assist with anything from code explanations to debugging or even just discussing programming concepts. 😊",
+        "refusal": null,
+        "reasoning": "The user has shared code blocks and examples of inline code. I see they want to demonstrate how code formatting works, with Python and JavaScript examples, plus inline code snippets.\n\nI notice their message is presented as a test prompt, likely to verify I handle code blocks correctly. They haven't asked a specific question - they're just showing the format. \n\nMy response should acknowledge their examples while staying helpful. Since they used demonstrate, I could provide my own code example to confirm their bot is working properly. \n\nFor the code, I'll pick something universal that works in most languages - just a simple \"Hello World\" with a variable. That keeps it accessible. I'll use Python since it's widely understood. \n\nThe response should be warm and conversational, so I'll greet them casually, appreciate their examples, and offer mine without sounding robotic. No need for markdown in the response since they already showed formatted examples.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user has shared code blocks and examples of inline code. I see they want to demonstrate how code formatting works, with Python and JavaScript examples, plus inline code snippets.\n\nI notice their message is presented as a test prompt, likely to verify I handle code blocks correctly. They haven't asked a specific question - they're just showing the format. \n\nMy response should acknowledge their examples while staying helpful. Since they used demonstrate, I could provide my own code example to confirm their bot is working properly. \n\nFor the code, I'll pick something universal that works in most languages - just a simple \"Hello World\" with a variable. That keeps it accessible. I'll use Python since it's widely understood. \n\nThe response should be warm and conversational, so I'll greet them casually, appreciate their examples, and offer mine without sounding robotic. No need for markdown in the response since they already showed formatted examples.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 488,
+    "completion_tokens": 367,
+    "total_tokens": 855,
+    "cost": 0.00080268,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 240,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00080268,
+      "upstream_inference_prompt_cost": 0.00014208,
+      "upstream_inference_completions_cost": 0.0006606
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 184,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

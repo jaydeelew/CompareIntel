@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/mistral-medium-3.1",
+  "modelName": "Mistral: Mistral Medium 3.1",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here’s a structured response testing delimiter variants, edge cases, and boundaries as per your prompt:\n\n---\n\n### **Delimiter Variants**\n1. **Double dollar display**:\n   $$x^2 + y^2 = r^2$$\n   *Renders as centered display math.*\n\n2. **Bracket display**:\n   \\[E = mc^2\\]\n   *Also renders as display math (alternative syntax).*\n\n3. **Single dollar inline**:\n   $a + b = c$\n   *Renders as inline math.*\n\n4. **Paren inline**:\n   \\(x = 5\\)\n   *Alternative inline syntax, equivalent to `$...$`.*\n\n---\n\n### **Nested Structures**\n- First item\n- The equation is:\n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n  And it evaluates to 0.5\n- Third item\n*Display math works inside lists with proper indentation.*\n\n---\n\n### **Code with Math-like Syntax**\n```python\n# Literal code (no rendering):\nprice = $50  # Dollar sign is literal in code blocks\nformula = \"E = mc^2\"  # String, not math\nresult = a**2 + b**2  # Python syntax, not LaTeX\ndef calc(x):\n    return x**2  # Exponentiation operator\n```\n*Code blocks preserve literal `$` and math-like syntax.*\n\n---\n\n### **Currency and Escaped Dollars**\n- Plain: The price is $100\n  *Single `$` without matching delimiter → treated as text.*\n- Escaped: The budget is \\$500\n  *Escaped `$` in LaTeX (if processed) or literal in Markdown.*\n- Multiple: Costs $25, $30, and $45\n  *Unpaired `$` → text.*\n- In sentence: I spent $50 at the store\n  *Same as above.*\n\n---\n\n### **Tables with Math**\n| Variable | Formula          | Value   |\n|----------|------------------|---------|\n| Area     | $A = \\pi r^2$   | $78.54$ |\n| Volume   | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n*Inline math (`$...$`) works in table cells.*\n\n---\n\n### **Raw Dollar Signs**\n- The shell variable `$HOME` is set.\n  *Unpaired `$` → treated as text.*\n- Price: $99.99\n  *Same as above.*\n\n---\n\n### **Edge Case Observations**\n1. **Unmatched Delimiters**:\n   - `$x^2` (no closing `$`) → *Text*: \"$x^2\".\n   - `x^2$` (no opening `$`) → *Text*: \"x^2$\".\n\n2. **Mixed Delimiters**:\n   - `$$x^2$` → *May break rendering* (unclosed display math).\n   - `\\(x^2\\)` → *Valid inline math* (alternative to `$...$`).\n\n3. **Escaping in Math Mode**:\n   - `\\$100` inside `$...$` → *Renders as literal `$` in math* (e.g., `$Price = \\$100$` → \"Price = $100\").\n\n4. **Code vs. Math**:\n   - Inline code: `` `$50` `` → *Literal*: `$50`.\n   - Math mode: `$50$` → *Renders as math* (italicized \"50\").\n\n5. **Tables + Display Math**:\n   - Display math (`$$...$$`) in tables may break alignment due to line breaks.\n\n6. **Currency in Math Mode**:\n   - `$Price = \\$100$` → *Renders as*: Price = $100 (math mode for equation, escaped `$` for currency).\n\n---",
+  "usage": {
+    "prompt_tokens": 370,
+    "completion_tokens": 836,
+    "total_tokens": 1206,
+    "cost": 0.00182,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00182,
+      "upstream_inference_prompt_cost": 0.000148,
+      "upstream_inference_completions_cost": 0.001672
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00182,
+  "actualCost": 0.00182,
+  "timestamp": "2026-11-08T18:49:07.699Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

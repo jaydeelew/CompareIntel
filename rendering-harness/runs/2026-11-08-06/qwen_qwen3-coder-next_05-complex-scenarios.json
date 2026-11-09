@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-coder-next",
+  "modelName": "Qwen: Qwen3 Coder Next",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here’s a robust response that addresses the edge cases and complexities raised in your scenarios—highlighting potential parsing pitfalls, formatting ambiguities, and how modern Markdown/LaTeX renderers handle (or mis-handle) them:\n\n---\n\n### ✅ **Scenario 1: Math in Lists with Formatting**  \n**Edge case**: Nested formatting (bold/italic) *inside* math blocks vs. outside.  \n- The **Pythagorean theorem** states that $a^2 + b^2 = c^2$ — here `**Pythagorean theorem**` renders as bold *outside* the math block; $a^2$ is properly interpreted as LaTeX.  \n- ⚠️ **Critical ambiguity**: If you write `$**a**^2$`, some parsers (e.g., GitHub, older Jupyter) may *not* apply bold to `a` inside math mode — LaTeX math mode ignores Markdown.  \n- ✔️ Safe practice: Keep Markdown formatting *outside* math: `$a^2$` (not `$\\mathbf{a}^2$` unless using LaTeX macros).\n\n---\n\n### ✅ **Scenario 2: Tables with Math**  \n**Edge case**: Alignment, line breaks, and cell escaping in tabular math.  \n- Your table renders cleanly in Pandoc, Jupyter, or Obsidian (if `$` math is enabled).  \n- ⚠️ Pitfalls:  \n  - *Pipe escaping*: Some parsers require `\\|` inside table cells containing `$` to avoid breaking the table.  \n  - *Multiline math*: If you add `\\\\` inside a cell (e.g., for aligned equations), Markdown may break — wrap in raw HTML:  \n    ```html\n    <div>$\\begin{aligned} \n      x &= \\frac{-b + \\sqrt{D}}{2a} \\\\\n      y &= \\frac{-b - \\sqrt{D}}{2a}\n    \\end{aligned}$</div>\n    ```  \n  - *LaTeX vs. MathJax*: `$...$` works in MathJax, but raw `$` in tables can confuse lightweight parsers (e.g., early MkDocs).  \n\n---\n\n### ✅ **Scenario 3: Code and Math Mixed**  \n**Edge case**: Dollar signs in code comments vs. math delimiters.  \n- Your Python example:  \n  ```python\n  # Formula: A = πr²\n  ```  \n  — The `$` is *not present*, but if you wrote `# A = $\\pi r^2$`, many code fences (e.g., VS Code, GitHub) would treat `$\\pi r^2$` as *inline math* in preview modes — causing rendering errors *inside* the code block.  \n- ✅ Best practice:  \n  - Escape or avoid `$` in code: `# A = \\pi r^2` (plain text).  \n  - Use a math block *outside* the code:  \n    ```python\n    # Compute area (see below)\n    return math.pi * r**2\n    ```  \n    $A = \\pi r^2$  \n- ⚠️ **Trickiest case**: Backticks in code *inside* math:  \n  ```markdown\n  The function $f(x) = `x**2`$ is invalid — backticks break LaTeX parsing.\n  ```\n\n---\n\n### ✅ **Scenario 4: Horizontal Rules & Inline Math**  \n**Edge case**: `$` immediately before/after `---` or `***`.  \n- Your line: `Third section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$`  \n  — This works in MathJax/Pandoc, but:  \n  - ❌ If written as `---$\\int...$`, some parsers interpret `---$` as a horizontal rule followed by *unmatched* `$` (error).  \n  - ✅ Solution: Add spaces: `--- $\\int...$` or wrap in `<span>`: `---<span>$\\int_0^1 x\\,dx = \\frac12$</span>`.  \n\n---\n\n### ✅ **Scenario 5: Multiple Dollar Signs (Critical!)**  \n**Edge case**: Dollar signs used for *currency* vs. *math delimiters*.  \n- `Computer costs $1,200, monitor $300...`  \n  → **Major parsing trap**: Most Markdown-to-LaTeX engines (e.g., Jupyter, Typora, Pandoc) treat *every* `$...$` as math — so `$1,200` becomes `$1,200` (incomplete), breaking rendering.  \n- **Solutions**:  \n  - Escape: `\\$1,200` (universal fix).  \n  - Use non-breaking space: `$\\,$1,200` (LaTeX-only).  \n  - For complex amounts: `$`**`1,200`**`$` (quote in code, but loses currency symbol styling).  \n  - **Advanced fix**: In Pandoc, use `tex_math_dollars: false` or wrap text in `::: normal-text` (a PandocDiv).  \n- 🛑 Known failure:  \n  ```markdown\n  Total: $1,575 and $2,300\n  ```  \n  renders as **error** unless escaped — even though it’s clearly *not* math.\n\n---\n\n### 🔑 **Summary of Best Practices**  \n| Scenario | Risk | Recommended Fix |\n|----------|------|-----------------|\n| Lists + Math | Bold/italic inside math ignored | Keep formatting outside `$...$` |\n| Tables + Math | `$` breaks table structure | Escape `\\$` or use HTML wrappers |\n| Code + Math | `$` in comments triggers math | Escape `\\$` or move formula to text |\n| H-Rules + Math | `$` after `---` misparsed | Add space: `--- $...$` |\n| Currency `$` | Unescaped `\\$` breaks parsing | **Always escape**: `\\$1,200` |\n\n> 💡 **Pro tip**: Test your Markdown in multiple renderers (GitHub, Obsidian, Jupyter, Pandoc) — they differ drastically in `$` handling. For production docs, **escape all literal `$`** or use a custom math delimiter (e.g., `$$...$$` only for display, or `\\(...\\)`).\n\nLet me know if you'd like these examples as reproducible snippets for Pandoc, Jupyter, or GitHub!",
+  "usage": {
+    "prompt_tokens": 440,
+    "completion_tokens": 1387,
+    "total_tokens": 1827,
+    "cost": 0.0011624,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0011624,
+      "upstream_inference_prompt_cost": 0.0000528,
+      "upstream_inference_completions_cost": 0.0011096
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0011624,
+  "actualCost": 0.0011624,
+  "timestamp": "2026-11-08T18:47:14.482Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

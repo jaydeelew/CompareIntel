@@ -1,0 +1,60 @@
+{
+  "id": "gen-1794166569-Z1i2q0l888Ms1Fpx6h0y",
+  "object": "chat.completion",
+  "created": 1794166569,
+  "model": "google/gemini-3.1-pro-preview",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": "provisioned",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is the response demonstrating the requested fenced code blocks and inline code formatting:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "**Focusing on Code Blocks**\n\nI'm currently processing the instructions for generating a response that necessitates both fenced code blocks for distinct programming languages, such as Python and JavaScript, and also requires the inclusion of inline code elements. These inline elements are specifically noted to contain mathematical expressions like `x^2` and array indexing like `a_b`.\n\n**Implementing Code Formatting**\n\nI'm now focusing on the precise implementation details for rendering both fenced code blocks, distinguishing between languages like Python and JavaScript, and incorporating inline code elements that include mathematical expressions like `x^2` and array indexing such as `a_b`. My current thinking centers on accurately reproducing the requested markdown structure.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Focusing on Code Blocks**\n\nI'm currently processing the instructions for generating a response that necessitates both fenced code blocks for distinct programming languages, such as Python and JavaScript, and also requires the inclusion of inline code elements. These inline elements are specifically noted to contain mathematical expressions like `x^2` and array indexing like `a_b`.\n\n**Implementing Code Formatting**\n\nI'm now focusing on the precise implementation details for rendering both fenced code blocks, distinguishing between languages like Python and JavaScript, and incorporating inline code elements that include mathematical expressions like `x^2` and array indexing such as `a_b`. My current thinking centers on accurately reproducing the requested markdown structure.\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "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",
+            "format": "google-gemini-v1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 261,
+    "completion_tokens": 878,
+    "total_tokens": 1139,
+    "cost": 0.011058,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.011058,
+      "upstream_inference_prompt_cost": 0.000522,
+      "upstream_inference_completions_cost": 0.010536
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 617,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

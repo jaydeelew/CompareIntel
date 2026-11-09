@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-2.5-flash",
+  "modelName": "Google: Gemini 2.5 Flash",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nTo find the derivative $f'(x)$, we apply the power rule and sum rule for differentiation:\n$$f'(x) = \\frac{d}{dx}(x^2) + \\frac{d}{dx}(2x) + \\frac{d}{dx}(1)$$\n$$f'(x) = 2x^{2-1} + 2x^{1-1} + 0$$\n$$f'(x) = 2x + 2$$\n\nFor the integral $\\int f(x) dx$, we use the power rule for integration and the sum rule:\n$$\\int f(x) dx = \\int (x^2 + 2x + 1) dx$$\n$$\\int f(x) dx = \\int x^2 dx + \\int 2x dx + \\int 1 dx$$\n$$\\int f(x) dx = \\frac{x^{2+1}}{2+1} + 2\\frac{x^{1+1}}{1+1} + x + C$$\n$$\\int f(x) dx = \\frac{x^3}{3} + 2\\frac{x^2}{2} + x + C$$\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: The determinant of a $2 \\times 2$ matrix is calculated as the product of the diagonal elements minus the product of the off-diagonal elements.\n  $$\\det(A) = ad - bc$$\n- Trace: The trace of a square matrix is the sum of the elements on its main diagonal.\n  $$\\text{tr}(A) = a + d$$\n- Inverse (if exists): The inverse of a $2 \\times 2$ matrix $A$ exists if and only if $\\det(A) \\neq 0$. If it exists, it is given by:\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n  Note that the diagonal elements are swapped, and the off-diagonal elements are negated.\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ is a common way to model production costs. Here, $C(q)$ represents the total cost of producing $q$ units of a good.\n> *   The term $100$ represents the **fixed costs**, which are expenses that do not change with the quantity of goods produced (e.g., rent for a factory).\n> *   The term $5q$ represents the **variable costs**, which are expenses that change directly with the quantity produced, with a per-unit cost of $5$.\n\nMoney context: If you buy 10 units, the total cost calculation would be:\n*   Fixed costs: $100\n*   Variable costs: $5 \\times 10 \\text{ units} = $50\n*   Total cost: $100 (\\text{fixed}) + $50 (\\text{variable}) = $150 total.\nThis demonstrates how mathematical functions are used to model real-world financial scenarios.",
+  "usage": {
+    "prompt_tokens": 318,
+    "completion_tokens": 791,
+    "total_tokens": 1109,
+    "cost": 0.0020729,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0020729,
+      "upstream_inference_prompt_cost": 0.0000954,
+      "upstream_inference_completions_cost": 0.0019775
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0020729,
+  "actualCost": 0.0020729,
+  "timestamp": "2026-11-08T20:53:26.827Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

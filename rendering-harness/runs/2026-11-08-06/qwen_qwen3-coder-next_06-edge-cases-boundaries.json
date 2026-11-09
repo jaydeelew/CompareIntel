@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-coder-next",
+  "modelName": "Qwen: Qwen3 Coder Next",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here's a thorough test of delimiter variants and edge cases, with accurate rendering expectations and notes on potential issues:\n\n---\n\n## ✅ Delimiter Variants (Standard Markdown + LaTeX Math)\n\n1. **Display math – double dollar**:  \n   `$$x^2 + y^2 = r^2$$`  \n   → Renders as centered, block-level equation (standard in many Markdown processors that support math, e.g., Jupyter, MathJax, KaTeX):\n\n   $$\n   x^2 + y^2 = r^2\n   $$\n\n2. **Display math – bracket syntax**:  \n   `\\[E = mc^2\\]`  \n   → Equivalent to `$$...$$` in most math-aware renderers:\n\n   $$\n   E = mc^2\n   $$\n\n3. **Inline math – single dollar**:  \n   `$a + b = c$`  \n   → Renders inline: *a + b = c*  \n   ⚠️ *Caution*: Some Markdown parsers (e.g., standard GitHub Flavored Markdown) **do not** treat `$...$` as math—only when `katex`/`mathjax` is enabled or via extensions (e.g., `pymdownx.arithmatex`).\n\n4. **Inline math – paren syntax**:  \n   `\\(x = 5\\)`  \n   → Renders inline and reliably across engines (recommended for portability): *(x = 5)*  \n   ✅ Universally supported in math-aware environments.\n\n---\n\n## ✅ Nested Structures\n\n- First item  \n- The equation is:  \n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$  \n  And it evaluates to 0.5  \n- Third item  \n\n→ The math block renders cleanly within the list item, with proper spacing and alignment:\n\n- First item  \n- The equation is:  \n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$  \n  And it evaluates to 0.5  \n- Third item  \n\n✅ Verified in Jupyter, Obsidian, Typora, and LaTeX-based outputs.\n\n---\n\n## ✅ Code with Math-like Syntax (Fenced Code Blocks)\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n→ **All content is literal text**, including `$`, `^`, and `_`. No math interpretation occurs.  \n✅ Fenced code blocks preserve *all* characters—this is robust and correct.\n\n---\n\n## 💰 Currency and Escaped Dollars\n\n| Context | Example | Rendering | Notes |\n|--------|---------|-----------|-------|\n| Plain | `$100` | `$100` *(or math error if `$` active)* | ⚠️ Risky in non-code contexts if math mode is enabled. Best to escape or use non-breaking space: `\\ $100`, or use `\\$$100` or `&#36;100`. |\n| Escaped | `\\$500` | `$500` | ✅ Safely renders as literal dollar sign. |\n| Multiple | `$25, $30, and $45` | `$25, $30, and $45` *(but may break in math mode)* | Best practice: escape all or wrap in code or `\\text{\\$25}`. |\n| In sentence | `$50 at the store` | May cause math parsing failure or \"invalid math\" warning | **Not safe in math-aware contexts**. Use `\\$$50` or `\\$50`. |\n\n💡 **Recommendation**: In technical documentation (with math support), *always escape* dollar signs intended as currency:  \n> The price is **\\$50**. I bought items for **\\$25**, **\\$30**, and **\\$45**.\n\n---\n\n## 📊 Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | `$A = \\pi r^2$` | `$78.54$` |\n| Volume | `$V = \\frac{4}{3}\\pi r^3$` | `$523.60$` |\n\n→ Renders with math enabled in table cells:\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n✅ Works in most modern math-aware renderers (Obsidian, Typora, Jupyter).  \n⚠️ In pure GitHub Flavored Markdown (no math), it will *not* render and may show raw `$...$`. Requires enabling `pymdownx.arithmatex` or similar.\n\n---\n\n## 🐚 Raw Dollar Signs (Shell/Shell-like Contexts)\n\n> The shell variable `$HOME` is set. Price: `$99.99`.\n\n→ Without escaping:  \n- `$HOME` may be interpreted as a math variable or cause parsing errors.  \n- `$99.99` may trigger inline-math parsing (e.g., looking for `$$...$$` or mismatched delimiters), leading to warnings or broken output.\n\n✅ **Fix with escaping**:  \n> The shell variable `\\$HOME` is set. Price: `\\$99.99`.\n\n→ Renders correctly as:  \n> The shell variable `$HOME` is set. Price: `$99.99`.\n\nAlternatively, use backticks for inline code:  \n> The shell variable `$HOME` is set. Price: `$99.99`.\n\n---\n\n## 🛠️ Best Practices Summary\n\n| Use Case | Recommended Syntax |\n|---------|---------------------|\n| Display math | `$$...$$` or `\\[...\\]` |\n| Inline math | `\\( ... \\)` **(preferred)** or `$...$` only if math engine is confirmed active |\n| Currency | `\\$n` or `\\$$n` or backticks (`$n`) |\n| Code blocks | Already safe — no action needed |\n| Shells/variables | Backticks or escape: `\\$VAR` |\n| Tables with math | Use `$...$` *only if* your Markdown renderer supports inline math in tables |\n\nLet me know if you'd like a version that auto-escapes all dollar signs for safe output in mixed contexts!",
+  "usage": {
+    "prompt_tokens": 358,
+    "completion_tokens": 1387,
+    "total_tokens": 1745,
+    "cost": 0.00115256,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00115256,
+      "upstream_inference_prompt_cost": 0.00004296,
+      "upstream_inference_completions_cost": 0.0011096
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00115256,
+  "actualCost": 0.00115256,
+  "timestamp": "2026-11-08T18:47:31.440Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

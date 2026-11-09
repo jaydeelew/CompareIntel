@@ -1,0 +1,36 @@
+{
+  "modelId": "microsoft/phi-4",
+  "modelName": "Microsoft: Phi 4",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here's a response featuring several code blocks using Python, JavaScript, and inline code with math-like content:\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    if discriminant < 0:\n        return None  # No real solutions\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nif result:\n    print(f\"Solutions: x = {result[0]}, x = {result[1]}\")\nelse:\n    print(\"No real solutions.\")\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(`Fibonacci of 10: ${fibonacci(10)}`); // 55\n```\n\n## Additional Python Usage (Extended Function)\n\n```python\ndef solve_quadratic(a, b, c):\n    results = quadratic_formula(a, b, c)\n    if results:\n        x1, x2 = results\n        print(f\"The solutions are x = {x1} and x = {x2}\")\n    else:\n        print(\"This quadratic equation has no real solutions.\")\n\n# Example: solve 2x^2 + 3x + 1 = 0\nsolve_quadratic(2, 3, 1)\n```\n\n## Inline code with math-like content\n\nIn a markdown-like notation, when you use inline code, it's rendered in a monospace font:\n\n- `x^2` represents a variable `x` squared, rendered as code.\n- `a_b` is used to show a variable or placeholder in code, keeping the underscore intact.\n- `$price` may represent a price in a script, maintaining its format as code.\n\nThis presentation ensures that the code is correctly interpreted and displayed, allowing developers to focus on the syntax and logic.",
+  "usage": {
+    "prompt_tokens": 242,
+    "completion_tokens": 466,
+    "total_tokens": 708,
+    "cost": 0.00008218,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00008218,
+      "upstream_inference_prompt_cost": 0.00001694,
+      "upstream_inference_completions_cost": 0.00006524
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00008218,
+  "actualCost": 0.00008218,
+  "timestamp": "2026-11-08T18:03:45.466Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

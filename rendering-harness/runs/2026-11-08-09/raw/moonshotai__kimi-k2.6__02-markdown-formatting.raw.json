@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794164865-MfB7a2UflWZRDlNvWtgo",
+  "object": "chat.completion",
+  "created": 1794164865,
+  "model": "moonshotai/kimi-k2.6",
+  "provider": "Baidu",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+        "refusal": null,
+        "reasoning": "The user wants me to generate a response containing specific markdown elements to test formatting. I need to include:\n\n1. Headers: H3 and H4\n2. Text formatting: bold, italic, bold italic\n3. Lists: nested unordered list and nested ordered list with specific items\n4. Tables: a table with Model, Context, Price columns and GPT-4/Claude rows\n5. Blockquotes: a multi-line blockquote\n\nI should reproduce these elements exactly as requested while making sure the markdown renders correctly. Since this is a test prompt for markdown formatting, I should just output the formatted content directly without extra fluff, though a brief intro/outro is fine.\n\nLet me construct the response:\n\nHeaders section:\n## Headers\n### This is H3\n#### This is H4\n\nText formatting:\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\nLists:\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\nTables:\n## Tables\n... table ...\n\nBlockquotes:\n## Blockquotes\n...\n\nI'll combine them all into a clean response.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants me to generate a response containing specific markdown elements to test formatting. I need to include:\n\n1. Headers: H3 and H4\n2. Text formatting: bold, italic, bold italic\n3. Lists: nested unordered list and nested ordered list with specific items\n4. Tables: a table with Model, Context, Price columns and GPT-4/Claude rows\n5. Blockquotes: a multi-line blockquote\n\nI should reproduce these elements exactly as requested while making sure the markdown renders correctly. Since this is a test prompt for markdown formatting, I should just output the formatted content directly without extra fluff, though a brief intro/outro is fine.\n\nLet me construct the response:\n\nHeaders section:\n## Headers\n### This is H3\n#### This is H4\n\nText formatting:\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\nLists:\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\nTables:\n## Tables\n... table ...\n\nBlockquotes:\n## Blockquotes\n...\n\nI'll combine them all into a clean response.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 197,
+    "completion_tokens": 466,
+    "total_tokens": 663,
+    "cost": 0.0007978928,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 133,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0007978928,
+      "upstream_inference_prompt_cost": 0.0000336528,
+      "upstream_inference_completions_cost": 0.00076424
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 292,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

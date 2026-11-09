@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170129-aZVvk4rhafFfdXWUc3Tg",
+  "object": "chat.completion",
+  "created": 1794170129,
+  "model": "anthropic/claude-opus-5.5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Edge Cases and Boundaries: Rendering Test\n\n## Delimiter Variants\n\n1. **Double dollar display:**\n   $$x^2 + y^2 = r^2$$\n\n2. **Bracket display:**\n   \\[E = mc^2\\]\n\n3. **Single dollar inline:** The relation $a + b = c$ appears mid-sentence.\n\n4. **Paren inline:** We set \\(x = 5\\) for this example.\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\nInline code should also stay literal: `price = $50` and `E = mc^2`.\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n*(Values assume $r = 5$: $\\pi \\cdot 25 \\approx 78.54$ and $\\frac{4}{3}\\pi \\cdot 125 \\approx 523.60$.)*\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\n---\n\n## Expected Behavior Checklist\n\n| Case | Expected Result |\n|------|-----------------|\n| `$$...$$` | Centered display equation |\n| `\\[...\\]` | Centered display equation |\n| `$...$` | Inline math |\n| `\\(...\\)` | Inline math |\n| Math inside list item | Display equation indented under its bullet, with the \"And it evaluates to 0.5\" text continuing in the same item |\n| Fenced code block | No math rendering; `$50`, `^`, and `**` shown literally |\n| `$100`, `$50` (single) | Plain text currency |\n| `$25, $30, and $45` | Plain text. A naive parser may wrongly render `25, ` and `, and ` as math. |\n| `\\$500` | Literal `$500` with the backslash removed |\n| Table math cells | Inline math rendered without breaking the table's column structure |\n| `$HOME ... $99.99` | Plain text. A naive parser may pair these two dollars and render the text between them as math. |",
+        "refusal": null,
+        "reasoning": "I'm sorting out how the delimiter and edge-case tests should be presented, since currency dollar signs might get misread as math delimiters, so I'm considering whether to escape them. I'm also double-checking the sample math: a circle with radius 5 has area about 78.54, and a sphere with radius 5 has volume about 523.60.\n\nI'm going to put together the test document as it was given, leaving the raw sections untouched, and add brief notes on the expected behavior. For the currency signs, I'll leave them in place since the point is to see how they render, and I may close with a short checklist of expected results.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm sorting out how the delimiter and edge-case tests should be presented, since currency dollar signs might get misread as math delimiters, so I'm considering whether to escape them. I'm also double-checking the sample math: a circle with radius 5 has area about 78.54, and a sphere with radius 5 has volume about 523.60.\n\nI'm going to put together the test document as it was given, leaving the raw sections untouched, and add brief notes on the expected behavior. For the currency signs, I'll leave them in place since the point is to see how they render, and I may close with a short checklist of expected results.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQS6AkKEAgTGAI4AUIIdGhpbmtpbmcSDN6euDysVOH8Uh632RoMudzwMv7d9XFZheczIjACAMgqLbYhl2qpZHG+U/7V0gHrLtfSM5EMT2v17aJMFylH29ICzpoOyQM4KLwCZnoqhQk8sX/M2qyH3CwPtRkTrw+xVKUj4X84ytBlCgL/l50DbV9DBaJBZbP5+U6EU93gV/F8gqgoAMnXNfwJQzY6y7KMM89RMeutB9KBzhKRjUAbgLRANSk7cP/r5rQXhCqDfWm0DoEjlAiKJjP5mXOMAyzfgyh2loexcSWSOwKqVFBmd9n/WWDb5+3uZo3ZCuftYYfYkSMwIZwzUNnLUAs8V1/iAAqw5hrqfOt/JksyKtrhmTvHSTJJ0CQJyzV9eheHguEmv8JuuDYDpBgrd+FwGg9ugdntzTVRH/4iOaylwWHZz6ezv/i0uALMj8Ot6a0QNpVwalz7a5b+K4EZWcvIJ2aHcSY+me4XPA7pEoZvHUrgmXypt+nyWm6Rbs4/3sVKH5/ylvhUy9IAiMr9xkZ+bNrNQ775uKzsBOGpYTE++lgf7mkXJ0Xr2Dg4eEV8fITkaCYwozPEN580bgGqiknbYoUBiCP+nXR0ZvaFA0XvDJPIL7m2dUSJw/olCPfDzcC9yLi9qGxHObezwU1Vq37HZW/ILaoEpusp2AFOQccndwjg4kYnE/CbpBIwly5EnGuu2qhzKeY846U7YmrYrUWX7N3vp/deM2ehTL4YTAYF+kHa4EemUNMbMb+sb60RuIUnwKfLBrX9/SCtR7Beqz31AeCAREPEXzNUPNCL23Pef+VhfwXcQpImP7XxDYIw1jWor5AhC156BvMi9AsMV83RrvfOuIfeDk60lUczZ8VXtE4UtZtqRo/YSAFsO6Exgw91/3pVAn98CPer7lKXl5HDpaJALj8yMFAIgLUxjkAU5wrFnkBcr74Zwmlo+UgSi7b7fFzDVXmZOy5F8FKB7U+Rl8YROh6PtaDFqdayTDXkRhiHaFTLEBGClFCrefIKV8TehSlWnfTf/BQWZe266t0F2LRAJ1p+/OCyz4bI9yw3WWps1FP72OytbSTufUrX4fPijp0+cmLbd85GmLqtRAU4pILGH18I5FXlawzsgL6vVUNEx4wZKR01h9E0eM5EmJpNNiMRPvp72IgY9DXU3HaFTNPd4kyFu7IgDHAVDNWg2AHKV0MyzUzZytOim3xhM3pMK+QM60IZXAdn2Fz6K/tYu883Oj1xWs7eRWjStj4wOR8wErY9H1wKs8lfTA2RPLXkbucEDCcw+7u3OQKkmEVqWMK9dVbScDVa+oiTUf8JZkRhftnhoRFxnRYykNm8IjqDcCRF02l94EU3yFQiLxBAk75KqW28jYqtCt6xLzf+KPWFOG3CCU/63YsTx84PHj4Y/q25+cqtsVJjXk+KRrMLSGSZ1yv2yutnqH7PVi8uSs2o1dpyToTosE6VO0PdfCIwS8rYrcPgLJkIVa4uZ1BRpDpHiiCCTvoSXfKafpLm3pJVaLTGaxle8L9DEBwOtOEvu0xTvqTvMNcmvhoXVSzkW0OdDN+phsgggxeNOAF+KzYts3hT0ulVcTHVlN830Le1NEQzkx8FR/EFtYfs9Y0yYgQ4ebEhNL9H5rkHWJHtz/ZtGDfqLbQ3yHWMvuf6WnymzHzjfkoftBgB.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1vcHVzLTUuNS0yMDI2MDkyMXxjbGF1ZGUtb24tYXdzIn0"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 485,
+    "completion_tokens": 1140,
+    "total_tokens": 1625,
+    "cost": 0.02474,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.02474,
+      "upstream_inference_prompt_cost": 0.00194,
+      "upstream_inference_completions_cost": 0.0228
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 220,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

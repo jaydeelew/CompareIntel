@@ -1,0 +1,36 @@
+{
+  "modelId": "moonshotai/kimi-k2.6",
+  "modelName": "MoonshotAI: Kimi K2.6",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": " ## Problem Statement\n**Exercise 1**: Consider the function $g(x) = e^{2x} + \\sin(x)$. Determine:\n\n1. The *first derivative* $g'(x)$\n2. The **definite integral** $\\int_{0}^{\\pi} g(x) \\, dx$\n\n### Solution\nDifferentiating term by term:\n$$g'(x) = 2e^{2x} + \\cos(x)$$\n\nEvaluating the definite integral:\n$$\\int_{0}^{\\pi} \\left(e^{2x} + \\sin(x)\\right) dx = \\left[\\frac{1}{2}e^{2x} - \\cos(x)\\right]_{0}^{\\pi} = \\frac{1}{2}e^{2\\pi} + \\frac{3}{2}$$\n\n## Linear Transformations\nFor the linear transformation $T: \\mathbb{R}^2 \\to \\mathbb{R}^2$ represented by matrix $B = \\begin{pmatrix} 3 & 1 \\\\ 0 & 2 \\end{pmatrix}$:\n- Eigenvalues: solve $\\det(B - \\lambda I) = (3-\\lambda)(2-\\lambda) = 0$, so $\\lambda_1 = 3, \\lambda_2 = 2$\n- Eigenvectors: for $\\lambda_1 = 3$, solve $(B - 3I)\\mathbf{v} = \\mathbf{0}$ yielding $\\mathbf{v}_1 = \\begin{pmatrix} 1 \\\\ 0 \\end{pmatrix}$; for $\\lambda_2 = 2$, $\\mathbf{v}_2 = \\begin{pmatrix} -1 \\\\ 1 \\end{pmatrix}$\n- Diagonalization: $B = PDP^{-1}$ where $D = \\begin{pmatrix} 3 & 0 \\\\ 0 & 2 \\end{pmatrix}$\n\n## Real World Context\n> **Note**: In microeconomics, a firm's profit function $\\pi(q) = R(q) - C(q)$ is maximized when marginal revenue equals marginal cost: $MR(q) = MC(q)$.\n\nPricing scenario: If the price is $20 per unit and the cost function is $C(q) = 500 + 8q$, then revenue is $R(q) = 20q$. Profit is:\n$$\\pi(q) = 20q - (500 + 8q) = 12q - 500$$\nThe break-even point occurs when $\\pi(q) = 0$, which gives $q = \\frac{500}{12} \\approx 41.67$ units. To actually make money, you need to sell at least 42 units.",
+  "usage": {
+    "prompt_tokens": 301,
+    "completion_tokens": 2719,
+    "total_tokens": 3020,
+    "cost": 0.00669717,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00669717,
+      "upstream_inference_prompt_cost": 0.00017157,
+      "upstream_inference_completions_cost": 0.0065256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2149,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00669717,
+  "actualCost": 0.00669717,
+  "timestamp": "2026-11-08T19:08:53.928Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

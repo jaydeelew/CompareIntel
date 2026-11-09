@@ -1,0 +1,123 @@
+{
+  "status": "completed",
+  "stopReason": null,
+  "attemptedCalls": 6,
+  "knownActualCost": 0.1395,
+  "unknownCostCalls": 0,
+  "perModelCost": {
+    "openai/gpt-6-astra": 0.1395
+  },
+  "promptTokens": 1790,
+  "completionTokens": 2432,
+  "reasoningTokensIncludedInCompletion": 106,
+  "errors": [],
+  "truncated": [],
+  "visibleEmpty": [],
+  "finishReasons": {
+    "stop": 6
+  },
+  "firstCallCST": "2026-11-08T14:55:11.007000-06:00 CST",
+  "lastCallCST": "2026-11-08T14:55:43.864000-06:00 CST",
+  "cumulativeKnownUsd": 3.3860020956,
+  "priorUnknownCharges": 2,
+  "coverage": "Collection only; no new rendering passes",
+  "requestTimeoutSeconds": 600,
+  "dynamicGuardEvidence": [
+    {
+      "modelId": "openai/gpt-6-astra",
+      "promptName": "01-math-basics",
+      "reserveUsd": 0.5221250000000001,
+      "reserveRates": {
+        "usd": 0.5221250000000001,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 9.999999999999999e-06,
+        "output": 4.9999999999999996e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-6-astra",
+      "promptName": "02-markdown-formatting",
+      "reserveUsd": 0.5201,
+      "reserveRates": {
+        "usd": 0.5201,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 9.999999999999999e-06,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-6-astra",
+      "promptName": "03-code-blocks",
+      "reserveUsd": 0.5212,
+      "reserveRates": {
+        "usd": 0.5212,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 9.999999999999999e-06,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-6-astra",
+      "promptName": "04-mixed-markdown-latex",
+      "reserveUsd": 0.5236625,
+      "reserveRates": {
+        "usd": 0.5236625,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 9.999999999999999e-06,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-6-astra",
+      "promptName": "05-complex-scenarios",
+      "reserveUsd": 0.5273375,
+      "reserveRates": {
+        "usd": 0.5273375,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 9.999999999999999e-06,
+        "output": 5e-05
+      }
+    },
+    {
+      "modelId": "openai/gpt-6-astra",
+      "promptName": "06-edge-cases-boundaries",
+      "reserveUsd": 0.5252,
+      "reserveRates": {
+        "usd": 0.5252,
+        "inputRate": 1e-05,
+        "outputRate": 5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "observedRateAfterResponse": {
+        "input": 9.999999999999999e-06,
+        "output": 5e-05
+      }
+    }
+  ]
+}

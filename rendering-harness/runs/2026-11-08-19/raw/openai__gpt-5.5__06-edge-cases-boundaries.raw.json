@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794170615-okR9VrehfbM331W2FElI",
+  "object": "chat.completion",
+  "created": 1794170615,
+  "model": "openai/gpt-5.5",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Delimiter Variants\n\n1. Double dollar display:\n\n$$x^2 + y^2 = r^2$$\n\n2. Bracket display:\n\n\\[E = mc^2\\]\n\n3. Single dollar inline: $a + b = c$\n\n4. Paren inline: \\(x = 5\\)\n\n---\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n\n     And it evaluates to 0.5\n   - Third item\n\n---\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n---\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n---\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n---\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+        "refusal": null,
+        "reasoning": "**Testing delimiters**\n\nI see the request is about testing delimiters, and it seems literal delimiters are fine to use. The platform might render them. I could include them as markdown, but I’m wondering if there’s a potential issue with code blocks. For example, using price = $50 isn’t valid Python, but maybe it’s okay for testing purposes. I need to make sure to include everything in the final test response!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Testing delimiters**\n\nI see the request is about testing delimiters, and it seems literal delimiters are fine to use. The platform might render them. I could include them as markdown, but I’m wondering if there’s a potential issue with code blocks. For example, using price = $50 isn’t valid Python, but maybe it’s okay for testing purposes. I need to make sure to include everything in the final test response!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8N78yDFDZQJGRiTpryQL6uvs9NZurYdGrTKCysz5uLDeA0DHUkno2Fm0XS3bwxGaAAtNRD9K04rh2YN_Ipj1sJ_OvNsh_nVCOY68klvC4O-p-LwAF8anOFkaqtNFUK4rN2q99EH8mgkvYqUhx5MPNAfFCW-Pk2w5sUl7SimjMTiWynaxQ4nPwHCD3JjfepJsTwgl1fQ_AVZw9EbEXcAwFwE5xGlKm5ADNjd3-bj7qdLRgfPCK1GP2YZLQs0ILwAUq_cqXihgChJ_8_5wt9wzJWUdmFYIrbrKLdoVHDxPTcjhkRkyuMc7_DUAU1So44eQImKBcNyXEEaMjbC1sMrkKExDmSDFyF1NfC-Dup2ZwGUAk4ddTpyei66Wj5vRpsepJ9Nnro_47O2oQJzHBEruNIRHgxylZi9qktRSwb5BeqsG7K3WV3wqLU26Kcc4SZPA2HdVnNq16RDgmpfYC3_lMWC84_BttyErs8VCvpWbe23SILUptrjMTeExHNAF0zP9IEpWA5b9xb3g0U5WsfeEG4GtNfiY2HL_s2GlxBqDef0qmn6fRW2pAAs0oXXQf4iSGUxymk9zobjT-0peW7GSBuvZ6DrBm4Sbvt0Lhj0dQNxsDUXCZ5zHZd8fDn-l9zrtf9WJgO0cTvwIJmOiCRkpC19A9bHmae2BJGinC3ouh29dqO85RVUkPX0rCt_wXVWq9fmnMJt5fwfNY1gI9c0cnJeBV9CebiV9EfAD_fg1jNwcZQp_JaAeIHA_9WEJQ1VUpQ9c-xQrAiwsb8aEzzG86Tc3Y8BOtDYVung2OjwneT0YuOPUerlo2HxdiWlrt0nBZ65lFM11N698kobhWiGdDnznmZJJVwsL4Rz65KD9I-2SIYh_5AgjhepjcvZFU_V_0D5F-KdgWqRIm5qcJCbYhrY17PPel8i7983VubSW20PrAmutBZGKtmBw_ONl7kY1p_ZpKi7XRJ1gT9jlV6yePA7mwXTJju-hZ6SeTUE4RWxk8LqPxF_SGDIsEf0oke563-2OhEDJkRB2S8UTmMdH-dkcTjPLdVRGMfok6YVG8uNcjDA2Oqau0vWC2eHexJjHEFuCYAp2xNa_j3w2_9TeJhNMkgegO-dBRLBvl0reIft8Oh2fLzuyAgzTJddZmwEpmbYouukYnAdhv1OAB5jufH2fOoKYQ1cT4M5SocJUzVzP0dfmjhHrYcQJlPEmr7px7MHy7e2HxjQZGDVjJElWiWiZ8zaoRrJ0ZXB1DjFwBCAt6x62LnB_BBv8DoUmQonl_RZ2cJnceOvSgkYfuSG2O6NLGACxUngLVQhJo-DVcv26W2X0ZL1et7QFCIFsL8onhV9Vua0DzbDgJNS39N7fqS1HeQL_qdqKOpgch2NKO3e51swyM40bTxnAad9yDbizcVJ1bAkbeGOp0KthJcbAQZq3UdNR1ZJP14n6iJ5FQtbNQtTBqe4dnaYrBKzJbYPGJXVsM69xH6uNEQLn6gjeIl6Zu1cBYqUMf3zeHuBvjs-1VZCPdL3NamfJ2xgZeD9Rj0-Y43B22kqpy-yzlWaCjdleJvfApD1qn7hZXM2lmSYRbfHq3_qGeJ1jg0c2eFdf4tLHUeaYRZ2EAblv-DhXzYKAol6GB8w20wa03pgj81TVnJ2p0bTqjTB_35276UAB2nyiwnTA-51qNmNLMYrhwbJMGaQwnj0so4PyibAr7KFoajUzXSR3GDZ7SGx8xNpOuGBH2czAVTunkp0APtKpuM_u_VGvZx1_fPqVFpB8XiULgRtv6NaLl8Cj8YwHavaNfEwTGgmlu_c0odw_SEjS5507NIa1q9L8nrvuLj3K4bwjXX41NoWSwQh5CulSe5PDtEk3kssBudsHCr_C1yVgkHwzx0Vbjur_HyQ0KcyR31MlZ3RVivX8U_oRazXvZ9HmW5QShppDwMwJ6o5M0XeS1ERT5yztW1VG7WdU1zEeQm0oNx7L6a22hV3c368BEfsjBWFuvlc6rJ15JlEd1A0F1tfSK8yMkDirznwZhUqi4RXqNGphlcTD4kqsbfl07KP0a3RSVd18a-DM2Kh-FDN8-I5HtMq6KnIM5mD0FPfWU1AbONVfZpI9p_qEd-aRM7HTZJR7o_3HdBxz1FqANy3erzs45itdNbHl2Sw57myMjsO9SiSJUd_VploaZ1B3e5akip4-S2x0725uLYb3qPNYlHozEQz3ml16OOZ0iRT3qzWR09xJy-yOnoDDouqZizULM_YCAja7kUqk1DJLYTtTINttcKABra37sAUPWPAyMAnllCHC8ghRnHNTvDfjlw1SrN0CKyU3wTxqsmrLvC18i92-4Srzoe_nngbTwbFGDtDkGd9v4OD1UcuZUrkMEGP54t-_mYFwVAnUv1DtqDMrCHp_t_vYpfhKxk2FZQEBuM5boohBDqT0XNLZfijxwUQBgOc0gVxf0o-PdlDJ39Dnu3f93KHJ2DJOmiw-VW7OJxpmAbLl3fK4yJNUr4LNZRLsdg-W6WD9BifPG34UKidCOUXgg9o2o6wFt1lgIREzpR8y_UWu9HMbmWVufjw09T_CqfXppJAfya_lUMpHk7qx2zpZ-366aPgogXQvhRiCjqKRw40aeKuXPrj7c-45q82IypLCWidUtLoOoLiezAtvahHLDBnZFtAKBXESK1Y4VjpiKAmQpBjpmYaZM45dd6g3hGZzNBXI5LWq5QNebvftmMD6LEjRsPdHPGtXrzs7nJuqHUkx0zSO8sElOCHl73qyBDPSCnv0Kh1R9xEYIhxmNxrtnCA7KRNOyBfiwGUmsC54oTxbtEUhmYvk_arUqk1zpl-MWmaud6BO3TBgn653iDzC2NPMFI36n0mRnKZmVWXkDUzFTC30mNaVMz0dxPB3X28cTTpBtKm8pSshp5bcVINaL_AwRAJZSEK4G2UqiKM52uZ95Qt3VGRMoEXHeX5A0k1wT1dsiEGVX9ximgATRKFiXbsnYrayWSd7NscrAuXwsouyYjLU4Y2H0Q7wxei5V9Bo7VSO3dgjQ9ZWiqD_md2uV08wkWgNp3n_3qBXECzWVCvSfjjKgtQVkO2C29BSNHdjqZi1rvRBDU-r0ML0JIgI7iXidb8KM7f7gpGTBdpm85KPOmFdG8MfVPgocFA45DeGBUuhbHugc5twy-W2mKorfgl4e5V6EId0sZASFrBkxNM2gCDIRPc7XfsUlIHm3JAW7iEmdOcXfAN5O9eqoV7SY5tSSpzamwRaWj7RgV07xB0bYePufVyKbrMjrNxVg6q4g7yg21KMBOXEFtLLNKrlNc0ENiti6HUU8S5o6Yg2NYak2LI4ppT9k8vKANn6Ufj1hkBel2C0oL2MZR23LdprOAz5JK9k2OcsnOj6cn-zDmVCLAjiEXlzdqLF-KjOucOIZrJbCk4F8YyW5cDBuhNZqUCG6II1jb8Z5XBn33hG9j_0BAOLXzVnbQpFpAOrd50BEc0I9cuqbVQC5fA5cT5XQOcrHuqpjlWX3lPsSuixTKxn72Nkva9wxMiMzyRzngC1HAwoMsQkIUochYAsyEesrWSIhuBRUVwSPa8EPX4B6ix34ntRfi5Egplmznpj97RQkqKXCsD6k1G47TkCVoEzSOcOUv0aQ8mQB3pOMEi7yoKqJ0WOZGLNtPt4Zo9V_B5WqfpDoA6QmJ4OVbt0kvH4E6P23G_SHUNkAMANLJa2bdipz6oM3goFL6Fy7Fcia2Dh-Uh8yZp_NJ5Z0JGeTAwHi_kp354_l9MaUEZYw4QLlZ3Bl1LcDX-ZkYL7GX7Wg3cfJnLKIpwRafeCkTdAOQNJQrVXRixVoCVIK-Mg_RP_-n56sO-sSlIuQIuBoOq5vRrb5tPnjFBuAJlemUtTI_HzA_c9h1CAeLoPYXXsH2rkp8CZWVoZOTCgthL-v3VDpxkRxrKimAbyGLFhE6ItlgMwnBFU2t4gedSwvWdyRpMsP_s0Vx_kIo3V8jj4uFfbnkIuGRyRYka30HqJV7iF-YmoStUBBYfZw2O6yW7dzrFwVc8xn_G3KWAeTdcWQXRKQB-6UQ7A2AhHn3MD7CKSJnwRYdmed5ECW05fLhbrSsTWnVOM9X_lBMCOv_HmkkZtfDl2Eo6dBvKMkOMqylt7w_13sU8XqUM60YTX9YD2dYmjExnG0Ga8iYQqtiBm-9JQnQBVWOPeV1jv2K6nKridMfw9oLDRZmBJmSsrH5TwH_PveigVYuY_lkpMntG5Yymu-f-yFDeoDhBmApuI4MVHE5bpoWAeJ3m3W8KK_md4jEzJUlnpcYAdzmxBzAWiDrcBPghEjnz9J5s9IUYBi6l8Ps98I2TquxuidLUtsNAii3ef3Gwwb8gmgZQEbXZVlHX3eEqldJ0RbOw7OWuw6QPZlN0leHzt16Y2FwV9bn8_YrU2pvpDcWzkKoHHEszi0f4NQlwFrS0Dijq2NIUbbzrmLtxp4-2FW1EYEpL0SgWxZfE-nspGUBUc4qRGpy855d4JI9hBUbGC4oTEMZARbG87FO1_mdh2kyH_bXsBFzf5VbMY0n4P7uE5AKIdccSGFqILZ8yKFLjPYnubNh_MmVYYbIR_517R2a2ygycXxlnyG5O7kJbM7guFbYe45VF0rtVuaYD8hJ08yU9FH1M8UbzkOkOY7xbQJ8IpM1GUYr4o7TInntT5npu9C8oGJpQ2SynweO8SqY9GuM6dgtqGHmNCSG45SRnEhXn3hSPTVkNViPJ_1r_2LnJuCL6YeH7qLU6_OovpXOWVS9ITte6AR_zBcR8AjzSz-JkLCzp1DdRSBf8ThknJLBVBWhxam19MGf5WpUmXnP2o-NL2h58a53PWwYfwJ0urfpqSwjbXEO53nLL_4uhu3KDSvHqNCA28feADW2a_Oe7d5OIIgcvwI3GoYq-WZx6I5QdA2cnH0CsCgi6h-Mqw3sD4vKvocYShhSpBxdQnByJ-A3NYM387IIpOsTzYbZ97ujVZgpBgjbFukj5c4WC_3d05LG_molo6VuqDAxyatosqbI4kC94LUmzng0jyOsC1MXtURSCuye5tV_dtzlpLNgNpmcVUv79r0vN5WK_Xc2KxRalpIoCtauQA1uWVEFGrGRU_Kh1Pxgl2aZELHgU=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjUtMjAyNjA0MjN8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0779ab1fa2b347d8016af0def8406c87d1a63604ef38eaae76",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 342,
+    "completion_tokens": 572,
+    "total_tokens": 914,
+    "cost": 0.01887,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01887,
+      "upstream_inference_prompt_cost": 0.00171,
+      "upstream_inference_completions_cost": 0.01716
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 244,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

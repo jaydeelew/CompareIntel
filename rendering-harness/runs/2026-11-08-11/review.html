@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Model Rendering QA Review</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .summary {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .prompt-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .model-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafafa;
+    }
+    .model-card h4 {
+      margin-top: 0;
+    }
+    .screenshot {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .raw-response {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+    .feedback {
+      margin-top: 10px;
+    }
+    .feature-coverage {
+      font-size: 0.85em;
+      margin: 10px 0;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .feature-coverage .feature {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .feature-coverage .feature.yes {
+      background: #d4edda;
+      color: #155724;
+    }
+    .feature-coverage .feature.no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .feature-coverage .math-error {
+      color: #d32f2f;
+      font-weight: bold;
+      display: block;
+      margin-top: 4px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+    .export-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .export-btn:hover {
+      background: #0056b3;
+    }
+    .status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      text-transform: uppercase;
+    }
+    .status-pass { background: #d4edda; color: #155724; }
+    .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-truncated { background: #e7e3ff; color: #3d348b; }
+    .status-incomplete { background: #ede7f6; color: #4a148c; }
+    .status-fail { background: #f8d7da; color: #721c24; }
+    .error {
+      color: red;
+      background: #fee;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .meta {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Model Rendering QA Review</h1>
+  
+  <div class="summary">
+    <h2>Summary</h2>
+    <p><strong>Run Date:</strong> 2026-11-08-11</p>
+    <p><strong>Models Tested:</strong> 4</p>
+    <p><strong>Prompts:</strong> 6</p>
+    <p><strong>API history records:</strong> 26
+       &nbsp;<strong>Unique coverage cells:</strong> 24</p>
+    <p><strong>History:</strong>
+       Passed 23
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 3
+       / Failed 0</p>
+    <p><strong>Unique coverage:</strong>
+       Passed 23
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 1
+       / Failed 0
+       (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $0.236670</p>
+    <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
+  </div>
+  
+  
+    <div class="prompt-section">
+      <h2>01-math-basics</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Google: Gemini 3.1 Pro Preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-3.1-pro-preview<br>
+              Attempt: original · google_gemini-3.1-pro-preview_01-math-basics.json<br>
+              Tokens: 2026 (279 in / 1747 out)<br>
+              Cost: $0.021522<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 7:36:00 PM
+            </div>
+            
+            
+              <img src="google_gemini-3.1-pro-preview_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is a demonstration of the requested formatting elements:
+
+**1. Inline math**
+The quadratic formula is a widely used algebraic tool for finding the roots of a quadratic equation of the form $ax^2 + bx + c = 0$. The solutions can be found using the formula $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$, where the expression under the square root, $b^2 - 4ac$, is known as the discriminant and determines the nature of the roots.
+
+**2. Display math with aligned equations**
+Here is a system of linear equations formatted with vertical alignment on the equals sign:
+$$
+\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}
+$$
+
+**3. Matrices and cases**
+Below is the $2 \times 2$ identity matrix alongside a piecewise function defined using cases:
+$$
+I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}
+$$
+
+**4. Multiple equations**
+Here are three fundamental equations from physics and geometry, displayed on separate...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-3.1-pro-preview"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.1-Codex-Mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.1-codex-mini<br>
+              Attempt: original · openai_gpt-5.1-codex-mini_01-math-basics.json<br>
+              Tokens: 676 (274 in / 402 out)<br>
+              Cost: $0.000873<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 7:34:17 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.1-codex-mini_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">The solutions to a quadratic equation \(ax^2 + bx + c = 0\) are given by the quadratic formula \(x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}\), where the discriminant \(b^2 - 4ac\) determines the number and type of roots.
+
+To solve a linear system, consider
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+We can also express important mathematical objects such as
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}$$
+
+Some fundamental equations include:
+$$E = mc^2$$
+$$F = ma$$
+$$a^2 + b^2 = c^2$$
+
+See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.
+
+The item costs $5 and the shipping is $10, for a total of $15. Budget: \$1000.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.1-codex-mini"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Tencent: Hy4 preview <span class="status status-incomplete">incomplete</span></h4>
+            <div class="meta">
+              Model ID: tencent/hy4-preview<br>
+              Attempt: original · tencent_hy4-preview_01-math-basics.json<br>
+              Tokens: 8460 (268 in / 8192 out)<br>
+              Cost: $0.020712<br>
+              Finish: length / length — empty visible (reasoning-only), incomplete<br>
+              Time: 11/8/2026, 7:29:11 PM
+            </div>
+            
+            
+              <div class="error">No visible assistant text (completion tokens were reasoning-only or truncated before content). Incomplete — not a renderer failure.</div>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="tencent/hy4-preview"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.2 <span class="status status-incomplete">incomplete</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.2<br>
+              Attempt: original · z-ai_glm-5.2_01-math-basics.json<br>
+              Tokens: 717 (279 in / 438 out)<br>
+              Cost: $0.001288<br>
+              Finish: stop / stop — empty visible (reasoning-only), incomplete<br>
+              Time: 11/8/2026, 7:34:48 PM
+            </div>
+            
+            
+              <div class="error">No visible assistant text (completion tokens were reasoning-only or truncated before content). Incomplete — not a renderer failure.</div>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.2"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Tencent: Hy4 preview <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-32768</span></h4>
+            <div class="meta">
+              Model ID: tencent/hy4-preview<br>
+              Attempt: rerun-32768 · tencent_hy4-preview_01-math-basics.json<br>
+              Tokens: 9026 (268 in / 8758 out)<br>
+              Cost: $0.022127<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:40:44 PM
+            </div>
+            
+            
+              <img src="reruns/tencent_hy4-preview_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">1. **Inline math**
+
+The quadratic formula $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ gives the solutions to the equation $ax^2 + bx + c = 0$.
+
+2. **Display math with aligned equations**
+
+$$
+\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}
+$$
+
+3. **Matrices and cases**
+
+$$
+I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}
+$$
+
+4. **Multiple equations**
+
+$$
+E = mc^2
+$$
+
+$$
+F = ma
+$$
+
+$$
+a^2 + b^2 = c^2
+$$
+
+5. **Links**
+
+See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.
+
+6. **Money context (escaped dollar signs, so this does NOT render as math)**
+
+The item costs \$5 and the shipping is \$10, for a total of \$15. Budget: \$1000 (escaped dollar).</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="tencent/hy4-preview"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.2 <span class="status status-pass">pass</span> <span class="status status-not-covered">rerun-16384</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.2<br>
+              Attempt: rerun-16384 · z-ai_glm-5.2_01-math-basics.json<br>
+              Tokens: 1514 (279 in / 1235 out)<br>
+              Cost: $0.003162<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:45:50 PM
+            </div>
+            
+            
+              <img src="reruns/z-ai_glm-5.2_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is a response demonstrating the requested math and formatting basics:
+
+### 1. Inline Math
+To find the roots of a quadratic equation $ax^2 + bx + c = 0$, we use the quadratic formula $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$. The term inside the square root, $b^2 - 4ac$, is called the discriminant, and it tells us how many real roots the equation has.
+
+### 2. Display Math with Aligned Equations
+Consider the following system of linear equations:
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+By adding the two equations together, we can easily solve for $x$ and $y$, yielding the solution $x = 2$ and $y = 3$.
+
+### 3. Matrices and Cases
+In linear algebra and piecewise functions, we often use matrices and cases to define structures and conditions. Here are examples of both:
+$$I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}, \quad
+f(x) = \begin{cases}
+x^2 &amp; \text{if } x \geq 0 \\
+-x &amp; \text{if } x &lt; 0
+\end{cases}$$
+
+### 4. Multiple Equations
+Here are a few of the most famous for...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.2"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>02-markdown-formatting</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Google: Gemini 3.1 Pro Preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-3.1-pro-preview<br>
+              Attempt: original · google_gemini-3.1-pro-preview_02-markdown-formatting.json<br>
+              Tokens: 1295 (200 in / 1095 out)<br>
+              Cost: $0.013540<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 7:36:09 PM
+            </div>
+            
+            
+              <img src="google_gemini-3.1-pro-preview_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-3.1-pro-preview"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.1-Codex-Mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.1-codex-mini<br>
+              Attempt: original · openai_gpt-5.1-codex-mini_02-markdown-formatting.json<br>
+              Tokens: 384 (195 in / 189 out)<br>
+              Cost: $0.000427<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 7:34:19 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.1-codex-mini_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.1-codex-mini"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Tencent: Hy4 preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: tencent/hy4-preview<br>
+              Attempt: original · tencent_hy4-preview_02-markdown-formatting.json<br>
+              Tokens: 4065 (210 in / 3855 out)<br>
+              Cost: $0.009816<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:29:51 PM
+            </div>
+            
+            
+              <img src="tencent_hy4-preview_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="tencent/hy4-preview"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.2 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.2<br>
+              Attempt: original · z-ai_glm-5.2_02-markdown-formatting.json<br>
+              Tokens: 806 (202 in / 604 out)<br>
+              Cost: $0.001470<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:34:53 PM
+            </div>
+            
+            
+              <img src="z-ai_glm-5.2_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.2"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>03-code-blocks</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Google: Gemini 3.1 Pro Preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-3.1-pro-preview<br>
+              Attempt: original · google_gemini-3.1-pro-preview_03-code-blocks.json<br>
+              Tokens: 1139 (261 in / 878 out)<br>
+              Cost: $0.011058<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 7:36:18 PM
+            </div>
+            
+            
+              <img src="google_gemini-3.1-pro-preview_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is the response demonstrating the requested fenced code blocks and inline code formatting:
+
+## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-3.1-pro-preview"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.1-Codex-Mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.1-codex-mini<br>
+              Attempt: original · openai_gpt-5.1-codex-mini_03-code-blocks.json<br>
+              Tokens: 765 (241 in / 524 out)<br>
+              Cost: $0.001108<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 7:34:23 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.1-codex-mini_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here’s an example response containing fenced code blocks, along with inline code references for the math-like content you mentioned.
+
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+Inline code snippets for clarity: `x^2`, `a_b`, and `$price` are all rendered as code, not math.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.1-codex-mini"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Tencent: Hy4 preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: tencent/hy4-preview<br>
+              Attempt: original · tencent_hy4-preview_03-code-blocks.json<br>
+              Tokens: 1984 (258 in / 1726 out)<br>
+              Cost: $0.004532<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:30:32 PM
+            </div>
+            
+            
+              <img src="tencent_hy4-preview_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="tencent/hy4-preview"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.2 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.2<br>
+              Attempt: original · z-ai_glm-5.2_03-code-blocks.json<br>
+              Tokens: 709 (247 in / 462 out)<br>
+              Cost: $0.001189<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:34:58 PM
+            </div>
+            
+            
+              <img src="z-ai_glm-5.2_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature no">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is the response demonstrating the requested fenced code blocks and inline code formatting:
+
+## Python code
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+## JavaScript code
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+## Inline code with math-like content
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.2"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>04-mixed-markdown-latex</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Google: Gemini 3.1 Pro Preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-3.1-pro-preview<br>
+              Attempt: original · google_gemini-3.1-pro-preview_04-mixed-markdown-latex.json<br>
+              Tokens: 1883 (317 in / 1566 out)<br>
+              Cost: $0.019426<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 7:36:32 PM
+            </div>
+            
+            
+              <img src="google_gemini-3.1-pro-preview_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is another example that mixes Markdown formatting with LaTeX mathematical expressions, following the structure of your test prompt:
+
+## Problem Statement
+**Exercise 2**: Given the function $g(x) = e^{2x} + \sin(x)$, find:
+
+1. The *derivative* $g&#039;(x)$
+2. The **integral** $\int g(x) dx$
+
+### Solution
+The derivative is calculated using the chain rule:
+$$g&#039;(x) = 2e^{2x} + \cos(x)$$
+
+The integral is found using standard integration rules:
+$$\int g(x) dx = \frac{1}{2}e^{2x} - \cos(x) + C$$
+
+## Linear Algebra with Lists
+Properties of the identity matrix $I_3 = \begin{pmatrix} 1 &amp; 0 &amp; 0 \\ 0 &amp; 1 &amp; 0 \\ 0 &amp; 0 &amp; 1 \end{pmatrix}$:
+- Determinant: $\det(I_3) = 1$
+- Trace: $\text{tr}(I_3) = 3$
+- Eigenvalues: 
+  $$\lambda_1 = 1, \quad \lambda_2 = 1, \quad \lambda_3 = 1$$
+
+## Real World Context
+&gt; **Note**: In finance, the compound interest formula $A = P\left(1 + \frac{r}{n}\right)^{nt}$ calculates the future value of an investment.
+
+Money context: If you invest a principal of $1,000 at a 5% annu...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-3.1-pro-preview"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.1-Codex-Mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.1-codex-mini<br>
+              Attempt: original · openai_gpt-5.1-codex-mini_04-mixed-markdown-latex.json<br>
+              Tokens: 742 (310 in / 432 out)<br>
+              Cost: $0.000941<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 7:34:26 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.1-codex-mini_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here’s a mixed Markdown + LaTeX response:
+
+---
+
+### ✅ Exercise 1: Calculus Review
+
+We start with the quadratic function \( f(x) = x^2 + 2x + 1 \).
+
+1. **Derivative**:
+   \[
+   f&#039;(x) = \frac{d}{dx}(x^2 + 2x + 1) = 2x + 2.
+   \]
+
+2. **Indefinite Integral**:
+   \[
+   \int f(x)\,dx = \int (x^2 + 2x + 1)\,dx = \frac{x^3}{3} + x^2 + x + C.
+   \]
+
+---
+
+### 🧮 Linear Algebra Facts for \( A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix} \)
+
+- **Determinant**: \( \det(A) = ad - bc \)
+- **Trace**: \( \text{tr}(A) = a + d \)
+- **Inverse** (when \( \det(A) \neq 0 \)):
+  \[
+  A^{-1} = \frac{1}{ad - bc}\begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}.
+  \]
+
+---
+
+### 🏭 Real-World Interpretation
+
+&gt; **Note**: In economics, the cost function \( C(q) = 100 + 5q \) captures \( \$100 \) in fixed costs plus \( \$5 \) in variable costs per unit.
+
+So, buying 10 units gives \( C(10) = 100 + 5 \cdot 10 = 150 \), meaning \( \$150 \) total.
+
+Let me know if you’d like graphing or further exploration!</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.1-codex-mini"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Tencent: Hy4 preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: tencent/hy4-preview<br>
+              Attempt: original · tencent_hy4-preview_04-mixed-markdown-latex.json<br>
+              Tokens: 2367 (306 in / 2061 out)<br>
+              Cost: $0.005410<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:30:54 PM
+            </div>
+            
+            
+              <img src="tencent_hy4-preview_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is a response that mixes Markdown formatting with LaTeX:
+
+## Problem Statement
+
+**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:
+
+1. The *derivative* $f&#039;(x)$
+2. The **integral** $\int f(x)\,dx$
+
+### Solution
+
+The derivative is:
+
+$$f&#039;(x) = 2x + 2$$
+
+The integral is:
+
+$$\int f(x)\,dx = \frac{x^3}{3} + x^2 + x + C$$
+
+## Linear Algebra with Lists
+
+Properties of the matrix $A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$:
+
+- Determinant: $\det(A) = ad - bc$
+- Trace: $\operatorname{tr}(A) = a + d$
+- Inverse (if $\det(A) \neq 0$):
+
+  $$A^{-1} = \frac{1}{ad - bc}\begin{pmatrix} d &amp; -b \\ -c &amp; a \end{pmatrix}$$
+
+## Real World Context
+
+&gt; **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are \$100 and variable costs are \$5 per unit.
+
+Money context: If you buy 10 units, that&#039;s \$100 fixed plus \$50 variable = \$150 total:
+
+$$C(10) = 100 + 5(10) = 150$$</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="tencent/hy4-preview"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.2 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.2<br>
+              Attempt: original · z-ai_glm-5.2_04-mixed-markdown-latex.json<br>
+              Tokens: 1253 (311 in / 942 out)<br>
+              Cost: $0.002590<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:35:12 PM
+            </div>
+            
+            
+              <img src="z-ai_glm-5.2_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Solutions with Mixed Markdown and LaTeX
+
+## Exercise 1: Calculus Review
+
+Given the function $f(x) = x^2 + 2x + 1$, we can solve both parts:
+
+### 1. The Derivative
+
+Using the power rule term by term:
+
+$$f&#039;(x) = \frac{d}{dx}\left[x^2 + 2x + 1\right] = 2x + 2$$
+
+**Verification**: Notice that $f(x) = (x+1)^2$, so by the chain rule:
+
+$$f&#039;(x) = 2(x+1) = 2x + 2 ✓$$
+
+### 2. The Integral
+
+Integrating each term:
+
+$$\int f(x)\, dx = \int (x^2 + 2x + 1)\, dx = \frac{x^3}{3} + x^2 + x + C$$
+
+&gt; **Tip**: Always include the constant of integration $C$ for indefinite integrals!
+
+---
+
+## Exercise 2: Linear Algebra Properties
+
+For the matrix $A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$, here are the key properties:
+
+- **Determinant**: $\det(A) = ad - bc$
+- **Trace**: $\text{tr}(A) = a + d$
+- **Eigenvalues**: Found from $\lambda^2 - \text{tr}(A)\lambda + \det(A) = 0$
+
+### Worked Example
+
+Let $A = \begin{pmatrix} 4 &amp; 7 \\ 2 &amp; 6 \end{pmatrix}$:
+
+$$\det(A) = (4)(6) - (7)(2) = 24 - 14 = 10$$
+
+Since $\...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.2"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>05-complex-scenarios</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Google: Gemini 3.1 Pro Preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-3.1-pro-preview<br>
+              Attempt: original · google_gemini-3.1-pro-preview_05-complex-scenarios.json<br>
+              Tokens: 2695 (446 in / 2249 out)<br>
+              Cost: $0.027880<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 7:37:01 PM
+            </div>
+            
+            
+              <img src="google_gemini-3.1-pro-preview_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is a comprehensive rendering test suite based on your scenarios, carefully formatted to test the limits of Markdown and LaTeX parsers. I have also included a **Bonus Scenario 6** with extreme edge cases that commonly break renderers.
+
+## Scenario 1: Math in Lists with Formatting
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+## Scenario 2: Tables with Math
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+## Scenario 3: Code and Math Mixed
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+```
+
+The mathematical formula is $A =...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-3.1-pro-preview"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.1-Codex-Mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.1-codex-mini<br>
+              Attempt: original · openai_gpt-5.1-codex-mini_05-complex-scenarios.json<br>
+              Tokens: 1597 (428 in / 1169 out)<br>
+              Cost: $0.002445<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 7:34:33 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.1-codex-mini_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here&#039;s a walkthrough that tests the limits of each scenario:
+
+---
+
+### Scenario 1: Math in Lists with Formatting (Edge Cases)
+- The Pythagorean theorem \( a^2 + b^2 = c^2 \) is standard, but when \( a = 3 \) and \( b = 4 \), we get \( c = \sqrt{9 + 16} = \sqrt{25} = 5 \).  
+  **Edge case:** if either leg were negative or non-integer (e.g., \( a = -3 \) or \( b = 4.5 \)), \( c \) would still be \( \sqrt{a^2 + b^2} \) and positive; showing the theorem’s invariance under sign changes.  
+  **Formatting note:** ensure the list remains clear even when nested calculations or nonstandard spacing are introduced.
+
+---
+
+### Scenario 2: Tables with Math (Edge Cases)
+| Formula    | LaTeX                              | Result |
+|------------|------------------------------------|--------|
+| Quadratic  | \( ax^2 + bx + c = 0 \)           | \( x = \frac{-b \pm \sqrt{b^2-4ac}}{2a} \) |
+| Sum        | \( \sum_{i=1}^{n} i \)             | \( \frac{n(n+1)}{2} \) |
+| Product    | \( \prod_{i=1}^{n} i \)    ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.1-codex-mini"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Tencent: Hy4 preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: tencent/hy4-preview<br>
+              Attempt: original · tencent_hy4-preview_05-complex-scenarios.json<br>
+              Tokens: 7689 (432 in / 7257 out)<br>
+              Cost: $0.018510<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:32:37 PM
+            </div>
+            
+            
+              <img src="tencent_hy4-preview_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is the response containing all five scenarios. To avoid ambiguity in Scenario 5, literal currency amounts are written with escaped dollar signs (`\$`) so they are not parsed as LaTeX inline math, while the actual mathematical expressions keep their `$...$` delimiters.
+
+## Scenario 1: Math in Lists with Formatting
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+## Scenario 2: Tables with Math
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+## Scenario 3: Code and Math Mixed
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+``...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="tencent/hy4-preview"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.2 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.2<br>
+              Attempt: original · z-ai_glm-5.2_05-complex-scenarios.json<br>
+              Tokens: 1312 (434 in / 878 out)<br>
+              Cost: $0.002235<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:35:29 PM
+            </div>
+            
+            
+              <img src="z-ai_glm-5.2_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is the response handling all the challenging edge cases you provided, ensuring that markdown, LaTeX math, code blocks, tables, and mixed dollar signs are all formatted correctly:
+
+## Scenario 1: Math in Lists with Formatting
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+## Scenario 2: Tables with Math
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+## Scenario 3: Code and Math Mixed
+```python
+# Calculate area of circle with radius r
+import math
+
+def circle_area(r):
+    # Formula: A = πr²
+    return math.pi * r**2
+
+print(f&quot;Area: {circle_area(5)}&quot;)
+```
+
+The mathematical formula is $A = \pi r^2$ where $r$ is the radius.
+
+## Scenario 4: Hori...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.2"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>06-edge-cases-boundaries</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Google: Gemini 3.1 Pro Preview <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: google/gemini-3.1-pro-preview<br>
+              Attempt: original · google_gemini-3.1-pro-preview_06-edge-cases-boundaries.json<br>
+              Tokens: 1930 (357 in / 1573 out)<br>
+              Cost: $0.019590<br>
+              Finish: stop / STOP<br>
+              Time: 11/8/2026, 7:37:17 PM
+            </div>
+            
+            
+              <img src="google_gemini-3.1-pro-preview_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is a complete test response containing all the requested delimiter variants, edge cases, and nested structures to evaluate your Markdown and MathJax/KaTeX rendering engine. 
+
+### 1. Delimiter Variants
+
+**Display Math (Double Dollar):**
+The equation for a circle is:
+$$x^2 + y^2 = r^2$$
+
+**Display Math (Brackets):**
+The mass-energy equivalence formula is:
+\[E = mc^2\]
+
+**Inline Math:**
+Using single dollars: Let $a + b = c$ be our first assumption.
+Using parentheses: Let \(x = 5\) be our second assumption.
+
+---
+
+### 2. Nested Structures
+
+1. Display math in a list with continuation:
+   - First item in the nested list.
+   - The equation is:
+     
+     $$\int_0^1 x \, dx = \frac{1}{2}$$
+     
+     And it evaluates to 0.5. (This text should align with the bullet point above).
+   - Third item in the nested list.
+
+---
+
+### 3. Code with Math-like Syntax
+
+The following block tests if your parser incorrectly identifies dollars or exponents inside code blocks as math delimiters. It should rend...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="google/gemini-3.1-pro-preview"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>OpenAI: GPT-5.1-Codex-Mini <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: openai/gpt-5.1-codex-mini<br>
+              Attempt: original · openai_gpt-5.1-codex-mini_06-edge-cases-boundaries.json<br>
+              Tokens: 789 (342 in / 447 out)<br>
+              Cost: $0.000979<br>
+              Finish: stop / completed<br>
+              Time: 11/8/2026, 7:34:37 PM
+            </div>
+            
+            
+              <img src="openai_gpt-5.1-codex-mini_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Thanks for the thorough edge-case prompt! Here’s a response that mirrors the structure you provided while ensuring each kind of delimiter and scenario is handled cleanly:
+
+---
+
+### Delimiter Variants
+- Display with double dollars: $$x^2 + y^2 = r^2$$  
+- Bracket display: \[E = mc^2\]  
+- Inline single dollar: $a + b = c$  
+- Inline parentheses: \(x = 5\)
+
+### Nested Structures
+- First item  
+- The equation is:  
+  $$\int_0^1 x\,dx = \frac{1}{2}$$  
+  And it evaluates to 0.5  
+- Third item
+
+### Code with Math-like Syntax
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+### Currency and Escaped Dollars
+- Plain: The price is $100  
+- Escaped: The budget is \$500  
+- Multiple: Costs $25, $30, and $45  
+- In sentence: I spent $50 at the store
+
+### Tables with Math
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="openai/gpt-5.1-codex-mini"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Tencent: Hy4 preview <span class="status status-incomplete">incomplete</span></h4>
+            <div class="meta">
+              Model ID: tencent/hy4-preview<br>
+              Attempt: original · tencent_hy4-preview_06-edge-cases-boundaries.json<br>
+              Tokens: 8542 (350 in / 8192 out)<br>
+              Cost: $0.020780<br>
+              Finish: length / length — empty visible (reasoning-only), incomplete<br>
+              Time: 11/8/2026, 7:34:13 PM
+            </div>
+            
+            
+              <div class="error">No visible assistant text (completion tokens were reasoning-only or truncated before content). Incomplete — not a renderer failure.</div>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="tencent/hy4-preview"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+          <div class="model-card">
+            <h4>Z.ai: GLM 5.2 <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: z-ai/glm-5.2<br>
+              Attempt: original · z-ai_glm-5.2_06-edge-cases-boundaries.json<br>
+              Tokens: 1522 (347 in / 1175 out)<br>
+              Cost: $0.003059<br>
+              Finish: stop / stop<br>
+              Time: 11/8/2026, 7:35:35 PM
+            </div>
+            
+            
+              <img src="z-ai_glm-5.2_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">Here is the processed response handling the various delimiter variants and edge cases, maintaining proper Markdown rendering for math, code, text, and tables:
+
+## Delimiter Variants
+1. Double dollar display:
+   $$x^2 + y^2 = r^2$$
+2. Bracket display:
+   \[E = mc^2\]
+3. Single dollar inline: $a + b = c$
+4. Paren inline: \(x = 5\)
+
+## Nested Structures
+1. Display math in a list with continuation:
+   - First item
+   - The equation is:
+     $$\int_0^1 x dx = \frac{1}{2}$$
+     And it evaluates to 0.5
+   - Third item
+
+## Code with Math-like Syntax
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+## Currency and Escaped Dollars
+- Plain: The price is $100
+- Escaped: The budget is \$500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+## Tables with Math
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="z-ai/glm-5.2"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+  
+  <script>
+    function exportFeedback() {
+      const feedback = {};
+      document.querySelectorAll('textarea[data-feedback-model]').forEach(textarea => {
+        const modelId = textarea.dataset.feedbackModel;
+        const promptName = textarea.dataset.feedbackPrompt;
+        const value = textarea.value.trim();
+        
+        if (value) {
+          if (!feedback[modelId]) {
+            feedback[modelId] = {};
+          }
+          feedback[modelId][promptName] = value;
+        }
+      });
+      
+      const json = JSON.stringify(feedback, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rendering-feedback-2026-11-08-11.json';
+      a.click();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794165639-s4vvk4uxaQmugvyVYkx7",
+  "object": "chat.completion",
+  "created": 1794165639,
+  "model": "stepfun/step-5-preview",
+  "provider": "StepFun",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "The user wants me to generate a response with fenced code blocks, specifically including Python, JavaScript, and inline code with math-like content. The prompt seems to be a test for how code blocks and inline code are rendered/formatted.\n\nI should provide:\n1. A Python code block (already provided in the prompt, but I can present it or similar)\n2. A JavaScript code block (already provided, but I can present it)\n3. Inline code examples with math-like content (x^2, a_b, $price)\n\nThe user is asking me to \"Generate a response with fenced code blocks\" following their structure. I should reproduce the content they provided or create similar content, ensuring the formatting is correct. Since they gave me the exact content they want, I should output it formatted properly.\n\nLet me construct a response that includes:\n- A heading for Python code\n- A Python fenced code block\n- A heading for JavaScript code  \n- A JavaScript fenced code block\n- A section about inline code with math-like content using backticks\n\nI'll use the content they provided since it matches exactly what they're asking for.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants me to generate a response with fenced code blocks, specifically including Python, JavaScript, and inline code with math-like content. The prompt seems to be a test for how code blocks and inline code are rendered/formatted.\n\nI should provide:\n1. A Python code block (already provided in the prompt, but I can present it or similar)\n2. A JavaScript code block (already provided, but I can present it)\n3. Inline code examples with math-like content (x^2, a_b, $price)\n\nThe user is asking me to \"Generate a response with fenced code blocks\" following their structure. I should reproduce the content they provided or create similar content, ensuring the formatting is correct. Since they gave me the exact content they want, I should output it formatted properly.\n\nLet me construct a response that includes:\n- A heading for Python code\n- A Python fenced code block\n- A heading for JavaScript code  \n- A JavaScript fenced code block\n- A section about inline code with math-like content using backticks\n\nI'll use the content they provided since it matches exactly what they're asking for.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 247,
+    "completion_tokens": 456,
+    "total_tokens": 703,
+    "cost": 0.0014782,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0014782,
+      "upstream_inference_prompt_cost": 0.000247,
+      "upstream_inference_completions_cost": 0.0012312
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

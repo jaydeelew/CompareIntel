@@ -1,0 +1,98 @@
+{
+  "status": "completed",
+  "attemptedCalls": 10,
+  "actualCost": 0.0059023262,
+  "unknownCosts": 0,
+  "promptTokens": 3078,
+  "completionTokens": 15862,
+  "reasoningTokensIncludedInCompletion": 11162,
+  "firstCallCST": "11/8/2026, 11:59:20 AM CST",
+  "lastCallCST": "11/8/2026, 12:01:51 PM CST",
+  "truncated": [],
+  "coverage": "Unassessed; no rendering",
+  "visibleEmpty": [],
+  "errors": [],
+  "perCall": [
+    {
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "01-math-basics",
+      "cost": 0.0000918,
+      "completionTokens": 385,
+      "reasoningTokens": 0,
+      "finish": "stop"
+    },
+    {
+      "model": "deepseek/deepseek-v4-flash",
+      "prompt": "04-mixed-markdown-latex",
+      "cost": 0.00008847,
+      "completionTokens": 345,
+      "reasoningTokens": 0,
+      "finish": "stop"
+    },
+    {
+      "model": "openai/gpt-5-nano",
+      "prompt": "01-math-basics",
+      "cost": 0.0009901,
+      "completionTokens": 2441,
+      "reasoningTokens": 2112,
+      "finish": "stop"
+    },
+    {
+      "model": "openai/gpt-5-nano",
+      "prompt": "02-markdown-formatting",
+      "cost": 0.00044815,
+      "completionTokens": 1096,
+      "reasoningTokens": 896,
+      "finish": "stop"
+    },
+    {
+      "model": "openai/gpt-5-nano",
+      "prompt": "03-code-blocks",
+      "cost": 0.00080005,
+      "completionTokens": 1970,
+      "reasoningTokens": 1728,
+      "finish": "stop"
+    },
+    {
+      "model": "openai/gpt-5-nano",
+      "prompt": "04-mixed-markdown-latex",
+      "cost": 0.0006351,
+      "completionTokens": 1549,
+      "reasoningTokens": 1216,
+      "finish": "stop"
+    },
+    {
+      "model": "openai/gpt-5-nano",
+      "prompt": "05-complex-scenarios",
+      "cost": 0.0011862,
+      "completionTokens": 2912,
+      "reasoningTokens": 2048,
+      "finish": "stop"
+    },
+    {
+      "model": "openai/gpt-5-nano",
+      "prompt": "06-edge-cases-boundaries",
+      "cost": 0.0010171,
+      "completionTokens": 2500,
+      "reasoningTokens": 2112,
+      "finish": "stop"
+    },
+    {
+      "model": "z-ai/glm-5.3-flash",
+      "prompt": "04-mixed-markdown-latex",
+      "cost": 0.00045634,
+      "completionTokens": 1720,
+      "reasoningTokens": 973,
+      "finish": "stop"
+    },
+    {
+      "model": "z-ai/glm-5.3-flash",
+      "prompt": "05-complex-scenarios",
+      "cost": 0.0001890162,
+      "completionTokens": 944,
+      "reasoningTokens": 77,
+      "finish": "stop"
+    }
+  ],
+  "futureBudgetGuidance": "1024 is inadequate for default reasoning models. At unchanged defaults use observed total completion (including reasoning) plus headroom, initially 8192 for these three models; assess nonempty visible output and length finish before coverage. Reserve at max(catalog, observed provider rate) with margin. No automatic retries or reasoning-effort changes. This is empirical, not a guaranteed universal cap."
+}

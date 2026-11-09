@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170081-wUpGicyI7amCoW4xsaxr",
+  "object": "chat.completion",
+  "created": 1794170081,
+  "model": "anthropic/claude-opus-5.5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Math Basics\n\n## 1. Inline Math: The Quadratic Formula\n\nAny quadratic equation of the form $ax^2 + bx + c = 0$ (where $a \\neq 0$) can be solved with the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$.\n\nThe expression under the square root, $\\Delta = b^2 - 4ac$, is called the **discriminant**, and it tells us about the nature of the roots:\n\n- If $\\Delta > 0$, there are two distinct real roots.\n- If $\\Delta = 0$, there is exactly one repeated real root, $x = -\\frac{b}{2a}$.\n- If $\\Delta < 0$, there are two complex conjugate roots.\n\n**Example:** For $x^2 - 5x + 6 = 0$, we have $a = 1$, $b = -5$, $c = 6$, so $\\Delta = 25 - 24 = 1$. The roots are $x = \\frac{5 \\pm 1}{2}$, giving $x = 3$ and $x = 2$.\n\n---\n\n## 2. Display Math: A System of Equations\n\nConsider the following system:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding the two equations eliminates $y$:\n\n$$\\begin{align}\n(x + y) + (2x - y) &= 5 + 1 \\\\\n3x &= 6 \\\\\nx &= 2\n\\end{align}$$\n\nSubstituting back into the first equation gives $y = 5 - 2 = 3$. So the solution is $(x, y) = (2, 3)$.\n\n---\n\n## 3. Matrices and Piecewise Functions\n\nThe $2 \\times 2$ identity matrix and a piecewise-defined function:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\nThe identity matrix satisfies $AI = IA = A$ for any $2 \\times 2$ matrix $A$. The function $f$ is non-negative everywhere, since $x^2 \\geq 0$ and $-x > 0$ whenever $x < 0$.\n\n---\n\n## 4. Multiple Famous Equations\n\n**Mass–energy equivalence** (Einstein):\n$$E = mc^2$$\n\n**Newton's second law:**\n$$F = ma$$\n\n**Pythagorean theorem:**\n$$a^2 + b^2 = c^2$$\n\n---\n\n## 5. Links\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n---\n\n## 6. Money Context (Should Not Render as Math)\n\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n\n> **Note:** Dollar signs followed immediately by digits (like $5 or $10) should be treated as currency, not math delimiters. The escaped form \\$1000 should always display as a literal dollar sign.",
+        "refusal": null,
+        "reasoning": "The user wants a response that demonstrates the markdown and math rendering features, which looks like a renderer test, so I'll write a response with each section and its explanation. I'm solving the system x + y = 5 and 2x − y = 1 first: adding the equations gives 3x = 6, so x = 2 and y = 3. For the dollar amounts I'm making sure they won't be read as math, since something like \"$5 and the shipping is $10\" could be parsed as an equation by some renderers, and the prompt wants them kept as plain text.\n\nI'm weighing whether to escape every dollar sign, since the test seems to want a mix of plain \"$5\" and escaped \"\\$1000.\" I'll keep the examples as they're given, and I'll note the choice in the explanation. I also need to decide whether the aligned equations should stay in their original form inside the display math, since some renderers handle that differently.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants a response that demonstrates the markdown and math rendering features, which looks like a renderer test, so I'll write a response with each section and its explanation. I'm solving the system x + y = 5 and 2x − y = 1 first: adding the equations gives 3x = 6, so x = 2 and y = 3. For the dollar amounts I'm making sure they won't be read as math, since something like \"$5 and the shipping is $10\" could be parsed as an equation by some renderers, and the prompt wants them kept as plain text.\n\nI'm weighing whether to escape every dollar sign, since the test seems to want a mix of plain \"$5\" and escaped \"\\$1000.\" I'll keep the examples as they're given, and I'll note the choice in the explanation. I also need to decide whether the aligned equations should stay in their original form inside the display math, since some renderers handle that differently.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQStQoKEAgTGAI4AUIIdGhpbmtpbmcSDBXudq+ep8v9bXmeHRoMSqoVjZTYrgiDMIgRIjC8uLdmmQLO7BdpGgWbZMYUK8nftA2hDWwmpVj3RMyOjL8Uw4hTDKifXvgon58oESkq0gkjFm24AefNSlbNXV/ILZoVbMT63cFU0VMHP9v8ZwKKFIMS4lCfuzguM6wlKHi5Ta6evsNAX+j7PTGRIw+AuIZrhUDoqU35iMJRB1kMaxc/+b+4RUsRnLxIhVoiXgpPm9j6WREqdLVnTQ13Je/g/NLmw4Hz4IMQFYtIp4/PteVwi5SAMYGcUIB+BbfHXaNjTmPepoL1dstcM1taB2cLYR5qfu2iz8ieX4kAbMP1N1Hm+pIDbWcf/PZ16Kh9QvATQdxZzE7DU88KP+d+cKFJ8TOjvtrfFEF6GSIr6T7c2w8E0f3o7mlazxTnVx66FM4KtQRIlFdVmOIt+U28aveQpCe+07Nmtk7A+Znlc+CAQgndezLDqAsllPR3jWroX+7sl3nuV4eLl04IPARphKHf8+8vKCWqNXeSdWyLLR4hr8K/+fH31OB0AISwsqbCE6l2MPA/jCYi85szOLR/1YiDrrJep1LgSlH33GA2jt+d8l0YGXk9PZrbYKTXys87LWcA9I9O0f69xkEN1riNWVGXpkyxyoftEKW9iXWoyb+tnTZUFrWL9R22NaQRr/vLAl6c+hD8UoWpMBSVuC2titaNBWhbhoUAGqo0JndddCXYYT+CoB9m2Dv+xwv5uoISuLlYH2h9LbR9Vl3dCacXjGUszuRK9bE2+SbIvUvWyDdwKgEiy0q5Y8lMm39/ctYeLbS9JH/h+ZsQzQ04jYCvvWI+SF779V4A+LdxSx5lfyowjoQfDDKPzPw5pDjNQ0DvmhU0oPzwRIK1u96Gd+suiLDUX5sw8KfrrXN8JaCE72ZHk/0DJWwzwoeXA3I13X3NB/CqQmXOtjCZVjPo/Zy9MfgO4lQnVJnyHmVjR5dj9AA1EFldfmVkMCTtKhNcIWv20B1obeWh8MQhL+o4OPC5fYP2UK+4Md+dvJpTylGvlxu1/DhBoqI0lBT0KyVHbONp8EkyLCz5VvA2bHOTGG/xadCfqlxGbnHu/+DJ8b0qOvcSiggzjfc5cgvPdAv7+hEy+ZzmxW4+JlKhJOJJis/xXnnrC9O+bwnSHc9SAmqFQOhi7Cac8SMYFj5fo35bLpsCK63pddvTChlYc9XwuA/ETGtIEbhi624RJCR49r4hoMPuq6PzzhwVzx48GFKlr4erlFrRcv2fKTQiVdzQumYJOWiSOJm3hnJtvjqwOongLgcOvJMol9HcyeraboyFuodDmBnASNMJbMpn1wtUcwougacVmqkghkWrszvy5r8IbXJMf15yyKTlBFchBRtWA0NaoG7cS2oqfdEnhi0eYnS7BXz9JPCuQsqxkjaplBVtw7cA1yGCev4C84bZeJ4M70h90qmly9BiDZdYPAN775wB+7IUWr27Mc9vQ80bfCDJIJ1YrX4DMI63CUP9JFDgcMRAYTlkK9SJXKSZ7weBL2lI6c9zyBDDdKpmkmlA1sNIOXZBlUNhbMLYEnFXDJGn5/JtiotXJjJCKW2xoR9wTjJXCg2EMrnFd4QzBpU3aH6HA0J6mxz01/oCzjrpESbDVixYBDp0wnEkS2U5joFrTFPGJOaW26v9rF7nKmZM7JT0M03w+2zSQB2XOK6j40zluf+LYeKLLUTHUpAcVkJ/r63T96P3CYURxEl1Al2GFqE9BgfdakLihBx8GAE=.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1vcHVzLTUuNS0yMDI2MDkyMXxjbGF1ZGUtb24tYXdzIn0"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 410,
+    "completion_tokens": 1336,
+    "total_tokens": 1746,
+    "cost": 0.02836,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.02836,
+      "upstream_inference_prompt_cost": 0.00164,
+      "upstream_inference_completions_cost": 0.02672
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 273,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

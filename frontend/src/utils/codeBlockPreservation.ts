@@ -5,6 +5,7 @@
  * This system extracts code blocks before processing and restores them after.
  */
 
+import { isInsideOuterDisplayMath } from './latex/mathRenderer'
 import logger from './logger'
 
 /**
@@ -93,6 +94,13 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
   processed = processed.replace(indentedBlockRegex, (match, content, offset) => {
     // Skip if this is already a placeholder
     if (match.includes('__CODE_BLOCK_')) {
+      return match
+    }
+
+    // Indented `&=` lines inside $$...$$ / \[...\] are align continuations,
+    // not markdown code (GLM 5.3 06 leaked __CODE_BLOCK_ into KaTeX).
+    const start = typeof offset === 'number' ? offset : 0
+    if (isInsideOuterDisplayMath(processed, start + (match.startsWith('\n') ? 1 : 0))) {
       return match
     }
 

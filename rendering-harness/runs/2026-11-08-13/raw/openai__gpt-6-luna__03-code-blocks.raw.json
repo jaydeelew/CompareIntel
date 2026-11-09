@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794167834-7MnUa9Lv4w4ohvHmf8o9",
+  "object": "chat.completion",
+  "created": 1794167834,
+  "model": "openai/gpt-6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": null,
+        "reasoning_details": [
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NQbknCj_UPY3A8IrBivoLREqkaM-LxyXELMP9A8HEk5Oq1Lz1i5rxTtIFCEbbaFjv7JSEVsLYhW_KvX514sBL_2ufH7uvvpQPKcIxaVHr1gauoUh8myR6L6oFp-dEjsQoN4-tTVxPElpGE5tr0zpqr-GxzEIqbCj1aqCQETzx-R6_pKz4s9OPcE3ApLBPbQyzldABHAtB2p3xMx435LJsU-hsSGgWgxP-mThrbQUNOy_RpP7RvwjsakT-XdQS3WhQuQ6HTuOeXAFCzTA5VWYOUP3zYGqgxR4SImWEfLVyOtXMntOgcTRnvCFsTEoy-D1XI77aTajGLljgGIbMf91UV6_JRpkR_Q4ps3L4RjNjDHGfeumw0DtbYATgevlYSNgbZPcgRsElTws9883288ir4GH2t14_xeCzK9VyUgb0MtIGNS-VDSCGYggUMA8bY7U7bMVVinDHP7VFQWs8l2-Bl45-BJulBKxVeHjVCWob6na9IJf8-EkA5hp2zI9IvtQ690X097jwARIl_DU_E467KsbbSD3gIVJErtRrobqwYozcdChB-F4p-2RxRRcgfIrzJFyxC-wexkj1NAJbHmiv43xDl4UPc7rYYzMJvz-4GsWGYziO_ypPw1lCOVOo2R1Dq5DKOwia-V-12CoxPMIfLVoavEEfEmOT49E58hMd7mJffKoS3Et2ADdsxLoweJkpVX2U1BYQvw929UtbBs6HIZPpFPRZIw5ifrMxM-RxBIEfpGeK3hrU2tb3ZwFUQNZqI6J3AI6ZEthqjgK-CWno_5XkyxavedpgjT_Wn83bH0gsRsZIIdMUyMGTFIO5rLMPXHCXkRjPxvIpkEHQPzMFsiXu2_YNoGOBRDxau49xzokZ-lJaF3kieScj1eqkcN-D_IVmacZbYJM3ow5vo5j6b-ntRzk6gfrgqXesRa_LoiblzuT4oWp9KXH1kf9eg1P2zKq84jiRal-DBmvCz9ep3_DFeLiQkMOYY6VyOV1HNASv5ExCsYyJP8Du3ca1foH1YwBPEoQdZK98OeCxlOKlRgC4Yl-P1MqupBxWamx8gBXolUe1hvdNV5rpaj6IY94TKsnd-PoXlAfROQtZYEwjK_XsjFLVN574DHx-2VYQDZK0B3iCtzycMdemNz3KEf-3Cv0X5oXJwzeO8DwvIXbwC_42AAeIY8gtWfLBhTjRRgx1dVppoBVNa8fEaChCHp3tSFjc8CRxjXyWtIbLMKegST8Twoe5rYkf6XX20e5zQQ2ZFu23O7Cuo_fP8PRxXMClgz-X3QSC-qxwNEpRHaqxvRHgG3hO3Hsr_scddWOL2uKWiY3MIGugnfup9y_WKMT5uf4m8eQ2rGfzwhOWUKZmbKhvAEGCuANm_n7Speb5OJiCR7hkMG3MiOyJ9FysynrVgA5cFS02XaeHKxZd3d7wScCD0NfkeDmr9I2d2nIeCcGvIPhcDHxJuCdS_-4G1z-4gVOlB9Omnj12ON4YqGOdKoOtU0k1CkT4EKqPbGguh663if4KPOU6MFAk_Owg9SN752I21KE0m9vDtgMeZdrb-wryD59nfpYBCeUKjVb7quSl6PoFuUx2vb1t-XboNAxgAH8RdoDySm1VoL4PdcoOylRpYV0YZfh8WVCLDKcResGZm4swAztBRLle-Hb8GdQ8-DD7nlggqwvQ9akCTvi4O0yjP7xqbuoIzDkU5srzqprHAD-2eEJWc4kDWHxwMaS0F6bGW3ULfVIIJtHbBzXZbzNn_DxEqte-ctXZ6uoEIudv8klsPmamo-ti6gJ6d7_00yV4T6ithaqLeGPGQjQnTei0eEKO3tnRdyPfvpqAP9zg-Fz4AI_14AMFYzoEyQ4HzC_TDq3PorWGXdocT90HRx1gw3IgqxytazIPzIISsDOHndHiOVedcfOdHlVfNsInfruIcDtMcBNzgiv-DrBiPxwps1di7UaSzDi_pjLiDZgGLcJQHKyFBhw0RxervNMnR4yabuOi6oCihJbm82rRw5dqtUlP1PG9_nuYdRzqpZJnXSpOXyhjs01tgI7rNTN5A8jYnzgOibSN8vRsWmOtgT6dsCrH6ukFd5DLg4cULo7PZUqZx5aCoTKb86ImZHB_mwqwKNgo5NMJgAFrLLAvHntg==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LWx1bmEtMjAyNjA5MjJ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_00454060a49c3d9a016af0d41ad8a887d1b653bb0e1c193823",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 241,
+    "completion_tokens": 253,
+    "total_tokens": 494,
+    "cost": 0.0001506,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0001506,
+      "upstream_inference_prompt_cost": 0.0000241,
+      "upstream_inference_completions_cost": 0.0001265
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 27,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170711-vt50SsXCkMVlsFdFUBYu",
+  "object": "chat.completion",
+  "created": 1794170711,
+  "model": "anthropic/claude-fable-5.1",
+  "provider": "Azure",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Response: Code Blocks\n\nHere are the requested fenced code blocks and inline code examples.\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n**Output:**\n```\nSolutions: x = 3.0, x = 2.0\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n**Output:**\n```\n55\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nA few more edge cases:\n\n- Underscores in identifiers: `my_variable_name`, `__init__`, `snake_case_fn()`\n- Dollar signs: `$HOME`, `$1`, `${variable}`, `$(command)`\n- Carets and asterisks: `2^10`, `a*b*c`, `**kwargs`\n- Mixed: `$x^2 + y_1$` — this should appear literally as code, with the `$` signs visible and no LaTeX rendering\n- Backticks inside code: use double backticks to wrap `` `single` `` backticks\n\n## Code block without a language tag\n\n```\nplain text block\nno syntax highlighting expected\n    indentation preserved\n```\n\n## Code block with a less common language\n\n```rust\nfn main() {\n    let nums: Vec<i32> = (1..=5).collect();\n    let squares: Vec<i32> = nums.iter().map(|x| x * x).collect();\n    println!(\"{:?}\", squares); // [1, 4, 9, 16, 25]\n}\n```",
+        "refusal": null,
+        "reasoning": "I'm going to produce a formatting test response that includes fenced code blocks and inline code, matching the test prompt.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm going to produce a formatting test response that includes fenced code blocks and inline code, matching the test prompt.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQSugYKEAgTGAI4AUIIdGhpbmtpbmcSDHOOADtVlv/dN+GhQBoMN7qFHfFdRbYZWFkXIjDeT/JpNRwEAzHANO1OcI4yKRlWHvXRxTbBBUOZJS4yt27c8/9SmI22jsQ7C9gM1q0q1wVccVlrjJ/dbunLztgBVz26tjmxeX+BeerFe+rZVvOtrcpZV9MiDBPwnNcsh6MTnsjJg0G4NgW4WN7dI/5c0qMX8cygCR67HI/el5sdKNng58dHxFqGFw8kqeE7o1aagCydZj7V7PYSuF5R8FCiCABpKWXaLHCJDYq45RQTapguuSOcKvgr6JeYJlRxgclcBj8pyjUGYJGcaSz86MWpUDKxoWRQT7H4/K1Sqk9bB6dWISjK9EcNAcxsqUzJ5OlWeWHW4yEjHn4o4BqfSKM44RWnKso47+MFsAEwXeH1KuY1KDfCVDl5nQU6OMDFZ5zu2PGvkP0OsQDrCJumkm8zqEmNp3gyFW9+bDucoMrp60fxyk+KZhM0A4jCJOLVQF7AqA4kQsSilYbbbcno+IOP4E1nUg1WIcpu9z3yTr6GW9b49EKNa2aD728KJeW1h1hKg2Cv98oDTEgfJUzF6k1NDT4HAMJifX1EgEfLEtNzoxQaObE6dbOOfj3eLoB7H+jASgXCellGmb6mAH9W3t8vuMRcRmqCaE/Ax5UPgPsElfffIt5MsuDFqJBdJH/vHixA9Iv4dHq0e/Hh9/SzB9MCQWhWmyVMRjkzF7+vjxpwgBxDMjeP3QBvZ2OMdGyEaq+UdN4kMnt1GXCEdL01XBsUjMYPgpTgzu8xZX++j9uOyLYRQX6GqCTy0Da0N/eOz3CCtanLAc5CQKu58FPEVkfUGswPEQiRf165mOXtYAJf6MYJM/ipICPg8VAy9stq5Uh/epYFbGCrIo8/RoCeBxm68n2WMCiGeI8BTRCJoMpUmhuVb80cUofae/BBDGDs0WVjRaYbMDqEv6HE5qLPAJ7jitfaf/nXHkArJaKaIzhUxqciyCrhVI8WDRSoD7tAfxgAkA4peoTcvlbLO50X6gHYQGpnI7araYCBdpWBALOho5bo5pStsBjcpilLVg+EvWIG1A/MtQS83O2zGAE=.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1mYWJsZS01LjEtMjAyNjA4MzF8YXp1cmUifQ"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 340,
+    "completion_tokens": 772,
+    "total_tokens": 1112,
+    "cost": 0.042,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.042,
+      "upstream_inference_prompt_cost": 0.0034,
+      "upstream_inference_completions_cost": 0.0386
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 60,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

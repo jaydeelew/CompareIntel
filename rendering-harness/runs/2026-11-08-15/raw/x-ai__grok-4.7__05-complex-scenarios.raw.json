@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169151-ygwDBCXrRpjnZMlA77wV",
+  "object": "chat.completion",
+  "created": 1794169151,
+  "model": "x-ai/grok-4.7",
+  "provider": "xAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "These cases mix Markdown structure with inline math, currency, and code. Rendered carefully, they stay distinct.\n\n### Scenario 1: Math in lists\n1. The **Pythagorean theorem** states that \\(a^2 + b^2 = c^2\\).\n2. For a *right triangle* with sides \\(a = 3\\) and \\(b = 4\\):\n   - \\(c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\\)\n   - Therefore, \\(c = 5\\) units.\n\nNested list items can also hold display math without breaking the list:\n\n1. Discriminant check for \\(x^2 - 5x + 6 = 0\\):\n   - \\(\\Delta = b^2 - 4ac = 25 - 24 = 1\\)\n   - Roots: \\(x = \\dfrac{5 \\pm 1}{2}\\), so \\(x \\in \\{2, 3\\}\\)\n\n### Scenario 2: Tables with math\n| Formula | Expression | Closed form |\n|---------|------------|-------------|\n| Quadratic | \\(ax^2 + bx + c = 0\\) | \\(x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\\) |\n| Sum | \\(\\sum_{i=1}^{n} i\\) | \\(\\dfrac{n(n+1)}{2}\\) |\n| Product | \\(\\prod_{i=1}^{n} i\\) | \\(n!\\) |\n| Integral | \\(\\int_0^1 x\\,dx\\) | \\(\\dfrac{1}{2}\\) |\n\nPipes inside math are the fragile case. Prefer \\(\\mid\\) or escaped text rather than a raw `|` in a cell, for example \\(P(A \\mid B)\\).\n\n### Scenario 3: Code and math mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nOutside the fence, the same relation is \\(A = \\pi r^2\\), with \\(r\\) the radius. For \\(r = 5\\), \\(A = 25\\pi \\approx 78.54\\).\n\nA dollar sign inside a code span stays literal: `` price = \"$1,200\" ``. It is not math.\n\n### Scenario 4: Horizontal rules\nFirst section. A rule needs a blank line before it so a list or paragraph does not swallow it.\n\n---\n\nSecond section: \\(\\int_0^1 x\\,dx = \\dfrac{1}{2}\\).\n\n---\n\nThird section. Three hyphens, asterisks, or underscores on their own line all make a rule; `***` and `___` do the same job as `---`.\n\n### Scenario 5: Currency vs. math delimiters\nPrices: computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nThose dollar amounts are currency, not delimiters, because they are not paired as math.\n\nMath on the same line still works when delimiters are explicit: \\(f(x) = x^2\\) gives \\(f(5) = 25\\).\n\nEdge cases that usually break naive `$...$` parsing:\n\n- A single currency mark with no closer: the laptop is $999 today.\n- Adjacent amounts: $10 + $20 = $30, while \\(10 + 20 = 30\\).\n- A price next to a formula: at $5 per unit, cost is \\(C(n) = 5n\\).\n- Escaped dollars in math prose: the string `\\$` is a dollar sign, not a delimiter.\n\nUsing `\\(...\\)` for inline math and leaving `$` for money avoids almost all of these collisions.",
+        "refusal": null,
+        "reasoning": "The user sent a test prompt with complex markdown edge cases. It covers math in lists and tables. It includes code blocks and horizontal rules. It also includes multiple dollar signs.\n\nI will generate a response that correctly renders these complex markdown and LaTeX edge cases.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "The user sent a test prompt with complex markdown edge cases. It covers math in lists and tables. It includes code blocks and horizontal rules. It also includes multiple dollar signs.\n\nI will generate a response that correctly renders these complex markdown and LaTeX edge cases.",
+            "format": "xai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "2sLZCw/1AK7nEDURBA4ENzlq1nEHuPyWTSFo9jvVNITIh4TgFVeazAZmYTnxa8Bsz1Q7EIL5qgmuOhRQYV2FrZtrqrtGzz7QMPUsBMIgw5jmr11hhMEPHKC4k4P+OE6QhMJNTQH+Mg8SFA5cASSYzKVzm7y4/WQ/l8m/4VUOZl6IZkATp83ZvMn9kFhqU2qMCalKGCsbjt4b7pCpL/aBeNgDELxAc0v3iMrhszfgGUirssQ4GTAIKribTnPwSJZlTr7ZKH4h0ng8RSP1YZaDc1A8iNyvC7z0hqWTEpVRQisk+UEZWlIsTOMsMocm1/TUoDwmz1tEySx73b1KCU/GONd8Oqjvt0Xu+6hZdUPSzp1cazoVRjlNAPMLtjauiT372NjhN+QdqP8XQp3fuPlDoYjzWGB9pz0q7+e6gbOgSeoQAy2y/4UU/1WS3GsjdIHakdDxHpJbsD1Jik7GXr/G1kMiu/n3Hx8rjAmhxYMBOeHj+3P2H8/fcobO3NmLsQPjLfUytyEUzTCgXnc4YL/POYYUzr4ABzHZfqpj1Fbs/7mVFsfhgOhyjHn29I30q81AXTmELSk6MG9opQTO6l+S5U3aSyTXLfGSzBy4rmufF2BWY4tBjgaLzjJ0hE5ftuBBaEgLvJ9i2+fiupYDt5U6U6VcDhEs7R1wsez3gujI7pTq3Fb9Tydi8SeAN8NicVgWPlVWS+H3yga2CkkzHEQ7KyfP63Wwic32ChzhHFukBvM18dZhUmL8jZVjswrSXVkBUGNPOMZMWU0lDdB/A0FyT1T/ORUl.eyJlbmRwb2ludF9zbHVnIjoieC1haS9ncm9rLTQuNy0yMDI2MDkxNnx4YWkifQ",
+            "format": "xai-responses-v1",
+            "id": "rs_37b50179-8579-9ee5-9c3f-d6f1104e94ae",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1671,
+    "completion_tokens": 1064,
+    "total_tokens": 2735,
+    "cost": 0.007998,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 1152,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.007998,
+      "upstream_inference_prompt_cost": 0.001614,
+      "upstream_inference_completions_cost": 0.006384
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 217,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

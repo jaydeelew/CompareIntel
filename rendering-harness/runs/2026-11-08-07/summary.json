@@ -1,0 +1,56 @@
+{
+  "status": "completed",
+  "stopReason": null,
+  "attemptedCalls": 24,
+  "actualCost": 0.032544532,
+  "unknownCosts": 0,
+  "errors": [],
+  "promptTokens": 7679,
+  "completionTokens": 17894,
+  "totalTokens": 25573,
+  "reasoningTokensIncludedInCompletion": 8152,
+  "firstCallCST": "11/8/2026, 12:50:25 PM CST",
+  "lastCallCST": "11/8/2026, 12:54:07 PM CST",
+  "finishReasonCounts": {
+    "stop": 21,
+    "length": 3
+  },
+  "truncated": [
+    {
+      "modelId": "z-ai/glm-5",
+      "promptName": "01-math-basics"
+    },
+    {
+      "modelId": "z-ai/glm-5",
+      "promptName": "05-complex-scenarios"
+    },
+    {
+      "modelId": "z-ai/glm-5",
+      "promptName": "06-edge-cases-boundaries"
+    }
+  ],
+  "visibleEmpty": [],
+  "perModel": [
+    {
+      "id": "qwen/qwen3-coder",
+      "cost": 0.0029169,
+      "calls": 6
+    },
+    {
+      "id": "openai/gpt-oss-120b",
+      "cost": 0.001054152,
+      "calls": 6
+    },
+    {
+      "id": "z-ai/glm-5",
+      "cost": 0.019609480000000002,
+      "calls": 6
+    },
+    {
+      "id": "google/gemini-3-flash-preview",
+      "cost": 0.008964,
+      "calls": 6
+    }
+  ],
+  "coverage": "Collection only; no rendering or feature validation"
+}

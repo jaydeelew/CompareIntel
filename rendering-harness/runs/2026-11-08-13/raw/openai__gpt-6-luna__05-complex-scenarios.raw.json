@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794167841-8vDbBhtUJZB4nGUHUHqc",
+  "object": "chat.completion",
+  "created": 1794167841,
+  "model": "openai/gpt-6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that \\(a^2 + b^2 = c^2\\).\n2. For a *right triangle* with sides \\(a=3\\) and \\(b=4\\):\n   - Calculate: \\(c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\\).\n   - Therefore, \\(c = 5\\) units.\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | \\(ax^2 + bx + c = 0\\) | \\(x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\\) |\n| Sum | \\(\\sum_{i=1}^{n} i\\) | \\(\\frac{n(n+1)}{2}\\) |\n| Product | \\(\\prod_{i=1}^{n} i\\) | \\(n!\\) |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is \\(A = \\pi r^2\\), where \\(r\\) is the radius.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: \\(\\int_{0}^{1} x\\,dx = \\frac{1}{2}\\)\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, and mouse \\$25. Total: \\$1,575.\n\nMath: The formula \\(f(x) = x^2\\) evaluates to \\(f(5) = 25\\).",
+        "refusal": null,
+        "reasoning": null,
+        "reasoning_details": [
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NQj2b-ygSdpkzeW7-rt-uhiOPRyqTxIIMyO_TzyF2LCosPmCMJyKGkfAlRGoEs9yAIkCD30ziql8swu4MH6r_4BgO5r6zAy26n9Mq4heaVK_smTIHyyJ8mmGgxgbukuw5luEoExRhM4gBoQv83Qaxo9a4KpPKFA3Z1NRAoDobn7qkLu0Mm61dXb2Kxf9DCslhMd7amAi6ZPpaISW67gX45yuZ9BAFYiOE4QLgzN2BLuexMZRVaGQFK6I-6LdJMlk7XvehLKgeOrHolpKommIjQ3Bg-FnD75VdU4Hexr47rXbfMq6AOIa3JME7MPXXkvSUp4ngEvefyQ3Y8hRwk7QcSk8q_cLcgz2r-hAlFO5Wv4kI4E7BmLCqZ3op471WDw_3bjY4vS9VJexjmilUaBPuU_S80Hzl6O7BgPYeHrPD03bZSSVRpbxXhHKOs10nqkRTMEuCyBPQaTllCBABGGo4Ax9QkKN8IKxAMuFIaSyvAG_nPtAqjPX93RYH-zVBEwYFGwwlYnOQcIFobnb7awF_PPGAFg6pEcDTaBpqIL9yJ_pirRRQmhsZxTI-KoBwQYPbaiY5w_nXmZHzvgRuvCQ7kLfdCaKzugAnFmDX_giZbZ-sFG10OmotHLCcKqKdm5VBewAJH0-Zp0jjuEFkEvn4IFQgBESCmDYxwDWKbuOs8ot83LQla3Se_JV0YfFWwPSA67Z9ZKNEWlAn3eKtHFOPH4GT_rFRSV-1Z8PYl59x0q8tDcwpOFT_mEf0pWLCnHHY6VWGzAU_gIUEZEAMXLOnTadwObYqTRAEuryUzNo-xNZxYWHLID8VbI2vRo3Qh04Ciu1ifhikDWuGQ_MDCqoYdC5DOZGZ8WosMufMIvekFZfD_mt2ipJgPVT7xtnBrUBpDC58mcX3UbtwYAFLeDDh6HzDugAwghyGgpLuAhSzxYwkhpdh2nyPhhnbG29cKWDSTSvrFv3fIX6-QFF_eIgQ0nluIhNe41trXy_PfOLKFMdMGqgCSjQzUPdD4Db4a_OmR6pEc_IsBCBX7JJz7qOo9JB__nX2ktlLEFo6nDBd667ahmUpuRjRYLR_Lu0Qs-yGFEvC4kTmaRzZfgXtS4YsHJtRkOlFGyLsygjpBO31MDs6_qVhvm7uBHvx8Osyxshj8_a7qejDCizV4CzH1OiBqwHE0QlP8mpGNk9lFF78XiPX06ag0xZDcYGf5Xyi7Hhz2_GOaXk0UySisnKORnCMPezoIU4SVaqVpvYt387RFrBv6VD4tLpIQ_4miFMk5kf4K4NVauB6NcHo9td6YnkinBHBncYTUzFStYfeF2zWuEcscmK3E85jEFkoQEftdCG4bOCJaJFpym5tMxdzKhQeQvntZ4kWTdjUG9TV3ix1eeAXjaMeEooWk4D-9jNWYLyGB7Tgrt9VqPYdY1dwSwUyXia0BsmDjBg3T1Fyxv0ilKyV4H7vXqv2ba_viotBVlPBvHjtuZ4lGws-cShcuO7EbXWLhTGmq2_yk4B1wkjD-F3dBkOPGfxuqh3xHYHLRYT-5EtzWeWhTk286keKKO4r4V8HUFq8N8iCxKxQ6Lj8BfNsvYNM4ZC1SySafBFFmsF0oGMXXxTra7PzugMZQGw9gFyA_asE4IKlhEfEeA4M98_kQVxtdXW4_wUwNpqols1J-4blMHfeVAoEJh6kb-Ua98JFG8xg6Rvsy7Eo0124OGSkZUbD1V_SEqnmyDwwgy9E2C8qBxXAHXWV3UrbpIFAjyJYCYgDnVbdSGFBgvsayoaTupNapetg9h30ywm6pNOQIKjOznOBiNixgFJQDZs0bLWI6WDL5YvBYDHl18Qr4QuDAY7CMoni2zWbscnarfQS5_3l0nj8C6V_EXM_leorGBGh6Wg7Fea2UXztLklNH7WdCnjNp7NMugUBbOW3HpU-xH-Sk6ogmaBEyji2E3Yd3MSxxGPLG88HkoCdWV2kl7I2rrFL6-1C-P2PegAakwxSatLzOdLYwnEqda0TSkVjEeZUs_JxMIIx8NQq6nym81q1e_EGe4dwOJB0tUwCG69OhdKpZ3Y00ja7BiEc93Q-3oLeFTllO2FJOd7trtGv0dmP8XaH9NL6r252vcQ2ND8BF_DbiemA4k0Al1I14m6wEosb0x-Lium_txBsdqOEGMqmZQ4zfAUZz6X8VFdCxaDjDTzQhEqc23EcAlzZt5mh5C4SDWpJYwDHyu-fwebifU4Z5xzS0syD8YHfIMygd0pfxeCvFfQVn3kNVhzb28vfBPPaCNkNGPvvLQn150EI-6-2Kf61ZhHTwDYw0SzztIvfIsDyqzKGVRhjG_mx9rE7oD1kyNK5FkH0KKFOi2gmDTp_P4ld3DXcuM6Fv60Bc1MtoR2K337W0IvuYGAr-u61_I_QXzeEUMhciGXTIyl7SWhV08QuxRcQ3Xtp23egdPhQawzufZXULLZEhqVd0l35GP5nYJPk0Xv_SsrUOGPgcGQKWDJHdPc8IVgnK0eK_PYivqKsLjwAIu4Eo9J6Jns7Bd3KLt-o32Elu5Psd_pveGwACac3voiNXmHPz4t4CD_sgG6BrDshY8fL0oZp3EmhOztaOjjQlvR4Y9f_3ZeGYUWASf3cf6N_lR7qc_iuNbH-V4EvZTdJfLsErsXJfH4MjHW26yMXHQVO45_y6_8a-VZ7vZX7T2aG82PDbRPYXLWNfng38-dSgjWZPmWY9zXhPLGT4o3FVcpR83pNv8YJxb8WEkd-QN5Ir4lcaXDMzBzpH2ZRxXll9k7T8qhtOLCzSI-oCrDSKQhQv2PY1TNRq2C3w0q2xF5RHJ5_HeJBTekijBy7ygtsh03a04bc71qgqXvUdW7KGvQ28NiGfUc0LHEEjOTgpttWys11N2mV_waOMB1lAF2JfCszSphOcGicbLhDxnrfVl965cN9X4l0oJOZyFjbf8jovTjhI2O5p14yILfl2PmjQ1jjRhYyDCl4It_iHAgNNwJ4kulCMOWT0OwTPB-6yI-4xPtQhp9fuIzdbiON0_MtlATceSl5suQjPsPPwqHEbVJedL46Wr3KI6uIFsharcieWB-9XCdwMULGjJKLsjgrfsuCsRQdLJCgGY-tEolfcHK6Ggwf03gtJn57g8419JC8kt8wMhWBvVHDYI8338iTr3kqVOWpGQwPYmO4B28I-SfZ6lFX2Kd8ro0JcuwdZB4Q_-k-ttT5YQB4uVFEzBF14yY_I2Jr5i7GhMnD_02z0NCH7g75-726-75UCYJEJ0p-hhjIFyUnOV7PJeveE7uYWyDEIbqitnlhIMaalpsDFSKvgAK5RJbk_Bna8WYpS6zk1jTEysKid_fw6PBV6yqNJHvILYT1Tb_aAc0FXLSgQRyGNgFta9GEp_vXGVWIcRz_OFu2opFFvkSpj6aGr0Hyrj_3GX0WQzWJ_uSHhPFrYzhxfQv-JkVtQOgblwxo94EJT2tkG8ziidvbZwaCBcuzLBWiW6aX5EUxBQUJKCyffP0K_myUzuQ-7_dOjYMsnuDm_F2lW0rrLGgIQyJHkxUSObAlAhYoHTv6CmGKHyeN_Yk5vgJBPSTsx37SiPGeZvqeexKeWSIrX6n1J9aiU6H9BLpQVqS7VNL2FEFfjHwFXeQT58i0e5UX1LAkcHfAbPr3iSKc9VPS42YQq7jQ0OTZis7o7ZsxqjEdy4fLb-4-_oTcMcuITKzWIpuEZ06a3tk9pE-eMtsm0Y0Z7tg_gjuuskBxXLX8Y3GN8eNxT29eydZzkfE2namR4grO8v_eoYcXLqavpUDk_CiA_7a6Gb2EanP6RlHUKiVabrqUvk1-7Rnidqa7kwlV4JOzpa2w_gR45W5VQxoC5hGtr9B9aw_TBT4aDb3oDV5oKvI7yyILKL6JSEjoJtdRKWWQjQuaMFeaJdSY26US-2jKFin_0fdD6M_COY1nhVkUrQ0Pszj9TDXH3qGuFR2hwUqlx-HII6TsUT-GJnJSHkEOMNnnB2tN1kp5oKED2XbFzsdXDsQKeMfSs_yZtuwbqHuuUVDO7PmVuMWOhZiUzGiiKK2pOXzya4ZXBDBEs-JgEJN4Y5lPufGG4N9YhTe-Ng_kOAnGZrXqfVXzK4ryOX6cNhkMGrbPDVJdSvitkCqbDsruzQ8_6Yv7_4qdPnkAVI8Qk=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LWx1bmEtMjAyNjA5MjJ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_04515b50a2f74f3c016af0d4219dc487d1baa64684a966f1d8",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 597,
+    "total_tokens": 1025,
+    "cost": 0.0003413,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0003413,
+      "upstream_inference_prompt_cost": 0.0000428,
+      "upstream_inference_completions_cost": 0.0002985
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 167,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

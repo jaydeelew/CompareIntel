@@ -1,0 +1,25 @@
+{
+  "attemptedCalls": 1,
+  "knownActualCost": 0.0009205389,
+  "unknownCostCalls": 0,
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "visibleEmpty": false,
+  "visibleCharacters": 1846,
+  "truncated": false,
+  "promptTokens": 311,
+  "completionTokens": 642,
+  "reasoningTokensIncludedInCompletion": 23,
+  "firstCallCST": "2026-11-08T14:03:29.358000-06:00 CST",
+  "lastCallCST": "2026-11-08T14:03:34.656000-06:00 CST",
+  "preRequestReserve": {
+    "usd": 0.127299725,
+    "inputRate": 9.800000000000001e-07,
+    "outputRate": 3.08e-06,
+    "inputByteAllowance": 933,
+    "completionCap": 32768
+  },
+  "cumulativeKnownUsd": 0.9826772175,
+  "priorUnknownCharges": 2,
+  "coverage": "Collection only; no rendering pass claim"
+}

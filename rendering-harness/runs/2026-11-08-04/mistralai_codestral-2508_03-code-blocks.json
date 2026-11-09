@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/codestral-2508",
+  "modelName": "Mistral: Codestral 2508",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here's a response incorporating your requested code blocks:\n\n## Python Implementation\n```python\nclass DataProcessor:\n    def __init__(self, data):\n        self.data = data\n\n    def clean(self):\n        \"\"\"Remove None values and convert strings to lowercase\"\"\"\n        return [str(item).lower() if item is not None else None\n                for item in self.data]\n\n    def summarize(self):\n        \"\"\"Return basic statistics\"\"\"\n        clean_data = [x for x in self.clean() if x is not None]\n        return {\n            'count': len(clean_data),\n            'unique': len(set(clean_data)),\n            'sample': clean_data[:3] if len(clean_data) > 3 else clean_data\n        }\n\n# Example usage\nprocessor = DataProcessor(['Apple', None, 'banana', 'APPLE', 'orange'])\nprint(processor.summarize())\n```\n\n## JavaScript Implementation\n```javascript\nclass UserProfile {\n  constructor(name, age) {\n    this.name = name;\n    this.age = age;\n    this.createdAt = new Date();\n  }\n\n  getInfo() {\n    return `${this.name} (${this.age} years old)`;\n  }\n\n  static validateAge(age) {\n    return age >= 18 && age <= 120;\n  }\n}\n\n// Usage\nconst user = new UserProfile('Alice', 28);\nconsole.log(user.getInfo());\nconsole.log(UserProfile.validateAge(25)); // true\n```\n\n## Inline Code Examples\nFor database operations, use `SELECT * FROM users WHERE status = 'active'`. The variable `user_count` should be treated as code, not as a mathematical expression. Similarly, `$config['debug']` and `array_keys()` should be rendered as inline code.",
+  "usage": {
+    "prompt_tokens": 246,
+    "completion_tokens": 368,
+    "total_tokens": 614,
+    "cost": 0.000405,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000405,
+      "upstream_inference_prompt_cost": 0.0000738,
+      "upstream_inference_completions_cost": 0.0003312
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.000405,
+  "actualCost": 0.000405,
+  "timestamp": "2026-11-08T18:08:49.709Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

@@ -1,0 +1,44 @@
+{
+  "status": "completed",
+  "attemptedCalls": 3,
+  "actualCost": 0.01833766,
+  "unknownCosts": 0,
+  "promptTokens": 1053,
+  "completionTokens": 7010,
+  "reasoningTokensIncludedInCompletion": 5620,
+  "firstCallCST": "11/8/2026, 12:54:42 PM CST",
+  "lastCallCST": "11/8/2026, 12:56:12 PM CST",
+  "truncated": [],
+  "coverage": "Unassessed; no rendering",
+  "visibleEmpty": [],
+  "finishReasonCounts": {
+    "stop": 3
+  },
+  "errors": [],
+  "perCall": [
+    {
+      "modelId": "z-ai/glm-5",
+      "promptName": "01-math-basics",
+      "cost": 0.0055601,
+      "finish": "stop",
+      "completionTokens": 2395,
+      "reasoningTokens": 1992
+    },
+    {
+      "modelId": "z-ai/glm-5",
+      "promptName": "05-complex-scenarios",
+      "cost": 0.00645036,
+      "finish": "stop",
+      "completionTokens": 2744,
+      "reasoningTokens": 1934
+    },
+    {
+      "modelId": "z-ai/glm-5",
+      "promptName": "06-edge-cases-boundaries",
+      "cost": 0.0063272,
+      "finish": "stop",
+      "completionTokens": 1871,
+      "reasoningTokens": 1694
+    }
+  ]
+}

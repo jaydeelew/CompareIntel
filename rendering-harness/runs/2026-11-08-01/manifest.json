@@ -1,0 +1,965 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.1,
+  "maxTokens": 1024,
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "anthropic/claude-haiku-5.5",
+    "qwen/qwen3-coder-flash",
+    "mistralai/mistral-small-3.2-24b-instruct",
+    "google/gemma-3-27b-it"
+  ],
+  "plannedCalls": 24,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.007390915,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T17:43:49.816Z",
+      "reserveUsd": 0.000593,
+      "actualCost": 0.000442,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:43:53.837Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 410,
+        "completion_tokens": 802,
+        "total_tokens": 1212,
+        "cost": 0.000442,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000442,
+          "upstream_inference_prompt_cost": 0.000041,
+          "upstream_inference_completions_cost": 0.000401
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 298,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 2,
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T17:43:53.837Z",
+      "reserveUsd": 0.0005767999999999999,
+      "actualCost": 0.0002344,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:43:56.126Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 279,
+        "completion_tokens": 413,
+        "total_tokens": 692,
+        "cost": 0.0002344,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0002344,
+          "upstream_inference_prompt_cost": 0.0000279,
+          "upstream_inference_completions_cost": 0.0002065
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 171,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 3,
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T17:43:56.126Z",
+      "reserveUsd": 0.0005855999999999999,
+      "actualCost": 0.000275,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:43:58.265Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 340,
+        "completion_tokens": 482,
+        "total_tokens": 822,
+        "cost": 0.000275,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000275,
+          "upstream_inference_prompt_cost": 0.000034,
+          "upstream_inference_completions_cost": 0.000241
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 151,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 4,
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T17:43:58.265Z",
+      "reserveUsd": 0.0006053,
+      "actualCost": 0.0004194,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:01.520Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 459,
+        "completion_tokens": 747,
+        "total_tokens": 1206,
+        "cost": 0.0004194,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0004194,
+          "upstream_inference_prompt_cost": 0.0000459,
+          "upstream_inference_completions_cost": 0.0003735
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 244,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 5,
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T17:44:01.521Z",
+      "reserveUsd": 0.0006347,
+      "actualCost": 0.0005753,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:05.550Z",
+      "finishReason": "length",
+      "nativeFinishReason": "max_tokens",
+      "usage": {
+        "prompt_tokens": 633,
+        "completion_tokens": 1024,
+        "total_tokens": 1657,
+        "cost": 0.0005753,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005753,
+          "upstream_inference_prompt_cost": 0.0000633,
+          "upstream_inference_completions_cost": 0.000512
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 435,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null
+    },
+    {
+      "index": 6,
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T17:44:05.550Z",
+      "reserveUsd": 0.0006175999999999999,
+      "actualCost": 0.0005605,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:10.043Z",
+      "finishReason": "length",
+      "nativeFinishReason": "max_tokens",
+      "usage": {
+        "prompt_tokens": 485,
+        "completion_tokens": 1024,
+        "total_tokens": 1509,
+        "cost": 0.0005605,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005605,
+          "upstream_inference_prompt_cost": 0.0000485,
+          "upstream_inference_completions_cost": 0.000512
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 440,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null
+    },
+    {
+      "index": 7,
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T17:44:10.043Z",
+      "reserveUsd": 0.00115635,
+      "actualCost": 0.00038298,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:13.950Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 279,
+        "completion_tokens": 337,
+        "total_tokens": 616,
+        "cost": 0.00038298,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00038298,
+          "upstream_inference_prompt_cost": 0.000054405,
+          "upstream_inference_completions_cost": 0.000328575
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 8,
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T17:44:13.950Z",
+      "reserveUsd": 0.00112476,
+      "actualCost": 0.00021528,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:16.705Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 204,
+        "completion_tokens": 180,
+        "total_tokens": 384,
+        "cost": 0.00021528,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00021528,
+          "upstream_inference_prompt_cost": 0.00003978,
+          "upstream_inference_completions_cost": 0.0001755
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 9,
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T17:44:16.706Z",
+      "reserveUsd": 0.00114192,
+      "actualCost": 0.000332475,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:20.129Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 245,
+        "completion_tokens": 292,
+        "total_tokens": 537,
+        "cost": 0.000332475,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000332475,
+          "upstream_inference_prompt_cost": 0.000047775,
+          "upstream_inference_completions_cost": 0.0002847
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 10,
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T17:44:20.130Z",
+      "reserveUsd": 0.001180335,
+      "actualCost": 0.00054249,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:25.371Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 317,
+        "completion_tokens": 493,
+        "total_tokens": 810,
+        "cost": 0.00054249,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00054249,
+          "upstream_inference_prompt_cost": 0.000061815,
+          "upstream_inference_completions_cost": 0.000480675
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 11,
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T17:44:25.372Z",
+      "reserveUsd": 0.001237665,
+      "actualCost": 0.000634725,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:31.144Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 440,
+        "completion_tokens": 563,
+        "total_tokens": 1003,
+        "cost": 0.000634725,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000634725,
+          "upstream_inference_prompt_cost": 0.0000858,
+          "upstream_inference_completions_cost": 0.000548925
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 12,
+      "modelId": "qwen/qwen3-coder-flash",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T17:44:31.144Z",
+      "reserveUsd": 0.00120432,
+      "actualCost": 0.000470535,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:35.892Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 358,
+        "completion_tokens": 411,
+        "total_tokens": 769,
+        "cost": 0.000470535,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000470535,
+          "upstream_inference_prompt_cost": 0.00006981,
+          "upstream_inference_completions_cost": 0.000400725
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 13,
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T17:44:35.893Z",
+      "reserveUsd": 0.00026555,
+      "actualCost": 0.000113075,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:40.034Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 257,
+        "completion_tokens": 469,
+        "total_tokens": 726,
+        "cost": 0.000113075,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000113075,
+          "upstream_inference_prompt_cost": 0.000019275,
+          "upstream_inference_completions_cost": 0.0000938
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 14,
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T17:44:40.034Z",
+      "reserveUsd": 0.0002534,
+      "actualCost": 0.00005815,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:42.276Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 210,
+        "completion_tokens": 212,
+        "total_tokens": 422,
+        "cost": 0.00005815,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00005815,
+          "upstream_inference_prompt_cost": 0.00001575,
+          "upstream_inference_completions_cost": 0.0000424
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 15,
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T17:44:42.277Z",
+      "reserveUsd": 0.00026,
+      "actualCost": 0.0001134,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:44.258Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 258,
+        "completion_tokens": 292,
+        "total_tokens": 550,
+        "cost": 0.0001134,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001134,
+          "upstream_inference_prompt_cost": 0.0000258,
+          "upstream_inference_completions_cost": 0.0000876
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 16,
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T17:44:44.258Z",
+      "reserveUsd": 0.000274775,
+      "actualCost": 0.000101075,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:48.278Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 305,
+        "completion_tokens": 391,
+        "total_tokens": 696,
+        "cost": 0.000101075,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000101075,
+          "upstream_inference_prompt_cost": 0.000022875,
+          "upstream_inference_completions_cost": 0.0000782
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 17,
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T17:44:48.279Z",
+      "reserveUsd": 0.000296825,
+      "actualCost": 0.000352,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:44:54.554Z",
+      "finishReason": "length",
+      "nativeFinishReason": "length",
+      "usage": {
+        "prompt_tokens": 448,
+        "completion_tokens": 1024,
+        "total_tokens": 1472,
+        "cost": 0.000352,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000352,
+          "upstream_inference_prompt_cost": 0.0000448,
+          "upstream_inference_completions_cost": 0.0003072
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null
+    },
+    {
+      "index": 18,
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T17:44:54.554Z",
+      "reserveUsd": 0.00028399999999999996,
+      "actualCost": 0.0002089,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:45:01.198Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 370,
+        "completion_tokens": 573,
+        "total_tokens": 943,
+        "cost": 0.0002089,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0002089,
+          "upstream_inference_prompt_cost": 0.000037,
+          "upstream_inference_completions_cost": 0.0001719
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 19,
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T17:45:01.199Z",
+      "reserveUsd": 0.0004232,
+      "actualCost": 0.0001983,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:45:15.112Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 288,
+        "completion_tokens": 565,
+        "total_tokens": 853,
+        "cost": 0.0001983,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001983,
+          "upstream_inference_prompt_cost": 0.0000288,
+          "upstream_inference_completions_cost": 0.0001695
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 20,
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T17:45:15.113Z",
+      "reserveUsd": 0.00041024,
+      "actualCost": 0.0000767,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:45:19.213Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 209,
+        "completion_tokens": 186,
+        "total_tokens": 395,
+        "cost": 0.0000767,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0000767,
+          "upstream_inference_prompt_cost": 0.0000209,
+          "upstream_inference_completions_cost": 0.0000558
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 21,
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T17:45:19.213Z",
+      "reserveUsd": 0.00041727999999999996,
+      "actualCost": 0.0001251,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:45:34.655Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 270,
+        "completion_tokens": 327,
+        "total_tokens": 597,
+        "cost": 0.0001251,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001251,
+          "upstream_inference_prompt_cost": 0.000027,
+          "upstream_inference_completions_cost": 0.0000981
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 22,
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T17:45:34.656Z",
+      "reserveUsd": 0.00043304,
+      "actualCost": 0.00032263,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:45:45.289Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 326,
+        "completion_tokens": 659,
+        "total_tokens": 985,
+        "cost": 0.00032263,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00032263,
+          "upstream_inference_prompt_cost": 0.00002608,
+          "upstream_inference_completions_cost": 0.00029655
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 23,
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T17:45:45.289Z",
+      "reserveUsd": 0.00045655999999999995,
+      "actualCost": 0.0003101,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:46:04.905Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 455,
+        "completion_tokens": 782,
+        "total_tokens": 1237,
+        "cost": 0.0003101,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0003101,
+          "upstream_inference_prompt_cost": 0.0000364,
+          "upstream_inference_completions_cost": 0.0002737
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 24,
+      "modelId": "google/gemma-3-27b-it",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T17:46:04.905Z",
+      "reserveUsd": 0.00044288,
+      "actualCost": 0.0003264,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T17:46:25.485Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 366,
+        "completion_tokens": 966,
+        "total_tokens": 1332,
+        "cost": 0.0003264,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0003264,
+          "upstream_inference_prompt_cost": 0.0000366,
+          "upstream_inference_completions_cost": 0.0002898
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed: collection only, no rendering or feature validation",
+  "startedAt": "2026-11-08T17:43:49.812Z",
+  "conservativeBatchReserve": 0.0148761,
+  "status": "completed",
+  "finishedAt": "2026-11-08T17:46:25.486Z",
+  "files": {
+    "replies": [
+      "replies/anthropic_claude-haiku-5.5_01-math-basics.json",
+      "replies/anthropic_claude-haiku-5.5_02-markdown-formatting.json",
+      "replies/anthropic_claude-haiku-5.5_03-code-blocks.json",
+      "replies/anthropic_claude-haiku-5.5_04-mixed-markdown-latex.json",
+      "replies/anthropic_claude-haiku-5.5_05-complex-scenarios.json",
+      "replies/anthropic_claude-haiku-5.5_06-edge-cases-boundaries.json",
+      "replies/google_gemma-3-27b-it_01-math-basics.json",
+      "replies/google_gemma-3-27b-it_02-markdown-formatting.json",
+      "replies/google_gemma-3-27b-it_03-code-blocks.json",
+      "replies/google_gemma-3-27b-it_04-mixed-markdown-latex.json",
+      "replies/google_gemma-3-27b-it_05-complex-scenarios.json",
+      "replies/google_gemma-3-27b-it_06-edge-cases-boundaries.json",
+      "replies/mistralai_mistral-small-3.2-24b-instruct_01-math-basics.json",
+      "replies/mistralai_mistral-small-3.2-24b-instruct_02-markdown-formatting.json",
+      "replies/mistralai_mistral-small-3.2-24b-instruct_03-code-blocks.json",
+      "replies/mistralai_mistral-small-3.2-24b-instruct_04-mixed-markdown-latex.json",
+      "replies/mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.json",
+      "replies/mistralai_mistral-small-3.2-24b-instruct_06-edge-cases-boundaries.json",
+      "replies/qwen_qwen3-coder-flash_01-math-basics.json",
+      "replies/qwen_qwen3-coder-flash_02-markdown-formatting.json",
+      "replies/qwen_qwen3-coder-flash_03-code-blocks.json",
+      "replies/qwen_qwen3-coder-flash_04-mixed-markdown-latex.json",
+      "replies/qwen_qwen3-coder-flash_05-complex-scenarios.json",
+      "replies/qwen_qwen3-coder-flash_06-edge-cases-boundaries.json"
+    ],
+    "raw": [
+      "raw/anthropic__claude-haiku-5.5__01-math-basics.raw.json",
+      "raw/anthropic__claude-haiku-5.5__02-markdown-formatting.raw.json",
+      "raw/anthropic__claude-haiku-5.5__03-code-blocks.raw.json",
+      "raw/anthropic__claude-haiku-5.5__04-mixed-markdown-latex.raw.json",
+      "raw/anthropic__claude-haiku-5.5__05-complex-scenarios.raw.json",
+      "raw/anthropic__claude-haiku-5.5__06-edge-cases-boundaries.raw.json",
+      "raw/google__gemma-3-27b-it__01-math-basics.raw.json",
+      "raw/google__gemma-3-27b-it__02-markdown-formatting.raw.json",
+      "raw/google__gemma-3-27b-it__03-code-blocks.raw.json",
+      "raw/google__gemma-3-27b-it__04-mixed-markdown-latex.raw.json",
+      "raw/google__gemma-3-27b-it__05-complex-scenarios.raw.json",
+      "raw/google__gemma-3-27b-it__06-edge-cases-boundaries.raw.json",
+      "raw/mistralai__mistral-small-3.2-24b-instruct__01-math-basics.raw.json",
+      "raw/mistralai__mistral-small-3.2-24b-instruct__02-markdown-formatting.raw.json",
+      "raw/mistralai__mistral-small-3.2-24b-instruct__03-code-blocks.raw.json",
+      "raw/mistralai__mistral-small-3.2-24b-instruct__04-mixed-markdown-latex.raw.json",
+      "raw/mistralai__mistral-small-3.2-24b-instruct__05-complex-scenarios.raw.json",
+      "raw/mistralai__mistral-small-3.2-24b-instruct__06-edge-cases-boundaries.raw.json",
+      "raw/qwen__qwen3-coder-flash__01-math-basics.raw.json",
+      "raw/qwen__qwen3-coder-flash__02-markdown-formatting.raw.json",
+      "raw/qwen__qwen3-coder-flash__03-code-blocks.raw.json",
+      "raw/qwen__qwen3-coder-flash__04-mixed-markdown-latex.raw.json",
+      "raw/qwen__qwen3-coder-flash__05-complex-scenarios.raw.json",
+      "raw/qwen__qwen3-coder-flash__06-edge-cases-boundaries.raw.json"
+    ]
+  }
+}

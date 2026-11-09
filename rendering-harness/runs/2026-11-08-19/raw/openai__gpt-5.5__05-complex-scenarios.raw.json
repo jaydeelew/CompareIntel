@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794170607-teznStEUC9EK1evWTy3D",
+  "object": "chat.completion",
+  "created": 1794170607,
+  "model": "openai/gpt-5.5",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that \\(a^2 + b^2 = c^2\\).\n2. For a *right triangle* with sides \\(a=3\\) and \\(b=4\\):\n   - Calculate:  \n     \\[\n     c = \\sqrt{3^2 + 4^2}\n       = \\sqrt{9 + 16}\n       = \\sqrt{25}\n       = 5\n     \\]\n   - Therefore, \\(c = 5\\) units.\n\n---\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---|---|---|\n| Quadratic | \\(ax^2 + bx + c = 0\\) | \\(x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\\) |\n| Sum | \\(\\sum_{i=1}^{n} i\\) | \\(\\frac{n(n+1)}{2}\\) |\n| Product | \\(\\prod_{i=1}^{n} i\\) | \\(n!\\) |\n\n---\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is:\n\n\\[\nA = \\pi r^2\n\\]\n\nwhere \\(r\\) is the radius.\n\nFor \\(r = 5\\):\n\n\\[\nA = \\pi \\cdot 5^2 = 25\\pi \\approx 78.54\n\\]\n\n---\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math:\n\n\\[\n\\int_{0}^{1} x \\, dx = \\frac{1}{2}\n\\]\n\n---\n\nThird section\n\n---\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices:\n\n- Computer costs \\$1,200\n- Monitor costs \\$300\n- Keyboard costs \\$50\n- Mouse costs \\$25\n\nTotal:\n\n\\[\n1200 + 300 + 50 + 25 = 1575\n\\]\n\nSo the total cost is **\\$1,575**.\n\nMath expression:\n\n\\[\nf(x) = x^2\n\\]\n\nEvaluating at \\(x = 5\\):\n\n\\[\nf(5) = 5^2 = 25\n\\]",
+        "refusal": null,
+        "reasoning": "**Crafting a response with edge cases**\n\nI need to generate a response that includes challenging edge cases, possibly reproducing scenarios. It seems like the user wants something comprehensive. I can craft a markdown response that includes math, lists, tables, code, and pricing formatted with dollar signs. I’ll ensure everything is correctly formatted, and note the need to escape dollar signs to prevent parsing issues. The goal is to create a well-rounded response that covers all the desired elements!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Crafting a response with edge cases**\n\nI need to generate a response that includes challenging edge cases, possibly reproducing scenarios. It seems like the user wants something comprehensive. I can craft a markdown response that includes math, lists, tables, code, and pricing formatted with dollar signs. I’ll ensure everything is correctly formatted, and note the need to escape dollar signs to prevent parsing issues. The goal is to create a well-rounded response that covers all the desired elements!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8N70ZJ_PLsSycSLeY1QMVmx9UV-Z2Gi56TemFO9_S2JkdG-4xJqkciWBYo_jSisfRNDEo8r54WhgyMAfY2WfeMCRtWsia7kUoBK6k99y-ncO0MR2woYaRdtOOnWdbfR4Kev0vzsD4E9qSjuR7zWw1vORekhxBlmI5auShvvB5q5UBqCYF7lAGIr2-TzsoFx6QgCkdUuJ8ik0TdjoCcUmmj9TlrhWv8SeUkTRzNZF3hasmhGc1exLzr8LyZSKf2beXWRlbJ6_vbDAGvY4ctB8EJk9YPmfB8uxTLpXRRJs9i4985z-_Gf4EqoEJntFichPOaND0aN8nQI3qV2BzETx61rOZYiE2VaUUvkDklwJ1O2Re4OcQp8DtiP0wzaiTCNbLv3nBfJDOQ9qdKMVSaMydUt1WyEhUD4_dWEcsROFkR4wtMptmr4fMlS7dCmBweBwBV9vGbaN0DXHgCHF_BwQUGEXY2FYtWdxfUIHuI1dJt6yM7hINLzIH6tzOWCy5Lliyilo-Y_r-DXMSoIVwwr5oE30ZQ9Lj75YJzuWlDPLrr9RPSJ_SuC7qwLUkec1BirRpDNZdlRRU2ipY7Y1fAWeFtW8Wpu5_f2vX_t-ItEFW841u9bvB1RqPSZGQ_DkOwRXY2r9STt62mPuH8VarAhsiC8pJZruT5kc1R9hhbyZ0STjuNxkleErSPXOBqaq8lwmEgD03qJaiJOt8albkLmWnKywZWwZrB6mxHoyEBhAX1HqgqSKQmXCuauvzKaD9YoTPXBK3xzAr1awQgNKa7m4TSDQDwJ3tWzYjtKDpIlvUqwZDGVNaa_CusvrERTe4NHiOU35vtZcXezZ7RLBEdr5WjxwthKbtUrjBZyeNBQsFoxkX-D-PxDpX-Xgh_1aiH7MCLStU4HOY1RQXLpdyJ5ukSXCCjDi8-aWjqLWVN-rDJtVVq46NT1Ds8cZ7EAnmjcOsPLezO_ObvuWXGXI41INRs4_YQ7ymu8_GllhTPFmYO9WylAYGfWxJnnxphLOpFx2B2wW3TiIwxavWztbA-RN4onLncxoBzjx6TsRDJ522Sty-FYPXE_O326zcIGjicjpQ_cXZzv9CrHtlEbHAlugbEVlMIDW6em1JxYKkr37oQgkkAkHlt3gYyNh-mm-Iq2ahc1_WNnuXc14XvfpuuQJqMtGBPv4DUuLp8HA-qPxqUe8B079gFY_VQDsu2PniG6sFjJ0LlYpRNiitF9bKt1V0ZBM677zivC84UzXikaoJlKS19nFP8_1lOcFVfgimkbZUVue2X5g0QIOCaOxZHKiOTZ4w-_e_2hJGipstBu1YYF6oYJC1W7ZFovkT7v2yXtaQTuEopemHuxKi2VN1DEwqNHYopLAIf2WqfbwwWbBs2yVRAON__61CAnNV1Ny3kKM2qh86nGiPeqUJmXzDRT0vhhG-N2KD-lRz97Awj7DEQ42_H0XNQXEEq0OPGgCQ4rDUJMNaqSDqbi64WkB7GVTYaDcw1nN0P4deq26vDRZKlLqvoE5saprPE5VjhB7s9X9eHhOyybDpt4tCYae_1v_kh5D3MUltOj2LqDVNRpS0kUfIp_05Ot5s4rc77gKkI7CRxkPp-qqQmSUMIN_j1NJNqGeiUmHSZxh3OaOUMQRr7h8_YXOOK1bd3Eii57_RMFHhhAkF1MToSE32OTd-NDAwTepkZC2FusX2w3BaA9G39tBiQHJhB37_TVsTaR65UhVLT6UzFUEYwW57e5PnXYpLqbPXghTohiQx5NvE_6ejVDK66Ne-pREg4wumHbt7QE_7mIkw1xJ-mpoTmKz9vsFkdOBid-YJJLLcv1kDzBLPfEin_fdTaKQXwFDWotWBOp-tlIb8IR426APSloo9A7_NltidC-ToZ3mZ3Fkrx3ohZcvXFKHSH2ZIJkcGvIW0hCEhlh4tLGYx8dKZF2ck-jSJ_yRVoZHDAXSdcecn-R6L7YUmApuiP5z-QNRPhMXVZQbgtz9sjGiygoFIPkmfa0afP8m76Mv4O0_lknvtR0j6cXhX62sTWMXdSZB7JsASlNIiCQiqP6u8L523OU1kw9DoW32h4cMUdCEUlX9AkE9wOZ30iqQFTwGD4UXW_e3abXQujb17S9N5e-17D83-kaF9gXVmHlC6MrX_sSKAmIfxH7c2EYdy47xK20wFL8GZwaK0NPfNcG8eE1STGkqcFJdRt1djEwTqN6LOHqZ7iUDZly7os-dFOuHgcW6B5NlS7Zw2xp5uMSiOFXAz437tk9D2Tg0iXapQ5zV8N3gUjNlGb7Ea3ljlg_7LsjG_t0Cr_CCcWFtPjJPPPTJIkoLpJeWlv3jmc_91azU8hsTHwq5VWwbRkxHxHHihEZo8dNlFoWHcRbwg9kE6mD2-sH8_inlfkgOIaPLPqRRH23bw6qslPe4OzTNKUdA-xN25Ebo4rGFB8gwa6p2jF0xBzBPjhrjnEWad05ElEcC19ZT9LIwpLt1dP4bi_Afvh581f16bhAe9b9yT075O0AfMR9TrMcXnv3a1iOEHje9zDWnzJ7OR9Yl6p7x-mcXT8MPokBeQgmKoHp7MnKOifY48aQzapt8JEW6wwCEhNoHXrQoOxHBNRiv7oxVWVI_qEgE6znmLVTbx1yHhFH3jHnppSV514VzyMF8aDg8S9AkYKqalewxBJBXD08e1LrnYIaznKbTPkthUcn5sYDEdP6XhAnk_BcfbA6WufoWTbhiKuSerpbqZTUjWyvg88z31VhwkXWVafLxyATMlKMhL2_PO--u5KPFKm4jWSw80pgoUqVnwwr6IcZVYv5JUC9SFH_9S8PFWdCR1CNowN6wyxWadPi3ULtkP13H2zCnVjCqTlcLRhjTAKyQCQSIS95poOGR9zryli6s2GmR0cqCrOS34ZfokSt99o6Hygc2Q_QEHldnVf11s9uKNLRnvA69djl_iQnKIoYL3CGVQkYXiG1x15ngjftth4KL82nA7XmgQ3X937vzluZLA3nBNNH-CdX2kBRXXpN7ueP0wI6UsZdDqdXKDVcaOaE9K9zGnEM9Eyz4Ur9BlybwGao5LycdYiEbnxkUAQXGqIBqiFcbPLQxMqFtUmzN9_dovlGJn2XHIBexGbBsdbsUnyf21MepYLZC-eDOVkYEw-sjmOAywmRe-fPU0MgC8d2qpn239WG9xUr20Mw1MMdJh92_5stJgfwis0xcHS1h_huUaAcXd6VlCvA2vExXXHvWGzr7vPQaW0ds783DiA-pu_tzdnhkfFJUJM2L9u1TywD-4NGutjMlAtAk0JlSAFWlk0qvfX_baQCiv9oe7rUxJlL1ngiKjykF2eO1p6UdkQaE6U0CqiWlbH1LlWBLo9CEvIFQZCPXIKJuS0onHUaNL7xx7Y4yw2q0tcnqy0lk-7Cp8dzok85p3kpwi3ZZJhfGJsCCadp-6PDjWF4LSzppR8NG9ihAPRw_5Hjy5iGhBfFxdnY3JHPYC82XOHyi6-DjGg==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjUtMjAyNjA0MjN8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_01c2ad02d66773a8016af0def0cbc487d1b0fe50d7bfd0a619",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 662,
+    "total_tokens": 1090,
+    "cost": 0.022,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.022,
+      "upstream_inference_prompt_cost": 0.00214,
+      "upstream_inference_completions_cost": 0.01986
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 128,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

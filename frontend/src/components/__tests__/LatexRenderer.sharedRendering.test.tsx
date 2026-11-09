@@ -300,6 +300,367 @@ describe('bug 10: Unicode × in prose stays literal', () => {
   })
 })
 
+describe('bug 12: $HOME must not pair with a later currency dollar', () => {
+  it.each(['anthropic/claude-haiku-5.5', 'google/gemma-3-27b-it', 'qwen/qwen3-coder-flash'])(
+    'keeps "$HOME ... $99.99" as prose (%s)',
+    modelId => {
+      const el = renderReply('The shell variable $HOME is set. Price: $99.99.', modelId)
+      expect(el.querySelector('.katex')).toBeNull()
+      expect(visibleText(el)).toBe('The shell variable $HOME is set. Price: $99.99.')
+    }
+  )
+})
+
+describe('bug 13: \\[...\\] display math is recognized even when a JSON config omitted it', () => {
+  it.each(['anthropic/claude-haiku-5.5', 'google/gemma-3-27b-it', 'qwen/qwen3-coder-flash'])(
+    'renders same-line bracket display math (%s)',
+    modelId => {
+      const el = renderReply('2. **Bracket display:** \\[E = mc^2\\]', modelId)
+      expectNoKatexErrors(el)
+      expect(el.querySelector('.katex-display')).not.toBeNull()
+      expect(texSources(el.querySelector('.katex-display')!)).toEqual(['E = mc^2'])
+      expect(el.innerHTML).not.toContain('\\[E = mc^2\\]')
+    }
+  )
+})
+
+describe('bug 14: consecutive tables stay separate; prose with | is not a table row', () => {
+  const glm05Snippet = `| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |
+| Product | $\\prod_{i=1}^{n} i$ | $n!$ |
+
+**Edge case notes:** table cells where pipes (\`|\`) must not be confused with column delimiters.
+
+\`\`\`python
+print("not a table cell")
+\`\`\`
+
+The formula $A = \\pi r^2$ stays outside the table.
+
+| Scenario | Risk | Handling |
+|----------|------|----------|
+| Math in lists | nested emphasis | Preserve \`$...$\` |
+| Dollar signs | currency vs LaTeX | Heuristic or \`\\\\$\` |`
+
+  it('does not swallow following prose, code, or a later table into the first table', () => {
+    const el = renderReply(glm05Snippet, 'z-ai/glm-5.3-flash')
+    const tables = el.querySelectorAll('table.markdown-table')
+    expect(tables).toHaveLength(2)
+    expect(tables[0].querySelectorAll('tr')).toHaveLength(4)
+    expect(tables[1].querySelectorAll('tr')).toHaveLength(3)
+    expect(visibleText(el)).toContain('pipes (|) must not be confused with column delimiters')
+    expect(el.querySelector('pre')).not.toBeNull()
+    expect(visibleText(el.querySelector('pre')!)).toContain('print("not a table cell")')
+    expect(el.querySelector('td pre')).toBeNull()
+    expect(texSources(el).some(t => t.includes('\\pi r^2'))).toBe(true)
+  })
+})
+
+describe('bug 17: ## after a markdown table becomes a heading, not leftover #', () => {
+  it('renders Scenario 3 as h2 after a math table (MiMo prompt 05)', () => {
+    const el = renderReply(
+      `| Formula | LaTeX |\n|---------|-------|\n| Sum | $\\sum i$ |\n\n## Scenario 3: Code and Math Mixed\n`,
+      'xiaomi/mimo-v2.6-flash'
+    )
+    expect(el.querySelector('h2')?.textContent).toBe('Scenario 3: Code and Math Mixed')
+    expect(visibleText(el)).not.toMatch(/#\s*Scenario 3/)
+  })
+})
+
+describe('bug 15: markdown links inside list items become <a href>', () => {
+  it('renders Wikipedia inside a numbered list continuation (Phi-4 prompt 01)', () => {
+    const el = renderReply(
+      '5. **Links**\n\n   For more information on the quadratic formula, you can refer to [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula).\n',
+      'microsoft/phi-4'
+    )
+    const link = el.querySelector('a[href="https://en.wikipedia.org/wiki/Quadratic_formula"]')
+    expect(link).not.toBeNull()
+    expect(link?.textContent).toBe('Wikipedia')
+    expect(visibleText(el)).not.toContain('[Wikipedia](')
+  })
+})
+
+describe('bug 18: **$x = 0$** in an ordered-list continuation is bold math, not leftover asterisks', () => {
+  it('renders Gemini 04 critical-point prose without visible **', () => {
+    const el = renderReply(
+      `2. **Find critical points**:
+   Setting $g'(x) = 0$.
+   Thus, the critical points are at **$x = 0$** and **$x = 2$**.
+`,
+      GEMINI
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('**')
+    expect(el.querySelectorAll('strong .katex').length).toBeGreaterThanOrEqual(2)
+    expect(texSources(el).some(t => t.includes('x = 0'))).toBe(true)
+    expect(texSources(el).some(t => t.includes('x = 2'))).toBe(true)
+  })
+})
+
+describe('bug 25: `$`100`, `$`0.99` is not a KaTeX error', () => {
+  it('keeps escaped-currency code dollars as code, not math (Step 5 Preview 05)', () => {
+    const el = renderReply(
+      '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs\n- Code span containing single dollar: `` `$` `` and `` `$x$` ``',
+      'stepfun/step-5-preview'
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('KaTeX parse error')
+    const codes = Array.from(el.querySelectorAll('code')).map(c => c.textContent)
+    expect(codes.filter(c => c === '$').length).toBeGreaterThanOrEqual(3)
+    expect(visibleText(el)).toContain('100')
+    expect(visibleText(el)).toContain('0.99')
+    expect(texSources(el).some(t => /0\.99/.test(t))).toBe(false)
+  })
+})
+
+describe('bug 24: double-backtick `` `$x$` `` is inline code, not leaked KaTeX HTML', () => {
+  it('does not dump KaTeX HTML for GLM 5 05 delimiter example', () => {
+    const el = renderReply(
+      'In Markdown, writing `` `$x$` `` renders as inline code, whereas writing $y$ renders as math.',
+      'z-ai/glm-5'
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('class="katex"')
+    expect(el.innerHTML).not.toContain('&lt;span class="katex"')
+    const code = el.querySelector('code')
+    expect(code?.textContent).toContain('$x$')
+    expect(texSources(el).some(t => t.includes('y'))).toBe(true)
+  })
+})
+
+describe('bug 23: $$\\begin{align}$$ is not a leaked __DISPLAY_MATH_0__ placeholder', () => {
+  it('renders Qwen3 Coder 01 aligned display math without placeholder KaTeX errors', () => {
+    const el = renderReply(
+      [
+        '## Display Math with Aligned Equations',
+        '$$\\begin{align}',
+        'x + y &= 5 \\\\',
+        '2x - y &= 1',
+        '\\end{align}$$',
+        '',
+        '$$E = mc^2$$',
+      ].join('\n'),
+      'qwen/qwen3-coder'
+    )
+    expectNoKatexErrors(el)
+    expect(el.innerHTML).not.toContain('__DISPLAY_MATH_')
+    expect(visibleText(el)).not.toContain('__DISPLAY_MATH_0__')
+    expect(el.querySelectorAll('.katex-display').length).toBeGreaterThanOrEqual(2)
+    const tex = texSources(el)
+    expect(tex.some(t => /x \+ y/.test(t) && /2x - y/.test(t))).toBe(true)
+    expect(tex.some(t => t.includes('E = mc^2') || t.includes('E=mc^2'))).toBe(true)
+  })
+})
+
+describe('bug 22: hyphenated prose (Non-Math) is not implicit math', () => {
+  it('does not wrap (Non-Math) as KaTeX (Mistral Medium 01 heading)', () => {
+    const el = renderReply(
+      '6. **Money Context (Non-Math):**\n   The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).',
+      'mistralai/mistral-medium-3.1'
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).toContain('Non-Math')
+    expect(visibleText(el)).not.toContain('\\Non')
+    expect(texSources(el).some(t => /Non-Math/.test(t))).toBe(false)
+    expect(visibleText(el)).toContain('$5')
+    expect(visibleText(el)).toContain('$10')
+  })
+})
+
+describe('bug 19: (U+00B2) code-point notes are not implicit math', () => {
+  it('does not wrap Qwen 05 superscript notes as KaTeX (U+00B2\\)', () => {
+    const el = renderReply(
+      '- `r²` uses superscript 2 (U+00B2), which may render poorly or cause syntax errors in some parsers.',
+      GPT_MINI
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).toContain('U+00B2')
+    expect(visibleText(el)).not.toContain('U+00B2\\')
+    expect(el.querySelector('.katex')).toBeNull()
+  })
+})
+
+describe('bug 19b: Qwen 05 summary table with `$...$` examples and unicode ² is not a KaTeX error', () => {
+  it('does not extract ² or delimiter examples as math', () => {
+    const el = renderReply(
+      [
+        '| Issue | Solution |',
+        '|------|----------|',
+        '| Dollar signs in text (e.g., prices) | Escape with `\\$` |',
+        '| Math in comments or code | Use `r^2`, `pi`, not `²`, `π` |',
+        '| Math across horizontal rules | Use blank lines and `$$...$$` |',
+        '| Unpaired math delimiters | Always pair `$...$` or `$$...$$` |',
+        '',
+        'Always **escape non-math `$`** to avoid parsing errors.',
+      ].join('\n'),
+      GPT_MINI
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).toContain('²')
+  })
+})
+
+describe("bug 21: padded `$ f'(x) $` is inline math, not leftover dollars", () => {
+  it('renders Qwen 04 spaced dollar spans as KaTeX (not raw $…$)', () => {
+    const el = renderReply(
+      "1. The ***derivative*** $ f'(x) $\n2. The ***integral*** $ \\int f(x) \\, dx $\n\nConsider the $ 2 \\times 2 $ matrix.\n",
+      'qwen/qwen3-next-80b-a3b-instruct'
+    )
+    expectNoKatexErrors(el)
+    const tex = texSources(el)
+    expect(tex.some(t => t.includes("f'(x)"))).toBe(true)
+    expect(tex.some(t => t.includes('\\int'))).toBe(true)
+    expect(tex.some(t => t.includes('\\times'))).toBe(true)
+    expect(visibleText(el)).not.toMatch(/\$\s*f'/)
+    expect(visibleText(el)).not.toContain('$ 2')
+  })
+})
+
+describe('bug 20: list-prefixed \\] closes display math without a trailing minus', () => {
+  it('renders \\sqrt and a following bare fraction; no dangling minus (phi-4 config)', () => {
+    const el = renderReply(
+      '- \\[\nc = \\sqrt{3^2 + 4^2} = 5\n- \\]\n\nBare fraction after the block:\n\n\\frac{1}{2}\n',
+      'microsoft/phi-4'
+    )
+    expectNoKatexErrors(el)
+    const tex = texSources(el)
+    expect(tex.some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
+    expect(tex.some(t => /=\s*5\s*-/.test(t))).toBe(false)
+    expect(tex.some(t => t.includes('\\frac{1}{2}'))).toBe(true)
+    expect(visibleText(el)).not.toContain('\\frac')
+  })
+})
+
+describe('bug 16: $...$ / $$...$$ delimiter examples are not math', () => {
+  it('does not extract ellipsis dollar examples or leak list/math placeholders (Phi-4 prompt 05)', () => {
+    const el = renderReply(
+      `Handle dollar signs with caution.
+   - Interpreting $ for inline math and $$ for display math can help:
+     - **Inline Math**: For quick, inline equations ($...$).
+     - **Display Math**: For equations that require their own line or space ($$...$$ or \\[...\\] for clarity without dollar signs).
+
+- \\[
+  c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5
+  \\]
+`,
+      'microsoft/phi-4'
+    )
+    expectNoKatexErrors(el)
+    expect(el.innerHTML).not.toContain('__INLINE_MATH_')
+    expect(el.innerHTML).not.toContain('__UL_')
+    expect(el.innerHTML).not.toContain('__DISPLAY_MATH_')
+    expect(visibleText(el)).toContain('$...$')
+    expect(visibleText(el)).toContain('$$...$$')
+    expect(texSources(el).some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
+  })
+})
+
+describe('bug 27: indented align continuation is not a leaked __CODE_BLOCK__ KaTeX error', () => {
+  it('renders GLM 5.3 06 $$\\begin{aligned}$$ without placeholder errors', () => {
+    const el = renderReply(
+      [
+        '**Multiline display:**',
+        '$$',
+        '\\begin{aligned}',
+        'f(x) &= x^2 + 2x + 1 \\\\',
+        '     &= (x+1)^2',
+        '\\end{aligned}',
+        '$$',
+      ].join('\n'),
+      'z-ai/glm-5.3'
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('__CODE_BLOCK_')
+    expect(el.innerHTML).not.toContain('__CODE_BLOCK_')
+    expect(texSources(el).some(t => /\\begin\{aligned\}/.test(t) && /\(x\+1\)\^2/.test(t))).toBe(
+      true
+    )
+  })
+})
+
+describe('bug 26: multiline `$ \\begin{cases} $` is display math, not leftover raw LaTeX', () => {
+  const gpt5Piecewise = [
+    'Third section with a piecewise function: ',
+    '$f(x) = \\begin{cases}',
+    'x^2, & x \\ge 0 \\\\',
+    '-\\,|x|, & x < 0',
+    '\\end{cases}$',
+    '',
+    '## Scenario 5: Multiple Dollar Signs',
+    'Prices: Laptop costs $1,499.99, monitor $329.00, keyboard $49.95, mouse $24.50. Subtotal: $1,903.44. Tax (8.25%): $157.03. Total: $2,060.47.',
+  ].join('\n')
+
+  it.each(['openai/gpt-5', CLAUDE])(
+    'renders GPT-5 05 cases and keeps catalog currency as prose (%s)',
+    modelId => {
+      const el = renderReply(gpt5Piecewise, modelId)
+      expectNoKatexErrors(el)
+      expect(visibleText(el)).not.toContain('\\begin{cases}')
+      expect(visibleText(el)).not.toMatch(/\$f\(x\)/)
+      expect(texSources(el).some(t => /\\begin\{cases\}/.test(t) && /x\^2/.test(t))).toBe(true)
+      expect(el.querySelector('.katex-display, .katex')).not.toBeNull()
+      expect(visibleText(el)).toContain('$1,499.99')
+      expect(visibleText(el)).toContain('$329.00')
+      expect(visibleText(el)).toContain('$2,060.47')
+      expect(texSources(el).some(t => /1,499/.test(t))).toBe(false)
+    }
+  )
+
+  it('does not treat currency dollars as a multiline math span', () => {
+    const el = renderReply(
+      'Prices: Laptop costs $1,499.99, monitor $329.00, keyboard $49.95.',
+      'openai/gpt-5'
+    )
+    expect(el.querySelector('.katex')).toBeNull()
+    expect(visibleText(el)).toContain('$1,499.99')
+    expect(visibleText(el)).toContain('$329.00')
+  })
+})
+
+describe('bug 28: array row-skip \\[6pt] is not a display-math delimiter', () => {
+  const o3Cases = [
+    '$$',
+    'I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\qquad',
+    'f(x) = \\begin{cases}',
+    '  x^2 & \\text{if } x \\ge 0,\\\\[6pt]',
+    '  -x  & \\text{if } x < 0.',
+    '\\end{cases}',
+    '$$',
+  ].join('\n')
+
+  const o3Pmatrix = ['\\[', 'A=\\begin{pmatrix}a & b \\\\[4pt] c & d\\end{pmatrix}.', '\\]'].join(
+    '\n'
+  )
+
+  it('renders o3 01 cases without leftover \\[6pt] (openai/o3)', () => {
+    const el = renderReply(o3Cases, 'openai/o3')
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('\\[6pt]')
+    expect(visibleText(el)).not.toContain('[6pt]')
+    expect(visibleText(el)).not.toContain('\\begin{cases}')
+    expect(texSources(el).some(t => /\\begin\{cases\}/.test(t) && /6pt/.test(t))).toBe(true)
+    expect(el.querySelector('.katex-display')).not.toBeNull()
+  })
+
+  it('renders o3 04 pmatrix \\[4pt] as two rows (openai/o3)', () => {
+    const el = renderReply(o3Pmatrix, 'openai/o3')
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).not.toContain('\\[4pt]')
+    expect(visibleText(el)).not.toContain('[4pt]')
+    expect(texSources(el).some(t => /\\begin\{pmatrix\}/.test(t) && /4pt/.test(t))).toBe(true)
+    expect(el.querySelector('.katex-display')).not.toBeNull()
+  })
+
+  it('still renders double-escaped \\[E = mc^2\\] as display math', () => {
+    const el = renderReply('2. **Bracket display:** \\\\[E = mc^2\\\\]', 'openai/o3')
+    expectNoKatexErrors(el)
+    expect(el.querySelector('.katex-display')).not.toBeNull()
+    expect(texSources(el.querySelector('.katex-display')!)).toEqual(['E = mc^2'])
+  })
+})
+
 describe('bug 11: display math at a bullet’s indent stays inside the list', () => {
   const reply =
     '## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that for any right triangle, the relationship between the lengths of the sides is given by the formula:\n   \\[\n   a^2 + b^2 = c^2\n   \\]\n2. Let’s consider a *right triangle* with side lengths \\(a = 3\\) and \\(b = 4\\):\n   - To find the hypotenuse \\(c\\):\n   \\[\n   c = \\sqrt{a^2 + b^2} = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\n   \\]\n   - Therefore, the length of the hypotenuse \\(c\\) is \\(5\\) units.\n\n## Scenario 2: Tables with Math'

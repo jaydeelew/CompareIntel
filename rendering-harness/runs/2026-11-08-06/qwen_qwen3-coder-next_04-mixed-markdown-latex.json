@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-coder-next",
+  "modelName": "Qwen: Qwen3 Coder Next",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "Your prompt is already an excellent example of mixed Markdown and LaTeX—well-structured, clear, and technically accurate! Here's a slightly polished version with minor enhancements for consistency, readability, and pedagogical clarity—while preserving your original intent and content:\n\n---\n\n## Problem Statement  \n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:  \n1. The *derivative* $f'(x)$  \n2. The **indefinite integral** $\\int f(x)\\,dx$\n\n### Solution  \nFirst, observe that $f(x) = x^2 + 2x + 1 = (x+1)^2$, but we’ll proceed using standard differentiation and integration rules.\n\n- **Derivative**:  \n  Using the power rule $\\frac{d}{dx}[x^n] = nx^{n-1}$,  \n  $$\n  f'(x) = \\frac{d}{dx}(x^2) + \\frac{d}{dx}(2x) + \\frac{d}{dx}(1) = 2x + 2.\n  $$\n\n- **Indefinite integral**:  \n  $$\n  \\int f(x)\\,dx = \\int (x^2 + 2x + 1)\\,dx = \\frac{x^3}{3} + x^2 + x + C,\n  $$\n  where $C$ is the constant of integration.\n\n---\n\n## Linear Algebra with $2 \\times 2$ Matrices  \nConsider the matrix  \n$$\nA = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}.\n$$  \nKey properties:\n\n| Property        | Formula |\n|-----------------|---------|\n| **Determinant** | $\\det(A) = ad - bc$ |\n| **Trace**       | $\\operatorname{tr}(A) = a + d$ |\n| **Inverse** (if $\\det(A) \\neq 0$) | $A^{-1} = \\dfrac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$ |\n\n> 💡 **Note**: The inverse exists **only** when $ad - bc \\ne 0$. If $\\det(A) = 0$, the matrix is *singular* and not invertible.\n\n---\n\n## Real-World Context: Cost Functions in Economics  \n> **Economic Insight**: In cost analysis, the cost function $C(q) = 100 + 5q$ models total production cost for $q$ units, where:\n> - **Fixed costs** = \\$100 (incurred even if $q = 0$),\n> - **Variable cost per unit** = \\$5.\n\n### Example Calculation  \nFor $q = 10$ units:  \n- Fixed cost: \\$100  \n- Variable cost: $5 \\times 10 = \\$50$  \n- **Total cost**: $C(10) = 100 + 5(10) = \\$150$  \n\nThis linear cost structure is foundational for break-even analysis and marginal cost computations.\n\n---\n\nLet me know if you'd like to extend this with graphs (e.g., plotting $f(x)$ or $C(q)$), numerical examples, or optimization applications! 📈",
+  "usage": {
+    "prompt_tokens": 317,
+    "completion_tokens": 707,
+    "total_tokens": 1024,
+    "cost": 0.00060364,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00060364,
+      "upstream_inference_prompt_cost": 0.00003804,
+      "upstream_inference_completions_cost": 0.0005656
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00060364,
+  "actualCost": 0.00060364,
+  "timestamp": "2026-11-08T18:46:58.096Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

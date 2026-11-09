@@ -1,0 +1,45 @@
+{
+  "modelId": "z-ai/glm-5.3-flash",
+  "modelName": "Z.ai: GLM 5.3 Flash",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = \u03c0r\u00b2\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "# Complex Formatting Test Response\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n**Verification notes:** Bold inside a numbered list item, nested bullet content with chained LaTeX equations, and inline math mixed with emphasis \u2014 all preserved.\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n**Edge case notes:** The quadratic formula contains `\\pm`, `\\sqrt{}` with a nested expression, and `\\frac` with a multi-character numerator \u2014 all inside table cells where pipes (`|`) must not be confused with column delimiters.\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = \u03c0r\u00b2\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n**Edge case notes:** The `**` in Python code (exponentiation) must not be interpreted as markdown bold markers. The `\u03c0` character in the comment is Unicode, while the rendered formula uses `\\pi`. Code blocks preserve everything verbatim.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n**Edge case notes:** Horizontal rules (`---`) can be ambiguous with setext-style headers if placed directly under text \u2014 blank lines are required on both sides.\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n**Edge case notes:** This is the trickiest scenario. Currency amounts like `$1,200` contain digits between dollar signs, which naive LaTeX parsers may misinterpret as math delimiters (e.g., treating `$1,200, monitor $` as a math span). Disambiguation strategies:\n\n- **Heuristic parsing:** Require no whitespace immediately after an opening `$` and before a closing `$` (currency `$1,200` has a digit right after `$`, real math like `$f(x)$` has a letter/symbol)\n- **Context awareness:** `1,200` with thousands separators suggests currency; `x^2` suggests math\n- **Escaping:** Use `\\$1,200` when explicit control is needed\n\n## Summary Table\n\n| Scenario | Risk | Handling |\n|----------|------|----------|\n| Math in lists | Chained equations, nested emphasis | Preserve indentation and inline `$...$` |\n| Tables with math | `\\|` conflicts, complex fractions | Escape pipes, parse full cell content |\n| Code + math | `**`, `#`, `f\"...\"` misread as markup | Code fences take precedence |\n| Horizontal rules | `---` vs. setext headers vs. table syntax | Require blank lines |\n| Dollar signs | Currency vs. LaTeX delimiters | Heuristic or explicit `\\$` escaping |\n\nAll five scenarios render correctly with the conventions demonstrated above. \u2705",
+  "usage": {
+    "prompt_tokens": 434,
+    "completion_tokens": 944,
+    "total_tokens": 1378,
+    "cost": 0.0001890162,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0001890162,
+      "upstream_inference_prompt_cost": 1.53202e-05,
+      "upstream_inference_completions_cost": 0.000173696
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 77,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0001890162,
+  "actualCost": 0.0001890162,
+  "timestamp": "2026-11-08T18:01:51.741Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null,
+  "provenance": {
+    "originalFile": "/workspace/prism/paid-batch-2026-11-08-02/replies/z-ai_glm-5.3-flash_05-complex-scenarios.json",
+    "promptSha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+    "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd"
+  },
+  "attempt": "rerun-8192",
+  "maxTokens": 8192,
+  "replacesCoverageFor": "z-ai_glm-5.3-flash_05-complex-scenarios.json",
+  "truncated": false
+}

@@ -1,0 +1,36 @@
+{
+  "modelId": "z-ai/glm-5-turbo",
+  "modelName": "Z.ai: GLM 5 Turbo",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here is the generated response incorporating the specified delimiter variants and edge cases. This document serves as a robust benchmark for testing how a Markdown/Math renderer handles different math environments, nested structures, code isolation, and ambiguous dollar signs.\n\n***\n\n## 1. Delimiter Variants\nThis section tests the four standard mathematical delimiter syntaxes.\n\n**Double dollar display:**\n$$x^2 + y^2 = r^2$$\n\n**Bracket display:**\n\\[E = mc^2\\]\n\n**Single dollar inline:** \nThe relation $a + b = c$ holds true for inline variables.\n\n**Paren inline:** \nThe solution is \\(x = 5\\) when using paren delimiters.\n\n---\n\n## 2. Nested Structures\nThis section tests display math embedded within list items, ensuring that the math block does not break the list continuation.\n\n- First item\n- The equation is:\n  $$\\int_0^1 x dx = \\frac{1}{2}$$\n  And it evaluates to 0.5\n- Third item\n\n---\n\n## 3. Code with Math-like Syntax\nThis section ensures that math-like syntax inside fenced code blocks is treated as literal text and is not processed by the math renderer.\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n---\n\n## 4. Currency and Escaped Dollars\nThis section tests the parser's ability to distinguish between mathematical delimiters and currency indicators, as well as handling explicit escaping.\n\n- **Plain:** The price is $100\n- **Escaped:** The budget is \\$500\n- **Multiple:** Costs $25, $30, and $45\n- **In sentence:** I spent $50 at the store\n\n---\n\n## 5. Tables with Math\nThis section tests inline math rendering within the constraints of a Markdown table pipe structure.\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n---\n\n## 6. Raw Dollar Signs\nThis section tests unpaired, raw dollar signs which should ideally render as literal currency or shell syntax rather than throwing math rendering errors.\n\nThe shell variable $HOME is set. Price: $99.99.",
+  "usage": {
+    "prompt_tokens": 340,
+    "completion_tokens": 1956,
+    "total_tokens": 2296,
+    "cost": 0.008232,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.008232,
+      "upstream_inference_prompt_cost": 0.000408,
+      "upstream_inference_completions_cost": 0.007824
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1442,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.008232,
+  "actualCost": 0.008232,
+  "timestamp": "2026-11-08T19:05:43.744Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

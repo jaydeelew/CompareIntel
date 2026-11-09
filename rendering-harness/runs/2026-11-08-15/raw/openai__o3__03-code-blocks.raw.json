@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794169185-NwByYMJYc7HOTGmS0wPM",
+  "object": "chat.completion",
+  "created": 1794169185,
+  "model": "openai/o3",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "Here are the requested fenced code blocks and inline-code examples.\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly, `a_b` and `$price` should remain formatted as inline code.",
+        "refusal": null,
+        "reasoning": null,
+        "reasoning_details": [
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8Nlj59E8gFV9HLQMK_t4vY_bns-OvjmfN5lrIzuprH2CLmCmglM_JOpGMjUwFK8GfECdONDpfgSUOD8nfC_am23-e7baiX35dn3p8I8a28Q_vA3mTNUVBNyAnWQZx-cebjFfH_tsWDQtOxCAoUp5MwqHjZlGHzHJFtD2gGvQhCJUeMTVeqloDkVcd9zHZyE5SahOZzwu2BcSWv8Y7eHLx2-K7xqz-5E7IMUaXLJcKRMWNlgSAvhx1d0p2kn2ih1Mya7M7LDGr0LUufPA5Njf-vCGlpk-JL5_hkggm8GJ2Go2xpoPB2GVor0jwMKLWXFysFnufMIOTyWF4T8th4mtC1dkdnrVI0tPxFTcSLc2N05_p4DIJ7Mm7xE4hKHzFOj1ZlYfrLzINSQ9YMwGzSg8FTU9rRek16nblbkgK4VuOuRfZlZzUAD2l1wgOx8ij-DxZebGSNSPDN1WlpfqhGo5DuEz3Qu-bsJ1X0P-61HZg7r8oLj6G8JA9pxyvorp-N7iyth3sG9yNRhQQEiX0Wgydm6vW0-BnHQGtsrxK91Z8XArBLKHe4qPmm-LXB0xiYBtJDPBVEdPij56XPGjkfzO0Fz6tRxNWFiQSjme2p2ueFPe0RKxSBZVxleDJu9NpMwygUYrS47N-gsisX0mtTQcxAkAQdHpffhQOdpgilruyd5_g3iZVx02jmn_cweDSeOn2-N64GWV4bTsavLEyNVKB3IUgRzrc2lVOUJFX9mC7IRCjOtNLOMaX2QALpd6wqyTe4da-pIUCB-ovtv3-YR2GjHK5UEk3fdRSNEUeLZP1KmXqro2btPUIVVntYiMzmbdy6_nhBXPdZBAPvMUfnmxK7IoWGkdsTM16eleYysW86YOHoOok3yGoh4Knm7DiQ4PXzGrsSTTSwsloPLn8HQwYygUwO4_7rd7DaKLeYDkwejlj7r8mjlZRt7sBX01WZw4FQXrWK3c3T38J65gbAvMlk2QqPt1dwXO4vS4MfzdfBPqLiFgZrHTYbwdy1kW5L0kMK1GldEBLPKr6l-M395-jETLo6ybokFt-YQWfshkNvF2mF1r0YB_s3Lue8BvBtOtR18x0bwgUgY_5OFJXzMOXo9OoTQj8AB2adyrQLxFGEdcbU9FVa1lMXRfMkP-r1l1V5fB2ALLqro3tkxKGhqxyiJjceTAYZPgiRPwmQqPj5x4fjXs2KnDJWxVmr8xRTN-5TuQ0vZ5Dt_Fu99i_XIOM4d3G-w8jW9XxTl_SbGx6hzdL0FcGHwtNUMkTJZlehUoor6ruxxHbzcZ9Hh1NcYjAygIGhp48PUF2vtkvuN0flp6qbG25wbItuhGXomfnZwyJEnHUmnZIZUTAljPNNGxidr6zIVgXIcDa8u_jU_QekhZq1Rdo0G1YBMhqa25AM32SVTOdunyZcDzUYm3CDYno6Jdj2Gx_f46hJAQ8VKSi8-ZH_BtR8RMGmmyI2gh6FpIC9--9uAiV9WXtCEeJkakhhwaehqSLnzLP_VNN5sPuVe40tWJfMBbWo_sk9yWM2UffxgTdpWYkQtjM_3ukR9ma0NJdTdOTOx2FH0lbrzdZBUdQDiBZYLR0_5ims4ywBTOwY_hNGdOEPca6FT_eR1sTWTN1PsNugXddS2JGUSqqF0IIuiNyiYjS5NkwvEZcjSWcOk334SwpJXKr8rdrWyGSYeH8MnN4UV8sxF1uCOaCsaPXEhtGoqZSIh7qoG8GTrKgaQahY_RQUY8Tez07cWjv-wMy_mIx10Nzl2maDXUGHnUtmwUUAb5xHzzJ8NF8BLaxBH-jP_U2hM-PdDMtZUwtHJBYYCMqHc-DRzWNzZE56c3RXCZg0K9fms2L0Hv7Q1Wd9e978xe3u7LAZEBwmFaYLgN05t-fHkjPUo6jjoF5CK9VYfjsOCw6nqrYElLw50BRT4xz0zNnEjslZguht3Abgt1kyh2lbN4EdIYhScj61Lup0-PuuZm2p_fG0NNmmAiDMeC3UFtkXxO5hlFKAvOZHJRtQnvFRmgLQypBuPFOrFU_NYqgG8Wvoo-yz00gzGE0d_43yFKSy8X5eS5Ep5QokKmZWf4l-ROusb7SqSnQBKe8aSEu4Ao-N7_5jc81WcXWLXxJEvvrJLHpRn0jdwvT9L25egAi20FD0F6rd8x6M48gwpyamKVOgTHX3ZS2z70k6YgSh5mkfHHYCaVEkAnI1b07UE6xwEEUd7yKnP4ecvrFEnASc1JIGnzqhjIuUdjOr2maWu9LKOYQygbaFujMmKUb8JwV1N4zAMosIQTPUiPAxOUc-OCM-G0ZkLhdft_XQFBkICERrDIV2NNlZj-RItE-Nv_3oeoVyMVtrAe8HAcJXSmMTfPxAjcr9cXbIKomCtZP_RAShTxnuHtjLOh45b5sPy_QYTZR4GqDBK_SiUAYc7g9hbsszBpdDf8qO7UiOZ6i3nKp9VG3H8vLKWLK9xl4_WoVdkAM6lZeHA1_nQuhWd1knqc_QNu7q5nWtzUuiDtOulcq6xbit8P4pu1MXtV2qBx1WfmfruBZ-FCpt0660ZQjZi0KrdEni3NZsa2VZi__Ih7bOQYopJO_XSx61ZY5EYcQC89OFVeIX--ed0RYYKfGpwbDYVJZQIUPeNqrh2AHMjN3GBO8Zcqyr4ebxiYX8oQkP1qLuoM2ELkBCtI2K1HnQAHkh0XIRzhts4V8-3B-pq80a9iMvYlTieDGzS1uYohYgKdisVWu2xombhFRDKYtHo7FbRvJoXzyHdIbrAxN_2LXdK1rDpBmGvEMPpfm0NrpTPS6HEfT2PxpNk5cHoE0EN4WEAFifiqVDGj0QVaBONuwJtY8IGYnlXwd5VsjPpne7SfwH4SEwLgKqRDSrLxsv2f6sunNdYGGNvjdb4ToVC3PXpX6GMVXH_Ed9xdyIMnwjCNnfYiWwU5DIwBMB7-8MYLe1VYgrUKOJT67vVESqGnBIsJM1cGwzjyxUqG1H80COWLfmxyNqS-G9GKj0CTKe5VO1lIj4jGwAVhF3161iCdKiEtagkrpdkEKEkt08jtHpgIy6KH-vTQP2y-rB9qb3aItLdrcfL3ea1qMrHx49tZ2Ij8eIlK7ROILNHRN10o6L1o58lJDjl2aZwHA-NFl8KgZzgxjCBsR5sITfb5ZTJxnemwHpescVtJwhmSy_0SC-VCAz6LM5cp-H2xt5UtLc6qXxy59qsmwKgYKxg2gL5jNMJTNqOsXBkGWK7wZM9yDYS-ZiMgosusHQAmriSk1adWvRbpaFvRoKudVlRmxzwmFp8mmvYIZQ_lDA0-rjs5_PHB8yoVkBH4iO1X-3XyXp7uUOspks61LOw-BPEMX2dSXIySnfUxnZxVwsGiGwK3brqoA-4suDOBZfpLoAHzIp4E31dX5CsOT0kMJh8GUbNTTA5Bb-CSe0M-HilIQlky3XkxWjMvrixsxIG-1wPLduRP_uClgF93vKGzbtHOAXXEalmrHKizDmZ6xgNTEuHcodTUWiw9KSqVxogihkMxY2Vw1KU9MOM8RS9TGVmJEO1KSyV1j6bDR36eJ6HWvK9Uh4g8ogMnEHCldzxGo2KLhV6uyL4Z30tA7yOzO4Eg_yWcr5KEtmYBWC1ELLiadA==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL28zLTIwMjUtMDQtMTZ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0dd4ee556f118447016af0d961fb4487d1908b15de9150429c",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 241,
+    "completion_tokens": 382,
+    "total_tokens": 623,
+    "cost": 0.003538,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.003538,
+      "upstream_inference_prompt_cost": 0.000482,
+      "upstream_inference_completions_cost": 0.003056
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 128,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

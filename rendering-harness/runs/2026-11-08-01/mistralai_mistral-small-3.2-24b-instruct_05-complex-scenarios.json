@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+  "modelName": "Mistral: Mistral Small 3.2 24B",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here’s a response that addresses each scenario with challenging edge cases and robust handling of math formatting, tables, code integration, and structural elements:\n\n---\n\n### **Scenario 1: Math in Lists with Formatting (Edge Cases)**\n1. **Nested Lists with Math**:\n   - **Level 1**: The **Pythagorean theorem** states that $a^2 + b^2 = c^2$.\n     - **Level 2**: For a *right triangle* with sides $a=3$ and $b=4$:\n       - **Level 3**: Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$.\n         - **Level 4**: Therefore, $c = 5$ units (but what if $a$ or $b$ is negative? **Edge Case**: $a=-3$, $b=4$ → $c = \\sqrt{(-3)^2 + 4^2} = 5$ still holds).\n2. **Math with Units**:\n   - Speed: $v = \\frac{d}{t} = \\frac{100\\,\\text{m}}{10\\,\\text{s}} = 10\\,\\text{m/s}$ (units must survive LaTeX rendering).\n3. **Math in Bold/Italics**:\n   - **Bold math**: $\\mathbf{A} = \\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix}$.\n   - *Italic math*: $f(x) = \\int_{0}^{x} e^{-t^2} dt$.\n\n---\n\n### **Scenario 2: Tables with Math (Edge Cases)**\n| **Formula**       | **LaTeX**                          | **Result**                          | **Edge Case Handling**                     |\n|-------------------|------------------------------------|-------------------------------------|--------------------------------------------|\n| Quadratic         | $ax^2 + bx + c = 0$                | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ | What if $a=0$? → Linear equation: $x = -c/b$. |\n| Sum               | $\\sum_{i=1}^{n} i$                 | $\\frac{n(n+1)}{2}$                  | Edge: $n=0$ → Sum is $0$.                  |\n| Product           | $\\prod_{i=1}^{n} i$                | $n!$                                | Edge: $n=0$ → Product is $1$.              |\n| **Matrix**        | $\\mathbf{A} = \\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix}$ | $\\det(\\mathbf{A}) = -2$ | Edge: Singular matrix (e.g., $\\begin{bmatrix} 1 & 1 \\\\ 1 & 1 \\end{bmatrix}$). |\n| **Fraction**      | $\\frac{\\frac{a}{b}}{\\frac{c}{d}}$  | $\\frac{ad}{bc}$                     | Edge: $b=0$ or $d=0$ → Undefined.          |\n\n---\n\n### **Scenario 3: Code and Math Mixed (Edge Cases)**\n```python\n# Edge Case 1: Handle invalid radius (negative or non-numeric)\nimport math\n\ndef circle_area(r):\n    if not isinstance(r, (int, float)) or r < 0:\n        raise ValueError(\"Radius must be a non-negative number.\")\n    # Formula: A = πr²\n    return math.pi * r**2\n\n# Edge Case 2: Large radius (overflow)\ntry:\n    print(f\"Area: {circle_area(1e100)}\")  # May raise OverflowError\nexcept OverflowError:\n    print(\"Area too large to compute!\")\n\n# Edge Case 3: Precision loss with floating-point\nprint(f\"Area (r=0.1): {circle_area(0.1)}\")  # Expected: ~0.03141592653589793\n```\n\n**Math Context**:\n- The formula $A = \\pi r^2$ assumes $r \\geq 0$. For $r < 0$, the area is still positive (since $r^2$ is used), but the function above raises an error for physical plausibility.\n- **Edge**: What if $r$ is a complex number? The formula generalizes to $A = \\pi |r|^2$, but the code would need adjustment.\n\n---\n\n### **Scenario 4: Horizontal Rules (Edge Cases)**\nFirst section (with math: $E = mc^2$).\n\n---\n\n**Edge Case 1: Consecutive Horizontal Rules**\n---\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$ and $\\oint_C",
+  "usage": {
+    "prompt_tokens": 448,
+    "completion_tokens": 1024,
+    "total_tokens": 1472,
+    "cost": 0.000352,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000352,
+      "upstream_inference_prompt_cost": 0.0000448,
+      "upstream_inference_completions_cost": 0.0003072
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.000352,
+  "actualCost": 0.000352,
+  "timestamp": "2026-11-08T17:44:54.554Z",
+  "finishReason": "length",
+  "nativeFinishReason": "length",
+  "error": null
+}

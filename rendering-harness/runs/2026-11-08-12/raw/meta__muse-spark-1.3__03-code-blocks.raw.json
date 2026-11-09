@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794167351-iFlhqDJBKxjR7kw2BLRg",
+  "object": "chat.completion",
+  "created": 1794167351,
+  "model": "meta/muse-spark-1.3",
+  "provider": "Meta",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "Here are the requested examples:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+        "refusal": null,
+        "reasoning": "Generating fenced code blocks for Python and JavaScript per the request format.Populating the Python and JavaScript fenced blocks with the provided snippets.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "Generating fenced code blocks for Python and JavaScript per the request format.Populating the Python and JavaScript fenced blocks with the provided snippets.",
+            "format": "meta-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "Q-PaDgF_4RkBMSlnqYtsZxitdOOLMTRx-WPcFOhM6U12KTiTFOowpwBw7L6hUMaqEjuRx3-gBp0208bNv2CDTxoMU9t6kX4m7lxQTPL7K4TjkBAF6ahpKCPPckrWNqdSNQYktcj5QNMR7d31vWtQZ3MqRuZoZoDTxDEP3OKtFoBlw8LUyh3ue0iinc361iZxCp-gS8Gqetl_mQhLhjWH6IyBpnP4ZMlBRCHNCNyxqSliqi2sxmLPliYtBHXdlV4FnR7WHoLoo-PGSEPdk0DbyZHWVnIaU2gURqYS-08jC-XVOAWIPe4SYWgN0P_nfxJmxr2xRCtEPKPa1G8zL2noVPfdDRNT1Nn9e2p_sDB_FUfuh-DOL2IDyTPU4rKeLU_C8Ixb3mgSrAhe7iXntDVPFJXiwmzwq16t_SqBWX5Ot30t9EltyRNFyFNmxhiLQCMTgX20F4Gi6Y0cWH6IUpHl6KIOUNDyKN7D0eZN3qtkUtI74tyL70zpS8BXbQeza58uOMSw0_xFsiuZMhfEv9lYVccz0JDMpTiH8rOf62qZ_GXAfn0ZbsQ6ps4RieJNEGmPyhXO0BtxZ8TomRHD1dRDeYy7BHpg9np826TysJUTnuZTmhcMVcPeaA3Zo3_6EJ1h1h2T6JqE4__vS0ivKywiqB-OQwpvBSbX696giCXeMFy5CeaVhUU88-tSkLZwGf-fDnJZ4De1ucfueZ90xWUsl1cocCucgxE-sdoslQlq1k3nq1D3EQRT0AO5YbYib56G1nwexC6jpPAiekUJdTlXehoT5xwLMhyVJLxiHlxZeqRoxwGKXQZw6LMpCEcbbTdi6MeZTe3U56b3VrwZiW4KTcbO6IOU_61ky1y5ez7ww2bBVZ_yktnY0R44azQ2TI26vG_0JMDazypauKxwJFz3kwF1vatRAQ8o60LImPrdxyNotAThMrnVdtQjdoKVSoIbqnUdCYluol7tad3zDCZ-j8cDjE-Ck4WZ-ZAGAWO7cDeHwPqYYiDqib4UFIMcrVW1Csouj6FG1iRftrWRM7psPScoQyWyH1DnTKlBN0xi20uTWVDX_VRkj64h2NI2tbqQPrH862CgrudfDvWOFT1Coq754GaRcP8--9OqbhVtWpcV54b4DfIMnKlQNi5FQVcKQb0lFrhV-F5GcqaRdvKOgOAc1LAB7Afm0Sz7Aewd6KNKBGs2Quhgg60Mrh8bM1eJ_Epq1RH_NgXjJW0eZ6Ezs0rfnlBB2Axf3ndgehdu6F9tzzKhhR7dwM2eu35_icowAP0yUOYqjL3NVCpBs8Gx42ApB9gMM7wd-VM1GwMd40gvpZGvqSsNqdBQ5n-MrlFBXyJ9lQdwTlQsXDnRWVi_YSszB63JbG8VY79F9c48vya759eWH88AIO7Xt_BcyWBeHwyrcGOeNi5aJI4a7Y6ZdcxXhr4wJmIUU0umzPEcOMch-EYF3IXSmKzuZoq6j2DgGKMGwvc1W0HQCUNHR_KaPnv_aCuw1V3PrvgXYmXRxoOD7PjDVKM4N8v99wu3SOdSQXwpKH_Ii82sbnxby9K6WF8xsKZV_zO82hpipcemeM5s1KfBencH2VDeGzPxoFFf0yOHMIr1k6bRcGnDHl9z6TS-GSUJmV7Desntsl0-7duXtD8OUlAs0n29Ytm8Toc6f6mp60eXpEDjtC-lf1oFGVhv1TdHuuxPq0o_tWKkVF3V-RAHREBEx3c0LdoOq3Gzt8Ovs3MdTAvOy-EvhI_nhlqPETj83ril3_4K83mhGABNuvHrVXo8EMOZ-tJxQVG5XciqfYgTYUdSV8YIeFCTdzDNX7IlnP41nGXoT6UZl7Vb9_k9EaHnIpIKlR9qjTOgOaaUX0mF685NYlP9W4JrRrhZkWh6u_YpiuItiUatfr2LBhNulasE-twfeO9Tu11WAg6HbooNSnfgFnVtCH1LxCDedJgAB7YbP0INrLM_7nsQmwyFG3Pj7n_r8iRxwDdlD71-hHyHL22dsNrR_rr5Tozo3aYJCRYXFwDI-YwO_pMJR46DucEVQC_c_9gc-hyGLoWSCGiyeDkfd8DmBm2O_qVLMPJbRnTO4xeJCBec-2REWdWZVqS2_79EYc94mJBqbxCEOjU03Tc_4S-py9146tbI99RlGXxbXfG3BeuClGikaoPHk05M5H6tOBZ4y0J5lZhUnpoFvEmvzT32mPkeVcaWe4xJGQIBXjDQYyGgNtyxrVc3vdpNYArUA0GJm-tphOF7In9NOaFahJ33FGJ1kPUlcolXMAe8AHZLeUPgVTKlffplsS_6tRdYERKkOnJjQ2KbmwDX2j7aTxvVLokH9frX9sp3Q57IIPZ3v3mowKJga-ISJFd8132WOcAe0mkvv2fQG6agi07pMcjrsN2ANgJwf72nYe3iZKvdFOKKHiYuiHqCOzsXOac_lb8OTEMSQq3x6n8NCYL6smfIQslKDS29XyRGHM1hcXZPhZCD6NZeciewUtyHO95Kx5w_bwVzdEhMzjNvK9y_obn7KY1buSRBfBXjy0Zn-RwFJBWilv3x7k4ODAYiVmbeoMM3prJ5lMDNcBeWtHB8dF3Vp0TQnlaAarvSveQ0ZvWK62vK3pH6gy-_dSe5vA1x2LdPt8arNgAVQs98-Ar379coJHVDloDW2rMY_wryBjXBlFahpw1Dp0F5_UWnz5i8Kcl_jslzzxmQnw_ZAAW6xqyUMMdhqK1MT2wPGonZpZ4TnBB7Uyet7R9yi9i-zZyg7Tqw3s5FA5IJsyf9KI5cs18i0BKHwXB1Vkqgj87kXwmgnLwB-TLRwyJnCTju3E0M7n84XlUbCxWMw9kOSmbIAPGpbpO8TuvID3k7LXhY4swqTVOQ10i52HAjJabHea8M8tx08oX8P7Sbq-S03K4IuzNj6aWNS0kYZ0uwAZU7HIlrNdi0pbydkr8lT_dUeuMtJVNCey3JSvo7ftUUpAwJWXT4e0ZLu15s9fymmqoxsx0VX3iVQMPNyCBSBzP7f7VPnOS_ZpdTn80BqDTJE2xfVfIJ8yuPy7cZFYYdYZFgiQwMF2aO1_UzOAu5wz3m2DQVqlYnHTCQ9KJHnXT-w_hDrTdGVb0P05YRTx1wmRtl5z3mTODSeGds9ZV7777faVFfGKQk1UaB4oBTBQcNVpVHdgFlWgQflmXuEcGTxeJT_7rwA6F-CMiBPDFa3ynOLmlWtxCXbwt-cJpg80kKO-4hgowZCee_psXfbTPcWZLyP8HU-7VVJyKrkvNyMwO8bqXVdCy8uH1NHAytwogb24wXp3CL-8GRjpejOVVnrS0zazBBOL1w23bpb1WbpJUJJ2hLKlGvNEC4p9HN0t0-IDKl1OoVdXahwbU97uJ8rizLHf3_seyrbIGZIESW1O5Gi3DuZ8Hoh2m6C0KafZYK5OMa-CJmrJoxelj68rjd05dPfVDmY091wbBXHZGeIlzW2ONztmjmUlp-vBQyc0KFo88l7FaaCTOdjN7BeyfQnFCQEaryf95qSZC9_kgh2KRN0VnP0FOS2uVJlwxD1vrgnuLShZ_dx9xdbTfsbHyBOkTKpXaBkorH8osEjtq8rGH0aJf9EfF67sH_d72Ggx7SwI2FW_lterTIwk85dudUFmZgJhlYrv6NHuAIJkA-teHbKWskR2Kebx8u0wgyr5KLiQndxRt2nhLHCQgeSZfYfLDWs_lWGl_wosdLNuwErKE20bI0lJpu3ZMaVDN-D0tapChwxhU3bqu1KiscN4qSjkdv2bxhPaXumcDukPsXcxFmxWr-DD_AhVUQrksSzyZshmx2kGtni_8KbEXgHKJVQWQeIDLaRWrF0bqDO3zBSZxfeQ1BJ_5iqcqIba1zM-WO8-D1Eouo_fCBa9pumvce4s8T2OJ3WP9m6O3frYw97zuvQ8lgo1hmnxfUgQcNf9Rr3DdKk-kki7T9yWf0AQcLKOok9SH2H-W62RTvczPtppIucSiG5wOi35Kl_3592AxnHgoqfrVto92q11W38LIKDFHDZyAr8-MwQeUYghFyR9fUDfcmfapd876NgMThiaZcpdzc5e0AnoKHa5yrTpU0qKx4SMCYzv7HuS3h6q7OfpvhGFzwse19cfzOsQZotqTjszRQjOntPvEVyKcKMHKbbA1m2GxO4XHOw8nzt9wyKaQglfTIfj2jJVVop9WB9kCCFL-THs9UjlEkcEfyra4T8NNPRAB17_pXBVC4GZcrZE9hR4EuSCtkeKwPBiDqexl3PGJrVL1hBkdKARw-ZPnHqFiQO9iaQL_FHPmS8RK5zF1hCAh3KXr1UiqO-3ytOKgGd0gRUieBCGIADz-5XsDPzOzG1EeJKptB1H5PRm44x7qkrrkvyDWQECXlRYijd4t1Usnd4fljpLdCDfqZYWRKqEOjnNKqwny5uPG0dVGgKKRhEg6KVLgUhEOLcFC74DZxSPkzatCyDIOek7h9-QRlAQdHETRKfd3JClibAy-JTelVUIv_DCtAUrSuQINqxjwaFQqJdzk_aVfTJqxq1_d6xp5s0FTx0xUIr4Y_ttdRwNa3M6a_4b_BowwQLlYldg3t25-Mv_JIvgx4anUyGoZ587Shwt1MjrMGo-9tTpEKqbYfxuUfZIOjXPCKdQonBzVF4jIk-8w_NTOUC4uUe2W3sFdQJnKKY-oJ2WEVfVuuG8XhygU6mYYcUnWa-ivwK8gwOhAaeXnF0YK7ABHEDLrIpaQ_atU4YjE1BiuN9gNlMDIyyBVPwiaOOh9pwadmVU94yu00HW3fAYe7ZkwkU68pshnkposhzmkl9L8Z4bg_bQ5Fzb7KW-h1M9QyJKYbzVxireAA87_uyF2LfKSwRwtzhUg80UtxbXe9gvtg3jguxY_OE6qN31ZWJg5-n9ODRFvNn4JmABMYhaOl_4Ih5TYCc_c-zsEUnOYZoGY52Mnu1nXNSYp9um9HNxD8LZ77VMFyQmg3fmE4HvSeqa11jIcsqz7gVIbSB3pAq7kfcgRsBkJVm-aIfmiWLlCZVl7kZwKefQhkhDJ5U5cSbXYMRjhYMaoz3J0p-ouycX9g3kON_l0DEPjif3QY_IqUh4XAViMJDPzndgLg3VVxuQxGiEMgIw62X51_66W7_0qEoyX47SGyYRs-3870cVsuLE0BbnrJ69YsQqPxULTyh0fEJOkTK1LbOr3rl2tZKB1IyT6v7Jv5QtwGR7nBEJFh5zLxsU54q1s27oRoeluHQzKNhBGhwBSx1wPzF8vJbPvLvZYjK6OuyEFitQPJAe52ps5cOOXevvl9pSyq-iSm2B8ay-CgIfU-ktq1bZl-Avvf87vwLphavbX3XhfamjPJ51CLSOip7oLhoYXLz-XzMHKvqbEwyiIWt9fYpRRgKbrCzqxce2obFoWXTKrqIhkdNDv8oeUZb4paxM9__ORfV7ylafaDo6L_-fAspo_IDJndxRJQphz-wsmec9p3uor7_zRbdpSDFnQy1y9xzZMmXq1vmZeY7QxWxRkVBmtHJK5pgIQUprJO5CK8TiGSgMWMpRuVgTTxY7az_LKuEA.eyJlbmRwb2ludF9zbHVnIjoibWV0YS9tdXNlLXNwYXJrLTEuMy0yMDI2MDkwMnxtZXRhIn0",
+            "format": "meta-responses-v1",
+            "id": "rs_6af0d239b05e5e6607a64b1a:rs_01a1bcb531807617975b6ca69597fa0c",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 242,
+    "completion_tokens": 902,
+    "total_tokens": 1144,
+    "cost": 0.004136,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.004136,
+      "upstream_inference_prompt_cost": 0.0003025,
+      "upstream_inference_completions_cost": 0.0038335
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 636,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169286-6MLPYJHxIRKV99w7sSPe",
+  "object": "chat.completion",
+  "created": 1794169286,
+  "model": "openai/gpt-5.1-codex-max",
+  "provider": "Azure",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "**Structuring code segments**\n\nI see it wants the code separated into distinct sections: one for Python, which should be labeled \"## Python code\" and enclosed in triple backticks with the python syntax. Then there’s a section for JavaScript, labeled \"## JavaScript code\" with the corresponding triple backticks. Lastly, for the inline code with math content, I’ll include a statement about x^2 and format it appropriately. I'll get started on that!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Structuring code segments**\n\nI see it wants the code separated into distinct sections: one for Python, which should be labeled \"## Python code\" and enclosed in triple backticks with the python syntax. Then there’s a section for JavaScript, labeled \"## JavaScript code\" with the corresponding triple backticks. Lastly, for the inline code with math content, I’ll include a statement about x^2 and format it appropriately. I'll get started on that!",
+            "format": "azure-openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NnK-X3n0Hs11AXlAHPReQDxIgJ-EZiE4YX2nnKLSYlsMLZPYtoZrt6ENvFxqvDmRXSxRbtcyQbAt_UfIV45cVGRbzwVIFJXPy8ogil6srz_F-SR59-8AVr3BH59k0TCabGdHCYTAPTYOYjn3RmaK_x42bHSM9kI3jp7NMNEUab3zO9tF1Klk21F87rT3jv2Ap3g-Ck5o_8fTuDJEkNjHg52M8pyEbE_5BtpmC_rllDu5gARe2AelixmszbJh2UA-_Xer5zRhfL6G3j08IivszWuQ-jMJBa299VZY96MxeYNwIqD1D1_PHz6bJdBHDf8dH5KydNaBCslzyAJtBPmgdFD016M6Dt84Cb3gMoOHXJ8avOahHjxTfJxQFBIyG6aoEw-odXkBD15O7-pTnsW6zN9bGD_lIr5iqFKOxRPaKAMiPC0IM4SGQRqggS1VpGo0vY8NdsDHT64aDFVDTheB-QhliYdBBOVPUkV_Bhbqx0BTTHhraceKHz4K2Xmh5vMz4q9J8G5rgc9AteBRPNP7SLr8KpLPERiYD2N9oBPmL6EGM2y4tGS405TMpO2GqE7D2kqwDA5n0XaJEe2fbWNSnfw21GfthdYACYoFm6TgDDmEZtMI9aSlwnIEh3X3FtUifujbvUvQJOjc8XDrT7D6P5tHog6m8tosBYTiq058u78gnup0bRZWeSJ96LsS3Dqi8K0LO3Q5z7RAjKkAxNQ7Gih4IoPBJvByxXoFl0FGB6-atvsRRBAKxkAunUdOuIxvPVpCHUlmL4gslGeut3SlI7SxKsk8g1s5tiyrsK4-Puo3l6biGJQ9mnELq33wmmtp07ZYVTc2ewVHvpIMoCnvAYjkeTBb7T7z4AlXeFJavux9NOOHJvI1MF0raLW8ZyHpdF0zm2MhF1ECqy0cprpN-C4E3f0aFJTcimbeWQGtj-W9FxRBlJZ07BWBfr1-GlpiDwvma6gnlXV32XXN8ig4hMxa-6iYCyRFUOBjXrM6jkeW6oJRti89StY-eQS6mkAQ8x2o4vvNPeRIQAAjkj3PGwHsSk7tiomLklwGBZGkuorhPZNxDEnDnP68wdjE5GvuGmH4bCnHOOk_T-zKivGbP1xC4CFMXpjFG7xg55qr3r3Qu7TpG_2hGBHPh6ZoVarw4DnwXm3a98cVMorV4oBZabMcw2CmsBBYCLmvqU2MJV1DjjWt7UUB1WktmhNvzJg3zegqj6ygxjbdqX5DZHpn6caRtyQrG4glfmG7_QZDOMkulS7QCJT3k02r5n7McdpiCvpWf6ZhNjloC_BQbJgrtxqxagsK9KmHUEKRdaSIbWJXq8u66Bcig8p2KYWMwtspTK7CGZcMNzWHGgdEM0KUdFuyCj8AIvF8ryR532QZN14EB2qELkQ_vBBTEVO5FMzw5WYbfnR5ipsPnWZjVCr0EAGU-yOM4lF5_xCd4diy7EVuZ91ov3VrETmvruOgDaFkZFVgckT5qkyd6eCmsazEAZple_qtcfGbQS97MKIDtlp-7sJBg9HbXMYj2Q_hqiiq12gLwqWOHjnj4PVpu6gavJYF_sAbhuDz_wTUFBef-BRwjusjVTick5sRSs4bD9mqZ1Taz2FGG7GTg2gv6LJgePlZJtEcmr_woI-aAkv5z8WZm8TS-jnFGiYzr5PIGg7288JcnNtr_h5Svq49EaesIwn5KVAvz6Rf19N-gubW7LTUmX72-fLyxycFbLPczNcOYjUdcr6jK46a-PqmEQmeIWKQdREp1jHgAX6N6Xw87dfr8OCALA1hjFE4VajDHqmxTqaMHMSfWw2CZ-URvRH80DDmxUsGAKQCRDfXEADowohMElQNOlpxGl8GW0aiwH0r8YWQbh4sA9r3I3XrJd0y1hbLHIxQvNBUxU9asdtvziWfz6GSx5Vr_SrO2_xtIDwmDxqri1yyQwvn75Exauc898nEqzdj0O2B2mlQU29oqQ6XDDFMuCOeBtANHrrJ44_cfHXcOGVfjTEqfvuAINuyDBouU5C3VHcwt9JensJ3m4Oc-JxmULnM7PrFJm7R_SDw6Hx7yN_rmr4bgylSBPu2_GbuYeSHIqjpHHfH51z2_UQXLZRShzowWC5tSlz0sN6v5BuiwLn4Kpl3EMLik__2aCDiY2_qFb-xALepsHVKPMYfIE-Z_Jt3uU47G92REwLMM1rBbYfr9doc75ZOoNRNcuq80d_60SLZNG0vXRgUwS3SQbTN3kvbOYXZ5UtoT2EbZKZn_11pATlVk2ZkffXFDm0oQiLlS2ma2hZLVn13nSqgSR-M3SJrLchNu0MtLKbmpPxayLaznBpD_mBvTx3cySyp4toLbpqFW2HBy0-fRbJEtYxz-s0Y54iYYc90d7zrzNUMmdydtghY73zdkynw4O_rHCCxjopRUJmh2nGw3fUOFAnKxCwUHnaELJmWkQah_waGlTtd60MqPjeGABzlZP2dovdFo3f36H51J-uUxEozDOiRUw3fiWzJC7L108QpHv5FYqQGsGeJTAN4ltGlWA7ac57jHP9mw51B3lUiR-87yq_82rU0Y0qKVMmdRXThS29H1P75_9BmtmC24G4OAZXpA93OrQh7xB1lkun9X7-VRCdswobOce6hhcyyi-ShIK776wpr1iaNbONpG68lvAOjd6ZpbI3gA76MdIgXi67ObvRP2l_JqUlus7ZF0m05d15LyyJPNUQ7hO9D-gqCl_9er0HgoWsSsEWd9GbSXvJjDJUY7fnLdIuROepqTuqbv3uXbQ27vFlpV03DNxIy8rzFwd1mYLOUV1AaygNdSbEv9EYvB5kc5odovjSjrNM2Ihh0BJEDhronc2Udd3qdqGkXUGchOy2OVYtOoyoW7TbTfQLsiZqXJIZyygjh_69gMtS7B11uIRPxmUnZjfl5jStvw4LyqkrkgPdm1oD_3OeAuomq9fedHcaa9o3kaoTdXkCp7m4RAwmnePz7F_al178ckfXfPEsSYnMzEeDeM4cauSBo6pSjnU17sUv1ODLfMHoGcjq91xanhFFX6qX_imD-T1B4nlFMiVj6C7T8-U7XeMiC8D53jTxHOc1KhFqMTK8dy25IyI_AFBgpltEyTTpCjiudUSgpWrAiEb3UjVwNLE-XsStUcYlmIsa3Wi5AqCs75AXR4UKQcyMJDNDOSw65SvJ9oCVSUO7Dr6SxcijHLRZu2MZGEIHbC1Sx0f5b3X_WpsH360Sa7XBaZ2PQ3yybEpWDul6ND-SiT5dx6qX0cGTnpesGC3qisYhrYe-j3dnaBuRr1fENgXHsflML5iz1BfAMT-lG7pyxT-dKDK7rjOrGhToApjf44ndJf7r025vOZ1UY__ujNDL-bcqeXADzEJoXPORDgK4B_YYs2MQ66Mo1BCOdDF-5QG4KuMwwLl-yV9XKwUrJ4XIaWyye3Y3zoDq4bolB5sYjNfwEZNVF2ov0cJY4VA6nHYXcezARcqL_4axESI4c7QEbWdfM7QARQvxoMnftyxyZKfOikw1gzFAfqbPztPHKHUmPulyt1Y_a9PrkQLDKpIL-9S1Am8wgPKIaj2yl9ZZmUgMadC2QNVKYo4GOs_wKRtdMSSTN7UxYsz2JeJlndtwlilkYJEpUaK3qiAAU4eH9fh4pkOi5BXqrTnsPNxv7w4dwgZkvV29cOGxs9QWOkQP34V2KoJbg0DS5LgjsenVQKJi6Zr-h5tP72-7_iBpOVSBbkAV2v-OrehwDSKP6mQfvz8WqgeejpbXyzr3Kq9JZ2yRS16-_YO2lxIvW3kCHnmR0Vg3S0ZmtXQKAS8HciUQivftlVEK5pSBkbdJCbOwVMhDQaU6rTFAR9LyVMAWDv7g8XtScCrxZvGGScccGaT5GuK7ufnu3nqQXQG_4irZyL2v6pZDrq-AP5MEAql_bcSQ10518qEipP5KZeX8Ny8KgHxWJFgT9ZRXiRWKma4CYxRofbyx1x6nMcTniAjiExh5tIMPiPCX15_I2tDhqA57A886k2B4DSy3YMLjDuwWcv2a-HmlfC3YuX3MO5oxXu9e5nullEpjCJn2sYVNmbmUp0IYUTdTf4Us3DhinfvQNttnsTOWuZzDFiIX_2Jj9QEiW_SG7AZeQ-2_SLTL5p0QiaoaH1PMAyyOSB1QVdDol6-_WW_o-GioIo3Cm1HV5nzE4CNXrczyUSdPiqsfme9BkaaM0z-6Qu9hHax_X23HTKHgjxCgj9hKyigq0_zRPnaaguwmXO78UxucSHtC31CFT0P4gq5PX4c_xyyl_7ujzTEl4es6_uzeQ2kiGhTuggyt6wU2l_LRrgvoxR-kciw4_54zQl392JTW7RAvbvSWaraObgQaJcHSZ5MbXP3PR0UCvBrEWYsBy6G0yZoMbbZjng_1Hsd2F4oK_GSII473sg_SEIOcZtL7bFBA6IYYz9OHlLxJsrBhwlnBNxH-KVs9ehQQQJCv9EMYjPULptpc-vu6Qxab2ZWBoJZvFB7XeM0Nfg3v-XCNz0LonRegShYNaSg0kMha8if_2Wh7SoldlAsZFH2P_stWJ6ossu23TE0pe38SpX6CFuvSXm5am7kJRSo6jcK3i_JkL9vb1CX17qYEuzYPbxNib4WIcLhpD5fV4UhSKMe0vneBVPwDt56nbvBdq_LhGjFnBiCxbmHtzUIDq7bFg6xS9nS3gldBtLgQr4Do9VD4p1MspByvxxvc2ZMyFiZ7DA==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjEtY29kZXgtbWF4LTIwMjUxMjA0fGF6dXJlIn0",
+            "format": "azure-openai-responses-v1",
+            "id": "rs_042c396d5dc8f368016af0d9c7bf5c819396acbaa28a213854",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 241,
+    "completion_tokens": 476,
+    "total_tokens": 717,
+    "cost": 0.00506125,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00506125,
+      "upstream_inference_prompt_cost": 0.00030125,
+      "upstream_inference_completions_cost": 0.00476
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 192,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

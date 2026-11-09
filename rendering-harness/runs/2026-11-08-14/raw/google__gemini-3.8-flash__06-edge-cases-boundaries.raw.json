@@ -1,0 +1,60 @@
+{
+  "id": "gen-1794168974-0AqqaMXbVgpkdmSa50ZW",
+  "object": "chat.completion",
+  "created": 1794168974,
+  "model": "google/gemini-3.8-flash",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is a comprehensive rendering and evaluation of the specified edge cases and delimiter variants:\n\n---\n\n## 1. Delimiter Variants\n\n1. **Double dollar display (`$$...$$`):**\n   $$x^2 + y^2 = r^2$$\n\n2. **Bracket display (`\\[...\\]`):**\n   \\[E = mc^2\\]\n\n3. **Single dollar inline (`$...$`):**\n   The equation $a + b = c$ represents basic linearity.\n\n4. **Paren inline (`\\(...\\)`):**\n   The coordinate component evaluates to \\(x = 5\\).\n\n---\n\n## 2. Nested Structures\n\nDemonstration of display math within a Markdown list structure preserving list indentation and paragraph continuation:\n\n* Item 1: Initialization of boundary variables.\n* Item 2: The integral calculation across the normalized interval:\n  $$\\int_0^1 x \\, dx = \\left[ \\frac{x^2}{2} \\right]_0^1 = \\frac{1}{2}$$\n  This evaluates to $0.5$ under standard Riemann integration.\n* Item 3: Post-processing and normalization.\n\n---\n\n## 3. Code Blocks with Math-like Syntax\n\nContent inside backticks must remain unrendered raw text, ignoring any internal `$` signs or mathematical operators:\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\n\ndef calc(x):\n    # LaTeX syntax must not trigger inside comments: $\\alpha + \\beta$\n    return x**2\n```\n\nInline code test: `$HOME` or `price = $10.00` and `$$not_display_math$$`.\n\n---\n\n## 4. Currency and Escaped Dollars\n\nParsing rules must differentiate between currency notations, escaped delimiters, and LaTeX formatting:\n\n- **Plain single currency:** The base item costs $100.\n- **Escaped dollar sign:** The total projected budget is \\$500.\n- **Multiple currency tokens in a single sentence:** The components cost $25, $30, and $45 respectively (no italicized or math block between `$30, and $` should occur).\n- **Embedded currency:** I spent $50 at the store yesterday.\n- **Adjacent symbols:** Exchange rate: $1.00 USD ≈ €0.92 EUR.\n\n---\n\n## 5. Tables with Inline and Complex Math\n\nTables requiring cell-level inline math parsing with alignment delimiters intact:\n\n| Quantity | Formula | Approximate Value | Error Term |\n| :--- | :--- | :--- | :--- |\n| **Circle Area** | $A = \\pi r^2$ | $78.54\\text{ m}^2$ | $\\pm 0.01$ |\n| **Sphere Volume** | $V = \\frac{4}{3}\\pi r^3$ | $523.60\\text{ m}^3$ | $\\mathcal{O}(h^2)$ |\n| **Euler's Identity** | $e^{i\\pi} + 1 = 0$ | $0$ | $0$ |\n| **Inline Fraction** | $\\frac{a}{b} \\cdot \\frac{c}{d}$ | $\\frac{ac}{bd}$ | — |\n\n---\n\n## 6. Raw Dollar Signs and Shell Variables\n\nTesting environment variables and boundary numeric values where spaces do not separate symbols:\n\n- Shell variables: `$HOME`, `$PATH`, `$USER`, and `$$` (PID reference).\n- Adjacent numeric strings: An item priced at $99.99 went on sale for $49.99.\n- Subscript-like syntax without math: `var_name_test` vs math subscript $var_{name}$.",
+        "refusal": null,
+        "reasoning": "**Analyzing Markdown Edge Cases**\n\nI'm currently focused on refining the parsing logic to handle more complex Markdown scenarios. Specifically, I'm scrutinizing the interaction between various delimiters, particularly around nested structures and the nuances of escaped dollar signs within code blocks and tables. My aim is to ensure robust interpretation of all potential edge cases.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Analyzing Markdown Edge Cases**\n\nI'm currently focused on refining the parsing logic to handle more complex Markdown scenarios. Specifically, I'm scrutinizing the interaction between various delimiters, particularly around nested structures and the nuances of escaped dollar signs within code blocks and tables. My aim is to ensure robust interpretation of all potential edge cases.\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "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",
+            "format": "google-gemini-v1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 357,
+    "completion_tokens": 1150,
+    "total_tokens": 1507,
+    "cost": 0.00458025,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00458025,
+      "upstream_inference_prompt_cost": 0.00026775,
+      "upstream_inference_completions_cost": 0.0043125
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 314,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

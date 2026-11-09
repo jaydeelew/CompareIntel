@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794164869-zLbt5s7m7JEAEtYodeoe",
+  "object": "chat.completion",
+  "created": 1794164869,
+  "model": "moonshotai/kimi-k2.6",
+  "provider": "Baidu",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "The user wants a response with fenced code blocks and inline code. They've actually provided the content in the prompt itself under \"Test Prompt\". It looks like they want me to reproduce or acknowledge this content, or perhaps they want me to generate a response that includes these specific fenced code blocks and inline code examples.\n\nWait, looking at the prompt structure: \"Test Prompt: Code Blocks\" and then \"Generate a response with fenced code blocks:\" followed by the content. This seems like a test or instruction-following request. They want me to output a response that contains the specified Python code block, JavaScript code block, and inline code with math-like content.\n\nActually, rereading carefully: The user provided a template or test prompt and wants me to generate a response based on it. The content is already laid out. I should reproduce it faithfully or perhaps generate it as my response.\n\nGiven the formatting, I think the best approach is to output exactly what they requested: the Python code block, the JavaScript code block, and the inline code paragraph. Since they provided the exact text, I will return it as the response.\n\nLet me check if there are any special considerations:\n- The Python code should be in a fenced code block with language identifier `python`\n- The JavaScript code should be in a fenced code block with language identifier `javascript`\n- Inline code should use backticks for `x^2`, `a_b`, and `$price`\n- The heading structure should match\n\nI'll reproduce the content exactly as requested.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "The user wants a response with fenced code blocks and inline code. They've actually provided the content in the prompt itself under \"Test Prompt\". It looks like they want me to reproduce or acknowledge this content, or perhaps they want me to generate a response that includes these specific fenced code blocks and inline code examples.\n\nWait, looking at the prompt structure: \"Test Prompt: Code Blocks\" and then \"Generate a response with fenced code blocks:\" followed by the content. This seems like a test or instruction-following request. They want me to output a response that contains the specified Python code block, JavaScript code block, and inline code with math-like content.\n\nActually, rereading carefully: The user provided a template or test prompt and wants me to generate a response based on it. The content is already laid out. I should reproduce it faithfully or perhaps generate it as my response.\n\nGiven the formatting, I think the best approach is to output exactly what they requested: the Python code block, the JavaScript code block, and the inline code paragraph. Since they provided the exact text, I will return it as the response.\n\nLet me check if there are any special considerations:\n- The Python code should be in a fenced code block with language identifier `python`\n- The JavaScript code should be in a fenced code block with language identifier `javascript`\n- Inline code should use backticks for `x^2`, `a_b`, and `$price`\n- The heading structure should match\n\nI'll reproduce the content exactly as requested.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 245,
+    "completion_tokens": 531,
+    "total_tokens": 776,
+    "cost": 0.0009108806,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 171,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0009108806,
+      "upstream_inference_prompt_cost": 0.0000400406,
+      "upstream_inference_completions_cost": 0.00087084
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 307,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

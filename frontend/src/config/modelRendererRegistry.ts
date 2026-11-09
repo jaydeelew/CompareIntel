@@ -5,7 +5,11 @@
  * Maps model IDs to their specific rendering configurations.
  */
 
-import type { ModelRendererConfig, DefaultRendererConfig } from '../types/rendererConfig'
+import type {
+  ModelRendererConfig,
+  DefaultRendererConfig,
+  MathDelimiterPattern,
+} from '../types/rendererConfig'
 
 /**
  * Registry validation error
@@ -162,11 +166,31 @@ export function registerModelConfig(config: ModelRendererConfig): void {
  * @param modelId - Model identifier
  * @returns Model-specific configuration or default configuration
  */
+function mergeStandardDelimiters(
+  configured: MathDelimiterPattern[],
+  standard: MathDelimiterPattern[]
+): MathDelimiterPattern[] {
+  const names = new Set(configured.map(d => d.name))
+  return [...configured, ...standard.filter(d => !names.has(d.name))]
+}
+
 export function getModelConfig(modelId: string): ModelRendererConfig {
   const config = registry.get(modelId)
 
   if (config) {
-    return config
+    // JSON model rows sometimes list only `$$` / `$` and drop the unified
+    // `\[` / `\(` delimiters. Keep the model's patterns, then fill holes.
+    return {
+      ...config,
+      displayMathDelimiters: mergeStandardDelimiters(
+        config.displayMathDelimiters,
+        DEFAULT_CONFIG.displayMathDelimiters
+      ),
+      inlineMathDelimiters: mergeStandardDelimiters(
+        config.inlineMathDelimiters,
+        DEFAULT_CONFIG.inlineMathDelimiters
+      ),
+    }
   }
 
   // Return default configuration

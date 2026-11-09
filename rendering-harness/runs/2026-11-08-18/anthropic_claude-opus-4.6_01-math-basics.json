@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-opus-4.6",
+  "modelName": "Anthropic: Claude Opus 4.6",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+  "response": "# Math Basics Demonstration\n\n## 1. Inline Math: The Quadratic Formula\n\nThe quadratic formula is used to find the roots of any quadratic equation of the form $ax^2 + bx + c = 0$, where $a \\neq 0$. The solution is given by $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. Here, the term $b^2 - 4ac$ is called the **discriminant** — when it's positive, there are two distinct real roots; when it equals zero, there's exactly one real root; and when it's negative, the roots are complex. For example, if $a = 1$, $b = -3$, and $c = 2$, then $x = \\frac{3 \\pm \\sqrt{9 - 8}}{2} = \\frac{3 \\pm 1}{2}$, giving us $x = 2$ or $x = 1$.\n\n## 2. Display Math with Aligned Equations\n\nWe can solve a system of linear equations using elimination:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding both equations eliminates $y$:\n\n$$\\begin{align}\n3x &= 6 \\\\\nx &= 2 \\\\\ny &= 5 - x = 3\n\\end{align}$$\n\n## 3. Matrices and Cases\n\nThe $2 \\times 2$ identity matrix and a piecewise function:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad f(x) = \\begin{cases} x^2 & \\text{if } x \\geq 0 \\\\ -x & \\text{if } x < 0 \\end{cases}$$\n\nThe identity matrix has the property that $AI = IA = A$ for any compatible matrix $A$. The piecewise function $f(x)$ behaves like a parabola for non-negative inputs and like a reflection for negative inputs.\n\n## 4. Multiple Fundamental Equations\n\nThree of the most iconic equations in physics and mathematics:\n\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\nEinstein's mass–energy equivalence, Newton's second law, and the Pythagorean theorem, respectively. Each one is deceptively simple yet profoundly powerful.\n\n## 5. Links\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula. You can also explore [Khan Academy](https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:quadratic-functions-equations) for interactive lessons, or check the [Wolfram MathWorld](https://mathworld.wolfram.com/QuadraticFormula.html) entry for a more rigorous treatment.\n\n## 6. Money Context (Not Math)\n\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar). If you buy 3 items at $5 each, that's $15 for items plus $10 shipping, bringing your grand total to $25. You'd still have $975 left in your budget — plenty of room to spare!",
+  "usage": {
+    "prompt_tokens": 319,
+    "completion_tokens": 825,
+    "total_tokens": 1144,
+    "cost": 0.02222,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.02222,
+      "upstream_inference_prompt_cost": 0.001595,
+      "upstream_inference_completions_cost": 0.020625
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.02222,
+  "actualCost": 0.02222,
+  "timestamp": "2026-11-08T20:37:56.067Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

@@ -46,6 +46,9 @@ import {
   renderMathContent,
   preserveEquationLineBreaks,
   preserveMathLineBreaks,
+  sortMathDelimiters,
+  isInsideRenderedMathHtml,
+  collapseDoubleEscapedDelimiters,
   safeRenderKatex,
   convertListPlaceholdersToHTML,
   markBlockquotes,
@@ -168,8 +171,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         return '__TABLE_ROW__' + content + '__/TABLE_ROW__'
       })
 
-      // Process table rows and convert to HTML
-      processed = processed.replace(/(__TABLE_ROW__[\s\S]*__\/TABLE_ROW__)+/g, match => {
+      // Consecutive table rows only. A greedy `[\s\S]*` here joined the first
+      // table in the document to the last, swallowing prose, code, and later
+      // tables (GLM 5.3 Flash 05: `|` in "pipes (`|`)" notes plus a summary table).
+      processed = processed.replace(/(?:__TABLE_ROW__[\s\S]*?__\/TABLE_ROW__\n?)+/g, match => {
         const rows = match.split('__/TABLE_ROW__').filter(row => row.trim())
         let tableHTML = '<div class="markdown-table-scroll"><table class="markdown-table">'
         let isHeader = true
@@ -326,6 +331,13 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // Ensure headers after closing list tags are properly separated
       // Match: </ul> or </ol> tag (with optional newline) followed by header marker
       processed = processed.replace(/(<\/(ul|ol)[^>]*>\s*\n?\s*)(#{1,6}\s+)/gi, '$1\n\n$3')
+      // Tables are emitted as <div class="markdown-table-scroll"><table>…</table></div>
+      // with no trailing newline (MiMo 05/06: `## Scenario 3` / `## Raw Dollar Signs`
+      // stuck to `</div>` and showed a leftover #).
+      processed = processed.replace(
+        /(<\/(?:table|div|blockquote|pre)[^>]*>)(\s*)(#{1,6}\s+)/gi,
+        '$1\n\n$3'
+      )
       // Replace any header markers that are preceded by non-whitespace (except at start of string)
       // or HTML tags with a newline before them
       processed = processed.replace(/([^\s#|])(\s+)(#{1,6}\s+)/g, '$1\n\n$3')
@@ -369,15 +381,14 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       return ''
     })
 
+    const renderMarkdownLink = (_match: string, text: string, url: string, title?: string) => {
+      const titleAttr = title ? ` title="${title}"` : ''
+      return `<a href="${url}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`
+    }
+
     // Links (both inline and reference-style, if enabled)
     if (markdownRules.processLinks !== false) {
-      processed = processed.replace(
-        /\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g,
-        (_, text, url, title) => {
-          const titleAttr = title ? ` title="${title}"` : ''
-          return `<a href="${url}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`
-        }
-      )
+      processed = processed.replace(/\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g, renderMarkdownLink)
 
       // Reference-style links
       processed = processed.replace(/\[([^\]]+)\]\[([^\]]*)\]/g, (match, text, ref) => {
@@ -450,6 +461,17 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       processed = processed.replace(new RegExp(escapedPlaceholder, 'g'), original)
     })
+
+    // List items were MDPH-protected during the first link pass (Phi-4 prompt 01:
+    // `[Wikipedia](https://…/Quadratic_formula)` stayed raw inside `__OL__`).
+    if (markdownRules.processLinks !== false) {
+      processed = processed.replace(/\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g, renderMarkdownLink)
+    }
+    // Same restore window: `**$x = 0$**` in OL continuations (Gemini 04) stayed
+    // as leftover asterisks around restored KaTeX.
+    if (markdownRules.processBoldItalic !== false) {
+      processed = processed.replace(/\*\*((?:(?!\*\*)[\s\S])+?)\*\*/g, '<strong>$1</strong>')
+    }
 
     // Final safety check: remove any remaining placeholders that weren't restored
     // This handles edge cases where placeholders might have been missed
@@ -684,12 +706,12 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Normalize double-escaped LaTeX in non-code content (e.g., \\( ... \\), \\frac)
         // Some models/providers emit extra escaping; collapse one slash so delimiters/commands parse.
-        processed = processed
-          .replace(/\\\\(?=[()[\]])/g, '\\')
-          .replace(
-            /\\\\(?=(?:frac|sqrt|left|right|boxed|pm|mp|neq|leq|geq|cdot|times|div|Rightarrow|Leftarrow|rightarrow|leftarrow|alpha|beta|gamma|delta|theta|pi|infty|displaystyle)\b)/g,
-            '\\'
-          )
+        // Keep `\\[6pt]` (array row-skip) — collapsing it to `\[` leaks leftover `\[6pt]`.
+        processed = collapseDoubleEscapedDelimiters(processed)
+        processed = processed.replace(
+          /\\\\(?=(?:frac|sqrt|left|right|boxed|pm|mp|neq|leq|geq|cdot|times|div|Rightarrow|Leftarrow|rightarrow|leftarrow|alpha|beta|gamma|delta|theta|pi|infty|displaystyle)\b)/g,
+          '\\'
+        )
 
         // Stage 0.4: Wrap bare LaTeX blocks (commands without delimiters) in $$
         // Some models output \frac{}{}, \sqrt{}, etc. without any math delimiters.
@@ -803,18 +825,18 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Stage 8.4: Render display math that was restored in Stage 8.3
         // Display math blocks restored here need to be rendered since they weren't rendered in Stage 6
-        const displayDelimiters = [...config.displayMathDelimiters].sort((a, b) => {
-          const priorityA = a.priority ?? 999
-          const priorityB = b.priority ?? 999
-          return priorityA - priorityB
-        })
+        const displayDelimiters = sortMathDelimiters(config.displayMathDelimiters)
         displayDelimiters.forEach(({ pattern }) => {
-          processed = processed.replace(pattern, (_match, math) => {
-            // Check if already rendered
-            if (_match.includes('<span class="katex">')) {
-              return _match
+          processed = processed.replace(pattern, (fullMatch, math, ...rest) => {
+            const offset = rest[rest.length - 2]
+            if (typeof offset === 'number' && isInsideRenderedMathHtml(processed, offset)) {
+              return fullMatch
             }
-            return safeRenderKatex(math, true, config.katexOptions)
+            if (fullMatch.includes('<span class="katex">')) {
+              return fullMatch
+            }
+            const body = typeof math === 'string' ? math : fullMatch
+            return safeRenderKatex(body, true, config.katexOptions)
           })
         })
 
@@ -971,11 +993,16 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Render any restored math placeholders
         displayDelimiters.forEach(({ pattern }) => {
-          processed = processed.replace(pattern, (_match, math) => {
-            if (_match.includes('<span class="katex">')) {
-              return _match
+          processed = processed.replace(pattern, (fullMatch, math, ...rest) => {
+            const offset = rest[rest.length - 2]
+            if (typeof offset === 'number' && isInsideRenderedMathHtml(processed, offset)) {
+              return fullMatch
             }
-            return safeRenderKatex(math, true, config.katexOptions)
+            if (fullMatch.includes('<span class="katex">')) {
+              return fullMatch
+            }
+            const body = typeof math === 'string' ? math : fullMatch
+            return safeRenderKatex(body, true, config.katexOptions)
           })
         })
         inlineDelimiters.forEach(({ pattern }) => {

@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-fable-5.1",
+  "modelName": "Anthropic: Claude Fable 5.1",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "# Edge Cases and Boundaries: Delimiter Test Response\n\n## Delimiter Variants\n\n1. **Double dollar display:**\n\n$$x^2 + y^2 = r^2$$\n\n2. **Bracket display:**\n\n\\[E = mc^2\\]\n\n3. **Single dollar inline:** The relation $a + b = c$ holds for all real numbers.\n\n4. **Paren inline:** We set \\(x = 5\\) as the initial value.\n\n## Nested Structures\n\n- First item\n- The equation is:\n\n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n\n  And it evaluates to 0.5\n- Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\nInline code should also stay literal: `$50`, `E = mc^2`, and `x**2`.\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n- Adjacent amounts: Items cost $10 and $20 respectively (should **not** render \"and\" as math)\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n| Circumference | $C = 2\\pi r$ | $31.42$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\nOther shell-style references: `$PATH`, `$USER`, and `${VAR}` in backticks; also $PATH unquoted.\n\n## Additional Boundary Cases\n\n**Math at line boundaries:**\n$x$ starts the line, and the line ends with $y$\n\n**Math with punctuation inside delimiters:** $f(x) = x^2, \\quad g(x) = 2x.$\n\n**Adjacent inline math:** $a$$b$ versus $a$ $b$\n\n**Display math immediately following text:**\nThe result is\n$$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$\nand that concludes the proof.\n\n**Empty-ish and degenerate:** $ $ (space only), $$ $$ (display, space only)\n\n**Dollar followed by digit then space then dollar:** It costs $5 for 2 $items — the second dollar is not a delimiter in intent.\n\n**Escaped inside math:** $\\$x$ should show a literal dollar sign within rendered math.\n\n**Multiline display:**\n\n$$\n\\begin{aligned}\na &= b + c \\\\\n  &= d\n\\end{aligned}\n$$\n\n**Math inside bold/italic:** **The value $v = 3$ is fixed.** *And $w = 4$ is also fixed.*\n\n**Math in headers:**\n\n### Section with $\\alpha + \\beta$\n\n**Blockquote with math:**\n\n> The identity $e^{i\\pi} + 1 = 0$ is often called beautiful.\n>\n> $$\\lim_{n \\to \\infty} \\left(1 + \\frac{1}{n}\\right)^n = e$$",
+  "usage": {
+    "prompt_tokens": 485,
+    "completion_tokens": 1177,
+    "total_tokens": 1662,
+    "cost": 0.0637,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0637,
+      "upstream_inference_prompt_cost": 0.00485,
+      "upstream_inference_completions_cost": 0.05885
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 72,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0637,
+  "actualCost": 0.0637,
+  "timestamp": "2026-11-08T20:46:17.968Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

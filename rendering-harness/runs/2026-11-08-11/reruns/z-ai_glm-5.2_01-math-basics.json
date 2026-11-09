@@ -1,0 +1,45 @@
+{
+  "modelId": "z-ai/glm-5.2",
+  "modelName": "Z.ai: GLM 5.2",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+  "response": "Here is a response demonstrating the requested math and formatting basics:\n\n### 1. Inline Math\nTo find the roots of a quadratic equation $ax^2 + bx + c = 0$, we use the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. The term inside the square root, $b^2 - 4ac$, is called the discriminant, and it tells us how many real roots the equation has.\n\n### 2. Display Math with Aligned Equations\nConsider the following system of linear equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\nBy adding the two equations together, we can easily solve for $x$ and $y$, yielding the solution $x = 2$ and $y = 3$.\n\n### 3. Matrices and Cases\nIn linear algebra and piecewise functions, we often use matrices and cases to define structures and conditions. Here are examples of both:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n### 4. Multiple Equations\nHere are a few of the most famous formulas in physics and geometry, displayed on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n### 5. Links\nFor a deeper dive into the history and derivation of solving quadratic equations, see [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula).\n\n### 6. Money Context\nPlease note that dollar signs used for regular text should not trigger math rendering. For example, if you buy an item online, the item costs $5 and the shipping is $10, for a total of $15. If you are tracking your expenses, your total budget might be \\$1000 (escaped dollar).",
+  "usage": {
+    "prompt_tokens": 279,
+    "completion_tokens": 1235,
+    "total_tokens": 1514,
+    "cost": 0.00316168,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00316168,
+      "upstream_inference_prompt_cost": 0.00017298,
+      "upstream_inference_completions_cost": 0.0029887
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 782,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00316168,
+  "actualCost": 0.00316168,
+  "timestamp": "2026-11-08T19:45:50.070Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null,
+  "provenance": {
+    "originalFile": "/workspace/prism/paid-batch-2026-11-08-11/replies/z-ai_glm-5.2_01-math-basics.json",
+    "promptSha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+    "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd"
+  },
+  "attempt": "rerun-16384",
+  "maxTokens": 16384,
+  "truncated": false,
+  "replacesCoverageFor": "z-ai_glm-5.2_01-math-basics.json"
+}

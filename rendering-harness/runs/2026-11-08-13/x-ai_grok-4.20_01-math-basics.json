@@ -1,0 +1,36 @@
+{
+  "modelId": "x-ai/grok-4.20",
+  "modelName": "SpaceXAI: Grok 4.20",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+  "response": "**Math Basics Response**\n\nThe quadratic formula is given by $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. This formula allows us to solve any quadratic equation of the form $ax^2 + bx + c = 0$.\n\nHere is a system of linear equations solved using elimination:\n\n$$\n\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}\n$$\n\nThe identity matrix and a piecewise function can be expressed as:\n\n$$\nI = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}\n$$\n\nSome famous equations in physics and mathematics include:\n\n$$\nE = mc^2\n$$\n$$\nF = ma\n$$\n$$\na^2 + b^2 = c^2\n$$\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\nIn a money context (these should **not** render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).",
+  "usage": {
+    "prompt_tokens": 426,
+    "completion_tokens": 267,
+    "total_tokens": 693,
+    "cost": 0.0010656,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 128,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0010656,
+      "upstream_inference_prompt_cost": 0.0003981,
+      "upstream_inference_completions_cost": 0.0006675
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0010656,
+  "actualCost": 0.0010656,
+  "timestamp": "2026-11-08T20:00:47.050Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null
+}

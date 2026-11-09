@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794168995-I0HwXdXgrAnyPdgUugIt",
+  "object": "chat.completion",
+  "created": 1794168995,
+  "model": "openai/gpt-6.1-terra",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Calculus\n\nFor \\(f(x)=x^2+2x+1\\):\n\n1. The **derivative** is\n   \\[\n   f'(x)=2x+2.\n   \\]\n\n2. The **indefinite integral** is\n   \\[\n   \\int f(x)\\,dx=\\frac{x^3}{3}+x^2+x+C.\n   \\]\n\n## Linear algebra\n\nFor \\(A=\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}\\):\n\n- **Determinant:** \\(\\det(A)=ad-bc\\)\n- **Trace:** \\(\\operatorname{tr}(A)=a+d\\)\n- **Inverse**, when \\(ad-bc\\ne 0\\):\n  \\[\n  A^{-1}=\\frac{1}{ad-bc}\n  \\begin{pmatrix}d&-b\\\\-c&a\\end{pmatrix}.\n  \\]\n\n## Real-world context\n\n> The cost function \\(C(q)=100+5q\\) represents a fixed cost of \\$100 and a variable cost of \\$5 per unit.\n\nFor 10 units, the total is \\(C(10)=100+5(10)=150\\), or **\\$150**.",
+        "refusal": null,
+        "reasoning": "**Planning economic response**\n\nI think it’s important for me to mix markdown and math in my response. I want to provide an exercise that involves a matrix and some economic calculation. Ideally, I should escape the dollar currency to avoid any math parsing issues and ensure I’m correct on the inverse condition as well. Keeping everything concise is key here, so I’ll make sure to stick to that! Let's get this figured out.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Planning economic response**\n\nI think it’s important for me to mix markdown and math in my response. I want to provide an exercise that involves a matrix and some economic calculation. Ideally, I should escape the dollar currency to avoid any math parsing issues and ensure I’m correct on the inverse condition as well. Keeping everything concise is key here, so I’ll make sure to stick to that! Let's get this figured out.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NimiI7Kxumtjo09ZYJ8S9YYacmzCuwIuHU8xzzWeQvtFeXaxhJz_ujqvVjjDtngEk8-nrqV8vAtCZ6odoqz9QFByXYaiTssQF8KRynwfmrQHH1_Ei6L-qe7_4-URDWLW2i6pGaASrNjZ4oAVFMABfxx5f1OiRL1vPGpWDRIwjkOl6Ftdo3drJM23a6cuYE0cnOfpbw0aPdpAzbz3pss8Xt96pke3pvk47kqhKHOTHXFwoVMtPT7-XXpchxZJ2th-V53RvpAwVLmxenC014TDgpFJA1THG4PuoxFQ6sGQqL-f3iWTc7o_16W_vkmrmyHi1Ix8B1ED0Bg1ovFBpHuTBsm0OJH36_nUmwfAxvBBKOXApPnCpiVDzRazV5UtIAhuVhi8zOrNCfa1cxnX6odNaXHRT-lIZNg1KMFhhNx6Aj4s1p0tkC1vR_CjoJtN0K8-IiiTI25Sg8TXPLqBUH0p0uxObGoKUyJ-bxV1aOyR9C6aUpsr498w0bckKm1olPGnB_YeStRF6QzUl9jmppKSfTgaQ373qDlEsQ9rQFfR-QEdwyk91lk0bfQ89geRW6PVulHgE5nNMbcu6IUdIMu9_y8fpa4gGIr3CJXT3PU4uiYUzbFG5L6A9F6NIg-MIXC8zn9gjyqm2vceNvO6XkW38Vw1O06wG4sgIC1f40QEH8SRhovdDRK62pPCGi5Rv5TGiHKovOV1LgVoXp_XqWsVb2aRUid7e7tX8fwJceEPwrp9AXT_N1DxiwIYNZ1F4bHJYCmjHAjalgVtCSHH4qncsTkZBA5iP2k73zLr-S9-Te1Qm1pqiQWo0qcrhUYL_-xV5ksL6My4VdBG-gW946X7_zBFsJnS30QBnYaPqVxl5cGfOcfNixkolJzRRhPe40_GI-CHG-_l-aYG9xKBsbrTz_LgRKF2RBWiXSXeBzkQT8Pe9Obs68RwDvii4vb6XpGCosKjYLDOOHY_8-sWVinXJbMeKXZ1FDGzVUxQv9zs4VS_sjZQ5yrlNVaNCrQkc2b-Ih2XNZ7fXwQggov1w7pI6L-uCDlMxZn_MEiG-DKsUmcLZPFOku8YwpRRRzwLo-xaJSGGSOtT9mjgIFH8GkL91kY6Vecx3qdV1ghoonvELn5iA2W66EaOvCAD1mupt1Pel7feF1ILPsFJPn37FFggIAireoz_LaT0Wn40jLAHyh6Hq06mIctjTjjWee74wbF_4tfRaeU-LEIbEXfJLPTnxInF8xFToMwVxLwoHilrapv7GzoDmPh-Tr7zhKquBajgN8Z0nrHlr6jCK2XFfDZNKY3SnTtFtpd_wub1S85tKWtCubYq9CzxSZ0Lzxy9lLBw-19lOGMYZ0IyKn2Fej5ckIlw73FoALStGN6NEvGgdV55ZJXpwVFh64Oj-hNDJAstk-NG1Z0kBogmFLJjT9J-GGjr0EnJfCO9QpNb-U9tIBapoMNP8F9XSZw4qlaxj2T2TKPSKXtjtdj-YUY5bPe0MfVGNxrsZpzn0svlnzh78rGBc_lCbBW-nidujndZ1WE1kJC-rZNiklSOPNCENqJKcCzVOIzbIxYI6ZccPLQdTTKwxvvOiijlL4iXzS4o6Z33MelcTR8hS-dRzZFp_iC9aCgq5R0rchNCx99Ti6SNM69Ki_r1u4l3uF9fDtSaR7hvSQXzWxi8ACrFADOCCDmm8nZRYz2WkwHWgvNPRXWmmcvjfnJzHmshNVN7-zJKFbwIWoX6_LToKrAfYOG8auMD7mBTMhDuGLckMIGYZ5VgI8GCf8dBO8QF_k5_kcSFpEl1SResPek6SDww9Tz7dKNr-sV1N2cD_oru3xyB-YINTCtRnBzJ6wsXk6KuYMFN2gV7Ae0NHIWBEjYkTuqyvxUyKfGulcKurPuJP2dnf-HPz9MdgwvBd3t7MZQ_jZ_5PqYh8GXyIKQ5FHFO3URoLk0kgg6_qjgX-Sm1t2ESjHc4q4vHYv_mPRYg9Un-ZY1lVyGNtJulXpdKOiFIST4TLtLapXpW1ZcUF6wuaA3nUR09c6BWT7MTrW-m2aDrhBWYU0roO87IfsANI50HQZeWKcuW8NQmz6tAcImVMEMh68wMs1kmuoNMd8CUDnyzZ6qp6wUMSaOEsuIiTRUVRR2Sr48vt8bTA8XAiRn3juptO41ERP3SBcOljpJEp_RQTpUTknWSGbinaro3rcaKTcT1iIcU2iFYviOshAYHVSdNwlpf3U4uual-_vs_zcJR2Z8uJuCFiZWNCVRsBv5sRS0TEYOkTcfaJ0qCRHy1YU_3xiXB61TImY=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LjEtdGVycmEtMjAyNjEwMjZ8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0e99c0f1e8661f57016af0d8a4a7cc87d18fd3a1390f95e6e4",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 310,
+    "completion_tokens": 304,
+    "total_tokens": 614,
+    "cost": 0.00183,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00183,
+      "upstream_inference_prompt_cost": 0.00031,
+      "upstream_inference_completions_cost": 0.00152
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 35,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

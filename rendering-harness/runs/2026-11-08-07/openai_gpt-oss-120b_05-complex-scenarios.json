@@ -1,0 +1,36 @@
+{
+  "modelId": "openai/gpt-oss-120b",
+  "modelName": "OpenAI: gpt-oss-120b",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "**Below is a deliberately‑rich markdown response that pushes a few edge‑cases in formatting, LaTeX, tables, code, and dollar‑sign handling.**  \n\n---  \n\n## Scenario 1 – Math inside a list with extra formatting  \n\n1. The **Pythagorean theorem** states that  \n   $$a^{2}+b^{2}=c^{2}$$  \n\n2. For a *right‑angled triangle* with sides \\(a=3\\) and \\(b=4\\):  \n\n   - **Calculate:**  \n\n     \\[\n     c=\\sqrt{3^{2}+4^{2}}\n       =\\sqrt{9+16}\n       =\\sqrt{25}\n       =5\n     \\]\n\n   - Hence, the hypotenuse length is **\\(c = 5\\) units**.  \n\n> *Edge‑case note:* the list mixes bold, italics, block‑level LaTeX, and inline math all together.  \n\n---  \n\n## Scenario 2 – Table containing LaTeX formulas  \n\n| **Formula** | **LaTeX** | **Result** |\n|-------------|-----------|------------|\n| Quadratic equation | \\(\\displaystyle ax^{2}+bx+c=0\\) | \\(\\displaystyle x=\\frac{-b\\pm\\sqrt{b^{2}-4ac}}{2a}\\) |\n| Sum of first *n* integers | \\(\\displaystyle \\sum_{i=1}^{n} i\\) | \\(\\displaystyle \\frac{n(n+1)}{2}\\) |\n| Product (factorial) | \\(\\displaystyle \\prod_{i=1}^{n} i\\) | \\(\\displaystyle n!\\) |\n\n*Tip:* The table mixes inline math (`\\( … \\)`) and displayed math (`\\[\\]`) inside cells—some renderers may need the `$$` delimiters for block‑level output.\n\n---  \n\n## Scenario 3 – Code block with embedded math comment  \n\n```python\n# -------------------------------------------------\n# Calculate the area of a circle given its radius r\n# -------------------------------------------------\n# Mathematical formula (displayed as a comment):\n#   A = π r²    →   A = \\pi r^2\n# -------------------------------------------------\nimport math\n\ndef circle_area(r: float) -> float:\n    \"\"\"Return the area using A = π·r².\"\"\"\n    # Using the formula A = π·r²\n    return math.pi * r**2\n\n# Example usage:\nprint(f\"Area of a circle with radius 5: {circle_area(5):.4f}\")\n```\n\nThe underlying formula is  \n\n\\[\nA = \\pi r^{2},\n\\]\n\nwhere \\(r\\) denotes the radius.  \n\n---  \n\n## Scenario 4 – Horizontal rules separating sections with math  \n\n**First section** – a short intro, no math.  \n\n---  \n\n**Second section with inline integral:**  \n\n\\[\n\\int_{0}^{1} x\\,dx = \\left[ \\frac{x^{2}}{2} \\right]_{0}^{1} = \\frac{1}{2}.\n\\]\n\n---  \n\n**Third section** – back to plain text.  \n\n---  \n\n## Scenario 5 – Multiple dollar signs (price list) and a separate math example  \n\n> **Price list (escaped dollar signs so they render as currency, not math):**  \n> - Computer: \\\\\\$1,200  \n> - Monitor: \\\\\\$300  \n> - Keyboard: \\\\\\$50  \n> - Mouse: \\\\\\$25  \n> **Total:** \\\\\\$1,575  \n\n**Mathematical example:**  \n\nThe quadratic function \\(f(x)=x^{2}\\) evaluated at \\(x=5\\) gives  \n\n\\[\nf(5)=5^{2}=25.\n\\]\n\n---  \n\n### Summary of edge‑case handling  \n\n| Edge case | How it’s demonstrated |\n|-----------|------------------------|\n| **Bold/italic inside list items** | Scenario 1 uses `**` and `*` together with block LaTeX. |\n| **LaTeX inside tables** | Scenario 2 places both inline and display math in table cells. |\n| **Math comments inside code** | Scenario 3 keeps LaTeX in Python comments while the code itself runs. |\n| **Horizontal rules surrounding math** | Scenario 4 places `---` before and after a displayed integral. |\n| **Escaping dollar signs** | Scenario 5 uses `\\\\$` to show literal currency symbols next to normal `$…$` math. |\n\nFeel free to copy‑paste this markdown into any renderer (GitHub, Jupyter, StackExchange, etc.) to see how each edge case behaves!",
+  "usage": {
+    "prompt_tokens": 489,
+    "completion_tokens": 1269,
+    "total_tokens": 1758,
+    "cost": 0.000251973,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 64,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000251973,
+      "upstream_inference_prompt_cost": 0.00001467,
+      "upstream_inference_completions_cost": 0.000237303
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 285,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.000251973,
+  "actualCost": 0.000251973,
+  "timestamp": "2026-11-08T18:51:07.650Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

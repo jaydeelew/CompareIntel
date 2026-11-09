@@ -1,0 +1,10 @@
+{
+  "id": "gen-1794165151-ipHFzCF2qdWq3M2KPsLU",
+  "error": {
+    "message": "The model is currently at capacity due to high demand. Please try again in a few minutes, or use a higher service tier for priority processing: https://docs.x.ai/developers/advanced-api-usage/priority-processing",
+    "code": 502,
+    "metadata": {
+      "error_type": "provider_unavailable"
+    }
+  }
+}

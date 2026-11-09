@@ -1,0 +1,36 @@
+{
+  "modelId": "z-ai/glm-5.3-flash",
+  "modelName": "Z.ai: GLM 5.3 Flash",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here's a response demonstrating fenced code blocks with language tags and inline code:\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\n**Verification notes:**\n- Fenced blocks use triple backticks with language identifiers (`python`, `javascript`) preserved\n- Inline backtick sequences like `x^2`, `a_b`, `$price`, and even `**bold-like**` content remain literal code spans\n- Special characters inside code blocks (e.g., `{result[0]}`, `n <= 1`) are not interpreted as markdown",
+  "usage": {
+    "prompt_tokens": 247,
+    "completion_tokens": 1008,
+    "total_tokens": 1255,
+    "cost": 0.0002765,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0002765,
+      "upstream_inference_prompt_cost": 0.00003458,
+      "upstream_inference_completions_cost": 0.00024192
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 688,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0002765,
+  "actualCost": 0.0002765,
+  "timestamp": "2026-11-08T17:58:00.761Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

@@ -1,0 +1,36 @@
+{
+  "modelId": "openai/o3",
+  "modelName": "OpenAI: o3",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Below is a deliberately “stress-test” reply that combines many Markdown edge cases—nested lists, multiple code-fences, inline and display math, repeated dollar signs, horizontal rules inside lists, tables with long equations, and stray back-ticks that have to be escaped.  \nFeel free to copy-paste it into any Markdown/LaTeX renderer to see what breaks!\n\n---\n\n## Scenario A – Nested Lists with Interleaved Math\n\n1. Outer item **α**\n   1. Inner item *α1*  \n      – Pythagorean triple: $a^2\\;+\\;b^2\\;=\\;c^2$  \n      – Example: $(a,b,c)=(5,12,13)$ → $5^2+12^2=25+144=169=13^2$\n   2. Inner item *α2*  \n      – Derivative rule: $\\displaystyle \\frac{d}{dx}\\bigl[x^n\\bigr] = nx^{n-1}$\n2. Outer item **β**\n   1. Roman numerals in sub-list  \n      i. Evaluate $\\displaystyle \\lim_{x\\to0}\\frac{\\sin x}{x}=1$  \n      ii. Evaluate $\\int_{0}^{\\pi}\\!\\sin x\\,dx = 2$\n   2. A horizontal rule *inside* the list:\n\n      ---\n\n   3. Back to list text after the rule\n\n---\n\n## Scenario B – Table with Multi-Line Math\n\n| Topic | LaTeX | Explanation |\n|-------|-------|-------------|\n| Geometric Series | $\\displaystyle S_n=\\sum_{k=0}^{n-1}ar^{k}$ | If $|r|<1$ and $n\\to\\infty$,<br>$\\displaystyle S_\\infty=\\frac{a}{1-r}$ |\n| Euler’s Identity | $\\displaystyle e^{i\\pi}+1=0$ | Links $e,\\;i,\\;\\pi,\\;1,\\;0$ in one formula |\n| Fourier Coeff. | $\\displaystyle a_n=\\frac{2}{T}\\int_{0}^{T}f(t)\\cos\\!\\bigl(\\tfrac{2\\pi nt}{T}\\bigr)\\,dt$ | Orthogonality of sine/cosine functions |\n\n---\n\n## Scenario C – Code Fence with Internal Back-Ticks and Math\n\n```javascript\n// A quick λ-calculator in JS\nfunction lambdaCube(x, λ=2.0) {\n  // inside string we need an escaped back-tick: \\` \n  return `λ·x³ = ${λ * Math.pow(x, 3)}`;  // Uses formula λx³\n}\nconsole.log(lambdaCube(1.5));\n```\n\nInline math check: For $λ=2$ and $x=1.5$, we expect $λx^{3}=2·(1.5)^{3}=6.75$.\n\n---\n\n## Scenario D – Multiple Dollar Signs and Escaping\n\nPrices (with commas): Laptop $$1,299, monitor $$249, keyboard $$79 → subtotal $$1,627.  \nTax (8 %): $\\$1,627×0.08=\\$130.16$  \nGrand total: **\\$1,757.16**\n\nMathematics right next to dollars: “\\$” does **not** open LaTeX here, but \\$\\(f(x)=x^2\\$) would break most renderers.\n\nProper math: $f(7)=7^{2}=49$.\n\n---\n\n## Scenario E – Blockquote Containing Code *and* Display Math\n\n> Here’s a quoted block that mixes everything:  \n> ```python\n> def fib(n):\n>     \"\"\"Return Fₙ using F₀=0, F₁=1.\"\"\"\n>     return n if n < 2 else fib(n-1)+fib(n-2)\n> ```  \n> $$F_{10}=55$$  \n> End of quote.\n\n---\n\n### Bonus Mini-Checklist\n\n- [x] Inline math `$a+b$` next to punctuation.  \n- [x] Display math on its own line:  \n  $$\\nabla\\cdot\\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$  \n- [x] Triple back-tick fencing ``` inside a larger code fence.  \n- [x] Horizontal rules above and below.\n\nIf your parser survives all that without hiccups—congratulations!",
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 1316,
+    "total_tokens": 1744,
+    "cost": 0.011384,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.011384,
+      "upstream_inference_prompt_cost": 0.000856,
+      "upstream_inference_completions_cost": 0.010528
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 320,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.011384,
+  "actualCost": 0.011384,
+  "timestamp": "2026-11-08T20:20:00.805Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null
+}

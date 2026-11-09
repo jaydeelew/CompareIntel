@@ -1,0 +1,36 @@
+{
+  "modelId": "cohere/command-a",
+  "modelName": "Cohere: Command A",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "Here’s a response that mixes markdown formatting with mathematical expressions, addressing the problem statement and incorporating additional context:\n\n## Problem Statement\n\n**Exercise 1**: Given the function \\( f(x) = x^2 + 2x + 1 \\), find:\n\n1. The *derivative* \\( f'(x) \\)\n2. The **integral** \\( \\int f(x) \\, dx \\)\n\n### Solution\n\nThe derivative is:\n\n\\[\nf'(x) = 2x + 2\n\\]\n\nThe integral is:\n\n\\[\n\\int f(x) \\, dx = \\frac{x^3}{3} + x^2 + x + C\n\\]\n\n## Linear Algebra with Lists\n\nProperties of the matrix \\( A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\):\n\n- **Determinant**: \\( \\det(A) = ad - bc \\)\n- **Trace**: \\( \\text{tr}(A) = a + d \\)\n- **Inverse** (if exists):\n\n  \\[\n  A^{-1} = \\frac{1}{ad - bc} \\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}\n  \\]\n\n## Real World Context\n\n> **Note**: In economics, the cost function \\( C(q) = 100 + 5q \\) represents:\n> - **Fixed costs**: \\$100 (regardless of production quantity)\n> - **Variable costs**: \\$5 per unit produced\n\n**Example Calculation**:  \nIf you buy **10 units**, the total cost is:\n\n\\[\nC(10) = 100 + 5(10) = 100 + 50 = \\$150\n\\]\n\n**Markdown Summary**:\n- **Fixed Costs**: \\$100  \n- **Variable Costs (10 units)**: \\$50  \n- **Total Cost**: \\$150  \n\nThis combines mathematical expressions, markdown formatting, and real-world application seamlessly.",
+  "usage": {
+    "prompt_tokens": 331,
+    "completion_tokens": 465,
+    "total_tokens": 796,
+    "cost": 0.0054775,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0054775,
+      "upstream_inference_prompt_cost": 0.0008275,
+      "upstream_inference_completions_cost": 0.00465
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0054775,
+  "actualCost": 0.0054775,
+  "timestamp": "2026-11-08T19:15:51.085Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "complete",
+  "error": null
+}

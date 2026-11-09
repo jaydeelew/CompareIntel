@@ -134,7 +134,10 @@ export function processMarkdownLists(text: string): string {
         for (const line of lines) {
           const trimmed = line.trim()
           if (trimmed) {
-            result += `<div style="margin-left: 2em; margin-top: 0.5em;">${trimmed}</div>`
+            // Same inline markdown as the list item itself. Raw `**$x = 0$**` in
+            // an ordered-list continuation (Gemini 3.1 Flash Lite 04) left
+            // leftover asterisks after math restore.
+            result += `<div style="margin-left: 2em; margin-top: 0.5em;">${processListContent(trimmed)}</div>`
           }
         }
       }

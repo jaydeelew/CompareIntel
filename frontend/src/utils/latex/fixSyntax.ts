@@ -14,27 +14,32 @@ export function wrapBareLatexBlocks(text: string): string {
   while (i < lines.length) {
     const trimmed = lines[i].trim()
 
-    if (!insideMathBlock && /^\\\[\s*$/.test(trimmed)) {
+    // List-prefixed openers (`- \[`, `1. $$`) must count as math-block start.
+    // Otherwise the inner `\sqrt{...}` line is wrapped in $$ and KaTeX sees
+    // `\[ $$c=\sqrt{} $$ \]` (Phi-4 prompt 05).
+    if (!insideMathBlock && /^(?:[-*+]\s+|\d+\.\s+)?\\\[\s*$/.test(trimmed)) {
       insideMathBlock = true
       result.push(lines[i])
       i++
       continue
     }
-    if (insideMathBlock && /^\\\]\s*$/.test(trimmed)) {
+    if (insideMathBlock && /^(?:[-*+]\s+|\d+\.\s+)?\\\]\s*$/.test(trimmed)) {
       insideMathBlock = false
-      result.push(lines[i])
+      // List marker on a closer is not math. Leaving `- \]` in source makes
+      // extractDisplayMath capture a trailing minus (`= 5 -`).
+      result.push(lines[i].replace(/^(\s*)(?:[-*+]\s+|\d+\.\s+)(\\\]\s*)$/, '$1$2'))
       i++
       continue
     }
-    if (!insideMathBlock && /^\$\$\s*$/.test(trimmed)) {
+    if (!insideMathBlock && /^(?:[-*+]\s+|\d+\.\s+)?\$\$\s*$/.test(trimmed)) {
       insideMathBlock = true
       result.push(lines[i])
       i++
       continue
     }
-    if (insideMathBlock && /^\$\$\s*$/.test(trimmed)) {
+    if (insideMathBlock && /^(?:[-*+]\s+|\d+\.\s+)?\$\$\s*$/.test(trimmed)) {
       insideMathBlock = false
-      result.push(lines[i])
+      result.push(lines[i].replace(/^(\s*)(?:[-*+]\s+|\d+\.\s+)(\$\$\s*)$/, '$1$2'))
       i++
       continue
     }

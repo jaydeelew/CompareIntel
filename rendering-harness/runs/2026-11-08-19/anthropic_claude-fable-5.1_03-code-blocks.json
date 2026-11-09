@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-fable-5.1",
+  "modelName": "Anthropic: Claude Fable 5.1",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "# Response: Code Blocks\n\nHere are the requested fenced code blocks and inline code examples.\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n**Output:**\n```\nSolutions: x = 3.0, x = 2.0\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n**Output:**\n```\n55\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nA few more edge cases:\n\n- Underscores in identifiers: `my_variable_name`, `__init__`, `snake_case_fn()`\n- Dollar signs: `$HOME`, `$1`, `${variable}`, `$(command)`\n- Carets and asterisks: `2^10`, `a*b*c`, `**kwargs`\n- Mixed: `$x^2 + y_1$` — this should appear literally as code, with the `$` signs visible and no LaTeX rendering\n- Backticks inside code: use double backticks to wrap `` `single` `` backticks\n\n## Code block without a language tag\n\n```\nplain text block\nno syntax highlighting expected\n    indentation preserved\n```\n\n## Code block with a less common language\n\n```rust\nfn main() {\n    let nums: Vec<i32> = (1..=5).collect();\n    let squares: Vec<i32> = nums.iter().map(|x| x * x).collect();\n    println!(\"{:?}\", squares); // [1, 4, 9, 16, 25]\n}\n```",
+  "usage": {
+    "prompt_tokens": 340,
+    "completion_tokens": 772,
+    "total_tokens": 1112,
+    "cost": 0.042,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.042,
+      "upstream_inference_prompt_cost": 0.0034,
+      "upstream_inference_completions_cost": 0.0386
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 60,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.042,
+  "actualCost": 0.042,
+  "timestamp": "2026-11-08T20:45:23.210Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

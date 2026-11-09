@@ -34,6 +34,11 @@ describe('protectCurrencyDollars', () => {
     }
   )
 
+  it('leaves padded inline math with spaces inside the dollars untouched (Qwen 04)', () => {
+    const input = "1. The derivative $ f'(x) $\n2. The integral $ \\int f(x) \\, dx $"
+    expect(protectCurrencyDollars(input)).toBe(input)
+  })
+
   it('pairs dollars per table cell', () => {
     expect(protectCurrencyDollars('| $0.03 | Claude | 200k | $0.02 |')).toBe(
       `| ${L}0.03 | Claude | 200k | ${L}0.02 |`
@@ -46,6 +51,12 @@ describe('protectCurrencyDollars', () => {
 
   it('ignores $$ display delimiters', () => {
     expect(protectCurrencyDollars('$$x$$ costs $5')).toBe(`$$x$$ costs ${L}5`)
+  })
+
+  it('does not pair $HOME with a later currency $', () => {
+    expect(protectCurrencyDollars('The shell variable $HOME is set. Price: $99.99.')).toBe(
+      `The shell variable ${L}HOME is set. Price: ${L}99.99.`
+    )
   })
 })
 
@@ -74,9 +85,42 @@ describe('inline code protection', () => {
       'The variable <code class="inline-code">x^2</code> and <code class="inline-code">&lt;b&gt;</code> and <code class="inline-code">$price</code>.'
     )
   })
+
+  it('keeps `` `$x$` `` as one code span so $x$ is not math (GLM 5 05)', () => {
+    const { text, spans } = extractInlineCode(
+      'In Markdown, writing `` `$x$` `` renders as inline code, whereas writing $y$ renders as math.'
+    )
+    expect(spans).toEqual(['`$x$`'])
+    expect(text).not.toContain('$x$')
+    expect(text).toContain('$y$')
+    expect(restoreInlineCode(text, spans)).toContain('<code class="inline-code">`$x$`</code>')
+  })
+
+  it('extracts `$` as a complete span so adjacent amounts are not leftover math (Step 5 Preview 05)', () => {
+    const line = '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs'
+    const { text, spans } = extractInlineCode(line)
+    expect(spans.filter(s => s === '$')).toHaveLength(3)
+    expect(protectCurrencyDollars(text)).not.toContain('$')
+  })
+})
+
+describe('inline-code placeholders are not math spans', () => {
+  it('literalizes leftover $ wrapping only an inline-code placeholder', () => {
+    const placeholder = '\uE0010\uE002'
+    expect(protectCurrencyDollars(`$${placeholder}$`)).toBe(`${L}${placeholder}${L}`)
+  })
 })
 
 describe('blockquotes', () => {
+  it('strips nested > markers so leftover quotes are not visible (GLM 5 05)', () => {
+    const marked = markBlockquotes(
+      '> **Euler**\n> $$ e^{i\\pi} + 1 = 0 $$\n>\n> > Nested quote containing inline code:\n> > You can verify this.'
+    )
+    expect(marked).not.toMatch(/^>/m)
+    expect(marked).not.toContain('> Nested')
+    expect(marked).toContain('Nested quote containing inline code:')
+  })
+
   it('strips > markers and wraps the run', () => {
     const marked = markBlockquotes('Intro\n> This is a blockquote\n> with multiple lines\nAfter')
     expect(marked).not.toContain('>')
@@ -121,5 +165,14 @@ describe('lists', () => {
     expect(processMarkdownLists('- Calculate:  \n     $c = 5$\n- Next')).toBe(
       '__UL_0__Calculate:<br>$c = 5$__/UL__\n__UL_0__Next__/UL__'
     )
+  })
+
+  it('applies bold to ordered-list continuation lines (Gemini 04 leftover **)', () => {
+    const out = processMarkdownLists(
+      '2. **Find critical points**:\n   Thus the points are at **$x = 0$** and **$x = 2$**.\n'
+    )
+    expect(out).toContain('<strong>$x = 0$</strong>')
+    expect(out).toContain('<strong>$x = 2$</strong>')
+    expect(out).not.toContain('**$x = 0$**')
   })
 })

@@ -1,0 +1,36 @@
+{
+  "modelId": "moonshotai/kimi-k3.1-pro",
+  "modelName": "MoonshotAI: Kimi K3.1 Pro",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "# Complex Markdown and Math Scenarios\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$.\n2. For a *right triangle* with sides $a = 3$ and $b = 4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$.\n   - Therefore, the hypotenuse is **$c = 5$ units**.\n\n## Scenario 2: Tables with Math\n\n| Formula | Expression | Result |\n|---------|------------|--------|\n| Quadratic equation | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ |\n| Sum of integers | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product of integers | $\\prod_{i=1}^{n} i$ | $n!$ |\n\nThe quadratic formula assumes $a \\neq 0$.\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate the area of a circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius. For $r = 5$, the area is $25\\pi \\approx 78.5398$ square units.\n\n## Scenario 4: Horizontal Rules\n\nFirst section: horizontal rules should remain separate from surrounding text.\n\n---\n\nSecond section with math: $\\int_{0}^{1} x\\,dx = \\left[\\frac{x^2}{2}\\right]_{0}^{1} = \\frac{1}{2}$.\n\n---\n\nThird section: formatting should return to normal after the rule.\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, and mouse \\$25. Total: **\\$1,575**.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$. Currency dollar signs are escaped so they are not confused with math delimiters.",
+  "usage": {
+    "prompt_tokens": 501,
+    "completion_tokens": 2665,
+    "total_tokens": 3166,
+    "cost": 0.0225954728,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 64,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0225954728,
+      "upstream_inference_prompt_cost": 0.0001132663,
+      "upstream_inference_completions_cost": 0.0224822065
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2236,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0225954728,
+  "actualCost": 0.0225954728,
+  "timestamp": "2026-11-08T20:26:48.312Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

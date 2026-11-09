@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794167851-bt4hvjWicdK6pQucyM0m",
+  "object": "chat.completion",
+  "created": 1794167851,
+  "model": "openai/gpt-5.6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "The quadratic formula, \\(x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\\), gives the solutions to a quadratic equation \\(ax^2 + bx + c = 0\\). The symbol \\(\\pm\\) represents the two possible solutions.\n\n\\[\n\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}\n\\]\n\nThe identity matrix and a piecewise-defined function can be written as:\n\n\\[\nI = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}\n\\]\n\nSome common equations are:\n\n\\[\nE = mc^2\n\\]\n\n\\[\nF = ma\n\\]\n\n\\[\na^2 + b^2 = c^2\n\\]\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\nThe item costs \\$5 and the shipping is \\$10, for a total of \\$15. Budget: \\$1000.",
+        "refusal": null,
+        "reasoning": "**Crafting a clear response**\n\nI need to ensure my response is satisfying. I have to be careful with how I display dollar amounts to avoid them being interpreted as math. The user specifically requested that the dollar signs should not trigger any math rendering, even though plain dollar signs might do so depending on the renderer. Escaping dollar signs seems necessary. For instance, I can present costs like `\\$5` for clarity while also explaining the variables clearly and organizing the equations properly.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Crafting a clear response**\n\nI need to ensure my response is satisfying. I have to be careful with how I display dollar amounts to avoid them being interpreted as math. The user specifically requested that the dollar signs should not trigger any math rendering, even though plain dollar signs might do so depending on the renderer. Escaping dollar signs seems necessary. For instance, I can present costs like `\\$5` for clarity while also explaining the variables clearly and organizing the equations properly.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NQvi8CBw0vhgSBbTO6K-FMnGFfrvxumigGfKYVRr-BdoFJxKfYzrqVPEnvA92prcIys9CuLrbYgLzA0a-F_amIcyGzq_L8BPE0zXBiTyeWMuBlXGCjxdb63GUN5R2uEpKJ3PITVRcZVmYZpacEQLmvb6u2Kk9_d0A6-WkgQv9CnE6gsx7TRcTj19AUk3MxF8GZdkr_r8n1-ZX_SLX1tIu3iTFh2UuaTTA_mIf1g5xqv5fOiEq3dE5_Kq_jyXLvawi7BKkTzK1qypjjeeQEABphxbP7RW_in3zfNncTXj9Kb_F-WYBqb7sVsLpijE6QyNAXpqtl3xMKEtQWpiDb5lrVYJr94RGiXieM4Euzjk6ZyyKlyirgNszRzo1_XBS6QIqirqwywLK6MxFkrhyELn5kpD9t94D7M4pckhSeMYGVdv6ogl_5MVsmrpevvv7udjy4PGsCbWTagaWJJXDhdl_JYI7RpRe9LJiwlPhvScqMr8TRZQCbth5qVV81msBSn01aecZ98Gx6KJKGAC2HXGfvjaMLxmW7EsV8FRibO4VOEJSfhj4k5vsrqbKTU-JZckYZpvTKORU08xEHuXbUqiyZWJI9QovhQ2zSu-WJeqLqRKNiqo2zZ1ivay_jH7GH-NuRmggsLPH80phQ7E-HjiaC4cAclsqkmOh1h7e4WUxu_YnkB88vnstfMD3CoZGM1IEqmojCa_w8q49euSDXKhQPn0mjjmllDQfc76Ygw2vSyAY8-eTIa7DpxVn9fIDdmPwfWtexQFBNhUvCPcsuRtXCRMjUB1kSr5uW88byt3n2B0h7m6ReI81mw89ODTpdOhpkKyIZI7zB7iGZvLsdkgLUVpvGY1SnNjbkXHs7Pm8-XsHLr-sMCGylx_MUIw33xVWp_LDK0rnyvgQJbBKbnlMJwwXgciI6L0eMek05qWaWKmNB2h77fjmhG-Dv5eXgY-XaUSyzK9Xe_x4mRtty1ddckuGn7cSV-6LD2vqGqNaNK5Cp18oIexACGO6pVuDO8FzJVdBFf_bdEk4h2RWdFdyybOUG_gtGZJeWTp9wHZdclsnUJybjJstO34nOrfq9Pn2atsIPnjnxhGimhYoyzev8XhlPVxrHjBL-Pfu2z1BVptkvjHuOLzIzr1dZJSYb-_TyRxJik7oNVhbHOGf0KeMWg0EaBP-ewUKxvaxkL0eVXHJxSxyoVNGJ_okxJg6QML7hcqqOD3vcf3v4CKrAWpXPuePzPnChbO6h4XRgLgatE09HrZaN7K0JISFKeqZmG2qLt1zL8HoTdgcWggg8ZXZ-Q4MOkG9-q6oglKsWoxVbMjW0tgounnI9fYzSej5uHzfvLFy2XHmYHvWVvhY_p_a_OgUfqLzVjMNFH60yaxByeTssN-G1dnBUkvnmPLWlSOZRndLZv3Ye4V3qbTXrl62C0pje0VyJP1TTeDo_QCMz3vlywnuF4C9VLJj0pvhdgDKzFmiIDvm_3qTqJyAOsbfoSXSb01g82v7xswhIqw1vQ1dt_3KByCOTQBwyDY2IelEtWc7H2ZNGuuSkDbNPm34_knO7J_ol4L76BpcD6P2VWcYCusRFi9-emKBtgZOZ4Q9bV6uYwDMteNi9xYOSIKFM1uCH4WFkokyKy2Tp9ClBLw4RqTrqbpW6VpMhW0Krd21SLEktqA8TsHXwfwsEmUXjL196DQslggCuu2ZB25B38PY6TMjVTCbFJnM2PyQ7hlDDa7env0CtUNjlfjgLWJ937Yrlc_DjPiI5zEGVQ1LI4p1JcLZhQWgbidlQ9vEQnTlVSCRvNmSmOaFamv73l7U5GjpSudM9NXjCPdG1AoWBb7n80czzugstqduo7BteSXLIO2sdRhA1iO55DYhYPKQSGyIJeOenPWbxz-CZorx61v1zCKhQjmzt9wEVH_KiiFz4NsEWhsOL6wiD1ULnAk-04lcNuJwjO57H-q4USHg2I-YmsQ8QvA1PykCI9PZ2SX_fiR7nTR_2-bjo2Xmeevjd6miewAO-725YnRLVHNCKuElRPJWwVYiDmriXu6aoVdCBh5cq4W8Qqj-mrRt-8qDSv2Vs_KNJ0eBZejg49ijlXIvXJ1qMp5d-tG7XC-7GgFuY5oMrATAhnANgC2-tzBjQdGbRMSassSn6VlAiY8qCN8xc_qurS1R-kLygM8URjY5C5UpULWYMXabfLQHx2h-1b5mkuh-Jpy52pn-qkeKbS9H_iilE3IRL5jJWnyTFBgczeCd63hl_UUL08LhdnmcHfOJo-Qm8gjmWKvxpkYg-ew345XymZNNigf4GahVL8w1OUL0SBK26grq-JR-SaEbBoxG2ha-hwsMekMRgkyn3kNWo75rqMJqvdp9_DbWk14w8QEyOVkFfArVfmKK03ar1zqETy0KrUBvPoNmD9K_mXEQBAyz66w7gTRAXs5Lhoxm0t8qzN-7RyLzGCma4PwDCVe_VlbEamqJbfNQxcbGtBu04lrHLz79O63Cn3bwP8iaItG9PXyQsXOngNajRE4wi3Bd-bnpDrDyTn30n_hdclJWVCz6PS2Anba-OKfXM1ltiuQQIUrGOi3adom8RrZCmIN-8_kdD0iwkTx91Vs7WtAJjVXT1sUJQMrccaemH56PViYhWIPSfdSznQbvcklg5Ik355cMsnsc1VumTpH3NGuKLbZY_oadd5_RRPwNcDrTt8DGy2gO5LTrGt2xB3L-CaX4YtSxfadDeOZUxtPLV819etsa6_iAqhA_6TToLY6y_3S4AILzLAwXsufCVPrm9uJNrRXq4d_8rJ-hXtBMAwPDUKe-ydDGKZcKom2lVlZxBfS5lLjLsMjPPpdDsK01nnMA9Vjnf8Eu4XPLpBMHhczW0p2HDToNzcRHjeI0eXSYChEjk-6rrrugeKQUo9IxjmvyllbP2SlddqcqzapuZSbSccM60uc7BEHq4R1mHdKaDm3MAB8PO357FG2UjEEbvknZVbddHW08xMvk4iYvvKgTcaV_4xOVAmSWG0sb_7TJhVIRJ8N-6UoLqBxdoFbkDjqvTsJ9dx2XK8VuGkuzRDfa0nm_l0emQv1n-UxqwU8FfGiKEHdMsI5eGYkuKL-qvWNAP21dBCLUKzWp8AwvhsRYyj-zuaE2vZ2K23zUAWcXf5HTduK4rK3kKxR_nQ-ObnucU757N8NSId-Q5hVfV5w5SDdsvRGERRrtSla-FtckmXr2im5XrmZWmG-r68PVQndyYIsYYpaWKAP507iIVaaSp2w4ZLpQTiHSUk6_sTbHqih7PnF7BTi62xZXqgyjqsoOGhZSCMSNAGa1Q-8vuRXvC0p8j4N7z3u2oHl9i3EcxMLV8WhNvrk-xY-D1IOROKxh6qVBrXurAl5dEontH6OseH4YZEhbHzIr0raJhCoQfKq0Yx84TzvOykhNwJsFfiVePAUKN8AEEEIyqoXYinq2B9RP55vIBns9HE8qkwBBAJaOlw3ByX355cVoPxJnqbRs3IHu-Z8qF-TV8yQD7HuU5FE-Xwxetort_d74XMl9aQZI3qL22LwJmWiS93tsrL_p64wZQyCn32YiHKX9siSQwZ4-9RD-UfkXV-CgSa-6YjUUm8et0Ufl5flzIaNdZgXbLBj_j9f-RfENUAWamiZzbA8q1NKwNbD4PAbim5Y_F9IvEK4Tcc7lhnS72I7bu_2bz9n7nkXn6APOGh3NY-vGUoEebx0QuwrhozgbvCy9gyEDfBUfKN97UshKkKLFsg4iscsiabPkRYInRT0vqXIG1SC8greXkH4SZarrp6bn-vpQQnrQWM74pCjhAREKNmOtHeYe04mPd7Rjmls5Q5IMUVrpMPRNRpRLkHCu03p75oYsvzHeRqk7DATDfWazhseak2iomdCvyvJaMLcbDbCfR24JLsG41JJnSGYBSV_u8c.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
+            "format": "openai-responses-v1",
+            "id": "rs_0234237da7c04d30016af0d42c1e4087d1b82acdded80f69db",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 274,
+    "completion_tokens": 439,
+    "total_tokens": 713,
+    "cost": 0.0005816,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0005816,
+      "upstream_inference_prompt_cost": 0.0000548,
+      "upstream_inference_completions_cost": 0.0005268
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 165,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

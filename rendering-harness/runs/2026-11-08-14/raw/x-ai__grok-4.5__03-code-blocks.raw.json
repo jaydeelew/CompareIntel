@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169022-BaR9g5sulSMbiSsKwzOe",
+  "object": "chat.completion",
+  "created": 1794169022,
+  "model": "x-ai/grok-4.5",
+  "provider": "xAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "I will generate a response with the requested fenced code blocks.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "I will generate a response with the requested fenced code blocks.",
+            "format": "xai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "yCXt0iYae9Y2X5ACpM0h1IN+YB+Fma1nFDXtpetSbKOrcRBSHjMpFdH+qF1vlf9jhJHynoLfkl++kakOve3qYk3+ftpnkah8Ex1mQ+zOvcQRC+KSq/6JmSR1PcRKzK1Ubr9c/k/6arx/nndNgMQtrcapoRh+XmSyEfp90Xxp6JjUTa7GX/JxpjtiLxx25QuigCEBjA47z1QScRLWi1cLmkPN5PY9o/bFDZvBz9zqVHwlGA4DUUzlVdh1QHUILSMtZemHARr+pWE5K244GKbjMjZz01TETqTfTl5RkHKhxOMPY1+ZstnFWc/Yov4hs7iT17dmn5RJhmnLfXdQ/yT24RF0/u1TM8cOr1d39L2057jIWTqgkF8yyZqlhZL/jx6Mh4WRc8QPQHot.eyJlbmRwb2ludF9zbHVnIjoieC1haS9ncm9rLTQuNS0yMDI2MDcwOHx4YWkifQ",
+            "format": "xai-responses-v1",
+            "id": "rs_adc45b05-ee86-96b8-8c0a-d0ac0179d7a2",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 456,
+    "completion_tokens": 328,
+    "total_tokens": 784,
+    "cost": 0.0026624,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 128,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0026624,
+      "upstream_inference_prompt_cost": 0.0006944,
+      "upstream_inference_completions_cost": 0.001968
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 94,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

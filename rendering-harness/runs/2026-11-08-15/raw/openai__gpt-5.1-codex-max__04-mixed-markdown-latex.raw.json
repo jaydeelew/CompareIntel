@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169291-gUJNAw0VabVuBhuP4M1j",
+  "object": "chat.completion",
+  "created": 1794169291,
+  "model": "openai/gpt-5.1-codex-max",
+  "provider": "Azure",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Problem Statement\n\n**Exercise 1**: Given the function \\(f(x) = x^2 + 2x + 1\\), find:\n\n1. The *derivative* \\(f'(x)\\)\n2. The **integral** \\(\\int f(x)\\,dx\\)\n\n### Solution\n\nThe derivative is:\n\\[\nf'(x) = 2x + 2\n\\]\n\nThe integral is:\n\\[\n\\int f(x)\\,dx = \\tfrac{x^3}{3} + x^2 + x + C\n\\]\n\n## Linear Algebra with Lists\n\nProperties of the matrix \\(A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}\\):\n\n- Determinant: \\(\\det(A) = ad - bc\\)\n- Trace: \\(\\operatorname{tr}(A) = a + d\\)\n- Inverse (if it exists):\n  \\[\n  A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}\n  \\]\n\n## Real World Context\n\n> **Note**: In economics, the cost function \\(C(q) = 100 + 5q\\) means fixed costs are \\$100 and variable costs are \\$5 per unit.\n\nIf you buy 10 units, that's \\$100 fixed plus \\$50 variable = \\$150 total.",
+        "refusal": null,
+        "reasoning": "**Generating mixed response**\n\nI need to create a response that combines markdown with LaTeX, as the user has given an example to follow. They're not asking a question but rather provide a prompt titled \"Test Prompt: Mixed Markdown and LaTeX.\" They want me to generate content in this style, which appears to be safe since it’s purely mathematical and does not involve personal data. I should consider summarizing or acknowledging their request while ensuring to format everything correctly.**Formatting mixed content**\n\nI believe the best approach is to create a response that adheres to the user's request without just repeating their text. They provided content and specified that they want a mix of markdown and mathematical expressions. Since they don’t need me to solve anything, I can focus on presenting their problem and solution in a clear format. I’ll make sure to rectify any missing elements, like dollar signs in their cost function, and then formatted response with headings and lists as needed.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Generating mixed response**\n\nI need to create a response that combines markdown with LaTeX, as the user has given an example to follow. They're not asking a question but rather provide a prompt titled \"Test Prompt: Mixed Markdown and LaTeX.\" They want me to generate content in this style, which appears to be safe since it’s purely mathematical and does not involve personal data. I should consider summarizing or acknowledging their request while ensuring to format everything correctly.**Formatting mixed content**\n\nI believe the best approach is to create a response that adheres to the user's request without just repeating their text. They provided content and specified that they want a mix of markdown and mathematical expressions. Since they don’t need me to solve anything, I can focus on presenting their problem and solution in a clear format. I’ll make sure to rectify any missing elements, like dollar signs in their cost function, and then formatted response with headings and lists as needed.",
+            "format": "azure-openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NnQG90mVZ7HUO2ejUH2EuYgpSrEviNjkecvLvtyWxhcl5EM5OYVj0mFVbSvqDyVS32CyzUZww7XGaNn0h2Cyf7zelXmYfeDvaIZ0BEDHjVbxZLQFGYJtOM_CivKMhuvqIdrCfXnBJeiyv4aG833g4TDwlesj5C27qUr0LBFkNdMopiSD759GHvQ0eGVwGMPOxoztF4bv2mf5S112zwCFsMigTAL44Iq0__zkJd_4A3rGi9yie_QPAIDQOeDFHsbpVRTapyGQM27_8v1RFoFUYgWiyFy0pwKeEimCel2BDYad56RqFkjslAvZQnuJ9xfg-SV3ES4vcS8QZvbAjpis8q63oT3_vN_7PX8sg_uNceswej1yG8jdg15N7zUB-aqwjghUakicViBuVX46uLCNSKR_5H6U1LoEWXIgxLhkp9VL3KvoYUYFr4wi6wghvA6nbEVCEY03bR2c3c8ACZA2-ktfvNJtLimeLI9xQlS7D1H8xMpARZveRBJwxXe-OQsnmJ4yTVR6lmU06wD3wX3CvZi9MLVs0FDJjdN0zqtKCGIyJC3mA34uh2fOB5jsos4AcfDyplgDMSzFJl39DAMn32GjRBQQEDNVkcccDdB3W8KN9lXLD8B3kTvvvgLp2LikNo_H7cBqwQxdIsO3IXCdb0HZS9KM8aM6AulaiybKdiZrVF2iO6on3uA6OCIcOnLHlGZ79QZY-ykrIc9N9PsgBrcPePryuJGbux0_p72xOit0fRAoiIt9MASTaBvwqXGXUtRZ7AbGtP5gGQM6WKFMWGCEjwKU8RjhAGh-yTw1UxIRxo51lX9SHkszpVvSvzd45bKM9blOxOHKItLhJmCv8N2RPQEQx7-hxwe9mEFTsTqMIc6xiqFIqgJcPj3e3fJXqaU25v_HJ2OeVNja_4j8yRXkPVMHYI7V3ewRTulNQVXX95HtiLRxAOcfQ8jYQWIvAw6p4rqDgkYsJplZQ5id7lPUbYJQk_p_Oa1iIU0lqqYUspGq97qahqnPFUuEme3Wo6oVIaghHwDrjcURVuUKXZ18HFUvn7hDg9bRsn1RnpRJLmMuStWf_x3EYD6Xvnh3a4TREGy237l0eOFyEFeIBNu1-AlMFtJEIC9A7bCSWkOUatJ9DidS6wNUTRbS2n0BtPMlbx-TtYrO2WYaZDWXpgdVubCqcLLsa3ZPBCBSS9nADFyKjC8oimZgZUXcPtSu6KtzK4Kvl_lakyC7WQXCxyLWsQTBwkbzIC_AwMuGGUldykEQqvh7_H0I3XwfhoEY4m_ul5_ElEuZ-oKS-g9NZnOk7G1-opeoF26RbLGzRsg6oawp5SE-c_HvLl9-3Tnm5Pdd9SExICy8sEVZObjmEHFRSMzWUUwtnGCak72zbixfkypugupEkdH-ip287RRa5btBW0r8tpQIi4KSxJ585pfi1aY0eSfpIogYFV-4wzt-rO1Uk7qAJgjm4HANBbkw6XVT-iGNkGLb5cUVPNvKpjQVxux6Gp6tTVr-MrAX4MPNDOd3v-P0nNl8DWW0ObcNNCzkPVvjABYjIGtfRfkExOu4q1cCEU_loBLs_3IiGidaUvmg6c0jytkbmi6V_H3CS2JAkNVVZGLRvr2Ao4tOU-fIVc80zVS8Hi7UGG4XvGfFUoypPd0vZGYeo-0ZQid2MBqNep0G-YBTPt1qnGHQ9RPUPoJCnD5nMXjprgCpwdHoOaUl6tUWldu6bWkMImWGlKSYq43FN_pT61y83y4njjiwIMs1csjw9qvX2Pohm2dIDZodP2tCvbHTlOuYOLUg6lyFPleQarbUdNjM6nVsLn_76X8bJMpuBV7-LljrOFExHNmSZIHN9MWWuHpqJ04rhxZNbn0ZbjKScOl3lthuysbi0CBxxroN2xyRgt7JGafheZLwIETHo2WEYqD98_TyPf_912gxftSBFFo5GY5sha3DDxpTNwDP161cl6Eo3JtFyKvVg8Kq_Astw353Bbhon91ACaKek_xYtQrvMGZK4NIrPEFKHsofF5kWubN9Awh9BlZHgZA_VUDyHGy9ipH225OIo2lxuacTb264meP4YsFo0IDpM39H2SAY22sJqZSYfNsI_CnYM3UyxptVqxt1ONYas45KN9Z-4ps-uWs_HKLLR4VmNQuFO7gCyXoQ7RboPzs6RBwYHXyhjK9H1pKDQ81Li1RXq9YecGO7nEy5fMQlNqCAngjeODQAbaj97K6pZ2_BqqQwXu6Gt4cUzaX8sYKJ5orA_IPbJ-htYm0LwUPOOWiTonPe9LQl9i_cz04tj9hdv2e5vO3YXojdO67-PZJZb2ngS2NpIZHXUhvrzm9QvSBItNKgkTi0_tKshDqBwhC5jPQ-Ve4sKeY_5xrY4d5CzYB1RrjTb0AALXFcHA8n_FAlEt9xVelxTg0tigfOLcDGQ4UwAR51FkhulWgaLIBp2_z9HFFuxbK5GmnH1Tmc4E4p8NbPDq_NlqF8hNr-3-JtVG8JYjTZ1Zo3zVO8s0VdvE9CMt1lCZtugh4gOC270dbA24dosalWM8TEM-9KscuPAvwdydMKbIqNDvPcIhJZskSiXs8snCkqUekzZycKH11mhjGgXGKmdCOdAAMg4k0qu7alUHP-pnzp3GZ72ooO0L1w6XAFVqVmIL4aQsEYv_GxafrfnPzZsHou4kDE4RxdOdNwZXJIK_P536e2Q7fwZN0U1_DGydXxtLQV0r--r-MlfTD-c2TX1Ca0Rb5vv6bYXzVQsLuXPZBodszrv3ytH8QsPcbhos2FcORTM-1eeKoBYtS90vhqahKvhTHU6rm5OQ0ulMx6uCWQS8B62t_ombB8MPZ0l7VGLBE5HfTzWB-bjId7xsRD2BzaiYVZsEcfT5Tu3YW1GoXrVPVsGDx5y6OP540QG83Rp0TwGGWfu1x-atoYD7RDICZVYSWYOShjZlpr3PuuEyXIdYMDelPMuqrDTsgTG89PNchWxG5ojnB5A2Pc93-WDhD0GGTqU-LhI9NXii4vrUkCicu4Rukf6Gw-RzKAhMOcfAgHToewngvUOYVhcgJQI8qFXg-TnnbtXkpDj0ZCk3Uox4C8F9caF2hTQWj3w73e0DGYzoYzIDCMbly5psLilHGEENE43Q95hoZH6Dtv9b-GkXs6mr_Mk7xqTQ05E_lFnywlcnO2WMQBbJkFdMHnbqwqfXHz93JUuJXmPaASPlVA0g3TBiWs0yFnjDTRo37wJMxrhXixNJzT77Ge7BPknIXPenGNP5NYowSvjA9casPB0TgLbujprwUi5bLmIQh0l8V9yceSUrkKAOhLPdzwW6GEcZiJnw_ASla4a-UY-Xoa3_Li5sJk9BfkpxBpyY8YH7XohfYYtmkg84gjt8Zn-GZVnDPkoWr30-NR_7o3XwODzQyMllpnxMH-S1PuO59VdZ5yvPPs2pB-Nz56q7xT4-jCBC-lTWISArkaGq6a1hH2zvE8Od1UMFlD6eVolWZX_RwVnSbgHC-1CIFffJTan0q6874fc15dTgWiCkCo3a8sSYCUClLDYVDhKB5URyH_zZBw6fsPP4wOiMZxugQuav8A_EVjXJBTKAXZkIwUZB5SVjR_xjp6o9Z_EA8mOyKBL2iq90wvthUrs_gAqu9H5VLYbm27I5uyL6D1RVi-UosAWAe64ySaUV6BDna9cCb_yIt8XKuNpd0MkMmb1bnh5AgZvKX0KOdZLIeJeaq-nUgijpS2peaI5XZN1Jp80HvypMuQQNhmACkKugP8u2PlIPVUwsDQdZYbby0mTtE_Q1Tjp6yrTjdbdRNDyPsad-WdLv0U4ftE6M0RJg9PzrdUgCsqf4DVi_T_e492aAgEzNPKT_kxTyHdEj2h9lLCoqaUVGnubYFmr80Bakaf0W-m2SaDkgkW8q4diiZOPKBDXUqQ23IWJw7Xf5CuS_68O2LyxA_JUQ4bNpkxPVtpsc7SImrqWYue-JzNZXu9_t72DYrZRESdEqHXdz-km3S2SzvnNKidikwnZenWJVUqGRbOK5B4DU9lGIUJcAchkk6xG1GK53hiEG4wOfrqCp8Q-TOFuh7w6z8LyXacgc5C9UFF5NVQufBCKRjKYugi0dMDhlyWWsYhXlFJ1yO7pNs9b1Mm96z4g_MBurHHDPrIWZk9NYlSRocQN4RPZXC3a5xBrwb9CFiWnsKaf9a6y2WzHhcX12DmerPPK_YlEd4f1uRKXPWUr-F_Bm1iI1no0vYhqvRvfxEo0u4RJPcm_WwuVs56fjY2FybXrmVixz8oY_Oyq4M3tENoOxTCfNN32xdWyBYdEMBiTvjNxGZkcIFlSjzmWy1XOOsAMkDEJwesc_UoQ96atgIpmwUIpL_gyIph8EzEoVZYaNWo32BGwnGszLmzdcrRxLaeJWqhV8grcNQ_v0PDeZocEnQCfsIGetJAjRqfXtfig5NgwGf0cfbiyErsGAMAmT7CYvsVAhWCxWGmKDak9OT19HZPTX8Q4lDvnQEPdxnvS7-GmopDA0vp2vm6IA1RFj-ZqcOKZBkdmNp4Zs68mWry1R-q5RM6fOr171N10XYVXwBY5jG4pORgbvhs9IEU0qemmwCpnebfY5rmoVtGo9bMtQbkfzzeW8-08SbVFu88I9SO3IsGj7hXXLQDGqPPiECj6i8miKqbgMHgk9wMZBKGQqVZd6INBLAY4zou-nWS89nwpjmovslWMQR1drKjcRfbMLyRYmWcJwb13qaBDO5HTKOZybpDqaRRFxk68XQB3xwtZdVyfAZEPGmbURQO30J_2k5hkHRUdrmb4Q1C9kiYaF-SJyhIaDKMom-F7vyBUEeU7juq43xnlVR9hAQAAtaGzGNvqparPtdOZdhC0F_uVPqgXmVE-2h-HqkTKRCliney2-i5k864AeY89p3mE_uRsaLW1ZRATpeBMXUCsHCxNVPjH4h9jiyVLusppaNA5ZIWCREnAsxLziAhew6W1IMDfsJGok-z9gJe0gEn8D4Y1npkeqrNcSYOdPSrgyGXfL6WyhbQXzV3KhaAl7T4p3kbfctJfmSq2lVrhojjdykdjiNZDZIGBgwwsZw-G3oroU8LkWPTgLswj0jvU1NzHx6neZH4MiDvcj3N0_UPv-Eb4IudJ71plgWH6gXglFnsv-4lMoEOg3I3x6WcaQCLWdR4NkitsCz8frkFWk0jycieU5Wk_cjN8pdXXDMhe24TuBg-0OC0Cf397dD_nV3P5Yk_Giw1UCJ-Jq166zDTR7b35pqIUXgmhZPh5PyBDe6_p6yH0ecuQF-kFtKitNq8nfc1ozfQ9jmZglTYUBroqOBounGT7CKtkJqsAabVhwBeHGKEJEMFs53syfG5mBlk2_O6DUfagZii-wRRBbNB1TkeC_xNG1EowRtxuIIBX50-Da6YjbEFyUQP6de9kDFYsjxUWWKl-lRxCudQNQLDnWLNV7G5GjVUIJ_tIoG-gn3xrig3WneIWr7zE3Kcw9qMM0qd2FaD3B8VQ-JUPXUssaV5gX8mEjK_vWgpeJMS01wD9MY1eTkulaPDjewlDyMYiOpSfmqhFpDN6_rz8KSOK3zurF-UPqUrClBzqG__oNqv1eSyQVua8-ivUHOAd7yKAOhg2fuxKm_EbHv5bzrhsZol_jwfH5R53dVPWg1CRYeE0Ibi5cN_iKkh7TclacM7KJ3giV8C2YYSsBHziHYVjqEKETDniwcZMgdEGfDNUMLdmM3Zmz5jtAIGZ64Q-E_B51nybAh3u7Oh6TUhI_LkUT7J0uYbm2g5t6fbzwcemRGM-nuQc-LO2zkFE6NAqwNsz2c9Q2hLx4FJ_aB0ebJo4qEzWKin0KONtHoqEgHC_btWN8vmaMlp0353YNU0vdbXZmRtt5YV5-zGd1QVoIm6DHnJ3MXW7Rfb3QYmOc4NV1tM7EZ1coLEHtYNlTT35Uw8gctF9PHmyqOoogE97xBE1JfC5aWrNwHNtM1iaQyMDhmDCj73mnfVJbKnHMcPqFBj_bNvZlye-YsivwGGaHtrkOxMvn1xuw8aCS9jdA2h6VkCww6FSgSXYKw1o_IxgOLQNHf-64gDlpzQdi-VU5fwO-9JCAlhMHo-C0YfyQXDsXUh22mdqp_rh3omiGxBAvmyYYOvdOX3b1L03Ff9gDxOKGz1vXHrMVv_UyTkexjG__-UdNf-2QC48wHWgTJgaufGpyd6LvcEHKoXkA9gNAn0icBMgDYXoRLK_zPv8uBjJIdRR_sRntGBldybcZ424eFEQqHnFLMWb9YB2cNADH1xA1Wn3bgps132pZNa4KfxXgVkFFM-ZJFWxQbVOFXekOX78IAu2zI9j3b-QAfutvF_McL2LiEJUUP6OqSeBjlScsJlqTHa0jg1VAogPZe0fNWJV8K8A5DCL6duE6cym0zFylwnS5XhIZOh_D5shZoQiY8aYLoRswm1_soDohcPm7xIdnrcbIrK7gc5kTZ12ccw_rEmYcbkXXlhSG9c0Z0doACsc-dNI39UwQCn8H41M2sRDXBfpJB2x5AobkLjGNHAZE5Je0Ori2XjGsMOS0WRCn4hbA7nhJ_IzoNHf9Bht3aKU54Ut9f3YKRKqnMYGwDFOXZypSwjtKhewBAZvUymhyr4PyL.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjEtY29kZXgtbWF4LTIwMjUxMjA0fGF6dXJlIn0",
+            "format": "azure-openai-responses-v1",
+            "id": "rs_021f7324e95e53d4016af0d9cc1d64819392e847d096058818",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 310,
+    "completion_tokens": 697,
+    "total_tokens": 1007,
+    "cost": 0.0073575,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0073575,
+      "upstream_inference_prompt_cost": 0.0003875,
+      "upstream_inference_completions_cost": 0.00697
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 384,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

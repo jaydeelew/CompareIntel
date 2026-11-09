@@ -1,0 +1,1057 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 1.95,
+  "maxTokens": "perModel",
+  "perModelMaxTokens": [
+    {
+      "id": "anthropic/claude-sonnet-5.5",
+      "maxTokens": 8192
+    },
+    {
+      "id": "openai/gpt-5",
+      "maxTokens": 8192
+    },
+    {
+      "id": "meta/muse-spark-1.3",
+      "maxTokens": 8192
+    },
+    {
+      "id": "qwen/qwen3.8-max-0902",
+      "maxTokens": 8192
+    }
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+    }
+  ],
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "anthropic/claude-sonnet-5.5",
+    "openai/gpt-5",
+    "meta/muse-spark-1.3",
+    "qwen/qwen3.8-max-0902"
+  ],
+  "plannedCalls": 24,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.29197825,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "anthropic/claude-sonnet-5.5",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:46:37.664Z",
+      "reserveUsd": 0.104425,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01458,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:46:47.141Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 410,
+        "completion_tokens": 1376,
+        "total_tokens": 1786,
+        "cost": 0.01458,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01458,
+          "upstream_inference_prompt_cost": 0.00082,
+          "upstream_inference_completions_cost": 0.01376
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 446,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 2,
+      "modelId": "anthropic/claude-sonnet-5.5",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:46:47.141Z",
+      "reserveUsd": 0.10402000000000002,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.004388,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:46:50.010Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 279,
+        "completion_tokens": 383,
+        "total_tokens": 662,
+        "cost": 0.004388,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.004388,
+          "upstream_inference_prompt_cost": 0.000558,
+          "upstream_inference_completions_cost": 0.00383
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 82,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 3,
+      "modelId": "anthropic/claude-sonnet-5.5",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:46:50.010Z",
+      "reserveUsd": 0.10424000000000001,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00951,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:46:56.046Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 340,
+        "completion_tokens": 883,
+        "total_tokens": 1223,
+        "cost": 0.00951,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00951,
+          "upstream_inference_prompt_cost": 0.00068,
+          "upstream_inference_completions_cost": 0.00883
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 226,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 4,
+      "modelId": "anthropic/claude-sonnet-5.5",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:46:56.047Z",
+      "reserveUsd": 0.10473250000000002,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.016828,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:47:05.562Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 459,
+        "completion_tokens": 1591,
+        "total_tokens": 2050,
+        "cost": 0.016828,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.016828,
+          "upstream_inference_prompt_cost": 0.000918,
+          "upstream_inference_completions_cost": 0.01591
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 219,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 5,
+      "modelId": "anthropic/claude-sonnet-5.5",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:47:05.563Z",
+      "reserveUsd": 0.1054675,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.013136,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:47:13.587Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 633,
+        "completion_tokens": 1187,
+        "total_tokens": 1820,
+        "cost": 0.013136,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.013136,
+          "upstream_inference_prompt_cost": 0.001266,
+          "upstream_inference_completions_cost": 0.01187
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 240,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 6,
+      "modelId": "anthropic/claude-sonnet-5.5",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:47:13.587Z",
+      "reserveUsd": 0.10504000000000001,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01355,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:47:23.064Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 485,
+        "completion_tokens": 1258,
+        "total_tokens": 1743,
+        "cost": 0.01355,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01355,
+          "upstream_inference_prompt_cost": 0.00097,
+          "upstream_inference_completions_cost": 0.01258
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 229,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 7,
+      "modelId": "openai/gpt-5",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:47:23.064Z",
+      "reserveUsd": 0.10366562500000001,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0106325,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:47:36.572Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 1029,
+        "total_tokens": 1303,
+        "cost": 0.0106325,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0106325,
+          "upstream_inference_prompt_cost": 0.0003425,
+          "upstream_inference_completions_cost": 0.01029
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 704,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 8,
+      "modelId": "openai/gpt-5",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:47:36.573Z",
+      "reserveUsd": 0.10341250000000002,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00848375,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:47:46.876Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 195,
+        "completion_tokens": 824,
+        "total_tokens": 1019,
+        "cost": 0.00848375,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00848375,
+          "upstream_inference_prompt_cost": 0.00024375,
+          "upstream_inference_completions_cost": 0.00824
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 640,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 9,
+      "modelId": "openai/gpt-5",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:47:46.876Z",
+      "reserveUsd": 0.10355000000000002,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00746125,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:47:54.903Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 241,
+        "completion_tokens": 716,
+        "total_tokens": 957,
+        "cost": 0.00746125,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00746125,
+          "upstream_inference_prompt_cost": 0.00030125,
+          "upstream_inference_completions_cost": 0.00716
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 448,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 10,
+      "modelId": "openai/gpt-5",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:47:54.903Z",
+      "reserveUsd": 0.10385781250000001,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0133775,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:48:09.841Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 310,
+        "completion_tokens": 1299,
+        "total_tokens": 1609,
+        "cost": 0.0133775,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0133775,
+          "upstream_inference_prompt_cost": 0.0003875,
+          "upstream_inference_completions_cost": 0.01299
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 960,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 11,
+      "modelId": "openai/gpt-5",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:48:09.841Z",
+      "reserveUsd": 0.1043171875,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.034005,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:48:37.692Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 3347,
+        "total_tokens": 3775,
+        "cost": 0.034005,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.034005,
+          "upstream_inference_prompt_cost": 0.000535,
+          "upstream_inference_completions_cost": 0.03347
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2368,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 12,
+      "modelId": "openai/gpt-5",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:48:37.692Z",
+      "reserveUsd": 0.10405,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0235775,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:48:56.788Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 2315,
+        "total_tokens": 2657,
+        "cost": 0.0235775,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0235775,
+          "upstream_inference_prompt_cost": 0.0004275,
+          "upstream_inference_completions_cost": 0.02315
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1920,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 13,
+      "modelId": "meta/muse-spark-1.3",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:48:56.788Z",
+      "reserveUsd": 0.044785624999999996,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00645625,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:49:07.023Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 252,
+        "completion_tokens": 1445,
+        "total_tokens": 1697,
+        "cost": 0.00645625,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00645625,
+          "upstream_inference_prompt_cost": 0.000315,
+          "upstream_inference_completions_cost": 0.00614125
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1131,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 14,
+      "modelId": "meta/muse-spark-1.3",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:49:07.024Z",
+      "reserveUsd": 0.044532499999999996,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0025175,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:49:11.753Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 195,
+        "completion_tokens": 535,
+        "total_tokens": 730,
+        "cost": 0.0025175,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0025175,
+          "upstream_inference_prompt_cost": 0.00024375,
+          "upstream_inference_completions_cost": 0.00227375
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 334,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 15,
+      "modelId": "meta/muse-spark-1.3",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:49:11.753Z",
+      "reserveUsd": 0.044669999999999994,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.004136,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:49:18.199Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 242,
+        "completion_tokens": 902,
+        "total_tokens": 1144,
+        "cost": 0.004136,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.004136,
+          "upstream_inference_prompt_cost": 0.0003025,
+          "upstream_inference_completions_cost": 0.0038335
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 636,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 16,
+      "modelId": "meta/muse-spark-1.3",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:49:18.199Z",
+      "reserveUsd": 0.0449778125,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.004983,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:49:25.561Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 294,
+        "completion_tokens": 1086,
+        "total_tokens": 1380,
+        "cost": 0.004983,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.004983,
+          "upstream_inference_prompt_cost": 0.0003675,
+          "upstream_inference_completions_cost": 0.0046155
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 779,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 17,
+      "modelId": "meta/muse-spark-1.3",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:49:25.561Z",
+      "reserveUsd": 0.045437187500000004,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0083455,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:49:42.597Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 417,
+        "completion_tokens": 1841,
+        "total_tokens": 2258,
+        "cost": 0.0083455,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0083455,
+          "upstream_inference_prompt_cost": 0.00052125,
+          "upstream_inference_completions_cost": 0.00782425
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1110,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 18,
+      "modelId": "meta/muse-spark-1.3",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:49:42.597Z",
+      "reserveUsd": 0.04517,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.0136745,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:50:10.174Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 335,
+        "completion_tokens": 3119,
+        "total_tokens": 3454,
+        "cost": 0.0136745,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0136745,
+          "upstream_inference_prompt_cost": 0.00041875,
+          "upstream_inference_completions_cost": 0.01325575
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2564,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 19,
+      "modelId": "qwen/qwen3.8-max-0902",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T19:50:10.174Z",
+      "reserveUsd": 0.063465,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.03753,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:52:38.108Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 6141,
+        "total_tokens": 6483,
+        "cost": 0.03753,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03753,
+          "upstream_inference_prompt_cost": 0.000684,
+          "upstream_inference_completions_cost": 0.036846
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 5822,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 20,
+      "modelId": "qwen/qwen3.8-max-0902",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T19:52:38.108Z",
+      "reserveUsd": 0.06306,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.002916,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:52:47.766Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 264,
+        "completion_tokens": 398,
+        "total_tokens": 662,
+        "cost": 0.002916,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002916,
+          "upstream_inference_prompt_cost": 0.000528,
+          "upstream_inference_completions_cost": 0.002388
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 208,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 21,
+      "modelId": "qwen/qwen3.8-max-0902",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T19:52:47.767Z",
+      "reserveUsd": 0.06328,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00433,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:53:00.585Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 308,
+        "completion_tokens": 619,
+        "total_tokens": 927,
+        "cost": 0.00433,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00433,
+          "upstream_inference_prompt_cost": 0.000616,
+          "upstream_inference_completions_cost": 0.003714
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 385,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 22,
+      "modelId": "qwen/qwen3.8-max-0902",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T19:53:00.585Z",
+      "reserveUsd": 0.0637725,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.006916,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:53:27.154Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 380,
+        "completion_tokens": 1026,
+        "total_tokens": 1406,
+        "cost": 0.006916,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.006916,
+          "upstream_inference_prompt_cost": 0.00076,
+          "upstream_inference_completions_cost": 0.006156
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 599,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 23,
+      "modelId": "qwen/qwen3.8-max-0902",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T19:53:27.154Z",
+      "reserveUsd": 0.0645075,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.020602,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:54:46.129Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 506,
+        "completion_tokens": 3265,
+        "total_tokens": 3771,
+        "cost": 0.020602,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.020602,
+          "upstream_inference_prompt_cost": 0.001012,
+          "upstream_inference_completions_cost": 0.01959
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2617,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    },
+    {
+      "index": 24,
+      "modelId": "qwen/qwen3.8-max-0902",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T19:54:46.130Z",
+      "reserveUsd": 0.06408,
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.010042,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T19:55:20.955Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 422,
+        "completion_tokens": 1533,
+        "total_tokens": 1955,
+        "cost": 0.010042,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.010042,
+          "upstream_inference_prompt_cost": 0.000844,
+          "upstream_inference_completions_cost": 0.009198
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1163,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed: collection only, no rendering or feature validation",
+  "startedAt": "2026-11-08T19:46:37.661Z",
+  "conservativeBatchReserve": 1.9025162500000001,
+  "status": "completed",
+  "finishedAt": "2026-11-08T19:55:20.956Z",
+  "files": [
+    "catalog.json",
+    "manifest.json",
+    "prompts.json",
+    "raw/anthropic__claude-sonnet-5.5__01-math-basics.raw.json",
+    "raw/anthropic__claude-sonnet-5.5__02-markdown-formatting.raw.json",
+    "raw/anthropic__claude-sonnet-5.5__03-code-blocks.raw.json",
+    "raw/anthropic__claude-sonnet-5.5__04-mixed-markdown-latex.raw.json",
+    "raw/anthropic__claude-sonnet-5.5__05-complex-scenarios.raw.json",
+    "raw/anthropic__claude-sonnet-5.5__06-edge-cases-boundaries.raw.json",
+    "raw/meta__muse-spark-1.3__01-math-basics.raw.json",
+    "raw/meta__muse-spark-1.3__02-markdown-formatting.raw.json",
+    "raw/meta__muse-spark-1.3__03-code-blocks.raw.json",
+    "raw/meta__muse-spark-1.3__04-mixed-markdown-latex.raw.json",
+    "raw/meta__muse-spark-1.3__05-complex-scenarios.raw.json",
+    "raw/meta__muse-spark-1.3__06-edge-cases-boundaries.raw.json",
+    "raw/openai__gpt-5__01-math-basics.raw.json",
+    "raw/openai__gpt-5__02-markdown-formatting.raw.json",
+    "raw/openai__gpt-5__03-code-blocks.raw.json",
+    "raw/openai__gpt-5__04-mixed-markdown-latex.raw.json",
+    "raw/openai__gpt-5__05-complex-scenarios.raw.json",
+    "raw/openai__gpt-5__06-edge-cases-boundaries.raw.json",
+    "raw/qwen__qwen3.8-max-0902__01-math-basics.raw.json",
+    "raw/qwen__qwen3.8-max-0902__02-markdown-formatting.raw.json",
+    "raw/qwen__qwen3.8-max-0902__03-code-blocks.raw.json",
+    "raw/qwen__qwen3.8-max-0902__04-mixed-markdown-latex.raw.json",
+    "raw/qwen__qwen3.8-max-0902__05-complex-scenarios.raw.json",
+    "raw/qwen__qwen3.8-max-0902__06-edge-cases-boundaries.raw.json",
+    "replies/anthropic_claude-sonnet-5.5_01-math-basics.json",
+    "replies/anthropic_claude-sonnet-5.5_02-markdown-formatting.json",
+    "replies/anthropic_claude-sonnet-5.5_03-code-blocks.json",
+    "replies/anthropic_claude-sonnet-5.5_04-mixed-markdown-latex.json",
+    "replies/anthropic_claude-sonnet-5.5_05-complex-scenarios.json",
+    "replies/anthropic_claude-sonnet-5.5_06-edge-cases-boundaries.json",
+    "replies/meta_muse-spark-1.3_01-math-basics.json",
+    "replies/meta_muse-spark-1.3_02-markdown-formatting.json",
+    "replies/meta_muse-spark-1.3_03-code-blocks.json",
+    "replies/meta_muse-spark-1.3_04-mixed-markdown-latex.json",
+    "replies/meta_muse-spark-1.3_05-complex-scenarios.json",
+    "replies/meta_muse-spark-1.3_06-edge-cases-boundaries.json",
+    "replies/openai_gpt-5_01-math-basics.json",
+    "replies/openai_gpt-5_02-markdown-formatting.json",
+    "replies/openai_gpt-5_03-code-blocks.json",
+    "replies/openai_gpt-5_04-mixed-markdown-latex.json",
+    "replies/openai_gpt-5_05-complex-scenarios.json",
+    "replies/openai_gpt-5_06-edge-cases-boundaries.json",
+    "replies/qwen_qwen3.8-max-0902_01-math-basics.json",
+    "replies/qwen_qwen3.8-max-0902_02-markdown-formatting.json",
+    "replies/qwen_qwen3.8-max-0902_03-code-blocks.json",
+    "replies/qwen_qwen3.8-max-0902_04-mixed-markdown-latex.json",
+    "replies/qwen_qwen3.8-max-0902_05-complex-scenarios.json",
+    "replies/qwen_qwen3.8-max-0902_06-edge-cases-boundaries.json",
+    "summary.json"
+  ]
+}

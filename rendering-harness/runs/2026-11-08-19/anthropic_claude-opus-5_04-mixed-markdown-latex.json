@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-opus-5",
+  "modelName": "Anthropic: Claude Opus 5",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "# Calculus and Linear Algebra Review\n\n## Problem Statement\n\n**Exercise 2**: Given the function $g(x) = 3x^2 - 4x + 7$, find:\n\n1. The *derivative* $g'(x)$\n2. The **integral** $\\int g(x)\\,dx$\n3. The *critical point* where $g'(x) = 0$\n\n### Solution\n\nApplying the power rule $\\frac{d}{dx}x^n = nx^{n-1}$ term by term:\n\n$$g'(x) = 6x - 4$$\n\nReversing the process with $\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C$:\n\n$$\\int g(x)\\,dx = x^3 - 2x^2 + 7x + C$$\n\nSetting $g'(x) = 0$ gives $6x - 4 = 0$, so the critical point is at $x = \\frac{2}{3}$. Since $g''(x) = 6 > 0$, this is a **minimum**.\n\n---\n\n## Linear Algebra with Lists\n\nProperties of the $3 \\times 3$ identity-scaled matrix $B = \\begin{pmatrix} k & 0 & 0 \\\\ 0 & k & 0 \\\\ 0 & 0 & k \\end{pmatrix}$:\n\n- **Determinant**: $\\det(B) = k^3$\n- **Trace**: $\\text{tr}(B) = 3k$\n- **Eigenvalues**: $\\lambda_1 = \\lambda_2 = \\lambda_3 = k$\n- **Inverse** (exists iff $k \\neq 0$):\n  $$B^{-1} = \\frac{1}{k}\\begin{pmatrix} 1 & 0 & 0 \\\\ 0 & 1 & 0 \\\\ 0 & 0 & 1 \\end{pmatrix}$$\n\n### Useful Identities\n\n| Identity | Expression | Condition |\n|----------|------------|-----------|\n| Product rule | $\\det(AB) = \\det(A)\\det(B)$ | square, same size |\n| Transpose | $\\det(A^T) = \\det(A)$ | always |\n| Inverse | $\\det(A^{-1}) = \\dfrac{1}{\\det(A)}$ | $\\det(A) \\neq 0$ |\n| Scaling | $\\det(cA) = c^n \\det(A)$ | $A$ is $n \\times n$ |\n\n---\n\n## Real World Context\n\n> **Note**: In economics, the revenue function $R(q) = pq$ with price $p$ and quantity $q$ combines with cost $C(q) = F + vq$ to give profit $\\pi(q) = (p - v)q - F$.\n\nMoney context: Suppose fixed costs are \\$100, variable costs are \\$5 per unit, and each unit sells for \\$12.\n\n- Break-even quantity: $q^* = \\frac{F}{p - v} = \\frac{100}{12 - 5} \\approx 14.3$ units\n- At 20 units, profit is $(12-5)(20) - 100 = \\$40$\n- At 50 units, profit is $(12-5)(50) - 100 = \\$250$\n\nSo the firm needs to sell at least **15 units** (rounding up) to avoid a loss — that's \\$180 in revenue against \\$175 in total cost.\n\n### Marginal Analysis\n\nBecause $\\pi'(q) = p - v = 7 > 0$, profit increases by \\$7 for *every* additional unit sold. In the real world this linear model breaks down once $q$ grows large, since price typically falls with quantity:\n\n$$p(q) = 12 - 0.01q \\quad \\Longrightarrow \\quad \\pi(q) = -0.01q^2 + 7q - 100$$\n\nNow the optimum occurs where $\\pi'(q) = -0.02q + 7 = 0$, giving $q = 350$ units and a maximum profit of \\$1{,}125.",
+  "usage": {
+    "prompt_tokens": 457,
+    "completion_tokens": 1441,
+    "total_tokens": 1898,
+    "cost": 0.03831,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.03831,
+      "upstream_inference_prompt_cost": 0.002285,
+      "upstream_inference_completions_cost": 0.036025
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 161,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.03831,
+  "actualCost": 0.03831,
+  "timestamp": "2026-11-08T20:42:25.659Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

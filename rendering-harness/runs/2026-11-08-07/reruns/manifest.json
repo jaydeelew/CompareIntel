@@ -1,0 +1,145 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 0.15,
+  "maxTokens": 8192,
+  "temperature": "omitted, unchanged",
+  "attemptedCalls": 3,
+  "knownActualCost": 0.01833766,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "modelId": "z-ai/glm-5",
+      "promptName": "01-math-basics",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-07/replies/z-ai_glm-5_01-math-basics.json",
+      "originalFinishReason": "length",
+      "promptSha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+      "reserveUsd": 0.0337805,
+      "startedAt": "2026-11-08T18:54:42.732Z",
+      "actualCost": 0.0055601,
+      "finishedAt": "2026-11-08T18:55:14.337Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 279,
+        "completion_tokens": 2395,
+        "total_tokens": 2674,
+        "cost": 0.0055601,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0055601,
+          "upstream_inference_prompt_cost": 0.0001953,
+          "upstream_inference_completions_cost": 0.0053648
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1992,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "z-ai/glm-5",
+      "promptName": "05-complex-scenarios",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-07/replies/z-ai_glm-5_05-complex-scenarios.json",
+      "originalFinishReason": "length",
+      "promptSha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+      "reserveUsd": 0.03430175,
+      "startedAt": "2026-11-08T18:55:14.337Z",
+      "actualCost": 0.00645036,
+      "finishedAt": "2026-11-08T18:55:58.150Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 434,
+        "completion_tokens": 2744,
+        "total_tokens": 3178,
+        "cost": 0.00645036,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00645036,
+          "upstream_inference_prompt_cost": 0.0003038,
+          "upstream_inference_completions_cost": 0.00614656
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1934,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    },
+    {
+      "modelId": "z-ai/glm-5",
+      "promptName": "06-edge-cases-boundaries",
+      "originalFile": "/workspace/prism/paid-batch-2026-11-08-07/replies/z-ai_glm-5_06-edge-cases-boundaries.json",
+      "originalFinishReason": "length",
+      "promptSha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51",
+      "reserveUsd": 0.034088,
+      "startedAt": "2026-11-08T18:55:58.150Z",
+      "actualCost": 0.0063272,
+      "finishedAt": "2026-11-08T18:56:12.592Z",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 340,
+        "completion_tokens": 1871,
+        "total_tokens": 2211,
+        "cost": 0.0063272,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0063272,
+          "upstream_inference_prompt_cost": 0.00034,
+          "upstream_inference_completions_cost": 0.0059872
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1694,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "coverage": "Not assessed; collection only",
+  "batchReserve": 0.10217024999999999,
+  "reservePolicy": "Max of catalog and prior observed per-token provider rates, UTF8 bytes+32 input, 8192 total completion tokens, 25% margin",
+  "status": "completed",
+  "finishedAt": "2026-11-08T18:56:12.593Z",
+  "files": {
+    "replies": [
+      "replies/z-ai_glm-5_01-math-basics.json",
+      "replies/z-ai_glm-5_05-complex-scenarios.json",
+      "replies/z-ai_glm-5_06-edge-cases-boundaries.json"
+    ],
+    "raw": [
+      "raw/z-ai_glm-5_01-math-basics.json",
+      "raw/z-ai_glm-5_05-complex-scenarios.json",
+      "raw/z-ai_glm-5_06-edge-cases-boundaries.json"
+    ]
+  }
+}

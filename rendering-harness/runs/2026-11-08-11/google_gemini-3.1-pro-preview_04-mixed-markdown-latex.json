@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3.1-pro-preview",
+  "modelName": "Google: Gemini 3.1 Pro Preview",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "Here is another example that mixes Markdown formatting with LaTeX mathematical expressions, following the structure of your test prompt:\n\n## Problem Statement\n**Exercise 2**: Given the function $g(x) = e^{2x} + \\sin(x)$, find:\n\n1. The *derivative* $g'(x)$\n2. The **integral** $\\int g(x) dx$\n\n### Solution\nThe derivative is calculated using the chain rule:\n$$g'(x) = 2e^{2x} + \\cos(x)$$\n\nThe integral is found using standard integration rules:\n$$\\int g(x) dx = \\frac{1}{2}e^{2x} - \\cos(x) + C$$\n\n## Linear Algebra with Lists\nProperties of the identity matrix $I_3 = \\begin{pmatrix} 1 & 0 & 0 \\\\ 0 & 1 & 0 \\\\ 0 & 0 & 1 \\end{pmatrix}$:\n- Determinant: $\\det(I_3) = 1$\n- Trace: $\\text{tr}(I_3) = 3$\n- Eigenvalues: \n  $$\\lambda_1 = 1, \\quad \\lambda_2 = 1, \\quad \\lambda_3 = 1$$\n\n## Real World Context\n> **Note**: In finance, the compound interest formula $A = P\\left(1 + \\frac{r}{n}\\right)^{nt}$ calculates the future value of an investment.\n\nMoney context: If you invest a principal of $1,000 at a 5% annual interest rate compounded yearly ($n=1$) for 2 years, your total return is $1,000 × (1.05)^2 = $1,102.50. *(Notice how the $ symbols for currency do not interfere with the LaTeX formatting!)*",
+  "usage": {
+    "prompt_tokens": 317,
+    "completion_tokens": 1566,
+    "total_tokens": 1883,
+    "cost": 0.019426,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.019426,
+      "upstream_inference_prompt_cost": 0.000634,
+      "upstream_inference_completions_cost": 0.018792
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1164,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.019426,
+  "actualCost": 0.019426,
+  "timestamp": "2026-11-08T19:36:32.475Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

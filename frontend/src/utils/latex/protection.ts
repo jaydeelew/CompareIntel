@@ -41,13 +41,17 @@ const TABLE_ROW_RE = /^\s*\|/
 
 /**
  * A `$` followed by a digit only opens inline math when the span to the next `$` is
- * well formed: non-empty, no whitespace just inside the closing `$`, the closing `$`
- * is not followed by a digit (as in `$5 and $10`), and the content is not prose.
+ * well formed: non-empty, and not a currency `$5 … $10` pair (closing `$` followed by
+ * a digit, or trailing whitespace after a `$`+digit open). Padded math `$ f'(x) $`
+ * (Qwen 04) is still math.
  */
 function isValidCurrencyLikeMathSpan(segment: string, open: number, close: number): boolean {
   const content = segment.slice(open + 1, close)
   if (!content.trim()) return false
-  if (/\s$/.test(content)) return false
+  // `$`code`$` leftover after inline-code extraction is not math (Step 5 Preview 05).
+  if (content.includes(INLINE_CODE_OPEN)) return false
+  const opensOnDigit = /\d/.test(segment.charAt(open + 1))
+  if (/\s$/.test(content) && opensOnDigit) return false
   if (/\d/.test(segment.charAt(close + 1))) return false
   const hasMathSyntax = /[\\^_=+*/<>{}]/.test(content)
   if (!hasMathSyntax && /[A-Za-z]{2,}\s+[A-Za-z]{2,}/.test(content)) return false
@@ -79,8 +83,7 @@ function protectSegmentDollars(segment: string): string {
       literal.add(open)
       break
     }
-    const opensWithDigit = /\d/.test(segment.charAt(open + 1))
-    if (opensWithDigit && !isValidCurrencyLikeMathSpan(segment, open, close)) {
+    if (!isValidCurrencyLikeMathSpan(segment, open, close)) {
       literal.add(open)
       k += 1
       continue
@@ -123,13 +126,32 @@ export interface InlineCodeExtraction {
   spans: string[]
 }
 
+function pushInlineCodeSpan(spans: string[], content: string): string {
+  // CommonMark: one leading and trailing space are stripped when both are present.
+  let normalized = content
+  if (normalized.length >= 2 && normalized.startsWith(' ') && normalized.endsWith(' ')) {
+    normalized = normalized.slice(1, -1)
+  }
+  spans.push(normalized)
+  return `${INLINE_CODE_OPEN}${spans.length - 1}${INLINE_CODE_CLOSE}`
+}
+
 /** Replace single-line backtick spans with placeholders. `spans` holds the raw content. */
 export function extractInlineCode(text: string): InlineCodeExtraction {
   const spans: string[] = []
-  const processed = text.replace(/`([^`\n]+?)`/g, (_match, content: string) => {
-    spans.push(content)
-    return `${INLINE_CODE_OPEN}${spans.length - 1}${INLINE_CODE_CLOSE}`
-  })
+  // Double-or-more backticks first so `` `$x$` `` is one code span (GLM 5 05).
+  // A single-backtick pass would close on the inner ` and leave `$x$` as math.
+  let processed = text.replace(
+    /(``+)((?:(?!\1)[^\n])*?)\1/g,
+    (_match, _delim: string, content: string) => pushInlineCodeSpan(spans, content)
+  )
+  // `$` is a complete code span. Take it before the generic single-backtick pass
+  // so `$`100`, `$`0.99` does not pair the leftover dollars as math
+  // (Step 5 Preview 05: KaTeX error "0.99, or literal ").
+  processed = processed.replace(/`\$`/g, () => pushInlineCodeSpan(spans, '$'))
+  processed = processed.replace(/`([^`\n]+?)`/g, (_match, content: string) =>
+    pushInlineCodeSpan(spans, content)
+  )
   return { text: processed, spans }
 }
 

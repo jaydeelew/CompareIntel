@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170569-pzOneY1i9yC0ZZVuJQAO",
+  "object": "chat.completion",
+  "created": 1794170569,
+  "model": "anthropic/claude-opus-5",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Edge Case Rendering Test\n\nBelow is each category reproduced with the appropriate handling for math, code, and literal currency.\n\n---\n\n## 1. Delimiter Variants\n\n**Double dollar display:**\n\n$$x^2 + y^2 = r^2$$\n\n**Bracket display:**\n\n$$E = mc^2$$\n\n**Single dollar inline:** the relation $a + b = c$ holds for all reals.\n\n**Paren inline:** we set $x = 5$ and substitute.\n\n> All four forms normalize to just two rendered modes: *inline* and *display*. The choice of `$…$` vs. `\\(…\\)` and `$$…$$` vs. `\\[…\\]` is purely authorial.\n\n---\n\n## 2. Nested Structures\n\n- First item\n- The equation is:\n\n  $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n\n  And it evaluates to 0.5\n- Third item\n\nNote the continuation line (\"And it evaluates to 0.5\") stays attached to the second bullet because it is indented to the list-item content column. A numbered variant behaves the same:\n\n1. Set up the integrand.\n2. Evaluate:\n\n   $$\\int_0^\\pi \\sin x \\, dx = 2$$\n\n   which is the area under one arch.\n3. Done.\n\n---\n\n## 3. Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\nInside a fenced block nothing is interpreted: `$50` is not math, `E = mc^2` is a string literal, and `**` is exponentiation, not emphasis. The same applies to inline code spans: `x**2 + $y` renders verbatim.\n\n---\n\n## 4. Currency and Escaped Dollars\n\n- Plain: The price is \\$100\n- Escaped: The budget is \\$500\n- Multiple: Costs \\$25, \\$30, and \\$45\n- In sentence: I spent \\$50 at the store\n\nEach dollar sign that denotes currency is escaped (`\\$`) so that a pair like `$25, $30` is not swallowed as inline math containing \"25, \". Compare:\n\n| Written as | Renders as |\n|---|---|\n| `$25, $30` | risky — may parse as math |\n| `\\$25, \\$30` | \\$25, \\$30 |\n\n---\n\n## 5. Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\tfrac{4}{3}\\pi r^3$ | $523.60$ |\n| Circumference | $C = 2\\pi r$ | $31.42$ |\n\nHere the \"Value\" column is intentionally typeset as math (numerals in math mode), not currency. If those were prices, they would be written \\$78.54 and \\$523.60 instead. Note also that `\\frac` inside a table cell is often better as `\\tfrac` to keep row height uniform.\n\n---\n\n## 6. Raw Dollar Signs\n\nThe shell variable `$HOME` is set. Price: \\$99.99.\n\nTwo different strategies appear in that line:\n\n1. `$HOME` → wrapped in a code span, since it is a literal shell token.\n2. `\\$99.99` → backslash-escaped, since it is prose-level currency.\n\n---\n\n## Summary of Rules Applied\n\n| Situation | Treatment |\n|---|---|\n| Intentional math, inline | `$…$` or `\\(…\\)` |\n| Intentional math, display | `$$…$$` or `\\[…\\]` on its own line |\n| Display math inside a list | blank line + indent to content column |\n| Code, any length | fenced block or inline code span — never escaped inside |\n| Currency in prose | `\\$` |\n| Shell/template variables | code span |\n\nEdge cases that remain genuinely ambiguous: a lone `$` at end of a sentence, a regex like `^\\d+$`, and LaTeX inside a table cell containing a pipe (`|`) — the last requires `\\vert` or `\\mid` instead of a raw pipe.",
+        "refusal": null,
+        "reasoning": "I'm working out how to present a response that tests delimiter variants and edge cases, keeping math rendered, code literal, and currency dollar signs escaped so they aren't read as math. I'll structure the answer to mirror each section of the prompt.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I'm working out how to present a response that tests delimiter variants and edge cases, keeping math rendered, code literal, and currency dollar signs escaped so they aren't read as math. I'll structure the answer to mirror each section of the prompt.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAIS9QYK4AIIExgCKkAShLEhF1Q5ccPetD84Oi8gu8ecXo4O4qu3kP5RBcW0Ti7H2AvJesJwvGC/Avd9eDdrrmDd2ZIKwXyDTaJGtl7PMg1jbGF1ZGUtb3B1cy01OAFCCHRoaW5raW5nWiQ0YzBmMDQ2Zi0yNWZkLTQ1ZmItYmZiMy1hMDhhOGUyNDljYTd6HnVwcm9mXzAxMUNlVkFvbmlDS0REQUZQOGdWd3QyVJoBDwoNY2xhdWRlLW9wdXMtNagBzb3D1wbCAToIBBAAGgwC2ooDTzcFiz8EJq0gATIEEnHPJToEODMjikIEODMjikoEODMjilAAWgTZBeFWYAJoAXAA2gFgChZwcmVmaXhfYmVmb3JlX2Jsb2NrX3YxEiCg1CfBCynO/FMXqZHe8m5Flq57Ff488EdtiPcirjLOqiIAMiDCwBPIapyS4i+Wbz2GF3aPi3pEyQKtzAl7+h4JivtOH0gDEgy+m5CQWiy5MKP845caDGlPnOOjbwIuFbLEHiIwbk+2ZhHYJa98Ank5clTCGOX37bkNVDf5m3Ow2zwtHP3NpB+xpxTYEygVNv2KjSuNKsEDN1A+yiVLr8SwjM/kfHTYSTpdsMkuzBIAMKCKZ2Z3G8JsRvox6J5jEO+N3rR4TkPh4opdlH+YuDKVlTJaoFS7VjyjV/tp+17QQ4jTUM8cOgy4Lj9wZsAzFSnuV11r7Kga6j5ADhHI3xdyRUIzAj2gvHDHohduExIdnXGxFFUNP1OCTXxodf6tlzzkRhUwy5FHHAR0NOsgu0zSjVhW7/4eRHl3/fQsoY7oJRtt6v6/zOKuRoKM2breBVH1JiNE3VXI9uiu7eQ6HbvFycrFO0KRFXyP6VgViXFAPC9zwMS1dAWZiM4gHT7hqipMFlRLWHNyFrQWkH8VvLJ3De8uVMClh5klpldPM3LaysVwBlFrdIzqdEKBA2s4xlSJn+UGI7ra8L4whq3t9bwOdOY+yZpC6ILry062C8VRQHM0nArV1izdMC9z7dTNZ5MUpI/o7nPao48XZHi+dX0pRqGW3oZuGjiafsj7zAc015WaZZoqn7L45cYKIV600y5iMnove1wkbcy19xL/VCakASb8CQGmXNYQZkESSdAbA4f3Tl4PvaR/Hkx2G8BkJyduRwScsWXtFRjVBL5w5tjT0uRqRaDt6KQYAQ==.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1vcHVzLTUtMjAyNjA3MjN8Y2xhdWRlLW9uLWF3cyJ9"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 483,
+    "completion_tokens": 1485,
+    "total_tokens": 1968,
+    "cost": 0.03954,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.03954,
+      "upstream_inference_prompt_cost": 0.002415,
+      "upstream_inference_completions_cost": 0.037125
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 130,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "status": "stopped",
+  "stopReason": "Grok 03 provider_unavailable 502; Grok 04-06 unattempted; no Grok retry; Cohere 6 completed",
+  "attemptedCalls": 21,
+  "successfulReplies": 20,
+  "unattemptedCalls": 3,
+  "knownActualCost": 0.0757709722,
+  "unknownCostCalls": 1,
+  "errors": [
+    {
+      "modelId": "x-ai/grok-4.3",
+      "promptName": "03-code-blocks",
+      "httpStatus": 200,
+      "error": {
+        "message": "The model is currently at capacity due to high demand. Please try again in a few minutes, or use a higher service tier for priority processing: https://docs.x.ai/developers/advanced-api-usage/priority-processing",
+        "code": 502,
+        "metadata": {
+          "error_type": "provider_unavailable"
+        }
+      },
+      "startedAt": "2026-11-08T19:12:31.308Z",
+      "finishedAt": "2026-11-08T19:12:31.918Z"
+    }
+  ],
+  "promptTokensKnown": 6313,
+  "completionTokensKnown": 18760,
+  "totalTokensKnown": 25073,
+  "reasoningTokensIncludedInCompletionKnown": 10632,
+  "firstCallCST": "11/8/2026, 1:07:15 PM CST",
+  "lastCallCST": "11/8/2026, 1:18:23 PM CST",
+  "finishReasonCounts": {
+    "stop": 20,
+    "unknown/error": 1
+  },
+  "truncated": [],
+  "visibleEmptySuccessful": [],
+  "perModel": [
+    {
+      "id": "xiaomi/mimo-v2.5",
+      "knownCost": 0.0068768,
+      "attempts": 6,
+      "successful": 6
+    },
+    {
+      "id": "moonshotai/kimi-k2.6",
+      "knownCost": 0.031664272199999996,
+      "attempts": 6,
+      "successful": 6
+    },
+    {
+      "id": "x-ai/grok-4.3",
+      "knownCost": 0.0036674000000000003,
+      "attempts": 3,
+      "successful": 2
+    },
+    {
+      "id": "cohere/command-a",
+      "knownCost": 0.0335625,
+      "attempts": 6,
+      "successful": 6
+    }
+  ],
+  "coverage": "Collection only; Grok 03 provider_unavailable preserved; no Grok retry; Cohere 6 merged",
+  "cohere": {
+    "attemptedCalls": 6,
+    "actualCost": 0.0335625,
+    "windowCST": "11/8/2026, 1:13:43 PM \u2013 1:18:23 PM CST",
+    "promptTokens": 1901,
+    "completionTokens": 2881,
+    "reasoningTokens": 0,
+    "finishReasonCounts": {
+      "stop": 6
+    }
+  }
+}

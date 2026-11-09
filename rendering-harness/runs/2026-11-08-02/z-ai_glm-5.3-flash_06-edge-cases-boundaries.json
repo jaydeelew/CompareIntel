@@ -1,0 +1,36 @@
+{
+  "modelId": "z-ai/glm-5.3-flash",
+  "modelName": "Z.ai: GLM 5.3 Flash",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "# Edge Case Test Response\n\n## Delimiter Variants\n1. Double dollar display:\n$$x^2 + y^2 = r^2$$\n\n2. Bracket display:\n\\[E = mc^2\\]\n\n3. Single dollar inline: $a + b = c$\n\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x\\, dx = \\frac{1}{2}$$\n     \n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n\n## Additional Edge Cases Worth Testing\n\n**Subscripts that look like LaTeX but aren't:**\n- Git references: `commit~1` and `HEAD^2`\n- Regular text: 2^10 in plain markdown\n- Footnote-like: something¹\n\n**Math inside blockquotes:**\n> Einstein said $E = mc^2$ and also:\n> $$\\Delta E = \\Delta m \\cdot c^2$$\n\n**Math inside bold/italic:**\n- **Bold with math: **$x^2$ inside bold**\n- *Italic with math: $y = mx + b$ inside italic*\n\n**Adjacent delimiters:**\n- Empty math: $$ $$ and $ $\n- No space: $x$$y$ (two adjacent inline maths)\n- Unclosed: $x^2 (this dollar never closes)\n\n**URLs and links with dollars:**\n- [A link](https://example.com/page?price=$5&qty=2)\n- Plain URL: https://example.com/path$param\n\n**Long display equation:**\n$$\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6} = 1 + \\frac{1}{4} + \\frac{1}{9} + \\frac{1}{16} + \\cdots$$\n\n**Environment test:**\n$$\\begin{aligned}\na &= b + c \\\\\nd &= e + f\n\\end{aligned}$$",
+  "usage": {
+    "prompt_tokens": 347,
+    "completion_tokens": 713,
+    "total_tokens": 1060,
+    "cost": 0.0002197,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0002197,
+      "upstream_inference_prompt_cost": 0.00004858,
+      "upstream_inference_completions_cost": 0.00017112
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 76,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0002197,
+  "actualCost": 0.0002197,
+  "timestamp": "2026-11-08T17:58:26.693Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

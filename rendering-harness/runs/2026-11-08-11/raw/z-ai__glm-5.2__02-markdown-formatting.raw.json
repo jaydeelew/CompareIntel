@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794166488-sQ1PRYckN1zEfuG5Z5ma",
+  "object": "chat.completion",
+  "created": 1794166488,
+  "model": "z-ai/glm-5.2",
+  "provider": "SiliconFlow",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+        "refusal": null,
+        "reasoning": "1.  **Analyze the Request:**\n    *   The user wants a response containing specific Markdown formatting elements.\n    *   The requested elements are:\n        *   Headers (H3, H4).\n        *   Text formatting (Bold, Italic, Bold Italic).\n        *   Nested unordered lists.\n        *   Nested ordered lists.\n        *   A table.\n        *   A blockquote.\n    *   The prompt itself already provides the exact markdown to output, essentially asking me to reproduce it or generate a response that includes these elements.\n\n2.  **Formulate the Response:**\n    *   I will output the requested markdown exactly as specified, maybe wrapping it nicely or just outputting it directly since it perfectly matches the prompt's instructions.\n\n3.  **Drafting the Output:**\n    ## Headers\n    ### This is H3\n    #### This is H4\n\n    ## Text formatting\n    **Bold text** and *italic text* and ***bold italic***\n\n    ## Lists\n    Nested unordered list:\n    - Level 1 item A\n      - Level 2 item A1\n      - Level 2 item A2\n        - Level 3 item A2a\n    - Level 1 item B\n\n    Nested ordered list:\n    1. First item\n       1. Nested first\n       2. Nested second\n    2. Second item\n    3. Third item\n\n    ## Tables\n    | Model | Context | Price |\n    |-------|---------|-------|\n    | GPT-4 | 128k | $0.03 |\n    | Claude | 200k | $0.02 |\n\n    ## Blockquotes\n    > This is a blockquote\n    > with multiple lines\n\n4.  **Review against constraints:**\n    *   Headers? Yes.\n    *   Text formatting? Yes.\n    *   Lists (unordered nested, ordered nested)? Yes.\n    *   Tables? Yes.\n    *   Blockquotes? Yes.\n    *   Direct output, no extra fluff needed.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "1.  **Analyze the Request:**\n    *   The user wants a response containing specific Markdown formatting elements.\n    *   The requested elements are:\n        *   Headers (H3, H4).\n        *   Text formatting (Bold, Italic, Bold Italic).\n        *   Nested unordered lists.\n        *   Nested ordered lists.\n        *   A table.\n        *   A blockquote.\n    *   The prompt itself already provides the exact markdown to output, essentially asking me to reproduce it or generate a response that includes these elements.\n\n2.  **Formulate the Response:**\n    *   I will output the requested markdown exactly as specified, maybe wrapping it nicely or just outputting it directly since it perfectly matches the prompt's instructions.\n\n3.  **Drafting the Output:**\n    ## Headers\n    ### This is H3\n    #### This is H4\n\n    ## Text formatting\n    **Bold text** and *italic text* and ***bold italic***\n\n    ## Lists\n    Nested unordered list:\n    - Level 1 item A\n      - Level 2 item A1\n      - Level 2 item A2\n        - Level 3 item A2a\n    - Level 1 item B\n\n    Nested ordered list:\n    1. First item\n       1. Nested first\n       2. Nested second\n    2. Second item\n    3. Third item\n\n    ## Tables\n    | Model | Context | Price |\n    |-------|---------|-------|\n    | GPT-4 | 128k | $0.03 |\n    | Claude | 200k | $0.02 |\n\n    ## Blockquotes\n    > This is a blockquote\n    > with multiple lines\n\n4.  **Review against constraints:**\n    *   Headers? Yes.\n    *   Text formatting? Yes.\n    *   Lists (unordered nested, ordered nested)? Yes.\n    *   Tables? Yes.\n    *   Blockquotes? Yes.\n    *   Direct output, no extra fluff needed.",
+            "format": "unknown",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 202,
+    "completion_tokens": 604,
+    "total_tokens": 806,
+    "cost": 0.0014702,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0014702,
+      "upstream_inference_prompt_cost": 0.0001414,
+      "upstream_inference_completions_cost": 0.0013288
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 430,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

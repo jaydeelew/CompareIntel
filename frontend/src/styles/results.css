@@ -1552,9 +1552,19 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   overflow-y: hidden;
 }
 
+/* KaTeX tags use position:absolute; right:0 on .katex-html. inline-block shrinks
+   that box to the equation width, so align (1)/(2) sit on the results instead of
+   at the display's right edge (Qwen3 Coder 01). */
 .latex-content .katex-display > .katex {
-  display: inline-block;
+  display: block;
+  width: 100%;
   text-align: initial;
+}
+
+.latex-content .katex-display > .katex > .katex-html {
+  display: block;
+  position: relative;
+  min-width: 100%;
 }
 
 /* Ensure inline math integrates well with text */

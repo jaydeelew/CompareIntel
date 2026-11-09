@@ -1,0 +1,1325 @@
+{
+  "sourceHead": "4db93a55fb91c9bacb082a245035671f457cd3fd",
+  "maxUsd": 6,
+  "maxTokens": "perModel",
+  "perModelMaxTokens": [
+    {
+      "id": "openai/gpt-5.6-sol",
+      "maxTokens": 8192
+    },
+    {
+      "id": "anthropic/claude-opus-4.6",
+      "maxTokens": 8192
+    },
+    {
+      "id": "anthropic/claude-opus-4.7",
+      "maxTokens": 8192
+    },
+    {
+      "id": "anthropic/claude-opus-4.8",
+      "maxTokens": 8192
+    }
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+    }
+  ],
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "openai/gpt-5.6-sol",
+    "anthropic/claude-opus-4.6",
+    "anthropic/claude-opus-4.7",
+    "anthropic/claude-opus-4.8"
+  ],
+  "plannedCalls": 24,
+  "attemptedCalls": 24,
+  "knownActualCost": 0.40495500000000006,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "openai/gpt-5.6-sol",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:37:13.960Z",
+      "reserveUsd": 0.20885,
+      "reserveRates": {
+        "usd": 0.20885,
+        "inputRate": 4e-06,
+        "outputRate": 2e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.013476,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:37:21.053Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 619,
+        "total_tokens": 893,
+        "cost": 0.013476,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.013476,
+          "upstream_inference_prompt_cost": 0.001096,
+          "upstream_inference_completions_cost": 0.01238
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 256,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4e-06,
+        "output": 2e-05
+      }
+    },
+    {
+      "index": 2,
+      "modelId": "openai/gpt-5.6-sol",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:37:21.054Z",
+      "reserveUsd": 0.20804000000000003,
+      "reserveRates": {
+        "usd": 0.20804000000000003,
+        "inputRate": 4e-06,
+        "outputRate": 2e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00432,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:37:23.092Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 195,
+        "completion_tokens": 177,
+        "total_tokens": 372,
+        "cost": 0.00432,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00432,
+          "upstream_inference_prompt_cost": 0.00078,
+          "upstream_inference_completions_cost": 0.00354
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4e-06,
+        "output": 2e-05
+      }
+    },
+    {
+      "index": 3,
+      "modelId": "openai/gpt-5.6-sol",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:37:23.092Z",
+      "reserveUsd": 0.20848000000000003,
+      "reserveRates": {
+        "usd": 0.20848000000000003,
+        "inputRate": 4e-06,
+        "outputRate": 2e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.005784,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:37:25.320Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 241,
+        "completion_tokens": 241,
+        "total_tokens": 482,
+        "cost": 0.005784,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.005784,
+          "upstream_inference_prompt_cost": 0.000964,
+          "upstream_inference_completions_cost": 0.00482
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 14,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4e-06,
+        "output": 2e-05
+      }
+    },
+    {
+      "index": 4,
+      "modelId": "openai/gpt-5.6-sol",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:37:25.320Z",
+      "reserveUsd": 0.20946500000000004,
+      "reserveRates": {
+        "usd": 0.20946500000000004,
+        "inputRate": 4e-06,
+        "outputRate": 2e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00902,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:37:28.983Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 310,
+        "completion_tokens": 389,
+        "total_tokens": 699,
+        "cost": 0.00902,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00902,
+          "upstream_inference_prompt_cost": 0.00124,
+          "upstream_inference_completions_cost": 0.00778
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 41,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4e-06,
+        "output": 2e-05
+      }
+    },
+    {
+      "index": 5,
+      "modelId": "openai/gpt-5.6-sol",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:37:28.984Z",
+      "reserveUsd": 0.210935,
+      "reserveRates": {
+        "usd": 0.210935,
+        "inputRate": 4e-06,
+        "outputRate": 2e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.014492,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:37:35.152Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 639,
+        "total_tokens": 1067,
+        "cost": 0.014492,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.014492,
+          "upstream_inference_prompt_cost": 0.001712,
+          "upstream_inference_completions_cost": 0.01278
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 170,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4e-06,
+        "output": 2e-05
+      }
+    },
+    {
+      "index": 6,
+      "modelId": "openai/gpt-5.6-sol",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:37:35.152Z",
+      "reserveUsd": 0.21008000000000002,
+      "reserveRates": {
+        "usd": 0.21008000000000002,
+        "inputRate": 4e-06,
+        "outputRate": 2e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.011548,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:37:42.264Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "completed",
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 509,
+        "total_tokens": 851,
+        "cost": 0.011548,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.011548,
+          "upstream_inference_prompt_cost": 0.001368,
+          "upstream_inference_completions_cost": 0.01018
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 199,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 4e-06,
+        "output": 2e-05
+      }
+    },
+    {
+      "index": 7,
+      "modelId": "anthropic/claude-opus-4.6",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:37:42.264Z",
+      "reserveUsd": 0.26106250000000003,
+      "reserveRates": {
+        "usd": 0.26106250000000003,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.02222,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:37:56.067Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 319,
+        "completion_tokens": 825,
+        "total_tokens": 1144,
+        "cost": 0.02222,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02222,
+          "upstream_inference_prompt_cost": 0.001595,
+          "upstream_inference_completions_cost": 0.020625
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 8,
+      "modelId": "anthropic/claude-opus-4.6",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:37:56.068Z",
+      "reserveUsd": 0.26005,
+      "reserveRates": {
+        "usd": 0.26005,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00841,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:38:00.578Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 222,
+        "completion_tokens": 292,
+        "total_tokens": 514,
+        "cost": 0.00841,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00841,
+          "upstream_inference_prompt_cost": 0.00111,
+          "upstream_inference_completions_cost": 0.0073
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 9,
+      "modelId": "anthropic/claude-opus-4.6",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:38:00.579Z",
+      "reserveUsd": 0.2606,
+      "reserveRates": {
+        "usd": 0.2606,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00821,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:38:03.536Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 277,
+        "completion_tokens": 273,
+        "total_tokens": 550,
+        "cost": 0.00821,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00821,
+          "upstream_inference_prompt_cost": 0.001385,
+          "upstream_inference_completions_cost": 0.006825
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 10,
+      "modelId": "anthropic/claude-opus-4.6",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:38:03.536Z",
+      "reserveUsd": 0.26183125,
+      "reserveRates": {
+        "usd": 0.26183125,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01041,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:38:07.292Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 357,
+        "completion_tokens": 345,
+        "total_tokens": 702,
+        "cost": 0.01041,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01041,
+          "upstream_inference_prompt_cost": 0.001785,
+          "upstream_inference_completions_cost": 0.008625
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 11,
+      "modelId": "anthropic/claude-opus-4.6",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:38:07.293Z",
+      "reserveUsd": 0.26366875,
+      "reserveRates": {
+        "usd": 0.26366875,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.02372,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:38:19.338Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 484,
+        "completion_tokens": 852,
+        "total_tokens": 1336,
+        "cost": 0.02372,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02372,
+          "upstream_inference_prompt_cost": 0.00242,
+          "upstream_inference_completions_cost": 0.0213
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 12,
+      "modelId": "anthropic/claude-opus-4.6",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:38:19.339Z",
+      "reserveUsd": 0.2626,
+      "reserveRates": {
+        "usd": 0.2626,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01618,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:38:29.373Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 376,
+        "completion_tokens": 572,
+        "total_tokens": 948,
+        "cost": 0.01618,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01618,
+          "upstream_inference_prompt_cost": 0.00188,
+          "upstream_inference_completions_cost": 0.0143
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 13,
+      "modelId": "anthropic/claude-opus-4.7",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:38:29.374Z",
+      "reserveUsd": 0.26106250000000003,
+      "reserveRates": {
+        "usd": 0.26106250000000003,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01819,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:38:36.586Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 413,
+        "completion_tokens": 645,
+        "total_tokens": 1058,
+        "cost": 0.01819,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01819,
+          "upstream_inference_prompt_cost": 0.002065,
+          "upstream_inference_completions_cost": 0.016125
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 14,
+      "modelId": "anthropic/claude-opus-4.7",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:38:36.587Z",
+      "reserveUsd": 0.26005,
+      "reserveRates": {
+        "usd": 0.26005,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.007535,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:38:39.387Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 282,
+        "completion_tokens": 245,
+        "total_tokens": 527,
+        "cost": 0.007535,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.007535,
+          "upstream_inference_prompt_cost": 0.00141,
+          "upstream_inference_completions_cost": 0.006125
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 15,
+      "modelId": "anthropic/claude-opus-4.7",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:38:39.388Z",
+      "reserveUsd": 0.2606,
+      "reserveRates": {
+        "usd": 0.2606,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.025565,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:38:51.300Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 343,
+        "completion_tokens": 954,
+        "total_tokens": 1297,
+        "cost": 0.025565,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.025565,
+          "upstream_inference_prompt_cost": 0.001715,
+          "upstream_inference_completions_cost": 0.02385
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 16,
+      "modelId": "anthropic/claude-opus-4.7",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:38:51.301Z",
+      "reserveUsd": 0.26183125,
+      "reserveRates": {
+        "usd": 0.26183125,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.03221,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:39:03.548Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 462,
+        "completion_tokens": 1196,
+        "total_tokens": 1658,
+        "cost": 0.03221,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03221,
+          "upstream_inference_prompt_cost": 0.00231,
+          "upstream_inference_completions_cost": 0.0299
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 17,
+      "modelId": "anthropic/claude-opus-4.7",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:39:03.548Z",
+      "reserveUsd": 0.26366875,
+      "reserveRates": {
+        "usd": 0.26366875,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.03388,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:39:18.013Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 636,
+        "completion_tokens": 1228,
+        "total_tokens": 1864,
+        "cost": 0.03388,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03388,
+          "upstream_inference_prompt_cost": 0.00318,
+          "upstream_inference_completions_cost": 0.0307
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 18,
+      "modelId": "anthropic/claude-opus-4.7",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:39:18.015Z",
+      "reserveUsd": 0.2626,
+      "reserveRates": {
+        "usd": 0.2626,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.023365,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:39:28.080Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 488,
+        "completion_tokens": 837,
+        "total_tokens": 1325,
+        "cost": 0.023365,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.023365,
+          "upstream_inference_prompt_cost": 0.00244,
+          "upstream_inference_completions_cost": 0.020925
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 19,
+      "modelId": "anthropic/claude-opus-4.8",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-08T20:39:28.081Z",
+      "reserveUsd": 0.26106250000000003,
+      "reserveRates": {
+        "usd": 0.26106250000000003,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 810,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01594,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:39:34.222Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 408,
+        "completion_tokens": 556,
+        "total_tokens": 964,
+        "cost": 0.01594,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01594,
+          "upstream_inference_prompt_cost": 0.00204,
+          "upstream_inference_completions_cost": 0.0139
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.4999999999999998e-05
+      }
+    },
+    {
+      "index": 20,
+      "modelId": "anthropic/claude-opus-4.8",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-08T20:39:34.223Z",
+      "reserveUsd": 0.26005,
+      "reserveRates": {
+        "usd": 0.26005,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 648,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.00776,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:39:37.374Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 277,
+        "completion_tokens": 255,
+        "total_tokens": 532,
+        "cost": 0.00776,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00776,
+          "upstream_inference_prompt_cost": 0.001385,
+          "upstream_inference_completions_cost": 0.006375
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.4999999999999998e-05
+      }
+    },
+    {
+      "index": 21,
+      "modelId": "anthropic/claude-opus-4.8",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-08T20:39:37.375Z",
+      "reserveUsd": 0.2606,
+      "reserveRates": {
+        "usd": 0.2606,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 736,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.01524,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:39:43.697Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 338,
+        "completion_tokens": 542,
+        "total_tokens": 880,
+        "cost": 0.01524,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01524,
+          "upstream_inference_prompt_cost": 0.00169,
+          "upstream_inference_completions_cost": 0.01355
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.4999999999999998e-05
+      }
+    },
+    {
+      "index": 22,
+      "modelId": "anthropic/claude-opus-4.8",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-08T20:39:43.698Z",
+      "reserveUsd": 0.26183125,
+      "reserveRates": {
+        "usd": 0.26183125,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 933,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.024985,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:39:53.170Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 457,
+        "completion_tokens": 908,
+        "total_tokens": 1365,
+        "cost": 0.024985,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.024985,
+          "upstream_inference_prompt_cost": 0.002285,
+          "upstream_inference_completions_cost": 0.0227
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 23,
+      "modelId": "anthropic/claude-opus-4.8",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-08T20:39:53.171Z",
+      "reserveUsd": 0.26366875,
+      "reserveRates": {
+        "usd": 0.26366875,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1227,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.03003,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:40:05.191Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 631,
+        "completion_tokens": 1075,
+        "total_tokens": 1706,
+        "cost": 0.03003,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.03003,
+          "upstream_inference_prompt_cost": 0.003155,
+          "upstream_inference_completions_cost": 0.026875
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    },
+    {
+      "index": 24,
+      "modelId": "anthropic/claude-opus-4.8",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-08T20:40:05.192Z",
+      "reserveUsd": 0.2626,
+      "reserveRates": {
+        "usd": 0.2626,
+        "inputRate": 5e-06,
+        "outputRate": 2.5e-05,
+        "inputByteAllowance": 1056,
+        "completionCap": 8192
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.022465,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-08T20:40:13.540Z",
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 483,
+        "completion_tokens": 802,
+        "total_tokens": 1285,
+        "cost": 0.022465,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.022465,
+          "upstream_inference_prompt_cost": 0.002415,
+          "upstream_inference_completions_cost": 0.02005
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-06,
+        "output": 2.5e-05
+      }
+    }
+  ],
+  "budgetCaveat": "Estimate guard, not provider hard billing cap; future unobserved routing/pricing may exceed reserve. Rates update after each valid response.",
+  "coverage": "Not assessed: collection only, no rendering or feature validation",
+  "startedAt": "2026-11-08T20:37:13.957Z",
+  "conservativeBatchReserve": 5.965287499999999,
+  "status": "completed",
+  "finishedAt": "2026-11-08T20:40:13.541Z",
+  "files": [
+    "catalog.json",
+    "manifest.json",
+    "prompts.json",
+    "raw/anthropic__claude-opus-4.6__01-math-basics.raw.json",
+    "raw/anthropic__claude-opus-4.6__02-markdown-formatting.raw.json",
+    "raw/anthropic__claude-opus-4.6__03-code-blocks.raw.json",
+    "raw/anthropic__claude-opus-4.6__04-mixed-markdown-latex.raw.json",
+    "raw/anthropic__claude-opus-4.6__05-complex-scenarios.raw.json",
+    "raw/anthropic__claude-opus-4.6__06-edge-cases-boundaries.raw.json",
+    "raw/anthropic__claude-opus-4.7__01-math-basics.raw.json",
+    "raw/anthropic__claude-opus-4.7__02-markdown-formatting.raw.json",
+    "raw/anthropic__claude-opus-4.7__03-code-blocks.raw.json",
+    "raw/anthropic__claude-opus-4.7__04-mixed-markdown-latex.raw.json",
+    "raw/anthropic__claude-opus-4.7__05-complex-scenarios.raw.json",
+    "raw/anthropic__claude-opus-4.7__06-edge-cases-boundaries.raw.json",
+    "raw/anthropic__claude-opus-4.8__01-math-basics.raw.json",
+    "raw/anthropic__claude-opus-4.8__02-markdown-formatting.raw.json",
+    "raw/anthropic__claude-opus-4.8__03-code-blocks.raw.json",
+    "raw/anthropic__claude-opus-4.8__04-mixed-markdown-latex.raw.json",
+    "raw/anthropic__claude-opus-4.8__05-complex-scenarios.raw.json",
+    "raw/anthropic__claude-opus-4.8__06-edge-cases-boundaries.raw.json",
+    "raw/openai__gpt-5.6-sol__01-math-basics.raw.json",
+    "raw/openai__gpt-5.6-sol__02-markdown-formatting.raw.json",
+    "raw/openai__gpt-5.6-sol__03-code-blocks.raw.json",
+    "raw/openai__gpt-5.6-sol__04-mixed-markdown-latex.raw.json",
+    "raw/openai__gpt-5.6-sol__05-complex-scenarios.raw.json",
+    "raw/openai__gpt-5.6-sol__06-edge-cases-boundaries.raw.json",
+    "replies/anthropic_claude-opus-4.6_01-math-basics.json",
+    "replies/anthropic_claude-opus-4.6_02-markdown-formatting.json",
+    "replies/anthropic_claude-opus-4.6_03-code-blocks.json",
+    "replies/anthropic_claude-opus-4.6_04-mixed-markdown-latex.json",
+    "replies/anthropic_claude-opus-4.6_05-complex-scenarios.json",
+    "replies/anthropic_claude-opus-4.6_06-edge-cases-boundaries.json",
+    "replies/anthropic_claude-opus-4.7_01-math-basics.json",
+    "replies/anthropic_claude-opus-4.7_02-markdown-formatting.json",
+    "replies/anthropic_claude-opus-4.7_03-code-blocks.json",
+    "replies/anthropic_claude-opus-4.7_04-mixed-markdown-latex.json",
+    "replies/anthropic_claude-opus-4.7_05-complex-scenarios.json",
+    "replies/anthropic_claude-opus-4.7_06-edge-cases-boundaries.json",
+    "replies/anthropic_claude-opus-4.8_01-math-basics.json",
+    "replies/anthropic_claude-opus-4.8_02-markdown-formatting.json",
+    "replies/anthropic_claude-opus-4.8_03-code-blocks.json",
+    "replies/anthropic_claude-opus-4.8_04-mixed-markdown-latex.json",
+    "replies/anthropic_claude-opus-4.8_05-complex-scenarios.json",
+    "replies/anthropic_claude-opus-4.8_06-edge-cases-boundaries.json",
+    "replies/openai_gpt-5.6-sol_01-math-basics.json",
+    "replies/openai_gpt-5.6-sol_02-markdown-formatting.json",
+    "replies/openai_gpt-5.6-sol_03-code-blocks.json",
+    "replies/openai_gpt-5.6-sol_04-mixed-markdown-latex.json",
+    "replies/openai_gpt-5.6-sol_05-complex-scenarios.json",
+    "replies/openai_gpt-5.6-sol_06-edge-cases-boundaries.json",
+    "summary.json"
+  ],
+  "sourcePreflight": "/workspace/prism/next-batch-18-preflight.json",
+  "collectorTemplate": "/workspace/prism/collect-approved-batch-template.cjs",
+  "costGuardUtility": "/workspace/prism/collection-cost-guard.cjs"
+}

@@ -31,6 +31,7 @@ jobs:
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
+      rendering-harness: ${{ steps.filter.outputs.rendering-harness }}
       seo: ${{ steps.filter.outputs.seo }}
       extension: ${{ steps.filter.outputs.extension }}
     steps:
@@ -56,6 +57,13 @@ jobs:
               - 'frontend/src/data/**'
               - '.github/workflows/ci.yml'
               - '.github/actions/**'
+            rendering-harness:
+              - 'rendering-harness/**'
+              - 'frontend/src/components/LatexRenderer.tsx'
+              - 'frontend/src/config/modelRendererRegistry.ts'
+              - 'frontend/src/config/model_renderer_configs.json'
+              - 'frontend/src/config/loadModelConfigs.ts'
+              - '.github/workflows/ci.yml'
             seo:
               - 'frontend/public/sitemap.xml'
               - 'frontend/index.html'
@@ -981,6 +989,68 @@ jobs:
           deny-licenses: GPL-3.0, AGPL-3.0
           allow-dependencies-licenses: pkg:npm/jszip
 
+  rendering-harness-test:
+    name: Rendering Harness Tests
+    needs: detect-changes
+    if: needs.detect-changes.outputs.rendering-harness == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            rendering-harness/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install harness dependencies
+        working-directory: rendering-harness
+        run: npm ci
+
+      - name: Install frontend dependencies (for LatexRenderer)
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: rendering-harness
+        run: npx playwright install chromium --with-deps
+
+      - name: TypeScript check (harness core)
+        working-directory: rendering-harness
+        run: npm run typecheck
+
+      - name: Isolated Playwright suites
+        working-directory: rendering-harness
+        run: |
+          npx playwright test budget-guard.test.ts
+          npx playwright test durable-spend.test.ts
+          npx playwright test paid-call.test.ts
+          npx playwright test source-features.test.ts
+          npx playwright test expected-features.test.ts
+          npx playwright test overall-status.test.ts
+          npx playwright test production-validation.test.ts
+          npx playwright test production-styling.test.ts
+          npx playwright test dom-assertions.test.ts
+          npx playwright test test-with-fixtures.test.ts
+
+      - name: Run full offline fixture suite
+        working-directory: rendering-harness
+        run: npm test
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-test-results
+          path: rendering-harness/test-results/
+          retention-days: 7
+
   extension-test:
     name: Extension Tests
     needs: detect-changes
@@ -1081,6 +1151,7 @@ jobs:
       e2e-test-accessibility,
       e2e-test-prerendered,
       security-scan,
+      rendering-harness-test,
       extension-test
     ]
     if: always()
@@ -1108,6 +1179,7 @@ jobs:
             echo "| E2E Tests (Accessibility) | ${{ needs.e2e-test-accessibility.result }} |"
             echo "| E2E Tests (Prerendered) | ${{ needs.e2e-test-prerendered.result }} |"
             echo "| Security Scan | ${{ needs.security-scan.result }} |"
+            echo "| Rendering Harness Tests | ${{ needs.rendering-harness-test.result }} |"
             echo "| Extension Tests | ${{ needs.extension-test.result }} |"
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
@@ -1140,6 +1212,7 @@ jobs:
           check_job "E2E Tests (Accessibility)" "${{ needs.e2e-test-accessibility.result }}"
           check_job "E2E Tests (Prerendered)" "${{ needs.e2e-test-prerendered.result }}"
           check_job "Security Scan" "${{ needs.security-scan.result }}"
+          check_job "Rendering Harness Tests" "${{ needs.rendering-harness-test.result }}"
           check_job "Extension Tests" "${{ needs.extension-test.result }}"
 
           if [[ ${#FAILED_JOBS[@]} -gt 0 ]]; then

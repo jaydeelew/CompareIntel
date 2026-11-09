@@ -1,0 +1,60 @@
+{
+  "id": "gen-1794168928-8HucGu0e6jpRlreWL4qR",
+  "object": "chat.completion",
+  "created": 1794168928,
+  "model": "google/gemini-3.6-flash",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is the rendered output testing all requested math delimiters, nested structures, code blocks, currency symbols, tables, and raw dollar sign edge cases:\n\n---\n\n## Delimiter Variants\n\n1. **Double dollar display:**\n   $$x^2 + y^2 = r^2$$\n\n2. **Bracket display:**\n   \\[E = mc^2\\]\n\n3. **Single dollar inline:**\n   $a + b = c$\n\n4. **Paren inline:**\n   \\(x = 5\\)\n\n---\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     And it evaluates to $0.5$.\n   - Third item\n\n---\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n---\n\n## Currency and Escaped Dollars\n\n- **Plain:** The price is $100\n- **Escaped:** The budget is \\$500\n- **Multiple:** Costs $25, $30, and $45\n- **In sentence:** I spent $50 at the store\n\n---\n\n## Tables with Math\n\n| Variable | Formula | Value |\n| :--- | :--- | :--- |\n| **Area** | $A = \\pi r^2$ | $78.54$ |\n| **Volume** | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n---\n\n## Raw Dollar Signs\n\n- The shell variable `$HOME` is set.\n- Price: $99.99.",
+        "refusal": null,
+        "reasoning": "**Considering Delimiters and Syntax**\n\nI'm currently exploring how to best handle various LaTeX math delimiter styles, both inline and display, alongside alternative syntaxes. My focus is on ensuring robust parsing and rendering, particularly with nested structures.\n\n**Processing Complex Math Cases**\n\nI'm now analyzing how to accurately process and render intricate scenarios. This includes math within lists, code blocks with dollar signs, currency symbols, tables containing equations, and raw dollar signs like shell variables. My goal is to ensure a flawless output that correctly interprets all these edge cases.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Considering Delimiters and Syntax**\n\nI'm currently exploring how to best handle various LaTeX math delimiter styles, both inline and display, alongside alternative syntaxes. My focus is on ensuring robust parsing and rendering, particularly with nested structures.\n\n**Processing Complex Math Cases**\n\nI'm now analyzing how to accurately process and render intricate scenarios. This includes math within lists, code blocks with dollar signs, currency symbols, tables containing equations, and raw dollar signs like shell variables. My goal is to ensure a flawless output that correctly interprets all these edge cases.\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "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",
+            "format": "google-gemini-v1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 357,
+    "completion_tokens": 1036,
+    "total_tokens": 1393,
+    "cost": 0.00415275,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00415275,
+      "upstream_inference_prompt_cost": 0.00026775,
+      "upstream_inference_completions_cost": 0.003885
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 627,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

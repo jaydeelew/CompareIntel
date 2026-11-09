@@ -1,0 +1,60 @@
+{
+  "id": "gen-1794166578-gyDuS26fCr4PEG3ahvfJ",
+  "object": "chat.completion",
+  "created": 1794166578,
+  "model": "google/gemini-3.1-pro-preview",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": "provisioned",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is another example that mixes Markdown formatting with LaTeX mathematical expressions, following the structure of your test prompt:\n\n## Problem Statement\n**Exercise 2**: Given the function $g(x) = e^{2x} + \\sin(x)$, find:\n\n1. The *derivative* $g'(x)$\n2. The **integral** $\\int g(x) dx$\n\n### Solution\nThe derivative is calculated using the chain rule:\n$$g'(x) = 2e^{2x} + \\cos(x)$$\n\nThe integral is found using standard integration rules:\n$$\\int g(x) dx = \\frac{1}{2}e^{2x} - \\cos(x) + C$$\n\n## Linear Algebra with Lists\nProperties of the identity matrix $I_3 = \\begin{pmatrix} 1 & 0 & 0 \\\\ 0 & 1 & 0 \\\\ 0 & 0 & 1 \\end{pmatrix}$:\n- Determinant: $\\det(I_3) = 1$\n- Trace: $\\text{tr}(I_3) = 3$\n- Eigenvalues: \n  $$\\lambda_1 = 1, \\quad \\lambda_2 = 1, \\quad \\lambda_3 = 1$$\n\n## Real World Context\n> **Note**: In finance, the compound interest formula $A = P\\left(1 + \\frac{r}{n}\\right)^{nt}$ calculates the future value of an investment.\n\nMoney context: If you invest a principal of $1,000 at a 5% annual interest rate compounded yearly ($n=1$) for 2 years, your total return is $1,000 × (1.05)^2 = $1,102.50. *(Notice how the $ symbols for currency do not interfere with the LaTeX formatting!)*",
+        "refusal": null,
+        "reasoning": "**Analyzing Mixed Markdown**\n\nI'm currently deep into dissecting the \"Test Prompt: Mixed Markdown and LaTeX.\" My focus is on meticulously parsing both the markdown structures and the embedded LaTeX, ensuring accurate representation of each element for seamless integration.\n\n**Simulating Mixed Formatting**\n\nI'm focused on generating a new, distinct response that mirrors the provided structure. My aim is to demonstrate proficiency in mixing markdown elements with mathematical expressions, much like the user's test prompt, possibly by tackling a new problem using similar formatting conventions.\n\n**Designing New Exercises**\n\nI'm currently constructing \"Exercise 2,\" a novel example that rigorously adheres to the mixed markdown and LaTeX formatting. My aim is to demonstrate a complete grasp of the pattern by creating a self-contained, distinct problem set.\n\n**Testing Dollar Signs**\n\nI'm actively processing the nuances of dollar sign usage, particularly their dual role in markdown for currency and LaTeX for inline math. My current focus is on ensuring accurate rendering of both scenarios within the generated content.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Analyzing Mixed Markdown**\n\nI'm currently deep into dissecting the \"Test Prompt: Mixed Markdown and LaTeX.\" My focus is on meticulously parsing both the markdown structures and the embedded LaTeX, ensuring accurate representation of each element for seamless integration.\n\n**Simulating Mixed Formatting**\n\nI'm focused on generating a new, distinct response that mirrors the provided structure. My aim is to demonstrate proficiency in mixing markdown elements with mathematical expressions, much like the user's test prompt, possibly by tackling a new problem using similar formatting conventions.\n\n**Designing New Exercises**\n\nI'm currently constructing \"Exercise 2,\" a novel example that rigorously adheres to the mixed markdown and LaTeX formatting. My aim is to demonstrate a complete grasp of the pattern by creating a self-contained, distinct problem set.\n\n**Testing Dollar Signs**\n\nI'm actively processing the nuances of dollar sign usage, particularly their dual role in markdown for currency and LaTeX for inline math. My current focus is on ensuring accurate rendering of both scenarios within the generated content.\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "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",
+            "format": "google-gemini-v1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 317,
+    "completion_tokens": 1566,
+    "total_tokens": 1883,
+    "cost": 0.019426,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.019426,
+      "upstream_inference_prompt_cost": 0.000634,
+      "upstream_inference_completions_cost": 0.018792
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1164,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

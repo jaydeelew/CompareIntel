@@ -1,0 +1,60 @@
+{
+  "id": "gen-1794168882-AcgPR1syVgn95rRyMX6w",
+  "object": "chat.completion",
+  "created": 1794168882,
+  "model": "google/gemini-3.6-flash",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is a demonstration covering all requested formatting elements:\n\n---\n\n### 1. Inline Math\nThe quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ is used to find the roots of any quadratic equation in the form $ax^2 + bx + c = 0$, provided that $a \\neq 0$.\n\n---\n\n### 2. Display Math with Aligned Equations\nWe can represent a system of linear equations using the `align` environment:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n---\n\n### 3. Matrices and Cases\nHere is the standard $2 \\times 2$ identity matrix $I$ alongside a piecewise function $f(x)$:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n---\n\n### 4. Multiple Equations\nHere are three fundamental equations in physics and mathematics displayed on separate lines:\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\n---\n\n### 5. Links\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n---\n\n### 6. Money Context\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).",
+        "refusal": null,
+        "reasoning": "**Analyzing Required Elements**\n\nI'm currently parsing the user's prompt, dissecting each of the six distinct sections and their specific requirements. My focus is on identifying the core intent and constraints for each part to ensure a comprehensive and accurate response.\n\n**Confirming Formatting Success**\n\nI've successfully generated content that correctly implements inline and display LaTeX, including aligned equations, matrices, and piecewise functions. All six specified formatting elements, from currency symbols to markdown links, have been addressed.\n\n**Incorporating Formatting Details**\n\nI am now embedding the specific numerical examples and dollar amounts into the drafted sections, carefully ensuring that the dollar signs do not interfere with LaTeX interpretation. This involves precise placement and validation to maintain structural integrity.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Analyzing Required Elements**\n\nI'm currently parsing the user's prompt, dissecting each of the six distinct sections and their specific requirements. My focus is on identifying the core intent and constraints for each part to ensure a comprehensive and accurate response.\n\n**Confirming Formatting Success**\n\nI've successfully generated content that correctly implements inline and display LaTeX, including aligned equations, matrices, and piecewise functions. All six specified formatting elements, from currency symbols to markdown links, have been addressed.\n\n**Incorporating Formatting Details**\n\nI am now embedding the specific numerical examples and dollar amounts into the drafted sections, carefully ensuring that the dollar signs do not interfere with LaTeX interpretation. This involves precise placement and validation to maintain structural integrity.\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "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",
+            "format": "google-gemini-v1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 279,
+    "completion_tokens": 1291,
+    "total_tokens": 1570,
+    "cost": 0.0050505,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0050505,
+      "upstream_inference_prompt_cost": 0.00020925,
+      "upstream_inference_completions_cost": 0.00484125
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 914,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

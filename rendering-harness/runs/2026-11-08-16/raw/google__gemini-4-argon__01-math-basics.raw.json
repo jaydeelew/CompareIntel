@@ -1,0 +1,54 @@
+{
+  "id": "gen-1794169411-LQr3JPmTLkUVRDEy2eQp",
+  "object": "chat.completion",
+  "created": 1794169411,
+  "model": "google/gemini-4-argon",
+  "provider": "Google AI Studio",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is the response demonstrating the requested mathematical notations and formatting contexts:\n\n### 1. Inline Math: The Quadratic Formula\nTo find the roots of a standard quadratic equation of the form $ax^2 + bx + c = 0$ (where $a \\neq 0$), you can use the quadratic formula: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. Within this formula, the expression under the square root, $\\Delta = b^2 - 4ac$, is known as the discriminant. If $\\Delta > 0$, there are two distinct real roots; if $\\Delta = 0$, there is exactly one real root $x = -\\frac{b}{2a}$; and if $\\Delta < 0$, the roots are complex conjugates.\n\n---\n\n### 2. Display Math with Aligned Equations\nBelow is a system of linear equations aligned at the equals sign, followed by the steps to solve for $x$:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1 \\\\\n\\hline\n3x &= 6 \\\\\nx &= 2\n\\end{align}$$\n\n---\n\n### 3. Matrices and Cases\nHere is the $2 \\times 2$ identity matrix $I$ alongside a piecewise function $f(x)$ defined using the `cases` environment:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n---\n\n### 4. Multiple Equations\nFundamental equations from physics and geometry rendered in separate display blocks:\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\n---\n\n### 5. Links\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula, including its historical derivation and alternative forms.\n\n---\n\n### 6. Money Context (Non-Math Rendering)\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).",
+        "refusal": null,
+        "reasoning": null,
+        "reasoning_details": [
+          {
+            "type": "reasoning.encrypted",
+            "data": "EmIKYAFpFH0TdNK67F+S+T+kzwvtPDJZCxxfFWlVCXpJ+F+CKkdrjvAo8/afqGMv3s7GZJO04i8HBwWxflzx4qyqPE9mz0IZQ/cCVLklQXP17V727Ae9Q7TuS9wv0t356VoDhw==",
+            "format": "google-gemini-v1",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 308,
+    "completion_tokens": 509,
+    "total_tokens": 817,
+    "cost": 0.005706,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.005706,
+      "upstream_inference_prompt_cost": 0.000616,
+      "upstream_inference_completions_cost": 0.00509
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

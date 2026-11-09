@@ -1,0 +1,11 @@
+{
+  "type": "local_transport_timeout",
+  "modelId": "tencent/hy4-preview",
+  "promptName": "06-edge-cases-boundaries",
+  "message": "The operation was aborted due to timeout",
+  "startedAt": "2026-11-08T19:40:44.995Z",
+  "finishedAt": "2026-11-08T19:43:45.003Z",
+  "apiResponseReceived": false,
+  "generationId": null,
+  "cost": null
+}

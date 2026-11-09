@@ -1,0 +1,46 @@
+{
+  "id": "gen-1794171219-JeNb0cYFIEbHsbtQiLBi",
+  "object": "chat.completion",
+  "created": 1794171219,
+  "model": "anthropic/claude-sonnet-4.6",
+  "provider": "Claude Platform on AWS",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Markdown Formatting Demo\n\n## Headers\n### This is H3\n#### This is H4\n\n---\n\n## Text Formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\n---\n\n## Lists\n\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n---\n\n## Tables\n\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n---\n\n## Blockquotes\n\n> This is a blockquote\n> with multiple lines\n\n---\n\n> **Note:** All markdown elements above are rendering correctly, including **nested lists**, *formatted text*, tables with aligned columns, and properly styled blockquotes.",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 222,
+    "completion_tokens": 251,
+    "total_tokens": 473,
+    "cost": 0.004431,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.004431,
+      "upstream_inference_prompt_cost": 0.000666,
+      "upstream_inference_completions_cost": 0.003765
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

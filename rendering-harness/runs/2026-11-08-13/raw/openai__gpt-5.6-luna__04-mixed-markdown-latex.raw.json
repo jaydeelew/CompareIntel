@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794167862-AhdJqMDlX5ZhrKs3xEKC",
+  "object": "chat.completion",
+  "created": 1794167862,
+  "model": "openai/gpt-5.6-luna",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Exercise 1: Calculus\n\nGiven the function\n\n\\[\nf(x) = x^2 + 2x + 1,\n\\]\n\nfind:\n\n1. The *derivative* \\(f'(x)\\)\n2. The **integral** \\(\\int f(x)\\,dx\\)\n\n### Solution\n\nThe derivative is\n\n\\[\nf'(x) = 2x + 2.\n\\]\n\nThe integral is\n\n\\[\n\\int f(x)\\,dx\n= \\int (x^2 + 2x + 1)\\,dx\n= \\frac{x^3}{3} + x^2 + x + C.\n\\]\n\n---\n\n## Linear Algebra with Lists\n\nFor the matrix\n\n\\[\nA =\n\\begin{pmatrix}\na & b \\\\\nc & d\n\\end{pmatrix},\n\\]\n\nits properties include:\n\n- **Determinant:**\n  \\[\n  \\det(A) = ad - bc\n  \\]\n\n- **Trace:**\n  \\[\n  \\operatorname{tr}(A) = a + d\n  \\]\n\n- **Inverse**, provided \\(ad-bc \\ne 0\\):\n  \\[\n  A^{-1}\n  =\n  \\frac{1}{ad-bc}\n  \\begin{pmatrix}\n  d & -b \\\\\n  -c & a\n  \\end{pmatrix}\n  \\]\n\n---\n\n## Real-World Context\n\n> **Note:** In economics, the cost function  \n> \\[\n> C(q) = 100 + 5q\n> \\]\n> means that the fixed cost is \\(100\\), while the variable cost is \\(5\\) per unit.\n\nIf you buy \\(10\\) units, the total cost is\n\n\\[\nC(10) = 100 + 5(10) = 150.\n\\]\n\nThus, the total cost is **\\$150**, consisting of **\\$100 fixed cost** and **\\$50 variable cost**.",
+        "refusal": null,
+        "reasoning": "**Clarifying response needs**\n\nI need to answer the prompt which asks for a response that mixes markdown formatting with mathematical expressions. It sounds like I need to reproduce or solve particular problems, and I must provide a polished answer. I should also ensure that any use of the dollar sign is clear, maybe by escaping it. I'll consider including derivatives, integrals, and matrices within the appropriate context to address the prompt effectively.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Clarifying response needs**\n\nI need to answer the prompt which asks for a response that mixes markdown formatting with mathematical expressions. It sounds like I need to reproduce or solve particular problems, and I must provide a polished answer. I should also ensure that any use of the dollar sign is clear, maybe by escaping it. I'll consider including derivatives, integrals, and matrices within the appropriate context to address the prompt effectively.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8NQ4_hJ9xTbLPtYvj0liS6tQ9DAnvTYwCzfBnuzio74yRcf-LYRYPMHcyiRmmVRK4vyB2kMQ5EJtdQpw8pKCv_PdQnc5Vms_ccdC9mwCR6OxEKmJ2hDBD1xcvhTuMz7cQ3CPEy88jxdbjWrBoS1KH7V3HATnhSXssRIc8cMwDAbcu-aAfZ4dOjLm-RsdiW4AJHXz1LqCs0Q2KYDKC67pE9NGeaeYoOI18nvIrR4pucHkJxWw-hntqoMyJWZEtKYHLV09Eb-QCGbw1IFRbwSwZv_8jN7vMhbQX3yrKUM0BPFnMLXxOIYVdp8wV2Wcu0ZrV8JLRZJLtHCzYjHANzEAzZncWaefw1Wc1jVKdrHQ3pble3uRaNsu-6T2HKIE3IH-sP3Fphaoq1UTbEMtjrLVc4IXn5kAr6O9NuQK7cw24WlLpvdblJtzFHzNzVqV6mho5Q-l6DHVznRst3pSuC4pPfuXdd4k5vCXrXY4cmnHdSKwVzENjPV97g3lk4VmBVUSryv54LKRysdQaKVUKLuuOU4JhrqhqQaLHza3KXhWHSM8oTNW4hrQS-3Sc2vl0rfJ1pM3lr9ySyMtq2vwjNnWQHXRBY5V3Vk1R7q2rG6zEgO_VdSl5LP1uWLl7hlWIshyNfSoIcGVoS66Jg2RqWRykOTPRp1vpqDibndi2ni06Dbkag74VbuKvXW3vB9nO87kFdu3v61D_9lY-Hk62nIwj0OKddYxKMF51ktqMz06T2EtGmfEPH0sH1kGiABdTgciIO4vJ6M9GkLSYAbPJPUB5t1PjJ8gUdtPQxp62FZYIk1MAwWeacUwB4qLX-771XTwr7HIZ3BJeICdXjP9EHMzMpxQcv8zt5xRF5QizyjehmekKdGl_vdPpLb2PQoTYoTZVo5_lujADOkKGwbANtBP_PDmQtCzSwH34TcpQHjSkZlj1FVHSj6jJhFvAkm_iwv-IYxUh2f1ueHeZEzPrx4cy8FVvlYhmhj6sSzUBPfgVvgUO5bPcKrKvU2EFfqhc5LR81NG0sVjWiyidJdR2FV-FcKzXfNztXe9_hFCcZnSZplLYNuquBjVi1pbGhe-Zw2iwTwHAIRze2Mh1HtUEEyIcwMuOBUGoP_e44MGW9scTX-lhgZgl7jx1_gbDx5fQZECpBLZAvbkxqEua9BQ3df7xbOYuPx9BWuPuP2G3ElNKIYgkqGoa-U6QwFqXdIsOxukwRbzaixigdHwcv0M6wq31kSmL3_zz2D89DdYB5zYW1GMCuP2w37hpLA4WSAOzTs20maxNM3fLng2sehM0hNwjxCX2Cmm23Qm68VJnuDuTUuY07tx8FSwDzNLynCNhgw3WjFMq-lvMrzpnTSmNXekCiJm_0ItAcAKbDtRiD6oErZ0bbr5NQpM1TLrPkbNPlsE3jTJwMJUfS2UxSf1O8gvM6rY-FtnBZ4zw9b5EVFKfaMo4pFTmkvCEYadh9pOZB_xhEfs63KYf_ri466XdM9cqrnNe3e384LFduq7JiPr3t2yfuqwCwxWLAN2CA5UbGa2-KpX8z0hGT6QrTg64E1EmcFJrHbqy-phhSK5hnW0yxgllKya-Uu2ja10YUD2KujtzcA9JDmnjAQScCoB3__wZK6RFQV0mcepuUbWM3QycJCMeQxk-J9-s9sFCQmyg22p0d3fmiC2GPFsoTO3PnZQAg0BhOBkfyHmkASn7i9vW4rrEmlwPqYaaKzWZKWdsjWvFynpeT5Rg3QbJIXuAQHwjo4ES3z6EQzSv-uIcFNcxgBe3hHCYkpt0QXWqiRjIKNb9VrWVVPoO1JtofYllawl0RpJ7PCmNJY6fgms0cRNHuc8Wk0puiC0RCBy95JglNT5ff410RIUvbzw-kM0To2nUo6aXLIzSOyhxJ_fX5C2bUIUYXA4nB3KNXMGzilk0gPtZUA3Qu2hGWS6EvYCoKEJ351Q5KzT56YoIRC6PD7tuWrITaRtQAo6IcjWlFMrAWQvkW4z73l5Kso2U6vT_e96KZBlRbciMl8GzaeOQoOQv5mbi483CmkLQx0430qDfS9KcX4V3bfoQa1JlhlLdQhsC5qD3GCU-Y9JUbfvbE26uMYo6BS-RvVMZW2WR63zdVB44j2bLiSLn6MCl5avhHiL-yHLONMWgR6K5VJZiPPYEWh5hjsDaRp8Cl2P2c9HVU-d6g0kRf4BU9mp3imFBKeqUj37ikgOu_T7YVWrbmUlMQPysvT8dmONF0OHyF3PTDYObsPf8wbevDWvCT_rHQWeubmpYXPYwkrhHSGG6G_hzRG4bwatGJvMp4I5Ej1DpXECk1t7tNqJNXlBEqaOjsA7HSGJ846DnkKkWCCmBh5thjfiMUh1QdnTboIXYSYc9MDzk0sJpWKrmlFwlCLocSyaD3gzL11ot7n6TjarRXYCQuu2DRFpo2UO1Am3KPd4ic0T4WwwZgdE4VQsCHuHgXbEyieYelZkCWuOVSDvVwC3DINSePlSVWoLkLtKelx5fMAeDu6P9ZIX6VEEmuqTKZ02QKKu3m1OTAL_Y8EKONI8O7HLbwA=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
+            "format": "openai-responses-v1",
+            "id": "rs_05bdb1a36fc6fcfc016af0d436d37487d1ad8497ff37214fbe",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 310,
+    "completion_tokens": 473,
+    "total_tokens": 783,
+    "cost": 0.0006296,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0006296,
+      "upstream_inference_prompt_cost": 0.000062,
+      "upstream_inference_completions_cost": 0.0005676
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 54,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

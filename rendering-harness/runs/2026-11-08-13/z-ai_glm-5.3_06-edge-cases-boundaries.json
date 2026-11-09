@@ -1,0 +1,36 @@
+{
+  "modelId": "z-ai/glm-5.3",
+  "modelName": "Z.ai: GLM 5.3",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "# Response: Edge Cases and Boundaries Test\n\nBelow is a generated document exercising each delimiter variant and boundary condition:\n\n## 1. Delimiter Variants\n\n**Double dollar display:**\n\n$$x^2 + y^2 = r^2$$\n\n**Bracket display:**\n\n\\[E = mc^2\\]\n\n**Single dollar inline:** The identity $a + b = c$ holds for all real numbers.\n\n**Paren inline:** When \\(x = 5\\), the function evaluates to 25.\n\n**Mixed on one line:** Inline $a + b = c$ and inline \\(x = 5\\) together, plus a displayed formula:\n\n$$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$\n\n## 2. Nested Structures\n\n- First item\n- The equation is:\n  $$\\int_0^1 x\\, dx = \\frac{1}{2}$$\n  And it evaluates to 0.5\n- Third item continues after the display math\n\n**Math inside blockquote:**\n> The quadratic formula:\n> $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n> applies when the discriminant is non-negative.\n\n**Math with surrounding emphasis:** The famous *Gaussian integral* is:\n$$\\int_{-\\infty}^{\\infty} e^{-x^2}\\, dx = \\sqrt{\\pi}$$\n\n## 3. Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n```javascript\n// Dollar signs in code stay literal\nconst cost = `$${amount}`;\nconst regex = /\\$\\d+/;\nconsole.log(\"$100 or $200\");\n```\n\n```\nEven in plain code fences:\n$5 + $10 = $15\n```\n\n## 4. Currency and Escaped Dollars\n\n- **Plain:** The price is $100 — wait, that could parse as math! Use context: \"The price is 100 dollars.\"\n- **Escaped:** The budget is \\$500 (the backslash should render a literal dollar)\n- **Multiple:** Costs 25, 30, and 45 dollars — avoid: Costs $25, $30, and $45\n- **In sentence:** I spent fifty dollars at the store.\n\n**Ambiguity example:** He has $5 and she has $10 — depending on the parser, this may become italic math between the dollars!\n\n## 5. Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n| Circumference | \\(C = 2\\pi r\\) | \\(31.42\\) |\n| Hypotenuse | $c = \\sqrt{a^2 + b^2}$ | $10.00$ |\n\n**Table with escaped currency:**\n\n| Item | Price |\n|------|-------|\n| Widget | \\$29.99 |\n| Gadget | \\$49.99 |\n\n## 6. Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: \\$99.99.\n\nEnvironment variables like $PATH, $USER, and $SHELL should not trigger math rendering.\n\n## 7. Additional Stress Cases\n\n**Superscripts/subscripts in prose:** Einstein wrote $E = mc^2$ in 1905.\n\n**Multiline display:**\n$$\n\\begin{aligned}\nf(x) &= x^2 + 2x + 1 \\\\\n     &= (x+1)^2\n\\end{aligned}\n$$\n\n**Unicode adjacent to math:** The value α relates via $\\alpha + \\beta = \\gamma$.\n\n**Empty-ish math:** $ $ (space only) and $$$ (triple dollar) are parser hazards.\n\n**Escaped delimiters:** \\$x^2\\$ should show literal dollar-x-squared-dollar.\n\n---\n\n**Summary of parser expectations:**\n\n| Case | Expected Behavior |\n|------|-------------------|\n| `$$...$$` | Render as display math |\n| `\\[...\\]` | Render as display math |\n| `$...$` | Render as inline math |\n| `\\(...\\)` | Render as inline math |\n| `` ``` ``` blocks | Content stays literal |\n| `\\$` | Renders as literal `$` |\n| `$HOME`, `$PATH` | Context-dependent; ideally literal |\n| Single `$` unpaired | Ideally literal, but parser-dependent |",
+  "usage": {
+    "prompt_tokens": 347,
+    "completion_tokens": 1287,
+    "total_tokens": 1634,
+    "cost": 0.00248518,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00248518,
+      "upstream_inference_prompt_cost": 0.00019432,
+      "upstream_inference_completions_cost": 0.00229086
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 291,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00248518,
+  "actualCost": 0.00248518,
+  "timestamp": "2026-11-08T20:00:44.183Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

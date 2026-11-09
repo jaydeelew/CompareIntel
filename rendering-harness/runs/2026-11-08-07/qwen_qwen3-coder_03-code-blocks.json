@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-coder",
+  "modelName": "Qwen: Qwen3 Coder 480B A35B",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here's my response with fenced code blocks:\n\n## Python code\n```python\ndef bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n    return arr\n\n# Example usage\nnumbers = [64, 34, 25, 12, 22, 11, 90]\nsorted_numbers = bubble_sort(numbers.copy())\nprint(f\"Original: {numbers}\")\nprint(f\"Sorted: {sorted_numbers}\")\n```\n\n## JavaScript code\n```javascript\nclass Calculator {\n  static add(a, b) {\n    return a + b;\n  }\n  \n  static multiply(a, b) {\n    return a * b;\n  }\n  \n  static power(base, exponent) {\n    return Math.pow(base, exponent);\n  }\n}\n\nconsole.log(Calculator.add(5, 3)); // 8\nconsole.log(Calculator.power(2, 3)); // 8\n```\n\n## Inline code with math-like content\nWhen writing code, variables like `x^2`, `a_b`, and `$price` are treated as literal text within backticks, so the special characters don't trigger markdown formatting. This is important when documenting mathematical expressions or financial calculations in code comments where you might write things like `result = x^2 + y^2` or `total = $price * quantity`.",
+  "usage": {
+    "prompt_tokens": 245,
+    "completion_tokens": 324,
+    "total_tokens": 569,
+    "cost": 0.0003975,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0003975,
+      "upstream_inference_prompt_cost": 0.0000735,
+      "upstream_inference_completions_cost": 0.000324
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0003975,
+  "actualCost": 0.0003975,
+  "timestamp": "2026-11-08T18:50:32.762Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

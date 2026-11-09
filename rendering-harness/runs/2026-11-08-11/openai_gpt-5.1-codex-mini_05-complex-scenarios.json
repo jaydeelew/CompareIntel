@@ -1,0 +1,36 @@
+{
+  "modelId": "openai/gpt-5.1-codex-mini",
+  "modelName": "OpenAI: GPT-5.1-Codex-Mini",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here's a walkthrough that tests the limits of each scenario:\n\n---\n\n### Scenario 1: Math in Lists with Formatting (Edge Cases)\n- The Pythagorean theorem \\( a^2 + b^2 = c^2 \\) is standard, but when \\( a = 3 \\) and \\( b = 4 \\), we get \\( c = \\sqrt{9 + 16} = \\sqrt{25} = 5 \\).  \n  **Edge case:** if either leg were negative or non-integer (e.g., \\( a = -3 \\) or \\( b = 4.5 \\)), \\( c \\) would still be \\( \\sqrt{a^2 + b^2} \\) and positive; showing the theorem’s invariance under sign changes.  \n  **Formatting note:** ensure the list remains clear even when nested calculations or nonstandard spacing are introduced.\n\n---\n\n### Scenario 2: Tables with Math (Edge Cases)\n| Formula    | LaTeX                              | Result |\n|------------|------------------------------------|--------|\n| Quadratic  | \\( ax^2 + bx + c = 0 \\)           | \\( x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} \\) |\n| Sum        | \\( \\sum_{i=1}^{n} i \\)             | \\( \\frac{n(n+1)}{2} \\) |\n| Product    | \\( \\prod_{i=1}^{n} i \\)            | \\( n! \\) |\n\n- **Edge case:** Quadratic formula breaks if \\( a = 0 \\), so the table could note that it degenerates to a linear equation.\n- **Edge case:** Summation/product not defined (or requires convention) for \\( n < 1 \\); we might mention how summing from \\( i = 1 \\) to \\( 0 \\) could default to 0 by convention.\n- **Formatting:** When mixing LaTeX with tables, watch out for escaping characters (e.g., ensure `%` isn’t interpreted as Markdown comment).\n\n---\n\n### Scenario 3: Code and Math Mixed (Edge Cases)\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n- Formula \\( A = \\pi r^2 \\) is correctly implemented.  \n- **Edge cases:** Negative radius or non-numeric input; the function would still return a positive area for negative \\( r \\) because \\( r^2 \\geq 0 \\), but conceptually radius should be \\( r \\geq 0 \\). If \\( r \\) were complex, `math.pi` and `r**2` would raise a `TypeError`.  \n- **Challenge:** In a mixed content structure, keep the LaTeX formula aligned with the code’s comment to avoid ambiguity.\n\n---\n\n### Scenario 4: Horizontal Rules (Edge Cases)\nFirst section\n\n---\n\nSecond section with math: \\( \\int_{0}^{1} x \\, dx = \\frac{1}{2} \\)\n\n- **Edge case:** Display a definite integral result alongside the surrounding sections to ensure inline math is rendered without being mistaken for new sections.  \n- **Edge case:** If the integral were improper or had more complex bounds, keep the presentation consistent (e.g., \\( \\int_{a}^{b} \\) or \\( \\int_{0}^{\\infty} \\)).\n\n---\n\nThird section\n\n---\n\n### Scenario 5: Multiple Dollar Signs (Edge Cases)\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\n- **Edge case:** When literal dollar amounts collide with inline math \\( \\$...\\$ \\), escape or separate them (as done above with a backslash) to prevent Markdown from treating them as math delimiters.\n- Math: The formula \\( f(x) = x^2 \\) evaluates to \\( f(5) = 25 \\).  \n  **Edge case:** If one sticks to \\( f(x) = x^2 \\) but computes \\( f(-5) \\), the output remains positive, reinforcing the function’s even symmetry.\n\n---\n\nLet me know if you’d like these scenarios embedded into a single cohesive explanation or if you’d like additional challenging edge cases per section!",
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 1169,
+    "total_tokens": 1597,
+    "cost": 0.002445,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.002445,
+      "upstream_inference_prompt_cost": 0.000107,
+      "upstream_inference_completions_cost": 0.002338
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 192,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.002445,
+  "actualCost": 0.002445,
+  "timestamp": "2026-11-08T19:34:33.982Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null
+}

@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/mistral-large-4-0",
+  "modelName": "Mistral: Mistral Large 4",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "Here is a response with properly formatted fenced code blocks in multiple languages:\n\n**Python:**\n```python\ndef fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n - 1) + fibonacci(n - 2)\n\n# Generate first 10 Fibonacci numbers\nresults = [fibonacci(i) for i in range(10)]\nprint(results)  # [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]\n```\n\n**JavaScript:**\n```javascript\nconst fetchData = async (url) => {\n  try {\n    const response = await fetch(url);\n    const data = await response.json();\n    return data;\n  } catch (error) {\n    console.error('Error:', error);\n  }\n};\n```\n\n**Bash/Shell:**\n```bash\n#!/bin/bash\nfor file in *.txt; do\n    echo \"Processing: $file\"\n    wc -l \"$file\"\ndone\n```\n\n**SQL:**\n```sql\nSELECT users.name, COUNT(orders.id) as order_count\nFROM users\nLEFT JOIN orders ON users.id = orders.user_id\nGROUP BY users.id\nHAVING COUNT(orders.id) > 5;\n```\n\nRegarding inline code formatting: variables such as `x^2`, `a_b`, and `$price` should render as inline code (using backticks) rather than being interpreted as mathematical notation or LaTeX. For example, the expression `x^2 + y^2 = z^2` uses code formatting to indicate variable names, while `a_b` clearly shows an underscore in a variable name, and `$price` represents a shell variable or PHP-style variable that should be visually distinct from regular text.",
+  "usage": {
+    "prompt_tokens": 252,
+    "completion_tokens": 1394,
+    "total_tokens": 1646,
+    "cost": 0.00341418,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00341418,
+      "upstream_inference_prompt_cost": 0.00019404,
+      "upstream_inference_completions_cost": 0.00322014
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1027,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00341418,
+  "actualCost": 0.00341418,
+  "timestamp": "2026-11-08T19:23:24.784Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

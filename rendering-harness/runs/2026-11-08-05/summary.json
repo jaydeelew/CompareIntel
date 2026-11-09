@@ -1,0 +1,41 @@
+{
+  "status": "completed",
+  "attemptedCalls": 24,
+  "actualCost": 0.013661330000000001,
+  "unknownCosts": 0,
+  "errors": [],
+  "promptTokens": 8385,
+  "completionTokens": 17128,
+  "totalTokens": 25513,
+  "reasoningTokensIncludedInCompletion": 3896,
+  "firstCallCST": "11/8/2026, 12:32:28 PM CST",
+  "lastCallCST": "11/8/2026, 12:35:17 PM CST",
+  "finishReasonCounts": {
+    "stop": 24
+  },
+  "truncated": [],
+  "visibleEmpty": [],
+  "perModel": [
+    {
+      "id": "google/gemma-4-26b-a4b-it",
+      "cost": 0.0003972275,
+      "calls": 6
+    },
+    {
+      "id": "qwen/qwen3-next-80b-a3b-instruct",
+      "cost": 0.0049673700000000005,
+      "calls": 6
+    },
+    {
+      "id": "meta-llama/llama-4-maverick",
+      "cost": 0.0034191,
+      "calls": 6
+    },
+    {
+      "id": "minimax/minimax-m3.1-flash",
+      "cost": 0.0048776325,
+      "calls": 6
+    }
+  ],
+  "coverage": "Collection only; rendering/feature coverage not assessed"
+}

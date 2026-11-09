@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "revision": 0,
+  "knownActualUsd": 3.7760560956,
+  "knownCostBasis": "Actual provider usage.cost through 20b; 2 unknown explicitly excluded",
+  "unknownCharges": [
+    {
+      "batch": "09",
+      "id": "x-ai/grok-4.3",
+      "modelId": "x-ai/grok-4.3",
+      "prompt": "03-code-blocks",
+      "promptName": "03-code-blocks",
+      "callId": "historical-unknown-1",
+      "reason": "provider_unavailable 502",
+      "actualCost": null,
+      "resolution": null,
+      "source": "Not acknowledged/resolved. Do not treat as $0."
+    },
+    {
+      "batch": "11-reruns",
+      "id": "tencent/hy4-preview",
+      "modelId": "tencent/hy4-preview",
+      "prompt": "06-edge-cases-boundaries",
+      "promptName": "06-edge-cases-boundaries",
+      "callId": "historical-unknown-2",
+      "reason": "Transport timeout; no generation",
+      "actualCost": null,
+      "resolution": null,
+      "source": "Not acknowledged/resolved. Do not treat as $0."
+    }
+  ],
+  "pendingRequests": [],
+  "batches": {},
+  "observedRates": {},
+  "policy": "Unknown/pending globally block all batch IDs. No automatic resolution API. No estimated actual or zero assumption. Resumption requires explicit Jack approval recorded on each unknown without falsifying actualCost."
+}

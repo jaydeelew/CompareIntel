@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794169977-oWoCQqIy6LchaWOg7HYe",
+  "object": "chat.completion",
+  "created": 1794169977,
+  "model": "openai/gpt-5.3-codex",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "Sure—here’s a clean example covering all requested elements.\n\n1. **Inline math**: The quadratic formula \\(x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\\) gives the solutions to a quadratic equation \\(ax^2 + bx + c = 0\\), where the term under the square root, \\(b^2 - 4ac\\), is the discriminant.\n\n2. **Display math with aligned equations**:\n$$\n\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}\n$$\n\n3. **Matrices and cases**:\n$$\nI = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}\n$$\n\n4. **Multiple equations**:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. **Links**: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. **Money context (not math rendering)**: The item costs \\$5 and the shipping is \\$10, for a total of \\$15. Budget: \\$1000 (escaped dollar).",
+        "refusal": null,
+        "reasoning": "**Ensuring proper dollar sign escaping**",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Ensuring proper dollar sign escaping**",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8Nx7vCbpwp1cr3NAWbFfYqYLWkLKLo8jI3GkCzThqOyxyHmaP_sFth0cgg3pi4dKjvA2jzpoDtPndLqF992SRG5BGBFEUM5jQaCoBC2RjIaVNnK3uUHTI8i0BvuKzUBsgPyyxSq18MCuXEg9HTwsB1XLx8UXFJAK7wa7DPiKhubkgjrf997f4zp-TH2tzGBVKpmQ-OB3cIWLa-_JZQ69S2aCnVKJ1T6Jdoe1jtSXA9aaF2at2On-y2rdt60cJl8B81TH8CAuvyOHWvdf-bFM_61yajp8Sl2-XHSrLGezwTabOUCndKhztMWCZWg2iJsMtCE300LNRxo9_zzoinhEP9QrB_o_FYBffmYtzsFmO8sd0GSlKwMZfpHegL4wo4Fwl4WlbqD57q5ZoO85jTm59pnKDoe555efad8Bnz1SwKeZblRl5K8HyzwT-S89OmtNO5gy6OwKEsp6QsrneC40qMl_W0ns_zRSfM1v74UCPA3Tvf99WI6p11_3xzsqiQKFLp6av1st7o4H73c2Vkuu4ocxp-qKbH_1_Elrfpu2IxCxejXTHdz9g7Bwi-velFVIIqyurag9e1nW12ZKQHsim0TaPp9is2q5Rxv3LxsbaX-QVvmFd0wfnGgXDF2pEnSvoXyIkQeF2YvbO7utjUozCH6_Lgi5BJKRUn0Z4IhbiOcj_teF6fzyj9hMV7E45GTdVH5270bOvOB3MFupO3ffiezkLGBdSNXf3AwkBFi1O-vzX4287Ftwd7NCGj8a-PuNR6tHPs6VnT99lAZ5LndZdoJa5qmjcwstHt8A_njhzxYeIDIOiikyV_hgwW7gW36XgBy_JDRsq7nCZzYCxmy5nJqjmqZ7CZiN3fVrWhXz3aPxQ2hYYQquYqz5hbPzzihs_XfvHP6QKOnNzG26QQtFZtZuvdGqCys21bEfht1e6mfG1udg7_N2zxUoC1Qx5FeHVlk1q5AGqLclqm_CyHyp5MNxtSrI4rQp9_D0PGxgK4XK0vgqq9vAfwkcNXUlF-kN31w0TANfEXmTZROhWEkxddtKr9dUqnRJl_9gIYRH4o899vK33prAzS6Gy25VquWZzAY31tp6LPPRQNAy0bxBL67GzPbMY2lEkdweKAYhV9Eeo9k_insD3C5vCbyVpk9EZNLKKYxKn4SkstxKvPDsty_E9Jgk0hfft1whPOb-dT8XXNz8sTiZsEsf3XZVpyFKlaVKpndo01H4b-O1tzhiyNRBvZc2HeW76mlte7TCKkp_YY5PJuTG6GSYHbKxgFxYl-Vs5YhhTb_2tKmD0hdwF1Qe43zAaw1UGneADk4p5_rgZMfM28k6lZunhtxmQek6WtJrrh03cOCkyL3XrDm8eFUW5FluM_dhDfCAcuYCt4O2FmSZewhqBhesdD6fHT3FVr26eNIvFhXAQuyGfOSzJuP1bfTmrKHUddac_9vG4RzX5AwKDO8UuOdDmNv9Ek4NhG81lR524JmY7Bi36AF2kd_S19TI4stv72BeZmy0G42M4S8-nhax72JESIQ0Rp8abzGWUN1nqgEiyQcbJHOrcYxekBAyPiri47RMjREeSlvZqp7-P60EWftSQ-vs-1YBlXC8Rb-Cgxan4oLqJJb3PNenCn5tgOl2hBwIIi5SiotQPNnBDFRFQTAonZyj9p04XrY-ebx1C4O_UhjaFOYKvRE9DAopZAVSunfYtYU5J_tfsBzJEsuBdGTDLgThuFOsW1ZtoQuQdblLOUUH3fKcnlc3whZ759_LYf-pv5wnj8Teizjv-xNSxdq4eMb_nApqZZku6WnDGfekq6Dt20h54C0uGt9g_I8sTW_JBoXkvaz36qq8z6XQNc8c25XGkSz_12jxocvpAZ1-tDpQAlajAKPAqsk9UGgjTFOX3shUF6VS48OCLkD0l-vu6b5Dboogi2izxVMexVzG1QvtkEmcnvMbgs3QPzxdcOvG-sqzfMztgjqOA4LSOYsI7zMPtVLPYhdP4zcGwtuN102E0XPpitL7QUxFzGGIG_5fVibJ29UJXDb9fwnWZA-XESLZfVOEqN1fIH5IZ12s7e0u9HPbVWqGaNoDuF7FO78vTNMEZ02G7UmSwNtv6tYgZXr4Plk3I5XlnIIxOBCOHJ4l2Eup7P5LSG_UCHhPWupjxlNp4OB0VzXDkKB4axy2hLC1Ag0HhdYS6MsGmuOR_s3gMv8YLYEiz06tuj0nfT5PLLwVc1-P18kpevNS0KvMcTTISXBEtR-FS_1lM368kjbiJEt9RgGTZA7VKGfK-YOfgk-HWwoCWMWt_Ek6nOqHXZhmOB0acWo6tm2OW5oxtKVgAUnryjrKN9CNorb6eunNrp6q7rI9AcL6Mn_YZD2vvQGMMzocYit2J6UWT63LojppD0pErk-TbC9iy5VGSZrzc30wGkdIWox8_btXyI_vKOATyDqFB6Q20u5CCbhiTU1ODS-wDlE7hYILeElDHEKCZzHE7FiyxLiCC9SGSV5SVuW2rXioc4Sa7UrLqzw7leFO73S6Oft2Dka203LPda_g5KVwJrtbvo7xDcp4KWXgnEul47r-uxfUghIgzZOXx-wsNt4pzSx5MG82Ulze932JGJplUjvOYFkv7qoNpzgsFGysu4kleGURaRoEJtWk3daM0ef9qwVg4cv9Q1vv_P80C4GCrFkeI599xMxKDedqeiTfPziU6abT8AIsEEEqwQsAc_H2YYCVLLzwnTpipRrP4k9Z0i4YcFXguvJCG1APdS5-6o2eU9M1qB9_akSTQD2Po3rcuOodGM1pTm6YscHv5hULcKiLbA8JFIm0rqVXreguMOA5uEEMeNmUgmwHChnRgfgxFd63wIBdnH7XzjQ6lVbmMEca9TKG_5xQ5l_Zy2CIOB2onb0sxWbY8OmKWS64EzxSLkuHFfoSlQ-X_vzF5cJzI9rKyvThRIaehSITNNGj-ePT8RiNlrdZ_tT6rZ_gbs7M2ISAwXIxOAc76rtM-QcojUG7op5agH5VLEjNWk6d-dA_vqZucNiBGwybMscLsXDDmdy9Ks6bouV_-53PXm1eoAqsk2gP71ItoJXpJnrszYFnGxV71L2GRP3phvJ94YEY50j9_RlRKgrw-AXhhC6DgjJfDTQ=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjMtY29kZXgtMjAyNjAyMjR8b3BlbmFpIn0",
+            "format": "openai-responses-v1",
+            "id": "rs_0ea1d05e0aa9972b016af0dc7a231c87d1a0e89c95b6fc9cd3",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 274,
+    "completion_tokens": 426,
+    "total_tokens": 700,
+    "cost": 0.0064435,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0064435,
+      "upstream_inference_prompt_cost": 0.0004795,
+      "upstream_inference_completions_cost": 0.005964
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 104,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

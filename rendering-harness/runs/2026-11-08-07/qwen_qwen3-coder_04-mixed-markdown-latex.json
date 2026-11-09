@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen3-coder",
+  "modelName": "Qwen: Qwen3 Coder 480B A35B",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "# Mathematical Analysis Response\n\n## Problem Solution\n\n**Exercise 1**: For the function $f(x) = x^2 + 2x + 1$\n\n### 1. Derivative Calculation\nUsing the power rule for differentiation:\n\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\n### 2. Integral Calculation\nApplying the power rule for integration:\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Matrix Properties Summary\n\nFor the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n\n- **Determinant**: $\\det(A) = ad - bc$\n- **Trace**: $\\text{tr}(A) = a + d$  \n- **Inverse** (when $\\det(A) \\neq 0$):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Economic Application\n\n> **Cost Function Analysis**: $C(q) = 100 + 5q$\n\nWhere:\n- Fixed costs = \\$100\n- Variable cost per unit = \\$5\n\n**Calculation for 10 units**:\n- Fixed cost component: \\$100\n- Variable cost component: $10 \\times \\$5 = \\$50$\n- **Total cost**: $100 + 50 = \\$150$\n\nThis demonstrates how mathematical functions can model real-world economic scenarios, where the total cost increases linearly with quantity produced.",
+  "usage": {
+    "prompt_tokens": 317,
+    "completion_tokens": 352,
+    "total_tokens": 669,
+    "cost": 0.0004471,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0004471,
+      "upstream_inference_prompt_cost": 0.0000951,
+      "upstream_inference_completions_cost": 0.000352
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0004471,
+  "actualCost": 0.0004471,
+  "timestamp": "2026-11-08T18:50:36.563Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

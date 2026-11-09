@@ -1,0 +1,36 @@
+{
+  "modelId": "z-ai/glm-5.3",
+  "modelName": "Z.ai: GLM 5.3",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "# Response: Edge Cases, Verified and Escalated\n\nYour scenarios all parse correctly — here's verification plus a second round of even nastier cases.\n\n## Verifying Your Scenarios\n\n**Scenario 1** — Nested lists with inline math render fine, and the math checks out: $\\sqrt{3^2 + 4^2} = \\sqrt{25} = 5$ ✓ (the classic 3-4-5 triple).\n\n**Scenario 2** — Tables with LaTeX work; long formulas just widen columns. Adding rows:\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Euler's identity | $e^{i\\pi} + 1$ | $0$ |\n| Gaussian integral | $\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx$ | $\\sqrt{\\pi}$ |\n\n**Scenario 3** — Note the asymmetry: the code comment uses Unicode `πr²` while prose uses $\\pi r^2$. Both are fine, but the code's output is $A = 25\\pi \\approx 78.54$.\n\n**Scenario 4** — Rules don't interfere: $\\int_0^1 x\\,dx = \\frac{1}{2}$ ✓\n\n**Scenario 5** — This is the genuine trap. You have **five** currency dollars followed by **four** math dollars. A naive parser pairs them sequentially, so `1,200, monitor ` becomes a bogus math span, then `300, keyboard `, and so on — one pairing even spans the paragraph break. By the time the parser reaches `$f(x) = x^2$`, the pairing is off-kilter. Mitigations:\n\n- Escape currency: `\\$1,200` renders as \\$1,200\n- Or put dollars *inside* math: $\\text{Total: } \\$1{,}575$\n\n## Round 2: Harder Edge Cases\n\n### Math in Headers\n### The Basel Problem: $\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}$\n\n### Pipes Inside Table Math\nBayes' theorem contains `|`, which collides with table delimiters:\n\n| Theorem | Formula |\n|---------|---------|\n| Bayes (using `\\mid`) | $P(A \\mid B) = \\frac{P(B \\mid A)\\,P(A)}{P(B)}$ |\n\nWriting raw `$P(A | B)$` in a cell splits it into three cells. Use `\\mid`, `\\vert`, or `\\rvert`.\n\n### Four-Level Nesting with Math\n1. **Definition**: $\\lim_{x \\to a} f(x) = L$ means:\n   - for every $\\epsilon > 0$,\n     - there exists $\\delta > 0$ such that\n       - $0 < |x - a| < \\delta \\implies |f(x) - L| < \\epsilon$\n\n### Escaping Hell\n- Literal dollar outside math: I paid \\$50.\n- Dollar inside math: $\\text{cost} = \\$50$\n- Curly braces: plain `{grouping}` in text vs. the set $\\{1, 2, 3\\}$\n- Both at once: The total $\\$300$ equals 300 dollars, or \\$300 USD.\n\n### Inline Formatting Wrapped Around Math\n- **Bold math**: **$E = mc^2$** is famous.\n- *Italic math*: *$f(x) = x^2$* is an even function.\n- Bold-italic-strike combo: ***$\\nabla \\cdot \\vec{E} = \\rho/\\epsilon_0$***\n\n### Structures in Display Math\n$$\\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}\\begin{pmatrix} x \\\\ y \\end{pmatrix} = \\begin{pmatrix} 5 \\\\ 11 \\end{pmatrix}$$\n\n$$f(x) = \\begin{cases} x^2 & \\text{if } x \\geq 0 \\\\ -x^2 & \\text{if } x < 0 \\end{cases}$$\n\n### Unicode vs. LaTeX Showdown\n\n| Unicode | LaTeX | Limitation |\n|---------|-------|------------|\n| x² + 1 | $x^2 + 1$ | Font-dependent rendering |\n| ∑ 1/n² | $\\sum_{n=1}^{\\infty} \\frac{1}{n^2}$ | Unicode can't place summation limits |\n| ∫₀¹ x dx | $\\int_0^1 x\\,dx$ | No thin-space control (`\\,`) |\n| ℝ ℂ ℕ | $\\mathbb{R}\\,\\mathbb{C}\\,\\mathbb{N}$ | Blackboard bold rarely in fonts |\n\n### Code Fences Are Dollar-Safe Zones\n```bash\n# Currency dollars never trigger math inside fences\nTOTAL=$1575\necho \"Price: $1,200 — no LaTeX interpretation here\"\n```\n\n### The Blank-Line Trap\nWithout a separating blank line, two display expressions:\n$$a^2 + b^2 = c^2$$\n$$e^{i\\pi} + 1 = 0$$\nmay merge into a single malformed block in lenient parsers.\n\n### Unsupported-Command Gambit\nThese render gracefully or degrade to raw text depending on the engine: $$E = mc^2 \\tag{1}$$ — `\\tag{}` works in KaTeX and MathJax, but not everywhere.\n\n## Risk Summary\n\n| Edge Case | Risk | Fix |\n|-----------|------|-----|\n| Currency `$` near math `$` | High | Escape as `\\$` |\n| Pipes in table math | High | Use `\\mid` / `\\vert` |\n| Blank lines between display math | Medium | Always separate |\n| Unicode math symbols | Medium | Prefer LaTeX |\n| Math in headers/bold/italic | Low | Usually safe |\n| Deep list nesting | Low | Keep ≤ 4 levels |\n\nThe Scenario 5 ambiguity remains the hardest problem — no parser can perfectly distinguish `I have $5 and $x=5$` without semantic context.",
+  "usage": {
+    "prompt_tokens": 434,
+    "completion_tokens": 7156,
+    "total_tokens": 7590,
+    "cost": 0.0224658,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0224658,
+      "upstream_inference_prompt_cost": 0.00042532,
+      "upstream_inference_completions_cost": 0.02204048
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 5835,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0224658,
+  "actualCost": 0.0224658,
+  "timestamp": "2026-11-08T20:00:26.583Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

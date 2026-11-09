@@ -1,0 +1,60 @@
+{
+  "id": "gen-1794168957-ObUF5cFByJApGCDcQhZe",
+  "object": "chat.completion",
+  "created": 1794168957,
+  "model": "google/gemini-3.8-flash",
+  "provider": "Google",
+  "system_fingerprint": null,
+  "service_tier": "provisioned",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "Here is a response addressing each scenario, followed by an additional suite of advanced stress-test edge cases designed for Markdown and $\\LaTeX$ parsers.\n\n---\n\n### Verification and Rendering of Provided Scenarios\n\n#### Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n#### Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n#### Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n#### Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n#### Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n---\n\n### Additional Challenging Edge Cases\n\nBelow are five advanced scenarios that commonly stress parsers combining CommonMark/GFM and MathJax/KaTeX:\n\n#### Edge Case A: Table Pipes vs. Absolute Values and Sets\n*Challenge: Table column delimiters (`|`) colliding with set-builder notation or matrix determinants.*\n\n| Expression | Markdown-Safe LaTeX | Output |\n| :--- | :--- | :--- |\n| Set Builder | `{x \\in \\mathbb{R} \\mid x > 0}` | $\\{x \\in \\mathbb{R} \\mid x > 0\\}$ |\n| Matrix Determinant | `\\det(A) = \\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}` | $\\det(A) = \\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}$ |\n| Norm / Abs | `\\|x\\| \\le 1 \\implies \\lvert x \\rvert \\le 1` | $\\|x\\| \\le 1 \\implies \\lvert x \\rvert \\le 1$ |\n\n---\n\n#### Edge Case B: Subscripts and Underscores vs. Markdown Italics\n*Challenge: Math variables with underscores (e.g., $x_1, x_2, x_3$) erroneously triggering `<em>` tags.*\n\nLet $x_1, x_2, \\dots, x_n$ be coordinates such that:\n$$S = \\sum_{i=1}^{n} x_i^2 - 2 \\alpha_{max} \\cdot x_{i} \\cdot y_{i}$$\nIf we write $a_b + c_d + e_f$, no text should be *italicized* by markdown engine underscores.\n\n---\n\n#### Edge Case C: Currency Directly Adjacent to Inline Math\n*Challenge: Alternating currency symbols and mathematical expressions on the same line without breaking math delimiters.*\n\nAn asset priced at $100 drops by $x\\%$ where $x = 15$. The new value is $P = 100 \\times (1 - 0.15) = \\$85$. If purchased with a fee of $5, the total cost is $P + 5 = \\$90$.\n\n---\n\n#### Edge Case D: Display Math Nested in Multi-Level Lists and Blockquotes\n*Challenge: Indented display math within complex container blocks.*\n\n> ### Key Takeaways\n> 1. Normal distributions satisfy:\n>    * Probability density function:\n>      $$\\mathcal{N}(x \\mid \\mu, \\sigma^2) = \\frac{1}{\\sqrt{2\\pi\\sigma^2}} \\exp\\left(-\\frac{(x - \\mu)^2}{2\\sigma^2}\\right)$$\n>    * Standardized variable: $Z = \\frac{X - \\mu}{\\sigma} \\sim \\mathcal{N}(0, 1)$\n\n---\n\n#### Edge Case E: Escaped Characters, Backticks, and Inline Code Blocks\n*Challenge: Verbatim backticks containing dollar signs and $\\LaTeX$ commands.*\n\n* Raw syntax: `$x = \\text{`ls -la`}$` (should not parse as math across backtick boundaries).\n* Inline code literal: `$VAR = $HOME` vs inline math: $\\$VAR = \\$HOME$.\n* Escaped braces: evaluate $f(\\{x\\}) \\subseteq \\{y \\in \\mathbb{R} : y \\ge 0\\}$.",
+        "refusal": null,
+        "reasoning": "**Processing Edge Cases**\n\nI'm currently focused on dissecting complex scenarios, specifically those involving intricate formatting within lists and the integration of mathematical elements like inline LaTeX. My aim is to meticulously parse and accurately represent these nuances in my output.\n\n**Resolving Complex Parsing**\n\nI'm diligently working through the provided scenarios, with a keen focus on the interplay between markdown structures and embedded LaTeX. Specifically, I'm dissecting how tables and horizontal rules interact with mathematical expressions, ensuring accurate rendering and handling of potential ambiguities like mixed dollar sign usages.\n\n**Generating Advanced Scenarios**\n\nI'm now generating a new set of rigorous edge cases. These will focus on complex interactions like display math within blockquotes and tables, ambiguous currency and math symbols, and nested markdown elements alongside mathematical notation.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "**Processing Edge Cases**\n\nI'm currently focused on dissecting complex scenarios, specifically those involving intricate formatting within lists and the integration of mathematical elements like inline LaTeX. My aim is to meticulously parse and accurately represent these nuances in my output.\n\n**Resolving Complex Parsing**\n\nI'm diligently working through the provided scenarios, with a keen focus on the interplay between markdown structures and embedded LaTeX. Specifically, I'm dissecting how tables and horizontal rules interact with mathematical expressions, ensuring accurate rendering and handling of potential ambiguities like mixed dollar sign usages.\n\n**Generating Advanced Scenarios**\n\nI'm now generating a new set of rigorous edge cases. These will focus on complex interactions like display math within blockquotes and tables, ambiguous currency and math symbols, and nested markdown elements alongside mathematical notation.\n\n",
+            "format": "google-gemini-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "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",
+            "format": "google-gemini-v1",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 446,
+    "completion_tokens": 1899,
+    "total_tokens": 2345,
+    "cost": 0.00745575,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00745575,
+      "upstream_inference_prompt_cost": 0.0003345,
+      "upstream_inference_completions_cost": 0.00712125
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 678,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

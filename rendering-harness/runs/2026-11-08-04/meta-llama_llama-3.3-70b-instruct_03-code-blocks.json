@@ -1,0 +1,36 @@
+{
+  "modelId": "meta-llama/llama-3.3-70b-instruct",
+  "modelName": "Meta: Llama 3.3 70B Instruct",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "## Python Code Explanation\nThe provided Python code defines a function `quadratic_formula` that calculates the roots of a quadratic equation given the coefficients `a`, `b`, and `c`. It uses the quadratic formula to compute two solutions, `x1` and `x2`, which are then returned by the function.\n\n## JavaScript Code Explanation\nThe JavaScript code implements a recursive function `fibonacci` to calculate the nth Fibonacci number. It checks if `n` is less than or equal to 1 (the base cases for the Fibonacci sequence) and returns `n` in those cases. For `n` greater than 1, it recursively calls itself with `n-1` and `n-2` to calculate the nth Fibonacci number.\n\n## Inline Code Rendering\nTo render inline code correctly, especially with math-like content, it's essential to use the appropriate markdown syntax. For instance, to display `x^2`, `a_b`, and `$price` as code, they should be enclosed in backticks like so: `x^2`, `a_b`, and `$price`. This ensures they are displayed as code snippets rather than being interpreted as mathematical expressions or variables.\n\n### Example Use Cases\n- **Python**: The `quadratic_formula` function can be used to solve quadratic equations in various mathematical and scientific applications, such as physics and engineering problems.\n- **JavaScript**: The `fibonacci` function can be applied in algorithms and data structures, especially where recursive sequences are involved, like in the analysis of algorithms or in generating Fibonacci sequences for educational purposes.\n- **Inline Code**: Proper rendering of inline code is crucial in documentation, tutorials, and educational materials to clearly distinguish code from regular text, enhancing readability and understanding.",
+  "usage": {
+    "prompt_tokens": 245,
+    "completion_tokens": 353,
+    "total_tokens": 598,
+    "cost": 0.00042458,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00042458,
+      "upstream_inference_prompt_cost": 0.00017395,
+      "upstream_inference_completions_cost": 0.00025063
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00042458,
+  "actualCost": 0.00042458,
+  "timestamp": "2026-11-08T18:08:27.126Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

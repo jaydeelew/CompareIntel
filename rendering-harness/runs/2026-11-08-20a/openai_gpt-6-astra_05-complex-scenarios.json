@@ -1,0 +1,36 @@
+{
+  "modelId": "openai/gpt-6-astra",
+  "modelName": "OpenAI: GPT-6 Astra",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$.\n2. For a *right triangle* with legs $a=3$ and $b=4$:\n   - **Calculate:** $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$.\n   - Therefore, $c = 5$ units.\n3. **Edge case — zero-length side:**\n   - If $a=0$ and $b=4$, then $c=4$.\n   - However, these lengths form a *degenerate triangle*, not a right triangle.\n\n## Scenario 2: Tables with Math\n\n| Formula | Expression | Result or condition |\n|---------|------------|---------------------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$, provided $a \\ne 0$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ for integers $n \\ge 0$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ for integers $n \\ge 0$ |\n| Empty product | $\\prod_{i=1}^{0} i$ | $1 = 0!$ |\n| Absolute value | $\\lvert -5 \\rvert$ | $5$ |\n\n**Edge case:** If $a=0$, the quadratic formula does not apply. When $b \\ne 0$, the equation becomes linear, with solution $x=-c/b$.\n\n## Scenario 3: Code and Math Mixed\n\n```python\nimport math\n\ndef circle_area(r):\n    \"\"\"Return A = πr² for a finite, nonnegative radius.\"\"\"\n    if not math.isfinite(r) or r < 0:\n        raise ValueError(\"Radius must be finite and nonnegative.\")\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5):.2f}\")\nprint(f\"Zero-radius area: {circle_area(0):.2f}\")\n\n# Literal math notation in code stays unchanged: $A = \\pi r^2$\n```\n\nOutput:\n\n```text\nArea: 78.54\nZero-radius area: 0.00\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius.\n\n**Formatting edge case:** Inline code such as `r**2` or `$A = \\pi r^2$` should remain code rather than render as mathematics.\n\n## Scenario 4: Horizontal Rules\n\nFirst section: **Integration**\n\nFor $f(x)=x$, an antiderivative is $F(x)=\\frac{x^2}{2}$.\n\n---\n\nSecond section with math:\n\n$$\n\\int_{0}^{1} x\\,dx\n= \\left[\\frac{x^2}{2}\\right]_{0}^{1}\n= \\frac{1}{2}.\n$$\n\n---\n\nThird section: **Reversed limits**\n\nReversing the bounds changes the sign:\n\n$$\n\\int_{1}^{0} x\\,dx = -\\frac{1}{2}.\n$$\n\n## Scenario 5: Multiple Dollar Signs\n\n**Prices:** Computer costs \\$1,200, monitor \\$300, keyboard \\$50, and mouse \\$25. **Total: \\$1,575.**\n\n**Math:** The formula $f(x)=x^2$ evaluates to $f(5)=25$.\n\n**Mixed currency and math:** At \\$25 per mouse, buying $n=4$ mice costs $25 \\times 4 = 100$ dollars, or **\\$100**.\n\n**Literal delimiters in code:** `$` is a dollar sign, while `$$` is used by some renderers to delimit display math.",
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 902,
+    "total_tokens": 1330,
+    "cost": 0.04938,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.04938,
+      "upstream_inference_prompt_cost": 0.00428,
+      "upstream_inference_completions_cost": 0.0451
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 52,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.04938,
+  "actualCost": 0.04938,
+  "timestamp": "2026-11-08T20:55:41.038Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null
+}

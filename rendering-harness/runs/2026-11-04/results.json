@@ -8,10 +8,12 @@
       "google/gemini-2.5-flash",
       "openai/gpt-4o-mini"
     ],
-    "maxUsd": 1,
-    "maxTokens": 2048,
-    "outputDir": "/workspace/CompareIntel/rendering-harness/runs/2026-11-04",
-    "runDate": "2026-11-04"
+    "maxUsd": 0,
+    "maxTokens": 0,
+    "outputDir": "/agent/repos/CompareIntel/rendering-harness/runs/2026-11-04",
+    "runDate": "2026-11-04",
+    "textModelsOnly": true,
+    "cumulativeCostUsd": 0
   },
   "results": [
     {
@@ -19,202 +21,1991 @@
       "modelName": "Claude Sonnet 4.6",
       "promptName": "01-math-basics",
       "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math: Show the same formula as a display equation:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n3. Matrices: Show a 2x2 identity matrix:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\n4. Multiple equations on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15.\n",
-      "response": "",
+      "response": "# Math Basics Demonstration\n\n## 1. Inline Math\n\nThe quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ is used to solve any quadratic equation of the form $ax^2 + bx + c = 0$, where $a \\neq 0$. The term $b^2 - 4ac$ under the radical is called the **discriminant**.\n\n---\n\n## 2. Display Math\n\nThe same formula presented as a display equation:\n\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n---\n\n## 3. Matrices\n\nThe 2×2 identity matrix is:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nMultiplying any 2×2 matrix by $I$ leaves it unchanged.\n\n---\n\n## 4. Famous Equations\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nThese represent mass-energy equivalence, Newton's second law, and the Pythagorean theorem, respectively.\n\n---\n\n## 5. Plain Currency (No Math Rendering)\n\nThe item costs $5 and the shipping is $10, for a total of $15. These dollar signs are just currency symbols and should **not** trigger any math rendering.",
+      "usage": {
+        "prompt_tokens": 234,
+        "completion_tokens": 348,
+        "total_tokens": 582,
+        "cost": 0.005922,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.005922,
+          "upstream_inference_prompt_cost": 0.000702,
+          "upstream_inference_completions_cost": 0.00522
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:50:49.309Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Math%20Basics%20Demonstration%0A%0A%23%23%201.%20Inline%20Math%0A%0AThe%20quadratic%20formula%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%20is%20used%20to%20solve%20any%20quadratic%20equation%20of%20the%20form%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%2C%20where%20%24a%20%5Cneq%200%24.%20The%20term%20%24b%5E2%20-%204ac%24%20under%20the%20radical%20is%20called%20the%20**discriminant**.%0A%0A---%0A%0A%23%23%202.%20Display%20Math%0A%0AThe%20same%20formula%20presented%20as%20a%20display%20equation%3A%0A%0A%24%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%24%0A%0A---%0A%0A%23%23%203.%20Matrices%0A%0AThe%202%C3%972%20identity%20matrix%20is%3A%0A%0A%24%24I%20%3D%20%5Cbegin%7Bpmatrix%7D%201%20%26%200%20%5C%5C%200%20%26%201%20%5Cend%7Bpmatrix%7D%24%24%0A%0AMultiplying%20any%202%C3%972%20matrix%20by%20%24I%24%20leaves%20it%20unchanged.%0A%0A---%0A%0A%23%23%204.%20Famous%20Equations%0A%0A%24%24E%20%3D%20mc%5E2%24%24%0A%0A%24%24F%20%3D%20ma%24%24%0A%0A%24%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%24%0A%0AThese%20represent%20mass-energy%20equivalence%2C%20Newton%27s%20second%20law%2C%20and%20the%20Pythagorean%20theorem%2C%20respectively.%0A%0A---%0A%0A%23%23%205.%20Plain%20Currency%20(No%20Math%20Rendering)%0A%0AThe%20item%20costs%20%245%20and%20the%20shipping%20is%20%2410%2C%20for%20a%20total%20of%20%2415.%20These%20dollar%20signs%20are%20just%20currency%20symbols%20and%20should%20**not**%20trigger%20any%20math%20rendering.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Math%20Basics%20Demonstration%0A%0A%23%23%201.%20Inline%20Math%0A%0AThe%20quadratic%20formula%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%20is%20used%20to%20solve%20any%20quadratic%20equation%20of%20the%20form%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%2C%20where%20%24a%20%5Cneq%200%24.%20The%20term%20%24b%5E2%20-%204ac%24%20under%20the%20radical%20is%20called%20the%20**discriminant**.%0A%0A---%0A%0A%23%23%202.%20Display%20Math%0A%0AThe%20same%20formula%20presented%20as%20a%20display%20equation%3A%0A%0A%24%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%24%0A%0A---%0A%0A%23%23%203.%20Matrices%0A%0AThe%202%C3%972%20identity%20matrix%20is%3A%0A%0A%24%24I%20%3D%20%5Cbegin%7Bpmatrix%7D%201%20%26%200%20%5C%5C%200%20%26%201%20%5Cend%7Bpmatrix%7D%24%24%0A%0AMultiplying%20any%202%C3%972%20matrix%20by%20%24I%24%20leaves%20it%20unchanged.%0A%0A---%0A%0A%23%23%204.%20Famous%20Equations%0A%0A%24%24E%20%3D%20mc%5E2%24%24%0A%0A%24%24F%20%3D%20ma%24%24%0A%0A%24%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%24%0A%0AThese%20represent%20mass-energy%20equivalence%2C%20Newton%27s%20second%20law%2C%20and%20the%20Pythagorean%20theorem%2C%20respectively.%0A%0A---%0A%0A%23%23%205.%20Plain%20Currency%20(No%20Math%20Rendering)%0A%0AThe%20item%20costs%20%245%20and%20the%20shipping%20is%20%2410%2C%20for%20a%20total%20of%20%2415.%20These%20dollar%20signs%20are%20just%20currency%20symbols%20and%20should%20**not**%20trigger%20any%20math%20rendering.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:50:49.299Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "5 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "10 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "anthropic/claude-sonnet-4.6",
       "modelName": "Claude Sonnet 4.6",
       "promptName": "02-markdown-formatting",
       "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
-      "response": "",
+      "response": "# Markdown Formatting Demo\n\n## Headers\n### This is H3\n#### This is H4\n\n---\n\n## Text Formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\n---\n\n## Lists\n\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n---\n\n## Tables\n\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n---\n\n## Blockquotes\n\n> This is a blockquote\n> with multiple lines\n\n---\n\n> **Note:** All markdown elements above are rendering correctly, including **nested lists**, *formatted text*, tables, and blockquotes. This demonstrates full markdown support across headers `H2` through `H4`.",
+      "usage": {
+        "prompt_tokens": 222,
+        "completion_tokens": 262,
+        "total_tokens": 484,
+        "cost": 0.004596,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.004596,
+          "upstream_inference_prompt_cost": 0.000666,
+          "upstream_inference_completions_cost": 0.00393
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:50:54.180Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Markdown%20Formatting%20Demo%0A%0A%23%23%20Headers%0A%23%23%23%20This%20is%20H3%0A%23%23%23%23%20This%20is%20H4%0A%0A---%0A%0A%23%23%20Text%20Formatting%0A%0A**Bold%20text**%20and%20*italic%20text*%20and%20***bold%20italic***%0A%0A---%0A%0A%23%23%20Lists%0A%0ANested%20unordered%20list%3A%0A-%20Level%201%20item%20A%0A%20%20-%20Level%202%20item%20A1%0A%20%20-%20Level%202%20item%20A2%0A%20%20%20%20-%20Level%203%20item%20A2a%0A-%20Level%201%20item%20B%0A%0ANested%20ordered%20list%3A%0A1.%20First%20item%0A%20%20%201.%20Nested%20first%0A%20%20%202.%20Nested%20second%0A2.%20Second%20item%0A3.%20Third%20item%0A%0A---%0A%0A%23%23%20Tables%0A%0A%7C%20Model%20%7C%20Context%20%7C%20Price%20%7C%0A%7C-------%7C---------%7C-------%7C%0A%7C%20GPT-4%20%7C%20128k%20%7C%20%240.03%20%7C%0A%7C%20Claude%20%7C%20200k%20%7C%20%240.02%20%7C%0A%0A---%0A%0A%23%23%20Blockquotes%0A%0A%3E%20This%20is%20a%20blockquote%0A%3E%20with%20multiple%20lines%0A%0A---%0A%0A%3E%20**Note%3A**%20All%20markdown%20elements%20above%20are%20rendering%20correctly%2C%20including%20**nested%20lists**%2C%20*formatted%20text*%2C%20tables%2C%20and%20blockquotes.%20This%20demonstrates%20full%20markdown%20support%20across%20headers%20%60H2%60%20through%20%60H4%60.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Markdown%20Formatting%20Demo%0A%0A%23%23%20Headers%0A%23%23%23%20This%20is%20H3%0A%23%23%23%23%20This%20is%20H4%0A%0A---%0A%0A%23%23%20Text%20Formatting%0A%0A**Bold%20text**%20and%20*italic%20text*%20and%20***bold%20italic***%0A%0A---%0A%0A%23%23%20Lists%0A%0ANested%20unordered%20list%3A%0A-%20Level%201%20item%20A%0A%20%20-%20Level%202%20item%20A1%0A%20%20-%20Level%202%20item%20A2%0A%20%20%20%20-%20Level%203%20item%20A2a%0A-%20Level%201%20item%20B%0A%0ANested%20ordered%20list%3A%0A1.%20First%20item%0A%20%20%201.%20Nested%20first%0A%20%20%202.%20Nested%20second%0A2.%20Second%20item%0A3.%20Third%20item%0A%0A---%0A%0A%23%23%20Tables%0A%0A%7C%20Model%20%7C%20Context%20%7C%20Price%20%7C%0A%7C-------%7C---------%7C-------%7C%0A%7C%20GPT-4%20%7C%20128k%20%7C%20%240.03%20%7C%0A%7C%20Claude%20%7C%20200k%20%7C%20%240.02%20%7C%0A%0A---%0A%0A%23%23%20Blockquotes%0A%0A%3E%20This%20is%20a%20blockquote%0A%3E%20with%20multiple%20lines%0A%0A---%0A%0A%3E%20**Note%3A**%20All%20markdown%20elements%20above%20are%20rendering%20correctly%2C%20including%20**nested%20lists**%2C%20*formatted%20text*%2C%20tables%2C%20and%20blockquotes.%20This%20demonstrates%20full%20markdown%20support%20across%20headers%20%60H2%60%20through%20%60H4%60.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:50:54.174Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (9 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "3+ level nested lists",
+            "actual": "1 nested list structures",
+            "message": "3+ level nested lists assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "anthropic/claude-sonnet-4.6",
       "modelName": "Claude Sonnet 4.6",
       "promptName": "03-code-blocks",
       "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
-      "response": "",
+      "response": "# Code Block Test Response\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Additional example: SQL\n\n```sql\nSELECT users.name, COUNT(orders.id) AS order_count\nFROM users\nLEFT JOIN orders ON users.id = orders.user_id\nWHERE users.created_at >= '2024-01-01'\nGROUP BY users.name\nHAVING order_count > 5\nORDER BY order_count DESC;\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\n- Use `$variable` for shell variables, not currency math\n- The expression `a_b_c` uses underscores without triggering italics\n- Superscripts like `x^2 + y^2` stay literal inside backticks",
+      "usage": {
+        "prompt_tokens": 277,
+        "completion_tokens": 400,
+        "total_tokens": 677,
+        "cost": 0.006831,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.006831,
+          "upstream_inference_prompt_cost": 0.000831,
+          "upstream_inference_completions_cost": 0.006
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:51:00.996Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Code%20Block%20Test%20Response%0A%0A%23%23%20Python%20code%0A%0A%60%60%60python%0Adef%20quadratic_formula(a%2C%20b%2C%20c)%3A%0A%20%20%20%20discriminant%20%3D%20b**2%20-%204*a*c%0A%20%20%20%20x1%20%3D%20(-b%20%2B%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20x2%20%3D%20(-b%20-%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20return%20x1%2C%20x2%0A%0A%23%20Example%3A%20solve%20x%5E2%20-%205x%20%2B%206%20%3D%200%0Aresult%20%3D%20quadratic_formula(1%2C%20-5%2C%206)%0Aprint(f%22Solutions%3A%20x%20%3D%20%7Bresult%5B0%5D%7D%2C%20x%20%3D%20%7Bresult%5B1%5D%7D%22)%0A%60%60%60%0A%0A%23%23%20JavaScript%20code%0A%0A%60%60%60javascript%0Aconst%20fibonacci%20%3D%20(n)%20%3D%3E%20%7B%0A%20%20if%20(n%20%3C%3D%201)%20return%20n%3B%0A%20%20return%20fibonacci(n%20-%201)%20%2B%20fibonacci(n%20-%202)%3B%0A%7D%3B%0A%0Aconsole.log(fibonacci(10))%3B%20%2F%2F%2055%0A%60%60%60%0A%0A%23%23%20Additional%20example%3A%20SQL%0A%0A%60%60%60sql%0ASELECT%20users.name%2C%20COUNT(orders.id)%20AS%20order_count%0AFROM%20users%0ALEFT%20JOIN%20orders%20ON%20users.id%20%3D%20orders.user_id%0AWHERE%20users.created_at%20%3E%3D%20%272024-01-01%27%0AGROUP%20BY%20users.name%0AHAVING%20order_count%20%3E%205%0AORDER%20BY%20order_count%20DESC%3B%0A%60%60%60%0A%0A%23%23%20Inline%20code%20with%20math-like%20content%0A%0AThe%20variable%20%60x%5E2%60%20should%20render%20as%20code%2C%20not%20math.%20Similarly%20%60a_b%60%20and%20%60%24price%60%20should%20be%20code.%0A%0A-%20Use%20%60%24variable%60%20for%20shell%20variables%2C%20not%20currency%20math%0A-%20The%20expression%20%60a_b_c%60%20uses%20underscores%20without%20triggering%20italics%0A-%20Superscripts%20like%20%60x%5E2%20%2B%20y%5E2%60%20stay%20literal%20inside%20backticks\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Code%20Block%20Test%20Response%0A%0A%23%23%20Python%20code%0A%0A%60%60%60python%0Adef%20quadratic_formula(a%2C%20b%2C%20c)%3A%0A%20%20%20%20discriminant%20%3D%20b**2%20-%204*a*c%0A%20%20%20%20x1%20%3D%20(-b%20%2B%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20x2%20%3D%20(-b%20-%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20return%20x1%2C%20x2%0A%0A%23%20Example%3A%20solve%20x%5E2%20-%205x%20%2B%206%20%3D%200%0Aresult%20%3D%20quadratic_formula(1%2C%20-5%2C%206)%0Aprint(f%22Solutions%3A%20x%20%3D%20%7Bresult%5B0%5D%7D%2C%20x%20%3D%20%7Bresult%5B1%5D%7D%22)%0A%60%60%60%0A%0A%23%23%20JavaScript%20code%0A%0A%60%60%60javascript%0Aconst%20fibonacci%20%3D%20(n)%20%3D%3E%20%7B%0A%20%20if%20(n%20%3C%3D%201)%20return%20n%3B%0A%20%20return%20fibonacci(n%20-%201)%20%2B%20fibonacci(n%20-%202)%3B%0A%7D%3B%0A%0Aconsole.log(fibonacci(10))%3B%20%2F%2F%2055%0A%60%60%60%0A%0A%23%23%20Additional%20example%3A%20SQL%0A%0A%60%60%60sql%0ASELECT%20users.name%2C%20COUNT(orders.id)%20AS%20order_count%0AFROM%20users%0ALEFT%20JOIN%20orders%20ON%20users.id%20%3D%20orders.user_id%0AWHERE%20users.created_at%20%3E%3D%20%272024-01-01%27%0AGROUP%20BY%20users.name%0AHAVING%20order_count%20%3E%205%0AORDER%20BY%20order_count%20DESC%3B%0A%60%60%60%0A%0A%23%23%20Inline%20code%20with%20math-like%20content%0A%0AThe%20variable%20%60x%5E2%60%20should%20render%20as%20code%2C%20not%20math.%20Similarly%20%60a_b%60%20and%20%60%24price%60%20should%20be%20code.%0A%0A-%20Use%20%60%24variable%60%20for%20shell%20variables%2C%20not%20currency%20math%0A-%20The%20expression%20%60a_b_c%60%20uses%20underscores%20without%20triggering%20italics%0A-%20Superscripts%20like%20%60x%5E2%20%2B%20y%5E2%60%20stay%20literal%20inside%20backticks\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:51:00.990Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": [
+          "python",
+          "javascript",
+          "sql"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "3 code blocks (python, javascript, sql)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [
+            "python",
+            "javascript",
+            "sql"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "anthropic/claude-sonnet-4.6",
       "modelName": "Claude Sonnet 4.6",
       "promptName": "04-mixed-markdown-latex",
       "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
-      "response": "",
+      "response": "# Mathematical Analysis: Functions and Linear Algebra\n\n## Problem Statement\n\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x)\\, dx$\n\n---\n\n### Solution\n\nNotice that $f(x) = x^2 + 2x + 1 = (x+1)^2$, which simplifies verification.\n\n**Part 1 — Derivative:**\n\nApplying the power rule term by term:\n\n$$f'(x) = 2x + 2$$\n\nThis can be factored as $f'(x) = 2(x + 1)$, confirming the single critical point at $x = -1$.\n\n**Part 2 — Integral:**\n\n$$\\int f(x)\\, dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n> **Tip**: Always verify by differentiating the result — you should recover $f(x)$.\n\n---\n\n## Linear Algebra with Lists\n\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n\n- **Determinant**: $\\det(A) = ad - bc$\n- **Trace**: $\\text{tr}(A) = a + d$\n- **Eigenvalue relationship**: $\\lambda^2 - \\text{tr}(A)\\lambda + \\det(A) = 0$\n- **Inverse** (exists *if and only if* $\\det(A) \\neq 0$):\n\n$$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n### Key Observations\n\n| Property | Formula | Condition |\n|---|---|---|\n| Invertible | $\\det(A) \\neq 0$ | Required |\n| Singular | $\\det(A) = 0$ | No inverse |\n| Symmetric | $b = c$ | $A = A^T$ |\n\n---\n\n## Real World Context\n\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ represents a *linear cost model* where:\n> - $100$ represents **fixed costs** (independent of quantity)\n> - $5q$ represents **variable costs** (scaling with output $q$)\n\n**Worked Example:**\n\nIf you purchase $q = 10$ units:\n\n$$C(10) = 100 + 5(10) = 100 + 50 = \\$150 \\text{ total}$$\n\nThe *marginal cost* is simply:\n\n$$C'(q) = 5$$\n\nmeaning each additional unit costs exactly **\\$5**, regardless of current production level — a hallmark of linear cost models.",
+      "usage": {
+        "prompt_tokens": 357,
+        "completion_tokens": 693,
+        "total_tokens": 1050,
+        "cost": 0.011466,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.011466,
+          "upstream_inference_prompt_cost": 0.001071,
+          "upstream_inference_completions_cost": 0.010395
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:51:12.659Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Mathematical%20Analysis%3A%20Functions%20and%20Linear%20Algebra%0A%0A%23%23%20Problem%20Statement%0A%0A**Exercise%201**%3A%20Given%20the%20function%20%24f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%24%2C%20find%3A%0A%0A1.%20The%20*derivative*%20%24f%27(x)%24%0A2.%20The%20**integral**%20%24%5Cint%20f(x)%5C%2C%20dx%24%0A%0A---%0A%0A%23%23%23%20Solution%0A%0ANotice%20that%20%24f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%20%3D%20(x%2B1)%5E2%24%2C%20which%20simplifies%20verification.%0A%0A**Part%201%20%E2%80%94%20Derivative%3A**%0A%0AApplying%20the%20power%20rule%20term%20by%20term%3A%0A%0A%24%24f%27(x)%20%3D%202x%20%2B%202%24%24%0A%0AThis%20can%20be%20factored%20as%20%24f%27(x)%20%3D%202(x%20%2B%201)%24%2C%20confirming%20the%20single%20critical%20point%20at%20%24x%20%3D%20-1%24.%0A%0A**Part%202%20%E2%80%94%20Integral%3A**%0A%0A%24%24%5Cint%20f(x)%5C%2C%20dx%20%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%20x%5E2%20%2B%20x%20%2B%20C%24%24%0A%0A%3E%20**Tip**%3A%20Always%20verify%20by%20differentiating%20the%20result%20%E2%80%94%20you%20should%20recover%20%24f(x)%24.%0A%0A---%0A%0A%23%23%20Linear%20Algebra%20with%20Lists%0A%0AProperties%20of%20the%20matrix%20%24A%20%3D%20%5Cbegin%7Bpmatrix%7D%20a%20%26%20b%20%5C%5C%20c%20%26%20d%20%5Cend%7Bpmatrix%7D%24%3A%0A%0A-%20**Determinant**%3A%20%24%5Cdet(A)%20%3D%20ad%20-%20bc%24%0A-%20**Trace**%3A%20%24%5Ctext%7Btr%7D(A)%20%3D%20a%20%2B%20d%24%0A-%20**Eigenvalue%20relationship**%3A%20%24%5Clambda%5E2%20-%20%5Ctext%7Btr%7D(A)%5Clambda%20%2B%20%5Cdet(A)%20%3D%200%24%0A-%20**Inverse**%20(exists%20*if%20and%20only%20if*%20%24%5Cdet(A)%20%5Cneq%200%24)%3A%0A%0A%24%24A%5E%7B-1%7D%20%3D%20%5Cfrac%7B1%7D%7Bad%20-%20bc%7D%5Cbegin%7Bpmatrix%7D%20d%20%26%20-b%20%5C%5C%20-c%20%26%20a%20%5Cend%7Bpmatrix%7D%24%24%0A%0A%23%23%23%20Key%20Observations%0A%0A%7C%20Property%20%7C%20Formula%20%7C%20Condition%20%7C%0A%7C---%7C---%7C---%7C%0A%7C%20Invertible%20%7C%20%24%5Cdet(A)%20%5Cneq%200%24%20%7C%20Required%20%7C%0A%7C%20Singular%20%7C%20%24%5Cdet(A)%20%3D%200%24%20%7C%20No%20inverse%20%7C%0A%7C%20Symmetric%20%7C%20%24b%20%3D%20c%24%20%7C%20%24A%20%3D%20A%5ET%24%20%7C%0A%0A---%0A%0A%23%23%20Real%20World%20Context%0A%0A%3E%20**Note**%3A%20In%20economics%2C%20the%20cost%20function%20%24C(q)%20%3D%20100%20%2B%205q%24%20represents%20a%20*linear%20cost%20model*%20where%3A%0A%3E%20-%20%24100%24%20represents%20**fixed%20costs**%20(independent%20of%20quantity)%0A%3E%20-%20%245q%24%20represents%20**variable%20costs**%20(scaling%20with%20output%20%24q%24)%0A%0A**Worked%20Example%3A**%0A%0AIf%20you%20purchase%20%24q%20%3D%2010%24%20units%3A%0A%0A%24%24C(10)%20%3D%20100%20%2B%205(10)%20%3D%20100%20%2B%2050%20%3D%20%5C%24150%20%5Ctext%7B%20total%7D%24%24%0A%0AThe%20*marginal%20cost*%20is%20simply%3A%0A%0A%24%24C%27(q)%20%3D%205%24%24%0A%0Ameaning%20each%20additional%20unit%20costs%20exactly%20**%5C%245**%2C%20regardless%20of%20current%20production%20level%20%E2%80%94%20a%20hallmark%20of%20linear%20cost%20models.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Mathematical%20Analysis%3A%20Functions%20and%20Linear%20Algebra%0A%0A%23%23%20Problem%20Statement%0A%0A**Exercise%201**%3A%20Given%20the%20function%20%24f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%24%2C%20find%3A%0A%0A1.%20The%20*derivative*%20%24f%27(x)%24%0A2.%20The%20**integral**%20%24%5Cint%20f(x)%5C%2C%20dx%24%0A%0A---%0A%0A%23%23%23%20Solution%0A%0ANotice%20that%20%24f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%20%3D%20(x%2B1)%5E2%24%2C%20which%20simplifies%20verification.%0A%0A**Part%201%20%E2%80%94%20Derivative%3A**%0A%0AApplying%20the%20power%20rule%20term%20by%20term%3A%0A%0A%24%24f%27(x)%20%3D%202x%20%2B%202%24%24%0A%0AThis%20can%20be%20factored%20as%20%24f%27(x)%20%3D%202(x%20%2B%201)%24%2C%20confirming%20the%20single%20critical%20point%20at%20%24x%20%3D%20-1%24.%0A%0A**Part%202%20%E2%80%94%20Integral%3A**%0A%0A%24%24%5Cint%20f(x)%5C%2C%20dx%20%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%20x%5E2%20%2B%20x%20%2B%20C%24%24%0A%0A%3E%20**Tip**%3A%20Always%20verify%20by%20differentiating%20the%20result%20%E2%80%94%20you%20should%20recover%20%24f(x)%24.%0A%0A---%0A%0A%23%23%20Linear%20Algebra%20with%20Lists%0A%0AProperties%20of%20the%20matrix%20%24A%20%3D%20%5Cbegin%7Bpmatrix%7D%20a%20%26%20b%20%5C%5C%20c%20%26%20d%20%5Cend%7Bpmatrix%7D%24%3A%0A%0A-%20**Determinant**%3A%20%24%5Cdet(A)%20%3D%20ad%20-%20bc%24%0A-%20**Trace**%3A%20%24%5Ctext%7Btr%7D(A)%20%3D%20a%20%2B%20d%24%0A-%20**Eigenvalue%20relationship**%3A%20%24%5Clambda%5E2%20-%20%5Ctext%7Btr%7D(A)%5Clambda%20%2B%20%5Cdet(A)%20%3D%200%24%0A-%20**Inverse**%20(exists%20*if%20and%20only%20if*%20%24%5Cdet(A)%20%5Cneq%200%24)%3A%0A%0A%24%24A%5E%7B-1%7D%20%3D%20%5Cfrac%7B1%7D%7Bad%20-%20bc%7D%5Cbegin%7Bpmatrix%7D%20d%20%26%20-b%20%5C%5C%20-c%20%26%20a%20%5Cend%7Bpmatrix%7D%24%24%0A%0A%23%23%23%20Key%20Observations%0A%0A%7C%20Property%20%7C%20Formula%20%7C%20Condition%20%7C%0A%7C---%7C---%7C---%7C%0A%7C%20Invertible%20%7C%20%24%5Cdet(A)%20%5Cneq%200%24%20%7C%20Required%20%7C%0A%7C%20Singular%20%7C%20%24%5Cdet(A)%20%3D%200%24%20%7C%20No%20inverse%20%7C%0A%7C%20Symmetric%20%7C%20%24b%20%3D%20c%24%20%7C%20%24A%20%3D%20A%5ET%24%20%7C%0A%0A---%0A%0A%23%23%20Real%20World%20Context%0A%0A%3E%20**Note**%3A%20In%20economics%2C%20the%20cost%20function%20%24C(q)%20%3D%20100%20%2B%205q%24%20represents%20a%20*linear%20cost%20model*%20where%3A%0A%3E%20-%20%24100%24%20represents%20**fixed%20costs**%20(independent%20of%20quantity)%0A%3E%20-%20%245q%24%20represents%20**variable%20costs**%20(scaling%20with%20output%20%24q%24)%0A%0A**Worked%20Example%3A**%0A%0AIf%20you%20purchase%20%24q%20%3D%2010%24%20units%3A%0A%0A%24%24C(10)%20%3D%20100%20%2B%205(10)%20%3D%20100%20%2B%2050%20%3D%20%5C%24150%20%5Ctext%7B%20total%7D%24%24%0A%0AThe%20*marginal%20cost*%20is%20simply%3A%0A%0A%24%24C%27(q)%20%3D%205%24%24%0A%0Ameaning%20each%20additional%20unit%20costs%20exactly%20**%5C%245**%2C%20regardless%20of%20current%20production%20level%20%E2%80%94%20a%20hallmark%20of%20linear%20cost%20models.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:51:12.653Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 12,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "5 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "26 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 12,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "anthropic/claude-sonnet-4.6",
       "modelName": "Claude Sonnet 4.6",
       "promptName": "05-complex-scenarios",
       "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
-      "response": "",
+      "response": "# Complex Scenarios: Edge Cases in Action\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.",
+      "usage": {
+        "prompt_tokens": 484,
+        "completion_tokens": 474,
+        "total_tokens": 958,
+        "cost": 0.008562,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.008562,
+          "upstream_inference_prompt_cost": 0.001452,
+          "upstream_inference_completions_cost": 0.00711
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:51:18.161Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Complex%20Scenarios%3A%20Edge%20Cases%20in%20Action%0A%0A%23%23%20Scenario%201%3A%20Math%20in%20Lists%20with%20Formatting%0A%0A1.%20The%20**Pythagorean%20theorem**%20states%20that%20%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%0A2.%20For%20a%20*right%20triangle*%20with%20sides%20%24a%3D3%24%20and%20%24b%3D4%24%3A%0A%20%20%20-%20Calculate%3A%20%24c%20%3D%20%5Csqrt%7B3%5E2%20%2B%204%5E2%7D%20%3D%20%5Csqrt%7B9%20%2B%2016%7D%20%3D%20%5Csqrt%7B25%7D%20%3D%205%24%0A%20%20%20-%20Therefore%2C%20%24c%20%3D%205%24%20units%0A%0A%23%23%20Scenario%202%3A%20Tables%20with%20Math%0A%0A%7C%20Formula%20%7C%20LaTeX%20%7C%20Result%20%7C%0A%7C---------%7C-------%7C--------%7C%0A%7C%20Quadratic%20%7C%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%20%7C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D%24%20%7C%0A%7C%20Sum%20%7C%20%24%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24%5Cfrac%7Bn(n%2B1)%7D%7B2%7D%24%20%7C%0A%7C%20Product%20%7C%20%24%5Cprod_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24n!%24%20%7C%0A%0A%23%23%20Scenario%203%3A%20Code%20and%20Math%20Mixed%0A%0A%60%60%60python%0A%23%20Calculate%20area%20of%20circle%20with%20radius%20r%0Aimport%20math%0A%0Adef%20circle_area(r)%3A%0A%20%20%20%20%23%20Formula%3A%20A%20%3D%20%CF%80r%C2%B2%0A%20%20%20%20return%20math.pi%20*%20r**2%0A%0Aprint(f%22Area%3A%20%7Bcircle_area(5)%7D%22)%0A%60%60%60%0A%0AThe%20mathematical%20formula%20is%20%24A%20%3D%20%5Cpi%20r%5E2%24%20where%20%24r%24%20is%20the%20radius.%0A%0A%23%23%20Scenario%204%3A%20Horizontal%20Rules%0A%0AFirst%20section%0A%0A---%0A%0ASecond%20section%20with%20math%3A%20%24%5Cint_%7B0%7D%5E%7B1%7D%20x%20%5C%2C%20dx%20%3D%20%5Cfrac%7B1%7D%7B2%7D%24%0A%0A---%0A%0AThird%20section%0A%0A%23%23%20Scenario%205%3A%20Multiple%20Dollar%20Signs%0A%0APrices%3A%20Computer%20costs%20%241%2C200%2C%20monitor%20%24300%2C%20keyboard%20%2450%2C%20mouse%20%2425.%20Total%3A%20%241%2C575.%0A%0AMath%3A%20The%20formula%20%24f(x)%20%3D%20x%5E2%24%20evaluates%20to%20%24f(5)%20%3D%2025%24.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=anthropic%2Fclaude-sonnet-4.6&content=%23%20Complex%20Scenarios%3A%20Edge%20Cases%20in%20Action%0A%0A%23%23%20Scenario%201%3A%20Math%20in%20Lists%20with%20Formatting%0A%0A1.%20The%20**Pythagorean%20theorem**%20states%20that%20%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%0A2.%20For%20a%20*right%20triangle*%20with%20sides%20%24a%3D3%24%20and%20%24b%3D4%24%3A%0A%20%20%20-%20Calculate%3A%20%24c%20%3D%20%5Csqrt%7B3%5E2%20%2B%204%5E2%7D%20%3D%20%5Csqrt%7B9%20%2B%2016%7D%20%3D%20%5Csqrt%7B25%7D%20%3D%205%24%0A%20%20%20-%20Therefore%2C%20%24c%20%3D%205%24%20units%0A%0A%23%23%20Scenario%202%3A%20Tables%20with%20Math%0A%0A%7C%20Formula%20%7C%20LaTeX%20%7C%20Result%20%7C%0A%7C---------%7C-------%7C--------%7C%0A%7C%20Quadratic%20%7C%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%20%7C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D%24%20%7C%0A%7C%20Sum%20%7C%20%24%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24%5Cfrac%7Bn(n%2B1)%7D%7B2%7D%24%20%7C%0A%7C%20Product%20%7C%20%24%5Cprod_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24n!%24%20%7C%0A%0A%23%23%20Scenario%203%3A%20Code%20and%20Math%20Mixed%0A%0A%60%60%60python%0A%23%20Calculate%20area%20of%20circle%20with%20radius%20r%0Aimport%20math%0A%0Adef%20circle_area(r)%3A%0A%20%20%20%20%23%20Formula%3A%20A%20%3D%20%CF%80r%C2%B2%0A%20%20%20%20return%20math.pi%20*%20r**2%0A%0Aprint(f%22Area%3A%20%7Bcircle_area(5)%7D%22)%0A%60%60%60%0A%0AThe%20mathematical%20formula%20is%20%24A%20%3D%20%5Cpi%20r%5E2%24%20where%20%24r%24%20is%20the%20radius.%0A%0A%23%23%20Scenario%204%3A%20Horizontal%20Rules%0A%0AFirst%20section%0A%0A---%0A%0ASecond%20section%20with%20math%3A%20%24%5Cint_%7B0%7D%5E%7B1%7D%20x%20%5C%2C%20dx%20%3D%20%5Cfrac%7B1%7D%7B2%7D%24%0A%0A---%0A%0AThird%20section%0A%0A%23%23%20Scenario%205%3A%20Multiple%20Dollar%20Signs%0A%0APrices%3A%20Computer%20costs%20%241%2C200%2C%20monitor%20%24300%2C%20keyboard%20%2450%2C%20mouse%20%2425.%20Total%3A%20%241%2C575.%0A%0AMath%3A%20The%20formula%20%24f(x)%20%3D%20x%5E2%24%20evaluates%20to%20%24f(5)%20%3D%2025%24.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:51:18.155Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 12,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "16 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (12 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 12,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "deepseek/deepseek-v4-pro",
       "modelName": "Deepseek V4 Pro",
       "promptName": "01-math-basics",
       "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math: Show the same formula as a display equation:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n3. Matrices: Show a 2x2 identity matrix:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\n4. Multiple equations on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15.\n",
-      "response": "",
+      "response": "Let's explore a core algebra concept. The quadratic formula, $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$, gives the solution to any quadratic equation $ax^2 + bx + c = 0$. Here it is as a displayed equation:\n\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\nAn identity matrix is fundamental in linear algebra:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nAnd a few iconic equations from physics and geometry:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\nIn everyday life, money amounts use the same symbol but must not be rendered as math: The item costs \\$5 and the shipping is \\$10, for a total of \\$15.",
+      "usage": {
+        "prompt_tokens": 189,
+        "completion_tokens": 976,
+        "total_tokens": 1165,
+        "cost": 0.001921744305,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 141,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.001921744305,
+          "upstream_inference_prompt_cost": 0.000057076785,
+          "upstream_inference_completions_cost": 0.00186466752
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 788,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:51:37.048Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=Let%27s%20explore%20a%20core%20algebra%20concept.%20The%20quadratic%20formula%2C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%2C%20gives%20the%20solution%20to%20any%20quadratic%20equation%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24.%20Here%20it%20is%20as%20a%20displayed%20equation%3A%0A%0A%24%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%24%0A%0AAn%20identity%20matrix%20is%20fundamental%20in%20linear%20algebra%3A%0A%24%24I%20%3D%20%5Cbegin%7Bpmatrix%7D%201%20%26%200%20%5C%5C%200%20%26%201%20%5Cend%7Bpmatrix%7D%24%24%0A%0AAnd%20a%20few%20iconic%20equations%20from%20physics%20and%20geometry%3A%0A%24%24E%20%3D%20mc%5E2%24%24%0A%24%24F%20%3D%20ma%24%24%0A%24%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%24%0A%0AIn%20everyday%20life%2C%20money%20amounts%20use%20the%20same%20symbol%20but%20must%20not%20be%20rendered%20as%20math%3A%20The%20item%20costs%20%5C%245%20and%20the%20shipping%20is%20%5C%2410%2C%20for%20a%20total%20of%20%5C%2415.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=Let%27s%20explore%20a%20core%20algebra%20concept.%20The%20quadratic%20formula%2C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%2C%20gives%20the%20solution%20to%20any%20quadratic%20equation%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24.%20Here%20it%20is%20as%20a%20displayed%20equation%3A%0A%0A%24%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%24%0A%0AAn%20identity%20matrix%20is%20fundamental%20in%20linear%20algebra%3A%0A%24%24I%20%3D%20%5Cbegin%7Bpmatrix%7D%201%20%26%200%20%5C%5C%200%20%26%201%20%5Cend%7Bpmatrix%7D%24%24%0A%0AAnd%20a%20few%20iconic%20equations%20from%20physics%20and%20geometry%3A%0A%24%24E%20%3D%20mc%5E2%24%24%0A%24%24F%20%3D%20ma%24%24%0A%24%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%24%0A%0AIn%20everyday%20life%2C%20money%20amounts%20use%20the%20same%20symbol%20but%20must%20not%20be%20rendered%20as%20math%3A%20The%20item%20costs%20%5C%245%20and%20the%20shipping%20is%20%5C%2410%2C%20for%20a%20total%20of%20%5C%2415.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:51:37.040Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "5 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "7 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "deepseek/deepseek-v4-pro",
       "modelName": "Deepseek V4 Pro",
       "promptName": "02-markdown-formatting",
       "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
-      "response": "",
+      "response": "Here's a response with all the requested markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 191,
+        "total_tokens": 392,
+        "cost": 0.00102025,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00102025,
+          "upstream_inference_prompt_cost": 0.00035175,
+          "upstream_inference_completions_cost": 0.0006685
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:51:41.655Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=Here%27s%20a%20response%20with%20all%20the%20requested%20markdown%20elements%3A%0A%0A%23%23%20Headers%0A%23%23%23%20This%20is%20H3%0A%23%23%23%23%20This%20is%20H4%0A%0A%23%23%20Text%20formatting%0A**Bold%20text**%20and%20*italic%20text*%20and%20***bold%20italic***%0A%0A%23%23%20Lists%0ANested%20unordered%20list%3A%0A-%20Level%201%20item%20A%0A%20%20-%20Level%202%20item%20A1%0A%20%20-%20Level%202%20item%20A2%0A%20%20%20%20-%20Level%203%20item%20A2a%0A-%20Level%201%20item%20B%0A%0ANested%20ordered%20list%3A%0A1.%20First%20item%0A%20%20%201.%20Nested%20first%0A%20%20%202.%20Nested%20second%0A2.%20Second%20item%0A3.%20Third%20item%0A%0A%23%23%20Tables%0A%7C%20Model%20%7C%20Context%20%7C%20Price%20%7C%0A%7C-------%7C---------%7C-------%7C%0A%7C%20GPT-4%20%7C%20128k%20%7C%20%240.03%20%7C%0A%7C%20Claude%20%7C%20200k%20%7C%20%240.02%20%7C%0A%0A%23%23%20Blockquotes%0A%3E%20This%20is%20a%20blockquote%0A%3E%20with%20multiple%20lines\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=Here%27s%20a%20response%20with%20all%20the%20requested%20markdown%20elements%3A%0A%0A%23%23%20Headers%0A%23%23%23%20This%20is%20H3%0A%23%23%23%23%20This%20is%20H4%0A%0A%23%23%20Text%20formatting%0A**Bold%20text**%20and%20*italic%20text*%20and%20***bold%20italic***%0A%0A%23%23%20Lists%0ANested%20unordered%20list%3A%0A-%20Level%201%20item%20A%0A%20%20-%20Level%202%20item%20A1%0A%20%20-%20Level%202%20item%20A2%0A%20%20%20%20-%20Level%203%20item%20A2a%0A-%20Level%201%20item%20B%0A%0ANested%20ordered%20list%3A%0A1.%20First%20item%0A%20%20%201.%20Nested%20first%0A%20%20%202.%20Nested%20second%0A2.%20Second%20item%0A3.%20Third%20item%0A%0A%23%23%20Tables%0A%7C%20Model%20%7C%20Context%20%7C%20Price%20%7C%0A%7C-------%7C---------%7C-------%7C%0A%7C%20GPT-4%20%7C%20128k%20%7C%20%240.03%20%7C%0A%7C%20Claude%20%7C%20200k%20%7C%20%240.02%20%7C%0A%0A%23%23%20Blockquotes%0A%3E%20This%20is%20a%20blockquote%0A%3E%20with%20multiple%20lines\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:51:41.649Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (9 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "3+ level nested lists",
+            "actual": "1 nested list structures",
+            "message": "3+ level nested lists assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "deepseek/deepseek-v4-pro",
       "modelName": "Deepseek V4 Pro",
       "promptName": "03-code-blocks",
       "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
-      "response": "",
+      "response": "Here's the response with the requested fenced code blocks and inline code examples.\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code\n\nTo render small code snippets inside a paragraph, wrap them in single backticks. For example, the variable `x^2` is displayed as code, not interpreted as superscript. Similarly, `a_b` and `$price` stay as plain text code instead of turning into a subscript or a math expression. This keeps technical identifiers readable within normal text.",
+      "usage": {
+        "prompt_tokens": 240,
+        "completion_tokens": 523,
+        "total_tokens": 763,
+        "cost": 0.0010005,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010005,
+          "upstream_inference_prompt_cost": 0.000216,
+          "upstream_inference_completions_cost": 0.0007845
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 284,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:51:50.959Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=Here%27s%20the%20response%20with%20the%20requested%20fenced%20code%20blocks%20and%20inline%20code%20examples.%0A%0A%23%23%20Python%20code%0A%0A%60%60%60python%0Adef%20quadratic_formula(a%2C%20b%2C%20c)%3A%0A%20%20%20%20discriminant%20%3D%20b**2%20-%204*a*c%0A%20%20%20%20x1%20%3D%20(-b%20%2B%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20x2%20%3D%20(-b%20-%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20return%20x1%2C%20x2%0A%0A%23%20Example%3A%20solve%20x%5E2%20-%205x%20%2B%206%20%3D%200%0Aresult%20%3D%20quadratic_formula(1%2C%20-5%2C%206)%0Aprint(f%22Solutions%3A%20x%20%3D%20%7Bresult%5B0%5D%7D%2C%20x%20%3D%20%7Bresult%5B1%5D%7D%22)%0A%60%60%60%0A%0A%23%23%20JavaScript%20code%0A%0A%60%60%60javascript%0Aconst%20fibonacci%20%3D%20(n)%20%3D%3E%20%7B%0A%20%20if%20(n%20%3C%3D%201)%20return%20n%3B%0A%20%20return%20fibonacci(n%20-%201)%20%2B%20fibonacci(n%20-%202)%3B%0A%7D%3B%0A%0Aconsole.log(fibonacci(10))%3B%20%2F%2F%2055%0A%60%60%60%0A%0A%23%23%20Inline%20code%0A%0ATo%20render%20small%20code%20snippets%20inside%20a%20paragraph%2C%20wrap%20them%20in%20single%20backticks.%20For%20example%2C%20the%20variable%20%60x%5E2%60%20is%20displayed%20as%20code%2C%20not%20interpreted%20as%20superscript.%20Similarly%2C%20%60a_b%60%20and%20%60%24price%60%20stay%20as%20plain%20text%20code%20instead%20of%20turning%20into%20a%20subscript%20or%20a%20math%20expression.%20This%20keeps%20technical%20identifiers%20readable%20within%20normal%20text.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=Here%27s%20the%20response%20with%20the%20requested%20fenced%20code%20blocks%20and%20inline%20code%20examples.%0A%0A%23%23%20Python%20code%0A%0A%60%60%60python%0Adef%20quadratic_formula(a%2C%20b%2C%20c)%3A%0A%20%20%20%20discriminant%20%3D%20b**2%20-%204*a*c%0A%20%20%20%20x1%20%3D%20(-b%20%2B%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20x2%20%3D%20(-b%20-%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20return%20x1%2C%20x2%0A%0A%23%20Example%3A%20solve%20x%5E2%20-%205x%20%2B%206%20%3D%200%0Aresult%20%3D%20quadratic_formula(1%2C%20-5%2C%206)%0Aprint(f%22Solutions%3A%20x%20%3D%20%7Bresult%5B0%5D%7D%2C%20x%20%3D%20%7Bresult%5B1%5D%7D%22)%0A%60%60%60%0A%0A%23%23%20JavaScript%20code%0A%0A%60%60%60javascript%0Aconst%20fibonacci%20%3D%20(n)%20%3D%3E%20%7B%0A%20%20if%20(n%20%3C%3D%201)%20return%20n%3B%0A%20%20return%20fibonacci(n%20-%201)%20%2B%20fibonacci(n%20-%202)%3B%0A%7D%3B%0A%0Aconsole.log(fibonacci(10))%3B%20%2F%2F%2055%0A%60%60%60%0A%0A%23%23%20Inline%20code%0A%0ATo%20render%20small%20code%20snippets%20inside%20a%20paragraph%2C%20wrap%20them%20in%20single%20backticks.%20For%20example%2C%20the%20variable%20%60x%5E2%60%20is%20displayed%20as%20code%2C%20not%20interpreted%20as%20superscript.%20Similarly%2C%20%60a_b%60%20and%20%60%24price%60%20stay%20as%20plain%20text%20code%20instead%20of%20turning%20into%20a%20subscript%20or%20a%20math%20expression.%20This%20keeps%20technical%20identifiers%20readable%20within%20normal%20text.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:51:50.953Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": [
+          "python",
+          "javascript"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "2 code blocks (python, javascript)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [
+            "python",
+            "javascript"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "deepseek/deepseek-v4-pro",
       "modelName": "Deepseek V4 Pro",
       "promptName": "04-mixed-markdown-latex",
       "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
-      "response": "",
+      "response": "## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x)\\,dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n\\[\n\\int f(x)\\,dx\n= \\int \\left(x^2 + 2x + 1\\right)\\,dx\n= \\frac{x^3}{3} + x^2 + x + C\n\\]\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\operatorname{tr}(A) = a + d$\n- Inverse, if $ad - bc \\neq 0$:\n\\[\nA^{-1}\n= \\frac{1}{ad - bc}\n\\begin{pmatrix}\nd & -b \\\\\n-c & a\n\\end{pmatrix}\n\\]\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are \\$100 and variable costs are \\$5 per unit.\n\nMoney context: If you buy 10 units, the total cost is\n\\[\nC(10) = 100 + 5(10) = \\$150.\n\\]\nThat is \\$100 fixed plus \\$50 variable, for a total of \\$150.",
+      "usage": {
+        "prompt_tokens": 319,
+        "completion_tokens": 1645,
+        "total_tokens": 1964,
+        "cost": 0.00627966,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00627966,
+          "upstream_inference_prompt_cost": 0.00055506,
+          "upstream_inference_completions_cost": 0.0057246
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1318,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:52:13.620Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=%23%23%20Problem%20Statement%0A**Exercise%201**%3A%20Given%20the%20function%20%24f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%24%2C%20find%3A%0A%0A1.%20The%20*derivative*%20%24f%27(x)%24%0A2.%20The%20**integral**%20%24%5Cint%20f(x)%5C%2Cdx%24%0A%0A%23%23%23%20Solution%0AThe%20derivative%20is%3A%0A%24%24f%27(x)%20%3D%202x%20%2B%202%24%24%0A%0AThe%20integral%20is%3A%0A%5C%5B%0A%5Cint%20f(x)%5C%2Cdx%0A%3D%20%5Cint%20%5Cleft(x%5E2%20%2B%202x%20%2B%201%5Cright)%5C%2Cdx%0A%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%20x%5E2%20%2B%20x%20%2B%20C%0A%5C%5D%0A%0A%23%23%20Linear%20Algebra%20with%20Lists%0AProperties%20of%20the%20matrix%20%24A%20%3D%20%5Cbegin%7Bpmatrix%7D%20a%20%26%20b%20%5C%5C%20c%20%26%20d%20%5Cend%7Bpmatrix%7D%24%3A%0A%0A-%20Determinant%3A%20%24%5Cdet(A)%20%3D%20ad%20-%20bc%24%0A-%20Trace%3A%20%24%5Coperatorname%7Btr%7D(A)%20%3D%20a%20%2B%20d%24%0A-%20Inverse%2C%20if%20%24ad%20-%20bc%20%5Cneq%200%24%3A%0A%5C%5B%0AA%5E%7B-1%7D%0A%3D%20%5Cfrac%7B1%7D%7Bad%20-%20bc%7D%0A%5Cbegin%7Bpmatrix%7D%0Ad%20%26%20-b%20%5C%5C%0A-c%20%26%20a%0A%5Cend%7Bpmatrix%7D%0A%5C%5D%0A%0A%23%23%20Real%20World%20Context%0A%3E%20**Note**%3A%20In%20economics%2C%20the%20cost%20function%20%24C(q)%20%3D%20100%20%2B%205q%24%20means%20fixed%20costs%20are%20%5C%24100%20and%20variable%20costs%20are%20%5C%245%20per%20unit.%0A%0AMoney%20context%3A%20If%20you%20buy%2010%20units%2C%20the%20total%20cost%20is%0A%5C%5B%0AC(10)%20%3D%20100%20%2B%205(10)%20%3D%20%5C%24150.%0A%5C%5D%0AThat%20is%20%5C%24100%20fixed%20plus%20%5C%2450%20variable%2C%20for%20a%20total%20of%20%5C%24150.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=%23%23%20Problem%20Statement%0A**Exercise%201**%3A%20Given%20the%20function%20%24f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%24%2C%20find%3A%0A%0A1.%20The%20*derivative*%20%24f%27(x)%24%0A2.%20The%20**integral**%20%24%5Cint%20f(x)%5C%2Cdx%24%0A%0A%23%23%23%20Solution%0AThe%20derivative%20is%3A%0A%24%24f%27(x)%20%3D%202x%20%2B%202%24%24%0A%0AThe%20integral%20is%3A%0A%5C%5B%0A%5Cint%20f(x)%5C%2Cdx%0A%3D%20%5Cint%20%5Cleft(x%5E2%20%2B%202x%20%2B%201%5Cright)%5C%2Cdx%0A%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%20x%5E2%20%2B%20x%20%2B%20C%0A%5C%5D%0A%0A%23%23%20Linear%20Algebra%20with%20Lists%0AProperties%20of%20the%20matrix%20%24A%20%3D%20%5Cbegin%7Bpmatrix%7D%20a%20%26%20b%20%5C%5C%20c%20%26%20d%20%5Cend%7Bpmatrix%7D%24%3A%0A%0A-%20Determinant%3A%20%24%5Cdet(A)%20%3D%20ad%20-%20bc%24%0A-%20Trace%3A%20%24%5Coperatorname%7Btr%7D(A)%20%3D%20a%20%2B%20d%24%0A-%20Inverse%2C%20if%20%24ad%20-%20bc%20%5Cneq%200%24%3A%0A%5C%5B%0AA%5E%7B-1%7D%0A%3D%20%5Cfrac%7B1%7D%7Bad%20-%20bc%7D%0A%5Cbegin%7Bpmatrix%7D%0Ad%20%26%20-b%20%5C%5C%0A-c%20%26%20a%0A%5Cend%7Bpmatrix%7D%0A%5C%5D%0A%0A%23%23%20Real%20World%20Context%0A%3E%20**Note**%3A%20In%20economics%2C%20the%20cost%20function%20%24C(q)%20%3D%20100%20%2B%205q%24%20means%20fixed%20costs%20are%20%5C%24100%20and%20variable%20costs%20are%20%5C%245%20per%20unit.%0A%0AMoney%20context%3A%20If%20you%20buy%2010%20units%2C%20the%20total%20cost%20is%0A%5C%5B%0AC(10)%20%3D%20100%20%2B%205(10)%20%3D%20%5C%24150.%0A%5C%5D%0AThat%20is%20%5C%24100%20fixed%20plus%20%5C%2450%20variable%2C%20for%20a%20total%20of%20%5C%24150.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:52:13.613Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "4 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "12 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "deepseek/deepseek-v4-pro",
       "modelName": "Deepseek V4 Pro",
       "promptName": "05-complex-scenarios",
       "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
-      "response": "",
+      "response": "Below is a response that preserves Markdown structure while handling inline math, tables, code blocks, horizontal rules, and literal currency dollar signs.\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$.\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate:  \n     $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units.\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x\\,dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n### Edge-case handling notes\n\n- Currency dollar signs are escaped as `\\$` so they are not mistaken for math delimiters.\n- Inline math remains delimited with `$...$`.\n- Table cells can safely contain inline LaTeX math.\n- Fenced code blocks preserve code exactly.\n- Horizontal rules are separated by blank lines to avoid accidental Markdown parsing.",
+      "usage": {
+        "prompt_tokens": 443,
+        "completion_tokens": 1561,
+        "total_tokens": 2004,
+        "cost": 0.0062031,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0062031,
+          "upstream_inference_prompt_cost": 0.00077082,
+          "upstream_inference_completions_cost": 0.00543228
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1056,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:52:41.856Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=Below%20is%20a%20response%20that%20preserves%20Markdown%20structure%20while%20handling%20inline%20math%2C%20tables%2C%20code%20blocks%2C%20horizontal%20rules%2C%20and%20literal%20currency%20dollar%20signs.%0A%0A%23%23%20Scenario%201%3A%20Math%20in%20Lists%20with%20Formatting%0A%0A1.%20The%20**Pythagorean%20theorem**%20states%20that%20%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24.%0A2.%20For%20a%20*right%20triangle*%20with%20sides%20%24a%3D3%24%20and%20%24b%3D4%24%3A%0A%20%20%20-%20Calculate%3A%20%20%0A%20%20%20%20%20%24c%20%3D%20%5Csqrt%7B3%5E2%20%2B%204%5E2%7D%20%3D%20%5Csqrt%7B9%20%2B%2016%7D%20%3D%20%5Csqrt%7B25%7D%20%3D%205%24%0A%20%20%20-%20Therefore%2C%20%24c%20%3D%205%24%20units.%0A%0A%23%23%20Scenario%202%3A%20Tables%20with%20Math%0A%0A%7C%20Formula%20%7C%20LaTeX%20%7C%20Result%20%7C%0A%7C---------%7C-------%7C--------%7C%0A%7C%20Quadratic%20%7C%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%20%7C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D%24%20%7C%0A%7C%20Sum%20%7C%20%24%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24%5Cfrac%7Bn(n%2B1)%7D%7B2%7D%24%20%7C%0A%7C%20Product%20%7C%20%24%5Cprod_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24n!%24%20%7C%0A%0A%23%23%20Scenario%203%3A%20Code%20and%20Math%20Mixed%0A%0A%60%60%60python%0A%23%20Calculate%20area%20of%20circle%20with%20radius%20r%0Aimport%20math%0A%0Adef%20circle_area(r)%3A%0A%20%20%20%20%23%20Formula%3A%20A%20%3D%20%CF%80r%C2%B2%0A%20%20%20%20return%20math.pi%20*%20r**2%0A%0Aprint(f%22Area%3A%20%7Bcircle_area(5)%7D%22)%0A%60%60%60%0A%0AThe%20mathematical%20formula%20is%20%24A%20%3D%20%5Cpi%20r%5E2%24%20where%20%24r%24%20is%20the%20radius.%0A%0A%23%23%20Scenario%204%3A%20Horizontal%20Rules%0A%0AFirst%20section%0A%0A---%0A%0ASecond%20section%20with%20math%3A%20%24%5Cint_%7B0%7D%5E%7B1%7D%20x%5C%2Cdx%20%3D%20%5Cfrac%7B1%7D%7B2%7D%24%0A%0A---%0A%0AThird%20section%0A%0A%23%23%20Scenario%205%3A%20Multiple%20Dollar%20Signs%0A%0APrices%3A%20Computer%20costs%20%5C%241%2C200%2C%20monitor%20%5C%24300%2C%20keyboard%20%5C%2450%2C%20mouse%20%5C%2425.%20Total%3A%20%5C%241%2C575.%0A%0AMath%3A%20The%20formula%20%24f(x)%20%3D%20x%5E2%24%20evaluates%20to%20%24f(5)%20%3D%2025%24.%0A%0A%23%23%23%20Edge-case%20handling%20notes%0A%0A-%20Currency%20dollar%20signs%20are%20escaped%20as%20%60%5C%24%60%20so%20they%20are%20not%20mistaken%20for%20math%20delimiters.%0A-%20Inline%20math%20remains%20delimited%20with%20%60%24...%24%60.%0A-%20Table%20cells%20can%20safely%20contain%20inline%20LaTeX%20math.%0A-%20Fenced%20code%20blocks%20preserve%20code%20exactly.%0A-%20Horizontal%20rules%20are%20separated%20by%20blank%20lines%20to%20avoid%20accidental%20Markdown%20parsing.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=deepseek%2Fdeepseek-v4-pro&content=Below%20is%20a%20response%20that%20preserves%20Markdown%20structure%20while%20handling%20inline%20math%2C%20tables%2C%20code%20blocks%2C%20horizontal%20rules%2C%20and%20literal%20currency%20dollar%20signs.%0A%0A%23%23%20Scenario%201%3A%20Math%20in%20Lists%20with%20Formatting%0A%0A1.%20The%20**Pythagorean%20theorem**%20states%20that%20%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24.%0A2.%20For%20a%20*right%20triangle*%20with%20sides%20%24a%3D3%24%20and%20%24b%3D4%24%3A%0A%20%20%20-%20Calculate%3A%20%20%0A%20%20%20%20%20%24c%20%3D%20%5Csqrt%7B3%5E2%20%2B%204%5E2%7D%20%3D%20%5Csqrt%7B9%20%2B%2016%7D%20%3D%20%5Csqrt%7B25%7D%20%3D%205%24%0A%20%20%20-%20Therefore%2C%20%24c%20%3D%205%24%20units.%0A%0A%23%23%20Scenario%202%3A%20Tables%20with%20Math%0A%0A%7C%20Formula%20%7C%20LaTeX%20%7C%20Result%20%7C%0A%7C---------%7C-------%7C--------%7C%0A%7C%20Quadratic%20%7C%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%20%7C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D%24%20%7C%0A%7C%20Sum%20%7C%20%24%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24%5Cfrac%7Bn(n%2B1)%7D%7B2%7D%24%20%7C%0A%7C%20Product%20%7C%20%24%5Cprod_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24n!%24%20%7C%0A%0A%23%23%20Scenario%203%3A%20Code%20and%20Math%20Mixed%0A%0A%60%60%60python%0A%23%20Calculate%20area%20of%20circle%20with%20radius%20r%0Aimport%20math%0A%0Adef%20circle_area(r)%3A%0A%20%20%20%20%23%20Formula%3A%20A%20%3D%20%CF%80r%C2%B2%0A%20%20%20%20return%20math.pi%20*%20r**2%0A%0Aprint(f%22Area%3A%20%7Bcircle_area(5)%7D%22)%0A%60%60%60%0A%0AThe%20mathematical%20formula%20is%20%24A%20%3D%20%5Cpi%20r%5E2%24%20where%20%24r%24%20is%20the%20radius.%0A%0A%23%23%20Scenario%204%3A%20Horizontal%20Rules%0A%0AFirst%20section%0A%0A---%0A%0ASecond%20section%20with%20math%3A%20%24%5Cint_%7B0%7D%5E%7B1%7D%20x%5C%2Cdx%20%3D%20%5Cfrac%7B1%7D%7B2%7D%24%0A%0A---%0A%0AThird%20section%0A%0A%23%23%20Scenario%205%3A%20Multiple%20Dollar%20Signs%0A%0APrices%3A%20Computer%20costs%20%5C%241%2C200%2C%20monitor%20%5C%24300%2C%20keyboard%20%5C%2450%2C%20mouse%20%5C%2425.%20Total%3A%20%5C%241%2C575.%0A%0AMath%3A%20The%20formula%20%24f(x)%20%3D%20x%5E2%24%20evaluates%20to%20%24f(5)%20%3D%2025%24.%0A%0A%23%23%23%20Edge-case%20handling%20notes%0A%0A-%20Currency%20dollar%20signs%20are%20escaped%20as%20%60%5C%24%60%20so%20they%20are%20not%20mistaken%20for%20math%20delimiters.%0A-%20Inline%20math%20remains%20delimited%20with%20%60%24...%24%60.%0A-%20Table%20cells%20can%20safely%20contain%20inline%20LaTeX%20math.%0A-%20Fenced%20code%20blocks%20preserve%20code%20exactly.%0A-%20Horizontal%20rules%20are%20separated%20by%20blank%20lines%20to%20avoid%20accidental%20Markdown%20parsing.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:52:41.850Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 12,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "16 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (12 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 12,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "google/gemini-2.5-flash",
       "modelName": "Gemini 2.5 Flash",
       "promptName": "01-math-basics",
       "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math: Show the same formula as a display equation:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n3. Matrices: Show a 2x2 identity matrix:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\n4. Multiple equations on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15.\n",
-      "response": "",
+      "response": "Let's review some math basics!\n\nFirst, the quadratic formula is a fundamental tool for solving quadratic equations of the form $ax^2 + bx + c = 0$. It states that the solutions for $x$ are given by $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. Here, $a$, $b$, and $c$ are coefficients of the quadratic equation. The $\\pm$ symbol indicates that there are generally two solutions: one using the plus sign and one using the minus sign. The term $b^2 - 4ac$ is known as the discriminant, which tells us about the nature of the roots (real or complex, distinct or repeated).\n\nFor clarity, here is the quadratic formula displayed:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\nNext, let's look at matrices. A particularly important matrix is the identity matrix, which has ones on its main diagonal and zeros elsewhere. For a 2x2 matrix, the identity matrix is:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nWe also encounter many important equations in physics and geometry, which can be expressed on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\nFinally, in a non-mathematical context, we can talk about money. The item costs $5 and the shipping is $10, for a total of $15.",
+      "usage": {
+        "prompt_tokens": 200,
+        "completion_tokens": 340,
+        "total_tokens": 540,
+        "cost": 0.00091,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00091,
+          "upstream_inference_prompt_cost": 0.00006,
+          "upstream_inference_completions_cost": 0.00085
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:52:44.834Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=Let%27s%20review%20some%20math%20basics!%0A%0AFirst%2C%20the%20quadratic%20formula%20is%20a%20fundamental%20tool%20for%20solving%20quadratic%20equations%20of%20the%20form%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24.%20It%20states%20that%20the%20solutions%20for%20%24x%24%20are%20given%20by%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24.%20Here%2C%20%24a%24%2C%20%24b%24%2C%20and%20%24c%24%20are%20coefficients%20of%20the%20quadratic%20equation.%20The%20%24%5Cpm%24%20symbol%20indicates%20that%20there%20are%20generally%20two%20solutions%3A%20one%20using%20the%20plus%20sign%20and%20one%20using%20the%20minus%20sign.%20The%20term%20%24b%5E2%20-%204ac%24%20is%20known%20as%20the%20discriminant%2C%20which%20tells%20us%20about%20the%20nature%20of%20the%20roots%20(real%20or%20complex%2C%20distinct%20or%20repeated).%0A%0AFor%20clarity%2C%20here%20is%20the%20quadratic%20formula%20displayed%3A%0A%24%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%24%0A%0ANext%2C%20let%27s%20look%20at%20matrices.%20A%20particularly%20important%20matrix%20is%20the%20identity%20matrix%2C%20which%20has%20ones%20on%20its%20main%20diagonal%20and%20zeros%20elsewhere.%20For%20a%202x2%20matrix%2C%20the%20identity%20matrix%20is%3A%0A%24%24I%20%3D%20%5Cbegin%7Bpmatrix%7D%201%20%26%200%20%5C%5C%200%20%26%201%20%5Cend%7Bpmatrix%7D%24%24%0A%0AWe%20also%20encounter%20many%20important%20equations%20in%20physics%20and%20geometry%2C%20which%20can%20be%20expressed%20on%20separate%20lines%3A%0A%24%24E%20%3D%20mc%5E2%24%24%0A%24%24F%20%3D%20ma%24%24%0A%24%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%24%0A%0AFinally%2C%20in%20a%20non-mathematical%20context%2C%20we%20can%20talk%20about%20money.%20The%20item%20costs%20%245%20and%20the%20shipping%20is%20%2410%2C%20for%20a%20total%20of%20%2415.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=Let%27s%20review%20some%20math%20basics!%0A%0AFirst%2C%20the%20quadratic%20formula%20is%20a%20fundamental%20tool%20for%20solving%20quadratic%20equations%20of%20the%20form%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24.%20It%20states%20that%20the%20solutions%20for%20%24x%24%20are%20given%20by%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24.%20Here%2C%20%24a%24%2C%20%24b%24%2C%20and%20%24c%24%20are%20coefficients%20of%20the%20quadratic%20equation.%20The%20%24%5Cpm%24%20symbol%20indicates%20that%20there%20are%20generally%20two%20solutions%3A%20one%20using%20the%20plus%20sign%20and%20one%20using%20the%20minus%20sign.%20The%20term%20%24b%5E2%20-%204ac%24%20is%20known%20as%20the%20discriminant%2C%20which%20tells%20us%20about%20the%20nature%20of%20the%20roots%20(real%20or%20complex%2C%20distinct%20or%20repeated).%0A%0AFor%20clarity%2C%20here%20is%20the%20quadratic%20formula%20displayed%3A%0A%24%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%24%0A%0ANext%2C%20let%27s%20look%20at%20matrices.%20A%20particularly%20important%20matrix%20is%20the%20identity%20matrix%2C%20which%20has%20ones%20on%20its%20main%20diagonal%20and%20zeros%20elsewhere.%20For%20a%202x2%20matrix%2C%20the%20identity%20matrix%20is%3A%0A%24%24I%20%3D%20%5Cbegin%7Bpmatrix%7D%201%20%26%200%20%5C%5C%200%20%26%201%20%5Cend%7Bpmatrix%7D%24%24%0A%0AWe%20also%20encounter%20many%20important%20equations%20in%20physics%20and%20geometry%2C%20which%20can%20be%20expressed%20on%20separate%20lines%3A%0A%24%24E%20%3D%20mc%5E2%24%24%0A%24%24F%20%3D%20ma%24%24%0A%24%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%24%0A%0AFinally%2C%20in%20a%20non-mathematical%20context%2C%20we%20can%20talk%20about%20money.%20The%20item%20costs%20%245%20and%20the%20shipping%20is%20%2410%2C%20for%20a%20total%20of%20%2415.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:52:44.828Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "5 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "13 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "google/gemini-2.5-flash",
       "modelName": "Gemini 2.5 Flash",
       "promptName": "02-markdown-formatting",
       "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
-      "response": "",
+      "response": "## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 180,
+        "total_tokens": 381,
+        "cost": 0.0005103,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005103,
+          "upstream_inference_prompt_cost": 0.0000603,
+          "upstream_inference_completions_cost": 0.00045
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:52:46.896Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=%23%23%20Headers%0A%23%23%23%20This%20is%20H3%0A%23%23%23%23%20This%20is%20H4%0A%0A%23%23%20Text%20formatting%0A**Bold%20text**%20and%20*italic%20text*%20and%20***bold%20italic***%0A%0A%23%23%20Lists%0ANested%20unordered%20list%3A%0A-%20Level%201%20item%20A%0A%20%20-%20Level%202%20item%20A1%0A%20%20-%20Level%202%20item%20A2%0A%20%20%20%20-%20Level%203%20item%20A2a%0A-%20Level%201%20item%20B%0A%0ANested%20ordered%20list%3A%0A1.%20First%20item%0A%20%20%201.%20Nested%20first%0A%20%20%202.%20Nested%20second%0A2.%20Second%20item%0A3.%20Third%20item%0A%0A%23%23%20Tables%0A%7C%20Model%20%7C%20Context%20%7C%20Price%20%7C%0A%7C-------%7C---------%7C-------%7C%0A%7C%20GPT-4%20%7C%20128k%20%7C%20%240.03%20%7C%0A%7C%20Claude%20%7C%20200k%20%7C%20%240.02%20%7C%0A%0A%23%23%20Blockquotes%0A%3E%20This%20is%20a%20blockquote%0A%3E%20with%20multiple%20lines\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=%23%23%20Headers%0A%23%23%23%20This%20is%20H3%0A%23%23%23%23%20This%20is%20H4%0A%0A%23%23%20Text%20formatting%0A**Bold%20text**%20and%20*italic%20text*%20and%20***bold%20italic***%0A%0A%23%23%20Lists%0ANested%20unordered%20list%3A%0A-%20Level%201%20item%20A%0A%20%20-%20Level%202%20item%20A1%0A%20%20-%20Level%202%20item%20A2%0A%20%20%20%20-%20Level%203%20item%20A2a%0A-%20Level%201%20item%20B%0A%0ANested%20ordered%20list%3A%0A1.%20First%20item%0A%20%20%201.%20Nested%20first%0A%20%20%202.%20Nested%20second%0A2.%20Second%20item%0A3.%20Third%20item%0A%0A%23%23%20Tables%0A%7C%20Model%20%7C%20Context%20%7C%20Price%20%7C%0A%7C-------%7C---------%7C-------%7C%0A%7C%20GPT-4%20%7C%20128k%20%7C%20%240.03%20%7C%0A%7C%20Claude%20%7C%20200k%20%7C%20%240.02%20%7C%0A%0A%23%23%20Blockquotes%0A%3E%20This%20is%20a%20blockquote%0A%3E%20with%20multiple%20lines\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:52:46.889Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (9 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "3+ level nested lists",
+            "actual": "1 nested list structures",
+            "message": "3+ level nested lists assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "google/gemini-2.5-flash",
       "modelName": "Gemini 2.5 Flash",
       "promptName": "03-code-blocks",
       "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
-      "response": "",
+      "response": "Here are the code blocks and inline code as requested:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+      "usage": {
+        "prompt_tokens": 262,
+        "completion_tokens": 255,
+        "total_tokens": 517,
+        "cost": 0.0007161,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0007161,
+          "upstream_inference_prompt_cost": 0.0000786,
+          "upstream_inference_completions_cost": 0.0006375
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:52:49.390Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=Here%20are%20the%20code%20blocks%20and%20inline%20code%20as%20requested%3A%0A%0A%23%23%20Python%20code%0A%60%60%60python%0Adef%20quadratic_formula(a%2C%20b%2C%20c)%3A%0A%20%20%20%20discriminant%20%3D%20b**2%20-%204*a*c%0A%20%20%20%20x1%20%3D%20(-b%20%2B%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20x2%20%3D%20(-b%20-%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20return%20x1%2C%20x2%0A%0A%23%20Example%3A%20solve%20x%5E2%20-%205x%20%2B%206%20%3D%200%0Aresult%20%3D%20quadratic_formula(1%2C%20-5%2C%206)%0Aprint(f%22Solutions%3A%20x%20%3D%20%7Bresult%5B0%5D%7D%2C%20x%20%3D%20%7Bresult%5B1%5D%7D%22)%0A%60%60%60%0A%0A%23%23%20JavaScript%20code%0A%60%60%60javascript%0Aconst%20fibonacci%20%3D%20(n)%20%3D%3E%20%7B%0A%20%20if%20(n%20%3C%3D%201)%20return%20n%3B%0A%20%20return%20fibonacci(n%20-%201)%20%2B%20fibonacci(n%20-%202)%3B%0A%7D%3B%0A%0Aconsole.log(fibonacci(10))%3B%20%2F%2F%2055%0A%60%60%60%0A%0A%23%23%20Inline%20code%20with%20math-like%20content%0AThe%20variable%20%60x%5E2%60%20should%20render%20as%20code%2C%20not%20math.%20Similarly%20%60a_b%60%20and%20%60%24price%60%20should%20be%20code.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=Here%20are%20the%20code%20blocks%20and%20inline%20code%20as%20requested%3A%0A%0A%23%23%20Python%20code%0A%60%60%60python%0Adef%20quadratic_formula(a%2C%20b%2C%20c)%3A%0A%20%20%20%20discriminant%20%3D%20b**2%20-%204*a*c%0A%20%20%20%20x1%20%3D%20(-b%20%2B%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20x2%20%3D%20(-b%20-%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20return%20x1%2C%20x2%0A%0A%23%20Example%3A%20solve%20x%5E2%20-%205x%20%2B%206%20%3D%200%0Aresult%20%3D%20quadratic_formula(1%2C%20-5%2C%206)%0Aprint(f%22Solutions%3A%20x%20%3D%20%7Bresult%5B0%5D%7D%2C%20x%20%3D%20%7Bresult%5B1%5D%7D%22)%0A%60%60%60%0A%0A%23%23%20JavaScript%20code%0A%60%60%60javascript%0Aconst%20fibonacci%20%3D%20(n)%20%3D%3E%20%7B%0A%20%20if%20(n%20%3C%3D%201)%20return%20n%3B%0A%20%20return%20fibonacci(n%20-%201)%20%2B%20fibonacci(n%20-%202)%3B%0A%7D%3B%0A%0Aconsole.log(fibonacci(10))%3B%20%2F%2F%2055%0A%60%60%60%0A%0A%23%23%20Inline%20code%20with%20math-like%20content%0AThe%20variable%20%60x%5E2%60%20should%20render%20as%20code%2C%20not%20math.%20Similarly%20%60a_b%60%20and%20%60%24price%60%20should%20be%20code.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:52:49.385Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": [
+          "python",
+          "javascript"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "2 code blocks (python, javascript)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [
+            "python",
+            "javascript"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "google/gemini-2.5-flash",
       "modelName": "Gemini 2.5 Flash",
       "promptName": "04-mixed-markdown-latex",
       "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
-      "response": "",
+      "response": "Here's a response that mixes markdown formatting with mathematical expressions, as requested:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nTo find the derivative, we apply the power rule and sum rule of differentiation:\n$$f'(x) = \\frac{d}{dx}(x^2) + \\frac{d}{dx}(2x) + \\frac{d}{dx}(1)$$\n$$f'(x) = 2x + 2 + 0$$\nThus, the derivative is:\n$$f'(x) = 2x + 2$$\n\nFor the integral, we apply the power rule for integration and the sum rule:\n$$\\int f(x) dx = \\int (x^2 + 2x + 1) dx$$\n$$\\int f(x) dx = \\int x^2 dx + \\int 2x dx + \\int 1 dx$$\n$$\\int f(x) dx = \\frac{x^{2+1}}{2+1} + 2\\frac{x^{1+1}}{1+1} + x + C$$\n$$\\int f(x) dx = \\frac{x^3}{3} + 2\\frac{x^2}{2} + x + C$$\nTherefore, the integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: The determinant of a $2 \\times 2$ matrix is a scalar value that provides information about the matrix. It is calculated as:\n  $$\\det(A) = ad - bc$$\n- Trace: The trace of a square matrix is the sum of the elements on its main diagonal. For matrix $A$:\n  $$\\text{tr}(A) = a + d$$\n- Inverse (if exists): A matrix $A$ has an inverse $A^{-1}$ if and only if its determinant is non-zero ($\\det(A) \\neq 0$). The formula for the inverse of a $2 \\times 2$ matrix is:\n  $$A^{-1} = \\frac{1}{\\det(A)}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n  If $ad - bc = 0$, the inverse does not exist.\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ describes the total cost of producing $q$ units of a good. The components are:\n> *   **Fixed costs**: These are costs that do not change with the quantity produced, represented by the constant term $\\$100$. Examples include rent or machinery depreciation.\n> *   **Variable costs**: These costs vary directly with the quantity produced. The term $5q$ indicates that each unit produced incurs an additional cost of $\\$5$. This could be raw materials or direct labor.\n\nMoney context: If you buy 10 units, the total cost would be calculated by substituting $q=10$ into the cost function:\n$C(10) = 100 + 5(10) = 100 + 50 = \\$150$. This means $\\$100$ is for fixed costs, plus $\\$50$ for variable costs, totaling $\\$150$.",
+      "usage": {
+        "prompt_tokens": 318,
+        "completion_tokens": 828,
+        "total_tokens": 1146,
+        "cost": 0.0021654,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0021654,
+          "upstream_inference_prompt_cost": 0.0000954,
+          "upstream_inference_completions_cost": 0.00207
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:52:54.400Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=Here%27s%20a%20response%20that%20mixes%20markdown%20formatting%20with%20mathematical%20expressions%2C%20as%20requested%3A%0A%0A%23%23%20Problem%20Statement%0A**Exercise%201**%3A%20Given%20the%20function%20%24f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%24%2C%20find%3A%0A%0A1.%20The%20*derivative*%20%24f%27(x)%24%0A2.%20The%20**integral**%20%24%5Cint%20f(x)%20dx%24%0A%0A%23%23%23%20Solution%0ATo%20find%20the%20derivative%2C%20we%20apply%20the%20power%20rule%20and%20sum%20rule%20of%20differentiation%3A%0A%24%24f%27(x)%20%3D%20%5Cfrac%7Bd%7D%7Bdx%7D(x%5E2)%20%2B%20%5Cfrac%7Bd%7D%7Bdx%7D(2x)%20%2B%20%5Cfrac%7Bd%7D%7Bdx%7D(1)%24%24%0A%24%24f%27(x)%20%3D%202x%20%2B%202%20%2B%200%24%24%0AThus%2C%20the%20derivative%20is%3A%0A%24%24f%27(x)%20%3D%202x%20%2B%202%24%24%0A%0AFor%20the%20integral%2C%20we%20apply%20the%20power%20rule%20for%20integration%20and%20the%20sum%20rule%3A%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cint%20(x%5E2%20%2B%202x%20%2B%201)%20dx%24%24%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cint%20x%5E2%20dx%20%2B%20%5Cint%202x%20dx%20%2B%20%5Cint%201%20dx%24%24%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cfrac%7Bx%5E%7B2%2B1%7D%7D%7B2%2B1%7D%20%2B%202%5Cfrac%7Bx%5E%7B1%2B1%7D%7D%7B1%2B1%7D%20%2B%20x%20%2B%20C%24%24%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%202%5Cfrac%7Bx%5E2%7D%7B2%7D%20%2B%20x%20%2B%20C%24%24%0ATherefore%2C%20the%20integral%20is%3A%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%20x%5E2%20%2B%20x%20%2B%20C%24%24%0A%0A%23%23%20Linear%20Algebra%20with%20Lists%0AProperties%20of%20the%20matrix%20%24A%20%3D%20%5Cbegin%7Bpmatrix%7D%20a%20%26%20b%20%5C%5C%20c%20%26%20d%20%5Cend%7Bpmatrix%7D%24%3A%0A-%20Determinant%3A%20The%20determinant%20of%20a%20%242%20%5Ctimes%202%24%20matrix%20is%20a%20scalar%20value%20that%20provides%20information%20about%20the%20matrix.%20It%20is%20calculated%20as%3A%0A%20%20%24%24%5Cdet(A)%20%3D%20ad%20-%20bc%24%24%0A-%20Trace%3A%20The%20trace%20of%20a%20square%20matrix%20is%20the%20sum%20of%20the%20elements%20on%20its%20main%20diagonal.%20For%20matrix%20%24A%24%3A%0A%20%20%24%24%5Ctext%7Btr%7D(A)%20%3D%20a%20%2B%20d%24%24%0A-%20Inverse%20(if%20exists)%3A%20A%20matrix%20%24A%24%20has%20an%20inverse%20%24A%5E%7B-1%7D%24%20if%20and%20only%20if%20its%20determinant%20is%20non-zero%20(%24%5Cdet(A)%20%5Cneq%200%24).%20The%20formula%20for%20the%20inverse%20of%20a%20%242%20%5Ctimes%202%24%20matrix%20is%3A%0A%20%20%24%24A%5E%7B-1%7D%20%3D%20%5Cfrac%7B1%7D%7B%5Cdet(A)%7D%5Cbegin%7Bpmatrix%7D%20d%20%26%20-b%20%5C%5C%20-c%20%26%20a%20%5Cend%7Bpmatrix%7D%20%3D%20%5Cfrac%7B1%7D%7Bad%20-%20bc%7D%5Cbegin%7Bpmatrix%7D%20d%20%26%20-b%20%5C%5C%20-c%20%26%20a%20%5Cend%7Bpmatrix%7D%24%24%0A%20%20If%20%24ad%20-%20bc%20%3D%200%24%2C%20the%20inverse%20does%20not%20exist.%0A%0A%23%23%20Real%20World%20Context%0A%3E%20**Note**%3A%20In%20economics%2C%20the%20cost%20function%20%24C(q)%20%3D%20100%20%2B%205q%24%20describes%20the%20total%20cost%20of%20producing%20%24q%24%20units%20of%20a%20good.%20The%20components%20are%3A%0A%3E%20*%20%20%20**Fixed%20costs**%3A%20These%20are%20costs%20that%20do%20not%20change%20with%20the%20quantity%20produced%2C%20represented%20by%20the%20constant%20term%20%24%5C%24100%24.%20Examples%20include%20rent%20or%20machinery%20depreciation.%0A%3E%20*%20%20%20**Variable%20costs**%3A%20These%20costs%20vary%20directly%20with%20the%20quantity%20produced.%20The%20term%20%245q%24%20indicates%20that%20each%20unit%20produced%20incurs%20an%20additional%20cost%20of%20%24%5C%245%24.%20This%20could%20be%20raw%20materials%20or%20direct%20labor.%0A%0AMoney%20context%3A%20If%20you%20buy%2010%20units%2C%20the%20total%20cost%20would%20be%20calculated%20by%20substituting%20%24q%3D10%24%20into%20the%20cost%20function%3A%0A%24C(10)%20%3D%20100%20%2B%205(10)%20%3D%20100%20%2B%2050%20%3D%20%5C%24150%24.%20This%20means%20%24%5C%24100%24%20is%20for%20fixed%20costs%2C%20plus%20%24%5C%2450%24%20for%20variable%20costs%2C%20totaling%20%24%5C%24150%24.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=Here%27s%20a%20response%20that%20mixes%20markdown%20formatting%20with%20mathematical%20expressions%2C%20as%20requested%3A%0A%0A%23%23%20Problem%20Statement%0A**Exercise%201**%3A%20Given%20the%20function%20%24f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%24%2C%20find%3A%0A%0A1.%20The%20*derivative*%20%24f%27(x)%24%0A2.%20The%20**integral**%20%24%5Cint%20f(x)%20dx%24%0A%0A%23%23%23%20Solution%0ATo%20find%20the%20derivative%2C%20we%20apply%20the%20power%20rule%20and%20sum%20rule%20of%20differentiation%3A%0A%24%24f%27(x)%20%3D%20%5Cfrac%7Bd%7D%7Bdx%7D(x%5E2)%20%2B%20%5Cfrac%7Bd%7D%7Bdx%7D(2x)%20%2B%20%5Cfrac%7Bd%7D%7Bdx%7D(1)%24%24%0A%24%24f%27(x)%20%3D%202x%20%2B%202%20%2B%200%24%24%0AThus%2C%20the%20derivative%20is%3A%0A%24%24f%27(x)%20%3D%202x%20%2B%202%24%24%0A%0AFor%20the%20integral%2C%20we%20apply%20the%20power%20rule%20for%20integration%20and%20the%20sum%20rule%3A%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cint%20(x%5E2%20%2B%202x%20%2B%201)%20dx%24%24%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cint%20x%5E2%20dx%20%2B%20%5Cint%202x%20dx%20%2B%20%5Cint%201%20dx%24%24%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cfrac%7Bx%5E%7B2%2B1%7D%7D%7B2%2B1%7D%20%2B%202%5Cfrac%7Bx%5E%7B1%2B1%7D%7D%7B1%2B1%7D%20%2B%20x%20%2B%20C%24%24%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%202%5Cfrac%7Bx%5E2%7D%7B2%7D%20%2B%20x%20%2B%20C%24%24%0ATherefore%2C%20the%20integral%20is%3A%0A%24%24%5Cint%20f(x)%20dx%20%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%20x%5E2%20%2B%20x%20%2B%20C%24%24%0A%0A%23%23%20Linear%20Algebra%20with%20Lists%0AProperties%20of%20the%20matrix%20%24A%20%3D%20%5Cbegin%7Bpmatrix%7D%20a%20%26%20b%20%5C%5C%20c%20%26%20d%20%5Cend%7Bpmatrix%7D%24%3A%0A-%20Determinant%3A%20The%20determinant%20of%20a%20%242%20%5Ctimes%202%24%20matrix%20is%20a%20scalar%20value%20that%20provides%20information%20about%20the%20matrix.%20It%20is%20calculated%20as%3A%0A%20%20%24%24%5Cdet(A)%20%3D%20ad%20-%20bc%24%24%0A-%20Trace%3A%20The%20trace%20of%20a%20square%20matrix%20is%20the%20sum%20of%20the%20elements%20on%20its%20main%20diagonal.%20For%20matrix%20%24A%24%3A%0A%20%20%24%24%5Ctext%7Btr%7D(A)%20%3D%20a%20%2B%20d%24%24%0A-%20Inverse%20(if%20exists)%3A%20A%20matrix%20%24A%24%20has%20an%20inverse%20%24A%5E%7B-1%7D%24%20if%20and%20only%20if%20its%20determinant%20is%20non-zero%20(%24%5Cdet(A)%20%5Cneq%200%24).%20The%20formula%20for%20the%20inverse%20of%20a%20%242%20%5Ctimes%202%24%20matrix%20is%3A%0A%20%20%24%24A%5E%7B-1%7D%20%3D%20%5Cfrac%7B1%7D%7B%5Cdet(A)%7D%5Cbegin%7Bpmatrix%7D%20d%20%26%20-b%20%5C%5C%20-c%20%26%20a%20%5Cend%7Bpmatrix%7D%20%3D%20%5Cfrac%7B1%7D%7Bad%20-%20bc%7D%5Cbegin%7Bpmatrix%7D%20d%20%26%20-b%20%5C%5C%20-c%20%26%20a%20%5Cend%7Bpmatrix%7D%24%24%0A%20%20If%20%24ad%20-%20bc%20%3D%200%24%2C%20the%20inverse%20does%20not%20exist.%0A%0A%23%23%20Real%20World%20Context%0A%3E%20**Note**%3A%20In%20economics%2C%20the%20cost%20function%20%24C(q)%20%3D%20100%20%2B%205q%24%20describes%20the%20total%20cost%20of%20producing%20%24q%24%20units%20of%20a%20good.%20The%20components%20are%3A%0A%3E%20*%20%20%20**Fixed%20costs**%3A%20These%20are%20costs%20that%20do%20not%20change%20with%20the%20quantity%20produced%2C%20represented%20by%20the%20constant%20term%20%24%5C%24100%24.%20Examples%20include%20rent%20or%20machinery%20depreciation.%0A%3E%20*%20%20%20**Variable%20costs**%3A%20These%20costs%20vary%20directly%20with%20the%20quantity%20produced.%20The%20term%20%245q%24%20indicates%20that%20each%20unit%20produced%20incurs%20an%20additional%20cost%20of%20%24%5C%245%24.%20This%20could%20be%20raw%20materials%20or%20direct%20labor.%0A%0AMoney%20context%3A%20If%20you%20buy%2010%20units%2C%20the%20total%20cost%20would%20be%20calculated%20by%20substituting%20%24q%3D10%24%20into%20the%20cost%20function%3A%0A%24C(10)%20%3D%20100%20%2B%205(10)%20%3D%20100%20%2B%2050%20%3D%20%5C%24150%24.%20This%20means%20%24%5C%24100%24%20is%20for%20fixed%20costs%2C%20plus%20%24%5C%2450%24%20for%20variable%20costs%2C%20totaling%20%24%5C%24150%24.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:52:54.394Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "11 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "32 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "google/gemini-2.5-flash",
       "modelName": "Gemini 2.5 Flash",
       "promptName": "05-complex-scenarios",
       "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
-      "response": "",
+      "response": "## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.",
+      "usage": {
+        "prompt_tokens": 447,
+        "completion_tokens": 425,
+        "total_tokens": 872,
+        "cost": 0.0011966,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0011966,
+          "upstream_inference_prompt_cost": 0.0001341,
+          "upstream_inference_completions_cost": 0.0010625
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:52:57.203Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=%23%23%20Scenario%201%3A%20Math%20in%20Lists%20with%20Formatting%0A1.%20The%20**Pythagorean%20theorem**%20states%20that%20%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%0A2.%20For%20a%20*right%20triangle*%20with%20sides%20%24a%3D3%24%20and%20%24b%3D4%24%3A%0A%20%20%20-%20Calculate%3A%20%24c%20%3D%20%5Csqrt%7B3%5E2%20%2B%204%5E2%7D%20%3D%20%5Csqrt%7B9%20%2B%2016%7D%20%3D%20%5Csqrt%7B25%7D%20%3D%205%24%0A%20%20%20-%20Therefore%2C%20%24c%20%3D%205%24%20units%0A%0A%23%23%20Scenario%202%3A%20Tables%20with%20Math%0A%7C%20Formula%20%7C%20LaTeX%20%7C%20Result%20%7C%0A%7C---------%7C-------%7C--------%7C%0A%7C%20Quadratic%20%7C%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%20%7C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D%24%20%7C%0A%7C%20Sum%20%7C%20%24%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24%5Cfrac%7Bn(n%2B1)%7D%7B2%7D%24%20%7C%0A%7C%20Product%20%7C%20%24%5Cprod_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24n!%24%20%7C%0A%0A%23%23%20Scenario%203%3A%20Code%20and%20Math%20Mixed%0A%60%60%60python%0A%23%20Calculate%20area%20of%20circle%20with%20radius%20r%0Aimport%20math%0A%0Adef%20circle_area(r)%3A%0A%20%20%20%20%23%20Formula%3A%20A%20%3D%20%CF%80r%C2%B2%0A%20%20%20%20return%20math.pi%20*%20r**2%0A%0Aprint(f%22Area%3A%20%7Bcircle_area(5)%7D%22)%0A%60%60%60%0A%0AThe%20mathematical%20formula%20is%20%24A%20%3D%20%5Cpi%20r%5E2%24%20where%20%24r%24%20is%20the%20radius.%0A%0A%23%23%20Scenario%204%3A%20Horizontal%20Rules%0AFirst%20section%0A%0A---%0A%0ASecond%20section%20with%20math%3A%20%24%5Cint_%7B0%7D%5E%7B1%7D%20x%20dx%20%3D%20%5Cfrac%7B1%7D%7B2%7D%24%0A%0A---%0A%0AThird%20section%0A%0A%23%23%20Scenario%205%3A%20Multiple%20Dollar%20Signs%0APrices%3A%20Computer%20costs%20%241%2C200%2C%20monitor%20%24300%2C%20keyboard%20%2450%2C%20mouse%20%2425.%20Total%3A%20%241%2C575.%0A%0AMath%3A%20The%20formula%20%24f(x)%20%3D%20x%5E2%24%20evaluates%20to%20%24f(5)%20%3D%2025%24.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=google%2Fgemini-2.5-flash&content=%23%23%20Scenario%201%3A%20Math%20in%20Lists%20with%20Formatting%0A1.%20The%20**Pythagorean%20theorem**%20states%20that%20%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%0A2.%20For%20a%20*right%20triangle*%20with%20sides%20%24a%3D3%24%20and%20%24b%3D4%24%3A%0A%20%20%20-%20Calculate%3A%20%24c%20%3D%20%5Csqrt%7B3%5E2%20%2B%204%5E2%7D%20%3D%20%5Csqrt%7B9%20%2B%2016%7D%20%3D%20%5Csqrt%7B25%7D%20%3D%205%24%0A%20%20%20-%20Therefore%2C%20%24c%20%3D%205%24%20units%0A%0A%23%23%20Scenario%202%3A%20Tables%20with%20Math%0A%7C%20Formula%20%7C%20LaTeX%20%7C%20Result%20%7C%0A%7C---------%7C-------%7C--------%7C%0A%7C%20Quadratic%20%7C%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%20%7C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D%24%20%7C%0A%7C%20Sum%20%7C%20%24%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24%5Cfrac%7Bn(n%2B1)%7D%7B2%7D%24%20%7C%0A%7C%20Product%20%7C%20%24%5Cprod_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%7C%20%24n!%24%20%7C%0A%0A%23%23%20Scenario%203%3A%20Code%20and%20Math%20Mixed%0A%60%60%60python%0A%23%20Calculate%20area%20of%20circle%20with%20radius%20r%0Aimport%20math%0A%0Adef%20circle_area(r)%3A%0A%20%20%20%20%23%20Formula%3A%20A%20%3D%20%CF%80r%C2%B2%0A%20%20%20%20return%20math.pi%20*%20r**2%0A%0Aprint(f%22Area%3A%20%7Bcircle_area(5)%7D%22)%0A%60%60%60%0A%0AThe%20mathematical%20formula%20is%20%24A%20%3D%20%5Cpi%20r%5E2%24%20where%20%24r%24%20is%20the%20radius.%0A%0A%23%23%20Scenario%204%3A%20Horizontal%20Rules%0AFirst%20section%0A%0A---%0A%0ASecond%20section%20with%20math%3A%20%24%5Cint_%7B0%7D%5E%7B1%7D%20x%20dx%20%3D%20%5Cfrac%7B1%7D%7B2%7D%24%0A%0A---%0A%0AThird%20section%0A%0A%23%23%20Scenario%205%3A%20Multiple%20Dollar%20Signs%0APrices%3A%20Computer%20costs%20%241%2C200%2C%20monitor%20%24300%2C%20keyboard%20%2450%2C%20mouse%20%2425.%20Total%3A%20%241%2C575.%0A%0AMath%3A%20The%20formula%20%24f(x)%20%3D%20x%5E2%24%20evaluates%20to%20%24f(5)%20%3D%2025%24.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:52:57.198Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 12,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "16 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (12 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 12,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "openai/gpt-4o-mini",
       "modelName": "Gpt 4o Mini",
       "promptName": "01-math-basics",
       "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math: Show the same formula as a display equation:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\n3. Matrices: Show a 2x2 identity matrix:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\n4. Multiple equations on separate lines:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15.\n",
-      "response": "",
+      "response": "The quadratic formula is a fundamental concept in algebra, used to find the roots of a quadratic equation of the form \\( ax^2 + bx + c = 0 \\). It is given by the formula:\n\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\nIn this formula, \\( a \\), \\( b \\), and \\( c \\) are coefficients from the quadratic equation, and the expression under the square root, known as the discriminant \\( b^2 - 4ac \\), determines the nature of the roots.\n\nIn terms of matrices, the identity matrix of size 2x2 is represented as:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$$\n\nThis matrix acts as the multiplicative identity in matrix multiplication.\n\nAdditionally, here are some important equations presented on separate lines:\n\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\nAs for a money context, consider an item that costs $5 and the shipping fee is $10, leading to a total of $15.",
+      "usage": {
+        "prompt_tokens": 206,
+        "completion_tokens": 249,
+        "total_tokens": 455,
+        "cost": 0.0001803,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001803,
+          "upstream_inference_prompt_cost": 0.0000309,
+          "upstream_inference_completions_cost": 0.0001494
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:53:01.529Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=The%20quadratic%20formula%20is%20a%20fundamental%20concept%20in%20algebra%2C%20used%20to%20find%20the%20roots%20of%20a%20quadratic%20equation%20of%20the%20form%20%5C(%20ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%20%5C).%20It%20is%20given%20by%20the%20formula%3A%0A%0A%24%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%24%0A%0AIn%20this%20formula%2C%20%5C(%20a%20%5C)%2C%20%5C(%20b%20%5C)%2C%20and%20%5C(%20c%20%5C)%20are%20coefficients%20from%20the%20quadratic%20equation%2C%20and%20the%20expression%20under%20the%20square%20root%2C%20known%20as%20the%20discriminant%20%5C(%20b%5E2%20-%204ac%20%5C)%2C%20determines%20the%20nature%20of%20the%20roots.%0A%0AIn%20terms%20of%20matrices%2C%20the%20identity%20matrix%20of%20size%202x2%20is%20represented%20as%3A%0A%0A%24%24I%20%3D%20%5Cbegin%7Bpmatrix%7D%201%20%26%200%20%5C%5C%200%20%26%201%20%5Cend%7Bpmatrix%7D%24%24%0A%0AThis%20matrix%20acts%20as%20the%20multiplicative%20identity%20in%20matrix%20multiplication.%0A%0AAdditionally%2C%20here%20are%20some%20important%20equations%20presented%20on%20separate%20lines%3A%0A%0A%24%24E%20%3D%20mc%5E2%24%24%0A%24%24F%20%3D%20ma%24%24%0A%24%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%24%0A%0AAs%20for%20a%20money%20context%2C%20consider%20an%20item%20that%20costs%20%245%20and%20the%20shipping%20fee%20is%20%2410%2C%20leading%20to%20a%20total%20of%20%2415.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=The%20quadratic%20formula%20is%20a%20fundamental%20concept%20in%20algebra%2C%20used%20to%20find%20the%20roots%20of%20a%20quadratic%20equation%20of%20the%20form%20%5C(%20ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%20%5C).%20It%20is%20given%20by%20the%20formula%3A%0A%0A%24%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2%20-%204ac%7D%7D%7B2a%7D%24%24%0A%0AIn%20this%20formula%2C%20%5C(%20a%20%5C)%2C%20%5C(%20b%20%5C)%2C%20and%20%5C(%20c%20%5C)%20are%20coefficients%20from%20the%20quadratic%20equation%2C%20and%20the%20expression%20under%20the%20square%20root%2C%20known%20as%20the%20discriminant%20%5C(%20b%5E2%20-%204ac%20%5C)%2C%20determines%20the%20nature%20of%20the%20roots.%0A%0AIn%20terms%20of%20matrices%2C%20the%20identity%20matrix%20of%20size%202x2%20is%20represented%20as%3A%0A%0A%24%24I%20%3D%20%5Cbegin%7Bpmatrix%7D%201%20%26%200%20%5C%5C%200%20%26%201%20%5Cend%7Bpmatrix%7D%24%24%0A%0AThis%20matrix%20acts%20as%20the%20multiplicative%20identity%20in%20matrix%20multiplication.%0A%0AAdditionally%2C%20here%20are%20some%20important%20equations%20presented%20on%20separate%20lines%3A%0A%0A%24%24E%20%3D%20mc%5E2%24%24%0A%24%24F%20%3D%20ma%24%24%0A%24%24a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%24%24%0A%0AAs%20for%20a%20money%20context%2C%20consider%20an%20item%20that%20costs%20%245%20and%20the%20shipping%20fee%20is%20%2410%2C%20leading%20to%20a%20total%20of%20%2415.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:53:01.524Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "5 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "10 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "openai/gpt-4o-mini",
       "modelName": "Gpt 4o Mini",
       "promptName": "02-markdown-formatting",
       "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
-      "response": "",
+      "response": "## Headers\n\n### This is H3\n\n#### This is H4\n\n## Text formatting\n\nHere is an example of **Bold text**, *italic text*, and ***bold italic*** for emphasis.\n\n## Lists\n\n### Nested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\n### Nested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k    | $0.03 |\n| Claude| 200k    | $0.02 |\n\n## Blockquotes\n\n> This is a blockquote  \n> with multiple lines",
+      "usage": {
+        "prompt_tokens": 196,
+        "completion_tokens": 184,
+        "total_tokens": 380,
+        "cost": 0.0001398,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001398,
+          "upstream_inference_prompt_cost": 0.0000294,
+          "upstream_inference_completions_cost": 0.0001104
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:53:05.767Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=%23%23%20Headers%0A%0A%23%23%23%20This%20is%20H3%0A%0A%23%23%23%23%20This%20is%20H4%0A%0A%23%23%20Text%20formatting%0A%0AHere%20is%20an%20example%20of%20**Bold%20text**%2C%20*italic%20text*%2C%20and%20***bold%20italic***%20for%20emphasis.%0A%0A%23%23%20Lists%0A%0A%23%23%23%20Nested%20unordered%20list%3A%0A-%20Level%201%20item%20A%0A%20%20-%20Level%202%20item%20A1%0A%20%20-%20Level%202%20item%20A2%0A%20%20%20%20-%20Level%203%20item%20A2a%0A-%20Level%201%20item%20B%0A%0A%23%23%23%20Nested%20ordered%20list%3A%0A1.%20First%20item%0A%20%20%201.%20Nested%20first%0A%20%20%202.%20Nested%20second%0A2.%20Second%20item%0A3.%20Third%20item%0A%0A%23%23%20Tables%0A%0A%7C%20Model%20%7C%20Context%20%7C%20Price%20%7C%0A%7C-------%7C---------%7C-------%7C%0A%7C%20GPT-4%20%7C%20128k%20%20%20%20%7C%20%240.03%20%7C%0A%7C%20Claude%7C%20200k%20%20%20%20%7C%20%240.02%20%7C%0A%0A%23%23%20Blockquotes%0A%0A%3E%20This%20is%20a%20blockquote%20%20%0A%3E%20with%20multiple%20lines\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=%23%23%20Headers%0A%0A%23%23%23%20This%20is%20H3%0A%0A%23%23%23%23%20This%20is%20H4%0A%0A%23%23%20Text%20formatting%0A%0AHere%20is%20an%20example%20of%20**Bold%20text**%2C%20*italic%20text*%2C%20and%20***bold%20italic***%20for%20emphasis.%0A%0A%23%23%20Lists%0A%0A%23%23%23%20Nested%20unordered%20list%3A%0A-%20Level%201%20item%20A%0A%20%20-%20Level%202%20item%20A1%0A%20%20-%20Level%202%20item%20A2%0A%20%20%20%20-%20Level%203%20item%20A2a%0A-%20Level%201%20item%20B%0A%0A%23%23%23%20Nested%20ordered%20list%3A%0A1.%20First%20item%0A%20%20%201.%20Nested%20first%0A%20%20%202.%20Nested%20second%0A2.%20Second%20item%0A3.%20Third%20item%0A%0A%23%23%20Tables%0A%0A%7C%20Model%20%7C%20Context%20%7C%20Price%20%7C%0A%7C-------%7C---------%7C-------%7C%0A%7C%20GPT-4%20%7C%20128k%20%20%20%20%7C%20%240.03%20%7C%0A%7C%20Claude%7C%20200k%20%20%20%20%7C%20%240.02%20%7C%0A%0A%23%23%20Blockquotes%0A%0A%3E%20This%20is%20a%20blockquote%20%20%0A%3E%20with%20multiple%20lines\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:53:05.761Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (9 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "3+ level nested lists",
+            "actual": "1 nested list structures",
+            "message": "3+ level nested lists assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "openai/gpt-4o-mini",
       "modelName": "Gpt 4o Mini",
       "promptName": "03-code-blocks",
       "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
-      "response": "",
+      "response": "Here is the response with fenced code blocks as requested:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly, `a_b` and `$price` should be treated as code.",
+      "usage": {
+        "prompt_tokens": 242,
+        "completion_tokens": 234,
+        "total_tokens": 476,
+        "cost": 0.0001767,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001767,
+          "upstream_inference_prompt_cost": 0.0000363,
+          "upstream_inference_completions_cost": 0.0001404
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:53:09.423Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=Here%20is%20the%20response%20with%20fenced%20code%20blocks%20as%20requested%3A%0A%0A%23%23%20Python%20code%0A%60%60%60python%0Adef%20quadratic_formula(a%2C%20b%2C%20c)%3A%0A%20%20%20%20discriminant%20%3D%20b**2%20-%204*a*c%0A%20%20%20%20x1%20%3D%20(-b%20%2B%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20x2%20%3D%20(-b%20-%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20return%20x1%2C%20x2%0A%0A%23%20Example%3A%20solve%20x%5E2%20-%205x%20%2B%206%20%3D%200%0Aresult%20%3D%20quadratic_formula(1%2C%20-5%2C%206)%0Aprint(f%22Solutions%3A%20x%20%3D%20%7Bresult%5B0%5D%7D%2C%20x%20%3D%20%7Bresult%5B1%5D%7D%22)%0A%60%60%60%0A%0A%23%23%20JavaScript%20code%0A%60%60%60javascript%0Aconst%20fibonacci%20%3D%20(n)%20%3D%3E%20%7B%0A%20%20if%20(n%20%3C%3D%201)%20return%20n%3B%0A%20%20return%20fibonacci(n%20-%201)%20%2B%20fibonacci(n%20-%202)%3B%0A%7D%3B%0A%0Aconsole.log(fibonacci(10))%3B%20%2F%2F%2055%0A%60%60%60%0A%0A%23%23%20Inline%20code%20with%20math-like%20content%0AThe%20variable%20%60x%5E2%60%20should%20render%20as%20code%2C%20not%20math.%20Similarly%2C%20%60a_b%60%20and%20%60%24price%60%20should%20be%20treated%20as%20code.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=Here%20is%20the%20response%20with%20fenced%20code%20blocks%20as%20requested%3A%0A%0A%23%23%20Python%20code%0A%60%60%60python%0Adef%20quadratic_formula(a%2C%20b%2C%20c)%3A%0A%20%20%20%20discriminant%20%3D%20b**2%20-%204*a*c%0A%20%20%20%20x1%20%3D%20(-b%20%2B%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20x2%20%3D%20(-b%20-%20discriminant**0.5)%20%2F%20(2*a)%0A%20%20%20%20return%20x1%2C%20x2%0A%0A%23%20Example%3A%20solve%20x%5E2%20-%205x%20%2B%206%20%3D%200%0Aresult%20%3D%20quadratic_formula(1%2C%20-5%2C%206)%0Aprint(f%22Solutions%3A%20x%20%3D%20%7Bresult%5B0%5D%7D%2C%20x%20%3D%20%7Bresult%5B1%5D%7D%22)%0A%60%60%60%0A%0A%23%23%20JavaScript%20code%0A%60%60%60javascript%0Aconst%20fibonacci%20%3D%20(n)%20%3D%3E%20%7B%0A%20%20if%20(n%20%3C%3D%201)%20return%20n%3B%0A%20%20return%20fibonacci(n%20-%201)%20%2B%20fibonacci(n%20-%202)%3B%0A%7D%3B%0A%0Aconsole.log(fibonacci(10))%3B%20%2F%2F%2055%0A%60%60%60%0A%0A%23%23%20Inline%20code%20with%20math-like%20content%0AThe%20variable%20%60x%5E2%60%20should%20render%20as%20code%2C%20not%20math.%20Similarly%2C%20%60a_b%60%20and%20%60%24price%60%20should%20be%20treated%20as%20code.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:53:09.417Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": [
+          "python",
+          "javascript"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "2 code blocks (python, javascript)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [
+            "python",
+            "javascript"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "openai/gpt-4o-mini",
       "modelName": "Gpt 4o Mini",
       "promptName": "04-mixed-markdown-latex",
       "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
-      "response": "",
+      "response": "## Problem Statement\n**Exercise 1**: Given the function \\( f(x) = x^2 + 2x + 1 \\), find:\n\n1. The *derivative* \\( f'(x) \\)\n2. The **integral** \\( \\int f(x) \\, dx \\)\n\n### Solution\nThe derivative is:\n$$ f'(x) = 2x + 2 $$\n\nThe integral is:\n$$ \\int f(x) \\, dx = \\frac{x^3}{3} + x^2 + x + C $$\n\n## Linear Algebra with Lists\nProperties of the matrix \\( A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\):\n- **Determinant**: \n  $$ \\det(A) = ad - bc $$\n- **Trace**: \n  $$ \\text{tr}(A) = a + d $$\n- **Inverse** (if it exists):\n  $$ A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix} $$\n\n## Real World Context\n> **Note**: In economics, the cost function \\( C(q) = 100 + 5q \\) indicates that the fixed costs are \\$100 and the variable costs are \\$5 per unit produced.\n\n### Money Context\nIf you buy 10 units:\n- Fixed Cost: \\$100\n- Variable Cost for 10 units: \\( 5 \\times 10 = 50 \\)\n\nThus, the total cost is:\n$$ C(10) = 100 + 50 = 150 $$\n\nIn summary, the total cost of purchasing 10 units is **\\$150**.",
+      "usage": {
+        "prompt_tokens": 311,
+        "completion_tokens": 365,
+        "total_tokens": 676,
+        "cost": 0.00026565,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00026565,
+          "upstream_inference_prompt_cost": 0.00004665,
+          "upstream_inference_completions_cost": 0.000219
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:53:16.122Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=%23%23%20Problem%20Statement%0A**Exercise%201**%3A%20Given%20the%20function%20%5C(%20f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%20%5C)%2C%20find%3A%0A%0A1.%20The%20*derivative*%20%5C(%20f%27(x)%20%5C)%0A2.%20The%20**integral**%20%5C(%20%5Cint%20f(x)%20%5C%2C%20dx%20%5C)%0A%0A%23%23%23%20Solution%0AThe%20derivative%20is%3A%0A%24%24%20f%27(x)%20%3D%202x%20%2B%202%20%24%24%0A%0AThe%20integral%20is%3A%0A%24%24%20%5Cint%20f(x)%20%5C%2C%20dx%20%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%20x%5E2%20%2B%20x%20%2B%20C%20%24%24%0A%0A%23%23%20Linear%20Algebra%20with%20Lists%0AProperties%20of%20the%20matrix%20%5C(%20A%20%3D%20%5Cbegin%7Bpmatrix%7D%20a%20%26%20b%20%5C%5C%20c%20%26%20d%20%5Cend%7Bpmatrix%7D%20%5C)%3A%0A-%20**Determinant**%3A%20%0A%20%20%24%24%20%5Cdet(A)%20%3D%20ad%20-%20bc%20%24%24%0A-%20**Trace**%3A%20%0A%20%20%24%24%20%5Ctext%7Btr%7D(A)%20%3D%20a%20%2B%20d%20%24%24%0A-%20**Inverse**%20(if%20it%20exists)%3A%0A%20%20%24%24%20A%5E%7B-1%7D%20%3D%20%5Cfrac%7B1%7D%7Bad%20-%20bc%7D%5Cbegin%7Bpmatrix%7D%20d%20%26%20-b%20%5C%5C%20-c%20%26%20a%20%5Cend%7Bpmatrix%7D%20%24%24%0A%0A%23%23%20Real%20World%20Context%0A%3E%20**Note**%3A%20In%20economics%2C%20the%20cost%20function%20%5C(%20C(q)%20%3D%20100%20%2B%205q%20%5C)%20indicates%20that%20the%20fixed%20costs%20are%20%5C%24100%20and%20the%20variable%20costs%20are%20%5C%245%20per%20unit%20produced.%0A%0A%23%23%23%20Money%20Context%0AIf%20you%20buy%2010%20units%3A%0A-%20Fixed%20Cost%3A%20%5C%24100%0A-%20Variable%20Cost%20for%2010%20units%3A%20%5C(%205%20%5Ctimes%2010%20%3D%2050%20%5C)%0A%0AThus%2C%20the%20total%20cost%20is%3A%0A%24%24%20C(10)%20%3D%20100%20%2B%2050%20%3D%20150%20%24%24%0A%0AIn%20summary%2C%20the%20total%20cost%20of%20purchasing%2010%20units%20is%20**%5C%24150**.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=%23%23%20Problem%20Statement%0A**Exercise%201**%3A%20Given%20the%20function%20%5C(%20f(x)%20%3D%20x%5E2%20%2B%202x%20%2B%201%20%5C)%2C%20find%3A%0A%0A1.%20The%20*derivative*%20%5C(%20f%27(x)%20%5C)%0A2.%20The%20**integral**%20%5C(%20%5Cint%20f(x)%20%5C%2C%20dx%20%5C)%0A%0A%23%23%23%20Solution%0AThe%20derivative%20is%3A%0A%24%24%20f%27(x)%20%3D%202x%20%2B%202%20%24%24%0A%0AThe%20integral%20is%3A%0A%24%24%20%5Cint%20f(x)%20%5C%2C%20dx%20%3D%20%5Cfrac%7Bx%5E3%7D%7B3%7D%20%2B%20x%5E2%20%2B%20x%20%2B%20C%20%24%24%0A%0A%23%23%20Linear%20Algebra%20with%20Lists%0AProperties%20of%20the%20matrix%20%5C(%20A%20%3D%20%5Cbegin%7Bpmatrix%7D%20a%20%26%20b%20%5C%5C%20c%20%26%20d%20%5Cend%7Bpmatrix%7D%20%5C)%3A%0A-%20**Determinant**%3A%20%0A%20%20%24%24%20%5Cdet(A)%20%3D%20ad%20-%20bc%20%24%24%0A-%20**Trace**%3A%20%0A%20%20%24%24%20%5Ctext%7Btr%7D(A)%20%3D%20a%20%2B%20d%20%24%24%0A-%20**Inverse**%20(if%20it%20exists)%3A%0A%20%20%24%24%20A%5E%7B-1%7D%20%3D%20%5Cfrac%7B1%7D%7Bad%20-%20bc%7D%5Cbegin%7Bpmatrix%7D%20d%20%26%20-b%20%5C%5C%20-c%20%26%20a%20%5Cend%7Bpmatrix%7D%20%24%24%0A%0A%23%23%20Real%20World%20Context%0A%3E%20**Note**%3A%20In%20economics%2C%20the%20cost%20function%20%5C(%20C(q)%20%3D%20100%20%2B%205q%20%5C)%20indicates%20that%20the%20fixed%20costs%20are%20%5C%24100%20and%20the%20variable%20costs%20are%20%5C%245%20per%20unit%20produced.%0A%0A%23%23%23%20Money%20Context%0AIf%20you%20buy%2010%20units%3A%0A-%20Fixed%20Cost%3A%20%5C%24100%0A-%20Variable%20Cost%20for%2010%20units%3A%20%5C(%205%20%5Ctimes%2010%20%3D%2050%20%5C)%0A%0AThus%2C%20the%20total%20cost%20is%3A%0A%24%24%20C(10)%20%3D%20100%20%2B%2050%20%3D%20150%20%24%24%0A%0AIn%20summary%2C%20the%20total%20cost%20of%20purchasing%2010%20units%20is%20**%5C%24150**.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:53:16.116Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "6 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "12 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     },
     {
       "modelId": "openai/gpt-4o-mini",
       "modelName": "Gpt 4o Mini",
       "promptName": "05-complex-scenarios",
       "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
-      "response": "",
+      "response": "Here's a detailed response addressing the complex scenarios involving mathematical principles, LaTeX formatting, programming, and other structures:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that for any right triangle, the relationship between the lengths of the sides is given by the formula:\n   \\[\n   a^2 + b^2 = c^2\n   \\]\n2. Let’s consider a *right triangle* with side lengths \\(a = 3\\) and \\(b = 4\\):\n   - To find the hypotenuse \\(c\\):\n   \\[\n   c = \\sqrt{a^2 + b^2} = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5\n   \\]\n   - Therefore, the length of the hypotenuse \\(c\\) is \\(5\\) units.\n\n## Scenario 2: Tables with Math\nHere’s a table summarizing key mathematical formulas along with their LaTeX representations and results:\n\n| Formula                        | LaTeX                                      | Result                                   |\n|-------------------------------|--------------------------------------------|------------------------------------------|\n| Quadratic Formula             | $ax^2 + bx + c = 0$                       | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$|\n| Sum of the first \\(n\\) integers| $\\sum_{i=1}^{n} i$                      | $\\frac{n(n+1)}{2}$                      |\n| Product of the first \\(n\\) integers| $\\prod_{i=1}^{n} i$                 | $n!$ (factorial)                        |\n\n### Note:\n- The quadratic formula provides the roots of a quadratic equation.\n- The summation formula calculates the sum of the first \\(n\\) integers.\n- The product formula calculates the factorial for \\(n\\).\n\n## Scenario 3: Code and Math Mixed\nHere's a Python function to calculate the area of a circle given its radius. The underlying mathematical formula used is:\n\\[\nA = \\pi r^2\n\\]\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\n# Example usage:\nprint(f\"Area of circle with radius 5: {circle_area(5)}\")\n```\nThis code will output the area of a circle with a radius of 5 units, where \\( A \\approx 78.54 \\) square units.\n\n## Scenario 4: Horizontal Rules\nThe following sections illustrate the use of horizontal rules to separate content:\n\nFirst section of content.\n\n---\n\nIn the second section, we evaluate a definite integral:\n\\[\n\\int_{0}^{1} x \\, dx = \\frac{1}{2}\n\\]\nThis integral computes the area under the curve \\(y = x\\) from \\(x = 0\\) to \\(x = 1\\).\n\n---\n\nThird section concludes the content.\n\n## Scenario 5: Multiple Dollar Signs\nTo summarize expenses with precise formatting:\n- A computer costs **$1,200**\n- A monitor costs **$300**\n- A keyboard costs **$50**\n- A mouse costs **$25**\n\n**Total Expenses:**\n\\[\n1,200 + 300 + 50 + 25 = 1,575\n\\]\n\n### Additional Math:\nConsider the function defined as \\(f(x) = x^2\\):\n- Evaluating this function at \\(x = 5\\):\n\\[\nf(5) = 5^2 = 25\n\\]\n\nThis response captures the various mathematical concepts and their implementations in a clear and structured manner across the different scenarios provided.",
+      "usage": {
+        "prompt_tokens": 429,
+        "completion_tokens": 791,
+        "total_tokens": 1220,
+        "cost": 0.00053895,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00053895,
+          "upstream_inference_prompt_cost": 0.00006435,
+          "upstream_inference_completions_cost": 0.0004746
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
       "actualCost": 0,
-      "timestamp": "2026-11-04T00:53:25.402Z",
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=Here%27s%20a%20detailed%20response%20addressing%20the%20complex%20scenarios%20involving%20mathematical%20principles%2C%20LaTeX%20formatting%2C%20programming%2C%20and%20other%20structures%3A%0A%0A%23%23%20Scenario%201%3A%20Math%20in%20Lists%20with%20Formatting%0A1.%20The%20**Pythagorean%20theorem**%20states%20that%20for%20any%20right%20triangle%2C%20the%20relationship%20between%20the%20lengths%20of%20the%20sides%20is%20given%20by%20the%20formula%3A%0A%20%20%20%5C%5B%0A%20%20%20a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%0A%20%20%20%5C%5D%0A2.%20Let%E2%80%99s%20consider%20a%20*right%20triangle*%20with%20side%20lengths%20%5C(a%20%3D%203%5C)%20and%20%5C(b%20%3D%204%5C)%3A%0A%20%20%20-%20To%20find%20the%20hypotenuse%20%5C(c%5C)%3A%0A%20%20%20%5C%5B%0A%20%20%20c%20%3D%20%5Csqrt%7Ba%5E2%20%2B%20b%5E2%7D%20%3D%20%5Csqrt%7B3%5E2%20%2B%204%5E2%7D%20%3D%20%5Csqrt%7B9%20%2B%2016%7D%20%3D%20%5Csqrt%7B25%7D%20%3D%205%0A%20%20%20%5C%5D%0A%20%20%20-%20Therefore%2C%20the%20length%20of%20the%20hypotenuse%20%5C(c%5C)%20is%20%5C(5%5C)%20units.%0A%0A%23%23%20Scenario%202%3A%20Tables%20with%20Math%0AHere%E2%80%99s%20a%20table%20summarizing%20key%20mathematical%20formulas%20along%20with%20their%20LaTeX%20representations%20and%20results%3A%0A%0A%7C%20Formula%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20LaTeX%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20Result%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------------------------------%7C--------------------------------------------%7C------------------------------------------%7C%0A%7C%20Quadratic%20Formula%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D%24%7C%0A%7C%20Sum%20of%20the%20first%20%5C(n%5C)%20integers%7C%20%24%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20%24%5Cfrac%7Bn(n%2B1)%7D%7B2%7D%24%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20Product%20of%20the%20first%20%5C(n%5C)%20integers%7C%20%24%5Cprod_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20%24n!%24%20(factorial)%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%0A%23%23%23%20Note%3A%0A-%20The%20quadratic%20formula%20provides%20the%20roots%20of%20a%20quadratic%20equation.%0A-%20The%20summation%20formula%20calculates%20the%20sum%20of%20the%20first%20%5C(n%5C)%20integers.%0A-%20The%20product%20formula%20calculates%20the%20factorial%20for%20%5C(n%5C).%0A%0A%23%23%20Scenario%203%3A%20Code%20and%20Math%20Mixed%0AHere%27s%20a%20Python%20function%20to%20calculate%20the%20area%20of%20a%20circle%20given%20its%20radius.%20The%20underlying%20mathematical%20formula%20used%20is%3A%0A%5C%5B%0AA%20%3D%20%5Cpi%20r%5E2%0A%5C%5D%0A%0A%60%60%60python%0A%23%20Calculate%20area%20of%20circle%20with%20radius%20r%0Aimport%20math%0A%0Adef%20circle_area(r)%3A%0A%20%20%20%20%23%20Formula%3A%20A%20%3D%20%CF%80r%C2%B2%0A%20%20%20%20return%20math.pi%20*%20r**2%0A%0A%23%20Example%20usage%3A%0Aprint(f%22Area%20of%20circle%20with%20radius%205%3A%20%7Bcircle_area(5)%7D%22)%0A%60%60%60%0AThis%20code%20will%20output%20the%20area%20of%20a%20circle%20with%20a%20radius%20of%205%20units%2C%20where%20%5C(%20A%20%5Capprox%2078.54%20%5C)%20square%20units.%0A%0A%23%23%20Scenario%204%3A%20Horizontal%20Rules%0AThe%20following%20sections%20illustrate%20the%20use%20of%20horizontal%20rules%20to%20separate%20content%3A%0A%0AFirst%20section%20of%20content.%0A%0A---%0A%0AIn%20the%20second%20section%2C%20we%20evaluate%20a%20definite%20integral%3A%0A%5C%5B%0A%5Cint_%7B0%7D%5E%7B1%7D%20x%20%5C%2C%20dx%20%3D%20%5Cfrac%7B1%7D%7B2%7D%0A%5C%5D%0AThis%20integral%20computes%20the%20area%20under%20the%20curve%20%5C(y%20%3D%20x%5C)%20from%20%5C(x%20%3D%200%5C)%20to%20%5C(x%20%3D%201%5C).%0A%0A---%0A%0AThird%20section%20concludes%20the%20content.%0A%0A%23%23%20Scenario%205%3A%20Multiple%20Dollar%20Signs%0ATo%20summarize%20expenses%20with%20precise%20formatting%3A%0A-%20A%20computer%20costs%20**%241%2C200**%0A-%20A%20monitor%20costs%20**%24300**%0A-%20A%20keyboard%20costs%20**%2450**%0A-%20A%20mouse%20costs%20**%2425**%0A%0A**Total%20Expenses%3A**%0A%5C%5B%0A1%2C200%20%2B%20300%20%2B%2050%20%2B%2025%20%3D%201%2C575%0A%5C%5D%0A%0A%23%23%23%20Additional%20Math%3A%0AConsider%20the%20function%20defined%20as%20%5C(f(x)%20%3D%20x%5E2%5C)%3A%0A-%20Evaluating%20this%20function%20at%20%5C(x%20%3D%205%5C)%3A%0A%5C%5B%0Af(5)%20%3D%205%5E2%20%3D%2025%0A%5C%5D%0A%0AThis%20response%20captures%20the%20various%20mathematical%20concepts%20and%20their%20implementations%20in%20a%20clear%20and%20structured%20manner%20across%20the%20different%20scenarios%20provided.\nCall log:\n  - navigating to \"http://localhost:5174/?modelId=openai%2Fgpt-4o-mini&content=Here%27s%20a%20detailed%20response%20addressing%20the%20complex%20scenarios%20involving%20mathematical%20principles%2C%20LaTeX%20formatting%2C%20programming%2C%20and%20other%20structures%3A%0A%0A%23%23%20Scenario%201%3A%20Math%20in%20Lists%20with%20Formatting%0A1.%20The%20**Pythagorean%20theorem**%20states%20that%20for%20any%20right%20triangle%2C%20the%20relationship%20between%20the%20lengths%20of%20the%20sides%20is%20given%20by%20the%20formula%3A%0A%20%20%20%5C%5B%0A%20%20%20a%5E2%20%2B%20b%5E2%20%3D%20c%5E2%0A%20%20%20%5C%5D%0A2.%20Let%E2%80%99s%20consider%20a%20*right%20triangle*%20with%20side%20lengths%20%5C(a%20%3D%203%5C)%20and%20%5C(b%20%3D%204%5C)%3A%0A%20%20%20-%20To%20find%20the%20hypotenuse%20%5C(c%5C)%3A%0A%20%20%20%5C%5B%0A%20%20%20c%20%3D%20%5Csqrt%7Ba%5E2%20%2B%20b%5E2%7D%20%3D%20%5Csqrt%7B3%5E2%20%2B%204%5E2%7D%20%3D%20%5Csqrt%7B9%20%2B%2016%7D%20%3D%20%5Csqrt%7B25%7D%20%3D%205%0A%20%20%20%5C%5D%0A%20%20%20-%20Therefore%2C%20the%20length%20of%20the%20hypotenuse%20%5C(c%5C)%20is%20%5C(5%5C)%20units.%0A%0A%23%23%20Scenario%202%3A%20Tables%20with%20Math%0AHere%E2%80%99s%20a%20table%20summarizing%20key%20mathematical%20formulas%20along%20with%20their%20LaTeX%20representations%20and%20results%3A%0A%0A%7C%20Formula%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20LaTeX%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20Result%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C-------------------------------%7C--------------------------------------------%7C------------------------------------------%7C%0A%7C%20Quadratic%20Formula%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20%24ax%5E2%20%2B%20bx%20%2B%20c%20%3D%200%24%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20%24x%20%3D%20%5Cfrac%7B-b%20%5Cpm%20%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D%24%7C%0A%7C%20Sum%20of%20the%20first%20%5C(n%5C)%20integers%7C%20%24%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20%24%5Cfrac%7Bn(n%2B1)%7D%7B2%7D%24%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%7C%20Product%20of%20the%20first%20%5C(n%5C)%20integers%7C%20%24%5Cprod_%7Bi%3D1%7D%5E%7Bn%7D%20i%24%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%20%24n!%24%20(factorial)%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7C%0A%0A%23%23%23%20Note%3A%0A-%20The%20quadratic%20formula%20provides%20the%20roots%20of%20a%20quadratic%20equation.%0A-%20The%20summation%20formula%20calculates%20the%20sum%20of%20the%20first%20%5C(n%5C)%20integers.%0A-%20The%20product%20formula%20calculates%20the%20factorial%20for%20%5C(n%5C).%0A%0A%23%23%20Scenario%203%3A%20Code%20and%20Math%20Mixed%0AHere%27s%20a%20Python%20function%20to%20calculate%20the%20area%20of%20a%20circle%20given%20its%20radius.%20The%20underlying%20mathematical%20formula%20used%20is%3A%0A%5C%5B%0AA%20%3D%20%5Cpi%20r%5E2%0A%5C%5D%0A%0A%60%60%60python%0A%23%20Calculate%20area%20of%20circle%20with%20radius%20r%0Aimport%20math%0A%0Adef%20circle_area(r)%3A%0A%20%20%20%20%23%20Formula%3A%20A%20%3D%20%CF%80r%C2%B2%0A%20%20%20%20return%20math.pi%20*%20r**2%0A%0A%23%20Example%20usage%3A%0Aprint(f%22Area%20of%20circle%20with%20radius%205%3A%20%7Bcircle_area(5)%7D%22)%0A%60%60%60%0AThis%20code%20will%20output%20the%20area%20of%20a%20circle%20with%20a%20radius%20of%205%20units%2C%20where%20%5C(%20A%20%5Capprox%2078.54%20%5C)%20square%20units.%0A%0A%23%23%20Scenario%204%3A%20Horizontal%20Rules%0AThe%20following%20sections%20illustrate%20the%20use%20of%20horizontal%20rules%20to%20separate%20content%3A%0A%0AFirst%20section%20of%20content.%0A%0A---%0A%0AIn%20the%20second%20section%2C%20we%20evaluate%20a%20definite%20integral%3A%0A%5C%5B%0A%5Cint_%7B0%7D%5E%7B1%7D%20x%20%5C%2C%20dx%20%3D%20%5Cfrac%7B1%7D%7B2%7D%0A%5C%5D%0AThis%20integral%20computes%20the%20area%20under%20the%20curve%20%5C(y%20%3D%20x%5C)%20from%20%5C(x%20%3D%200%5C)%20to%20%5C(x%20%3D%201%5C).%0A%0A---%0A%0AThird%20section%20concludes%20the%20content.%0A%0A%23%23%20Scenario%205%3A%20Multiple%20Dollar%20Signs%0ATo%20summarize%20expenses%20with%20precise%20formatting%3A%0A-%20A%20computer%20costs%20**%241%2C200**%0A-%20A%20monitor%20costs%20**%24300**%0A-%20A%20keyboard%20costs%20**%2450**%0A-%20A%20mouse%20costs%20**%2425**%0A%0A**Total%20Expenses%3A**%0A%5C%5B%0A1%2C200%20%2B%20300%20%2B%2050%20%2B%2025%20%3D%201%2C575%0A%5C%5D%0A%0A%23%23%23%20Additional%20Math%3A%0AConsider%20the%20function%20defined%20as%20%5C(f(x)%20%3D%20x%5E2%5C)%3A%0A-%20Evaluating%20this%20function%20at%20%5C(x%20%3D%205%5C)%3A%0A%5C%5B%0Af(5)%20%3D%205%5E2%20%3D%2025%0A%5C%5D%0A%0AThis%20response%20captures%20the%20various%20mathematical%20concepts%20and%20their%20implementations%20in%20a%20clear%20and%20structured%20manner%20across%20the%20different%20scenarios%20provided.\", waiting until \"networkidle\"\n"
+      "timestamp": "2026-11-04T00:53:25.395Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 12,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "27 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (12 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 12,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass"
     }
   ],
-  "actualTotalCost": 0,
-  "estimatedTotalCost": 0.647098
+  "freshRendered": "2026-11-08T17:40:36.470Z"
 }

@@ -16,13 +16,29 @@ import path from 'path';
 import { chromium, Browser, Page } from 'playwright';
 import { fileURLToPath } from 'url';
 import { spawn, ChildProcess } from 'child_process';
+import { validateRenderedHTML, type ValidationResult } from './dom-assertions.js';
+import {
+  SharedCostGuard,
+} from './budget-guard.js';
+import {
+  runPaidPromptAttempt,
+  type PaidTransportResult,
+} from './paid-call.js';
+import { DEFAULT_GUARD_STATE_FILE, DurableStore } from './durable-spend.js';
+import { droppedNameExpectations, getExpectedFeatures } from './expected-features.js';
+import {
+  isTruncatedReply,
+  isEmptyVisibleReply,
+  overallStatus,
+  uniqueCoverageRecords,
+  type OverallStatus,
+} from './overall-status.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const DEFAULT_MAX_TOKENS = 2048;
-const THINKING_MODEL_OUTPUT_MULTIPLIER = 3; // Conservative 3x for thinking models
 
 interface ModelEntry {
   id: string;
@@ -51,13 +67,27 @@ interface TestResult {
   promptText: string;
   response: string;
   usage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
+    cost?: number; // Actual cost from OpenRouter usage.cost if available
   };
   actualCost: number;
   timestamp: string;
   error?: string;
+  featureCoverage?: FeatureCoverageResult;
+  validation?: ValidationResult;
+  validationStatus?: OverallStatus;
+  truncated?: boolean;
+  emptyVisible?: boolean;
+  finishReason?: string | null;
+  nativeFinishReason?: string | null;
+  attempt?: string;
+  screenshotRelpath?: string;
+  sourceFile?: string;
 }
 
 interface HarnessConfig {
@@ -67,12 +97,14 @@ interface HarnessConfig {
   maxTokens: number;
   outputDir: string;
   runDate: string;
+  textModelsOnly: boolean;
+  cumulativeCostUsd: number; // Track actual spending
 }
 
 /**
  * Load models from registry
  */
-async function loadModelRegistry(): Promise<ModelEntry[]> {
+async function loadModelRegistry(textOnly: boolean = true): Promise<ModelEntry[]> {
   const registryPath = path.join(__dirname, '../backend/data/models_registry.json');
   const content = await fs.readFile(registryPath, 'utf-8');
   const registry = JSON.parse(content);
@@ -81,6 +113,10 @@ async function loadModelRegistry(): Promise<ModelEntry[]> {
   for (const [provider, providerModels] of Object.entries(registry.models_by_provider)) {
     if (Array.isArray(providerModels)) {
       for (const model of providerModels) {
+        // Filter for text/language models only if requested
+        if (textOnly && model.category === 'Image') {
+          continue;
+        }
         models.push({
           id: model.id,
           name: model.name,
@@ -136,47 +172,18 @@ async function loadPrompts(): Promise<Map<string, string>> {
 }
 
 /**
- * Estimate cost for a single request
+ * OpenRouter transport for runPaidPromptAttempt. Does not resolve cost —
+ * accounting is settlePaidCall so a missing usage.cost cannot be forgotten.
  */
-function estimateRequestCost(
-  modelId: string,
-  promptTokens: number,
-  maxTokens: number,
-  pricing: PricingInfo | undefined,
-  isThinkingModel: boolean
-): number {
-  if (!pricing) {
-    console.warn(`  Warning: No pricing info for ${modelId}, using $0`);
-    return 0;
-  }
-  
-  const outputTokens = maxTokens * (isThinkingModel ? THINKING_MODEL_OUTPUT_MULTIPLIER : 1);
-  const inputCost = promptTokens * pricing.inputCostPerToken;
-  const outputCost = outputTokens * pricing.outputCostPerToken;
-  
-  return inputCost + outputCost;
-}
-
-/**
- * Rough token estimation (chars / 4)
- */
-function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 4);
-}
-
-/**
- * Call OpenRouter API
- */
-async function callOpenRouter(
-  modelId: string,
-  prompt: string,
-  maxTokens: number,
-  pricing: Map<string, PricingInfo>
-): Promise<{ response: string; usage: any; cost: number }> {
+async function openRouterTransport(req: {
+  modelId: string
+  prompt: string
+  completionCap: number
+}): Promise<PaidTransportResult> {
   if (!OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY environment variable is required');
   }
-  
+
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -186,123 +193,235 @@ async function callOpenRouter(
       'X-Title': 'CompareIntel Rendering Harness',
     },
     body: JSON.stringify({
-      model: modelId,
+      model: req.modelId,
       messages: [
         {
           role: 'user',
-          content: prompt,
+          content: req.prompt,
         },
       ],
-      max_tokens: maxTokens,
+      max_tokens: req.completionCap,
       usage: { include: true },
     }),
   });
-  
+
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenRouter API error (${response.status}): ${error}`);
+    return { httpStatus: response.status, usage: null, content: '' };
   }
-  
+
   const data = await response.json();
-  const content = data.choices[0]?.message?.content || '';
-  const usage = data.usage;
-  
-  // Use OpenRouter's actual cost if provided, otherwise estimate from pricing
-  let cost = 0;
-  if (usage?.cost) {
-    // OpenRouter returned actual cost
-    cost = usage.cost;
-  } else if (usage && usage.prompt_tokens && usage.completion_tokens) {
-    // Estimate from pricing map when cost not provided
-    const modelPricing = pricing.get(modelId);
-    if (modelPricing) {
-      cost = (usage.prompt_tokens * modelPricing.inputCostPerToken) +
-             (usage.completion_tokens * modelPricing.outputCostPerToken);
-    }
-  }
-  
-  return { response: content, usage, cost };
+  return {
+    httpStatus: 200,
+    usage: data.usage,
+    content: data.choices[0]?.message?.content || '',
+  };
 }
 
-/**
- * Start Vite dev server
- */
-async function startViteServer(): Promise<ChildProcess | null> {
-  // Check if server is already running
+interface ViteHandle {
+  process: ChildProcess
+  pid: number
+}
+
+let ownedVite: ViteHandle | null = null
+let viteCleaned = false
+
+function stopOwnedVite(): void {
+  if (viteCleaned) return
+  viteCleaned = true
+  const handle = ownedVite
+  ownedVite = null
+  if (!handle?.pid) return
   try {
-    const response = await fetch('http://localhost:5174/');
-    if (response.ok) {
-      console.log('✓ Vite dev server already running on port 5174');
-      return null; // Server already running, no process to manage
+    process.kill(-handle.pid, 'SIGTERM')
+  } catch {
+    try {
+      handle.process.kill('SIGTERM')
+    } catch {
+      /* already gone */
     }
-  } catch (e) {
-    // Server not running, start it
   }
-  
-  return new Promise((resolve, reject) => {
-    console.log('Starting Vite dev server...');
-    const vite = spawn('npm', ['run', 'dev'], {
-      cwd: __dirname,
-      stdio: 'pipe',
-      detached: false,
-    });
-    
-    let output = '';
-    let resolved = false;
-    
-    vite.stdout?.on('data', (data) => {
-      output += data.toString();
-      if (!resolved && output.includes('Local:') && output.includes('5174')) {
-        resolved = true;
-        // Give it a moment to fully initialize
-        setTimeout(() => {
-          console.log('✓ Vite dev server started on port 5174');
-          resolve(vite);
-        }, 2000);
-      }
-    });
-    
-    vite.stderr?.on('data', (data) => {
-      const msg = data.toString();
-      if (!resolved && msg.includes('EADDRINUSE')) {
-        resolved = true;
-        console.log('✓ Vite dev server already running on port 5174');
-        resolve(vite);
-      }
-    });
-    
-    vite.on('error', (err) => {
-      if (!resolved) {
-        resolved = true;
-        reject(err);
-      }
-    });
-    
-    // Timeout after 60s
-    setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        reject(new Error('Vite server failed to start within 60s'));
-      }
-    }, 60000);
-  });
 }
 
-/**
- * Wait for server to be ready
- */
 async function waitForServer(maxAttempts = 60): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      const response = await fetch('http://localhost:5174/');
-      if (response.ok) {
-        return;
-      }
-    } catch (e) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('http://127.0.0.1:5174/')
+      if (response.ok) return
+    } catch {
+      /* not up yet */
     }
+    await new Promise(resolve => setTimeout(resolve, 250))
   }
-  throw new Error('Server did not become ready within 60 seconds');
+  throw new Error('Server did not become ready within 15 seconds')
+}
+
+/**
+ * Start Vite as its own process group so SIGTERM/timeout on the harness
+ * can kill the actual vite binary (npm-spawned grandchildren were surviving
+ * as PID-1 orphans, then getting reused and later killed mid-run).
+ */
+async function startViteServer(): Promise<ViteHandle | null> {
+  try {
+    const response = await fetch('http://127.0.0.1:5174/')
+    if (response.ok) {
+      console.log('✓ Vite already listening on 5174 (not owned by this process; will not kill it)')
+      return null
+    }
+  } catch {
+    /* start our own */
+  }
+
+  const viteBin = path.join(__dirname, 'node_modules', '.bin', 'vite')
+  console.log('Starting Vite dev server...')
+  const child = spawn(viteBin, ['--host', '127.0.0.1', '--port', '5174', '--strictPort'], {
+    cwd: __dirname,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
+    env: { ...process.env },
+  })
+
+  if (child.pid == null) {
+    throw new Error('Failed to spawn Vite (no pid)')
+  }
+
+  const handle: ViteHandle = { process: child, pid: child.pid }
+  ownedVite = handle
+  viteCleaned = false
+
+  let output = ''
+  const onOut = (buf: Buffer) => {
+    output += buf.toString()
+  }
+  child.stdout?.on('data', onOut)
+  child.stderr?.on('data', onOut)
+  child.on('exit', (code, signal) => {
+    if (!viteCleaned) {
+      console.error(`Vite exited unexpectedly (code=${code}, signal=${signal})`)
+    }
+  })
+
+  try {
+    await waitForServer(80)
+    console.log(`✓ Vite dev server started on port 5174 (pid ${child.pid})`)
+    return handle
+  } catch (err) {
+    stopOwnedVite()
+    throw new Error(`Vite failed to start: ${err}\n--- vite output ---\n${output.slice(-2000)}`)
+  }
+}
+
+interface FeatureCoverageResult {
+  hasDisplayMath: boolean;
+  hasInlineMath: boolean;
+  hasCodeBlocks: boolean;
+  hasTables: boolean;
+  hasLinks: boolean;
+  hasNestedLists: boolean;
+  mathErrors: string[];
+  preservedCurrency: boolean;
+  preservedCodeDollars: boolean;
+  linkDestinations: string[];
+  tableCellCount: number;
+  codeBlockLanguages: string[];
+}
+
+/**
+ * Analyze DOM for feature coverage
+ */
+async function analyzeFeatureCoverage(
+  page: Page
+): Promise<{ coverage: FeatureCoverageResult; renderedHTML: string }> {
+  return await page.evaluate(() => {
+    const container = document.querySelector('[data-render-container]');
+    if (!container) {
+      throw new Error('Render container not found');
+    }
+
+    const result: {
+      hasDisplayMath: boolean;
+      hasInlineMath: boolean;
+      hasCodeBlocks: boolean;
+      hasTables: boolean;
+      hasLinks: boolean;
+      hasNestedLists: boolean;
+      mathErrors: string[];
+      preservedCurrency: boolean;
+      preservedCodeDollars: boolean;
+      linkDestinations: string[];
+      tableCellCount: number;
+      codeBlockLanguages: string[];
+    } = {
+      hasDisplayMath: false,
+      hasInlineMath: false,
+      hasCodeBlocks: false,
+      hasTables: false,
+      hasLinks: false,
+      hasNestedLists: false,
+      mathErrors: [],
+      preservedCurrency: false,
+      preservedCodeDollars: false,
+      linkDestinations: [],
+      tableCellCount: 0,
+      codeBlockLanguages: [],
+    };
+
+    // Check for display math (katex-display class)
+    const displayMath = container.querySelectorAll('.katex-display');
+    result.hasDisplayMath = displayMath.length > 0;
+
+    // Check for inline math
+    const inlineMath = container.querySelectorAll('.katex:not(.katex-display)');
+    result.hasInlineMath = inlineMath.length > 0;
+
+    // Check for KaTeX errors
+    const mathErrors = container.querySelectorAll('.katex-error');
+    result.mathErrors = Array.from(mathErrors).map(e => e.textContent || '').slice(0, 5);
+
+    // Check for code blocks
+    const codeBlocks = container.querySelectorAll('pre code');
+    result.hasCodeBlocks = codeBlocks.length > 0;
+    result.codeBlockLanguages = Array.from(codeBlocks)
+      .map(block => {
+        const classes = Array.from(block.classList);
+        const langClass = classes.find(c => c.startsWith('language-'));
+        return langClass ? langClass.replace('language-', '') : 'plain';
+      })
+      .filter((v, i, a) => a.indexOf(v) === i); // unique
+
+    // Check for tables
+    const tables = container.querySelectorAll('table');
+    result.hasTables = tables.length > 0;
+    result.tableCellCount = container.querySelectorAll('td, th').length;
+
+    // Check for links
+    const links = container.querySelectorAll('a[href]');
+    result.hasLinks = links.length > 0;
+    result.linkDestinations = Array.from(links)
+      .map(a => (a as HTMLAnchorElement).href)
+      .filter(href => !href.startsWith('javascript:'))
+      .slice(0, 10); // First 10 links
+
+    // Check for nested lists (3+ levels)
+    const nestedLists = container.querySelectorAll('ul ul ul, ol ol ol, ul ol ul, ol ul ol');
+    result.hasNestedLists = nestedLists.length > 0;
+
+    // Check for preserved currency ($5, $10, etc.) - simple text check
+    const allText = container.textContent || '';
+    result.preservedCurrency = /\$\d+/.test(allText);
+
+    // Check for $ in code blocks (should be preserved as literal)
+    for (const block of codeBlocks) {
+      if (block.textContent?.includes('$')) {
+        result.preservedCodeDollars = true;
+        break;
+      }
+    }
+
+    // Get the actual rendered HTML for validation
+    const renderedHTML = container.innerHTML;
+
+    return { coverage: result, renderedHTML };
+  });
 }
 
 /**
@@ -313,31 +432,40 @@ async function renderResponse(
   modelId: string,
   response: string,
   outputPath: string
-): Promise<void> {
+): Promise<{ coverage: FeatureCoverageResult; renderedHTML: string }> {
   // Navigate to harness with model ID and content as query params
   const encodedContent = encodeURIComponent(response);
-  const url = `http://localhost:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
-  
-  await page.goto(url, { waitUntil: 'networkidle' });
-  
-  // Wait for rendering to complete
-  // Wait for data-render-complete attribute (set after fonts load and Prism highlights)
+  const url = `http://127.0.0.1:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+
   await page.waitForFunction(
     () => {
-      const container = document.querySelector('[data-render-container]');
-      if (!container) return false;
-      
-      // Check for data-render-complete attribute
-      return container.hasAttribute('data-render-complete');
+      const failed = document.querySelector('[data-render-failed]');
+      const complete = document.querySelector('[data-render-complete]');
+      return !!(failed || complete);
     },
     { timeout: 30000 }
   );
-  
-  // Take screenshot of the rendered content
+
+  const failReason = await page.evaluate(() => {
+    const el = document.querySelector('[data-render-failed]');
+    return el?.getAttribute('data-render-failed') || null;
+  });
+
   const element = await page.$('[data-render-container]');
   if (element) {
     await element.screenshot({ path: outputPath });
   }
+
+  if (failReason) {
+    throw new Error(`Render readiness failed: ${failReason}`);
+  }
+
+  const result = await analyzeFeatureCoverage(page);
+
+  return result;
 }
 
 function escapeHtml(text: string): string {
@@ -352,7 +480,7 @@ function escapeHtml(text: string): string {
 /**
  * Render-only mode: re-screenshot existing results without calling API
  */
-async function renderOnlyMode(runDir: string): Promise<void> {
+async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void> {
   console.log(`\n=== Render-Only Mode ===`);
   console.log(`Run directory: ${runDir}\n`);
   
@@ -368,7 +496,23 @@ async function renderOnlyMode(runDir: string): Promise<void> {
   
   // Find all JSON files (saved responses)
   const files = await fs.readdir(fullPath);
-  const jsonFiles = files.filter(f => f.endsWith('.json') && !f.startsWith('results'));
+  const skipJson = new Set([
+    'summary.json',
+    'manifest.json',
+    'catalog.json',
+    'prompts.json',
+    'coverage.json',
+    'unique-coverage.json',
+    'next-batch-preflight.json',
+    'summary-partial.json',
+  ]);
+  const jsonFiles = files.filter(
+    f =>
+      f.endsWith('.json') &&
+      !f.startsWith('results') &&
+      !f.startsWith('unique-') &&
+      !skipJson.has(f)
+  );
   
   if (jsonFiles.length === 0) {
     console.error('ERROR: No saved response JSON files found in directory');
@@ -377,29 +521,43 @@ async function renderOnlyMode(runDir: string): Promise<void> {
   
   console.log(`Found ${jsonFiles.length} saved responses\n`);
   
-  // Start Vite server
-  const viteProcess = await startViteServer();
+  await startViteServer();
   await waitForServer();
-  
+
   const browser = await chromium.launch();
   const page = await browser.newPage();
   const results: TestResult[] = [];
-  
+
   try {
     for (const jsonFile of jsonFiles) {
       const jsonPath = path.join(fullPath, jsonFile);
       const content = await fs.readFile(jsonPath, 'utf-8');
       const data = JSON.parse(content);
-      
+      if (!data.modelId || typeof data.response !== 'string' || !data.promptName) {
+        console.log(`Skipping non-reply JSON: ${jsonFile}`);
+        continue;
+      }
+
       console.log(`Rendering ${data.modelName || data.modelId} - ${data.promptName}...`);
-      
-      // Generate screenshot path
+
       const screenshotPath = path.join(fullPath, jsonFile.replace('.json', '.png'));
-      
-      try {
-        await renderResponse(page, data.modelId, data.response, screenshotPath);
-        console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
-        
+      const truncated = isTruncatedReply(data);
+      const emptyVisible = isEmptyVisibleReply(data.response);
+
+      const providerError =
+        data.error == null
+          ? undefined
+          : typeof data.error === 'string'
+            ? data.error
+            : JSON.stringify(data.error);
+      // Provider/API errors and empty replies are incomplete coverage: never
+      // pass, never a renderer-loss fail, and never screenshot/render.
+      if (emptyVisible || providerError) {
+        const status = overallStatus({ truncated, emptyVisible: true });
+        const why = providerError
+          ? 'provider/API error; skip render, not pass, not renderer-fail'
+          : 'empty visible text; reasoning-only / truncated, not pass, not renderer-fail';
+        console.log(`  △ Validation: ${status.toUpperCase()} (${why})`);
         results.push({
           modelId: data.modelId,
           modelName: data.modelName,
@@ -407,39 +565,237 @@ async function renderOnlyMode(runDir: string): Promise<void> {
           promptText: data.promptText || '',
           response: data.response,
           usage: data.usage,
-          actualCost: data.cost || 0,
+          actualCost: data.cost || data.actualCost || 0,
           timestamp: data.timestamp,
+          error: providerError,
+          validationStatus: status,
+          truncated,
+          emptyVisible: true,
+          finishReason: data.finishReason ?? null,
+          nativeFinishReason: data.nativeFinishReason ?? null,
+          attempt: data.attempt || 'original',
+          sourceFile: jsonFile,
+        });
+        continue;
+      }
+
+      try {
+        const { coverage, renderedHTML } = await renderResponse(
+          page,
+          data.modelId,
+          data.response,
+          screenshotPath
+        );
+        console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
+
+        const expectedFeatures = getExpectedFeatures(data.promptName, data.promptText);
+        const dropped = droppedNameExpectations(data.promptName, data.promptText);
+        if (dropped.length > 0) {
+          console.log(
+            `  · Provenance: saved promptText dropped name-defaults [${dropped.join(', ')}]`
+          );
+        }
+        const validation = validateRenderedHTML(
+          renderedHTML,
+          expectedFeatures,
+          data.response
+        );
+        const status = overallStatus({ truncated, emptyVisible, validation });
+        const failedCount = validation.assertions.filter(a => a.status === 'fail').length;
+        const notCoveredCount = validation.assertions.filter(a => a.status === 'not-covered').length;
+        const mark =
+          status === 'pass'
+            ? '✓'
+            : status === 'not-covered'
+              ? '○'
+              : status === 'source-issue'
+                ? '◐'
+                : status === 'fail'
+                  ? '✗'
+                  : '△';
+        console.log(
+          `  ${mark} Validation: ${status.toUpperCase()}` +
+            (emptyVisible ? ' (empty visible, incomplete)' : truncated ? ' (incomplete finishReason, not comprehensive)' : '') +
+            (failedCount ? ` (${failedCount} DOM fail assertions)` : '') +
+            (notCoveredCount ? ` (${notCoveredCount} not-covered)` : '')
+        );
+
+        results.push({
+          modelId: data.modelId,
+          modelName: data.modelName,
+          promptName: data.promptName,
+          promptText: data.promptText || '',
+          response: data.response,
+          usage: data.usage,
+          actualCost: data.cost || data.actualCost || 0,
+          timestamp: data.timestamp,
+          featureCoverage: coverage,
+          validation,
+          validationStatus: status,
+          truncated,
+          emptyVisible,
+          finishReason: data.finishReason ?? null,
+          nativeFinishReason: data.nativeFinishReason ?? null,
+          attempt: data.attempt || 'original',
+          screenshotRelpath: path.basename(screenshotPath),
+          sourceFile: jsonFile,
         });
       } catch (error) {
         console.error(`  ✗ Error rendering: ${error}`);
+        const screenshotRelpath = jsonFile.replace('.json', '.png');
+        // Truncated / empty replies that time out of Prism (unclosed fence) are
+        // incomplete coverage, not renderer-loss. Keep finishReason so unique
+        // coverage can overlay a complete rerun.
+        const status = overallStatus({
+          truncated,
+          emptyVisible,
+          error: truncated || emptyVisible ? undefined : String(error),
+        });
+        console.log(
+          `  △ Validation: ${status.toUpperCase()}` +
+            (truncated || emptyVisible
+              ? ' (screenshot/readiness error on incomplete source, not renderer-fail)'
+              : '')
+        );
+        results.push({
+          modelId: data.modelId,
+          modelName: data.modelName,
+          promptName: data.promptName,
+          promptText: data.promptText || '',
+          response: data.response || '',
+          usage: data.usage,
+          actualCost: data.cost || data.actualCost || 0,
+          timestamp: data.timestamp || new Date().toISOString(),
+          error: String(error),
+          validationStatus: status,
+          truncated,
+          emptyVisible,
+          finishReason: data.finishReason ?? null,
+          nativeFinishReason: data.nativeFinishReason ?? null,
+          attempt: data.attempt || 'original',
+          screenshotRelpath,
+          sourceFile: jsonFile,
+        });
       }
     }
   } finally {
     await page.close();
     await browser.close();
-    
-    // Stop Vite server if we started it
-    if (viteProcess) {
-      viteProcess.kill();
-    }
+    stopOwnedVite();
   }
   
-  // Regenerate review page
-  const runDate = path.basename(fullPath);
+  let published = results;
+  let publishDir = fullPath;
+  if (mergeInto) {
+    const parentDir = path.isAbsolute(mergeInto) ? mergeInto : path.join(__dirname, mergeInto);
+    const parentResultsPath = path.join(parentDir, 'results.json');
+    const parentRaw = JSON.parse(await fs.readFile(parentResultsPath, 'utf-8')) as {
+      results?: TestResult[];
+    };
+    const parentResults = (parentRaw.results || []).map(record => ({
+      ...record,
+      attempt: record.attempt || 'original',
+      screenshotRelpath:
+        record.screenshotRelpath ||
+        `${record.modelId.replace(/\//g, '_')}_${record.promptName}.png`,
+    }));
+    const mergedNew = results.map(record => ({
+      ...record,
+      screenshotRelpath: path.posix.join(
+        path.basename(fullPath),
+        record.screenshotRelpath || path.basename(record.sourceFile || '').replace(/\.json$/, '.png')
+      ),
+    }));
+    published = [...parentResults, ...mergedNew];
+    publishDir = parentDir;
+  }
+
+  const unique = uniqueCoverageRecords(published);
+  const runDate = path.basename(publishDir);
   const config: HarnessConfig = {
     dryRun: false,
-    modelIds: [...new Set(results.map(r => r.modelId))],
+    modelIds: [...new Set(published.map(r => r.modelId))],
     maxUsd: 0,
     maxTokens: 0,
-    outputDir: fullPath,
+    outputDir: publishDir,
     runDate,
+    textModelsOnly: true,
+    cumulativeCostUsd: published.reduce((sum, r) => sum + r.actualCost, 0),
   };
-  
-  await generateReviewPage(results, config);
-  
+
+  await fs.writeFile(
+    path.join(publishDir, 'results.json'),
+    JSON.stringify(
+      {
+        runDate,
+        config,
+        results: published,
+        uniqueCoverage: unique.map(r => ({
+          modelId: r.modelId,
+          promptName: r.promptName,
+          validationStatus: resultStatus(r),
+          truncated: r.truncated,
+          finishReason: r.finishReason,
+          attempt: r.attempt,
+          sourceFile: r.sourceFile,
+          screenshotRelpath: r.screenshotRelpath,
+          actualCost: r.actualCost,
+        })),
+        historyRecords: published.length,
+        uniqueCells: unique.length,
+        freshRendered: new Date().toISOString(),
+      },
+      null,
+      2
+    )
+  );
+
+  await generateReviewPage(published, config, unique);
+
   console.log('\n=== Render-Only Complete ===');
-  console.log(`Screenshots regenerated: ${results.length}`);
-  console.log(`Review page updated: ${path.join(fullPath, 'review.html')}`);
+  console.log(`Screenshots regenerated this pass: ${results.length}`);
+  console.log(`History records: ${published.length}`);
+  console.log(`Unique coverage cells: ${unique.length}`);
+  console.log(`Review page updated: ${path.join(publishDir, 'review.html')}`);
+
+  console.log('\nHistory (all API records):');
+  reportValidationSummary(published);
+  console.log('Unique coverage (complete attempt replaces truncated provenance):');
+  reportValidationSummary(unique);
+  exitIfValidationFailed(unique);
+}
+
+function resultStatus(r: TestResult): OverallStatus {
+  return overallStatus({
+    truncated: Boolean(r.truncated) || isTruncatedReply(r),
+    emptyVisible: Boolean(r.emptyVisible) || isEmptyVisibleReply(r.response),
+    error: r.error,
+    validation: r.validation,
+  })
+}
+
+function reportValidationSummary(results: TestResult[]): void {
+  const passed = results.filter(r => resultStatus(r) === 'pass').length
+  const notCovered = results.filter(r => resultStatus(r) === 'not-covered').length
+  const sourceIssue = results.filter(r => resultStatus(r) === 'source-issue').length
+  const truncated = results.filter(r => resultStatus(r) === 'truncated').length
+  const incomplete = results.filter(r => resultStatus(r) === 'incomplete').length
+  const failed = results.filter(r => resultStatus(r) === 'fail').length
+  console.log(`\nValidation Summary:`)
+  console.log(`  ✓ Passed: ${passed}`)
+  console.log(`  ○ Not covered (source missing feature): ${notCovered}`)
+  console.log(`  ◐ Source issue (malformed/unsupported math env): ${sourceIssue}`)
+  console.log(`  △ Truncated (non-empty, finish length): ${truncated}`)
+  console.log(`  △ Incomplete (empty visible / reasoning-only): ${incomplete}`)
+  console.log(`  ✗ Failed (renderer loss / error): ${failed}\n`)
+}
+
+function exitIfValidationFailed(results: TestResult[]): void {
+  const failed = results.filter(r => resultStatus(r) === 'fail')
+  if (failed.length > 0) {
+    console.error(`Harness failed with ${failed.length} renderer-loss or render errors`)
+    process.exit(1)
+  }
 }
 
 /**
@@ -447,7 +803,8 @@ async function renderOnlyMode(runDir: string): Promise<void> {
  */
 async function generateReviewPage(
   results: TestResult[],
-  config: HarnessConfig
+  config: HarnessConfig,
+  unique: TestResult[] = uniqueCoverageRecords(results)
 ): Promise<void> {
   const reviewPath = path.join(config.outputDir, 'review.html');
   
@@ -521,6 +878,33 @@ async function generateReviewPage(
     .feedback {
       margin-top: 10px;
     }
+    .feature-coverage {
+      font-size: 0.85em;
+      margin: 10px 0;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .feature-coverage .feature {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .feature-coverage .feature.yes {
+      background: #d4edda;
+      color: #155724;
+    }
+    .feature-coverage .feature.no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .feature-coverage .math-error {
+      color: #d32f2f;
+      font-weight: bold;
+      display: block;
+      margin-top: 4px;
+    }
     textarea {
       width: 100%;
       min-height: 80px;
@@ -541,6 +925,20 @@ async function generateReviewPage(
     .export-btn:hover {
       background: #0056b3;
     }
+    .status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      text-transform: uppercase;
+    }
+    .status-pass { background: #d4edda; color: #155724; }
+    .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-source-issue { background: #ffe8cc; color: #9a3412; }
+    .status-truncated { background: #e7e3ff; color: #3d348b; }
+    .status-incomplete { background: #ede7f6; color: #4a148c; }
+    .status-fail { background: #f8d7da; color: #721c24; }
     .error {
       color: red;
       background: #fee;
@@ -561,8 +959,22 @@ async function generateReviewPage(
     <p><strong>Run Date:</strong> ${config.runDate}</p>
     <p><strong>Models Tested:</strong> ${config.modelIds.length}</p>
     <p><strong>Prompts:</strong> ${byPrompt.size}</p>
-    <p><strong>Total Results:</strong> ${results.length}</p>
-    <p><strong>Total Cost:</strong> $${totalCost.toFixed(4)}</p>
+    <p><strong>API history records:</strong> ${results.length}
+       &nbsp;<strong>Unique coverage cells:</strong> ${unique.length}</p>
+    <p><strong>History:</strong>
+       Passed ${results.filter(r => resultStatus(r) === 'pass').length}
+       / Not covered ${results.filter(r => resultStatus(r) === 'not-covered').length}
+       / Truncated ${results.filter(r => resultStatus(r) === 'truncated').length}
+       / Incomplete ${results.filter(r => resultStatus(r) === 'incomplete').length}
+       / Failed ${results.filter(r => resultStatus(r) === 'fail').length}</p>
+    <p><strong>Unique coverage:</strong>
+       Passed ${unique.filter(r => resultStatus(r) === 'pass').length}
+       / Not covered ${unique.filter(r => resultStatus(r) === 'not-covered').length}
+       / Truncated ${unique.filter(r => resultStatus(r) === 'truncated').length}
+       / Incomplete ${unique.filter(r => resultStatus(r) === 'incomplete').length}
+       / Failed ${unique.filter(r => resultStatus(r) === 'fail').length}
+       (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $${totalCost.toFixed(6)}</p>
     <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
   </div>
   
@@ -572,21 +984,47 @@ async function generateReviewPage(
       <div class="model-grid">
         ${promptResults.map(result => `
           <div class="model-card">
-            <h4>${result.modelName}</h4>
+            <h4>${result.modelName} <span class="status status-${resultStatus(result)}">${resultStatus(result)}</span>${result.attempt && result.attempt !== 'original' ? ` <span class="status status-not-covered">${escapeHtml(result.attempt)}</span>` : ''}</h4>
             <div class="meta">
               Model ID: ${result.modelId}<br>
+              Attempt: ${escapeHtml(result.attempt || 'original')}${result.sourceFile ? ` · ${escapeHtml(result.sourceFile)}` : ''}<br>
               ${result.usage ? `Tokens: ${result.usage.total_tokens || result.usage.totalTokens || '?'} (${result.usage.prompt_tokens || result.usage.promptTokens || '?'} in / ${result.usage.completion_tokens || result.usage.completionTokens || '?'} out)<br>` : ''}
-              Cost: $${result.actualCost.toFixed(4)}<br>
+              Cost: $${result.actualCost.toFixed(6)}<br>
+              Finish: ${escapeHtml(String(result.finishReason || 'unknown'))}${result.nativeFinishReason ? ` / ${escapeHtml(String(result.nativeFinishReason))}` : ''}${result.emptyVisible ? ' — empty visible (reasoning-only), incomplete' : result.truncated ? ' — truncated, not comprehensive' : ''}<br>
               Time: ${new Date(result.timestamp).toLocaleString()}
             </div>
             
             ${result.error ? `
               <div class="error">Error: ${result.error}</div>
+            ` : result.emptyVisible ? `
+              <div class="error">No visible assistant text (completion tokens were reasoning-only or truncated before content). Incomplete — not a renderer failure.</div>
             ` : `
-              <img src="${result.modelId.replace(/\//g, '_')}_${promptName}.png" 
+              <img src="${escapeHtml(result.screenshotRelpath || `${result.modelId.replace(/\//g, '_')}_${promptName}.png`)}" 
                    class="screenshot" 
                    alt="Rendered output"
                    onerror="this.style.display='none'">
+              
+              ${result.featureCoverage ? `
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature ${result.featureCoverage.hasDisplayMath ? 'yes' : 'no'}">Display Math</span>
+                    <span class="feature ${result.featureCoverage.hasInlineMath ? 'yes' : 'no'}">Inline Math</span>
+                    <span class="feature ${result.featureCoverage.hasCodeBlocks ? 'yes' : 'no'}">Code Blocks</span>
+                    <span class="feature ${result.featureCoverage.hasTables ? 'yes' : 'no'}">Tables</span>
+                    <span class="feature ${result.featureCoverage.hasLinks ? 'yes' : 'no'}">Links</span>
+                    <span class="feature ${result.featureCoverage.hasNestedLists ? 'yes' : 'no'}">Nested Lists</span>
+                    <span class="feature ${result.featureCoverage.preservedCurrency ? 'yes' : 'no'}">Currency</span>
+                    <span class="feature ${result.featureCoverage.preservedCodeDollars ? 'yes' : 'no'}">Code $</span>
+                  </div>
+                  ${result.featureCoverage.mathErrors && result.featureCoverage.mathErrors.length > 0 ? `
+                    <span class="math-error">⚠ KaTeX Errors: ${result.featureCoverage.mathErrors.length}</span>
+                  ` : ''}
+                  ${result.featureCoverage.linkDestinations && result.featureCoverage.linkDestinations.length > 0 ? `
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: ${result.featureCoverage.linkDestinations.slice(0, 3).join(', ')}${result.featureCoverage.linkDestinations.length > 3 ? '...' : ''}</div>
+                  ` : ''}
+                </div>
+              ` : ''}
               
               <details>
                 <summary>Raw Response</summary>
@@ -650,6 +1088,7 @@ async function main() {
   const maxUsdArg = args.find(arg => arg.startsWith('--max-usd='));
   const maxTokensArg = args.find(arg => arg.startsWith('--max-tokens='));
   const renderDirArg = args.find(arg => arg.startsWith('--render-dir='));
+  const mergeIntoArg = args.find(arg => arg.startsWith('--merge-into='));
   
   const maxUsd = maxUsdArg ? parseFloat(maxUsdArg.split('=')[1]) : 10.0;
   const maxTokens = maxTokensArg ? parseInt(maxTokensArg.split('=')[1]) : DEFAULT_MAX_TOKENS;
@@ -665,14 +1104,14 @@ async function main() {
       process.exit(1);
     }
     
-    await renderOnlyMode(renderDir);
+    await renderOnlyMode(renderDir, mergeIntoArg ? mergeIntoArg.split('=')[1] : undefined);
     return;
   }
   
   // Load data
   console.log('Loading model registry...');
-  const allModels = await loadModelRegistry();
-  console.log(`Found ${allModels.length} models in registry\n`);
+  const allModels = await loadModelRegistry(true); // Load text/language models only
+  console.log(`Found ${allModels.length} text models in registry\n`);
   
   console.log('Loading test prompts...');
   const prompts = await loadPrompts();
@@ -691,35 +1130,66 @@ async function main() {
   const pricing = await fetchOpenRouterPricing();
   console.log(`Fetched pricing for ${pricing.size} models\n`);
   
-  // Calculate estimates
+  // Dry-run uses the same SharedCostGuard.reserve as live (UTF-8 bytes + pad,
+  // completion cap once, 1.25 margin). Not token-estimate × 3 thinking.
   console.log('=== Cost Estimation ===');
   let totalEstimatedCost = 0;
   const modelEstimates = [];
-  
+  const estimateGuard = new SharedCostGuard(Number.MAX_SAFE_INTEGER);
+
   for (const model of selectedModels) {
     const modelPricing = pricing.get(model.id);
     let modelCost = 0;
-    
-    for (const [promptName, promptText] of prompts) {
-      const promptTokens = estimateTokens(promptText);
-      const cost = estimateRequestCost(
-        model.id,
-        promptTokens,
-        maxTokens,
-        modelPricing,
-        model.is_thinking_model || false
-      );
-      modelCost += cost;
+    let hasNoPricing = false;
+
+    for (const [, promptText] of prompts) {
+      if (!modelPricing) {
+        hasNoPricing = true;
+        break;
+      }
+      try {
+        const reserve = estimateGuard.reserve({
+          modelId: model.id,
+          prompt: promptText,
+          completionCap: maxTokens,
+          catalog: {
+            prompt: modelPricing.inputCostPerToken,
+            completion: modelPricing.outputCostPerToken,
+          },
+        });
+        modelCost += reserve.usd;
+      } catch {
+        hasNoPricing = true;
+        break;
+      }
     }
-    
-    totalEstimatedCost += modelCost;
+
+    if (!hasNoPricing) {
+      totalEstimatedCost += modelCost;
+    }
     modelEstimates.push({ model, cost: modelCost, hasPricing: !!modelPricing });
   }
   
-  console.log(`\nModels without pricing info: ${modelEstimates.filter(e => !e.hasPricing).length}`);
-  console.log(`Estimated cost per model (avg): $${(totalEstimatedCost / selectedModels.length).toFixed(4)}`);
-  console.log(`Total estimated cost: $${totalEstimatedCost.toFixed(4)}`);
-  console.log(`Cost cap: $${maxUsd.toFixed(2)}\n`);
+  const unpricedModels = modelEstimates.filter(e => !e.hasPricing);
+  const pricedModels = modelEstimates.filter(e => e.hasPricing);
+  
+  console.log(`\n=== Pricing Summary ===`);
+  console.log(`Models with pricing: ${pricedModels.length}/${selectedModels.length}`);
+  console.log(`Models WITHOUT pricing: ${unpricedModels.length}/${selectedModels.length}`);
+  
+  if (unpricedModels.length > 0) {
+    console.log(`\n⚠️  UNKNOWN PRICING (will be REFUSED):`);
+    unpricedModels.forEach(e => console.log(`   - ${e.model.id}`));
+  }
+  
+  if (pricedModels.length > 0) {
+    console.log(`\nEstimated cost (${pricedModels.length} priced models only):`);
+    console.log(`  Per model (avg): $${(totalEstimatedCost / pricedModels.length).toFixed(4)}`);
+    console.log(`  Total: $${totalEstimatedCost.toFixed(4)}`);
+    console.log(`  Cost cap: $${maxUsd.toFixed(2)}\n`);
+  } else {
+    console.log(`\n⚠️  No models have pricing data - all requests will be refused.\n`);
+  }
   
   if (totalEstimatedCost > maxUsd) {
     console.error(`ERROR: Estimated cost ($${totalEstimatedCost.toFixed(4)}) exceeds cap ($${maxUsd.toFixed(2)})`);
@@ -763,15 +1233,25 @@ async function main() {
     maxTokens,
     outputDir,
     runDate,
+    textModelsOnly: true,
+    cumulativeCostUsd: 0,
   };
   
-  // Start Vite server
-  const viteProcess = await startViteServer();
+  await startViteServer();
   await waitForServer();
   
   const browser = await chromium.launch();
   const results: TestResult[] = [];
   let actualTotalCost = 0;
+  const costGuard = new SharedCostGuard(maxUsd, [], {
+    store: new DurableStore(DEFAULT_GUARD_STATE_FILE),
+    batchId: runDate,
+  });
+  if (costGuard.unknownCharges > 0 || costGuard.failClosed) {
+    console.log(
+      `\n⚠ Durable unresolved unknown/pending spend (${costGuard.unknownCharges} unknown). Live paid calls fail-closed until explicit resolution/approval. Historical unknowns stay actualCost/resolution null — not $0.\n`
+    );
+  }
   
   // Create a single page for all renders (faster than creating new pages each time)
   const page = await browser.newPage();
@@ -784,17 +1264,46 @@ async function main() {
         console.log(`  Prompt: ${promptName}`);
         
         try {
-          // Call OpenRouter
-          const { response, usage, cost } = await callOpenRouter(
-            model.id,
-            promptText,
-            maxTokens,
-            pricing
-          );
+          const modelPricing = pricing.get(model.id);
+          const attempt = await runPaidPromptAttempt({
+            guard: costGuard,
+            modelId: model.id,
+            prompt: promptText,
+            completionCap: maxTokens,
+            catalog: modelPricing
+              ? {
+                  prompt: modelPricing.inputCostPerToken,
+                  completion: modelPricing.outputCostPerToken,
+                }
+              : undefined,
+            pricing: modelPricing,
+            promptName,
+            transport: openRouterTransport,
+          });
+          actualTotalCost = costGuard.actual;
+          config.cumulativeCostUsd = actualTotalCost;
+
+          if (attempt.skipped || attempt.error || !attempt.response) {
+            const reason = attempt.error || 'paid call skipped';
+            console.log(`    ⚠ Skipping: ${reason}`);
+            results.push({
+              modelId: model.id,
+              modelName: model.name,
+              promptName,
+              promptText,
+              response: '',
+              actualCost: 0,
+              timestamp: new Date().toISOString(),
+              error: reason,
+            });
+            continue;
+          }
+
+          const response = attempt.response;
+          const usage = attempt.usage;
+          const cost = attempt.actualCost;
           
-          actualTotalCost += cost;
-          
-          const totalTokens = usage?.total_tokens || (usage?.prompt_tokens + usage?.completion_tokens) || 0;
+          const totalTokens = (usage?.prompt_tokens || 0) + (usage?.completion_tokens || 0);
           console.log(`    ✓ Got response (${totalTokens} tokens, $${cost.toFixed(4)})`);
           
           // Save raw response
@@ -810,20 +1319,48 @@ async function main() {
             timestamp: new Date().toISOString(),
           }, null, 2));
           
-          // Render screenshot
+          // Render screenshot and analyze coverage
           const screenshotPath = path.join(outputDir, `${model.id.replace(/\//g, '_')}_${promptName}.png`);
-          await renderResponse(page, model.id, response, screenshotPath);
-          console.log(`    ✓ Rendered screenshot`);
+          const { coverage, renderedHTML } = await renderResponse(page, model.id, response, screenshotPath);
+          console.log(`    ✓ Rendered screenshot (coverage: ${Object.entries(coverage).filter(([k, v]) => typeof v === 'boolean' && v).length} features)`);
           
+          // Validate RENDERED HTML against expected features
+          const expectedFeatures = getExpectedFeatures(promptName, promptText);
+          const dropped = droppedNameExpectations(promptName, promptText);
+          if (dropped.length > 0) {
+            console.log(
+              `    · Provenance: promptText dropped name-defaults [${dropped.join(', ')}]`
+            );
+          }
+          const validation = validateRenderedHTML(renderedHTML, expectedFeatures, response);
+          const failedCount = validation.assertions.filter(a => a.status === 'fail').length;
+          const notCoveredCount = validation.assertions.filter(a => a.status === 'not-covered').length;
+          const mark =
+            validation.status === 'pass'
+              ? '✓'
+              : validation.status === 'not-covered'
+                ? '○'
+                : validation.status === 'source-issue'
+                  ? '◐'
+                  : '✗';
+          console.log(
+            `    ${mark} Validation: ${validation.status.toUpperCase()}` +
+              (failedCount ? ` (${failedCount} renderer-loss)` : '') +
+              (notCoveredCount ? ` (${notCoveredCount} not-covered)` : '')
+          );
+
           results.push({
             modelId: model.id,
             modelName: model.name,
             promptName,
             promptText,
             response,
-            usage,
+            usage: usage ?? undefined,
             actualCost: cost,
             timestamp: new Date().toISOString(),
+            featureCoverage: coverage,
+            validation,
+            validationStatus: validation.status,
           });
           
         } catch (error) {
@@ -848,10 +1385,7 @@ async function main() {
     await page.close();
     await browser.close();
     
-    // Stop Vite server if we started it
-    if (viteProcess) {
-      viteProcess.kill();
-    }
+    stopOwnedVite();
   }
   
   // Generate review page
@@ -873,6 +1407,22 @@ async function main() {
   console.log(`Difference: $${Math.abs(actualTotalCost - totalEstimatedCost).toFixed(4)}`);
   console.log(`\nResults saved to: ${outputDir}`);
   console.log(`Review page: ${path.join(outputDir, 'review.html')}`);
+  
+  reportValidationSummary(results);
+  exitIfValidationFailed(results);
 }
 
-main().catch(console.error);
+process.once('SIGTERM', () => {
+  stopOwnedVite();
+  process.exit(143);
+});
+process.once('SIGINT', () => {
+  stopOwnedVite();
+  process.exit(130);
+});
+
+main().catch(err => {
+  console.error(err);
+  stopOwnedVite();
+  process.exit(1);
+});

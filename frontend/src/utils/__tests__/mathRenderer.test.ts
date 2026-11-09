@@ -5,7 +5,13 @@
 import { describe, it, expect } from 'vitest'
 
 import type { MathRendererConfig } from '../../types/rendererConfig'
-import { renderMathContent } from '../latex/mathRenderer'
+import {
+  collapseDoubleEscapedDelimiters,
+  extractDisplayMath,
+  isInsideOuterDisplayMath,
+  restoreDisplayMath,
+  renderMathContent,
+} from '../latex/mathRenderer'
 
 // Config matching GPT 5.2 Pro: \( \) has priority over $
 const parenFirstConfig: MathRendererConfig = {
@@ -71,5 +77,104 @@ So \\(x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}\\).`
       expect(result).not.toMatch(/62-4a[cs]/)
       expect(result).not.toMatch(/b2-4ac√/)
     })
+  })
+})
+
+const qwenCoderDisplayDelimiters: MathRendererConfig['displayMathDelimiters'] = [
+  {
+    pattern: /\\begin\{align\}([\s\S]*?)\\end\{align\}/g,
+    name: 'align-env',
+    priority: 1,
+  },
+  {
+    pattern: /\$\$([^$]+?)\$\$/gs,
+    name: 'double-dollar',
+    priority: 2,
+  },
+]
+
+describe('extractDisplayMath - $$\\begin{align}$$ is one outer block', () => {
+  it('does not nest __DISPLAY_MATH_0__ inside a later $$ capture (Qwen3 Coder 01)', () => {
+    const input = `## Display Math with Aligned Equations
+$$\\begin{align}
+x + y &= 5 \\\\
+2x - y &= 1
+\\end{align}$$
+
+$$E = mc^2$$`
+    const { text, mathBlocks } = extractDisplayMath(input, qwenCoderDisplayDelimiters)
+    expect(text).not.toContain('\\begin{align}')
+    expect(mathBlocks.some(block => block.includes('__DISPLAY_MATH_'))).toBe(false)
+    expect(mathBlocks.some(block => /\\begin\{align\}/.test(block))).toBe(true)
+    const restored = restoreDisplayMath(text, mathBlocks)
+    expect(restored).toContain('\\begin{align}')
+    expect(restored).not.toContain('__DISPLAY_MATH_')
+  })
+
+  it('renders $$\\begin{align}$$ without KaTeX errors', () => {
+    const input = `$$\\begin{align}
+x + y &= 5 \\\\
+2x - y &= 1
+\\end{align}$$`
+    const result = renderMathContent(input, {
+      displayMathDelimiters: qwenCoderDisplayDelimiters,
+      inlineMathDelimiters: [],
+      katexOptions: { throwOnError: false, strict: false },
+    })
+    expect(result).toContain('katex-display')
+    expect(result).not.toContain('katex-error')
+    expect(result).not.toContain('__DISPLAY_MATH_')
+  })
+})
+
+const gpt5DisplayDelimiters: MathRendererConfig['displayMathDelimiters'] = [
+  { pattern: /\$\$([^$]+?)\$\$/gs, name: 'double-dollar', priority: 1 },
+]
+
+describe('extractDisplayMath - multiline $ \\begin{cases} $ is one display block', () => {
+  const piecewise = `$f(x) = \\begin{cases}
+x^2, & x \\ge 0 \\\\
+-\\,|x|, & x < 0
+\\end{cases}$`
+
+  it('extracts GPT-5 05 cases as $$...$$ (not leftover wrapping $)', () => {
+    const { text, mathBlocks } = extractDisplayMath(piecewise, gpt5DisplayDelimiters)
+    expect(text).not.toContain('\\begin{cases}')
+    expect(mathBlocks).toHaveLength(1)
+    expect(mathBlocks[0]).toMatch(/^\$\$/)
+    expect(mathBlocks[0]).toContain('\\begin{cases}')
+    expect(mathBlocks[0]).not.toMatch(/^\$[^$]/)
+  })
+
+  it('does not extract currency or single-line pmatrix as display', () => {
+    const currency = 'Prices: Laptop costs $1,499.99, monitor $329.00, keyboard $49.95.'
+    const { mathBlocks: moneyBlocks } = extractDisplayMath(currency, gpt5DisplayDelimiters)
+    expect(moneyBlocks).toHaveLength(0)
+
+    const inlinePmatrix = '$A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$'
+    const { text, mathBlocks } = extractDisplayMath(inlinePmatrix, gpt5DisplayDelimiters)
+    expect(mathBlocks).toHaveLength(0)
+    expect(text).toContain('\\begin{pmatrix}')
+  })
+})
+
+describe('collapseDoubleEscapedDelimiters - keep array row-skip \\[dim]', () => {
+  it('does not turn \\[6pt] row-skip into a display-math open', () => {
+    const cases = '$$\\begin{cases}\nx^2 & x \\ge 0,\\\\[6pt]\n-x & x < 0.\n\\end{cases}$$'
+    expect(collapseDoubleEscapedDelimiters(cases)).toContain('\\\\[6pt]')
+    expect(collapseDoubleEscapedDelimiters(cases)).not.toMatch(/(?<!\\)\\\[6pt\]/)
+  })
+
+  it('still collapses double-escaped \\[ display delimiters', () => {
+    expect(collapseDoubleEscapedDelimiters('\\\\[E = mc^2\\\\]')).toBe('\\[E = mc^2\\]')
+    expect(collapseDoubleEscapedDelimiters('\\\\(x = 5\\\\)')).toBe('\\(x = 5\\)')
+  })
+
+  it('does not count \\[6pt] as an outer display-math open', () => {
+    const text = '$$\\begin{cases}x^2\\\\[6pt]-x\\end{cases}$$ later'
+    const skipAt = text.indexOf('[6pt]')
+    expect(isInsideOuterDisplayMath(text, skipAt)).toBe(true)
+    const after = text.indexOf(' later')
+    expect(isInsideOuterDisplayMath(text, after)).toBe(false)
   })
 })

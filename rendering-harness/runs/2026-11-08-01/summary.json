@@ -1,0 +1,45 @@
+{
+  "attempted": 24,
+  "actualUsageCost": 0.007390915,
+  "unknownCosts": 0,
+  "promptTokens": 8211,
+  "completionTokens": 13214,
+  "totalTokens": 21425,
+  "reasoningTokensIncludedInCompletion": 1739,
+  "truncations": [
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "05-complex-scenarios"
+    },
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "promptName": "06-edge-cases-boundaries"
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "promptName": "05-complex-scenarios"
+    }
+  ],
+  "perModel": [
+    {
+      "modelId": "anthropic/claude-haiku-5.5",
+      "cost": 0.0025066000000000003
+    },
+    {
+      "modelId": "qwen/qwen3-coder-flash",
+      "cost": 0.002578485
+    },
+    {
+      "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+      "cost": 0.0009466
+    },
+    {
+      "modelId": "google/gemma-3-27b-it",
+      "cost": 0.00135923
+    }
+  ],
+  "firstCallChicago": "11/8/2026, 11:43:49 AM CST",
+  "lastCallFinishedChicago": "11/8/2026, 11:46:25 AM CST",
+  "coverage": "Unassessed; truncated outputs must not be counted as full coverage",
+  "pricingCaveat": "Some provider actual rates differ from catalog (notably Mistral); billing totals use returned usage.cost, never recalculated estimates."
+}

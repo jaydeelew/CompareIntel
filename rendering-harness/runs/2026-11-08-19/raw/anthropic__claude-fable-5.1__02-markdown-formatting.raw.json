@@ -1,0 +1,55 @@
+{
+  "id": "gen-1794170706-Jdjq4UJD9jdGEfO7X9jS",
+  "object": "chat.completion",
+  "created": 1794170706,
+  "model": "anthropic/claude-fable-5.1",
+  "provider": "Anthropic",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "end_turn",
+      "message": {
+        "role": "assistant",
+        "content": "# Markdown Formatting Test\n\n## Headers\n\n### This is H3\n\n#### This is H4\n\n## Text formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\n\nNested unordered list:\n\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n\n| Model  | Context | Price |\n|--------|---------|-------|\n| GPT-4  | 128k    | $0.03 |\n| Claude | 200k    | $0.02 |\n\n## Blockquotes\n\n> This is a blockquote\n> with multiple lines",
+        "refusal": null,
+        "reasoning": "I need to produce a response that includes all the requested markdown elements, and since this is a test prompt, I'll reproduce the formatting with the content provided or something similar.\n\n",
+        "reasoning_details": [
+          {
+            "type": "reasoning.text",
+            "text": "I need to produce a response that includes all the requested markdown elements, and since this is a test prompt, I'll reproduce the formatting with the content provided or something similar.\n\n",
+            "format": "anthropic-claude-v1",
+            "index": 0,
+            "signature": "CAQSnAcKEAgTGAI4AUIIdGhpbmtpbmcSDBdl0nUZ8I4HWY3E9xoMBBZnHgo55WBViTRNIjA73EfB+bxUI7E8KUWigzS+gycPM16Zt3R7e7v2bbqrZOduZ3GgvUH5tgZpHBwwGT8quQazPj4KpKSZwTP0cbjBCILbRnGEePE3TG1C4dEPdwMd6prBCw2/L4TQzCGQHWVMOzgrLIvozFOUZ5WKWR0vwAekg0LnGpvHpwg6MzJQ6Li8gjYOrjHaBt1LKYz0Q6QWI2roV0T0tIfBEsJz97CqfqIM0e9QlGKjvuyQVUGCuUsMXyBfKt43eR84uTH7hcd/yBo1cLsj78FZaVaRLmWpzDJVYXtJH51IN/nD2E2RJzFAiltFIRjH49QElGN1GcHXNL6rPWulx8lpFrAWWAUdQhTNbck4b9bUtbtIGOXCXNSI3wkSAZyRuhiwPI5IoiVXE0P0zXTgkeuR20TuxPryMzc77AVnLjJXm/Jt7KaZRTVJLns0uZJGykEfP67qQAf75YaFHJtgwkKLkZIjnrXggGXmaJnIovN1O7JRAe80+hgnk3+4tixwlajP40z4WlPAbp2sIL+lusjRQt95ngIzo/vktIc/YjfSTPdCo4FVGtSsMVyMbc3+7eA5xd9fNwnN3WZK3MK+NWzXzO8xhRnE2TN55tgtPQ0mlSEJSa6A7c6epc+OzXqiWKwh+T32gGKgvmfYDeEzqcqiAxvkSQLHPyPTxFO0pe3ZLGtFOuUipmJ2/Kbu1agTHWKV9d+l9Oy+MXXGjCBJv9f8YtAT7QbFiVhKv2plEE8qB9hGsUbPOB1wyJUmyK1riJvTUdb6fRVfnkpZBAvko/pCRoh6v+sTxawqU79REmagPWO6rmuoJwlv25XUee40zEL7aCqukJ4XAzeA3h0UdU31YYMZUF195NgcFdEP8LtnBKFvmIYMhCPVkdT+9K1eKjBBnTr0TSWD0XZYomHrOAYAbh1ANrsFmr7SqZ11I3jm/11mA9itTsZa9cZFimAps2C8hi0GSkHsNRhQP8LVkJzZcstCR79Ah+2DuNqXR5KY0PUbpHHl/F11TmvKXCE/QEYeuoSxX2uFjenCcyhBQitea0mJQZ/B+nfdEMk2Ie+a0/bul+3SAH4ZQnscQo7FqnBzdiKtb3yzsXiYrMjldPKc6pfqv/FVn2L/7fHmNoEA5X1WY206hEvxW3LxEFNAgB4tbxu9n1/yAJy3+IYm8h/Pec8YAQ==.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1mYWJsZS01LjEtMjAyNjA4MzF8YW50aHJvcGljIn0"
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 279,
+    "completion_tokens": 333,
+    "total_tokens": 612,
+    "cost": 0.01944,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01944,
+      "upstream_inference_prompt_cost": 0.00279,
+      "upstream_inference_completions_cost": 0.01665
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 76,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
