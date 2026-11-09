@@ -149,16 +149,41 @@ function protectSegmentDollars(segment: string): string {
 }
 
 /**
+ * Literalize leftover empty/unpaired `$$` (delimiter examples like
+ * "and $$ for display math") without touching real `$$content$$` pairs.
+ * A later `$$...$$` must not steal the first half of an unpaired `$$`.
+ */
+export function literalizeUnpairedDoubleDollars(text: string): string {
+  if (!text.includes('$$')) return text
+  let out = ''
+  let i = 0
+  while (i < text.length) {
+    if (text.startsWith('$$', i)) {
+      const close = text.indexOf('$$', i + 2)
+      if (close === -1 || close === i + 2 || text.slice(i + 2, close).includes('$')) {
+        out += `${LITERAL_DOLLAR}${LITERAL_DOLLAR}`
+        i += 2
+        continue
+      }
+      out += text.slice(i, close + 2)
+      i = close + 2
+      continue
+    }
+    out += text[i]
+    i += 1
+  }
+  return out
+}
+
+/**
  * Turn currency and other unpaired single `$` into literal tokens, line by line. Table
  * rows are processed cell by cell so a span never crosses a `|` boundary.
  * Run after display math (`$$`) has been extracted and before inline math extraction.
+ * Leftover unpaired `$$` is literalized first so it cannot pair with a later `$$...$$`.
  */
 export function protectCurrencyDollars(text: string): string {
   if (!text.includes('$')) return text
-  // Leftover `$$` after display extraction is a delimiter example, not an
-  // opener. Literalizing both dollars keeps "and $$ for display math" as two
-  // dollar signs instead of pairing into a later `$$...$$` and dropping one.
-  const processed = text.replace(/\$\$/g, `${LITERAL_DOLLAR}${LITERAL_DOLLAR}`)
+  const processed = literalizeUnpairedDoubleDollars(text)
   return processed
     .split('\n')
     .map(line => {

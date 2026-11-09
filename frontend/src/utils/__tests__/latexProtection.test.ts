@@ -51,7 +51,18 @@ describe('protectCurrencyDollars', () => {
   })
 
   it('ignores $$ display delimiters', () => {
-    expect(protectCurrencyDollars('$$x$$ costs $5')).toBe(`${L}${L}x${L}${L} costs ${L}5`)
+    expect(protectCurrencyDollars('$$x$$ costs $5')).toBe(`$$x$$ costs ${L}5`)
+  })
+
+  it('literalizes unpaired leftover $$ without swallowing a later $$...$$ pair', () => {
+    const leftover = 'Interpreting $ for inline math and $$ for display math can help.'
+    expect(protectCurrencyDollars(leftover)).toContain(`${L}${L} for display math`)
+
+    const withLaterPair =
+      'Interpreting $ for inline math and $$ for display math can help: $...$ or $$...$$.'
+    const out = protectCurrencyDollars(withLaterPair)
+    expect(out).toContain(`${L}${L} for display math`)
+    expect(out).toContain('$$...$$')
   })
 
   it('does not pair $HOME with a later currency $', () => {
