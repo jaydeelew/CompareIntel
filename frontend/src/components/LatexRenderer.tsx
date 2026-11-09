@@ -55,13 +55,43 @@ import {
   renderBlockquoteMarkers,
   protectEscapedDollars,
   protectCurrencyDollars,
+  literalizeUnpairedDoubleDollars,
   protectParenthesizedDelimiterExamples,
+  unescapeLeftoverBracketParenDelimiters,
   restoreLiteralDollars,
   extractInlineCode,
   restoreInlineCode,
   renderInlineCodeSpan,
+  unescapeGfmTableCellCodePipes,
 } from '../utils/latex'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
+
+/** GFM table cells split on unescaped `|` (spec example 200). */
+function splitUnescapedTableCells(row: string): string[] {
+  const cells: string[] = []
+  let buf = ''
+  const t = row.trim()
+  let i = 0
+  while (i < t.length) {
+    if (t[i] === '\\' && t[i + 1] === '|') {
+      buf += '\\|'
+      i += 2
+      continue
+    }
+    if (t[i] === '|') {
+      cells.push(buf)
+      buf = ''
+      i += 1
+      continue
+    }
+    buf += t[i]
+    i += 1
+  }
+  cells.push(buf)
+  if (cells.length && cells[0].trim() === '') cells.shift()
+  if (cells.length && cells[cells.length - 1].trim() === '') cells.pop()
+  return cells
+}
 
 interface LatexRendererProps {
   children: string
@@ -188,9 +218,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
             return
           }
 
-          const cells = cleanRow
-            .split('|')
-            .map(cell => cell.trim())
+          const cells = splitUnescapedTableCells(cleanRow)
+            .map(cell => cell.replace(/\\\|/g, '|').trim())
             .filter(cell => cell)
           if (cells.length > 0) {
             const tag = isHeader ? 'th' : 'td'
@@ -717,6 +746,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // Stage 0.35: `($$)` / `($)` / `(\[ \])` / `(\( \))` labels are not math
         processed = protectParenthesizedDelimiterExamples(processed)
 
+        // Stage 0.36: leftover mid-line `$$` must not pair with the next opener
+        processed = literalizeUnpairedDoubleDollars(processed)
+
         // Stage 0.4: Wrap bare LaTeX blocks (commands without delimiters) in $$
         // Some models output \frac{}{}, \sqrt{}, etc. without any math delimiters.
         // Must run before display/inline math extraction so wrapped blocks get picked up.
@@ -735,6 +767,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // This protects inline math content from being modified by preprocessing stages
         const inlineMathExtraction = extractInlineMath(processed, config.inlineMathDelimiters)
         processed = inlineMathExtraction.text
+        processed = unescapeLeftoverBracketParenDelimiters(processed)
 
         // Stage 0.7: Process horizontal rules VERY EARLY (before any preprocessing)
         // This ensures horizontal rules are converted before any text modification
@@ -933,7 +966,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Final cleanup - only unescape markdown characters, not LaTeX commands
         // Don't remove backslashes that are part of LaTeX commands
-        processed = processed.replace(/\\([`*_#+\-.!|])/g, '$1')
+        processed = processed.replace(/\\([`*_#+\-.!|[\]()])/g, '$1')
 
         // Render any remaining \\( \\) delimited math (double-escaped variant)
         processed = processed.replace(/\\\\\(\s*([\s\S]*?)\s*\\\\\)/g, (_match, math) => {
@@ -1106,6 +1139,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // above can modify it
         processed = restoreLiteralDollars(processed)
         processed = restoreInlineCode(processed, inlineCodeExtraction.spans)
+        processed = unescapeGfmTableCellCodePipes(processed)
         processed = processed.replace(/__CODE_BLOCK_(\d+)__/g, (_match, index) => {
           const block = codeBlockExtraction.blocks[parseInt(index, 10)]
           return block ? renderCodeBlock(block.language, block.content) : ''

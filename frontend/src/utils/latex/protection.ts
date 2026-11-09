@@ -39,18 +39,31 @@ export function literalDollarsToLatex(latex: string): string {
 }
 
 /** Convert literal-dollar tokens in final output back into `$`. */
+/**
+ * CommonMark-unescape leftover `\[` `\]` `\(` `\)` that were not extracted as
+ * math (empty labels, ellipsis examples, list-prefixed markers). Run after
+ * display/inline extraction so later list/HTML passes cannot pair them.
+ */
+export function unescapeLeftoverBracketParenDelimiters(text: string): string {
+  return text
+    .replace(/\\\[/g, '[')
+    .replace(/\\\]/g, ']')
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
+}
+
 export function restoreLiteralDollars(text: string): string {
   return text
     .split(LITERAL_DOLLAR)
     .join('$')
     .split(LITERAL_DISPLAY_OPEN)
-    .join('\\[')
+    .join('[')
     .split(LITERAL_DISPLAY_CLOSE)
-    .join('\\]')
+    .join(']')
     .split(LITERAL_INLINE_OPEN)
-    .join('\\(')
+    .join('(')
     .split(LITERAL_INLINE_CLOSE)
-    .join('\\)')
+    .join(')')
 }
 
 /**
@@ -136,13 +149,73 @@ function protectSegmentDollars(segment: string): string {
 }
 
 /**
+ * Literalize leftover empty/unpaired `$$` (delimiter examples like
+ * "and $$ for display math") without touching real `$$content$$` pairs.
+ *
+ * A mid-line leftover `$$` must not pair with the next line's opener:
+ * `use $$ as delimiter.\n\n$$E=mc^2$$` keeps two prose dollars and one
+ * display equation. Same-line `$$E=mc^2$$`, block `$$\nE\n$$`, and a
+ * mid-line opener with a fence closer (`The formula is $$\nE\n$$`) stay math.
+ */
+function leftoverMidLineDoubleDollar(
+  text: string,
+  _open: number,
+  close: number,
+  midLine: boolean,
+  inner: string
+): boolean {
+  if (!midLine || !inner.includes('\n')) return false
+  const closeLineEnd = text.indexOf('\n', close)
+  const restOfCloseLine = text.slice(close + 2, closeLineEnd === -1 ? text.length : closeLineEnd)
+  // A real closer sits alone at the end of its line (`\n$$`).
+  // A later opener still has content on that line (`$$E=mc^2$$`).
+  return /\S/.test(restOfCloseLine)
+}
+
+export function literalizeUnpairedDoubleDollars(text: string): string {
+  if (!text.includes('$$')) return text
+  let out = ''
+  let i = 0
+  while (i < text.length) {
+    if (text.startsWith('$$', i)) {
+      const lineStart = text.lastIndexOf('\n', i - 1) + 1
+      const midLine = /\S/.test(text.slice(lineStart, i))
+      const close = text.indexOf('$$', i + 2)
+      if (close === -1) {
+        out += `${LITERAL_DOLLAR}${LITERAL_DOLLAR}`
+        i += 2
+        continue
+      }
+      const inner = text.slice(i + 2, close)
+      if (
+        close === i + 2 ||
+        inner.includes('$') ||
+        leftoverMidLineDoubleDollar(text, i, close, midLine, inner)
+      ) {
+        out += `${LITERAL_DOLLAR}${LITERAL_DOLLAR}`
+        i += 2
+        continue
+      }
+      out += text.slice(i, close + 2)
+      i = close + 2
+      continue
+    }
+    out += text[i]
+    i += 1
+  }
+  return out
+}
+
+/**
  * Turn currency and other unpaired single `$` into literal tokens, line by line. Table
  * rows are processed cell by cell so a span never crosses a `|` boundary.
  * Run after display math (`$$`) has been extracted and before inline math extraction.
+ * Leftover unpaired `$$` is literalized first so it cannot pair with a later `$$...$$`.
  */
 export function protectCurrencyDollars(text: string): string {
   if (!text.includes('$')) return text
-  return text
+  const processed = literalizeUnpairedDoubleDollars(text)
+  return processed
     .split('\n')
     .map(line => {
       if (!line.includes('$')) return line
@@ -172,23 +245,64 @@ function pushInlineCodeSpan(spans: string[], content: string): string {
   return `${INLINE_CODE_OPEN}${spans.length - 1}${INLINE_CODE_CLOSE}`
 }
 
-/** Replace single-line backtick spans with placeholders. `spans` holds the raw content. */
+/**
+ * CommonMark spec 0.31 §6.1 pairing on one inline context: a backtick
+ * string of length n closes at the next backtick string of equal length.
+ * Preferring `` `$` `` before the rest of the line is not CommonMark —
+ * `$`100`, `$`0.99` pairs as
+ * <code>$</code>100<code>, </code>$<code>0.99, or literal </code>$`
+ * with leftover `$` and a trailing unmatched backtick left literal.
+ *
+ * Pairing is per line so a list item cannot swallow the next item (block
+ * structure already split those inlines in CommonMark).
+ */
+function extractInlineCodeLine(line: string, spans: string[]): string {
+  let out = ''
+  let i = 0
+  while (i < line.length) {
+    if (line.charCodeAt(i) !== 96) {
+      out += line[i]
+      i += 1
+      continue
+    }
+    let n = 1
+    while (i + n < line.length && line.charCodeAt(i + n) === 96) n += 1
+    const contentStart = i + n
+    let j = contentStart
+    let found = -1
+    while (j < line.length) {
+      if (line.charCodeAt(j) !== 96) {
+        j += 1
+        continue
+      }
+      let m = 1
+      while (j + m < line.length && line.charCodeAt(j + m) === 96) m += 1
+      if (m === n) {
+        found = j
+        break
+      }
+      j += m
+    }
+    if (found === -1) {
+      out += line.slice(i, i + n)
+      i += n
+      continue
+    }
+    const content = line.slice(contentStart, found)
+    out += pushInlineCodeSpan(spans, content)
+    i = found + n
+  }
+  return out
+}
+
+/** Replace inline code spans with placeholders. `spans` holds the raw content. */
 export function extractInlineCode(text: string): InlineCodeExtraction {
   const spans: string[] = []
-  // Double-or-more backticks first so `` `$x$` `` is one code span (GLM 5 05).
-  // A single-backtick pass would close on the inner ` and leave `$x$` as math.
-  let processed = text.replace(
-    /(``+)((?:(?!\1)[^\n])*?)\1/g,
-    (_match, _delim: string, content: string) => pushInlineCodeSpan(spans, content)
-  )
-  // `$` is a complete code span. Take it before the generic single-backtick pass
-  // so `$`100`, `$`0.99` does not pair the leftover dollars as math
-  // (Step 5 Preview 05: KaTeX error "0.99, or literal ").
-  processed = processed.replace(/`\$`/g, () => pushInlineCodeSpan(spans, '$'))
-  processed = processed.replace(/`([^`\n]+?)`/g, (_match, content: string) =>
-    pushInlineCodeSpan(spans, content)
-  )
-  return { text: processed, spans }
+  const textOut = text
+    .split('\n')
+    .map(line => extractInlineCodeLine(line, spans))
+    .join('\n')
+  return { text: textOut, spans }
 }
 
 export function escapeHtml(text: string): string {
@@ -205,4 +319,23 @@ export function restoreInlineCode(text: string, spans: string[]): string {
     const content = spans[parseInt(index, 10)]
     return content === undefined ? match : renderInlineCodeSpan(content)
   })
+}
+
+/**
+ * GFM table cells unescape `\|` to `|` even inside code (spec example 200).
+ * CommonMark code spans keep the backslash; only table cells strip it.
+ */
+export function unescapeGfmTableCellCodePipes(html: string): string {
+  return html.replace(
+    /<(td|th)(\s[^>]*)?>([\s\S]*?)<\/\1>/gi,
+    (_full: string, tag: string, attrs: string | undefined, inner: string) => {
+      const fixed = inner.replace(
+        /<code\b([^>]*)>([\s\S]*?)<\/code>/gi,
+        (_m: string, codeAttrs: string, content: string) => {
+          return `<code${codeAttrs}>${content.replace(/\\\|/g, '|')}</code>`
+        }
+      )
+      return `<${tag}${attrs || ''}>${fixed}</${tag}>`
+    }
+  )
 }

@@ -67,6 +67,13 @@ test.describe('Source feature detection vs renderer loss', () => {
     expect(geminiSrc.hasInlineMath).toBe(false)
   })
 
+  test('CommonMark `$`100` leftover dollars are not a math span (Step 5 Preview 05)', () => {
+    const line = '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs'
+    const src = detectSourceFeatures(line)
+    expect(src.hasInlineMath).toBe(false)
+    expect(src.hasDisplayMath).toBe(false)
+  })
+
   test('$5x+3$ remains inline math, not currency', () => {
     const src = detectSourceFeatures('Solve $5x+3$ for x.')
     expect(src.hasInlineMath).toBe(true)

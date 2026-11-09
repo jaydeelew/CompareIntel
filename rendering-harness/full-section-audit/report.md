@@ -1,0 +1,32 @@
+| bug | id | verdict | visual | parser diff |
+| --- | --- | --- | --- | --- |
+| 01 | 01-currency | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 02 | 02-table-currency | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 03 | 03-escaped-dollar | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 04 | 04-blockquotes | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 05 | 05-nested-lists | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 06 | 06-headings | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 07 | 07-fenced-code | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 08 | 08-inline-code | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 09 | 09-dollar-in-display | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 10 | 10-unicode-times | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 11 | 11-list-display-math | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 12 | 12-home-dollar | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 13 | 13-bracket-display | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 14 | 14-table-swallow | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 15 | 15-list-link | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 16 | 16-placeholder-leak | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 17 | 17-heading-after-table | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 18 | 18-bold-math | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 19 | 19-unicode-codepoint | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 20 | 20-list-prefixed-closer | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 20 | 20-synthetic | pass | n/a | none (markdown-it + KaTeX signatures match) |
+| 21 | 21-padded-dollar | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 22 | 22-hyphen-nonmath | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 23 | 23-align-placeholder | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 24 | 24-double-backtick | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 25 | 25-escaped-currency-code | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 26 | 26-multiline-cases | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 27 | 27-indented-align | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 28 | 28-row-skip | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 29 | 29-empty-delimiter-labels | pass | pass | none (markdown-it + KaTeX signatures match) |

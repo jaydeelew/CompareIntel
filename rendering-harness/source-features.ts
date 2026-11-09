@@ -6,6 +6,7 @@
 
 import {
   LITERAL_DOLLAR,
+  extractInlineCode,
   protectCurrencyDollars,
   protectEscapedDollars,
 } from '../frontend/src/utils/latex/protection.ts'
@@ -32,7 +33,8 @@ function stripFencedCode(markdown: string): string {
 }
 
 function stripInlineCode(markdown: string): string {
-  return markdown.replace(/`[^`\n]*`/g, '')
+  const { text } = extractInlineCode(markdown)
+  return text.replace(/\uE001\d+\uE002/g, '')
 }
 
 function extractFencedBlocks(markdown: string): string[] {

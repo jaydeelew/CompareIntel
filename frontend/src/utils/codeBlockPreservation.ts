@@ -57,12 +57,10 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
   let processed = text
   let blockCounter = 0
 
-  // First, extract fenced code blocks (```...```)
-  // This regex handles:
-  // - Optional language identifier
-  // - Multi-line content
-  // - Code blocks containing dollar signs, math, etc.
-  const fencedBlockRegex = /```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```/g
+  // CommonMark fenced blocks start a line (0–3 spaces) and need a newline
+  // after the opener. Inline ``` ``` in a table cell is a code span, not a fence
+  // (GLM 5.3 06: `| `` ``` ``` blocks |`).
+  const fencedBlockRegex = /^[ \t]{0,3}```([a-zA-Z0-9+#-]*)[^\n]*\n([\s\S]*?)^[ \t]{0,3}```/gm
 
   processed = processed.replace(fencedBlockRegex, (match, language, content, offset) => {
     const lang = (language || '').trim() // Keep empty if no language specified

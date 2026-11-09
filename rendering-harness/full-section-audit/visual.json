@@ -1,0 +1,263 @@
+[
+  {
+    "id": "01-currency",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/01-currency.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "02-table-currency",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/02-table-currency.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "03-escaped-dollar",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/03-escaped-dollar.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "04-blockquotes",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/04-blockquotes.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "05-nested-lists",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/05-nested-lists.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "06-headings",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/06-headings.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "07-fenced-code",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/07-fenced-code.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "08-inline-code",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/08-inline-code.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "09-dollar-in-display",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/09-dollar-in-display.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "10-unicode-times",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/10-unicode-times.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "11-list-display-math",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/11-list-display-math.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "12-home-dollar",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/12-home-dollar.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "13-bracket-display",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/13-bracket-display.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "14-table-swallow",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/14-table-swallow.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "15-list-link",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/15-list-link.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "16-placeholder-leak",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/16-placeholder-leak.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "17-heading-after-table",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/17-heading-after-table.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "18-bold-math",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/18-bold-math.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "19-unicode-codepoint",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/19-unicode-codepoint.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "20-list-prefixed-closer",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/20-list-prefixed-closer.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "21-padded-dollar",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/21-padded-dollar.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "22-hyphen-nonmath",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/22-hyphen-nonmath.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "23-align-placeholder",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/23-align-placeholder.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "24-double-backtick",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/24-double-backtick.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "25-escaped-currency-code",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/25-escaped-currency-code.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "26-multiline-cases",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/26-multiline-cases.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "27-indented-align",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/27-indented-align.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "28-row-skip",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/28-row-skip.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  },
+  {
+    "id": "29-empty-delimiter-labels",
+    "shot": "/agent/repos/CompareIntel/rendering-harness/full-section-audit/screenshots/29-empty-delimiter-labels.png",
+    "katexErrors": 0,
+    "placeholders": 0,
+    "overflow": false,
+    "tagDistRight": [],
+    "visualPass": true
+  }
+]

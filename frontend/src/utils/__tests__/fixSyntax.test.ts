@@ -17,12 +17,9 @@ describe('wrapBareLatexBlocks', () => {
     expect(wrapBareLatexBlocks(input)).toBe(input)
   })
 
-  it('still wraps a truly bare LaTeX line (no delimiters)', () => {
+  it('does not wrap a bare LaTeX line (undelimited \\frac stays CommonMark text)', () => {
     const input = 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}'
-    const out = wrapBareLatexBlocks(input)
-    expect(out).toMatch(/^\$\$/)
-    expect(out).toMatch(/\$\$$/)
-    expect(out).toContain('frac')
+    expect(wrapBareLatexBlocks(input)).toBe(input)
   })
 
   it('does not wrap inner lines of a list-prefixed \\[ display block', () => {
@@ -31,23 +28,17 @@ describe('wrapBareLatexBlocks', () => {
     expect(wrapBareLatexBlocks(input)).not.toContain('$$')
   })
 
-  it('treats a list-prefixed \\] as the math-block closer and strips the marker', () => {
+  it('does not strip a list-prefixed \\] closer or wrap a following bare \\frac', () => {
     const input = '- \\[\n  c = \\sqrt{3^2 + 4^2} = 5\n- \\]\n\\frac{1}{2}'
     const out = wrapBareLatexBlocks(input)
-    expect(out).toContain('- \\[')
-    expect(out).toMatch(/\n\\]\n/)
-    expect(out).not.toMatch(/^- \\]$/m)
-    expect(out).toMatch(/\$\$\\frac\{1\}\{2\}\$\$/)
-    expect(out).not.toContain('$$c =')
+    expect(out).toBe(input)
+    expect(out).toMatch(/^- \\]$/m)
+    expect(out).not.toMatch(/\$\$/)
   })
 
-  it('treats a list-prefixed $$ closer the same way', () => {
+  it('does not strip a list-prefixed $$ closer or wrap a following bare \\frac', () => {
     const input = '- $$\n  c = \\sqrt{3^2 + 4^2} = 5\n- $$\n\\frac{1}{2}'
-    const out = wrapBareLatexBlocks(input)
-    const lines = out.split('\n')
-    expect(lines[0]).toBe('- $$')
-    expect(lines[2].trim()).toBe('$$')
-    expect(out).toMatch(/\$\$\\frac\{1\}\{2\}\$\$/)
+    expect(wrapBareLatexBlocks(input)).toBe(input)
   })
 })
 

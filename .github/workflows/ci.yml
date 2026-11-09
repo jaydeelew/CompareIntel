@@ -942,7 +942,9 @@ jobs:
       
       - name: Install gitleaks
         run: |
-          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.22.1/gitleaks_8.22.1_linux_x64.tar.gz | tar xz
+          url="https://github.com/gitleaks/gitleaks/releases/download/v8.22.1/gitleaks_8.22.1_linux_x64.tar.gz"
+          curl -sSfL --retry 6 --retry-all-errors --retry-delay 8 -o gitleaks.tgz "$url"
+          tar xz -f gitleaks.tgz
           sudo mv gitleaks /usr/local/bin/
       
       - name: Scan for hardcoded secrets

@@ -13,6 +13,8 @@ import {
   restoreInlineCode,
   restoreLiteralDollars,
   safeRenderKatex,
+  unescapeGfmTableCellCodePipes,
+  literalizeUnpairedDoubleDollars,
 } from '../latex'
 
 const L = LITERAL_DOLLAR
@@ -54,6 +56,30 @@ describe('protectCurrencyDollars', () => {
     expect(protectCurrencyDollars('$$x$$ costs $5')).toBe(`$$x$$ costs ${L}5`)
   })
 
+  it('literalizes unpaired leftover $$ without swallowing a later $$...$$ pair', () => {
+    const leftover = 'Interpreting $ for inline math and $$ for display math can help.'
+    expect(protectCurrencyDollars(leftover)).toContain(`${L}${L} for display math`)
+
+    const withLaterPair =
+      'Interpreting $ for inline math and $$ for display math can help: $...$ or $$...$$.'
+    const out = protectCurrencyDollars(withLaterPair)
+    expect(out).toContain(`${L}${L} for display math`)
+    expect(out).toContain('$$...$$')
+  })
+
+  it('does not pair a leftover mid-line $$ with the next $$E=mc^2$$ opener', () => {
+    const input = 'For display math use $$ as delimiter.\n\n$$E=mc^2$$'
+    const out = protectCurrencyDollars(input)
+    expect(out).toContain(`use ${L}${L} as delimiter.`)
+    expect(out).toContain('$$E=mc^2$$')
+  })
+
+  it('keeps The formula is $$ / E=mc^2 / $$ as a real display pair', () => {
+    const input = 'The formula is $$\nE=mc^2\n$$'
+    expect(literalizeUnpairedDoubleDollars(input)).toBe(input)
+    expect(protectCurrencyDollars(input)).toBe(input)
+  })
+
   it('does not pair $HOME with a later currency $', () => {
     expect(protectCurrencyDollars('The shell variable $HOME is set. Price: $99.99.')).toBe(
       `The shell variable ${L}HOME is set. Price: ${L}99.99.`
@@ -72,7 +98,9 @@ describe('parenthesized empty delimiter examples', () => {
     expect(protectedText).not.toMatch(/\(\\\(\s*\\\)\)/)
     expect(protectedText).toContain(`(${L}${L})`)
     expect(protectedText).toContain(`(${L})`)
-    expect(restoreLiteralDollars(protectedText)).toBe(input)
+    expect(restoreLiteralDollars(protectedText)).toBe(
+      '**Display math ($$):**\n$$x^2$$\n**Display math ([ ]):**\n\\[E=mc^2\\]\n**Inline math ($):**\n$a+b$\n**Inline math (( )):**\n\\(x=5\\)'
+    )
   })
 
   it('does not rewrite real parenthesized math or currency', () => {
@@ -117,11 +145,17 @@ describe('inline code protection', () => {
     expect(restoreInlineCode(text, spans)).toContain('<code class="inline-code">`$x$`</code>')
   })
 
-  it('extracts `$` as a complete span so adjacent amounts are not leftover math (Step 5 Preview 05)', () => {
+  it('pairs `$`100`, `$`0.99` as CommonMark code spans, leaving bare $ literal (Step 5 Preview 05)', () => {
     const line = '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs'
     const { text, spans } = extractInlineCode(line)
-    expect(spans.filter(s => s === '$')).toHaveLength(3)
-    expect(protectCurrencyDollars(text)).not.toContain('$')
+    expect(spans).toEqual(['$', ', ', '0.99, or literal '])
+    expect(text).toContain('100')
+    expect(text).toMatch(/\$` signs$/)
+    const protectedText = protectCurrencyDollars(text)
+    expect(protectedText).not.toMatch(/(?<!\uE000)\$/)
+    expect(restoreLiteralDollars(restoreInlineCode(protectedText, spans))).toBe(
+      '- Escaped currency: <code class="inline-code">$</code>100<code class="inline-code">, </code>$<code class="inline-code">0.99, or literal </code>$` signs'
+    )
   })
 })
 
@@ -195,5 +229,15 @@ describe('lists', () => {
     expect(out).toContain('<strong>$x = 0$</strong>')
     expect(out).toContain('<strong>$x = 2$</strong>')
     expect(out).not.toContain('**$x = 0$**')
+  })
+})
+
+describe('GFM table-cell code pipes', () => {
+  it('unescapes \\| inside <code> in table cells only', () => {
+    const html =
+      '<table><tr><td><code>\\|</code> conflicts</td></tr></table><p>keep <code>\\|</code></p>'
+    const out = unescapeGfmTableCellCodePipes(html)
+    expect(out).toContain('<td><code>|</code> conflicts</td>')
+    expect(out).toContain('<p>keep <code>\\|</code></p>')
   })
 })

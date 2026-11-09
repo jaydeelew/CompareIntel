@@ -7,6 +7,7 @@ import { render } from '@testing-library/react'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { initializeRegistry } from '../../config/loadModelConfigs'
+import { BUG_CASES, loadBugSection } from '../../utils/__tests__/renderingAudit'
 import LatexRenderer from '../LatexRenderer'
 
 const CLAUDE = 'anthropic/claude-sonnet-4.6'
@@ -356,6 +357,30 @@ The formula $A = \\pi r^2$ stays outside the table.
     expect(el.querySelector('td pre')).toBeNull()
     expect(texSources(el).some(t => t.includes('\\pi r^2'))).toBe(true)
   })
+
+  it('unescapes \\| inside table-cell code (GFM example 200)', () => {
+    const el = renderReply(
+      '| Feature | Challenge | Solution |\n|---------|-----------|----------|\n| Tables with math | `\\|` conflicts, complex fractions | Escape pipes |\n',
+      'z-ai/glm-5.3-flash'
+    )
+    const cell = Array.from(el.querySelectorAll('td')).find(td =>
+      (td.textContent ?? '').includes('conflicts')
+    )
+    expect(cell).toBeTruthy()
+    expect(cell!.querySelector('code')?.textContent).toBe('|')
+    expect(visibleText(cell!)).toContain('| conflicts')
+  })
+
+  it('keeps U+2014 em dashes in table-adjacent prose (not ASCII hyphen)', () => {
+    const el = renderReply(
+      'and \\frac with a multi-character numerator — all inside table cells',
+      'z-ai/glm-5.3-flash'
+    )
+    const clone = el.cloneNode(true) as HTMLElement
+    clone.querySelectorAll('.katex-mathml').forEach(n => n.remove())
+    expect(clone.textContent ?? '').toContain('\u2014')
+    expect((clone.textContent ?? '').includes('numerator - all')).toBe(false)
+  })
 })
 
 describe('bug 17: ## after a markdown table becomes a heading, not leftover #', () => {
@@ -399,19 +424,36 @@ describe('bug 18: **$x = 0$** in an ordered-list continuation is bold math, not 
   })
 })
 
-describe('bug 25: `$`100`, `$`0.99` is not a KaTeX error', () => {
-  it('keeps escaped-currency code dollars as code, not math (Step 5 Preview 05)', () => {
-    const el = renderReply(
-      '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs\n- Code span containing single dollar: `` `$` `` and `` `$x$` ``',
-      'stepfun/step-5-preview'
-    )
+describe('bug 25: `$`100`, `$`0.99` follows CommonMark code-span pairing', () => {
+  const STEP5_ESCAPED_SECTION = [
+    '- Escaped currency: `$`100`, `$`0.99, or literal `$` signs',
+    '- Inline code with math: `` `f(x) = $x^2$` `` should not parse as math inside code',
+    '- Dollar in code: `` `price = $19.99` `` and `` `formula = $E=mc^2$` ``',
+    '- Math with escaped dollar inside: $\\text{Cost: }\\$100 \\times n$',
+    '- Code span containing single dollar: `` `$` `` and `` `$x$` ``',
+  ].join('\n')
+
+  it('keeps the Step 5 Preview 05 currency line as CommonMark code + literal $ (not math)', () => {
+    const el = renderReply(STEP5_ESCAPED_SECTION, 'stepfun/step-5-preview')
     expectNoKatexErrors(el)
     expect(visibleText(el)).not.toContain('KaTeX parse error')
     const codes = Array.from(el.querySelectorAll('code')).map(c => c.textContent)
-    expect(codes.filter(c => c === '$').length).toBeGreaterThanOrEqual(3)
+    expect(codes.slice(0, 3)).toEqual(['$', ', ', '0.99, or literal '])
+    expect(codes).toContain('`f(x) = $x^2$`')
+    expect(codes).toContain('`price = $19.99`')
+    expect(codes).toContain('`formula = $E=mc^2$`')
+    expect(codes).toContain('`$`')
+    expect(codes).toContain('`$x$`')
+    const firstLi = el.querySelector('li')
+    expect(firstLi).toBeTruthy()
+    const firstHtml = firstLi!.innerHTML
+    expect(firstHtml).toContain('>100<')
+    expect(firstHtml).toMatch(/<\/code>\$<code/)
+    expect(firstLi!.textContent).toMatch(/\$` signs/)
     expect(visibleText(el)).toContain('100')
     expect(visibleText(el)).toContain('0.99')
     expect(texSources(el).some(t => /0\.99/.test(t))).toBe(false)
+    expect(texSources(el).some(t => /Cost:/.test(t))).toBe(true)
   })
 })
 
@@ -516,20 +558,55 @@ describe("bug 21: padded `$ f'(x) $` is inline math, not leftover dollars", () =
     expect(visibleText(el)).not.toMatch(/\$\s*f'/)
     expect(visibleText(el)).not.toContain('$ 2')
   })
+
+  it('keeps the U+2014 em dash before “a crucial reminder”', () => {
+    const el = renderReply(
+      'where C is the constant of integration — a crucial reminder that antiderivatives are families of functions!',
+      'qwen/qwen3-next-80b-a3b-instruct'
+    )
+    const clone = el.cloneNode(true) as HTMLElement
+    clone.querySelectorAll('.katex-mathml').forEach(n => n.remove())
+    expect(clone.textContent ?? '').toContain('\u2014')
+  })
 })
 
-describe('bug 20: list-prefixed \\] closes display math without a trailing minus', () => {
-  it('renders \\sqrt and a following bare fraction; no dangling minus (phi-4 config)', () => {
+describe('bug 20: list-prefixed \\] is two CommonMark list items, not recovered math', () => {
+  it('does not treat - \\[ ... - \\] as one display span or wrap a following bare \\frac', () => {
     const el = renderReply(
       '- \\[\nc = \\sqrt{3^2 + 4^2} = 5\n- \\]\n\nBare fraction after the block:\n\n\\frac{1}{2}\n',
       'microsoft/phi-4'
     )
     expectNoKatexErrors(el)
-    const tex = texSources(el)
-    expect(tex.some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
-    expect(tex.some(t => /=\s*5\s*-/.test(t))).toBe(false)
-    expect(tex.some(t => t.includes('\\frac{1}{2}'))).toBe(true)
-    expect(visibleText(el)).not.toContain('\\frac')
+    expect(el.querySelectorAll('li').length).toBe(2)
+    const first = el.querySelector('li')
+    expect(first?.textContent ?? '').toContain('c = \\sqrt{3^2 + 4^2} = 5')
+    expect(first?.textContent ?? '').toContain('^2')
+    expect(first?.textContent ?? '').not.toContain('²')
+    expect(visibleText(el)).toContain('[')
+    expect(visibleText(el)).toContain(']')
+    expect(visibleText(el)).toContain('\\frac{1}{2}')
+    expect(texSources(el).some(t => t.includes('\\frac{1}{2}'))).toBe(false)
+    expect(texSources(el).some(t => /=\s*5\s*-/.test(t))).toBe(false)
+    expect(texSources(el).some(t => t.includes('\\sqrt'))).toBe(false)
+  })
+
+  it('still renders a real Phi-4 05 list item whose closer is indented \\]', () => {
+    const el = renderReply(
+      `#### 1. Math in Lists with Formatting
+
+For a **right triangle** with sides $a=3$ and $b=4$, the hypotenuse $c$ can be calculated using the Pythagorean theorem \\( a^2 + b^2 = c^2 \\):
+
+- \\[
+  c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5
+  \\]
+- Therefore, \\( c = 5 \\) units.
+`,
+      'microsoft/phi-4'
+    )
+    expectNoKatexErrors(el)
+    expect(texSources(el).some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
+    expect(el.querySelector('.katex-display')).not.toBeNull()
+    expect(el.querySelectorAll('li').length).toBe(2)
   })
 })
 
@@ -553,11 +630,53 @@ describe('bug 16: $...$ / $$...$$ delimiter examples are not math', () => {
     expect(el.innerHTML).not.toContain('__DISPLAY_MATH_')
     expect(visibleText(el)).toContain('$...$')
     expect(visibleText(el)).toContain('$$...$$')
+    expect(visibleText(el)).toContain('and $$ for display math')
+    expect(visibleText(el)).not.toMatch(/and \$ for display math/)
+    expect(visibleText(el)).toContain('[...]')
+    expect(visibleText(el)).not.toContain('\\[...\\]')
     expect(texSources(el).some(t => t.includes('\\sqrt{3^2 + 4^2}'))).toBe(true)
+  })
+
+  it('does not pair leftover $$ as delimiter. with the next $$E=mc^2$$ opener', () => {
+    const el = renderReply('For display math use $$ as delimiter.\n\n$$E=mc^2$$', CLAUDE)
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).toContain('use $$ as delimiter.')
+    expect(texSources(el)).toEqual(expect.arrayContaining([expect.stringMatching(/E\s*=\s*mc\^2/)]))
+    expect(texSources(el).some(t => /as delimiter/.test(t))).toBe(false)
+  })
+
+  it('renders The formula is $$ / E=mc^2 / $$ as one display equation', () => {
+    const el = renderReply('The formula is $$\nE=mc^2\n$$', CLAUDE)
+    expectNoKatexErrors(el)
+    expect(el.querySelectorAll('.katex-display')).toHaveLength(1)
+    expect(texSources(el)).toEqual(expect.arrayContaining([expect.stringMatching(/E\s*=\s*mc\^2/)]))
+    expect(visibleText(el)).toContain('The formula is')
+    expect(visibleText(el)).not.toMatch(/\$\$/)
   })
 })
 
 describe('bug 27: indented align continuation is not a leaked __CODE_BLOCK__ KaTeX error', () => {
+  it('keeps `` ``` ``` blocks as two ticks plus an inline space span in the table cell', () => {
+    const el = renderReply(
+      [
+        '| Case | Expected Behavior |',
+        '|------|-------------------|',
+        '| `` ``` ``` blocks | Content stays literal |',
+      ].join('\n'),
+      'z-ai/glm-5.3'
+    )
+    expectNoKatexErrors(el)
+    expect(el.querySelector('.code-block, .code-block-direct, pre')).toBeNull()
+    const cell = Array.from(el.querySelectorAll('td')).find(td =>
+      (td.textContent ?? '').includes('blocks')
+    )
+    expect(cell).toBeTruthy()
+    expect(cell!.querySelector('code')?.textContent).toBe(' ')
+    const clone = cell!.cloneNode(true) as HTMLElement
+    clone.querySelectorAll('code').forEach(n => n.remove())
+    expect((clone.textContent ?? '').replace(/\s+/g, ' ')).toMatch(/``\s*blocks/)
+  })
+
   it('renders GLM 5.3 06 $$\\begin{aligned}$$ without placeholder errors', () => {
     const el = renderReply(
       [
@@ -658,6 +777,10 @@ describe('bug 29: parenthesized ($$) / ($ ) / (\\[ \\]) labels are not math (Gro
       expect(visibleText(el)).toContain('First item')
       expect(visibleText(el)).toContain('Third item')
       expect(visibleText(el)).toMatch(/\$\$/)
+      expect(visibleText(el)).toContain('Display math ([ ])')
+      expect(visibleText(el)).toContain('Inline math (( ))')
+      expect(visibleText(el)).not.toMatch(/Display math \(\\\[/)
+      expect(visibleText(el)).not.toMatch(/Inline math \(\\\(/)
     }
   )
 })
@@ -734,4 +857,17 @@ describe('bug 11: display math at a bullet’s indent stays inside the list', ()
     expect(el.querySelector('li .katex-display')).toBeNull()
     expect(el.querySelectorAll('.katex-display')).toHaveLength(1)
   })
+})
+
+describe('full fixture sections for bugs 01–29', () => {
+  it.each(BUG_CASES.map(c => [c.id, c] as const))(
+    '%s has no KaTeX errors or leaked placeholders',
+    (_id, bug) => {
+      const { section } = loadBugSection(bug)
+      const el = renderReply(section, bug.modelId)
+      expectNoKatexErrors(el)
+      expect(el.innerHTML).not.toMatch(/__(?:DISPLAY_MATH|INLINE_MATH|CODE_BLOCK|UL|OL)_\d+__/)
+      expect(visibleText(el)).not.toContain('KaTeX parse error')
+    }
+  )
 })
