@@ -1,8 +1,8 @@
 {
   "version": 1,
   "revision": 0,
-  "knownActualUsd": 3.8044815456,
-  "knownCostBasis": "Actual provider usage.cost through 20b plus 21-incomplete 5-cell completion ($0.02842545); 2 unknown explicitly excluded",
+  "knownActualUsd": 4.8008560956,
+  "knownCostBasis": "Actual provider usage.cost through 20c; 2 unknown explicitly excluded",
   "unknownCharges": [
     {
       "batch": "09",

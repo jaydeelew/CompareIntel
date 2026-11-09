@@ -1,0 +1,26 @@
+[
+  {
+    "name": "01-math-basics",
+    "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+  },
+  {
+    "name": "02-markdown-formatting",
+    "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+  },
+  {
+    "name": "03-code-blocks",
+    "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+  },
+  {
+    "name": "04-mixed-markdown-latex",
+    "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+  },
+  {
+    "name": "05-complex-scenarios",
+    "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+  },
+  {
+    "name": "06-edge-cases-boundaries",
+    "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+  }
+]

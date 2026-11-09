@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794188131-C2Dysu2xmeqSDxW32BJ9",
+  "object": "chat.completion",
+  "created": 1794188131,
+  "model": "openai/gpt-5.4-pro",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "Here is a formatted example covering all the requested elements:\n\nThe quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ is used to solve equations of the form $ax^2 + bx + c = 0$, where $a$, $b$, and $c$ are constants, and $b^2 - 4ac$ is called the discriminant.\n\n$$\n\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}\n$$\n\n$$\nI = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}\n$$\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\nThe item costs \\$5 and the shipping is \\$10, for a total of \\$15. Budget: \\$1000.",
+        "refusal": null,
+        "reasoning": "**Formatting financial content properly**\n\nI need to ensure that the monetary amounts are displayed correctly with dollar signs, so they don’t accidentally render as math. To do this, I can escape the dollar signs, like using \\$5 for prices and confirming that the budget uses \\$1000. Along with this, I want to include inline math explaining the quadratic formula, mentioning coefficients a, b, and c, along with the discriminant. I’ll also display equations neatly. I think I can keep the analysis concise while still covering everything.**Formatting equations and monetary values**\n\nI need to think about using $ for inline math while also ensuring the literal \\$ signs are displayed correctly. The quadratic formula should look like \\( x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} \\) inline. I’ll also include aligned equations for clarity. When discussing money, I have to escape dollar signs, like saying “The item costs \\$5.” I’ll make sure nothing is misinterpreted as math in the links and introduce the example clearly. Let’s put this all together!",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Formatting financial content properly**\n\nI need to ensure that the monetary amounts are displayed correctly with dollar signs, so they don’t accidentally render as math. To do this, I can escape the dollar signs, like using \\$5 for prices and confirming that the budget uses \\$1000. Along with this, I want to include inline math explaining the quadratic formula, mentioning coefficients a, b, and c, along with the discriminant. I’ll also display equations neatly. I think I can keep the analysis concise while still covering everything.**Formatting equations and monetary values**\n\nI need to think about using $ for inline math while also ensuring the literal \\$ signs are displayed correctly. The quadratic formula should look like \\( x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} \\) inline. I’ll also include aligned equations for clarity. When discussing money, I have to escape dollar signs, like saying “The item costs \\$5.” I’ll make sure nothing is misinterpreted as math in the links and introduce the example clearly. Let’s put this all together!",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8SO9pXastiKICLDIF0yKORuO5Re9WCMsDQxdFgt8dJMDHCic_N9RLffkL6TkAHWrmNCstzyGmTlvM1It9Wi_JIYmYNSe-OQx62_PFPhBjjRtF9HcxgTVsL7jmDskNMsARzc0n1cqQI-ZhrV2TwFatgzGsT9KNesZ8SnFsyMz4TgxTvx4_3HAcs4lplKH6soE9p5ZQX_cwJM9J2R7RD-yA0PtVTRGCVDwtYlXw0wXAtCJ6YKYOm03I0jkle9Byicf6a1l__XdrX7Z9RMI6UhZE-WhlpB3vRTGI1OLdNVU7Fl7N7j1iQV7eqLCIOUez8XoYyxQRWr5PA2gsOG-2bjNyY61YSJjstKkfYOcBAlvgOYRoKIYjUfi2mAKHEpg5uZgl2yq3uQnPoC7blUN7drE1Zjwazz8Pp3LpQmPkcos0TRgDTpcni4aUetXOLUQAvZLQSHn3stFQbFm_UcoTbSoY__d1QoFBCvFG5zWzZX9zxkCW27bNXzNSnpMipjk5jn_AWhrWTM3iTAV7zENz3ouxjK9FokA5PLhKq9cUgHSm5WSjeegARSLGP-AAQWq81Wrwxk39rgvIp3_pvRr0QVrQyNsX2QphZQxZRDn5ZuUCWVg8laSI0-oOcIY61ZTPxl_PJU1GMIH6JB8Bm1CGk2ZA9Knc1YBopHvD7gwAEew3V3eDdD31X7SLValGFXLKTK9GAP4KH1oBnY6eYnrBq02KAwsIY-T-P5tVkJQBqPrdKpsA_o2Kz64SR1vJCE4wTiqOQbzjoWtq3wqaT7rKBpxJJEepTj9jYAy_pM85I49ketdl1aWbDhUpZyKG5XcTpe1slMiSJ5RYhrs2JQCwnJ_Qk6CTPt2_M46BxDASHjYVC_WuH0I8CrbnzL-IvWqXTGxY70bRws8-dFb2Eak8e2Ii0VF-lwDRZLoEB7EbqM6Vtxs_dO7LKV8bTm-kTRamvjyOlmiUowq_mg8j_lxRI_STa9EXcuT5fwvgOkgd7hCUYqO2FZCku5rLF8Jx-z5aQ52gi2Cs31emeq4lQ_Htj-xsJgz6ZorijY4fXVnBRIdwyxyCqn1iuij0f6FcUEW-QNfLpvi0LwI9rhoNIAcX_8ToDhQeomgjrR-3eIi4kXL0zi_OZg60xT_qgU-M9y8UKZzaajSfFU8NaXrMoeKKm0lQxw6SjCvPzTJZOvJ_isCRghOh5K-tDtXL9nTFtXr9s10TgIFJoAcNbemTF0BchPRDNNXPIORBr9C_hNuBknSb1x8sqDx85rsNIW0j8G_Af90-jCJV0Y8m32swmH-ZuCc8g3CVJseRMtaXnsH7xD3EyeY5gBjgsm81Gx421qa0rGWXgqr3HT-WIg0NfWpqKxy3_f2kBEPT5u_-RaOCGxKgkLkBBijHnDoqw5hf9sWu4371S3aFEw7Yzn5jjiz9KGi_QPVXSzo-EBDPrUDJqd9XeBSZ1rqjWF9Kt-LCmPebEzrpnzj8YTRNx9Xz_Bf3DFd1B81PriU1-ah1KsN8rPM_51LLxG_6LceqM8IHnIvd3S5JFR7PTVTBTHGeRI7qVracqQy1yt0wh5E8U_qAsN4vTAXvtTg_Ju5B28V2fhQSJnhv5MMDEatrpci5NhMPyqwyPrggZ0b4u43Cu7JBkSk8EEOiZDc8SCLD2tB_UUqd3J1pc6R1v3UjtdvLxxUERE22BQ4MibPKhDxMNUwmf2k9kTXqqdlf9B4Livs32LMB6mfFbJl-CZzbNTItE3AZDG1Tw1UiSVSOQ2gLD-BTs9MS7Zb7W4kjPlSQJRZDMZKYBUMIkRSWponWpoh8uy9SWQnAU-vm6B9PW2xl8D3ypE1q4GCVDkWZDMXnO8kEspRw067SzIOMsl-BwKq8ZqAhjRr5hjHo9OzRiZyT-WAm06ohE1xg4jHiiobd2qIawQji6-_Dzrem0oj2_brDaz9zqdbRWtsXxiBigK_CEnjIg-M8D1JIo-iu3twHcPEk4N3sMUpXE7betzR4p34s8CLt2OjSgNRaFK9AZSyZOHKCxPXj3R_ljxxfLR_mmCm0TA1iZ8dwDOcIHw8gL26cGPmatIf5aKUoGpG7ddDA9wgfzME0UvqHkmq_kvLt-6c1rP-SvECDBr-Rbz7LAVwegRMvgstDsFwiEdecu1cHdO3i0wKrlilMYTmJ_Gw9fydP1OCtSOUJhNA33-sW4BmK_mIeTbdFw5xXffAH9h7xpZhynS-vv721iouc7FNxiev9ChkDtnCb_egUXK9VvK1USwTjj0c5Ih_VWdgFpjohlRH8kgXCpcjnYad0m_WTNorTyK3_zfO08m7FRwnyXAqFz54e4NBbPRG-4jtBvPObLBXwD-_v6lUMOjZxtJ3Q2nJBt1f-UsupYT_rRDvLe95IzUq4Pziy-0PSleFnXlKOJqcONScpIrje-AYzWd45sP3omQXNfySPcETkiUEb5xO2EXT1Uq9J5bkYYBc9PJnaDJuhRNTVP816I44DUDm5l0AQuERsTHPM7zuduOt_imHHYVFCt8GqgEn0SrAuCpKRipD5B0rpNcoSEQkItwKQ8aRZcivHokXjiuUlQVeKVKP5_aunV6Fv10uKoy6RcMH0841osgb0ljLlJVy821klF17T4xezjH6uzfdqYkEgr1ibx9LjAuFMx4OMlvrFGzvia-NqDqb6U1R5G9jJp8VFSwZfOPeNJSGfmu2UEJO9ohJFKFf6SWQgEVk6x_q5RczoXmcnXL56SOyw0FckbppEPHVMJS9H0kiflD4l3wLhcBNeGXdCvTiDYoK5IkhB3eUxvxeqXLChx5or3dBKPdzyQb9UHBCkCrZaVEc5PafNd203bTlFSjItRnC7R_SYPmJVX9a6Dj_7iP9r_3ZthQalNgZYVwnFPDtNYjfCVA1ZWDWd_s143bIsWlSsYS-7EgvOutW4SArmIwrRORJQZH4o4gOA0sKmna-5K57z9s0z5IVJDwGC0XCk1lPteFuVRlHoViM6rTQiZhPqDbG_yNDZc98ZduxcEqPDOTbrvgn7S9jCYf4q3zGRA6nGixE6d5GrU9U-nCwkAS7jGzO_5Lt4wdribGt7gkIlD1HZfWWz7icg_FXCN-X4jeq7x6PKU6JDf-hjbtmLQF5VMhOHW-Knx9LdYK1fB1GCtD7aqM9fuPcVW8C5eURUsuvHsVz3ibYIMVA566S3p2uNOKuzXP8rdX7ztEEqvRoBWkrQzKgOG3soXp-c8kyo01kTNSsihuoBRx_BzOU_uzzx-fXGHJm8ljLcxQtNHIp7pRFQoGRvSH1EPFjV88W6w1NuzaOPdD93GCTsO2NJmHG06NsIhNn42SeeKert_Oebdn7TjthOb5jRVddZghQO87p0JrtHoitYNGXO42bwUN_3NHTGVjKumrtHWivyVNswxT_NSdRKaE3y-nqSFsxQCwnodSUabiCJL5V3AE-MfQz22FbKUdCo9k7YOKviPR3dP4zCcrVwok40ZuQMA3UznnrNVh4LCB8O09N1E-2o45UMB7efu5Uo0VZ2olGKQseQxg3Je9AtcxbYkxgCXkMuchBqTrZ7sNlBmOngK9JLke9VdUo62Ay7CuY-C5Li-mSSxiTJ35TwHF-_uCrYYOjdCm9WYo_d8ER1MV3pooszYR1hSTCCcXe-TUcUsOUJV3UFmQLB9fudykfKyJmv2qIXU2YED4cpvKpt9LDZCDVPB0IZLLIkiVTljg1M0KcLEh74pbYjgQTfULcAs4cRW2-ZLMrz5ZJLS4jqpjPLvbej39EsjpSLHzu6X0EESYyyIITz7wTasKo3BujGZE4WXcEki1E_j18J0-Nbv5kJ9Tldx1UPepkxHD-kOHGyNQhsxFt2JkOOIIqLE4I-X95iHZvAlPi-m8UwV459WoXut1wJRBE1sGbSCM8HuADXsVaQibWMwrY0njLKFAQ5jBC6_ZZUYcNGljWr9Qej5uscp1NR1W-I-hQ7ZtiBIToxQdpDBRUe8lS19ZO56Wq23SG4ApVEpQavpEo_woa-XTD0JRf9DMYw49Pz6VhEYXOmITmtKdGvR7TY-nccTjRMaJVs_Yz2KNi4-xUxWGLDeQTxB9Oi9xE2Hz_1aIX-NEf3GE2jvGH0gKxz4HlShTQTLvrPtlAoGf2_B9fFJXV6Kux7tB-3iQT6qJyn0JGFAERuLKFTENnmWRnIBZvmR2Io-58p7l66wYyNC43iY-RXrA9lWE_UttGkaDPkh1HDoGk35119PhcsxF_OnYXIkRzul3viUlc-yWOnck5jjb7qf6yX6PxOuRcnFxTmRVxD-GSzAqGszeh2lwBZA1jTg4ch4BLq-V8PZMskpvE4P60VMFqYvgmkUSt5WnaGbSGte2PZg5smXSo24mmjHvpCbMZ37EXKn86h5_C3zeZ1TOh4yxdALEsc6jkES1-fjpi0NHkBx4WF0sACtfDR32Z2z5SXvN7PLlWD5FOVfeS45wkdMD7fnuCiBO6h9XDezoCb6EQ24v59ZTE9HH4ptlwzkPvIT8vll1O-S9xbjMFBmFq-_H1Aozn2sk6yGiY8hQYqU6rG_saYwVdnPT7IuTA5aLxlRwyLacgaFVBcuZ2CPTr54UL23ufzgkfggAxmQhlH2gkehTezELymnIqX6pqBGIboCtESoBlgSksXtsPkEU_n71SRybVkz2M1YwMtTcq3BNLn1PTT5olNy_4mO6jMZfRkVHZJJ8TrQdMCPz0wBNGGN-QnTztBYWpXQrRzIPflo37yOgu_YAgftpBOoz1HsRSM6oau3z-Fyki1cZh3rZhJ36gKwMEq296a9E-8ESj77sRUzbE1VyfFj-DlHlY8ylTna8PRbNTTiLf22TMYZHUeGllLRe-pDsH8p2wk-2cEmliFTfOX4dUzy2RHLlg0NKcDj5OV3TruG94jiy1_xQaVb1xQIx-0nOTA-eId0O26YOCqbWYftfuZF1t-9qLAv1ssmDf8lTH-0XvUZVGW8d4H235NpeEMzK06KWSQkfDJ8PzdCNB-l9ck10_TNkit_qjUXZB11hpHGOPDqPjrJJTTJeFRx8V18Jb3i0cWMq3YtSCyqwrkQO_tMaE8d9SiBzaG9ujZcWLEV9R6c6RIPO66CeNCqILrg37wGHlyKLp5wHsQ_3Bqk07lYgnhRfN4j7sOBlHmwOfOTtillIS3Bm1Dy1JRV8pSYCdgpBFY6l_4u2psgWZ8-n9JJBLt7JwwrDnj0NOfVCnvT8N86gp6VxDeO_Vku_r2ZBc4wetvaN5oXZOeip0hTt9J6hjByn6mDuw6OIo2bEygfQv4yX4EKqCkfMUVLg_ROMY6QuKQo7RLi2XRjr--DnzDxgkSZhrvTaw4HpdvSUHjRN1lBFF65dknMuxuPipAxnJu-kbC41dv04SEQw1C9zhWmyMSASqylCXIzDosFJKs8EIyCY4ay_rS-zJSefr7sZjWRUSVPccAvuNF9rnvq2hY6gmNiOQ8kHpudgzpsgT8iLuQE1sA4T_0T35nJyuEb9LEyNXANedGmuaBAxhS6-tDiN7tKRGV1HThIo-Vh66bQQArKiPO6xcv97epmyo3PYchpfK2zW4QiGZX0Iu3kYvvFtPq3nPDK03dt6LEnTGu8ksTTFAvDtrAcEG_jz6lO1OPbe-x6prlPoIT-yPP0kbqtrHOiI2R7WOZbyUQ0cM2CAlZ4aSFPYdsqCr1zH-nzkdVO-n0u2aBcbnoebT3oVOSqeqbT8HanyhDiinVhH6QI856Lgt8qpvEyyBPY4IBUP0yk2PGAa1uFxB23nxbtLBnaqUAE1bClvkdr9seMLm0gDtWUxvy5NKfvQbbkmxsHHBJENLvvrG6cwHjus77WfNgf0wlksN9h6zK1jgyrEd0DRStiXiVDLu9XvBn6LvFuSpCvdL75lUwtzISu_Zv23MTK_isQXaxrDXDGMLirMaLOMrqbZK_Kbsxu1N5gnZ9yPyP7ur5sci4m1JBqIaV_e_9J_iCStH8eT71VCkfEAEMjGksSPf_2ZMKukjFSkFWRdqmmOgdCv33OslvDPKu-XsQRrFapbWcex5BFssc_WRlunn09phGhdcUXGJJQfqm_G3s5YbjmMRwhTWzZdprJcz-udZgVi43QINm77JEmmASTDavt32y6V9TQ6F0f-ZrsaiX7frfbt8N2U4UUTrFE6_3AtdzFT3C_d3xUZSNiJgTnSD7EJiB1DjVB03H-YZximvvFY9uXkZkGScc92i2n22TfmK5ypLr59Z6BWnWUTcCllHB6RvPSpM74udNjXIiN8nXl6ITAs9x_a0xVLjGBndd5Rzt8gCTQCFw8iac-HQXDYIj-LHyww6WkTnfqQt4OI5Blf1qQ6mcQT423euJlCV6XKTUxF3wArTFFnMkCsDf7kihxnfnLm68EBYKGJI-6zYgFrxH59HEjo4PxbqyMFQcmbqZmSb-1K0eIF38raXyoR_TPSP0FsZBHrXVXcvlNZxWaEFpp__MYUaXr6iF5A0__xDf9B1ju_mpsE8EVoKBVYKkmYi-PJLgJb5acOgqm7JSTyU5miRZUBZrlj5kO99rOwysanqllp2kvI8YVvL4lpmTluzaoyasR3R7cgPEPvumxAcEilrV8Q-ohNuwff8Kp-MDROROK03h0yyxwhI2lVBkVIl0BAKWHXiIKxjZYrcbY3JKZLqfcAo0ssEh_Gkh_r-7iG9pxsgbyQbPw3eb3ww1W64WNoYshmE6UV3jsObril3FL1vq4xaHuDXr81uNZ9I6mvzdB8lTjBJ7Bck-yXLKPnnSJXpgYwwqF67xUhL-mg6kkTZwrDhqYp6bIS6BIZKvzq7s4M6SHgv8oTQSLZyUJt1hkD-XNfwRsSSbhXQCyBi2xjEv2DylOp2GNNS81697dtIqS-HjcqRsvFhCPMlBXeGn48fmkFBj71d_bncLy4=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjQtcHJvLTIwMjYwMzA1fG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_0adc4c29c0c421f7016af123b8ccc887d1805512e43384de05",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 274,
+    "completion_tokens": 689,
+    "total_tokens": 963,
+    "cost": 0.13224,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.13224,
+      "upstream_inference_prompt_cost": 0.00822,
+      "upstream_inference_completions_cost": 0.12402
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 414,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

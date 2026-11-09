@@ -1,0 +1,283 @@
+{
+  "sourceHead": "3d0df259",
+  "mergeCommit": "431bc0c7",
+  "maxUsd": 11.3,
+  "batchId": "paid-batch-2026-11-08-20c",
+  "modelId": "openai/gpt-5.4-pro",
+  "outputLimitField": "max_completion_tokens",
+  "maxTokens": 8192,
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd"
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "747aba1ba238f8f256c762776d5b3c74b3d2220a85b3e0f951dcee528456dcad"
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "86661a559083cfa218a38ae12c456535f89ca6760fb32414e951ca4df43c9167"
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f"
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0"
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "e851aa6cb3e01e6220d95c9db36db656ad95ac7446c3f54b118d7f1b41d0ab51"
+    }
+  ],
+  "acceptanceId": "hist-risk-acc-2026-11-08-20c-grok-tencent",
+  "releaseId": "one-batch-release-2026-11-08-20c-gpt54pro-six",
+  "attemptedCalls": 6,
+  "knownActualCost": 1.0248,
+  "unknownCostCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "openai/gpt-5.4-pro",
+      "promptName": "01-math-basics",
+      "callId": "paid-batch-2026-11-08-20c:1:openai/gpt-5.4-pro:01-math-basics",
+      "startedAt": "2026-11-09T01:35:31.345Z",
+      "reserveUsd": 1.8735750000000002,
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.13224,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T01:37:01.703Z",
+      "reportedUsageCost": 0.13224,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 689,
+        "total_tokens": 963,
+        "cost": 0.13224,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.13224,
+          "upstream_inference_prompt_cost": 0.00822,
+          "upstream_inference_completions_cost": 0.12402
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 414,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "index": 2,
+      "modelId": "openai/gpt-5.4-pro",
+      "promptName": "02-markdown-formatting",
+      "callId": "paid-batch-2026-11-08-20c:2:openai/gpt-5.4-pro:02-markdown-formatting",
+      "startedAt": "2026-11-09T01:37:01.705Z",
+      "reserveUsd": 1.8675,
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.04113,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T01:37:24.870Z",
+      "reportedUsageCost": 0.04113,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 195,
+        "completion_tokens": 196,
+        "total_tokens": 391,
+        "cost": 0.04113,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.04113,
+          "upstream_inference_prompt_cost": 0.00585,
+          "upstream_inference_completions_cost": 0.03528
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 17,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "index": 3,
+      "modelId": "openai/gpt-5.4-pro",
+      "promptName": "03-code-blocks",
+      "callId": "paid-batch-2026-11-08-20c:3:openai/gpt-5.4-pro:03-code-blocks",
+      "startedAt": "2026-11-09T01:37:24.874Z",
+      "reserveUsd": 1.8708000000000002,
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.06033,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T01:37:35.123Z",
+      "reportedUsageCost": 0.06033,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 241,
+        "completion_tokens": 295,
+        "total_tokens": 536,
+        "cost": 0.06033,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.06033,
+          "upstream_inference_prompt_cost": 0.00723,
+          "upstream_inference_completions_cost": 0.0531
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 69,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "index": 4,
+      "modelId": "openai/gpt-5.4-pro",
+      "promptName": "04-mixed-markdown-latex",
+      "callId": "paid-batch-2026-11-08-20c:4:openai/gpt-5.4-pro:04-mixed-markdown-latex",
+      "startedAt": "2026-11-09T01:37:35.124Z",
+      "reserveUsd": 1.8781875000000001,
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.17688,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T01:39:02.344Z",
+      "reportedUsageCost": 0.17688,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 310,
+        "completion_tokens": 931,
+        "total_tokens": 1241,
+        "cost": 0.17688,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.17688,
+          "upstream_inference_prompt_cost": 0.0093,
+          "upstream_inference_completions_cost": 0.16758
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 515,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "index": 5,
+      "modelId": "openai/gpt-5.4-pro",
+      "promptName": "05-complex-scenarios",
+      "callId": "paid-batch-2026-11-08-20c:5:openai/gpt-5.4-pro:05-complex-scenarios",
+      "startedAt": "2026-11-09T01:39:02.346Z",
+      "reserveUsd": 1.8892125000000002,
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.3867,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T01:40:58.178Z",
+      "reportedUsageCost": 0.3867,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 2077,
+        "total_tokens": 2505,
+        "cost": 0.3867,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.3867,
+          "upstream_inference_prompt_cost": 0.01284,
+          "upstream_inference_completions_cost": 0.37386
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1507,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "error": null
+    },
+    {
+      "index": 6,
+      "modelId": "openai/gpt-5.4-pro",
+      "promptName": "06-edge-cases-boundaries",
+      "callId": "paid-batch-2026-11-08-20c:6:openai/gpt-5.4-pro:06-edge-cases-boundaries",
+      "startedAt": "2026-11-09T01:40:58.181Z",
+      "reserveUsd": 1.8828,
+      "requestOutputLimitField": "max_completion_tokens",
+      "requestOutputLimit": 8192,
+      "actualCost": 0.22752,
+      "httpStatus": 200,
+      "finishedAt": "2026-11-09T01:43:09.775Z",
+      "reportedUsageCost": 0.22752,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 1207,
+        "total_tokens": 1549,
+        "cost": 0.22752,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.22752,
+          "upstream_inference_prompt_cost": 0.01026,
+          "upstream_inference_completions_cost": 0.21726
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 884,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "error": null
+    }
+  ],
+  "noRetries": true,
+  "onePromptOnce": true,
+  "pausePolicy": "global pause remains; scopedAllow only",
+  "startedAt": "2026-11-09T01:35:31.343Z",
+  "conservativeBatchReserve": 11.262075,
+  "status": "completed",
+  "finishedAt": "2026-11-09T01:43:09.779Z"
+}

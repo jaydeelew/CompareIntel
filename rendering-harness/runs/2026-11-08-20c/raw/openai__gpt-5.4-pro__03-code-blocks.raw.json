@@ -1,0 +1,61 @@
+{
+  "id": "gen-1794188244-dWZFUTg6mBNgEHKi9UB9",
+  "object": "chat.completion",
+  "created": 1794188244,
+  "model": "openai/gpt-5.4-pro",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+        "refusal": null,
+        "reasoning": "**Generating code response**\n\nI need to answer the user's test prompt regarding code blocks. They specified “## Python code ... ## JavaScript code ... ## Inline code with math-like content ...” and likely want me to generate those exact code blocks. I should comply by reproducing this as it is and ensuring the fenced code blocks render properly. I want to keep it minimal while still being clear and compliant! Let’s get that sorted.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Generating code response**\n\nI need to answer the user's test prompt regarding code blocks. They specified “## Python code ... ## JavaScript code ... ## Inline code with math-like content ...” and likely want me to generate those exact code blocks. I should comply by reproducing this as it is and ensuring the fenced code blocks render properly. I want to keep it minimal while still being clear and compliant! Let’s get that sorted.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq8SPeN2HxZXXCu6LD7SRm7u6Q3w5pDwjj74LlN7aWaRoua_tjjZojSAhtWLCp4sngf11OErjyBxo_PzaN9rIRJPtSMQqsEPMDqs4djZl97KLBdLiyMsYar_DiCFDJApmVsmOwcgTiK3DwpUqRo4GiGrDAwktOsECELeMizLdAKcyRrkDMNNN27KMPbHSRJETa9euNqEsF94mWEIyjLMr9GL2PaCAosMEo9u4fNJ3FOA9s7DczjdqKHECkgRCtjaJr1DtjuSxtJa6AuNUfR75cAX_4xRMS9R-yihpybAebmCy1PzzPdKETohpv50MIXAbChe4ha-wsBuxbKh2Gm8BLbQbKfbJjc9fmr4DWyhnBe3da7K1xDM5LPCAWPI5K9xWuRbhHHPNbdY36HWBAflIEMaTvXwcRkBlw_7xfgYLNLEtTzNssnPn_9mLMQcZD4a8SJji_Der0d0nIE3UiwskLBt9guHOZzyqUX2lVUgqF13RqdCo9UIWfUD3PfOPW2-wiyeDfXtBvA68BRxTSHv21yzfVnWGvTiFxKhhfoAvaP7zEkrKkR2HHKdgT0rPol8lqSEQRegdqGIpc0Ck8s7sdqz4Zz_UBDf6PryrLkf3lrWA_TWHLxM2CuMZEIyTEC809elKcCifokKvNp0vvMkGVTH43KZokQ-vs38pHNW9wuf5VDkBZWncTzYqtyvOF3S2jGchKJ5HgpFb86cvpGGTTGbk-XxV2cxbFLAd1NL7gSgL2WKfw3KUL6RR6AR8CNTUW1pPvgnbY2vUWPqGE5UTjJ-kl7riuBjqifaG7_Unqn5K8bEsZNaeYDkoG-xzRbAcgz8qjJBq-Q_Y0UR1-tGBotCBunkOcIrj62xJNzBHnwpbKo5LA0jJhWs_jCc5hykRjKu6j-_sxc5OLHPDSUMo0IcUGoTxN5iCuTjw3RI09Taf_ZIKfDOFl4LcpXcP0iwgNEELA5MJUDau-Ro2bpYk1yS99Mj7GYpdi39JXPWa9AWBZYeOJT9DRUIlh1fGScBnC7BCFM52NKTh40vy-RPS6L7vw2STd1LHiwi1is31ChL4zMld0qCQCvafMNHtb5m0Gb2_1uZ7lVR41WA0LHEaubFWuNssH5jW44D_1C-qdoRQukxeYC1ESb66FJQRKo6KodZpUCkUmL5TDKEWNJiCBzu_LkGdHDtdco4G-uCvjbsSDJtqj_rKNojohnsh3mQ0254WQ6JFwRJTaQi_B07a6oVi6siRUcLBQPZcrvjkslgzSjlm0WciUCYCfVNhPdkpNLVrb9_c-JfvqKy8fKT4sjB4kj3Ynd-F7OqLWFZPh09sVxOSOK1YuZ48SDTyDsGUA5r4cAmnYDdai_b56a2f5tLTD_scXvHWeQLP1Zma-WjkPIh9u-5C1g6Uj2eCZpB7AnksHZT0z2STqkQxDydftNUn1oB3wX8xi1ce2-o5FouWUs7aatzg7YpE6v7nD9lJS_qoeKn49y_xzPVRYElIeAmlzeOaQ8ay78yoB7poT75KOf0cp09LY5eZpf6peJQcSDtbrB-hfu4PQ2N62QWr1Rbpn3TVLyx5uGCP7aY-WSNOQYNehKgN2tO96Hu8B_XHFYgrd6X96KpSeb8e4pTXZtsDTSqnzZKytIIOAskQDGlf04UTQ3wDU0faAARB2ebFjji0yVAE9Z6c9ubuVxXXFYVm0QVl-YId0gtmZBq6jUMRDrOmOfvA73DrYGRfuk7SaxpiOAYYaQ2ixSXQKlzwK571bPaJ6Xg9BRy3IvjusZr24M1eY2vkNapDJUN39BhiDdDsUZvelF0GCwv2yinfZC6pA0nBLnKW2TSjN9ofFqXnY5W2GqDP1iNyhjD-JXcUk8Jh3K_Q35LDkcSPHfxd9SCaxJ5SKTJbOzCmAwNNrDQijIc2SO7EvJwnv13IWnD_wSrkdOGqU4x4dJ5jeFb_E05_l4xUMi1UANg-mUekJfEwP8nIlXHJ8u6gULTjYkqwEsgfaIr5O7nbil5CQhs2q36TSBOvXYktoN3gsggRbwqpm124WFJpASGX9xA365Vpyo2nAPFjmjnBc4-ogUqBfh7i-nfBKuRxqydlXLJyQV_e4Dj1HezTG76DenX6W29PxJtm1TJ6pYx15e5EBWVv7VjsxSpOP_5wQovOlnpy1OqZseplveDwVJc2iQQWgzONlTrBIGdid_oB4hClNtSJ18FoRPiUIa-CeZC6rCQXQ0K2JC4iJSNVGaa3gpVbFf91WiUFZ2aIZmlCbq606CcwTd10zDng2oKTGVh60Y3HR5cpkx5EpOgTuJLmnaQmCv1UMQXEped4UPjsuEjbWLRAjMNeUeDx0QtRVIfrnEOwPCZR8ksFj4wRcUzks-gh61NYOeqFlaRrn8E7w7N-Uz8yfpmn-G0DfJIP3fs3r2SgQa_jmv0W1pYw7daRYRAsKBcwqYzVnrZo50uDIzStPL0isc8S--goFYWcqWRl0eAmCpn9tK2KoqNfV0j_TPek4UxOH1j-FcygrbRw6mUC_uigKZZ1b07twQ4htEuX6xzHdfJAGHs0NBoXhzO6eK9tjRrBtgJukhz8ebHqaR_EpfwsoAIZ_Rl9CB0fu0llvunLHu5W1IuOci-kko2dbdrTFzmk5twByFA8Pshdt25scpGlUhSpgLPe0j5QqDWWRdclATzYIZgG2iep2ZQCFMRxKsHVQsdYgBxBYiplfuDfw7DY9cdWvbQ==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjQtcHJvLTIwMjYwMzA1fG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_0cc9aa75ac764b23016af123ddb06087d1bf548dadedacf968",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 241,
+    "completion_tokens": 295,
+    "total_tokens": 536,
+    "cost": 0.06033,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.06033,
+      "upstream_inference_prompt_cost": 0.00723,
+      "upstream_inference_completions_cost": 0.0531
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 69,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
