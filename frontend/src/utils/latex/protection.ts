@@ -14,9 +14,15 @@ const INLINE_CODE_OPEN = '\uE001'
 const INLINE_CODE_CLOSE = '\uE002'
 const INLINE_CODE_PLACEHOLDER_RE = /\uE001(\d+)\uE002/g
 
+/** `\[` / `\]` / `\(` / `\)` used as empty parenthesized delimiter labels, not math. */
+export const LITERAL_DISPLAY_OPEN = '\uE003'
+export const LITERAL_DISPLAY_CLOSE = '\uE004'
+export const LITERAL_INLINE_OPEN = '\uE005'
+export const LITERAL_INLINE_CLOSE = '\uE006'
+
 /** True if the text contains any protection token (useful for heuristics that should skip it). */
 export function containsProtectedToken(text: string): boolean {
-  return /[\uE000-\uE002]/.test(text)
+  return /[\uE000-\uE006]/.test(text)
 }
 
 /**
@@ -34,7 +40,37 @@ export function literalDollarsToLatex(latex: string): string {
 
 /** Convert literal-dollar tokens in final output back into `$`. */
 export function restoreLiteralDollars(text: string): string {
-  return text.split(LITERAL_DOLLAR).join('$')
+  return text
+    .split(LITERAL_DOLLAR)
+    .join('$')
+    .split(LITERAL_DISPLAY_OPEN)
+    .join('\\[')
+    .split(LITERAL_DISPLAY_CLOSE)
+    .join('\\]')
+    .split(LITERAL_INLINE_OPEN)
+    .join('\\(')
+    .split(LITERAL_INLINE_CLOSE)
+    .join('\\)')
+}
+
+/**
+ * Parenthesized empty delimiter labels — `($$)`, `($)`, `(\[ \])`, `(\( \))` —
+ * are documentation, not math. Grok 4.3 prompt 06 used them as bold headings;
+ * the empty `$$` opened a display span that swallowed the next real `$$…$$`
+ * plus following lists (KaTeX `' in math mode`, leftover `__UL_`).
+ *
+ * Run before display-math extraction.
+ */
+export function protectParenthesizedDelimiterExamples(text: string): string {
+  return text
+    .replace(/\(\$\$\)/g, `(${LITERAL_DOLLAR}${LITERAL_DOLLAR})`)
+    .replace(/\(\$\)/g, `(${LITERAL_DOLLAR})`)
+    .replace(/\(\\\[\s*\\\]\)/g, match =>
+      match.replace('\\[', LITERAL_DISPLAY_OPEN).replace('\\]', LITERAL_DISPLAY_CLOSE)
+    )
+    .replace(/\(\\\(\s*\\\)\)/g, match =>
+      match.replace('\\(', LITERAL_INLINE_OPEN).replace('\\)', LITERAL_INLINE_CLOSE)
+    )
 }
 
 const TABLE_ROW_RE = /^\s*\|/

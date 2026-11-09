@@ -8,6 +8,7 @@ import {
   processMarkdownLists,
   protectCurrencyDollars,
   protectEscapedDollars,
+  protectParenthesizedDelimiterExamples,
   renderBlockquoteMarkers,
   restoreInlineCode,
   restoreLiteralDollars,
@@ -57,6 +58,26 @@ describe('protectCurrencyDollars', () => {
     expect(protectCurrencyDollars('The shell variable $HOME is set. Price: $99.99.')).toBe(
       `The shell variable ${L}HOME is set. Price: ${L}99.99.`
     )
+  })
+})
+
+describe('parenthesized empty delimiter examples', () => {
+  it('literalizes ($$), ($), (\\[ \\]), and (\\( \\)) so they cannot open math spans', () => {
+    const input =
+      '**Display math ($$):**\n$$x^2$$\n**Display math (\\[ \\]):**\n\\[E=mc^2\\]\n**Inline math ($):**\n$a+b$\n**Inline math (\\( \\)):**\n\\(x=5\\)'
+    const protectedText = protectParenthesizedDelimiterExamples(input)
+    expect(protectedText).not.toContain('($$)')
+    expect(protectedText).not.toContain('($)')
+    expect(protectedText).not.toMatch(/\(\\\[\s*\\\]\)/)
+    expect(protectedText).not.toMatch(/\(\\\(\s*\\\)\)/)
+    expect(protectedText).toContain(`(${L}${L})`)
+    expect(protectedText).toContain(`(${L})`)
+    expect(restoreLiteralDollars(protectedText)).toBe(input)
+  })
+
+  it('does not rewrite real parenthesized math or currency', () => {
+    const input = '($100) and $(x^2)$ and $$E=mc^2$$ and \\[a+b\\]'
+    expect(protectParenthesizedDelimiterExamples(input)).toBe(input)
   })
 })
 

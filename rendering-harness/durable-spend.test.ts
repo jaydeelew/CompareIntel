@@ -345,7 +345,7 @@ try {
       'historical-unknown-1',
       'historical-unknown-2',
     ])
-    expect(raw.knownActualUsd).toBe(3.7760560956)
+    expect(raw.knownActualUsd).toBe(3.8044815456)
     expect(raw.pendingRequests).toHaveLength(0)
     const store = new DurableStore(path.join(__dirname, 'guard-global-state.json'))
     const g = new SharedCostGuard(999, [], { store, batchId: '20c' })

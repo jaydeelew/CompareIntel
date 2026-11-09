@@ -1,0 +1,371 @@
+{
+  "retrievedAt": "2026-11-09T03:18:18.727851Z",
+  "data": [
+    {
+      "id": "tencent/hy4-preview",
+      "canonical_slug": "tencent/hy4-preview-20260827",
+      "hugging_face_id": "tencent/Hy4-preview",
+      "name": "Tencent: Hy4 preview",
+      "created": 1787897375,
+      "description": "Tencent: Hy4 preview is a mixture-of-experts model from Tencent, with 49B active parameters out of 770B total. It is designed for coding agents, complex tool-use workflows, and productivity tasks that...",
+      "context_length": 1048576,
+      "architecture": {
+        "modality": "text->text",
+        "input_modalities": [
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Other",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.000000834",
+        "completion": "0.000002501",
+        "input_cache_read": "0.000000042",
+        "overrides": [
+          {
+            "utc_start": 0,
+            "utc_end": 1600,
+            "prompt": "0.000000834",
+            "completion": "0.000002501",
+            "input_cache_read": "0.000000042"
+          },
+          {
+            "utc_start": 1600,
+            "utc_end": 0,
+            "prompt": "0.0000007506",
+            "completion": "0.0000022509",
+            "input_cache_read": "0.0000000378"
+          }
+        ]
+      },
+      "top_provider": {
+        "context_length": 1048576,
+        "max_completion_tokens": 64000,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logit_bias",
+        "logprobs",
+        "max_completion_tokens",
+        "max_tokens",
+        "min_p",
+        "parallel_tool_calls",
+        "presence_penalty",
+        "reasoning",
+        "reasoning_effort",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "default_parameters": {},
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/tencent/hy4-preview-20260827/endpoints"
+      },
+      "endpoints": [
+        "/api/v1/chat/completions",
+        "/api/v1/completions",
+        "/api/v1/messages",
+        "/api/v1/responses"
+      ],
+      "reasoning": {
+        "mandatory": false,
+        "default_enabled": true,
+        "supported_efforts": [
+          "high",
+          "low",
+          "none"
+        ],
+        "default_effort": "high"
+      }
+    },
+    {
+      "id": "x-ai/grok-4.3",
+      "canonical_slug": "x-ai/grok-4.3-20260430",
+      "hugging_face_id": null,
+      "name": "SpaceXAI: Grok 4.3",
+      "created": 1777591821,
+      "description": "Grok 4.3 is a reasoning model from SpaceXAI. It accepts text and image inputs with text output, and is suited for agentic workflows, instruction-following tasks, and applications requiring high factual...",
+      "context_length": 1000000,
+      "architecture": {
+        "modality": "text+image+file->text",
+        "input_modalities": [
+          "text",
+          "image",
+          "file"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Grok",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.00000125",
+        "completion": "0.0000025",
+        "web_search": "0.005",
+        "input_cache_read": "0.0000002",
+        "overrides": [
+          {
+            "min_prompt_tokens": 200000,
+            "prompt": "0.0000025",
+            "completion": "0.000005",
+            "input_cache_read": "0.0000004"
+          }
+        ]
+      },
+      "top_provider": {
+        "context_length": 1000000,
+        "max_completion_tokens": 900000,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "include_reasoning",
+        "logprobs",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "seed",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_logprobs",
+        "top_p"
+      ],
+      "default_parameters": {
+        "temperature": null,
+        "top_p": null,
+        "top_k": null,
+        "frequency_penalty": null,
+        "presence_penalty": null,
+        "repetition_penalty": null
+      },
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/x-ai/grok-4.3-20260430/endpoints"
+      },
+      "endpoints": [
+        "/api/v1/chat/completions",
+        "/api/v1/completions",
+        "/api/v1/messages",
+        "/api/v1/responses"
+      ],
+      "benchmarks": {
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "agenticgamedev",
+            "elo": 955,
+            "win_rate": 28.8,
+            "rank": 25
+          },
+          {
+            "arena": "agents",
+            "category": "agentichtmlslides",
+            "elo": 1066,
+            "win_rate": 31.8,
+            "rank": 9
+          },
+          {
+            "arena": "agents",
+            "category": "agenticslides",
+            "elo": 1072,
+            "win_rate": 31.9,
+            "rank": 9
+          },
+          {
+            "arena": "agents",
+            "category": "agenticslides(html)",
+            "elo": 1066,
+            "win_rate": 31.7,
+            "rank": 9
+          },
+          {
+            "arena": "agents",
+            "category": "agenticslides(python-pptx)",
+            "elo": 1068,
+            "win_rate": 32.4,
+            "rank": 9
+          },
+          {
+            "arena": "agents",
+            "category": "androidnative",
+            "elo": 963,
+            "win_rate": 22.9,
+            "rank": 43
+          },
+          {
+            "arena": "agents",
+            "category": "blender3d",
+            "elo": 807,
+            "win_rate": 15.5,
+            "rank": 25
+          },
+          {
+            "arena": "agents",
+            "category": "codetovideo",
+            "elo": 917,
+            "win_rate": 18.7,
+            "rank": 22
+          },
+          {
+            "arena": "agents",
+            "category": "fullstack",
+            "elo": 991,
+            "win_rate": 28,
+            "rank": 41
+          },
+          {
+            "arena": "agents",
+            "category": "godotgamedev",
+            "elo": 930,
+            "win_rate": 22.4,
+            "rank": 36
+          },
+          {
+            "arena": "agents",
+            "category": "htmlslides",
+            "elo": 905,
+            "win_rate": 28.6,
+            "rank": 25
+          },
+          {
+            "arena": "agents",
+            "category": "mobileapps",
+            "elo": 1056,
+            "win_rate": 33,
+            "rank": 47
+          },
+          {
+            "arena": "agents",
+            "category": "pdf",
+            "elo": 948,
+            "win_rate": 20.9,
+            "rank": 26
+          },
+          {
+            "arena": "agents",
+            "category": "pptxslides",
+            "elo": 1071,
+            "win_rate": 32.5,
+            "rank": 8
+          },
+          {
+            "arena": "agents",
+            "category": "python-pptxslides",
+            "elo": 1072,
+            "win_rate": 30.8,
+            "rank": 28
+          },
+          {
+            "arena": "agents",
+            "category": "spreadsheet",
+            "elo": 978,
+            "win_rate": 29.3,
+            "rank": 28
+          },
+          {
+            "arena": "agents",
+            "category": "webapps",
+            "elo": 1111,
+            "win_rate": 42.6,
+            "rank": 37
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1115,
+            "win_rate": 40.7,
+            "rank": 87
+          },
+          {
+            "arena": "models",
+            "category": "asciiart",
+            "elo": 1124,
+            "win_rate": 42.5,
+            "rank": 55
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1182,
+            "win_rate": 43.4,
+            "rank": 67
+          },
+          {
+            "arena": "models",
+            "category": "dataviz",
+            "elo": 1178,
+            "win_rate": 45,
+            "rank": 67
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1167,
+            "win_rate": 42.5,
+            "rank": 69
+          },
+          {
+            "arena": "models",
+            "category": "svg",
+            "elo": 1078,
+            "win_rate": 36.7,
+            "rank": 73
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1188,
+            "win_rate": 44.9,
+            "rank": 67
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1192,
+            "win_rate": 43.9,
+            "rank": 69
+          }
+        ],
+        "artificial_analysis": {
+          "intelligence_index": null,
+          "coding_index": 42.2,
+          "agentic_index": 15.5
+        }
+      },
+      "reasoning": {
+        "mandatory": false,
+        "default_enabled": true,
+        "supported_efforts": [
+          "high",
+          "medium",
+          "low",
+          "none"
+        ],
+        "default_effort": "low"
+      }
+    }
+  ]
+}

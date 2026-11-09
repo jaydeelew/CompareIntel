@@ -146,6 +146,17 @@ test.describe('Source feature detection vs renderer loss', () => {
     expect(rendered.assertions.some(a => a.status === 'fail')).toBe(false)
   })
 
+  test('parenthesized empty \\[ \\] delimiter labels are not leftover display math', () => {
+    const source = '**Display math (\\[ \\]):**\n\\[E = mc^2\\]\n'
+    const result = validateRenderedHTML(
+      '<div><strong>Display math (\\[ \\]):</strong><span class="katex-display"><span class="katex-html">E=mc^2</span></span></div>',
+      { noKatexErrors: true, displayMath: true },
+      source
+    )
+    expect(result.pass).toBe(true)
+    expect(result.assertions.some(a => /leftover \\\[/.test(a.message))).toBe(false)
+  })
+
   test('leftover visible \\[ fails even when \\begin{cases} was consumed', () => {
     const source = '$$\\begin{cases}\nx^2 & x \\ge 0,\\\\[6pt]\n-x & x < 0.\n\\end{cases}$$'
     const leftover = validateRenderedHTML(
