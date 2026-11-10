@@ -177,6 +177,25 @@ async function main() {
       2
     )
   )
+  if (phoneFailures.length > 0 || darkFailures.length > 0 || errors.length > 0) {
+    if (phoneFailures.length > 0) {
+      console.error('Phone failures (first 12):')
+      for (const row of phoneFailures.slice(0, 12)) {
+        for (const issue of row.issues) {
+          console.error(`  ${row.modelId} ${row.promptName} [${issue.kind}] ${issue.detail}`)
+        }
+      }
+    }
+    if (darkFailures.length > 0) {
+      console.error('Dark failures (first 12):')
+      for (const row of darkFailures.slice(0, 12)) {
+        for (const issue of row.issues) {
+          console.error(`  ${row.modelId} ${row.promptName} [${issue.kind}] ${issue.detail}`)
+        }
+      }
+    }
+    process.exit(1)
+  }
 }
 
 main().catch(error => {

@@ -66,6 +66,8 @@ jobs:
               - 'frontend/src/config/model_renderer_configs.json'
               - 'frontend/src/config/loadModelConfigs.ts'
               - 'frontend/src/utils/latex/**'
+              - 'frontend/src/utils/__tests__/referenceCorpus.test.tsx'
+              - 'frontend/src/utils/__tests__/renderingAudit/**'
               - '.github/workflows/ci.yml'
             seo:
               - 'frontend/public/sitemap.xml'
@@ -1064,16 +1066,38 @@ jobs:
           npx playwright test production-validation.test.ts
           npx playwright test production-styling.test.ts
           npx playwright test mobile-katex-overflow.test.ts
+          npx playwright test layout-checks.test.ts
+          npx playwright test results-section-overflow.test.ts
+          npx playwright test saved-cells.test.ts
           npx playwright test dom-assertions.test.ts
           npx playwright test rare-formats.test.ts
-          npx playwright test layout-checks.test.ts
           npx playwright test section-slice.test.ts
-          npx playwright test saved-cells.test.ts
           npx playwright test test-with-fixtures.test.ts
 
       - name: Run full offline fixture suite
         working-directory: rendering-harness
         run: npm test
+
+      - name: Full-corpus reference comparison
+        working-directory: frontend
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: |
+          start=$(date +%s)
+          pids=()
+          # Vitest --shard splits files, and this comparison is one file, so
+          # each process filters to one of the four cases inside it.
+          for shard in 0 1 2 3; do
+            npx vitest run src/utils/__tests__/referenceCorpus.test.tsx -t "shard ${shard}" --reporter=verbose &
+            pids+=("$!")
+          done
+          fail=0
+          for pid in "${pids[@]}"; do
+            wait "$pid" || fail=1
+          done
+          end=$(date +%s)
+          echo "reference corpus wall clock: $((end - start))s"
+          exit "$fail"
 
       - name: Upload test results
         if: failure()
@@ -1092,6 +1116,44 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: harness-layout-evidence
+          path: rendering-harness/layout-audit/
+          retention-days: 14
+
+  layout-audit-optional:
+    name: Layout audit (optional, render-only)
+    needs: detect-changes
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            rendering-harness/package-lock.json
+            frontend/package-lock.json
+      - name: Install harness dependencies
+        working-directory: rendering-harness
+        run: npm ci
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright browsers
+        working-directory: rendering-harness
+        run: npx playwright install chromium --with-deps
+      - name: Phone and dark layout audit
+        working-directory: rendering-harness
+        run: npm run layout-audit
+      - name: Upload layout audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-layout-audit
           path: rendering-harness/layout-audit/
           retention-days: 14
 

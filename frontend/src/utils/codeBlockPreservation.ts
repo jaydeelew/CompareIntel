@@ -38,6 +38,79 @@ export interface CodeBlockExtraction {
   placeholderMap: Map<string, CodeBlock>
 }
 
+function linePrefix(text: string, index: number): string {
+  const lineStart = text.lastIndexOf('\n', index - 1) + 1
+  return text.slice(lineStart, index)
+}
+
+/** Line-start fence (≤3 spaces) or mid-paragraph prose before ```. */
+function isFenceOpenerPrefix(prefix: string): boolean {
+  if (/^[ \t]{0,3}$/.test(prefix)) return true
+  if (/^[ \t]{4,}$/.test(prefix)) return false
+  if (/^[ \t]{0,3}(?:>[ \t]*)+$/.test(prefix)) return false
+  return /\S/.test(prefix)
+}
+
+function extractFencedCodeBlocks(
+  text: string,
+  blocks: CodeBlock[],
+  placeholderMap: Map<string, CodeBlock>,
+  nextPlaceholder: () => string
+): string {
+  let cursor = 0
+  let out = ''
+  while (cursor < text.length) {
+    const tick = text.indexOf('```', cursor)
+    if (tick === -1) {
+      out += text.slice(cursor)
+      break
+    }
+    const prefix = linePrefix(text, tick)
+    if (!isFenceOpenerPrefix(prefix)) {
+      out += text.slice(cursor, tick + 3)
+      cursor = tick + 3
+      continue
+    }
+    // Line-start fences keep PR 216's "rest of the line is the info string"
+    // so ````markdown` is one opener. Mid-paragraph openers (Llama 3.3) may
+    // only have a language token before the newline — prose after ``` is not a fence.
+    const lineStartFence = /^[ \t]{0,3}$/.test(prefix)
+    const openerRe = lineStartFence
+      ? /^```([a-zA-Z0-9+#-]*)[^\n]*\n/
+      : /^```([a-zA-Z0-9+#-]*)[ \t]*\n/
+    const opener = openerRe.exec(text.slice(tick))
+    if (!opener) {
+      out += text.slice(cursor, tick + 3)
+      cursor = tick + 3
+      continue
+    }
+    const closerRe = /^[ \t]{0,3}```/gm
+    closerRe.lastIndex = tick + opener[0].length
+    const closer = closerRe.exec(text)
+    if (!closer) {
+      out += text.slice(cursor, tick + 3)
+      cursor = tick + 3
+      continue
+    }
+    const content = text.slice(tick + opener[0].length, closer.index)
+    const lang = (opener[1] || '').trim()
+    const placeholder = nextPlaceholder()
+    const block: CodeBlock = {
+      id: `block-${blocks.length}`,
+      language: lang,
+      content: content.replace(/^\n+|\n+$/g, ''),
+      startIndex: tick,
+      endIndex: closer.index + closer[0].length,
+      placeholder,
+    }
+    blocks.push(block)
+    placeholderMap.set(placeholder, block)
+    out += text.slice(cursor, tick) + placeholder
+    cursor = closer.index + closer[0].length
+  }
+  return out
+}
+
 /**
  * Extract all code blocks from text and replace with placeholders
  *
@@ -57,29 +130,18 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
   let processed = text
   let blockCounter = 0
 
-  // CommonMark fenced blocks start a line (0–3 spaces) and need a newline
-  // after the opener. Inline ``` ``` in a table cell is a code span, not a fence
-  // (GLM 5.3 06: `| `` ``` ``` blocks |`).
-  const fencedBlockRegex = /^[ \t]{0,3}```([a-zA-Z0-9+#-]*)[^\n]*\n([\s\S]*?)^[ \t]{0,3}```/gm
-
-  processed = processed.replace(fencedBlockRegex, (match, language, content, offset) => {
-    const lang = (language || '').trim() // Keep empty if no language specified
-    const cleanContent = content.replace(/^\n+|\n+$/g, '') // Remove leading/trailing newlines
-
+  // A fenced block needs a newline after the info string and a closer at the
+  // start of a line (0–3 spaces). The opener may sit mid-paragraph when the
+  // rest of that line is only the info string (`The code block ```python`),
+  // which is how Llama 3.3 70B wrote prompt 06. Not a fence:
+  // - same-line `` ``` ``` `` (table cell bug 27)
+  // - prose after the opener (`Use ``` for fences`)
+  // - a 4-space indent (that closer cannot be a 0–3 space fence, so treating
+  //   it as an opener swallows the next real fence and the math after it)
+  // - a blockquote marker alone (`> ```python`), whose closer is `> ``` `
+  processed = extractFencedCodeBlocks(processed, blocks, placeholderMap, () => {
     const placeholder = `__CODE_BLOCK_${blockCounter}__`
-    const block: CodeBlock = {
-      id: `block-${blockCounter}`,
-      language: lang,
-      content: cleanContent,
-      startIndex: offset,
-      endIndex: offset + match.length,
-      placeholder,
-    }
-
-    blocks.push(block)
-    placeholderMap.set(placeholder, block)
     blockCounter++
-
     return placeholder
   })
 

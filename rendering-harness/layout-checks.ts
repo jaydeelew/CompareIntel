@@ -34,7 +34,8 @@ export function collectLayoutIssues(mode: string): LayoutIssue[] {
   const sampleOf = (el: Element): string => (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 120)
 
   const pageRight = document.documentElement.clientWidth
-  const intendedSelector = '.markdown-table-scroll, .code-block-direct, .preformatted-text, pre, .katex-display'
+  const intendedSelector =
+    '.markdown-table-scroll, .code-block-direct, .preformatted-text, pre, .katex-display, code.inline-code'
   const absorbs = (host: Element): boolean => {
     if (!host.matches(intendedSelector)) return false
     const overflow = getComputedStyle(host).overflowX
@@ -47,7 +48,31 @@ export function collectLayoutIssues(mode: string): LayoutIssue[] {
     let node: Element | null = el.parentElement
     while (node && node !== document.documentElement) {
       if (absorbs(node)) return true
+      if (node instanceof HTMLElement) {
+        const ox = getComputedStyle(node).overflowX
+        if (
+          (ox === 'auto' || ox === 'scroll' || ox === 'overlay') &&
+          node.scrollWidth > node.clientWidth + 4
+        ) {
+          const box = node.getBoundingClientRect()
+          if (box.left >= -1.5 && box.right <= pageRight + 1.5) return true
+        }
+      }
       node = node.parentElement
+    }
+    return false
+  }
+
+  const hostsWideScrollers = (host: Element): boolean => {
+    for (const child of host.querySelectorAll(intendedSelector)) {
+      if (!(child instanceof HTMLElement)) continue
+      const ox = getComputedStyle(child).overflowX
+      if (
+        (ox === 'auto' || ox === 'scroll' || ox === 'overlay') &&
+        child.scrollWidth > child.clientWidth + 4
+      ) {
+        return true
+      }
     }
     return false
   }
@@ -70,6 +95,8 @@ export function collectLayoutIssues(mode: string): LayoutIssue[] {
     if (!sticksOut && !contentWider) continue
     if (insideAbsorber(el)) continue
     if (absorbs(el)) continue
+    if (el.tagName === 'CODE' && el.closest('pre, .code-block, .code-block-direct')) continue
+    if (contentWider && !sticksOut && hostsWideScrollers(el)) continue
     const key = `${el.tagName}:${Math.round(rect.left)}:${sampleOf(el).slice(0, 40)}`
     if (seenOverflow.has(key)) continue
     seenOverflow.add(key)

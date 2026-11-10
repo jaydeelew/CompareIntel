@@ -10,6 +10,12 @@ function isInterruptingBlock(line: string): boolean {
   const t = line.trim()
   if (!t) return true
   if (ANY_LIST_ITEM_RE.test(line)) return true
+  if (isStructuralInterrupt(line)) return true
+  return false
+}
+
+function isStructuralInterrupt(line: string): boolean {
+  const t = line.trim()
   if (/^#{1,6}(?:\s|$)/.test(t)) return true
   if (/^```/.test(t)) return true
   if (/^(?:-{3,}|\*{3,}|_{3,})\s*$/.test(t)) return true
@@ -19,20 +25,92 @@ function isInterruptingBlock(line: string): boolean {
   return false
 }
 
+function lineIndent(line: string): number {
+  return line.match(/^[ \t]*/)![0].length
+}
+
 /**
  * Fold lazily indented continuation lines into the bullet item above them, e.g.
  * `- Calculate:  ` followed by `     $c = 5$`. A trailing double space keeps the line break.
  * An indented display-math block joins the bullet above it even at the bullet's own indent
  * (`   - Find c:` / `   \[ … \]` / `   - Therefore …`), so it doesn't split the list.
  */
-function mergeBulletContinuationLines(text: string): string {
+/** Fold a following display-math placeholder into the list item above it. */
+function mergeDisplayMathIntoListItems(text: string): string {
+  const lines = text.split('\n')
   const out: string[] = []
-  for (const line of text.split('\n')) {
+  for (let i = 0; i < lines.length; i++) {
+    const marker = lines[i].match(/^([ \t]*)(?:[-*•]|\d+[.)])[ \t]+\S/)
+    if (!marker) {
+      out.push(lines[i])
+      continue
+    }
+    let combined = lines[i]
+    let j = i + 1
+    while (j < lines.length && DISPLAY_MATH_LINE_RE.test(lines[j])) {
+      const aheadIndent = lineIndent(lines[j])
+      if (aheadIndent < marker[1].length) break
+      combined += ' ' + lines[j].trim()
+      j++
+    }
+    out.push(combined)
+    i = j - 1
+  }
+  return out.join('\n')
+}
+
+function mergeBulletContinuationLines(text: string): string {
+  const lines = text.split('\n')
+  const out: string[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
     const previous = out[out.length - 1]
     const bullet = previous?.match(BULLET_ITEM_RE)
-    const indent = line.match(/^[ \t]*/)![0].length
+    const indent = lineIndent(line)
     if (bullet && indent > 0 && indent >= bullet[1].length && DISPLAY_MATH_LINE_RE.test(line)) {
-      out[out.length - 1] = previous.trimEnd() + ' ' + line.trim()
+      const separator = / {2,}$/.test(previous) ? '<br>' : ' '
+      out[out.length - 1] = previous.trimEnd() + separator + line.trim()
+      continue
+    }
+    // A blank line does not end the item when the next non-blank line is still
+    // indented under the bullet (display math or the sentence after it).
+    // CommonMark keeps `- The equation is:` / blank / `$$` / blank / `And it…`
+    // / `- Third` as one list. Column-0 text, a sibling marker, or a heading
+    // still ends it.
+    if (bullet && line.trim() === '') {
+      let k = i + 1
+      while (k < lines.length && lines[k].trim() === '') k++
+      const ahead = lines[k]
+      const markerIndent = bullet[1].length
+      if (ahead) {
+        const aheadIndent = lineIndent(ahead)
+        const sibling = ANY_LIST_ITEM_RE.test(ahead) && aheadIndent <= markerIndent
+        const underBullet =
+          aheadIndent > markerIndent &&
+          aheadIndent < markerIndent + 4 &&
+          !sibling &&
+          !isStructuralInterrupt(ahead)
+        if (underBullet) {
+          i = k - 1
+          continue
+        }
+      }
+      out.push(line)
+      continue
+    }
+    // Prose after an indented display-math placeholder still belongs to the
+    // bullet. The placeholder would otherwise look like a new block and the
+    // following sentence would split the list.
+    if (
+      bullet &&
+      line.trim() &&
+      indent > bullet[1].length &&
+      !ANY_LIST_ITEM_RE.test(line) &&
+      !isStructuralInterrupt(line) &&
+      !BLOCK_PLACEHOLDER_RE.test(line)
+    ) {
+      const separator = / {2,}$/.test(previous) ? '<br>' : ' '
+      out[out.length - 1] = previous.trimEnd() + separator + line.trim()
       continue
     }
     if (
@@ -103,6 +181,10 @@ export function processMarkdownLists(text: string): string {
   }
 
   processed = mergeBulletContinuationLines(processed)
+  // A `$$` / `\[` block on the next line is still inside the list item
+  // (markdown-it lazy continuation). Replacing it with a column-0
+  // `__DISPLAY_MATH_n__` would otherwise end the list.
+  processed = mergeDisplayMathIntoListItems(processed)
 
   processed = processed.replace(/^- \[([ x])\] (.+)$/gm, (_, checked, text) => {
     const isChecked = checked === 'x'
@@ -129,7 +211,7 @@ export function processMarkdownLists(text: string): string {
   })
 
   processed = processed.replace(
-    /^([ \t]*)(\d+)\.[ \t]+(.+?)$/gm,
+    /^([ \t]*)(\d+)[.)][ \t]+(.+?)$/gm,
     (_match, indent, num, content) => {
       const level = indent.length
       const processedContent = processListContent(content)
@@ -168,6 +250,24 @@ export function processMarkdownLists(text: string): string {
   return processed
 }
 
+/**
+ * A display formula after the item's words must not be `:first-child`.
+ * That selector (and the `<br>` + formula rule) drops the top margin, which
+ * is only right when the formula itself starts the item.
+ */
+function separateLeadingProse(content: string): string {
+  // List HTML is built after KaTeX, so the formula is already a display span.
+  // Placeholders remain when this runs on the pre-render list pass.
+  const marker = content.search(/__DISPLAY_MATH_\d+__|<span class="katex-display"/)
+  if (marker <= 0) return content
+  const lead = content.slice(0, marker)
+  if (!lead.trim()) return content
+  // Keep one space before the formula. trimEnd() glued "formula:" to the math.
+  const prose = lead.replace(/[ \t]+$/, '')
+  const spacer = /[ \t]$/.test(lead) ? ' ' : ''
+  return `<span class="list-item-text">${prose}${spacer}</span>${content.slice(marker)}`
+}
+
 interface ListItem {
   tag: 'ul' | 'ol'
   indent: number
@@ -196,7 +296,7 @@ function buildListHTML(items: ListItem[]): string {
     } else {
       html += '</li>'
     }
-    const content = item.content.trim()
+    const content = separateLeadingProse(item.content.trim())
     html += item.tag === 'ol' ? `<li value="${item.num}">${content}` : `<li>${content}`
   }
   while (stack.length > 0) {

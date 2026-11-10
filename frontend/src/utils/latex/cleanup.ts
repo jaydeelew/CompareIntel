@@ -99,7 +99,8 @@ export function cleanMalformedContent(
   }
   cleaned = cleaned.replace(/\(MDPH\d+\)/g, '')
   cleaned = cleaned.replace(/\{MDPH\d+\}/g, '')
-  cleaned = cleaned.replace(/([^\n])\s*---+\s*(?=\S)/g, '$1 ')
+  // Only a `---` glued to a leftover placeholder. A prose "---" is text;
+  // a line of dashes is already a thematic break.
   cleaned = cleaned.replace(/(MDPH\d+)\s*---+\s*(?=\S)/g, '$1 ')
 
   if (preprocessOpts.customPreprocessors) {

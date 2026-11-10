@@ -305,6 +305,42 @@ export function extractInlineCode(text: string): InlineCodeExtraction {
   return { text: textOut, spans }
 }
 
+/**
+ * CommonMark backslash-escapes in prose. Already-rendered KaTeX (including
+ * its annotation source) is left untouched: `\-` inside `\\-c` is a TeX row
+ * break plus a sign, not a markdown escape. Running this over the annotation
+ * turned `\\-c` into `\-c` (gpt-6.1-terra 04 display matrix).
+ */
+export function unescapeMarkdownEscapesOutsideKatex(html: string): string {
+  const unescapeChunk = (chunk: string) => chunk.replace(/\\([`*_#+\-.!|[\]()])/g, '$1')
+  let out = ''
+  let i = 0
+  while (i < html.length) {
+    const next = html.indexOf('<span class="katex', i)
+    if (next === -1) {
+      out += unescapeChunk(html.slice(i))
+      break
+    }
+    out += unescapeChunk(html.slice(i, next))
+    const end = endOfSpan(html, next)
+    out += html.slice(next, end)
+    i = end
+  }
+  return out
+}
+
+function endOfSpan(html: string, start: number): number {
+  const re = /<(\/?)span\b[^>]*>/g
+  re.lastIndex = start
+  let depth = 0
+  let match: RegExpExecArray | null
+  while ((match = re.exec(html))) {
+    depth += match[1] === '/' ? -1 : 1
+    if (depth === 0) return match.index + match[0].length
+  }
+  return html.length
+}
+
 export function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }

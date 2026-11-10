@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
-import { renderReferenceHtml } from './reference'
+import { normalizeComparableTex, renderReferenceHtml } from './reference'
 import { signatureFromHtml } from './signature'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -62,5 +62,31 @@ describe('independent reference', () => {
     expect(sig.codeSpans).toContain('|')
     expect(sig.codeSpans.some(s => s.includes('\\|'))).toBe(false)
     expect(sig.tableCells[0]?.some(c => c.includes('| conflicts'))).toBe(true)
+  })
+
+  it('treats blockquote markers inside display math as the same formula', () => {
+    const ours = String.raw`\begin{aligned} > x + y &= 5 \\ > 2x - y &= 1 > \end{aligned}`
+    const ref = String.raw`\begin{aligned} x + y &= 5 \\ 2x - y &= 1 \end{aligned}`
+    expect(normalizeComparableTex(ours)).toBe(normalizeComparableTex(ref))
+    expect(normalizeComparableTex('> C(q)=100+5q >')).toBe('C(q)=100+5q')
+    expect(normalizeComparableTex(String.raw`\|\mathbf{x}\|_2`)).toBe(String.raw`|\mathbf{x}|_2`)
+  })
+
+  it('keeps $...$ as a label so the following example stays math', () => {
+    const html = renderReferenceHtml('Inline math uses $...$ (e.g., $a^2 + b^2 = c^2$).')
+    const sig = signatureFromHtml(html)
+    expect(sig.texSources.some(t => /a\^2/.test(t))).toBe(true)
+    expect(sig.texSources.some(t => t.includes('e.g'))).toBe(false)
+    expect(sig.visibleText).toContain('$...$')
+  })
+
+  it('does not swallow a code span when a prose $ comes first', () => {
+    const html = renderReferenceHtml(
+      'Matching the end of a line uses $, like `^foo$`, while $x^2$.'
+    )
+    const sig = signatureFromHtml(html)
+    expect(sig.texSources.some(t => t.includes('foo'))).toBe(false)
+    expect(sig.texSources.some(t => /x\^2/.test(t))).toBe(true)
+    expect(sig.codeSpans.some(s => s.includes('^foo'))).toBe(true)
   })
 })

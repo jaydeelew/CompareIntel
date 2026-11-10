@@ -23,6 +23,7 @@
     "layout-audit.ts",
     "triage.ts",
     "before-after.ts",
+    "phone-stack-shot.ts",
     "render-ready.ts",
     "coverage-lib.ts",
     "generate-coverage.ts",

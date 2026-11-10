@@ -55,7 +55,7 @@ class ConfigGenerator:
                 "name": "single-dollar",
             },
             "bracket": {"pattern": r"/\\\[\s*([\s\S]*?)\s*\\\]/g", "name": "bracket"},
-            "paren": {"pattern": r"/\\\(\s*([^\\]*?)\s*\\\)/g", "name": "paren"},
+            "paren": {"pattern": r"/\\\(\s*([\s\S]*?)\s*\\\)/g", "name": "paren"},
             "align-env": {
                 "pattern": r"/\\begin\{align\}([\s\S]*?)\\end\{align\}/g",
                 "name": "align-env",

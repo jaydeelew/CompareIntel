@@ -509,6 +509,16 @@ describe('bug 22: hyphenated prose (Non-Math) is not implicit math', () => {
     expect(visibleText(el)).toContain('$5')
     expect(visibleText(el)).toContain('$10')
   })
+
+  it('does not wrap a parenthetical hyphen run (---) as KaTeX', () => {
+    const el = renderReply(
+      'Horizontal rules (---) separate sections while keeping inline math intact.',
+      GPT_MINI
+    )
+    expectNoKatexErrors(el)
+    expect(visibleText(el)).toContain('(---)')
+    expect(texSources(el).some(t => t.includes('---') || t === '-')).toBe(false)
+  })
 })
 
 describe('bug 19: (U+00B2) code-point notes are not implicit math', () => {
@@ -783,6 +793,53 @@ describe('bug 29: parenthesized ($$) / ($ ) / (\\[ \\]) labels are not math (Gro
       expect(visibleText(el)).not.toMatch(/Inline math \(\\\(/)
     }
   )
+
+  it('keeps a blank line around display math inside one bullet list', () => {
+    const el = renderReply(
+      [
+        '1. Display math in a list with continuation:',
+        '   - First item',
+        '   - The equation is:',
+        '',
+        '     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$',
+        '',
+        '     And it evaluates to 0.5',
+        '   - Third item',
+      ].join('\n'),
+      'anthropic/claude-fable-5'
+    )
+    const lists = Array.from(el.querySelectorAll('ul, ol')).filter(
+      node => !node.closest('.katex, pre, code')
+    )
+    expect(lists.map(node => node.tagName.toLowerCase())).toEqual(['ol', 'ul'])
+    const items = Array.from(lists[1].querySelectorAll(':scope > li')).map(li =>
+      (li.textContent || '').replace(/\s+/g, ' ').trim()
+    )
+    expect(items).toHaveLength(3)
+    expect(items[0]).toContain('First item')
+    expect(items[1]).toContain('evaluates to 0.5')
+    expect(items[2]).toContain('Third item')
+  })
+
+  it('keeps column-0 display math inside one ordered list', () => {
+    const el = renderReply(
+      [
+        '1. **Inline math**: $x = 1$',
+        '2. **Display math with aligned equations**:',
+        '$$',
+        'E = mc^2',
+        '$$',
+        '3. **Matrices**:',
+        '$$I = 1$$',
+      ].join('\n'),
+      'openai/gpt-5.3-codex'
+    )
+    const lists = Array.from(el.querySelectorAll('ol')).filter(node => !node.closest('.katex'))
+    expect(lists).toHaveLength(1)
+    expect(lists[0].querySelectorAll(':scope > li')).toHaveLength(3)
+    expect(lists[0].textContent).toContain('Matrices')
+    expect(el.querySelectorAll('.katex-display').length).toBeGreaterThanOrEqual(2)
+  })
 })
 
 describe('bug 28: array row-skip \\[6pt] is not a display-math delimiter', () => {
@@ -848,14 +905,26 @@ describe('bug 11: display math at a bullet’s indent stays inside the list', ()
     expect(el.querySelector('h2:last-of-type')?.textContent).toBe('Scenario 2: Tables with Math')
   })
 
-  it('leaves unindented display math after a bullet outside the list', () => {
+  it('wraps item prose so a following display formula is not :first-child', () => {
+    const el = renderReply('3. Matrices and cases  \n   $$\n   I = 1\n   $$\n', 'openai/o3')
+    expectNoKatexErrors(el)
+    const li = el.querySelector('li')
+    expect(li?.querySelector('.list-item-text')?.textContent).toContain('Matrices and cases')
+    expect(li?.firstElementChild?.classList.contains('katex-display')).toBe(false)
+    expect(li?.querySelector(':scope > .katex-display')).not.toBeNull()
+  })
+
+  it('keeps a column-0 display formula in the bullet when the next line is not blank', () => {
     const el = renderReply(
       'Consider the function defined as \\(f(x) = x^2\\):\n- Evaluating this function at \\(x = 5\\):\n\\[\nf(5) = 5^2 = 25\n\\]\n\nThis response captures the concepts.',
       GPT_MINI
     )
     expectNoKatexErrors(el)
-    expect(el.querySelector('li .katex-display')).toBeNull()
+    const display = el.querySelector('li .katex-display')
+    expect(display).not.toBeNull()
+    expect(texSources(display!)).toEqual(['f(5) = 5^2 = 25'])
     expect(el.querySelectorAll('.katex-display')).toHaveLength(1)
+    expect(el.textContent).toContain('This response captures the concepts.')
   })
 })
 
