@@ -61,7 +61,7 @@ class ResponseAnalyzer:
             ],
             "inline": [
                 (r"(?<!\$)\$([^\$\n]+?)\$(?!\$)", "single-dollar"),
-                (r"\\\(\s*([^\\]*?)\s*\\\)", "paren"),
+                (r"\\\(\s*([\s\S]*?)\s*\\\)", "paren"),
                 (r"<math[^>]*>([\s\S]*?)</math>", "mathml-inline"),
             ],
         }

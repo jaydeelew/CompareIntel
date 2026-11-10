@@ -47,6 +47,7 @@ import {
   preserveEquationLineBreaks,
   preserveMathLineBreaks,
   sortMathDelimiters,
+  normalizeInlineMathDelimiters,
   isInsideRenderedMathHtml,
   collapseDoubleEscapedDelimiters,
   safeRenderKatex,
@@ -63,6 +64,7 @@ import {
   restoreInlineCode,
   renderInlineCodeSpan,
   unescapeGfmTableCellCodePipes,
+  unescapeMarkdownEscapesOutsideKatex,
 } from '../utils/latex'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
 
@@ -119,7 +121,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
   const mathRendererConfig = useMemo(
     () => ({
       displayMathDelimiters: config.displayMathDelimiters,
-      inlineMathDelimiters: config.inlineMathDelimiters,
+      inlineMathDelimiters: normalizeInlineMathDelimiters(config.inlineMathDelimiters),
       katexOptions: config.katexOptions,
     }),
     [config]
@@ -572,11 +574,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Handle single parentheses/braces as fallback
     converted = converted.replace(/\(MDPH\d+\)/g, '')
     converted = converted.replace(/\{MDPH\d+\}/g, '')
-    // Remove any trailing --- that might follow placeholders (but NOT standalone horizontal rules)
-    // Only match --- that's on the same line as content, not standalone --- on their own lines
-    // Pattern: content followed by whitespace and --- (not a standalone line)
-    converted = converted.replace(/([^\n])\s*---+\s*(?=\S)/g, '$1 ')
-    // Also remove --- that's immediately after placeholders on the same line
+    // A `---` glued to a leftover placeholder is not a thematic break.
+    // Prose such as `the "---" separator` must stay text; line-start rules
+    // already turn a real break into `<hr>`.
     converted = converted.replace(/(MDPH\d+)\s*---+\s*(?=\S)/g, '$1 ')
 
     return converted
@@ -765,7 +765,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Stage 0.6: Extract inline math blocks BEFORE any processing
         // This protects inline math content from being modified by preprocessing stages
-        const inlineMathExtraction = extractInlineMath(processed, config.inlineMathDelimiters)
+        const inlineMathExtraction = extractInlineMath(
+          processed,
+          mathRendererConfig.inlineMathDelimiters
+        )
         processed = inlineMathExtraction.text
         processed = unescapeLeftoverBracketParenDelimiters(processed)
 
@@ -883,7 +886,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks)
 
         // Render the restored inline math (using model-specific delimiters)
-        const inlineDelimiters = [...config.inlineMathDelimiters].sort((a, b) => {
+        const inlineDelimiters = [...mathRendererConfig.inlineMathDelimiters].sort((a, b) => {
           const priorityA = a.priority ?? 999
           const priorityB = b.priority ?? 999
           return priorityA - priorityB
@@ -966,7 +969,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Final cleanup - only unescape markdown characters, not LaTeX commands
         // Don't remove backslashes that are part of LaTeX commands
-        processed = processed.replace(/\\([`*_#+\-.!|[\]()])/g, '$1')
+        processed = unescapeMarkdownEscapesOutsideKatex(processed)
 
         // Render any remaining \\( \\) delimited math (double-escaped variant)
         processed = processed.replace(/\\\\\(\s*([\s\S]*?)\s*\\\\\)/g, (_match, math) => {

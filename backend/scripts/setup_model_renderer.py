@@ -266,7 +266,7 @@ class ModelRendererSetup:
             ],
             "inline": [
                 (r"(?<!\$)\$([^\$\n]+?)\$(?!\$)", "single-dollar"),
-                (r"\\\(\s*([^\\]*?)\s*\\\)", "paren"),
+                (r"\\\(\s*([\s\S]*?)\s*\\\)", "paren"),
                 (r"<math[^>]*>([\s\S]*?)</math>", "mathml-inline"),
             ],
         }
@@ -449,7 +449,7 @@ class ModelRendererSetup:
                 "name": "single-dollar",
             },
             "bracket": {"pattern": r"/\\\[\s*([\s\S]*?)\s*\\\]/g", "name": "bracket"},
-            "paren": {"pattern": r"/\\\(\s*([^\\]*?)\s*\\\)/g", "name": "paren"},
+            "paren": {"pattern": r"/\\\(\s*([\s\S]*?)\s*\\\)/g", "name": "paren"},
             "align-env": {
                 "pattern": r"/\\begin\{align\}([\s\S]*?)\\end\{align\}/g",
                 "name": "align-env",

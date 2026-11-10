@@ -77,6 +77,9 @@ export function convertImplicitMath(text: string): string {
     // Hyphenated prose labels like (Non-Math) match looksMathematical only
     // because `-` is an operator (Mistral Medium 01: KaTeX `\Non`).
     if (/^[A-Za-z]{2,}(?:-[A-Za-z]{2,})+$/.test(trimmed)) return _match
+    // A parenthetical run of hyphens is a prose dash, not an expression
+    // (gpt-5-mini 05: "Horizontal rules (---) separate sections").
+    if (/^-+$/.test(trimmed)) return _match
 
     if (
       /^[a-zA-Z0-9]$/.test(trimmed) ||

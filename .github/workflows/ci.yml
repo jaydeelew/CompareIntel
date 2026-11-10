@@ -63,6 +63,9 @@ jobs:
               - 'frontend/src/config/modelRendererRegistry.ts'
               - 'frontend/src/config/model_renderer_configs.json'
               - 'frontend/src/config/loadModelConfigs.ts'
+              - 'frontend/src/utils/latex/**'
+              - 'frontend/src/utils/__tests__/referenceCorpus.test.tsx'
+              - 'frontend/src/utils/__tests__/renderingAudit/**'
               - '.github/workflows/ci.yml'
             seo:
               - 'frontend/public/sitemap.xml'
@@ -1044,6 +1047,27 @@ jobs:
       - name: Run full offline fixture suite
         working-directory: rendering-harness
         run: npm test
+
+      - name: Full-corpus reference comparison
+        working-directory: frontend
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: |
+          start=$(date +%s)
+          pids=()
+          # Vitest --shard splits files, and this comparison is one file, so
+          # each process filters to one of the four cases inside it.
+          for shard in 0 1 2 3; do
+            npx vitest run src/utils/__tests__/referenceCorpus.test.tsx -t "shard ${shard}" --reporter=verbose &
+            pids+=("$!")
+          done
+          fail=0
+          for pid in "${pids[@]}"; do
+            wait "$pid" || fail=1
+          done
+          end=$(date +%s)
+          echo "reference corpus wall clock: $((end - start))s"
+          exit "$fail"
 
       - name: Upload test results
         if: failure()

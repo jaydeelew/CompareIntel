@@ -134,9 +134,25 @@ test.describe("list-item display math shares the marker line", () => {
             ),
           ) as HTMLElement[];
           for (const eq of displays) {
+            let previous = eq.previousSibling;
+            let leadingText = false;
+            while (previous) {
+              if (
+                previous.nodeType === Node.TEXT_NODE &&
+                (previous.textContent || "").trim()
+              ) {
+                leadingText = true;
+                break;
+              }
+              if (previous.nodeType === Node.ELEMENT_NODE) break;
+              previous = previous.previousSibling;
+            }
+            // Prose before the formula means it sits under the item, not on
+            // the marker line, even when the formula is the first element.
             const isFirst =
-              first === eq ||
-              (first?.tagName === "P" && first.firstElementChild === eq);
+              !leadingText &&
+              (first === eq ||
+                (first?.tagName === "P" && first.firstElementChild === eq));
             if (isFirst) {
               const liBox = li.getBoundingClientRect();
               const eqBox = eq.getBoundingClientRect();

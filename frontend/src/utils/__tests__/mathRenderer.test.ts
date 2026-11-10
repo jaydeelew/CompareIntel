@@ -8,7 +8,9 @@ import type { MathRendererConfig } from '../../types/rendererConfig'
 import {
   collapseDoubleEscapedDelimiters,
   extractDisplayMath,
+  extractInlineMath,
   isInsideOuterDisplayMath,
+  normalizeInlineMathDelimiters,
   restoreDisplayMath,
   renderMathContent,
 } from '../latex/mathRenderer'
@@ -25,6 +27,29 @@ const parenFirstConfig: MathRendererConfig = {
   ],
   katexOptions: { throwOnError: false, strict: false },
 }
+
+describe('normalizeInlineMathDelimiters', () => {
+  it('widens [^\\\\] paren bodies so \\\\frac and \\\\begin extract', () => {
+    const restrictive = /\\\(\s*([^\\]*?)\s*\\\)/g
+    const normalized = normalizeInlineMathDelimiters([
+      { pattern: restrictive, name: 'paren', priority: 1 },
+    ])
+    const source = 'Det \\(\\det(A)=ad-bc\\) and \\(A=\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}\\)'
+    const extracted = extractInlineMath(source, normalized)
+    expect(extracted.mathBlocks).toHaveLength(2)
+    expect(extracted.mathBlocks[0]).toContain('\\det')
+    expect(extracted.mathBlocks[1]).toContain('\\begin{pmatrix}')
+    expect(extracted.text).not.toContain('\\det')
+
+    const rendered = renderMathContent(extracted.mathBlocks[1], {
+      ...parenFirstConfig,
+      inlineMathDelimiters: normalized,
+    })
+    expect(rendered).toContain('class="katex"')
+    expect(rendered).toContain('encoding="application/x-tex"')
+    expect(rendered).toContain('\\begin{pmatrix}')
+  })
+})
 
 describe('mathRenderer', () => {
   describe('renderMathContent - delimiter order (GPT 5.2 Pro style)', () => {

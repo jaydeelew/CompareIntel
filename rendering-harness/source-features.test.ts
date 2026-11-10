@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { renderReferenceHtml } from '../frontend/src/utils/__tests__/renderingAudit/reference.ts'
 import { detectSourceFeatures } from './source-features.js'
 import { validateRenderedHTML } from './dom-assertions.js'
 
@@ -81,7 +82,8 @@ test.describe('Source feature detection vs renderer loss', () => {
   })
 
   test('missing currency in source stays not-covered, not a forced pass', () => {
-    const html = '<div>The quadratic is <span class="katex">x</span></div>'
+    const html =
+      '<div>The quadratic is <span class="katex"><annotation encoding="application/x-tex">x = 1</annotation>x</span></div>'
     const result = validateRenderedHTML(
       html,
       { currency: true, noKatexErrors: true },
@@ -143,11 +145,7 @@ test.describe('Source feature detection vs renderer loss', () => {
       true
     )
 
-    const rendered = validateRenderedHTML(
-      '<div><span class="katex-display"><span class="katex"><span class="katex-mathml"><annotation encoding="application/x-tex">f(x)=\\begin{cases}x^2\\end{cases}</annotation></span><span class="katex-html">piecewise</span></span></span></div>',
-      { noKatexErrors: true },
-      source
-    )
+    const rendered = validateRenderedHTML(renderReferenceHtml(source), { noKatexErrors: true }, source)
     expect(rendered.pass).toBe(true)
     expect(rendered.status).toBe('pass')
     expect(rendered.assertions.some(a => a.status === 'fail')).toBe(false)
@@ -156,7 +154,7 @@ test.describe('Source feature detection vs renderer loss', () => {
   test('parenthesized empty \\[ \\] delimiter labels are not leftover display math', () => {
     const source = '**Display math (\\[ \\]):**\n\\[E = mc^2\\]\n'
     const result = validateRenderedHTML(
-      '<div><strong>Display math (\\[ \\]):</strong><span class="katex-display"><span class="katex-html">E=mc^2</span></span></div>',
+      '<div><strong>Display math (\\[ \\]):</strong><span class="katex-display"><span class="katex"><annotation encoding="application/x-tex">E = mc^2</annotation><span class="katex-html">E=mc^2</span></span></span></div>',
       { noKatexErrors: true, displayMath: true },
       source
     )
@@ -176,6 +174,20 @@ test.describe('Source feature detection vs renderer loss', () => {
     expect(leftover.assertions.some(a => /lost it/.test(a.message) && /\\\[/.test(a.message))).toBe(
       true
     )
+  })
+
+  test('literal \\(\\frac stays a harness fail even when some other math rendered', () => {
+    const source = 'Inline \\(\\frac{1}{2}\\) and display $$E=mc^2$$.'
+    const lost = validateRenderedHTML(
+      '<div>Inline (\\frac{1}{2}) and display <span class="katex-display"><span class="katex"><annotation encoding="application/x-tex">E=mc^2</annotation></span></span></div>',
+      { displayMath: true, inlineMath: true },
+      source
+    )
+    expect(lost.status).toBe('fail')
+    expect(lost.assertions.some(a => /lost it/.test(a.message))).toBe(true)
+
+    const kept = validateRenderedHTML(renderReferenceHtml(source), { displayMath: true }, source)
+    expect(kept.assertions.filter(a => a.status === 'fail')).toEqual([])
   })
 
   test('unmatched \\begin{cases} is source-issue, not an unqualified pass', () => {

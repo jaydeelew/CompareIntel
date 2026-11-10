@@ -21,6 +21,7 @@ export {
   findMatchedExplicitMathEnvs,
   unmatchedExplicitMathEnvOpens,
   wrappingSingleDollarSpan,
+  normalizeInlineMathDelimiters,
   type MathRendererConfig,
 } from './mathRenderer'
 export { markBlockquotes, renderBlockquoteMarkers } from './blockquotes'
@@ -40,4 +41,5 @@ export {
   restoreInlineCode,
   renderInlineCodeSpan,
   unescapeGfmTableCellCodePipes,
+  unescapeMarkdownEscapesOutsideKatex,
 } from './protection'
