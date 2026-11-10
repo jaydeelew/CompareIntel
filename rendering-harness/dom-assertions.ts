@@ -6,6 +6,10 @@
 
 import { JSDOM } from 'jsdom'
 import {
+  normalizeComparableTex,
+  renderReferenceHtml,
+} from '../frontend/src/utils/__tests__/renderingAudit/reference.ts'
+import {
   detectSourceFeatures,
   explicitMathEnvsOutsideCode,
   type SourceFeatures,
@@ -67,6 +71,50 @@ function visibleUnrenderedMathEnvs(container: Element, envNames: string[]): stri
   if (unique.length === 0) return []
   const text = visibleMathText(container)
   return unique.filter(name => text.includes(`\\begin{${name}}`))
+}
+
+function normTex(value: string): string {
+  return normalizeComparableTex(value)
+}
+
+/** KaTeX annotation sources, whitespace-collapsed, with multiplicity. */
+function texSourceCounts(root: ParentNode): Map<string, number> {
+  const counts = new Map<string, number>()
+  root.querySelectorAll('annotation[encoding="application/x-tex"]').forEach(node => {
+    const key = normTex(node.textContent || '')
+    if (!key) return
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  })
+  return counts
+}
+
+/**
+ * Prose the reader sees. KaTeX, fenced code, and inline code are removed so a
+ * TeX command that only lives inside math or a code span is not a leftover.
+ */
+function visibleProseOutsideCode(container: Element): string {
+  const clone = container.cloneNode(true) as Element
+  clone
+    .querySelectorAll(
+      '.katex, .katex-mathml, pre, code, annotation, .code-block, .code-block-direct, .preformatted-text'
+    )
+    .forEach(node => node.remove())
+  return clone.textContent || ''
+}
+
+/** Literal TeX markers that must not survive outside code. Empty delimiter labels are documentation. */
+function visibleRawTexMarkers(text: string): string[] {
+  const cleaned = text
+    .replace(/\(\\\[\s*\\\]\)/g, '')
+    .replace(/\(\\\(\s*\\\)\)/g, '')
+    .replace(/\\\[\s*(?:\.{2,}|…)\s*\\\]/g, '')
+    .replace(/\\\(\s*(?:\.{2,}|…)\s*\\\)/g, '')
+  const found: string[] = []
+  if (cleaned.includes('\\(')) found.push('\\(')
+  if (cleaned.includes('\\[')) found.push('\\[')
+  if (cleaned.includes('\\begin{')) found.push('\\begin{')
+  if (cleaned.includes('\\frac')) found.push('\\frac')
+  return found
 }
 
 /** Visible leftover `\[` (e.g. `\\[6pt]` collapsed to a fake display open). */
@@ -308,6 +356,49 @@ export function validateRenderedHTML(
         expected: 'no leftover \\[ in visible text',
         actual: 'visible raw \\[',
         message: 'Source math rendered with leftover \\[ — rendered DOM lost it',
+      })
+    }
+
+    // Silent math loss: the harness used to pass when *some* math survived.
+    // Every TeX source the independent reference renders must be KaTeX here,
+    // and raw `\(` / `\[` / `\begin{` / `\frac` must not remain in prose.
+    const refDom = new JSDOM(renderReferenceHtml(sourceMarkdown))
+    const refTex = texSourceCounts(refDom.window.document.body)
+    const actualTex = texSourceCounts(container)
+    const missingTex: string[] = []
+    for (const [tex, count] of refTex) {
+      if ((actualTex.get(tex) ?? 0) < count) missingTex.push(tex)
+    }
+    if (missingTex.length > 0) {
+      const preview = missingTex
+        .slice(0, 3)
+        .map(tex => tex.slice(0, 80))
+        .join(' | ')
+      assertions.push({
+        pass: false,
+        status: 'fail',
+        expected: 'every reference KaTeX TeX source present in the DOM',
+        actual: `missing ${missingTex.length} TeX source(s): ${preview}`,
+        message: `Source included TeX the reference rendered but rendered DOM lost it: ${preview}`,
+      })
+    }
+
+    const rawMarkers = visibleRawTexMarkers(visibleProseOutsideCode(container))
+    const beginOnlyUnmatched =
+      rawMarkers.includes('\\begin{') && envs.matched.length === 0 && envs.unmatchedOpens.length > 0
+    const failingMarkers = rawMarkers.filter(marker => marker !== '\\begin{' || !beginOnlyUnmatched)
+    // A visible command is renderer loss when a reference TeX source is missing
+    // (the 18 paren-command cells) or when a delimiter itself leaked. A `\frac`
+    // that the reference never rendered — a pipe-split table cell markdown-it
+    // drops, or a bare fraction PR 216 leaves literal — is not a new failure.
+    const leakedDelimiter = failingMarkers.some(marker => marker !== '\\frac')
+    if (failingMarkers.length > 0 && (missingTex.length > 0 || leakedDelimiter)) {
+      assertions.push({
+        pass: false,
+        status: 'fail',
+        expected: 'no literal \\(, \\[, \\begin{, or \\frac outside code',
+        actual: `visible ${failingMarkers.join(', ')}`,
+        message: `Rendered DOM lost it: visible raw TeX outside code (${failingMarkers.join(', ')})`,
       })
     }
   }

@@ -105,6 +105,77 @@ describe('codeBlockPreservation', () => {
       expect(result.text).not.toContain('__CODE_BLOCK_')
     })
 
+    it('extracts a fenced block whose opener sits mid-paragraph (Llama 3.3 70B 06)', () => {
+      const text = [
+        'The code block ```python',
+        '# This should stay as literal code',
+        'price = $50',
+        'formula = "E = mc^2"',
+        '``` should remain unchanged.',
+      ].join('\n')
+      const result = extractCodeBlocks(text)
+      expect(result.blocks).toHaveLength(1)
+      expect(result.blocks[0].language).toBe('python')
+      expect(result.blocks[0].content).toContain('price = $50')
+      expect(result.text).toContain('The code block __CODE_BLOCK_0__')
+      expect(result.text).toContain('should remain unchanged.')
+      expect(result.text).not.toContain('```python')
+    })
+
+    it('does not let a 4-space fence swallow the next real fence or the math after it', () => {
+      const text = [
+        '    ```html',
+        '    <div>example</div>',
+        '    ```',
+        '  ```python',
+        '  print(1)',
+        '  ```',
+        '    $A = \\pi r^2$',
+      ].join('\n')
+      const result = extractCodeBlocks(text)
+      const python = result.blocks.find(block => block.language === 'python')
+      expect(python?.content).toContain('print(1)')
+      expect(result.blocks.some(block => block.content.includes('\\pi'))).toBe(false)
+      expect(result.text).toContain('$A = \\pi r^2$')
+      expect(result.text).not.toContain('print(1)')
+    })
+
+    it('does not treat a blockquote fence as a raw opener that swallows the next line', () => {
+      const text = [
+        '> ```python',
+        '> return math.pi * r**2',
+        '> ```',
+        '> The formula is $A = \\pi r^2$',
+      ].join('\n')
+      const result = extractCodeBlocks(text)
+      expect(result.blocks).toHaveLength(0)
+      expect(result.text).toContain('$A = \\pi r^2$')
+    })
+
+    it('treats a longer line-start fence as one opener (four backticks)', () => {
+      const text = [
+        '````markdown',
+        'To show a fence:',
+        '```python',
+        'print(1)',
+        '```',
+        '````',
+      ].join('\n')
+      const result = extractCodeBlocks(text)
+      expect(result.blocks[0]?.content.startsWith('To show a fence:')).toBe(true)
+      expect(result.text.startsWith('__CODE_BLOCK_0__')).toBe(true)
+      expect(result.text).not.toMatch(/^`/)
+    })
+
+    it('does not treat prose after an opening ``` as a fence', () => {
+      const text = 'Use ``` for fences, then a real block:\n```python\nprint(1)\n```'
+      const result = extractCodeBlocks(text)
+      expect(result.blocks).toHaveLength(1)
+      expect(result.blocks[0].language).toBe('python')
+      expect(result.blocks[0].content).toBe('print(1)')
+      expect(result.text).toContain('Use ``` for fences')
+    })
+
     it('does not steal indented align continuations from $$...$$ (GLM 5.3 06)', () => {
       const text = [
         '**Multiline display:**',

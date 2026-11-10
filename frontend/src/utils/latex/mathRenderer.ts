@@ -74,6 +74,27 @@ export function sortMathDelimiters(delimiters: MathDelimiterPattern[]) {
   })
 }
 
+/**
+ * Generated model configs store paren as `[^\\]*?`, which cannot match a TeX
+ * command (`\frac`, `\int`, `\det`, `\operatorname`, `\begin`). Those spans
+ * never extract, and leftover-delimiter unescaping then turns `\(` / `\)`
+ * into plain parentheses before the late `[\s\S]` fallback can render them.
+ * Keep the model's priority; only widen the body.
+ */
+const PERMISSIVE_PAREN_SOURCE = String.raw`\\\(\s*([\s\S]*?)\s*\\\)`
+
+export function normalizeInlineMathDelimiters(
+  delimiters: MathDelimiterPattern[]
+): MathDelimiterPattern[] {
+  return delimiters.map(delimiter => {
+    if (delimiter.name !== 'paren') return delimiter
+    return {
+      ...delimiter,
+      pattern: new RegExp(PERMISSIVE_PAREN_SOURCE, 'g'),
+    }
+  })
+}
+
 function sortDelimiters(delimiters: MathDelimiterPattern[]) {
   return sortMathDelimiters(delimiters)
 }
@@ -272,6 +293,18 @@ function extractDollarWrappedExplicitEnvs(processed: string, mathBlocks: string[
   )
 }
 
+/**
+ * A blockquote marker on a line inside `\[ ... \]` / `$$ ... $$` is markdown,
+ * not math. `> \[` / `> C(q)=100+5q` / `> \]` otherwise renders the `>` glyphs.
+ */
+function stripQuotedDisplayLines(fullMatch: string): string {
+  if (!fullMatch.includes('\n') || !fullMatch.includes('>')) return fullMatch
+  return fullMatch
+    .split('\n')
+    .map((line, index) => (index === 0 ? line : line.replace(/^[ \t]*>[ \t]?/, '')))
+    .join('\n')
+}
+
 export function extractDisplayMath(
   text: string,
   displayMathDelimiters: MathDelimiterPattern[]
@@ -292,7 +325,7 @@ export function extractDisplayMath(
         return fullMatch
       }
       const index = mathBlocks.length
-      mathBlocks.push(fullMatch)
+      mathBlocks.push(stripQuotedDisplayLines(fullMatch))
       return `${placeholderPrefix}${index}${placeholderSuffix}`
     })
   })

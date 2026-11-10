@@ -15,10 +15,23 @@
  */
 import katex from 'katex'
 import MarkdownIt from 'markdown-it'
-import type StateInline from 'markdown-it/lib/rules_inline/state_inline.mjs'
-
 const LITERAL = '\uE000'
 const FENCE_PH = (i: number) => `%%F${i}%%`
+
+/**
+ * Annotation text compared across the reference and the product renderer.
+ * Blockquote `>` markers are baked into display math when `> \[` is extracted
+ * before quote stripping; GFM tables turn `\|` into `|` before KaTeX. Neither
+ * is a different formula.
+ */
+export function normalizeComparableTex(value: string): string {
+  let tex = value.replace(/\\\|/g, '|').replace(/\s+/g, ' ').trim()
+  tex = tex.replace(/^(?:>\s*)+/, '').replace(/(?:\s*>)+$/, '')
+  tex = tex.replace(/\}\s*>\s*/g, '} ')
+  tex = tex.replace(/\\\\\s*>\s*/g, '\\\\ ')
+  tex = tex.replace(/\s*>\s*(?=\\end\b)/g, ' ')
+  return tex.replace(/\s+/g, ' ').trim()
+}
 
 function renderKatex(tex: string, displayMode: boolean): string {
   const source = tex.split(LITERAL).join('\\$').trim()
@@ -171,7 +184,7 @@ type MarkdownItInstance = InstanceType<typeof MarkdownIt>
  * backticks still win at a leading `` ` `` (code spans are not math).
  */
 function registerTexMath(md: MarkdownItInstance): void {
-  md.inline.ruler.before('escape', 'tex_math', (state: StateInline, silent: boolean) => {
+  md.inline.ruler.before('escape', 'tex_math', (state, silent) => {
     const src = state.src
     const pos = state.pos
     const max = state.posMax
@@ -248,10 +261,17 @@ function registerTexMath(md: MarkdownItInstance): void {
       if (close === -1) return false
       const inner = src.slice(pos + 1, close)
       const full = src.slice(pos, close + 1)
-      if (
-        isEllipsisExample(full) ||
-        isCurrencyLikeSpan(src.slice(pos, Math.min(max, close + 2)), 0, close - pos)
-      ) {
+      // A backtick inside the candidate belongs to a code span (`uses $, like `^foo$``).
+      // Returning false lets the backtick rule win instead of swallowing it as TeX.
+      if (inner.includes('`')) return false
+      if (isEllipsisExample(full)) {
+        // Consume `$...$`. Leaving it unparsed lets the closing `$` open a new span
+        // (`$...$ (e.g., $a^2$` became the TeX source `(e.g.,`).
+        if (!silent) pushText(leaveExample(full))
+        state.pos = close + 1
+        return true
+      }
+      if (isCurrencyLikeSpan(src.slice(pos, Math.min(max, close + 2)), 0, close - pos)) {
         return false
       }
       const isMultilineEnv =

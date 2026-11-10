@@ -14,6 +14,7 @@ import {
   restoreLiteralDollars,
   safeRenderKatex,
   unescapeGfmTableCellCodePipes,
+  unescapeMarkdownEscapesOutsideKatex,
   literalizeUnpairedDoubleDollars,
 } from '../latex'
 
@@ -239,5 +240,16 @@ describe('GFM table-cell code pipes', () => {
     const out = unescapeGfmTableCellCodePipes(html)
     expect(out).toContain('<td><code>|</code> conflicts</td>')
     expect(out).toContain('<p>keep <code>\\|</code></p>')
+  })
+})
+
+describe('unescapeMarkdownEscapesOutsideKatex', () => {
+  it('unescapes prose markdown but keeps \\\\- inside a KaTeX annotation', () => {
+    const html =
+      'A \\*bold\\* note <span class="katex"><span class="katex-mathml"><annotation encoding="application/x-tex">d&amp;-b\\\\-c</annotation></span></span> and \\( leftover'
+    const out = unescapeMarkdownEscapesOutsideKatex(html)
+    expect(out).toContain('A *bold* note')
+    expect(out).toContain('d&amp;-b\\\\-c')
+    expect(out).toContain('and ( leftover')
   })
 })

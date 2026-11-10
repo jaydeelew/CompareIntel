@@ -15,25 +15,52 @@ export function markBlockquotes(text: string): string {
     const inner = block
       .replace(/\n$/, '')
       .split('\n')
-      .map(line => {
-        let out = line
-        while (/^[ \t]{0,3}> ?/.test(out)) {
-          out = out.replace(/^[ \t]{0,3}> ?/, '')
-        }
-        return out
-      })
+      .map(line => line.replace(/^[ \t]{0,3}> ?/, ''))
       .join('\n')
-    return `\n${BLOCKQUOTE_OPEN}\n${inner}\n${BLOCKQUOTE_CLOSE}\n${hasTrailingNewline ? '\n' : ''}`
+    // One marker per level so `> > nested` stays a blockquote inside the outer one.
+    const nested = markBlockquotes(inner)
+    return `\n${BLOCKQUOTE_OPEN}\n${nested}\n${BLOCKQUOTE_CLOSE}\n${hasTrailingNewline ? '\n' : ''}`
   })
 }
 
+function renderPairedBlockquote(inner: string): string {
+  const nested = renderBlockquoteMarkers(inner.trim())
+  const withBreaks = nested.replace(/([^>\s])[ \t]*\n{2,}[ \t]*(?=[^<\s])/g, '$1<br><br>')
+  return (
+    `\n\n<blockquote class="markdown-blockquote" style="${BLOCKQUOTE_STYLE}">` +
+    withBreaks +
+    '</blockquote>\n\n'
+  )
+}
+
+/** Pair quote markers by depth so a nested quote is its own `<blockquote>`. */
 export function renderBlockquoteMarkers(text: string): string {
   if (!text.includes(BLOCKQUOTE_OPEN)) return text
-  return text.replace(
-    /\s*\uE010\s*([\s\S]*?)\s*\uE011\s*/g,
-    (_match, inner: string) =>
-      `\n\n<blockquote class="markdown-blockquote" style="${BLOCKQUOTE_STYLE}">` +
-      inner.replace(/([^>\s])[ \t]*\n{2,}[ \t]*(?=[^<\s])/g, '$1<br><br>') +
-      '</blockquote>\n\n'
-  )
+  let out = ''
+  let i = 0
+  while (i < text.length) {
+    const open = text.indexOf(BLOCKQUOTE_OPEN, i)
+    if (open === -1) {
+      out += text.slice(i)
+      break
+    }
+    out += text.slice(i, open)
+    let depth = 1
+    let j = open + BLOCKQUOTE_OPEN.length
+    while (j < text.length && depth > 0) {
+      if (text.startsWith(BLOCKQUOTE_OPEN, j)) {
+        depth += 1
+        j += BLOCKQUOTE_OPEN.length
+      } else if (text.startsWith(BLOCKQUOTE_CLOSE, j)) {
+        depth -= 1
+        j += BLOCKQUOTE_CLOSE.length
+      } else {
+        j += 1
+      }
+    }
+    const inner = text.slice(open + BLOCKQUOTE_OPEN.length, j - BLOCKQUOTE_CLOSE.length)
+    out += renderPairedBlockquote(inner)
+    i = j
+  }
+  return out
 }
