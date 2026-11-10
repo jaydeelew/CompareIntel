@@ -79,6 +79,8 @@ runs/*
 !runs/2026-11-08-21-incomplete-artifacts.tar.gz
 !runs/2026-11-08-20c/
 !runs/2026-11-08-20c/**
+!runs/2026-11-10-registry-rename/
+!runs/2026-11-10-registry-rename/**
 # 20c screenshots and tarball are generated run artifacts (not committed)
 runs/2026-11-08-20c/*.png
 runs/2026-11-08-20c-artifacts.tar.gz
