@@ -1966,7 +1966,10 @@ video.capability-tile-image-lightbox-img {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* flex-start with a growing saved-selections block keeps the default name beside the icon
+     and action buttons pinned to the right without space-between crowding on narrow viewports. */
+  justify-content: flex-start;
+  gap: 0.25rem;
   /* overflow:visible avoids clipping button chrome; composer tooltips use StyledTooltip usePortal
      so bubbles render in document.body and are not clipped by .composer overflow:hidden. */
   overflow: visible;
@@ -2302,6 +2305,10 @@ video.capability-tile-image-lightbox-img {
   margin-left: auto;
   flex-shrink: 0;
   overflow: visible;
+}
+
+.composer-toolbar .textarea-actions {
+  margin-left: 0;
 }
 
 /* Token usage indicator */
