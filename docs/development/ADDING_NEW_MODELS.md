@@ -19,9 +19,7 @@ For a text model the handler:
 5. On success the handler saves the registry and regenerates `rendering-harness/coverage.json`.
 6. The stream event `harness` and the final success message include the harness result. The models tab shows that message.
 
-If rendering fails, the response is an error that says **Rendering harness failed**. It does not report success, and the new id is not left in `models_registry.json`. A config written during that attempt is removed so the next attempt can regenerate it. Saved reply JSON is kept.
-
-If the machine cannot start Playwright, the response says the harness **did not run** and prints the exact `npm run harness -- --render-only --render-dir=...` command. That is also not success. The renderer config and reply JSON stay on disk; the registry row is not written. Run the command from `rendering-harness/`, then add the model again. The script reuses the saved replies and does not call OpenRouter a second time.
+If rendering fails, the response is an error that says **Rendering harness failed**. It does not report success, and the new id is not left in `models_registry.json`. The same is true when Playwright cannot start or the offline render is skipped: the response says the harness **did not run**. In every one of those cases the script deletes the `runs/admin-<timestamp>/` replies and any renderer config that this attempt wrote. A config that was already on disk is left alone, and complete replies in older batches are left alone so the next add can reuse them.
 
 Image models skip the harness. The handler still probes aspect ratios and then saves the registry. See `docs/features/IMAGE_GENERATION.md`.
 
@@ -38,13 +36,11 @@ The registry write is after a successful harness setup. These writes are still n
 
    The script uses the harness prompts, writes the renderer config, writes the reply JSON, renders offline when it can, and refreshes `rendering-harness/coverage.json`. Re-running it reuses complete reply files instead of paying again.
 
-3. If the script tells you the offline render did not run, estimate the cost and then either render the saved replies or collect them with the harness (only when replies are not already on disk):
+3. If the script says the offline render failed, was skipped, or did not start, it has already deleted that attempt's `runs/admin-<timestamp>/` directory and any renderer config it just wrote. Fix the local Playwright setup and run the script again. When no complete replies remain, collect them with the harness:
 
    ```bash
    cd rendering-harness
    npm run harness -- --dry-run --models=provider/model-id --max-usd=2
-   npm run harness -- --render-only --render-dir=runs/admin-<timestamp>
-   # or, when you still need a paid collection:
    npm run harness -- --models=provider/model-id --max-usd=2
    npm run generate-coverage
    ```

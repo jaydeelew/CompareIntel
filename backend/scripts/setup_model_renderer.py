@@ -30,11 +30,11 @@ from scripts.harness_replies import (
     PROMPT_ORDER,
     HarnessRenderFailedError,
     HarnessRenderNotRunError,
+    discard_attempt_files,
     find_complete_replies,
     harness_result_line,
     load_harness_prompts,
     regenerate_coverage_manifest,
-    remove_model_config,
     render_saved_replies,
     replies_to_analysis_responses,
     runs_root,
@@ -506,9 +506,11 @@ class ModelRendererSetup:
     def run(self, *, defer_coverage: bool = False) -> dict[str, Any]:
         """Collect harness replies, write a renderer config, and render offline.
 
-        Saved complete replies are reused, so a retry after a render failure does
-        not call OpenRouter again. defer_coverage leaves coverage.json to the
-        caller that has just persisted models_registry.json.
+        Saved complete replies from an earlier batch are reused, so that retry does
+        not call OpenRouter again. A render that fails, is skipped, or cannot
+        start deletes the admin batch and any renderer config this attempt
+        wrote. defer_coverage leaves coverage.json to the caller that has just
+        persisted models_registry.json.
         """
         self.log_progress("starting", f"Starting setup process for {self.model_id}...", 0.0)
         existing = find_complete_replies(self.model_id)
@@ -553,12 +555,11 @@ class ModelRendererSetup:
 
         self.log_progress("harness", "Rendering saved replies with LatexRenderer...", 0.0)
         rendered = render_saved_replies(run_dir, self.model_id)
-        if rendered["state"] == "failed":
-            if config_written:
-                remove_model_config(self.model_id)
+        if rendered["state"] != "passed":
+            discard_attempt_files(run_dir, model_id=self.model_id, remove_config=config_written)
+            if rendered["state"] == "not-run":
+                raise HarnessRenderNotRunError(rendered["message"], rendered["command"])
             raise HarnessRenderFailedError(rendered["message"])
-        if rendered["state"] == "not-run":
-            raise HarnessRenderNotRunError(rendered["message"], rendered["command"])
 
         if not defer_coverage:
             coverage = regenerate_coverage_manifest()

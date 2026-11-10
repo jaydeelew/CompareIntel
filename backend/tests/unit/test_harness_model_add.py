@@ -108,16 +108,87 @@ def test_offline_render_does_not_receive_the_openrouter_key(monkeypatch, tmp_pat
 
 
 def test_render_not_run_names_the_offline_command():
-    command = "npm run harness -- --render-only --render-dir=runs/admin-1"
     message = admin_setup_failure_message(
         2,
         "",
-        f"HARNESS_RENDER_NOT_RUN: npm missing\nHARNESS_COMMAND: {command}",
+        "HARNESS_RENDER_NOT_RUN: npm missing\nHARNESS_COMMAND: npm run harness -- --render-only",
     )
     assert "did not run" in message
-    assert command in message
+    assert "were removed" in message
     assert "was not added" in message
     assert "added successfully" not in message.lower()
+
+
+def test_unsuccessful_render_removes_files_this_attempt_wrote(monkeypatch, tmp_path):
+    """A failed render and a render that cannot start both leave nothing new behind."""
+    runs = tmp_path / "runs"
+    historical = runs / "2026-01-01"
+    historical.mkdir(parents=True)
+    (historical / "keep.json").write_text("{}", encoding="utf-8")
+    replies = {}
+    for name in PROMPT_ORDER:
+        path = historical / reply_filename("acme/new-model", name)
+        path.write_text(
+            json.dumps(
+                {
+                    "modelId": "acme/new-model",
+                    "promptName": name,
+                    "promptText": "p",
+                    "response": "hello",
+                    "finishReason": "stop",
+                }
+            ),
+            encoding="utf-8",
+        )
+        replies[name] = path
+
+    monkeypatch.setattr("scripts.setup_model_renderer.find_complete_replies", lambda _mid: replies)
+    monkeypatch.setattr("scripts.setup_model_renderer.runs_root", lambda: runs)
+    monkeypatch.setattr("scripts.harness_replies.runs_root", lambda: runs)
+    removed: list[str] = []
+    monkeypatch.setattr(
+        "scripts.harness_replies.remove_model_config",
+        lambda model_id: removed.append(model_id),
+    )
+    monkeypatch.setattr("scripts.setup_model_renderer.has_model_config", lambda _mid: False)
+
+    def save_config(self, config):
+        path = tmp_path / "config-written-this-attempt.json"
+        path.write_text(json.dumps(config), encoding="utf-8")
+        return path
+
+    monkeypatch.setattr("scripts.setup_model_renderer.ModelRendererSetup.save_config", save_config)
+
+    states = iter(["failed", "not-run"])
+
+    def render(_run_dir, _model_id):
+        state = next(states)
+        return {
+            "state": state,
+            "command": "npm run harness -- --render-only --render-dir=runs/admin-x",
+            "message": state,
+        }
+
+    monkeypatch.setattr("scripts.setup_model_renderer.render_saved_replies", render)
+
+    from scripts.harness_replies import HarnessRenderFailedError, HarnessRenderNotRunError
+    from scripts.setup_model_renderer import ModelRendererSetup
+
+    setup = ModelRendererSetup("acme/new-model", verbose=False)
+    with pytest.raises(HarnessRenderFailedError):
+        setup.run(defer_coverage=True)
+    assert removed == ["acme/new-model"]
+    assert not any(path.name.startswith("admin-") for path in runs.iterdir())
+    assert (historical / "keep.json").is_file()
+    assert set(replies) == set(PROMPT_ORDER)
+
+    monkeypatch.setattr("scripts.setup_model_renderer.has_model_config", lambda _mid: True)
+    setup_skipped = ModelRendererSetup("acme/new-model", verbose=False)
+    with pytest.raises(HarnessRenderNotRunError):
+        setup_skipped.run(defer_coverage=True)
+    assert removed == ["acme/new-model"]
+    assert not any(path.name.startswith("admin-") for path in runs.iterdir())
+    assert (historical / "keep.json").is_file()
 
 
 def test_failed_setup_does_not_write_the_registry(monkeypatch):

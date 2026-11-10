@@ -254,6 +254,21 @@ def regenerate_coverage_manifest() -> subprocess.CompletedProcess[str]:
     )
 
 
+def discard_attempt_files(run_dir: Path, *, model_id: str, remove_config: bool) -> None:
+    """Delete the reply batch and renderer config this add attempt created.
+
+    Only an ``admin-*`` directory directly under ``rendering-harness/runs`` is
+    removed. Older complete replies in other batches stay, so a later add can
+    reuse them. A config that already existed before this attempt is left alone.
+    """
+    resolved = run_dir.resolve()
+    root = runs_root().resolve()
+    if resolved.parent == root and resolved.name.startswith("admin-") and resolved.is_dir():
+        shutil.rmtree(resolved)
+    if remove_config:
+        remove_model_config(model_id)
+
+
 def remove_model_config(model_id: str) -> None:
     """Drop a renderer config this setup run just wrote, so a failed render can be retried."""
     from scripts.config_helpers import get_config_file_path, load_existing_configs
@@ -292,19 +307,14 @@ def harness_result_line(model_id: str, state: str, message: str, command: str) -
 def admin_setup_failure_message(returncode: int, stdout: str, stderr: str) -> str:
     """HTTP/SSE detail when setup does not exit 0. Never claims the model was added."""
     combined = f"{stderr or ''}\n{stdout or ''}"
-    command = ""
-    for line in combined.splitlines():
-        if line.startswith("HARNESS_COMMAND:"):
-            command = line.split(":", 1)[1].strip()
-            break
+    removed = "Renderer config and reply files written by this attempt were removed."
     if returncode == 2 or "HARNESS_RENDER_NOT_RUN" in combined:
-        instruction = command or "npm run harness -- --render-only --render-dir=<run>"
         return (
-            "Rendering harness did not run, so the model was not added to the registry. "
-            f"From rendering-harness run `{instruction}`. "
-            "Saved replies are reused on the next attempt; that command makes no paid API call."
+            f"Rendering harness did not run, so the model was not added to the registry. {removed}"
         )
     if "RENDERING HARNESS FAILED" in combined or returncode != 0:
         tail = (stderr or stdout or "Unknown error").strip()[-800:]
-        return f"Rendering harness failed. The model was not added to the registry. {tail}"
+        return (
+            f"Rendering harness failed. The model was not added to the registry. {removed} {tail}"
+        )
     return "Renderer setup failed. The model was not added to the registry."
