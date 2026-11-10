@@ -252,8 +252,11 @@ export async function probeWideContentClip(page: Page): Promise<ClipProbe> {
       return { ...empty, cardClientWidth, cardRight: cardRect.right }
     }
 
-    candidates.sort((a, b) => b.overflowPx - a.overflowPx)
-    const best = candidates[0]
+    const displays = candidates.filter(c => c.kind === 'katex-display')
+    const best =
+      displays.length > 0
+        ? displays.sort((a, b) => b.overflowPx - a.overflowPx)[0]
+        : candidates.sort((a, b) => b.overflowPx - a.overflowPx)[0]
     return {
       clipped: true,
       kind: best.kind,
@@ -314,14 +317,35 @@ export async function scrollClipTargetToEnd(page: Page, probe: ClipProbe): Promi
   )
 }
 
-export function texExcerptFromProbe(probe: ClipProbe, fullContent: string): string {
-  if (probe.texSource) {
+function extractMarkdownTables(content: string): string[] {
+  const re = /(?:^|\n)(\|[^\n]+\|\r?\n\|[-: |\t]+\|\r?\n(?:\|[^\n]+\|\r?\n?)+)/g
+  return [...content.matchAll(re)].map(m => m[1].trim())
+}
+
+export function rawSourceExcerptForProbe(probe: ClipProbe, fullContent: string): string {
+  if (probe.kind === 'katex-display' && probe.texSource) {
     return `$$\n${probe.texSource}\n$$`
   }
+  if (probe.kind === 'markdown-table-scroll') {
+    const tables = extractMarkdownTables(fullContent)
+    const table = tables[probe.elementIndex] ?? tables.sort((a, b) => b.length - a.length)[0]
+    if (table) {
+      if (probe.texSource) {
+        return `${table}\n\n# clipped cell math\n$${probe.texSource}$`
+      }
+      return table
+    }
+  }
+  if (probe.texSource) return `$$\n${probe.texSource}\n$$`
   const blocks = [...fullContent.matchAll(/\$\$[\s\S]*?\$\$/g)]
     .map(m => m[0])
     .sort((a, b) => b.length - a.length)
   return blocks[0]?.trim() ?? fullContent.slice(0, 800)
+}
+
+/** @deprecated use rawSourceExcerptForProbe */
+export function texExcerptFromProbe(probe: ClipProbe, fullContent: string): string {
+  return rawSourceExcerptForProbe(probe, fullContent)
 }
 
 export type KatexOverflowAudit = {

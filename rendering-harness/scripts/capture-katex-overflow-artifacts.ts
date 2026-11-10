@@ -17,7 +17,7 @@ import {
   openHarnessWithContent,
   probeWideContentClip,
   scrollClipTargetToEnd,
-  texExcerptFromProbe,
+  rawSourceExcerptForProbe,
   type ClipProbe,
 } from '../../frontend/e2e/helpers/harnessKatexOverflow'
 
@@ -104,7 +104,7 @@ async function capturePhasesForCell(
   const afterScrolledShot = await captureCardFullViewport(afterPage)
   await afterPage.close()
 
-  const source = texExcerptFromProbe(probeBefore, content)
+  const source = rawSourceExcerptForProbe(probeBefore, content)
   const stacker = await chromium.launch()
   const stackPage = await stacker.newPage()
   const stackedPath = path.join(artifactRoot, `mobile-${slug}-before-after-stacked.png`)
