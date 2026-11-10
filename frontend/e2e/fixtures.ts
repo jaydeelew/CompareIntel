@@ -327,8 +327,10 @@ async function dismissTutorialOverlay(page: Page): Promise<void> {
  *
  * An upward wheel reveals the bar only after it has settled at the top. A wheel that arrives
  * earlier is ignored, and a wheel that also scrolls (Playwright mouse.wheel) restarts that
- * gate, so a fixed pause plus a handful of wheels is a race. Poll the shell until it is open.
- * While it is folded, send one WheelEvent that does not move scroll. Once it is open,
+ * gate, so a fixed pause plus a handful of wheels is a race. Poll until every scroller is
+ * back at the top and the shell is open. The tablet hero pull-up leaves the window scrolled
+ * on WebKit, which parks Sign Up above the viewport even while the bar is already open.
+ * While the shell is folded, send one WheelEvent that does not move scroll. Once it is open,
  * pointerdown restarts the inactivity hide so the bar cannot fold before the caller measures
  * hero height (folded vs open differs by --navbar-height).
  */
@@ -343,28 +345,51 @@ async function ensureUnfoldedNavbar(page: Page): Promise<void> {
     .poll(
       async () => {
         if (page.isClosed()) return 'closed'
-        const state = await shell
-          .evaluate((el: HTMLElement) => ({
-            folded: el.classList.contains('app-header-shell--folded'),
-            height: el.getBoundingClientRect().height,
-          }))
+        const state = await page
+          .evaluate(() => {
+            const shellEl = document.querySelector('.app-header-shell')
+            if (!(shellEl instanceof HTMLElement)) return null
+            const app = document.querySelector('.app')
+            const scrolling = document.scrollingElement
+            const scrollY = () => {
+              const winY = window.scrollY ?? document.documentElement.scrollTop ?? 0
+              const bodyY = document.body?.scrollTop ?? 0
+              const rootY = scrolling instanceof HTMLElement ? scrolling.scrollTop : 0
+              const appY = app instanceof HTMLElement ? app.scrollTop : 0
+              return Math.max(winY, bodyY, rootY, appY)
+            }
+            // The hero's tablet pull-up can leave the window scrolled, which
+            // slides this sticky shell above the viewport (Sign Up center at
+            // y < 0). Put every scroller back at 0, then read the result.
+            if (scrollY() > 2) {
+              window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+              document.documentElement.scrollTop = 0
+              if (document.body) document.body.scrollTop = 0
+              if (scrolling instanceof HTMLElement) scrolling.scrollTop = 0
+              if (app instanceof HTMLElement) app.scrollTop = 0
+            }
+            const box = shellEl.getBoundingClientRect()
+            return {
+              folded: shellEl.classList.contains('app-header-shell--folded'),
+              height: box.height,
+              scrollY: scrollY(),
+            }
+          })
           .catch(() => null)
         if (!state) return 'missing'
+
+        // The reset above has to stick before a wheel. A wheel in the same
+        // turn as landing at the top is ignored (landing-from-below suppress).
+        if (state.scrollY > 2) {
+          restartedHideTimer = false
+          return 'away-from-top'
+        }
 
         const open = !state.folded && state.height > 40
         if (!open) {
           restartedHideTimer = false
           await page
             .evaluate(() => {
-              const app = document.querySelector('.app')
-              const winY = window.scrollY ?? document.documentElement.scrollTop ?? 0
-              const appY = app instanceof HTMLElement ? app.scrollTop : 0
-              // Same “at top” threshold the navbar uses for wheel reveal. Scrolling when
-              // already there fires a scroll event and restarts the reveal gate.
-              if (winY > 2 || appY > 2) {
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
-                if (app instanceof HTMLElement) app.scrollTop = 0
-              }
               window.dispatchEvent(
                 new WheelEvent('wheel', { deltaY: -1, bubbles: true, cancelable: true })
               )
