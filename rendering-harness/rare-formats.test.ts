@@ -43,6 +43,11 @@ const RARE_FLAGS = [
   'hasCurrencyBesideMath',
 ] as const
 
+function katexAnn(tex: string): string {
+  const escaped = tex.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return `<span class="katex"><annotation encoding="application/x-tex">${escaped}</annotation></span>`
+}
+
 function passHtml(): string {
   const longUrl = prompt.match(/https:\/\/example\.com\/rare-unbroken-url\/a+/)?.[0] || ''
   const unbroken = prompt.match(/UNBROKEN[x]+/)?.[0] || ''
@@ -77,9 +82,9 @@ function passHtml(): string {
           <th style="text-align:left">pipe</th>
         </tr>
         <tr>
-          <td><span class="katex"><annotation>\\alpha</annotation></span></td>
-          <td style="text-align:center"><span class="katex"><annotation>x^2</annotation></span></td>
-          <td style="text-align:right">1</td>
+          <td>${katexAnn('\\alpha')}</td>
+          <td style="text-align:center">${katexAnn('x^2')}</td>
+          <td style="text-align:right">${katexAnn('1')}</td>
           <td>a | b</td>
         </tr>
       </table>
@@ -90,18 +95,19 @@ function passHtml(): string {
     <div class="code-block-direct" data-language="mermaid"><span class="code-language-label">mermaid</span>
       <pre class="language-mermaid"><code class="language-mermaid">graph TD</code></pre>
     </div>
-    <span class="katex"><annotation>\\ce{H2O}</annotation></span>
-    <span class="katex"><annotation>\\begin{cases}x\\end{cases}</annotation></span>
-    <span class="katex"><annotation>\\begin{aligned}x\\end{aligned}</annotation></span>
-    <span class="katex"><annotation>\\boxed{E = mc^2}</annotation></span>
-    <span class="katex"><annotation>\\text{温度 25°C}</annotation></span>
+    ${katexAnn('\\ce{H2O}')}
+    ${katexAnn('\\ce{SO4^{2-}}')}
+    ${katexAnn('\\begin{cases} x & \\text{if } x \\ge 0 \\\\ -x & \\text{if } x < 0 \\end{cases}')}
+    ${katexAnn('\\begin{aligned} x + y &= 5 \\\\ 2x - y &= 1 \\end{aligned}')}
+    ${katexAnn('\\boxed{E = mc^2}')}
+    ${katexAnn('\\text{温度 25°C}')}
     <p>Status emoji: ✅ and 🧪.</p>
     <p dir="rtl">مرحبا بالعالم</p>
     <p>你好世界 こんにちは</p>
     <p>${unbroken}</p>
     <pre><code>${longCode}</code></pre>
-    <p>The fare is $12 beside <span class="katex"><annotation>E=mc^2</annotation></span>.</p>
-    <div class="katex-display"><span class="katex"><annotation>x+y</annotation></span></div>
+    <p>The fare is $12 beside ${katexAnn('E=mc^2')}.</p>
+    <div class="katex-display">${katexAnn('x+y')}</div>
   `
 }
 
