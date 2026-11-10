@@ -59,10 +59,12 @@ jobs:
               - '.github/actions/**'
             rendering-harness:
               - 'rendering-harness/**'
+              - 'backend/data/models_registry.json'
               - 'frontend/src/components/LatexRenderer.tsx'
               - 'frontend/src/config/modelRendererRegistry.ts'
               - 'frontend/src/config/model_renderer_configs.json'
               - 'frontend/src/config/loadModelConfigs.ts'
+              - 'frontend/src/utils/latex/**'
               - '.github/workflows/ci.yml'
             seo:
               - 'frontend/public/sitemap.xml'
@@ -1002,6 +1004,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      - name: Fetch base ref for the coverage gate
+        run: git fetch origin "+refs/heads/${{ github.base_ref || 'master' }}:refs/remotes/origin/${{ github.base_ref || 'master' }}"
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -1027,6 +1032,12 @@ jobs:
         working-directory: rendering-harness
         run: npm run typecheck
 
+      - name: Rendering coverage gate
+        working-directory: rendering-harness
+        env:
+          COVERAGE_BASE_REF: origin/${{ github.base_ref || 'master' }}
+        run: npm run check-coverage
+
       - name: Isolated Playwright suites
         working-directory: rendering-harness
         run: |
@@ -1036,6 +1047,7 @@ jobs:
           npx playwright test source-features.test.ts
           npx playwright test expected-features.test.ts
           npx playwright test overall-status.test.ts
+          npx playwright test coverage-gate.test.ts
           npx playwright test production-validation.test.ts
           npx playwright test production-styling.test.ts
           npx playwright test dom-assertions.test.ts

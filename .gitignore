@@ -140,3 +140,7 @@ extension/compareintel-extension.zip
 rendering-harness/full-section-audit/screenshots/*.png
 rendering-harness/full-section-audit/before-after/*.png
 rendering-harness/full-section-audit/*.zip
+# Local review artifacts. Saved reply JSON and coverage.json are the gate inputs.
+rendering-harness/runs/**/*.png
+rendering-harness/runs/**/*.tar.gz
+rendering-harness/runs/**/*.tgz
