@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "harness": "tsx run-harness.ts",
+    "layout-audit": "tsx layout-audit.ts",
     "generate-coverage": "tsx generate-coverage.ts",
     "check-coverage": "tsx check-coverage.ts",
     "test": "playwright test",

@@ -1052,8 +1052,17 @@ jobs:
           npx playwright test production-validation.test.ts
           npx playwright test production-styling.test.ts
           npx playwright test mobile-katex-overflow.test.ts
+          npx playwright test layout-checks.test.ts
+          npx playwright test results-section-overflow.test.ts
+          npx playwright test section-slice.test.ts
+          npx playwright test saved-cells.test.ts
           npx playwright test dom-assertions.test.ts
           npx playwright test test-with-fixtures.test.ts
+
+      - name: Phone and dark layout audit (render-only)
+        working-directory: rendering-harness
+        timeout-minutes: 55
+        run: npm run layout-audit
 
       - name: Run full offline fixture suite
         working-directory: rendering-harness

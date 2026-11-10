@@ -2447,8 +2447,13 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   .result-card .message-content .latex-content {
     min-width: 0;
     max-width: 100%;
-    overflow-x: visible;
-    overflow-y: visible;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+
+  .result-card .message-content .latex-content {
+    width: 100%;
+    contain: inline-size;
   }
 
   .result-card .latex-content .katex-display {
@@ -2474,6 +2479,9 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   .result-card .code-block-direct {
     max-width: 100%;
     box-sizing: border-box;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   .result-card .latex-content p,
@@ -2499,8 +2507,33 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   }
 
   .results-section {
-    overflow-x: hidden;
+    overflow-x: visible;
+    overflow-y: visible;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .results-grid {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: visible;
+  }
+
+  .results-grid > .result-card {
+    min-width: 0;
+  }
+
+  .result-card .latex-content code.inline-code {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    vertical-align: top;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    box-sizing: border-box;
   }
 
   /* Tabbed layout styles for mobile */
