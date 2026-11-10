@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "harness": "tsx run-harness.ts",
+    "generate-coverage": "tsx generate-coverage.ts",
+    "check-coverage": "tsx check-coverage.ts",
     "test": "playwright test",
     "test-fixtures": "tsx test-with-fixtures.ts",
     "typecheck": "tsc --project tsconfig.check.json --noEmit",

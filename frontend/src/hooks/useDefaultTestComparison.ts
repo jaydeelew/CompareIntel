@@ -37,7 +37,7 @@ const LEGACY_DISPLAY_NAME = 'Test Comparison'
  */
 const DEFAULT_MODEL_PRIORITY = [
   'google/gemini-2.5-flash', // Highly recognizable Google model
-  'deepseek/deepseek-v4.1-flash', // Very popular recent model
+  'deepseek/deepseek-v4.1-flash-1017', // Very popular recent model
   'deepseek/deepseek-v4-flash', // Alternative DeepSeek
   'google/gemini-3.1-flash-lite-preview', // Alternative Google
   'microsoft/phi-4', // Recognizable Microsoft model

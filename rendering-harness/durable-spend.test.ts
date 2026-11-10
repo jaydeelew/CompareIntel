@@ -279,7 +279,7 @@ test.describe('Durable global spend', () => {
           callId: 'historical-unknown-2',
           actualCost: null,
           resolution: null,
-          modelId: 'tencent/hy4-preview',
+          modelId: 'tencent/hy4',
         },
       ]
       writeState(x.stateFile, s)

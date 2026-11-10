@@ -3683,7 +3683,7 @@
     }
   },
   {
-    "modelId": "deepseek/deepseek-v4.1-flash",
+    "modelId": "deepseek/deepseek-v4.1-flash-1017",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
@@ -4711,7 +4711,7 @@
     }
   },
   {
-    "modelId": "tencent/hy4-preview",
+    "modelId": "tencent/hy4",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {

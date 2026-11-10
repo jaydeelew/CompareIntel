@@ -26,7 +26,20 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.model_runner import call_openrouter
 from scripts.config_helpers import has_model_config, load_existing_configs
-from scripts.test_prompts import TEST_PROMPTS, get_all_prompt_names
+from scripts.harness_replies import (
+    PROMPT_ORDER,
+    HarnessRenderFailedError,
+    HarnessRenderNotRunError,
+    discard_attempt_files,
+    find_complete_replies,
+    harness_result_line,
+    load_harness_prompts,
+    regenerate_coverage_manifest,
+    render_saved_replies,
+    replies_to_analysis_responses,
+    runs_root,
+    write_harness_replies,
+)
 
 
 class ModelRendererSetup:
@@ -124,15 +137,10 @@ class ModelRendererSetup:
         self.log(f"Collecting responses from {self.model_id}...")
         self.log_progress("collecting", f"Collecting responses from {self.model_id}...", 0.0)
 
-        prompt_names = get_all_prompt_names()
-        total_prompts = len(prompt_names)
+        harness_prompts = load_harness_prompts()
+        total_prompts = len(harness_prompts)
         self.stats["total_requests"] = total_prompts
-
-        # Create list of (prompt_name, prompt_text) tuples
-        prompt_tasks = []
-        for prompt_name in prompt_names:
-            prompt_data = next(p for p in TEST_PROMPTS if p["name"] == prompt_name)
-            prompt_tasks.append((prompt_name, prompt_data["prompt"]))
+        prompt_tasks = [(item["name"], item["prompt"]) for item in harness_prompts]
 
         # Collect all responses concurrently with a semaphore to limit concurrency
         # This prevents overwhelming the API while still being much faster than sequential
@@ -495,40 +503,90 @@ class ModelRendererSetup:
 
         return config_path
 
-    def run(self) -> dict[str, Any]:
-        """Run the complete setup process."""
-        # Check if model already has config
-        if has_model_config(self.model_id):
-            raise ValueError(f"Model {self.model_id} already has a renderer configuration")
+    def run(self, *, defer_coverage: bool = False) -> dict[str, Any]:
+        """Collect harness replies, write a renderer config, and render offline.
 
-        # Step 1: Collect responses
+        Saved complete replies from an earlier batch are reused, so that retry does
+        not call OpenRouter again. A render that fails, is skipped, or cannot
+        start deletes the admin batch and any renderer config this attempt
+        wrote. defer_coverage leaves coverage.json to the caller that has just
+        persisted models_registry.json.
+        """
         self.log_progress("starting", f"Starting setup process for {self.model_id}...", 0.0)
-        responses = self.collect_responses()
+        existing = find_complete_replies(self.model_id)
+        config_written = False
+        if len(existing) == len(PROMPT_ORDER):
+            self.log_progress(
+                "collecting",
+                f"Reusing saved harness replies for {self.model_id}; no OpenRouter call",
+                100.0,
+            )
+            responses = replies_to_analysis_responses(existing)
+            self.stats["total_requests"] = len(PROMPT_ORDER)
+            self.stats["successful"] = len(PROMPT_ORDER)
+        else:
+            responses = self.collect_responses()
+            if self.stats["successful"] != len(PROMPT_ORDER):
+                raise RuntimeError(
+                    f"Need all {len(PROMPT_ORDER)} harness replies from {self.model_id}; "
+                    f"got {self.stats['successful']}"
+                )
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        run_dir = runs_root() / f"admin-{stamp}"
+        write_harness_replies(self.model_id, self.model_id, responses, run_dir)
 
-        if self.stats["successful"] == 0:
-            raise RuntimeError(f"Failed to collect any successful responses from {self.model_id}")
-
-        # Step 2: Analyze responses
         analysis = self.analyze_responses(responses)
+        config: dict[str, Any] | None
+        config_path: Path | None
+        if has_model_config(self.model_id):
+            self.log_progress(
+                "generating",
+                "Renderer config already exists; leaving it in place",
+                100.0,
+            )
+            config = None
+            config_path = None
+        else:
+            config = self.generate_config(analysis)
+            self.log_progress("saving", "Saving renderer configuration to file...", 0.0)
+            config_path = self.save_config(config)
+            config_written = True
+            self.log_progress("saving", "Configuration saved successfully", 100.0)
 
-        # Step 3: Generate config
-        config = self.generate_config(analysis)
+        self.log_progress("harness", "Rendering saved replies with LatexRenderer...", 0.0)
+        rendered = render_saved_replies(run_dir, self.model_id)
+        if rendered["state"] != "passed":
+            discard_attempt_files(run_dir, model_id=self.model_id, remove_config=config_written)
+            if rendered["state"] == "not-run":
+                raise HarnessRenderNotRunError(rendered["message"], rendered["command"])
+            raise HarnessRenderFailedError(rendered["message"])
 
-        # Step 4: Save config
-        self.log_progress("saving", "Saving renderer configuration to file...", 0.0)
-        config_path = self.save_config(config)
-        self.log_progress("saving", "Configuration saved successfully", 100.0)
+        if not defer_coverage:
+            coverage = regenerate_coverage_manifest()
+            if coverage.returncode != 0:
+                detail = (coverage.stderr or coverage.stdout or "generate-coverage failed")[-500:]
+                raise RuntimeError(f"Failed to update rendering-harness/coverage.json: {detail}")
 
-        self.log(f"\n✓ Setup complete! Config saved to {config_path}")
-        self.log(
-            f"  Successful responses: {self.stats['successful']}/{self.stats['total_requests']}"
+        result_line = harness_result_line(
+            self.model_id,
+            "passed",
+            rendered["message"],
+            rendered["command"],
         )
+        print(result_line, flush=True)
+        self.log_progress("harness", rendered["message"], 100.0)
+        self.log(f"\n✓ Setup complete for {self.model_id}")
+        if config_path is not None:
+            self.log(f"  Config saved to {config_path}")
+        self.log(f"  Harness replies: {run_dir}")
 
         return {
             "config": config,
             "analysis": analysis,
             "stats": self.stats,
-            "config_path": str(config_path),
+            "config_path": str(config_path) if config_path else None,
+            "run_dir": str(run_dir),
+            "harness": rendered,
         }
 
 
@@ -549,6 +607,11 @@ def main():
         "--concurrency", type=int, default=5, help="Max concurrent requests (default: 5)"
     )
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output")
+    parser.add_argument(
+        "--defer-coverage",
+        action="store_true",
+        help="Do not rewrite coverage.json (admin add saves the registry first)",
+    )
 
     args = parser.parse_args()
 
@@ -561,9 +624,16 @@ def main():
     )
 
     try:
-        result = setup.run()
+        setup.run(defer_coverage=args.defer_coverage)
         print(f"\n✓ Successfully set up renderer config for {args.model_id}")
         sys.exit(0)
+    except HarnessRenderNotRunError as e:
+        print(f"HARNESS_RENDER_NOT_RUN: {e}", file=sys.stderr)
+        print(f"HARNESS_COMMAND: {e.command}", file=sys.stderr)
+        sys.exit(2)
+    except HarnessRenderFailedError as e:
+        print(f"RENDERING HARNESS FAILED: {e}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"\n✗ Error: {e}", file=sys.stderr)
         import traceback

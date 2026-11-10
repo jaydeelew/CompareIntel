@@ -1833,12 +1833,12 @@
       }
     },
     {
-      "id": "deepseek/deepseek-v4.1-flash",
-      "canonical_slug": "deepseek/deepseek-v4.1-flash-20260910",
-      "hugging_face_id": "deepseek-ai/DeepSeek-V4.1-Flash",
-      "name": "DeepSeek: DeepSeek V4.1 Flash",
-      "created": 1789021285,
-      "description": "DeepSeek V4.1 Flash is a sparse mixture-of-experts model from DeepSeek, and the first built on the company's Causal Encoder-Decoder (CED) architecture. It activates 8B parameters on input and 16B on...",
+      "id": "deepseek/deepseek-v4.1-flash-1017",
+      "canonical_slug": "deepseek/deepseek-v4.1-flash-20261017",
+      "hugging_face_id": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "name": "DeepSeek: DeepSeek V4.1 Flash 1017",
+      "created": 1792225624,
+      "description": "DeepSeek V4.1 Flash 1017 is the October 17, 2026 snapshot of DeepSeek V4.1 Flash, served by DeepSeek under the `deepseek-flash` API model name. V4.1 Flash is a sparse mixture-of-experts model...",
       "context_length": 1048576,
       "architecture": {
         "modality": "text+image->text",
@@ -1853,9 +1853,9 @@
         "instruct_type": null
       },
       "pricing": {
-        "prompt": "0.00000002",
-        "completion": "0.000001",
-        "input_cache_read": "0.000000015"
+        "prompt": "0.000000006",
+        "completion": "0.0000005",
+        "input_cache_read": "0.000000005"
       },
       "top_provider": {
         "context_length": 1048576,
@@ -1868,6 +1868,7 @@
         "include_reasoning",
         "logit_bias",
         "logprobs",
+        "max_completion_tokens",
         "max_tokens",
         "min_p",
         "parallel_tool_calls",
@@ -1882,7 +1883,6 @@
         "temperature",
         "tool_choice",
         "tools",
-        "top_a",
         "top_k",
         "top_logprobs",
         "top_p"
@@ -1892,12 +1892,76 @@
       "knowledge_cutoff": null,
       "expiration_date": null,
       "links": {
-        "details": "/api/v1/models/deepseek/deepseek-v4.1-flash-20260910/endpoints"
+        "details": "/api/v1/models/deepseek/deepseek-v4.1-flash-20261017/endpoints"
       },
       "benchmarks": {
-        "design_arena": [],
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "spreadsheet",
+            "elo": 1304,
+            "win_rate": 55,
+            "rank": 4
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1354,
+            "win_rate": 47.3,
+            "rank": 10
+          },
+          {
+            "arena": "models",
+            "category": "asciiart",
+            "elo": 1236,
+            "win_rate": 47.6,
+            "rank": 20
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1289,
+            "win_rate": 48.8,
+            "rank": 18
+          },
+          {
+            "arena": "models",
+            "category": "dataviz",
+            "elo": 1263,
+            "win_rate": 50.3,
+            "rank": 29
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1263,
+            "win_rate": 44.4,
+            "rank": 27
+          },
+          {
+            "arena": "models",
+            "category": "svg",
+            "elo": 1254,
+            "win_rate": 52.6,
+            "rank": 17
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1294,
+            "win_rate": 49.9,
+            "rank": 18
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1295,
+            "win_rate": 51.9,
+            "rank": 16
+          }
+        ],
         "artificial_analysis": {
-          "intelligence_index": 24.7,
+          "intelligence_index": 28.6,
           "coding_index": null,
           "agentic_index": null
         }
@@ -5977,12 +6041,12 @@
       }
     },
     {
-      "id": "openai/gpt-image-2.5-sunburst",
-      "canonical_slug": "openai/gpt-image-2.5-sunburst-20260908",
+      "id": "openai/gpt-image-2.6-sunburst",
+      "canonical_slug": "openai/gpt-image-2.6-sunburst-20261104",
       "hugging_face_id": null,
-      "name": "OpenAI: GPT Image 2.5 Sunburst",
-      "created": 1788916368,
-      "description": "GPT Image 2.5 Sunburst is an image generation and editing model from OpenAI, positioned as the precision-oriented tier of the GPT Image 2.5 series. It is suited to detailed creative...",
+      "name": "OpenAI: GPT Image 2.6 Sunburst",
+      "created": 1793835357,
+      "description": "GPT Image 2.6 Sunburst is OpenAI's image generation and editing model optimized for detail: dense compositions, text-heavy layouts, and edits that keep details consistent from one edit to the next...",
       "context_length": 400000,
       "architecture": {
         "modality": "text+image->image",
@@ -6001,7 +6065,8 @@
         "completion": "0.000008",
         "image_output": "0.00003",
         "web_search": "0.01",
-        "input_cache_read": "0.000002"
+        "input_cache_read": "0.000002",
+        "input_cache_write": "0.00001"
       },
       "top_provider": {
         "context_length": 400000,
@@ -6020,7 +6085,7 @@
       "knowledge_cutoff": null,
       "expiration_date": null,
       "links": {
-        "details": "/api/v1/models/openai/gpt-image-2.5-sunburst-20260908/endpoints"
+        "details": "/api/v1/models/openai/gpt-image-2.6-sunburst-20261104/endpoints"
       }
     },
     {
@@ -6797,17 +6862,18 @@
       }
     },
     {
-      "id": "tencent/hy4-preview",
-      "canonical_slug": "tencent/hy4-preview-20260827",
-      "hugging_face_id": "tencent/Hy4-preview",
-      "name": "Tencent: Hy4 preview",
-      "created": 1787897375,
-      "description": "Tencent: Hy4 preview is a mixture-of-experts model from Tencent, with 49B active parameters out of 770B total. It is designed for coding agents, complex tool-use workflows, and productivity tasks that...",
+      "id": "tencent/hy4",
+      "canonical_slug": "tencent/hy4-20261104",
+      "hugging_face_id": "tencent/Hy4",
+      "name": "Tencent: Hy4",
+      "created": 1793766031,
+      "description": "The official release of Hy4 delivers comprehensive and substantial improvements over Hy4 Preview, with particularly strong gains in agentic capabilities and performance across a wide range of long-horizon, real-world productivity...",
       "context_length": 1048576,
       "architecture": {
-        "modality": "text->text",
+        "modality": "text+image->text",
         "input_modalities": [
-          "text"
+          "text",
+          "image"
         ],
         "output_modalities": [
           "text"
@@ -6816,62 +6882,79 @@
         "instruct_type": null
       },
       "pricing": {
-        "prompt": "0.000000834",
-        "completion": "0.000002501",
-        "input_cache_read": "0.000000042",
-        "overrides": [
-          {
-            "utc_start": 0,
-            "utc_end": 1600,
-            "prompt": "0.000000834",
-            "completion": "0.000002501",
-            "input_cache_read": "0.000000042"
-          },
-          {
-            "utc_start": 1600,
-            "utc_end": 0,
-            "prompt": "0.0000007506",
-            "completion": "0.0000022509",
-            "input_cache_read": "0.0000000378"
-          }
-        ]
+        "prompt": "0.000000417",
+        "completion": "0.0000012505",
+        "input_cache_read": "0.000000021"
       },
       "top_provider": {
         "context_length": 1048576,
-        "max_completion_tokens": 64000,
+        "max_completion_tokens": 65536,
         "is_moderated": false
       },
       "per_request_limits": null,
       "supported_parameters": [
-        "frequency_penalty",
         "include_reasoning",
-        "logit_bias",
-        "logprobs",
         "max_completion_tokens",
         "max_tokens",
-        "min_p",
-        "parallel_tool_calls",
-        "presence_penalty",
         "reasoning",
         "reasoning_effort",
-        "repetition_penalty",
         "response_format",
-        "seed",
         "stop",
         "structured_outputs",
         "temperature",
         "tool_choice",
-        "tools",
-        "top_k",
-        "top_logprobs",
-        "top_p"
+        "tools"
       ],
       "default_parameters": {},
       "supported_voices": null,
       "knowledge_cutoff": null,
       "expiration_date": null,
       "links": {
-        "details": "/api/v1/models/tencent/hy4-preview-20260827/endpoints"
+        "details": "/api/v1/models/tencent/hy4-20261104/endpoints"
+      },
+      "benchmarks": {
+        "design_arena": [
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1264,
+            "win_rate": 49.3,
+            "rank": 25
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1258,
+            "win_rate": 47.8,
+            "rank": 37
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1259,
+            "win_rate": 47.9,
+            "rank": 34
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1195,
+            "win_rate": 38.7,
+            "rank": 63
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1256,
+            "win_rate": 47.9,
+            "rank": 40
+          }
+        ],
+        "artificial_analysis": {
+          "intelligence_index": 34.6,
+          "coding_index": null,
+          "agentic_index": null
+        }
       },
       "reasoning": {
         "mandatory": false,

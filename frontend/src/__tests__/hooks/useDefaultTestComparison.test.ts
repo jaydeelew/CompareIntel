@@ -73,7 +73,7 @@ function managedSelection(
   return {
     id: 'starter-id',
     name: STARTER_SELECTION_NAME,
-    modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'],
+    modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     systemKey: ANONYMOUS_STARTER_SYSTEM_KEY,
@@ -97,7 +97,7 @@ describe('useDefaultTestComparison', () => {
       createModel('google/gemini-3.1-flash-lite-preview', 'Google', 'unregistered'),
     ],
     DeepSeek: [
-      createModel('deepseek/deepseek-v4.1-flash', 'DeepSeek', 'unregistered'),
+      createModel('deepseek/deepseek-v4.1-flash-1017', 'DeepSeek', 'unregistered'),
       createModel('deepseek/deepseek-v4-flash', 'DeepSeek', 'unregistered'),
     ],
     Microsoft: [createModel('microsoft/phi-4', 'Microsoft', 'unregistered')],
@@ -131,7 +131,7 @@ describe('useDefaultTestComparison', () => {
       await waitFor(() => {
         expect(saveSelection).toHaveBeenCalledWith(
           STARTER_SELECTION_NAME,
-          ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'],
+          ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
           { systemKey: ANONYMOUS_STARTER_SYSTEM_KEY }
         )
       })
@@ -235,7 +235,7 @@ describe('useDefaultTestComparison', () => {
       const legacy = {
         id: 'legacy-id',
         name: LEGACY_DISPLAY_NAME,
-        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'],
+        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -295,7 +295,7 @@ describe('useDefaultTestComparison', () => {
       const legacy = {
         id: 'legacy-id',
         name: LEGACY_DISPLAY_NAME,
-        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'],
+        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -320,7 +320,7 @@ describe('useDefaultTestComparison', () => {
       const legacy = {
         id: 'legacy-id',
         name: LEGACY_DISPLAY_NAME,
-        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'],
+        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -452,7 +452,7 @@ describe('useDefaultTestComparison', () => {
 
       await waitFor(() => {
         expect(patchSelection).toHaveBeenCalledWith('starter-id', {
-          modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'],
+          modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
         })
       })
       expect(saveSelection).not.toHaveBeenCalled()
@@ -581,7 +581,7 @@ describe('useDefaultTestComparison', () => {
             supportsImageGen: true,
           }),
         ],
-        DeepSeek: [createModel('deepseek/deepseek-v4.1-flash', 'DeepSeek', 'unregistered')],
+        DeepSeek: [createModel('deepseek/deepseek-v4.1-flash-1017', 'DeepSeek', 'unregistered')],
       }
       const params = createDefaultParams({ modelsByProvider, saveSelection })
 
@@ -590,7 +590,7 @@ describe('useDefaultTestComparison', () => {
       await waitFor(() => {
         expect(saveSelection).toHaveBeenCalledWith(
           STARTER_SELECTION_NAME,
-          ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'],
+          ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
           { systemKey: ANONYMOUS_STARTER_SYSTEM_KEY }
         )
       })
@@ -607,7 +607,7 @@ describe('useDefaultTestComparison', () => {
             available: false,
           }),
         ],
-        DeepSeek: [createModel('deepseek/deepseek-v4.1-flash', 'DeepSeek', 'unregistered')],
+        DeepSeek: [createModel('deepseek/deepseek-v4.1-flash-1017', 'DeepSeek', 'unregistered')],
       }
       const params = createDefaultParams({ modelsByProvider, saveSelection })
 
@@ -616,7 +616,7 @@ describe('useDefaultTestComparison', () => {
       await waitFor(() => {
         expect(saveSelection).toHaveBeenCalledWith(
           STARTER_SELECTION_NAME,
-          ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash'],
+          ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
           { systemKey: ANONYMOUS_STARTER_SYSTEM_KEY }
         )
       })
@@ -639,7 +639,7 @@ describe('useDefaultTestComparison', () => {
         {
           id: 'sel-2',
           name: 'Selection 2',
-          modelIds: ['deepseek/deepseek-v4.1-flash'],
+          modelIds: ['deepseek/deepseek-v4.1-flash-1017'],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },

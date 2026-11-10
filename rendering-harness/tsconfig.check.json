@@ -11,7 +11,11 @@
     "paid-call.ts",
     "source-features.ts",
     "expected-features.ts",
-    "overall-status.ts"
+    "overall-status.ts",
+    "render-ready.ts",
+    "coverage-lib.ts",
+    "generate-coverage.ts",
+    "check-coverage.ts"
   ],
   "exclude": [
     "node_modules",
