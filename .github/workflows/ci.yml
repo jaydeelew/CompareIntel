@@ -531,10 +531,22 @@ jobs:
             playwright-${{ runner.os }}-
       
       - name: Install Playwright browsers
+        # apt has hung in `playwright install --with-deps` until this job's
+        # 45 minute timeout cancelled the run, before any test started.
+        # Bound each attempt so a stalled apt is retried.
+        timeout-minutes: 28
         run: |
           cd frontend
           # Critical flows run on Chromium only (see grep below).
-          npx playwright install --with-deps chromium
+          ok=0
+          for attempt in 1 2 3; do
+            if timeout 8m npx playwright install --with-deps chromium; then
+              ok=1
+              break
+            fi
+            echo "Playwright chromium install attempt ${attempt} did not finish; retrying"
+          done
+          test "$ok" = 1
       
       - name: Initialize test database directory
         run: |
