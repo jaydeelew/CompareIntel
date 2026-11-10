@@ -201,7 +201,7 @@ def _get_huggingface_model_name(model_id: str) -> str | None:
         "mistralai/codestral-2508": "mistralai/Codestral-2508",
         "deepseek/deepseek-v3.2": "deepseek-ai/DeepSeek-V3.2",
         "deepseek/deepseek-v4-flash": "deepseek-ai/DeepSeek-V4-Flash",
-        "deepseek/deepseek-v4.1-flash": "deepseek-ai/DeepSeek-V4.1-Flash",
+        "deepseek/deepseek-v4.1-flash-1017": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
         "deepseek/deepseek-v4-pro": "deepseek-ai/DeepSeek-V4-Pro",
         "qwen/qwen3-30b-a3b-instruct-2507": "Qwen/Qwen3-30B-A3B-Instruct-2507",
         "qwen/qwen3-next-80b-a3b-instruct": "Qwen/Qwen3-Next-80B-A3B-Instruct",
@@ -221,7 +221,7 @@ def _get_huggingface_model_name(model_id: str) -> str | None:
         "z-ai/glm-5.2": "zai-org/GLM-5.2",
         "z-ai/glm-5.3": "zai-org/GLM-5.3",
         "z-ai/glm-5.3-flash": "zai-org/GLM-5.3-Flash",
-        "tencent/hy4-preview": "tencent/Hy4-preview",
+        "tencent/hy4": "tencent/Hy4",
         "stepfun/step-5-preview": "stepfun-ai/Step-5-Preview",
     }
     return hf_model_map.get(base_id) or hf_model_map.get(model_id)

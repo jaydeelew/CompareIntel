@@ -57,7 +57,7 @@ class TestCatalogLineup:
         "black-forest-labs/flux-3-image",
         "bytedance-seed/seedream-4.5",
         "bytedance-seed/seedream-5-0-flash",
-        "openai/gpt-image-2.5-sunburst",
+        "openai/gpt-image-2.6-sunburst",
         "sourceful/riverflow-v2-pro",
         "sourceful/riverflow-v2.6-pro",
         "qwen/qwen-image-2.1-pro",
@@ -89,6 +89,27 @@ class TestCatalogLineup:
             "cohere/command-r7b-12-2024",
         ):
             assert model_id not in ids
+
+    def test_lineup_refresh_swaps_superseded_models(self):
+        ids = registry.get_registry_model_ids()
+        assert len(ids) == 100
+        for model_id in (
+            "deepseek/deepseek-v4.1-flash-1017",
+            "tencent/hy4",
+            "openai/gpt-image-2.6-sunburst",
+        ):
+            assert model_id in ids
+        for model_id in (
+            "deepseek/deepseek-v4.1-flash",
+            "tencent/hy4-preview",
+            "openai/gpt-image-2.5-sunburst",
+        ):
+            assert model_id not in ids
+        data = registry.load_registry()
+        assert "deepseek/deepseek-v4.1-flash-1017" in data["unregistered_tier_models"]
+        assert "tencent/hy4" in data["free_tier_additional_models"]
+        assert "openai/gpt-image-2.6-sunburst" in data["image_free_tier_additional_models"]
+        assert "openai/gpt-image-2.6-sunburst" not in data["free_tier_additional_models"]
 
     def test_qwen_image_model_is_image_only_and_text_qwen_is_not(self):
         """Qwen text and image models share a prefix, so image-only comes from metadata."""

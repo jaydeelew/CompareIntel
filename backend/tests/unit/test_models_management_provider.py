@@ -66,7 +66,7 @@ class TestProviderNameResolution:
     @pytest.mark.parametrize(
         ("model_id", "expected"),
         [
-            ("tencent/hy4-preview", "Tencent"),
+            ("tencent/hy4", "Tencent"),
             ("stepfun/step-5-preview", "Stepfun"),
         ],
     )

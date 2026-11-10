@@ -44,7 +44,7 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
   // OpenAI - 1:1 @ 1K only
   'openai/gpt-5-image': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
   'openai/gpt-5-image-mini': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
-  'openai/gpt-image-2.5-sunburst': { image_sizes: ['1K', '2K'] },
+  'openai/gpt-image-2.6-sunburst': { image_sizes: ['1K', '2K'] },
 
   // Sourceful - Riverflow V2
   'sourceful/riverflow-v2.6-pro': { image_sizes: ['1K', '2K'] },
