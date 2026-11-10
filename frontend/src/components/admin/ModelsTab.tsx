@@ -184,7 +184,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
                 })
               } else if (data.type === 'success') {
                 setModelSuccess(
-                  data.message || `Model ${data.model_id || newModelId.trim()} added successfully!`,
+                  data.message || `Model ${data.model_id || newModelId.trim()} added successfully!`
                 )
                 setNewModelId('')
                 setNewModelKnowledgeCutoff('')
