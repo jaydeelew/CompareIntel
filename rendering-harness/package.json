@@ -8,6 +8,8 @@
     "layout-audit": "tsx layout-audit.ts",
     "triage": "tsx triage.ts",
     "before-after": "tsx before-after.ts",
+    "generate-coverage": "tsx generate-coverage.ts",
+    "check-coverage": "tsx check-coverage.ts",
     "test": "playwright test",
     "test-fixtures": "tsx test-with-fixtures.ts",
     "typecheck": "tsc --project tsconfig.check.json --noEmit",

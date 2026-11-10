@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import LatexRenderer from '@/components/LatexRenderer';
 import { initializeRegistry } from '@/config/loadModelConfigs';
+import { contentExpectsKatex } from './render-ready';
 import '@/styles/variables.css';
 import '@/styles/base.css';
 import '@/styles/results.css';
@@ -149,7 +150,11 @@ function HarnessApp() {
   }
 
   return (
-    <div data-render-container className="results-section">
+    <div
+      data-render-container
+      data-expects-katex={contentExpectsKatex(renderData.content) ? 'true' : 'false'}
+      className="results-section"
+    >
       <div className="results-grid">
         <article className="result-card conversation-card">
           <div className="message-content">

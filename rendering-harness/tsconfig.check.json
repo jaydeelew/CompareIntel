@@ -22,7 +22,11 @@
     "launch-vite.ts",
     "layout-audit.ts",
     "triage.ts",
-    "before-after.ts"
+    "before-after.ts",
+    "render-ready.ts",
+    "coverage-lib.ts",
+    "generate-coverage.ts",
+    "check-coverage.ts"
   ],
   "exclude": [
     "node_modules",

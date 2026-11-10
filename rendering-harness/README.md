@@ -140,12 +140,34 @@ Logic is in `budget-guard.ts` (imported by the runner and by tests):
 
 See `BUDGET_GUARD_AUDIT.md` for limits (not a provider hard cap).
 
+## Coverage gate
+
+`coverage.json` lists every text-capable model in `backend/data/models_registry.json` and, for each of the six prompts, the saved reply path and status (`pass`, `not-covered`, `fail`, `incomplete`, or `source-issue`).
+
+A model is **image-only** when its registry `category` is exactly `"Image"`. Those ids are listed in `excludedImageModels` and are not required to have replies. Every other category is text-capable. The manifest does not read `supports_image_generation`. `output_modalities` is not stored on the registry; admin add copies an image output modality into `category: "Image"`.
+
+`not-covered` means the model omitted a feature the prompt asked for. It is allowed and must stay recorded. `fail` and `incomplete` (empty or truncated replies) fail the gate. `source-issue` is a malformed math environment in the model text, not a renderer loss, and does not fail the gate.
+
+Regenerate the manifest after replies change. This does not call a model API:
+
+```bash
+npm run generate-coverage
+npm run check-coverage
+```
+
+`coverage-allowlist.json` can exempt a text model. Each entry is `{ "modelId", "reason" }` and `reason` must be non-empty. An empty `entries` array means every text model is gated. Edit that file, then run `npm run generate-coverage`.
+
+CI runs `npm run check-coverage` when `backend/data/models_registry.json`, `frontend/src/config/model_renderer_configs.json`, `frontend/src/components/LatexRenderer.tsx`, `frontend/src/utils/latex/**`, or `rendering-harness/**` changes. The check fails if any text model lacks six saved replies or any cell is `fail` or `incomplete`. It re-renders replies for models that are new versus the base branch with `--render-only` and fails on an assertion failure. It deletes `OPENROUTER_API_KEY` from that child process and makes no paid call. A failure names the models and the exact `npm run harness -- --models=<ids> --max-usd=<n>` command.
+
+Screenshots (`*.png`) and archives (`*.tar.gz`) under `runs/` are gitignored. Commit the reply JSON and `coverage.json`.
+
 ## CI Integration
 
 All tests are fully offline (no API keys or real requests in CI):
 
 ```bash
-npm test  # Runs Playwright fixture tests
+npm test  # Runs Playwright fixture tests, including the coverage gate unit tests
+npm run check-coverage
 ```
 
 ## Example Cost Estimate
@@ -208,7 +230,7 @@ npm run harness -- --dry-run  # Shows current pricing
 
 - **Currency detection**: Simple text search (may over-report if math contains `$\d+`)
 - **Link safety**: Only filters `javascript:` schemes (not comprehensive XSS check)
-- **Readiness**: fonts, visible text, and KaTeX measurement. Prism highlighting is not a fixed delay.
+- **Readiness**: fonts, visible text, images, and KaTeX measurement. The 30s bound is only the failure deadline. Assertions, not this wait, decide whether missing math is a failure. Prism highlighting is not a fixed delay.
 
 ## Future Improvements
 

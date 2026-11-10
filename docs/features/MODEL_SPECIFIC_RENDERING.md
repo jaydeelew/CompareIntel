@@ -28,14 +28,8 @@ Implement a model-specific rendering registry where each model has its own:
 
 ### Phase 1: Response Collection and Analysis
 
-#### Step 1.1: Create Test Prompt Suite
-- Design comprehensive test prompts that cover:
-  - Complex mathematical expressions (display and inline)
-  - Various markdown elements (bold, italic, lists, links, headers)
-  - Edge cases (dollar signs in text, code blocks with math, mixed content)
-  - Special formatting patterns (tables, blockquotes, horizontal rules)
-- Ensure prompts are designed to elicit model-specific formatting behaviors
-- Include prompts that test code block preservation (to verify we don't break existing functionality)
+#### Step 1.1: Test prompts
+The rendering harness owns the six prompts in `rendering-harness/prompts/`. New text models are collected with those prompts so the saved replies satisfy the coverage gate. The older prompts in `backend/scripts/test_prompts.py` are not the gate.
 
 #### Step 1.2: Build Response Collection Script
 - Create a script that:
@@ -102,7 +96,7 @@ Implement a model-specific rendering registry where each model has its own:
   - Validate configurations against the schema
   - Document configuration decisions and reasoning
 
-**Note:** Manual refinement happens post-deployment (see Phase 7) when you review the actual rendered output on the website and provide feedback for adjustments.
+**Note:** Review the harness screenshots for a new model before committing the reply JSON. That review replaces opening the site and judging a prompt by eye. Do not commit the PNGs.
 
 #### Step 3.3: Create Configuration Validation
 - Build validation system to ensure:
@@ -144,6 +138,8 @@ Implement a model-specific rendering registry where each model has its own:
 - Test extensively to ensure no code formatting is altered
 
 ### Phase 5: Testing Framework
+
+The required check for a new text model is the rendering harness, not a manual pass in the running app. `rendering-harness/coverage.json` must list a saved reply for all six prompts, with status `pass`, `not-covered`, or `source-issue`. CI re-renders models that are new versus the base branch offline. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
 
 #### Step 5.1: Unit Tests for Renderer Configurations
 - Create tests for each model configuration:
@@ -340,32 +336,20 @@ Implement a model-specific rendering registry where each model has its own:
 
 ## Implementation Workflow
 
-**Implementation Phase (Phases 1-6):**
-- The AI assistant will implement the model-specific rendering features using best practices
-- Configurations will be generated based on Phase 1 analysis data
-- All phases will be completed before deployment
-
-**Post-Deployment Review (Phase 7):**
-- Once the website is running with model-specific rendering, you will manually examine the rendered results
-- You will identify any models that need configuration adjustments
-- Based on your review, configurations will be refined and updated
-- This iterative process continues until rendering quality meets standards
+Adding a text model (admin panel or CLI) writes harness replies for the six prompts, renders them with `LatexRenderer`, and updates `rendering-harness/coverage.json`. CI rejects a registry row that lacks those replies or has a `fail` or `incomplete` cell. Screenshot review happens on the harness output. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
 
 ## Next Steps
 
-1. Review and approve this implementation plan
-2. Set up response collection infrastructure
-3. Begin Phase 1: Response Collection and Analysis
-4. AI assistant implements Phases 2-6 using best practices
-5. Deploy model-specific rendering
-6. Manual review of rendered results on the website
-7. Refine configurations based on review feedback
+1. Add the model to the registry or through the development admin panel.
+2. Run `setup_model_renderer.py` (CLI) or let the admin flow run it.
+3. Estimate a paid harness collection with `--dry-run` only when saved replies are not already on disk.
+4. Review harness screenshots, commit reply JSON and `coverage.json`, and let CI run the coverage gate.
 
 ---
 
 **Document Version:** 1.1  
 **Last Updated:** November 2026  
-**Status:** Planning Phase, with an offline rendering harness in `rendering-harness/`
+**Status:** Harness coverage gate is the check for new text models
 
 ## Harness coverage beyond the original six prompts
 
