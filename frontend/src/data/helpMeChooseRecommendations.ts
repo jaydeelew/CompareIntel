@@ -77,6 +77,10 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       },
       { modelId: 'xiaomi/mimo-v2.6-flash', evidence: 'Avg. $0.21/1M tokens. Fetched 2026-11-09.' },
       { modelId: 'openai/gpt-5-nano', evidence: 'Avg. $0.22/1M tokens. Fetched 2026-11-09.' },
+      {
+        modelId: 'deepseek/deepseek-v4.1-flash-1017',
+        evidence: 'Avg. $0.25/1M tokens. Fetched 2026-11-10.',
+      },
       { modelId: 'google/gemma-3-27b-it', evidence: 'Avg. $0.26/1M tokens. Fetched 2026-11-09.' },
       { modelId: 'google/gemma-4-31b-it', evidence: 'Avg. $0.30/1M tokens. Fetched 2026-11-09.' },
       {
@@ -84,10 +88,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Avg. $0.30/1M tokens. Fetched 2026-11-09.',
       },
       { modelId: 'openai/gpt-6-luna', evidence: 'Avg. $0.30/1M tokens. Fetched 2026-11-09.' },
-      {
-        modelId: 'deepseek/deepseek-v4.1-flash',
-        evidence: 'Avg. $0.31/1M tokens. Fetched 2026-11-09.',
-      },
       { modelId: 'deepseek/deepseek-v3.2', evidence: 'Avg. $0.32/1M tokens. Fetched 2026-11-09.' },
       { modelId: 'openai/gpt-oss-120b', evidence: 'Avg. $0.38/1M tokens. Fetched 2026-11-09.' },
       { modelId: 'openai/gpt-4o-mini', evidence: 'Avg. $0.38/1M tokens. Fetched 2026-11-09.' },
@@ -469,10 +469,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       'Ranked by Text-to-Image Arena (kearai.com), human preference votes from creators. Higher Arena Rating = better at understanding creative intent.',
     models: [
       {
-        modelId: 'openai/gpt-image-2.5-sunburst',
-        evidence: 'Text-to-Image Arena (lmarena.ai): 1428. Fetched 2026-11-09.',
-      },
-      {
         modelId: 'google/gemini-nano-banana-2.1',
         evidence: 'Text-to-Image Arena (lmarena.ai): 1328. Fetched 2026-11-09.',
       },
@@ -721,16 +717,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       },
       { modelId: 'openai/o3', evidence: 'LegalBench (vals.ai): 83.76%. Fetched 2026-11-09.' },
       {
-        modelId: 'tencent/hy4-preview',
-        evidence: 'LegalBench (vals.ai): 83.76%. Fetched 2026-11-09.',
-      },
-      {
         modelId: 'anthropic/claude-opus-4.8',
         evidence: 'LegalBench (vals.ai): 83.57%. Fetched 2026-11-09.',
-      },
-      {
-        modelId: 'deepseek/deepseek-v4.1-flash',
-        evidence: 'LegalBench (vals.ai): 83.28%. Fetched 2026-11-09.',
       },
       { modelId: 'openai/gpt-5.2', evidence: 'LegalBench (vals.ai): 82.76%. Fetched 2026-11-09.' },
       {

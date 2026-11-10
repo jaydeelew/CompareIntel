@@ -38,7 +38,7 @@ const FIXTURE: ModelsByProvider = {
     m('google/gemini-2.5-flash-image', 'Google', 'free', { supports_image_generation: true }),
   ],
   xAI: [m('x-ai/grok-4.20', 'xAI')],
-  DeepSeek: [m('deepseek/deepseek-v4.1-flash', 'DeepSeek')],
+  DeepSeek: [m('deepseek/deepseek-v4.1-flash-1017', 'DeepSeek')],
   OpenAI: [m('openai/gpt-oss-120b', 'OpenAI')],
 }
 
@@ -162,7 +162,7 @@ describe('pickTwoDemoModels', () => {
     const withUnavailable: ModelsByProvider = {
       Google: [m('google/gemini-2.5-flash', 'Google', 'unregistered', { available: false })],
       xAI: [m('x-ai/grok-4.20', 'xAI')],
-      DeepSeek: [m('deepseek/deepseek-v4.1-flash', 'DeepSeek')],
+      DeepSeek: [m('deepseek/deepseek-v4.1-flash-1017', 'DeepSeek')],
     }
     const result = pickTwoDemoModels('natural-language', withUnavailable, false, null)
     expect(result).not.toBeNull()
@@ -183,7 +183,7 @@ describe('pickTwoDemoModels', () => {
   it('excludes thinking models for faster demos', () => {
     const withThinking: ModelsByProvider = {
       Qwen: [m('qwen/qwen3.8-max-0902', 'Qwen', 'unregistered', { is_thinking_model: true })],
-      DeepSeek: [m('deepseek/deepseek-v4.1-flash', 'DeepSeek')],
+      DeepSeek: [m('deepseek/deepseek-v4.1-flash-1017', 'DeepSeek')],
       Google: [m('google/gemini-2.5-flash', 'Google')],
     }
     const result = pickTwoDemoModels('natural-language', withThinking, false, null)

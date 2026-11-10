@@ -348,9 +348,9 @@
         "knowledge_cutoff": null
       },
       {
-        "id": "deepseek/deepseek-v4.1-flash",
-        "name": "Deepseek V4.1 Flash",
-        "description": "DeepSeek V4.1 Flash is a sparse mixture-of-experts model from DeepSeek, and the first built on the company's Causal Encoder-Decoder (CED) architecture.",
+        "id": "deepseek/deepseek-v4.1-flash-1017",
+        "name": "Deepseek V4.1 Flash 1017",
+        "description": "DeepSeek V4.1 Flash 1017 is the October 17, 2026 snapshot of DeepSeek V4.1 Flash, served by DeepSeek under the `deepseek-flash` API model name.",
         "category": "Language",
         "provider": "DeepSeek",
         "supports_web_search": true,
@@ -857,9 +857,9 @@
         "knowledge_cutoff": null
       },
       {
-        "id": "openai/gpt-image-2.5-sunburst",
-        "name": "Gpt Image 2.5 Sunburst",
-        "description": "GPT Image 2.5 Sunburst is an image generation and editing model from OpenAI, positioned as the precision-oriented tier of the GPT Image 2.5 series.",
+        "id": "openai/gpt-image-2.6-sunburst",
+        "name": "Gpt Image 2.6 Sunburst",
+        "description": "GPT Image 2.6 Sunburst is OpenAI's image generation and editing model optimized for detail: dense compositions, text-heavy layouts, and edits that keep details consistent from one edit to the next...",
         "category": "Image",
         "provider": "OpenAI",
         "supports_image_generation": true,
@@ -1221,9 +1221,9 @@
     ],
     "Tencent": [
       {
-        "id": "tencent/hy4-preview",
-        "name": "Hy4 Preview",
-        "description": "Hy4 Preview is a mixture-of-experts model from Tencent, with 49B active parameters out of 770B total.",
+        "id": "tencent/hy4",
+        "name": "Hy4",
+        "description": "The official release of Hy4 delivers comprehensive and substantial improvements over Hy4 Preview, with particularly strong gains in agentic capabilities and performance across a wide range of long-horizon, real-world productivity...",
         "category": "Language",
         "provider": "Tencent",
         "supports_web_search": true,
@@ -1378,7 +1378,7 @@
   "unregistered_tier_models": [
     "deepseek/deepseek-v3.2",
     "deepseek/deepseek-v4-flash",
-    "deepseek/deepseek-v4.1-flash",
+    "deepseek/deepseek-v4.1-flash-1017",
     "google/gemini-2.5-flash",
     "google/gemini-2.5-flash-image",
     "google/gemini-3.1-flash-lite-preview",
@@ -1413,7 +1413,7 @@
     "google/gemini-3-pro-image",
     "google/gemini-3.1-flash-image",
     "google/gemini-nano-banana-2.1",
-    "openai/gpt-image-2.5-sunburst",
+    "openai/gpt-image-2.6-sunburst",
     "qwen/qwen-image-2.1-pro"
   ],
   "free_tier_additional_models": [
@@ -1446,7 +1446,7 @@
     "qwen/qwen3-next-80b-a3b-instruct",
     "qwen/qwen3.5-397b-a17b",
     "stepfun/step-5-preview",
-    "tencent/hy4-preview",
+    "tencent/hy4",
     "x-ai/grok-4.3",
     "xiaomi/mimo-v2.5-pro",
     "z-ai/glm-5",

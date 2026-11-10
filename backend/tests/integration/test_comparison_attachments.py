@@ -9,7 +9,7 @@ from fastapi import status
 
 pytestmark = pytest.mark.integration
 
-FREE_TIER_MODEL = "deepseek/deepseek-v4.1-flash"
+FREE_TIER_MODEL = "deepseek/deepseek-v4.1-flash-1017"
 
 
 class TestCompareStreamAttachedImagesValidation:
