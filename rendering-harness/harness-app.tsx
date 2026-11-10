@@ -52,6 +52,8 @@ function HarnessApp() {
         const modelId = params.get('modelId');
         const content = params.get('content');
         if (modelId && content) {
+          // URLSearchParams already decodes. A second decodeURIComponent throws
+          // URI malformed on replies that contain a literal `%`.
           setRenderData({ modelId, content, generation: '' });
         }
       })
@@ -87,6 +89,8 @@ function HarnessApp() {
       if (!container || !domReady(container)) return;
       const token = ++attempt;
       void (async () => {
+        // KaTeX inserts font faces after the first paint. Wait until the
+        // font set stays loaded and the same size across two frames.
         for (let cycle = 0; cycle < 40; cycle++) {
           if (cancelled || token !== attempt) return;
           await document.fonts.ready;

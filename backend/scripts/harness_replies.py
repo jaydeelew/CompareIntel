@@ -57,14 +57,18 @@ def runs_root() -> Path:
 
 
 def load_harness_prompts() -> list[dict[str, str]]:
-    """Return the six harness prompts in filename order."""
-    found: list[dict[str, str]] = []
-    for path in sorted(prompts_dir().glob("*.md")):
-        found.append({"name": path.stem, "prompt": path.read_text(encoding="utf-8")})
-    names = [item["name"] for item in found]
-    if names != list(PROMPT_ORDER):
-        raise RuntimeError(f"rendering-harness/prompts must be {list(PROMPT_ORDER)}, found {names}")
-    return found
+    """Return the six coverage-gate prompts in filename order.
+
+    Extra prompt files, such as ``07-rare-formats.md``, may sit beside them.
+    New-model collection and the coverage gate use only ``PROMPT_ORDER``.
+    """
+    by_name = {path.stem: path.read_text(encoding="utf-8") for path in prompts_dir().glob("*.md")}
+    missing = [name for name in PROMPT_ORDER if name not in by_name]
+    if missing:
+        raise RuntimeError(
+            f"rendering-harness/prompts is missing {missing}; required {list(PROMPT_ORDER)}"
+        )
+    return [{"name": name, "prompt": by_name[name]} for name in PROMPT_ORDER]
 
 
 def reply_filename(model_id: str, prompt_name: str) -> str:

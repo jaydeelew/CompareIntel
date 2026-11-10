@@ -96,7 +96,7 @@ export function collectLayoutIssues(mode: string): LayoutIssue[] {
     if (insideAbsorber(el)) continue
     if (absorbs(el)) continue
     if (el.tagName === 'CODE' && el.closest('pre, .code-block, .code-block-direct')) continue
-  if (contentWider && !sticksOut && hostsWideScrollers(el)) continue
+    if (contentWider && !sticksOut && hostsWideScrollers(el)) continue
     const key = `${el.tagName}:${Math.round(rect.left)}:${sampleOf(el).slice(0, 40)}`
     if (seenOverflow.has(key)) continue
     seenOverflow.add(key)

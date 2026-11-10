@@ -2,8 +2,10 @@
  * Unique saved harness replies. One cell per model and prompt. A complete
  * later attempt, including a file under runs/<batch>/reruns/, replaces a
  * truncated or empty original. That is the same rule as uniqueCoverageRecords
- * and the batch rollups. This is the offline corpus (83 text models x 6
- * prompts = 498 when every cell was saved).
+ * and the batch rollups. The current registry is 83 text models x 6 prompts
+ * = 498. Pre-rename replies for tencent/hy4-preview and
+ * deepseek/deepseek-v4.1-flash stay beside the renamed copies, so the unique
+ * saved set is 510.
  */
 
 import fs from 'fs/promises'

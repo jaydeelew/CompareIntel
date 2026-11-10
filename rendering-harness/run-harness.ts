@@ -33,7 +33,9 @@ import {
   uniqueCoverageRecords,
   type OverallStatus,
 } from './overall-status.js';
-import { harnessRenderReady } from './render-ready.js';
+import { pageStateReady } from './page-state.js';
+import { capturePhoneAndDark, openThemedPage, DARK_VIEW, PHONE_VIEW } from './captures.js';
+import type { LayoutIssue } from './layout-checks.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -89,6 +91,8 @@ interface TestResult {
   attempt?: string;
   screenshotRelpath?: string;
   sourceFile?: string;
+  phoneLayout?: LayoutIssue[];
+  darkLayout?: LayoutIssue[];
 }
 
 interface HarnessConfig {
@@ -156,7 +160,7 @@ async function fetchOpenRouterPricing(): Promise<Map<string, PricingInfo>> {
 /**
  * Load test prompts
  */
-async function loadPrompts(): Promise<Map<string, string>> {
+async function loadPrompts(only?: string[] | null): Promise<Map<string, string>> {
   const promptsDir = path.join(__dirname, 'prompts');
   const files = await fs.readdir(promptsDir);
   const prompts = new Map<string, string>();
@@ -166,6 +170,18 @@ async function loadPrompts(): Promise<Map<string, string>> {
       const content = await fs.readFile(path.join(promptsDir, file), 'utf-8');
       const name = file.replace('.md', '');
       prompts.set(name, content);
+    }
+  }
+
+  if (only && only.length > 0) {
+    const unknown = only.filter(name => !prompts.has(name));
+    if (unknown.length > 0) {
+      console.error(`ERROR: Unknown prompt(s): ${unknown.join(', ')}`);
+      console.error(`Known prompts: ${[...prompts.keys()].sort().join(', ')}`);
+      process.exit(1);
+    }
+    for (const name of [...prompts.keys()]) {
+      if (!only.includes(name)) prompts.delete(name);
     }
   }
   
@@ -441,7 +457,7 @@ async function renderResponse(
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-  await page.waitForFunction(harnessRenderReady, { timeout: 30000 });
+  await page.waitForFunction(pageStateReady, undefined, { timeout: 30000 });
 
   const failReason = await page.evaluate(() => {
     const el = document.querySelector('[data-render-failed]');
@@ -520,9 +536,13 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
 
   const browser = await chromium.launch();
   const page = await browser.newPage();
+  let phonePage = page;
+  let darkPage = page;
   const results: TestResult[] = [];
 
   try {
+    phonePage = await openThemedPage(browser, 5174, 'light', PHONE_VIEW);
+    darkPage = await openThemedPage(browser, 5174, 'dark', DARK_VIEW);
     for (const jsonFile of jsonFiles) {
       const jsonPath = path.join(fullPath, jsonFile);
       const content = await fs.readFile(jsonPath, 'utf-8');
@@ -582,6 +602,30 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
         );
         console.log(`  ✓ Screenshot saved: ${path.basename(screenshotPath)}`);
 
+        let phoneLayout: LayoutIssue[] = [];
+        let darkLayout: LayoutIssue[] = [];
+        try {
+          const aux = await capturePhoneAndDark({
+            phonePage,
+            darkPage,
+            modelId: data.modelId,
+            content: data.response,
+            phonePath: screenshotPath.replace(/\.png$/, '.phone.png'),
+            darkPath: screenshotPath.replace(/\.png$/, '.dark.png'),
+          });
+          phoneLayout = aux.phone;
+          darkLayout = aux.dark;
+          const phoneFails = phoneLayout.length;
+          const darkFails = darkLayout.length;
+          console.log(
+            `  ${phoneFails ? '✗' : '✓'} Phone layout ${phoneFails ? phoneFails + ' issue(s)' : 'ok'}; ` +
+              `${darkFails ? '✗' : '✓'} dark ${darkFails ? darkFails + ' issue(s)' : 'ok'}`
+          );
+        } catch (auxError) {
+          console.error(`  ✗ Phone/dark capture: ${auxError}`);
+          phoneLayout = [{ kind: 'page-overflow', detail: String(auxError), heading: '', sample: '' }];
+        }
+
         const expectedFeatures = getExpectedFeatures(data.promptName, data.promptText);
         const dropped = droppedNameExpectations(data.promptName, data.promptText);
         if (dropped.length > 0) {
@@ -633,6 +677,8 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
           attempt: data.attempt || 'original',
           screenshotRelpath: path.basename(screenshotPath),
           sourceFile: jsonFile,
+          phoneLayout,
+          darkLayout,
         });
       } catch (error) {
         console.error(`  ✗ Error rendering: ${error}`);
@@ -1083,6 +1129,10 @@ async function main() {
   const maxTokensArg = args.find(arg => arg.startsWith('--max-tokens='));
   const renderDirArg = args.find(arg => arg.startsWith('--render-dir='));
   const mergeIntoArg = args.find(arg => arg.startsWith('--merge-into='));
+  const promptsArg = args.find(arg => arg.startsWith('--prompts='));
+  const promptFilter = promptsArg
+    ? promptsArg.split('=').slice(1).join('=').split(',').map(name => name.trim()).filter(Boolean)
+    : null;
   
   const maxUsd = maxUsdArg ? parseFloat(maxUsdArg.split('=')[1]) : 10.0;
   const maxTokens = maxTokensArg ? parseInt(maxTokensArg.split('=')[1]) : DEFAULT_MAX_TOKENS;
@@ -1108,8 +1158,8 @@ async function main() {
   console.log(`Found ${allModels.length} text models in registry\n`);
   
   console.log('Loading test prompts...');
-  const prompts = await loadPrompts();
-  console.log(`Found ${prompts.size} test prompts\n`);
+  const prompts = await loadPrompts(promptFilter);
+  console.log(`Found ${prompts.size} test prompts${promptFilter ? ` (${promptFilter.join(', ')})` : ''}\n`);
   
   // Filter models
   let selectedModels = allModels;
@@ -1184,12 +1234,13 @@ async function main() {
   } else {
     console.log(`\n⚠️  No models have pricing data - all requests will be refused.\n`);
   }
-  
-  if (totalEstimatedCost > maxUsd) {
-    console.error(`ERROR: Estimated cost ($${totalEstimatedCost.toFixed(4)}) exceeds cap ($${maxUsd.toFixed(2)})`);
-    console.error('Use --max-usd to increase the cap or --models to test fewer models.');
-    process.exit(1);
-  }
+
+  const promptLabel = [...prompts.keys()].sort().join(', ');
+  console.log(
+    `ESTIMATE ${promptLabel} × ${selectedModels.length} text models ` +
+      `(${pricedModels.length} priced, completion cap ${maxTokens}, margin 1.25): ` +
+      `$${totalEstimatedCost.toFixed(4)}`
+  );
   
   if (dryRun) {
     console.log('=== Dry Run Complete ===');
@@ -1202,7 +1253,18 @@ async function main() {
       console.log(`  ${model.id}: $${cost.toFixed(4)}${pricingNote}`);
     }
     
+    if (totalEstimatedCost > maxUsd) {
+      console.log(
+        `Note: estimate exceeds --max-usd=${maxUsd.toFixed(2)}. A live run would stop before spending. Dry-run made no model calls.`
+      );
+    }
     return;
+  }
+
+  if (totalEstimatedCost > maxUsd) {
+    console.error(`ERROR: Estimated cost ($${totalEstimatedCost.toFixed(4)}) exceeds cap ($${maxUsd.toFixed(2)})`);
+    console.error('Use --max-usd to increase the cap or --models to test fewer models.');
+    process.exit(1);
   }
   
   // Check for API key

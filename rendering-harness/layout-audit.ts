@@ -23,6 +23,7 @@ import {
 import { collectLayoutIssues, type LayoutIssue } from './layout-checks.js'
 import { launchVite } from './launch-vite.js'
 import { loadUniqueSavedCells, type SavedCell } from './saved-cells.js'
+import { sectionByHeading } from './section-slice.js'
 import { stackBeforeAfter } from './stack-shot.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -51,7 +52,8 @@ async function evidenceFor(
   kind: 'phone' | 'dark',
   pages: { wide: Page; phone: Page; dark: Page; stack: Page }
 ): Promise<string> {
-  const section = cell.response
+  const heading = issues.find(issue => issue.heading)?.heading || ''
+  const section = sectionByHeading(cell.response, heading)
   const generation = `evidence-${kind}-${Date.now()}`
   const beforePath = path.join(OUT_DIR, 'tmp', `${safeName(cell, kind)}.before.png`)
   const afterPath = path.join(OUT_DIR, 'tmp', `${safeName(cell, kind)}.after.png`)

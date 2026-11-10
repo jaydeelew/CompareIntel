@@ -8,7 +8,7 @@ import path from 'path';
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'url';
 import { spawn, ChildProcess } from 'child_process';
-import { harnessRenderReady } from './render-ready.js';
+import { pageStateReady } from './page-state.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -126,7 +126,7 @@ async function renderResponse(
   
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-  await page.waitForFunction(harnessRenderReady, { timeout: 30000 });
+  await page.waitForFunction(pageStateReady, undefined, { timeout: 30000 });
   
   // Take screenshot
   const element = await page.$('[data-render-container]');

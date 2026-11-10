@@ -4,7 +4,7 @@ Automated testing framework for validating LaTeX/markdown rendering across LLM m
 
 ## Features
 
-- **Renderer-driven readiness detection**: Waits for visible text and for KaTeX to finish layout instead of networkidle
+- **Renderer-driven readiness detection**: Playwright waits until the container has text, KaTeX is finished measuring, and the font set has stayed loaded. KaTeX inserts faces after the first paint, so the harness does not mark the page ready on the first `fonts.status === 'loaded'`. It does not use `networkidle` or a fixed sleep.
 - **DOM feature coverage analysis**: Validates display math, inline math, code blocks, tables, links, nested lists, currency preservation
 - **Pre-request budget guard**: Estimates cost before each API call, stops before exceeding remaining budget
 - **Text-only model selection**: Filters to Language category models by default (excludes Image models)
@@ -29,7 +29,10 @@ npm run harness -- --render-only --render-dir=runs/2026-11-04
 
 ```bash
 npm run harness -- --dry-run --max-usd=10
+npm run harness -- --dry-run --prompts=07-rare-formats
 ```
+
+`--prompts` is a comma-separated list of prompt file names (without `.md`). Dry-run prints the reserve for every selected text model and does not call a model. The public OpenRouter catalog is read for prices only.
 
 ### Test Specific Models
 
@@ -45,6 +48,7 @@ npm run harness -- --models=anthropic/claude-sonnet-4.6,openai/gpt-4o --max-usd=
 - `--render-only`: Re-screenshot existing responses without API calls
 - `--render-dir=PATH`: Directory containing saved responses (for `--render-only`)
 - `--models=ID1,ID2`: Comma-separated list of model IDs to test
+- `--prompts=NAME`: Comma-separated prompt names, for example `07-rare-formats`
 
 ## Test Prompts
 
@@ -56,6 +60,7 @@ Located in `prompts/`:
 4. **04-mixed-markdown-latex.md**: Math in lists, tables with math, formatted text with math
 5. **05-complex-scenarios.md**: Edge cases (math in lists/tables, horizontal rules, multiple dollar signs)
 6. **06-edge-cases-boundaries.md**: Delimiter variants `$$`/`\[`, nested display math in lists, code with math-like syntax, escaped currency `\$`, raw dollar signs
+7. **07-rare-formats.md**: Footnotes, task lists, strikethrough, autolinks and bare URLs, inline HTML (`br`, `sup`, `details`), nested blockquotes holding a list and code, an aligned table with inline math and escaped pipes, a wide table, a mermaid fence, `\ce{}`, `cases`, `aligned`, `\boxed`, `\text` with unicode, emoji, RTL and CJK, a long unbroken token, a long code line, and a dollar amount beside math. Replies are not collected by this change. `npm run harness -- --dry-run --prompts=07-rare-formats` estimates the reserve for all text models.
 
 ## Feature Coverage
 
@@ -73,6 +78,25 @@ Each rendered response is analyzed for:
 - **linkDestinations**: First 10 link URLs
 - **tableCellCount**: Number of table cells
 - **codeBlockLanguages**: Detected code block languages
+
+Prompt 07 also checks footnotes, task lists, strikethrough, autolinks, bare URLs, `<br>` / `<sup>` / `<details>`, nested blockquotes, table alignment and escaped pipes, mermaid language, mhchem `\ce{}`, `cases`, `aligned`, `\boxed`, unicode in `\text`, emoji, RTL (`dir="rtl"`), CJK, long tokens, wide tables, long code lines, and currency beside math. KaTeX is loaded without `katex/contrib/mhchem`, so `\ce{}` is expected to fail until that extension is wired into `safeRenderKatex`. The renderer is intentionally not changed here.
+
+## Phone, dark, and fix triage
+
+Render-only writes two extra captures beside each desktop screenshot:
+
+- `*.phone.png` — 390 CSS px wide, device pixel ratio 3
+- `*.dark.png` — the production dark theme (`localStorage` key `compareintel-theme`, `data-theme`, and `color-scheme`)
+
+At phone width the harness checks that the page itself does not scroll horizontally except inside table, code, and display-math scrollers, that KaTeX is not clipped, and that text does not overlap other text. Dark mode checks that the real theme attribute stuck and that body text contrast stays at least 3:1.
+
+```bash
+npm run layout-audit
+npm run triage -- --cell=anthropic/claude-fable-5:01-math-basics
+npm run before-after -- --cell=anthropic/claude-fable-5:01-math-basics --base=<ref> --head=<ref>
+```
+
+`layout-audit` rerenders the saved cells offline and writes `layout-audit/report.json` plus 960 CSS px DPR 2 stacked evidence for failures. A cell's source is the unique-coverage winner: a complete file under `runs/<batch>/reruns/` replaces the truncated or empty original in that batch. `triage` writes the heading-range source, a reference-vs-ours line diff, a 960 CSS px DPR 2 screenshot, and a full-section regression stub under `triage-out/`. `before-after` checks out both refs and stacks Before above After for the affected section, uncropped. PNGs from these commands are gitignored. CI uploads `layout-audit/` as an artifact.
 
 ## Output
 
@@ -206,7 +230,7 @@ npm run harness -- --dry-run  # Shows current pricing
 
 - **Currency detection**: Simple text search (may over-report if math contains `$\d+`)
 - **Link safety**: Only filters `javascript:` schemes (not comprehensive XSS check)
-- **Readiness detection**: Playwright waits until the page has visible text, KaTeX is not still measuring (no hidden `.katex-html`), and images have loaded. It does not use `networkidle` or a fixed sleep. The 30s bound is only the failure deadline. Assertions, not this wait, decide whether missing math is a failure.
+- **Readiness**: fonts, visible text, images, and KaTeX measurement. The 30s bound is only the failure deadline. Assertions, not this wait, decide whether missing math is a failure. Prism highlighting is not a fixed delay.
 
 ## Future Improvements
 

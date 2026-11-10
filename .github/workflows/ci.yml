@@ -534,10 +534,22 @@ jobs:
             playwright-${{ runner.os }}-
       
       - name: Install Playwright browsers
+        # apt has hung in `playwright install --with-deps` until this job's
+        # 45 minute timeout cancelled the run, before any test started.
+        # Bound each attempt so a stalled apt is retried.
+        timeout-minutes: 28
         run: |
           cd frontend
           # Critical flows run on Chromium only (see grep below).
-          npx playwright install --with-deps chromium
+          ok=0
+          for attempt in 1 2 3; do
+            if timeout 8m npx playwright install --with-deps chromium; then
+              ok=1
+              break
+            fi
+            echo "Playwright chromium install attempt ${attempt} did not finish; retrying"
+          done
+          test "$ok" = 1
       
       - name: Initialize test database directory
         run: |
@@ -1001,7 +1013,7 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.rendering-harness == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 90
     
     steps:
       - name: Checkout code
@@ -1058,6 +1070,8 @@ jobs:
           npx playwright test results-section-overflow.test.ts
           npx playwright test saved-cells.test.ts
           npx playwright test dom-assertions.test.ts
+          npx playwright test rare-formats.test.ts
+          npx playwright test section-slice.test.ts
           npx playwright test test-with-fixtures.test.ts
 
       - name: Run full offline fixture suite
@@ -1092,6 +1106,18 @@ jobs:
           name: harness-test-results
           path: rendering-harness/test-results/
           retention-days: 7
+
+      - name: Phone and dark layout audit
+        working-directory: rendering-harness
+        run: npm run layout-audit
+
+      - name: Upload phone and dark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-layout-evidence
+          path: rendering-harness/layout-audit/
+          retention-days: 14
 
   layout-audit-optional:
     name: Layout audit (optional, render-only)

@@ -145,3 +145,5 @@ rendering-harness/full-section-audit/*.zip
 rendering-harness/runs/**/*.png
 rendering-harness/runs/**/*.tar.gz
 rendering-harness/runs/**/*.tgz
+rendering-harness/layout-audit/
+rendering-harness/triage-out/
