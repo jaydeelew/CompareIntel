@@ -14,6 +14,7 @@ export interface HarnessFixtureCell {
 }
 
 /** Cells PR 227 audit flagged as clipped at 390px (full saved replies). */
+/* CI: clip regression proofs and artifact captures on PR #229 */
 export const CLIP_ARTIFACT_CELLS: HarnessFixtureCell[] = [
   {
     label: 'google/gemini-3.8-flash · 05-complex-scenarios',
