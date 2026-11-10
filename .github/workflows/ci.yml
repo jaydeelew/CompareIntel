@@ -59,6 +59,7 @@ jobs:
               - '.github/actions/**'
             rendering-harness:
               - 'rendering-harness/**'
+              - 'frontend/src/styles/**'
               - 'backend/data/models_registry.json'
               - 'frontend/src/components/LatexRenderer.tsx'
               - 'frontend/src/config/modelRendererRegistry.ts'
@@ -1062,6 +1063,7 @@ jobs:
           npx playwright test coverage-gate.test.ts
           npx playwright test production-validation.test.ts
           npx playwright test production-styling.test.ts
+          npx playwright test mobile-katex-overflow.test.ts
           npx playwright test dom-assertions.test.ts
           npx playwright test rare-formats.test.ts
           npx playwright test layout-checks.test.ts
