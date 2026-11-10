@@ -415,12 +415,14 @@ export function fixLatexIssues(text: string): string {
 
   fixed = fixed.replace(/\(-\s*\(-\s*(\d+)\s*\)\s*\)/g, '(-(-$1))')
   fixed = fixed.replace(/--(\d+)/g, '-(-$1)')
-  fixed = fixed.replace(/\((\d+)\s*\((\d+)\s*\)\s*\)/g, '($1 \\cdot $2)')
-  fixed = fixed.replace(/\((\d)(\d)\)/g, '($1 \\cdot $2)')
   fixed = fixed.replace(/\(--(\d+)\)/g, '(-(-$1))')
 
   fixed = fixed.replace(/√(\d+)/g, '\\sqrt{$1}')
-  fixed = fixed.replace(/±+/g, '\\pm')
+  // Two-digit "(25)" and a prose "±" are text. The same characters inside
+  // a math span are juxtaposition and a plus-minus.
+  fixed = fixed.replace(DELIMITED_MATH_RE, math =>
+    math.replace(/\((\d)(\d)\)/g, '($1 \\cdot $2)').replace(/±+/g, '\\pm')
+  )
   // `×` stays literal in prose (e.g. "a 2×2 matrix"); `\times` would show as raw text there
   fixed = fixed.replace(DELIMITED_MATH_RE, math =>
     math.replace(/×/g, '\\times').replace(/\((\d+)\\times(\d+)\)/g, '($1 \\times $2)')

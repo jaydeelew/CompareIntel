@@ -61,38 +61,89 @@ import {
   unescapeLeftoverBracketParenDelimiters,
   restoreLiteralDollars,
   extractInlineCode,
+  gfmSplitRow,
+  gfmTableSpan,
   restoreInlineCode,
   renderInlineCodeSpan,
   unescapeGfmTableCellCodePipes,
   unescapeMarkdownEscapesOutsideKatex,
 } from '../utils/latex'
+import { replaceExactlyTwoStrong, replaceSingleStarEm } from '../utils/latex/emphasis'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
 
-/** GFM table cells split on unescaped `|` (spec example 200). */
-function splitUnescapedTableCells(row: string): string[] {
-  const cells: string[] = []
-  let buf = ''
-  const t = row.trim()
-  let i = 0
-  while (i < t.length) {
-    if (t[i] === '\\' && t[i + 1] === '|') {
-      buf += '\\|'
-      i += 2
-      continue
-    }
-    if (t[i] === '|') {
-      cells.push(buf)
-      buf = ''
-      i += 1
-      continue
-    }
-    buf += t[i]
-    i += 1
+function padGfmRow(cells: string[], columns: number): string[] {
+  if (cells.length === columns) return cells
+  if (cells.length > columns) return cells.slice(0, columns)
+  return cells.concat(Array(columns - cells.length).fill(''))
+}
+
+function renderGfmCell(cell: string): string {
+  const cellTickMap = new Map<string, string>()
+  let tickIdx = 0
+  let processed = cell.replace(/`([^`\n]+?)`/g, full => {
+    const ph = `⟨⟨ICPH${tickIdx++}⟩⟩`
+    cellTickMap.set(ph, full)
+    return ph
+  })
+  const cellArphMap = new Map<string, string>()
+  let arIdx = 0
+  processed = processed.replace(/\[(file|image):\s*[^\]]+\]/gi, full => {
+    const ph = `⟨⟨ARPH${arIdx++}⟩⟩`
+    cellArphMap.set(ph, full)
+    return ph
+  })
+  processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  processed = replaceSingleStarEm(processed)
+  processed = processed.replace(/(?<!_)_((?:(?!_)[^\n])+?)_(?!_)/g, '<em>$1</em>')
+  for (const [ph, original] of [...cellArphMap.entries()].sort(
+    (a, b) =>
+      parseInt(b[0].match(/ARPH(\d+)/)?.[1] ?? '0', 10) -
+      parseInt(a[0].match(/ARPH(\d+)/)?.[1] ?? '0', 10)
+  )) {
+    processed = processed.split(ph).join(original)
   }
-  cells.push(buf)
-  if (cells.length && cells[0].trim() === '') cells.shift()
-  if (cells.length && cells[cells.length - 1].trim() === '') cells.pop()
-  return cells
+  for (const [ph, original] of [...cellTickMap.entries()].sort(
+    (a, b) =>
+      parseInt(b[0].match(/ICPH(\d+)/)?.[1] ?? '0', 10) -
+      parseInt(a[0].match(/ICPH(\d+)/)?.[1] ?? '0', 10)
+  )) {
+    processed = processed.split(ph).join(original)
+  }
+  processed = processed.replace(/`([^`\n]+?)`/g, '<code class="inline-code">$1</code>')
+  // A leftover backtick sits on the cell edge when a pipe split a code span.
+  // Leaving it raw lets a later pass pair across `</td><td>`.
+  return processed.replace(/`/g, '&#96;')
+}
+
+/**
+ * GFM tables the way markdown-it parses them: a header, a `|---|` separator,
+ * then every following non-blank line until a heading, list, fence, or rule.
+ * A short row is padded with empty cells, so a caption line under the table
+ * stays in the table. A pipe inside a code span splits the cell, because the
+ * split happens before inline parsing.
+ */
+function convertGfmTables(text: string): string {
+  const lines = text.split('\n')
+  const out: string[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const end = gfmTableSpan(lines, i)
+    if (end === null) {
+      out.push(lines[i])
+      continue
+    }
+    const columns = gfmSplitRow(lines[i]).length
+    const rows = [padGfmRow(gfmSplitRow(lines[i]), columns)]
+    for (let j = i + 2; j < end; j++) rows.push(padGfmRow(gfmSplitRow(lines[j]), columns))
+    let html = '<div class="markdown-table-scroll"><table class="markdown-table">'
+    rows.forEach((row, index) => {
+      const tag = index === 0 ? 'th' : 'td'
+      html += '<tr>' + row.map(cell => `<${tag}>${renderGfmCell(cell)}</${tag}>`).join('') + '</tr>'
+    })
+    html += '</table></div>'
+    out.push(html)
+    i = end - 1
+  }
+  return out.join('\n')
 }
 
 interface LatexRendererProps {
@@ -198,79 +249,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       return placeholder
     })
 
-    // Tables - must come first (if enabled)
+    // Tables before emphasis, so a pipe row is not eaten by a surrounding span.
     if (markdownRules.processTables !== false) {
-      processed = processed.replace(/^\|(.+)\|$/gm, (_match, content) => {
-        return '__TABLE_ROW__' + content + '__/TABLE_ROW__'
-      })
-
-      // Consecutive table rows only. A greedy `[\s\S]*` here joined the first
-      // table in the document to the last, swallowing prose, code, and later
-      // tables (GLM 5.3 Flash 05: `|` in "pipes (`|`)" notes plus a summary table).
-      processed = processed.replace(/(?:__TABLE_ROW__[\s\S]*?__\/TABLE_ROW__\n?)+/g, match => {
-        const rows = match.split('__/TABLE_ROW__').filter(row => row.trim())
-        let tableHTML = '<div class="markdown-table-scroll"><table class="markdown-table">'
-        let isHeader = true
-
-        rows.forEach((row, index) => {
-          const cleanRow = row.replace('__TABLE_ROW__', '').trim()
-          // Skip separator rows (like |----|----|)
-          if (cleanRow.match(/^[-|\s:]+$/)) {
-            isHeader = false
-            return
-          }
-
-          const cells = splitUnescapedTableCells(cleanRow)
-            .map(cell => cell.replace(/\\\|/g, '|').trim())
-            .filter(cell => cell)
-          if (cells.length > 0) {
-            const tag = isHeader ? 'th' : 'td'
-            // Process markdown formatting in each cell before creating HTML
-            const processedCells = cells.map(cell => {
-              const cellTickMap = new Map<string, string>()
-              let tickIdx = 0
-              let processed = cell.replace(/`([^`\n]+?)`/g, full => {
-                const ph = `⟨⟨ICPH${tickIdx++}⟩⟩`
-                cellTickMap.set(ph, full)
-                return ph
-              })
-              const cellArphMap = new Map<string, string>()
-              let arIdx = 0
-              processed = processed.replace(/\[(file|image):\s*[^\]]+\]/gi, full => {
-                const ph = `⟨⟨ARPH${arIdx++}⟩⟩`
-                cellArphMap.set(ph, full)
-                return ph
-              })
-              processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-              processed = processed.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>')
-              processed = processed.replace(/(?<!_)_((?:(?!_)[^\n])+?)_(?!_)/g, '<em>$1</em>')
-              for (const [ph, original] of [...cellArphMap.entries()].sort(
-                (a, b) =>
-                  parseInt(b[0].match(/ARPH(\d+)/)?.[1] ?? '0', 10) -
-                  parseInt(a[0].match(/ARPH(\d+)/)?.[1] ?? '0', 10)
-              )) {
-                processed = processed.split(ph).join(original)
-              }
-              for (const [ph, original] of [...cellTickMap.entries()].sort(
-                (a, b) =>
-                  parseInt(b[0].match(/ICPH(\d+)/)?.[1] ?? '0', 10) -
-                  parseInt(a[0].match(/ICPH(\d+)/)?.[1] ?? '0', 10)
-              )) {
-                processed = processed.split(ph).join(original)
-              }
-              processed = processed.replace(/`([^`\n]+?)`/g, '<code class="inline-code">$1</code>')
-              return processed
-            })
-            const rowHTML =
-              '<tr>' + processedCells.map(cell => `<${tag}>${cell}</${tag}>`).join('') + '</tr>'
-            tableHTML += rowHTML
-            if (index === 0) isHeader = false
-          }
-        })
-
-        tableHTML += '</table></div>'
-        return tableHTML
-      })
+      processed = convertGfmTables(processed)
     }
 
     // Protect inline `...` spans before bold/italic. Otherwise underscores inside code (e.g.
@@ -297,8 +278,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Process BEFORE headings and inline code so formatting works correctly
     // Process bold/italic before inline code to handle cases like **bold `code` text**
     if (markdownRules.processBoldItalic !== false) {
-      // Bold: match ** but allow single * inside
-      // Use a more robust pattern that handles content with HTML tags or other markdown
+      // CommonMark flanking first, so ` **$` does not close the bold.
+      // The regex remains for `***text***` and other runs longer than two.
+      processed = replaceExactlyTwoStrong(processed)
       processed = processed.replace(/\*\*((?:(?!\*\*)[\s\S])+?)\*\*/g, '<strong>$1</strong>')
       // Bold: match __ but allow single _ inside (underscore-based bold)
       // Note: Placeholders are already protected above, so we can safely process bold here
@@ -306,7 +288,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // Italic: match single * but not when part of **
       // Improved regex to handle LaTeX content inside italic (e.g., *text with $math$*)
       // Use a more robust pattern that doesn't break on newlines or special characters
-      processed = processed.replace(/(?<!\*)\*((?:(?!\*)[^\n])+?)\*(?!\*)/g, '<em>$1</em>')
+      processed = replaceSingleStarEm(processed)
       // Italic: match single _ but not when part of __ (underscore-based italic)
       // Use negative lookbehind/lookahead to avoid matching __text__ as _text_
       processed = processed.replace(/(?<!_)_((?:(?!_)[^\n])+?)_(?!_)/g, '<em>$1</em>')
@@ -347,7 +329,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     if (markdownRules.processHorizontalRules !== false) {
       // Double-check: process any remaining horizontal rules that weren't caught earlier
       // This is a safety net in case horizontal rules appear after Stage 2.5
-      processed = processed.replace(/^---+(\s*)$/gm, '\n<hr class="markdown-hr">\n')
+      processed = processed.replace(
+        /^[ \t]{0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/gm,
+        '\n<hr class="markdown-hr">\n'
+      )
       processed = processed.replace(/^\*\*\*+(\s*)$/gm, '\n<hr class="markdown-hr">\n')
       processed = processed.replace(/^___+(\s*)$/gm, '\n<hr class="markdown-hr">\n')
     }
@@ -404,7 +389,11 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     }
 
     // Strikethrough
-    processed = processed.replace(/~~([^~]+?)~~/g, '<del class="markdown-strikethrough">$1</del>')
+    // A single `~` inside the span is fine (KaTeX uses one). Only `~~` closes.
+    processed = processed.replace(
+      /~~((?:(?!~~)[\s\S])+?)~~/g,
+      '<del class="markdown-strikethrough">$1</del>'
+    )
 
     // Reference-style links
     const referenceMap: { [key: string]: string } = {}
@@ -420,7 +409,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
     // Links (both inline and reference-style, if enabled)
     if (markdownRules.processLinks !== false) {
-      processed = processed.replace(/\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g, renderMarkdownLink)
+      processed = processed.replace(
+        /(?<!!)\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g,
+        renderMarkdownLink
+      )
 
       // Reference-style links
       processed = processed.replace(/\[([^\]]+)\]\[([^\]]*)\]/g, (match, text, ref) => {
@@ -435,7 +427,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // Fix broken links (if enabled)
       if (markdownRules.fixBrokenLinks) {
         // Try to fix common broken link patterns
-        processed = processed.replace(/\[([^\]]+)\]\(([^)]*)\)/g, (match, text, url) => {
+        processed = processed.replace(/(?<!!)\[([^\]]+)\]\(([^)]*)\)/g, (match, text, url) => {
           if (!url || url.trim() === '') {
             // If URL is empty, try to create a link from the text
             if (text.match(/^https?:\/\//)) {
@@ -497,11 +489,15 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // List items were MDPH-protected during the first link pass (Phi-4 prompt 01:
     // `[Wikipedia](https://…/Quadratic_formula)` stayed raw inside `__OL__`).
     if (markdownRules.processLinks !== false) {
-      processed = processed.replace(/\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g, renderMarkdownLink)
+      processed = processed.replace(
+        /(?<!!)\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g,
+        renderMarkdownLink
+      )
     }
     // Same restore window: `**$x = 0$**` in OL continuations (Gemini 04) stayed
     // as leftover asterisks around restored KaTeX.
     if (markdownRules.processBoldItalic !== false) {
+      processed = replaceExactlyTwoStrong(processed)
       processed = processed.replace(/\*\*((?:(?!\*\*)[\s\S])+?)\*\*/g, '<strong>$1</strong>')
     }
 
@@ -546,16 +542,19 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     let converted = text
 
     // Task lists
-    converted = converted.replace(/(__TASK_(checked|unchecked)__[\s\S]*?__\/TASK__)+/g, match => {
-      const items = match.replace(
-        /__TASK_(checked|unchecked)__([\s\S]*?)__\/TASK__/g,
-        (_, checked, text) => {
-          const checkedAttr = checked === 'checked' ? 'checked' : ''
-          return `<li class="task-list-item"><input type="checkbox" ${checkedAttr} disabled> ${text}</li>`
-        }
-      )
-      return `<ul class="task-list">${items}</ul>`
-    })
+    converted = converted.replace(
+      /(__TASK_(checked|unchecked)__[\s\S]*?__\/TASK__\n?)+/g,
+      match => {
+        const items = match.replace(
+          /__TASK_(checked|unchecked)__([\s\S]*?)__\/TASK__/g,
+          (_, checked, text) => {
+            const checkedAttr = checked === 'checked' ? 'checked' : ''
+            return `<li class="task-list-item"><input type="checkbox" ${checkedAttr} disabled> ${text}</li>`
+          }
+        )
+        return `<ul class="task-list">${items}</ul>`
+      }
+    )
 
     // Unordered and ordered lists (nested by indentation, including mixed nesting)
     converted = convertListPlaceholdersToHTML(converted)
@@ -779,21 +778,30 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         const markdownRules = config.markdownProcessing || {}
         if (markdownRules.processHorizontalRules !== false) {
           // Convert horizontal rules to protected placeholders
-          processed = processed.replace(/^---+(\s*)$/gm, () => {
-            const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
-            hrPlaceholders.push('<hr class="markdown-hr">')
-            return placeholder
-          })
-          processed = processed.replace(/^\*\*\*+(\s*)$/gm, () => {
-            const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
-            hrPlaceholders.push('<hr class="markdown-hr">')
-            return placeholder
-          })
-          processed = processed.replace(/^___+(\s*)$/gm, () => {
-            const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
-            hrPlaceholders.push('<hr class="markdown-hr">')
-            return placeholder
-          })
+          // `- ---` is a thematic break (dashes with a space), so it splits a list
+          // instead of becoming an item whose text is `---`.
+          const thematic = /^[ \t]{0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/
+          // `Text\n---` is a setext heading. A `---` after a blank line is a rule.
+          const setext = /^[ \t]{0,3}(?:={3,}|-{3,})[ \t]*$/
+          const lines = processed.split('\n')
+          const rebuilt: string[] = []
+          for (const line of lines) {
+            const prev = rebuilt.length ? rebuilt[rebuilt.length - 1] : ''
+            if (setext.test(line) && prev.trim() && !/^\s*(?:\||```|#|<|__)/.test(prev)) {
+              const level = line.trim().startsWith('=') ? 1 : 2
+              rebuilt[rebuilt.length - 1] = `<h${level}>${prev.trim()}</h${level}>`
+              continue
+            }
+            if (thematic.test(line)) {
+              const indent = line.match(/^[ \t]*/)?.[0] ?? ''
+              const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
+              hrPlaceholders.push(`${indent}<hr class="markdown-hr">`)
+              rebuilt.push(placeholder)
+              continue
+            }
+            rebuilt.push(line)
+          }
+          processed = rebuilt.join('\n')
         }
 
         // Stage 2: Clean malformed content (using model-specific preprocessing)

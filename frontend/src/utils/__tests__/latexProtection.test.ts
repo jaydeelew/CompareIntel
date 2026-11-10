@@ -114,6 +114,8 @@ describe('escaped dollars', () => {
   it('turns \\$ into a literal token but leaves \\\\$ alone', () => {
     expect(protectEscapedDollars('costs \\$5 and \\$10')).toBe(`costs ${L}5 and ${L}10`)
     expect(protectEscapedDollars('a \\\\$x$')).toBe('a \\\\$x$')
+    // `\\\$1,200` is one visible backslash and a dollar, matching markdown-it.
+    expect(protectEscapedDollars('Computer: \\\\\\$1,200')).toBe(`Computer: \\${L}1,200`)
     expect(restoreLiteralDollars(`${L}5`)).toBe('$5')
   })
 

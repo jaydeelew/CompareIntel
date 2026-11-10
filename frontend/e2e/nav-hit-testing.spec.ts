@@ -101,7 +101,21 @@ async function assertNavButtonsAreHitTargets(page: import('@playwright/test').Pa
     testIds.push('theme-toggle')
   }
 
-  const probes = await probeNavHitTargets(page, testIds)
+  // The tablet hero pull-up can leave the page scrolled so Sign Up's center
+  // sits above the viewport (elementFromPoint returns nothing). Re-align the
+  // navbar until the hit point is actually inside the header.
+  let probes: HitProbe[] = []
+  await expect
+    .poll(
+      async () => {
+        await ensureUnfoldedNavbar(page)
+        probes = await probeNavHitTargets(page, testIds)
+        const ready = probes.every(probe => probe.y >= 0 && probe.inHeader && !probe.inHero)
+        return ready ? 'hit' : 'miss'
+      },
+      { timeout: 8000, intervals: [50, 100, 100] }
+    )
+    .toBe('hit')
 
   for (const probe of probes) {
     expect(

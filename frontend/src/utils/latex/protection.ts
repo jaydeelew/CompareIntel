@@ -30,7 +30,10 @@ export function containsProtectedToken(text: string): boolean {
  * delimiter) is left alone.
  */
 export function protectEscapedDollars(text: string): string {
-  return text.replace(/(?<!\\)\\\$/g, LITERAL_DOLLAR)
+  // `\$` is a literal dollar. `\\$` (escaped backslash, then a real dollar) stays.
+  // `\\\$` is one literal backslash plus a literal dollar, which is what
+  // markdown-it shows for a price written `\\\$1,200`.
+  return text.replace(/\\\\\\\$/g, `\\${LITERAL_DOLLAR}`).replace(/(?<!\\)\\\$/g, LITERAL_DOLLAR)
 }
 
 /** Convert literal-dollar tokens inside math source back into KaTeX's `\$`. */
@@ -256,7 +259,7 @@ function pushInlineCodeSpan(spans: string[], content: string): string {
  * Pairing is per line so a list item cannot swallow the next item (block
  * structure already split those inlines in CommonMark).
  */
-function extractInlineCodeLine(line: string, spans: string[]): string {
+function extractInlineCodeLine(line: string, spans: string[], keepTablePipes: boolean): string {
   let out = ''
   let i = 0
   while (i < line.length) {
@@ -289,18 +292,127 @@ function extractInlineCodeLine(line: string, spans: string[]): string {
       continue
     }
     const content = line.slice(contentStart, found)
+    // On a GFM table row, markdown-it splits on `|` before it pairs backticks,
+    // so a pipe inside a span is a cell break. Leave those spans in place.
+    // Everywhere else the span is code: extracting it keeps `$…$` and `\|`
+    // inside it from being read as math or a prose escape.
+    if (keepTablePipes && content.includes('|')) {
+      out += line.slice(i, found + n)
+      i = found + n
+      continue
+    }
     out += pushInlineCodeSpan(spans, content)
     i = found + n
   }
   return out
 }
 
+/**
+ * Split a GFM row on `|`, keeping `\|` as a literal pipe. Same edges as
+ * markdown-it: a leading or trailing empty cell is the row's outer pipe.
+ */
+function endOfKatexSpan(html: string, start: number): number {
+  const re = /<(\/?)span\b[^>]*>/g
+  re.lastIndex = start
+  let depth = 0
+  let match: RegExpExecArray | null
+  while ((match = re.exec(html))) {
+    depth += match[1] === '/' ? -1 : 1
+    if (depth === 0) return match.index + match[0].length
+  }
+  return html.length
+}
+
+export function gfmSplitRow(row: string): string[] {
+  const result: string[] = []
+  let pos = 0
+  let lastPos = 0
+  let current = ''
+  while (pos < row.length) {
+    // A pipe inside rendered KaTeX (the annotation of `P(A | B)`) is not a cell break.
+    if (row.startsWith('<span class="katex', pos)) {
+      pos = endOfKatexSpan(row, pos)
+      continue
+    }
+    const ch = row.charCodeAt(pos)
+    // `\|` stays in the cell. Collapsing it to `|` turns a double bar into a single one.
+    if (ch === 124 && row[pos - 1] !== '\\') {
+      result.push(current + row.substring(lastPos, pos))
+      current = ''
+      lastPos = pos + 1
+    }
+    pos += 1
+  }
+  result.push(current + row.substring(lastPos))
+  if (result.length && result[0] === '') result.shift()
+  if (result.length && result[result.length - 1] === '') result.pop()
+  return result.map(cell => cell.trim())
+}
+
+/** Column count of a `|---|` separator, or null when the line is not one. */
+export function gfmSeparatorCount(line: string): number | null {
+  const t = line.trim()
+  if (!t || /[^|\-:\s]/.test(t)) return null
+  const parts = t.split('|')
+  let count = 0
+  for (let i = 0; i < parts.length; i++) {
+    const cell = parts[i].trim()
+    if (!cell) {
+      if (i === 0 || i === parts.length - 1) continue
+      return null
+    }
+    if (!/^:?-+:?$/.test(cell)) return null
+    count += 1
+  }
+  return count > 0 ? count : null
+}
+
+/** A block that ends a GFM table the way markdown-it's terminator rules do. */
+export function isGfmRowTerminator(line: string): boolean {
+  const t = line.trim()
+  if (/^#{1,6}(?:\s|$)/.test(t)) return true
+  if (/^```/.test(t) || /^~~~/.test(t)) return true
+  if (/^[ \t]{0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/.test(line)) return true
+  if (/^[-*•][ \t]+\S/.test(t) || /^\d+[.)][ \t]+\S/.test(t)) return true
+  if (/^>/.test(t) || t.includes('\uE010')) return true
+  if (/^<hr\b/i.test(t)) return true
+  return false
+}
+
+/**
+ * If `lines[start]` opens a GFM table, the index of the first line after it.
+ * The table is the header, the separator, and following non-blank lines.
+ */
+export function gfmTableSpan(lines: string[], start: number): number | null {
+  if (start + 1 >= lines.length) return null
+  if (!lines[start].includes('|') || isGfmRowTerminator(lines[start])) return null
+  const cols = gfmSeparatorCount(lines[start + 1])
+  if (cols === null || gfmSplitRow(lines[start]).length !== cols) return null
+  let end = start + 2
+  let autocompleted = 0
+  while (end < lines.length && lines[end].trim() !== '' && !isGfmRowTerminator(lines[end])) {
+    autocompleted += cols - gfmSplitRow(lines[end]).length
+    if (autocompleted > 65536) break
+    end += 1
+  }
+  return end
+}
+
 /** Replace inline code spans with placeholders. `spans` holds the raw content. */
 export function extractInlineCode(text: string): InlineCodeExtraction {
   const spans: string[] = []
-  const textOut = text
-    .split('\n')
-    .map(line => extractInlineCodeLine(line, spans))
+  const lines = text.split('\n')
+  // Pipes inside code count as cell breaks only on lines that are actually a table.
+  const inTable = new Array<boolean>(lines.length).fill(false)
+  for (let i = 0; i < lines.length; i++) {
+    if (inTable[i]) continue
+    const end = gfmTableSpan(lines, i)
+    if (end === null) continue
+    for (let j = i; j < end; j++) inTable[j] = true
+    i = end - 1
+  }
+  const textOut = lines
+    .map((line, index) => extractInlineCodeLine(line, spans, inTable[index]))
     .join('\n')
   return { text: textOut, spans }
 }
