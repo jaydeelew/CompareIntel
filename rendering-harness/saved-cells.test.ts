@@ -16,10 +16,22 @@ const RERUN_CELLS = [
   'z-ai/glm-5.3:04-mixed-markdown-latex',
 ]
 
+const RETIRED_IDS = ['deepseek/deepseek-v4.1-flash', 'tencent/hy4-preview']
+const RENAMED_IDS = ['deepseek/deepseek-v4.1-flash-1017', 'tencent/hy4']
+
 test('unique coverage uses the complete rerun, not the empty original', async () => {
   const cells = await loadUniqueSavedCells()
-  expect(cells).toHaveLength(498)
+  // 498 current registry cells, plus 12 pre-rename replies that #231 left in place.
+  expect(cells).toHaveLength(510)
   expect(cells.filter(cell => cell.emptyVisible || cell.error)).toEqual([])
+  const retired = cells.filter(cell => RETIRED_IDS.includes(cell.modelId))
+  expect(retired).toHaveLength(12)
+  expect(retired.every(cell => cell.response.trim().length > 0)).toBe(true)
+  for (const modelId of RENAMED_IDS) {
+    const renamed = cells.filter(cell => cell.modelId === modelId)
+    expect(renamed, modelId).toHaveLength(6)
+    expect(renamed.every(cell => cell.response.trim().length > 0), modelId).toBe(true)
+  }
   for (const spec of RERUN_CELLS) {
     const splitAt = spec.indexOf(':')
     const cell = cells.find(
