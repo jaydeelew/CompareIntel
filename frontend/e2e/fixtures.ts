@@ -2,7 +2,7 @@
 // This file uses Playwright's fixture pattern with 'use' parameter,
 // which is not related to React hooks. Disabling react-hooks rule for entire file.
 
-import { test as base, expect, type Locator, type Page, type BrowserContext } from '@playwright/test'
+import { test as base, expect, type Page, type BrowserContext } from '@playwright/test'
 
 import { mockComparisonStream, mockModelsApi } from './helpers/mockModels'
 
@@ -323,81 +323,66 @@ async function dismissTutorialOverlay(page: Page): Promise<void> {
 /**
  * Desktop navbar auto-hides after ~5s (Navigation.tsx). When folded, `.app-header-shell--folded`
  * uses max-height:0 and pointer-events:none, so nav buttons sit outside the viewport and
- * Playwright clicks fail (Firefox is strict). Scroll to top and send upward wheel deltas to
- * match the in-app reveal gesture. Mobile / PWA disables auto-hide — no-op when not folded.
+ * Playwright clicks fail (Firefox is strict). Mobile / PWA disables auto-hide.
+ *
+ * An upward wheel reveals the bar only after it has settled at the top. A wheel that arrives
+ * earlier is ignored, and a wheel that also scrolls (Playwright mouse.wheel) restarts that
+ * gate, so a fixed pause plus a handful of wheels is a race. Poll the shell until it is open.
+ * While it is folded, send one WheelEvent that does not move scroll. Once it is open,
+ * pointerdown restarts the inactivity hide so the bar cannot fold before the caller measures
+ * hero height (folded vs open differs by --navbar-height).
  */
 async function ensureUnfoldedNavbar(page: Page): Promise<void> {
   if (page.isClosed()) return
 
-  // Main layout scrolls inside `.app` (see base.css); window + app can diverge on WebKit and
-  // break scrollIntoView / sticky nav hit-testing unless both are aligned to top before nav clicks.
-  await page
-    .evaluate(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
-      const app = document.querySelector('.app')
-      if (app instanceof HTMLElement) app.scrollTop = 0
-    })
-    .catch(() => {})
-
   const shell = page.locator('.app-header-shell').first()
   if ((await shell.count()) === 0) return
 
-  let folded = await shell
-    .evaluate((el: HTMLElement) => el.classList.contains('app-header-shell--folded'))
-    .catch(() => false)
-  if (!folded) {
-    // Restart the 5s inactivity hide. Returning while that timer is about to
-    // fire lets the bar fold between this helper and the next measurement,
-    // which changes hero min-height by --navbar-height (736 vs 800).
-    await shell.dispatchEvent('pointerdown').catch(() => {})
-    await waitForHeaderShellOpen(shell)
-    return
-  }
-
-  // Landing at the top from a scrolled page suppresses wheel-reveal for 480ms,
-  // and a second wheel is ignored until 280ms after the first. Wait past both
-  // before the first attempt, then space attempts the same way.
-  await safeWait(page, 600)
-
-  const viewport = page.viewportSize()
-  if (viewport) {
-    await page.mouse
-      .move(Math.floor(viewport.width / 2), Math.min(120, Math.floor(viewport.height / 3)))
-      .catch(() => {})
-  }
-
-  for (let attempt = 0; attempt < 6; attempt++) {
-    folded = await shell
-      .evaluate((el: HTMLElement) => el.classList.contains('app-header-shell--folded'))
-      .catch(() => false)
-    if (!folded) {
-      await waitForHeaderShellOpen(shell)
-      return
-    }
-
-    await page.mouse.wheel(0, -200).catch(() => {})
-    // WebKit sometimes drops Playwright mouse.wheel; fire the window listener the navbar uses.
-    await page
-      .evaluate(() => {
-        window.dispatchEvent(
-          new WheelEvent('wheel', { deltaY: -200, bubbles: true, cancelable: true })
-        )
-      })
-      .catch(() => {})
-    await safeWait(page, 500)
-  }
-
-  await expect(shell).not.toHaveClass(/app-header-shell--folded/, { timeout: 5000 })
-  await waitForHeaderShellOpen(shell)
-}
-
-/** Fold uses max-height plus overflow:hidden. The class drops before the 380ms transition finishes, so hit-testing during the animation lands on main. */
-async function waitForHeaderShellOpen(shell: Locator): Promise<void> {
+  let restartedHideTimer = false
   await expect
-    .poll(async () => shell.evaluate((el: HTMLElement) => el.getBoundingClientRect().height), {
-      timeout: 2000,
-    })
-    .toBeGreaterThan(40)
+    .poll(
+      async () => {
+        if (page.isClosed()) return 'closed'
+        const state = await shell
+          .evaluate((el: HTMLElement) => ({
+            folded: el.classList.contains('app-header-shell--folded'),
+            height: el.getBoundingClientRect().height,
+          }))
+          .catch(() => null)
+        if (!state) return 'missing'
+
+        const open = !state.folded && state.height > 40
+        if (!open) {
+          restartedHideTimer = false
+          await page
+            .evaluate(() => {
+              const app = document.querySelector('.app')
+              const winY = window.scrollY ?? document.documentElement.scrollTop ?? 0
+              const appY = app instanceof HTMLElement ? app.scrollTop : 0
+              // Same “at top” threshold the navbar uses for wheel reveal. Scrolling when
+              // already there fires a scroll event and restarts the reveal gate.
+              if (winY > 2 || appY > 2) {
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+                if (app instanceof HTMLElement) app.scrollTop = 0
+              }
+              window.dispatchEvent(
+                new WheelEvent('wheel', { deltaY: -1, bubbles: true, cancelable: true })
+              )
+            })
+            .catch(() => {})
+          return 'folded'
+        }
+
+        if (!restartedHideTimer) {
+          await shell.dispatchEvent('pointerdown').catch(() => {})
+          restartedHideTimer = true
+          return 'timer-restarted'
+        }
+        return 'open'
+      },
+      { timeout: 8000, intervals: [50, 100, 100, 100] }
+    )
+    .toBe('open')
 }
 
 /**

@@ -73,6 +73,9 @@ async function measureHeroLayout(page: import('@playwright/test').Page) {
             iconsBox.left >= pricingBox.right - 1
           )
         : false
+    const shell = document.querySelector('.app-header-shell')
+    const shellHeight = shell?.getBoundingClientRect().height ?? 0
+    const navbarFolded = shell?.classList.contains('app-header-shell--folded') ?? false
     return {
       heroHeight: Math.round(heroBox.height),
       creditsBottom: creditsBox.bottom,
@@ -80,8 +83,29 @@ async function measureHeroLayout(page: import('@playwright/test').Page) {
       iconsTop: iconsBox?.top ?? null,
       iconsBottom: iconsBox?.bottom ?? null,
       overlapPricing,
+      // Hero min-height drops --navbar-height while this class is present.
+      // Read it in the same frame as heroHeight so the two cannot disagree.
+      navbarOpen: !navbarFolded && shellHeight > 40,
     }
   })
+}
+
+/** Hero height is only comparable while the navbar is open. Wait until a measurement says so. */
+async function measureOpenHeroLayout(page: import('@playwright/test').Page) {
+  let layout: Awaited<ReturnType<typeof measureHeroLayout>> = null
+  await expect
+    .poll(
+      async () => {
+        layout = await measureHeroLayout(page)
+        if (layout?.navbarOpen) return 'open'
+        await ensureUnfoldedNavbar(page)
+        layout = await measureHeroLayout(page)
+        return layout?.navbarOpen ? 'open' : 'closed'
+      },
+      { timeout: 15000, intervals: [50, 100, 100] }
+    )
+    .toBe('open')
+  return layout
 }
 
 test.describe('Hero selected-model icons', () => {
@@ -101,10 +125,8 @@ test.describe('Hero selected-model icons', () => {
     await dismissTutorialOverlay(page)
     // Desktop navbar folds ~5s after load. Folded vs open changes hero
     // min-height by --navbar-height (736 vs 800 at this viewport).
-    await ensureUnfoldedNavbar(page)
-
     await expect(page.getByTestId('selected-model-icons')).toHaveCount(0)
-    const before = await measureHeroLayout(page)
+    const before = await measureOpenHeroLayout(page)
     expect(before).not.toBeNull()
 
     await dismissMobileBlockers(page)
@@ -140,8 +162,7 @@ test.describe('Hero selected-model icons', () => {
     await expect(page.getByRole('tooltip')).toHaveText('GPT-4o Mini')
     await expect(page.getByRole('tooltip')).not.toHaveText('OpenAI')
 
-    await ensureUnfoldedNavbar(page)
-    const after = await measureHeroLayout(page)
+    const after = await measureOpenHeroLayout(page)
     expect(after).not.toBeNull()
     expect(after!.heroHeight).toBe(before!.heroHeight)
     expect(after!.iconsTop).not.toBeNull()
