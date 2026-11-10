@@ -2435,9 +2435,63 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   .result-card {
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden;
+    min-width: 0;
+    overflow-x: visible;
     /* Outermost .results-section already frames the block; no second ring on each card (mobile) */
     border: none;
+  }
+
+  /* Wide KaTeX/tables/code scroll inside the card; ancestors must not clip (models.css sets hidden). */
+  .result-card .message-content,
+  .result-card .message-content .result-output,
+  .result-card .message-content .latex-content {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+
+  .result-card .latex-content .katex-display {
+    box-sizing: border-box;
+    max-width: 100%;
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .result-card .latex-content .markdown-table-scroll {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .result-card .message-content .latex-content .code-block,
+  .result-card .message-content .latex-content pre:not(.code-block),
+  .result-card .code-block-direct {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .result-card .latex-content p,
+  .result-card .latex-content li,
+  .result-card .latex-content blockquote {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .result-card .latex-content .katex:not(.katex-display) {
+    max-width: 100%;
+  }
+
+  .results-section-tabbed .results-tab-content--swipe-zone {
+    overflow-x: visible;
   }
 
   .result-card:hover {

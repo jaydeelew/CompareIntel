@@ -130,11 +130,7 @@ test('the current repo coverage gate passes', () => {
   const manifest = buildCoverage(harnessRoot)
   const onDisk = fs.readFileSync(path.join(harnessRoot, 'coverage.json'), 'utf8')
   expect(onDisk).toBe(stableManifest(manifest))
-  expect(manifest.allowlist.map(entry => entry.modelId)).toEqual([
-    'deepseek/deepseek-v4.1-flash-1017',
-    'tencent/hy4',
-  ])
-  expect(manifest.allowlist.every(entry => entry.reason.trim().length > 0)).toBe(true)
+  expect(manifest.allowlist).toEqual([])
   expect(manifest.excludedImageModels.length).toBeGreaterThan(0)
   expect(manifest.excludedImageModels.every(id => !manifest.models[id])).toBe(true)
   const registry = JSON.parse(
@@ -150,14 +146,8 @@ test('the current repo coverage gate passes', () => {
   expect(result.badCells).toEqual([])
   expect(result.ok).toBe(true)
   expect(manifest.totals.fail).toBe(0)
-  const allowed = new Set(manifest.allowlist.map(entry => entry.modelId))
-  const incomplete = Object.entries(manifest.models).flatMap(([modelId, prompts]) =>
-    Object.entries(prompts)
-      .filter(([, cell]) => cell.status === 'incomplete' || !cell.replyPath)
-      .map(([promptName]) => `${modelId} ${promptName}`)
-  )
-  expect(incomplete.every(cell => allowed.has(cell.split(' ')[0]))).toBe(true)
-  expect(new Set(incomplete.map(cell => cell.split(' ')[0]))).toEqual(allowed)
+  expect(manifest.totals.incomplete).toBe(0)
+  expect(manifest.totals.missing).toBe(0)
   expect(manifest.totals.textModels).toBe(Object.keys(manifest.models).length)
 })
 
