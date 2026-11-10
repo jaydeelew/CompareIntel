@@ -1,27 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import LatexRenderer from '../frontend/src/components/LatexRenderer';
-import { initializeRegistry } from '../frontend/src/config/loadModelConfigs';
-import '../frontend/src/styles/variables.css';
-import '../frontend/src/styles/base.css';
-import '../frontend/src/styles/results.css';
+import LatexRenderer from '@/components/LatexRenderer';
+import { initializeRegistry } from '@/config/loadModelConfigs';
+import '@/styles/variables.css';
+import '@/styles/base.css';
+import '@/styles/results.css';
 
 interface RenderRequest {
   modelId: string;
   content: string;
+  generation: string;
 }
-
-const SKIP_PRISM_LANGS = new Set([
-  '',
-  'none',
-  'plain',
-  'plaintext',
-  'text',
-  // Prism's markdown grammar often emits no .token spans (and nested ```
-  // inside a markdown fence can throw). Do not block screenshots on it.
-  'markdown',
-  'md',
-]);
 
 function markFailed(reason: string) {
   const root = document.getElementById('root');
@@ -31,15 +20,9 @@ function markFailed(reason: string) {
   container?.removeAttribute('data-render-complete');
 }
 
-function languageFromCode(block: Element): string {
-  const cls = Array.from(block.classList).find(c => c.startsWith('language-'));
-  return cls ? cls.replace('language-', '').toLowerCase() : '';
-}
-
 function HarnessApp() {
   const [ready, setReady] = useState(false);
   const [renderData, setRenderData] = useState<RenderRequest | null>(null);
-  const [renderComplete, setRenderComplete] = useState(false);
 
   useEffect(() => {
     initializeRegistry()
@@ -48,13 +31,16 @@ function HarnessApp() {
         setReady(true);
 
         window.addEventListener('message', (event) => {
-          if (event.data?.type === 'render') {
+          if (event.data?.type === 'render' && typeof event.data.content === 'string') {
             setRenderData({
-              modelId: event.data.modelId,
+              modelId: String(event.data.modelId || 'test'),
               content: event.data.content,
+              generation: String(event.data.generation || ''),
             });
           }
         });
+
+        document.documentElement.setAttribute('data-harness-listening', 'true');
 
         if (window.opener) {
           window.opener.postMessage({ type: 'harness-ready' }, '*');
@@ -65,8 +51,8 @@ function HarnessApp() {
         const content = params.get('content');
         if (modelId && content) {
           // URLSearchParams already decodes. A second decodeURIComponent throws
-          // URI malformed on replies that contain a literal `%` (Qwen 05 8192 rerun).
-          setRenderData({ modelId, content });
+          // URI malformed on replies that contain a literal `%`.
+          setRenderData({ modelId, content, generation: '' });
         }
       })
       .catch((err: unknown) => {
@@ -75,74 +61,84 @@ function HarnessApp() {
   }, []);
 
   useEffect(() => {
-    if (!ready || !renderData || renderComplete) return;
+    if (!ready || !renderData) return;
 
-    let attempts = 0;
-    const maxAttempts = 50;
     let cancelled = false;
+    let settled = false;
+    let attempt = 0;
 
-    const checkRenderState = () => {
-      if (cancelled) return;
+    const nextFrame = () =>
+      new Promise<void>(resolve => {
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()));
+      });
+
+    const domReady = (container: Element) => {
+      const text = (container.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!text) return false;
+      if (container.querySelectorAll('.katex-html[style*="visibility: hidden"]').length > 0) return false;
+      const images = Array.from(container.querySelectorAll('img'));
+      if (images.some(img => !img.complete)) return false;
+      return true;
+    };
+
+    const finishIfReady = () => {
+      if (cancelled || settled) return;
       const container = document.querySelector('[data-render-container]');
-      if (!container) {
-        retry('render-container-missing');
-        return;
-      }
-
-      const katexProcessing = container.querySelectorAll('.katex-html[style*="visibility: hidden"]');
-      if (katexProcessing.length > 0) {
-        retry('katex-processing');
-        return;
-      }
-
-      const codeBlocks = container.querySelectorAll('pre code[class*="language-"]');
-      const prism = (window as Window & { Prism?: { languages?: Record<string, unknown> } }).Prism;
-      for (const block of Array.from(codeBlocks)) {
-        const lang = languageFromCode(block);
-        if (SKIP_PRISM_LANGS.has(lang)) continue;
-        if (!prism) {
-          retry('prism-not-loaded');
-          return;
+      if (!container || !domReady(container)) return;
+      const token = ++attempt;
+      void (async () => {
+        // KaTeX inserts font faces after the first paint. Wait until the
+        // font set stays loaded and the same size across two frames.
+        for (let cycle = 0; cycle < 40; cycle++) {
+          if (cancelled || token !== attempt) return;
+          await document.fonts.ready;
+          if (cancelled || token !== attempt) return;
+          const size = document.fonts.size;
+          await nextFrame();
+          if (cancelled || token !== attempt) return;
+          const current = document.querySelector('[data-render-container]');
+          if (!current || !domReady(current)) return;
+          if (document.fonts.status === 'loaded' && document.fonts.size === size) {
+            settled = true;
+            observer.disconnect();
+            current.setAttribute('data-render-complete', 'true');
+            if (renderData.generation) current.setAttribute('data-render-generation', renderData.generation);
+            else current.removeAttribute('data-render-generation');
+            current.removeAttribute('data-render-failed');
+            document.getElementById('root')?.removeAttribute('data-render-failed');
+            return;
+          }
         }
-        if (!prism.languages || !prism.languages[lang]) {
-          // Unknown language, or Prism has no grammar: do not wait for .token
-          continue;
-        }
-        const isEmpty = block.textContent?.trim() === '';
-        if (!isEmpty && block.querySelectorAll('.token').length === 0) {
-          retry('prism-highlighting');
-          return;
-        }
-      }
+        if (!cancelled && token === attempt) markFailed('fonts did not settle');
+      })();
+    };
 
-      const images = container.querySelectorAll('img');
-      for (const img of Array.from(images)) {
+    const container = document.querySelector('[data-render-container]');
+    if (!container) return;
+    container.removeAttribute('data-render-complete');
+
+    const observer = new MutationObserver(() => {
+      container.querySelectorAll('img').forEach(img => {
         if (!img.complete) {
-          retry('images-loading');
-          return;
+          img.addEventListener('load', finishIfReady, { once: true });
+          img.addEventListener('error', finishIfReady, { once: true });
         }
-      }
-
-      container.setAttribute('data-render-complete', 'true');
-      container.removeAttribute('data-render-failed');
-      document.getElementById('root')?.removeAttribute('data-render-failed');
-      setRenderComplete(true);
-    };
-
-    const retry = (reason: string) => {
-      attempts += 1;
-      if (attempts >= maxAttempts) {
-        markFailed(reason);
-        return;
-      }
-      window.setTimeout(checkRenderState, 200);
-    };
-
-    window.setTimeout(checkRenderState, 50);
+      });
+      finishIfReady();
+    });
+    observer.observe(container, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
+    });
+    void document.fonts.ready.then(() => finishIfReady());
+    finishIfReady();
     return () => {
       cancelled = true;
+      observer.disconnect();
     };
-  }, [ready, renderData, renderComplete]);
+  }, [ready, renderData]);
 
   if (!ready) {
     return <div>Initializing renderer...</div>;

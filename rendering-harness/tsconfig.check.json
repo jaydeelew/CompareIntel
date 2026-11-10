@@ -11,7 +11,18 @@
     "paid-call.ts",
     "source-features.ts",
     "expected-features.ts",
-    "overall-status.ts"
+    "overall-status.ts",
+    "page-state.ts",
+    "layout-checks.ts",
+    "section-slice.ts",
+    "saved-cells.ts",
+    "captures.ts",
+    "line-diff.ts",
+    "stack-shot.ts",
+    "launch-vite.ts",
+    "layout-audit.ts",
+    "triage.ts",
+    "before-after.ts"
   ],
   "exclude": [
     "node_modules",

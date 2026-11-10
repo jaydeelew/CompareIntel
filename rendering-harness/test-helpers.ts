@@ -1,13 +1,14 @@
 import { Page } from '@playwright/test'
+import { pageStateReady } from './page-state.js'
 
 /**
- * Wait until the harness actually finished rendering, or failed with a reason.
- * A timeout here is a diagnostic failure, never treated as success.
+ * Wait until visible text is in the page, fonts have loaded, and KaTeX is no
+ * longer mid-layout — or the renderer marked a failure. The wait polls that
+ * DOM state. It does not sleep and it does not use networkidle. The timeout
+ * is only the failure deadline.
  */
 export async function waitForHarnessRender(page: Page): Promise<void> {
-  await page.waitForSelector('[data-render-complete], [data-render-failed]', {
-    timeout: 30000,
-  })
+  await page.waitForFunction(pageStateReady, undefined, { timeout: 30000 })
   const failed = page.locator('[data-render-failed]').first()
   if ((await failed.count()) > 0) {
     const reason =

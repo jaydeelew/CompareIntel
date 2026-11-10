@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "harness": "tsx run-harness.ts",
+    "layout-audit": "tsx layout-audit.ts",
+    "triage": "tsx triage.ts",
+    "before-after": "tsx before-after.ts",
     "test": "playwright test",
     "test-fixtures": "tsx test-with-fixtures.ts",
     "typecheck": "tsc --project tsconfig.check.json --noEmit",

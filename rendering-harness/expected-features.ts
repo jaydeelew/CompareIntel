@@ -19,6 +19,31 @@ export interface ExpectedFeatures {
   currency?: boolean
   noKatexErrors?: boolean
   safeLinksOnly?: boolean
+  footnotes?: boolean
+  taskLists?: boolean
+  strikethrough?: boolean
+  autolinks?: boolean
+  bareUrls?: boolean
+  breakHtml?: boolean
+  supHtml?: boolean
+  detailsHtml?: boolean
+  nestedBlockquote?: boolean
+  tableAlignment?: boolean
+  tablePipes?: boolean
+  tableInlineMath?: boolean
+  mermaid?: boolean
+  chemistry?: boolean
+  cases?: boolean
+  aligned?: boolean
+  boxed?: boolean
+  textUnicode?: boolean
+  emoji?: boolean
+  rtl?: boolean
+  cjk?: boolean
+  longUnbroken?: boolean
+  wideTable?: boolean
+  longCodeLine?: boolean
+  currencyBesideMath?: boolean
 }
 
 const ALWAYS: ExpectedFeatures = {
@@ -59,6 +84,39 @@ export const EXPECTED_BY_PROMPT_NAME: Record<string, ExpectedFeatures> = {
     currency: true,
     codeBlocks: true,
   },
+  '07-rare-formats': {
+    displayMath: true,
+    inlineMath: true,
+    codeBlocks: true,
+    tables: true,
+    links: true,
+    currency: true,
+    footnotes: true,
+    taskLists: true,
+    strikethrough: true,
+    autolinks: true,
+    bareUrls: true,
+    breakHtml: true,
+    supHtml: true,
+    detailsHtml: true,
+    nestedBlockquote: true,
+    tableAlignment: true,
+    tablePipes: true,
+    tableInlineMath: true,
+    mermaid: true,
+    chemistry: true,
+    cases: true,
+    aligned: true,
+    boxed: true,
+    textUnicode: true,
+    emoji: true,
+    rtl: true,
+    cjk: true,
+    longUnbroken: true,
+    wideTable: true,
+    longCodeLine: true,
+    currencyBesideMath: true,
+  },
 }
 
 const FEATURE_KEYS = [
@@ -69,6 +127,31 @@ const FEATURE_KEYS = [
   'links',
   'nestedLists',
   'currency',
+  'footnotes',
+  'taskLists',
+  'strikethrough',
+  'autolinks',
+  'bareUrls',
+  'breakHtml',
+  'supHtml',
+  'detailsHtml',
+  'nestedBlockquote',
+  'tableAlignment',
+  'tablePipes',
+  'tableInlineMath',
+  'mermaid',
+  'chemistry',
+  'cases',
+  'aligned',
+  'boxed',
+  'textUnicode',
+  'emoji',
+  'rtl',
+  'cjk',
+  'longUnbroken',
+  'wideTable',
+  'longCodeLine',
+  'currencyBesideMath',
 ] as const
 
 type FeatureKey = (typeof FEATURE_KEYS)[number]
@@ -83,6 +166,31 @@ export function inferAskedFeatures(promptText: string): ExpectedFeatures {
     links: src.hasLinks || undefined,
     nestedLists: src.hasNestedLists || undefined,
     currency: src.hasCurrency || undefined,
+    footnotes: src.hasFootnotes || undefined,
+    taskLists: src.hasTaskLists || undefined,
+    strikethrough: src.hasStrikethrough || undefined,
+    autolinks: src.hasAutolinks || undefined,
+    bareUrls: src.hasBareUrls || undefined,
+    breakHtml: src.hasBreakHtml || undefined,
+    supHtml: src.hasSupHtml || undefined,
+    detailsHtml: src.hasDetailsHtml || undefined,
+    nestedBlockquote: src.hasNestedBlockquote || undefined,
+    tableAlignment: src.hasTableAlignment || undefined,
+    tablePipes: src.hasTablePipes || undefined,
+    tableInlineMath: src.hasTableInlineMath || undefined,
+    mermaid: src.hasMermaid || undefined,
+    chemistry: src.hasChemistry || undefined,
+    cases: src.hasCases || undefined,
+    aligned: src.hasAligned || undefined,
+    boxed: src.hasBoxed || undefined,
+    textUnicode: src.hasTextUnicode || undefined,
+    emoji: src.hasEmoji || undefined,
+    rtl: src.hasRtl || undefined,
+    cjk: src.hasCjk || undefined,
+    longUnbroken: src.hasLongUnbroken || undefined,
+    wideTable: src.hasWideTable || undefined,
+    longCodeLine: src.hasLongCodeLine || undefined,
+    currencyBesideMath: src.hasCurrencyBesideMath || undefined,
   }
 }
 

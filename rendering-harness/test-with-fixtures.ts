@@ -8,6 +8,7 @@ import path from 'path';
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'url';
 import { spawn, ChildProcess } from 'child_process';
+import { pageStateReady } from './page-state.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,8 +56,7 @@ async function startViteServer(): Promise<ChildProcess> {
       if (!resolved && output.includes('Local:') && output.includes('5174')) {
         console.log('✓ Vite dev server started on port 5174');
         resolved = true;
-        // Give it a moment to fully initialize
-        setTimeout(() => resolve(vite), 2000);
+        resolve(vite);
       }
     });
     
@@ -124,17 +124,9 @@ async function renderResponse(
   const encodedContent = encodeURIComponent(response);
   const url = `http://127.0.0.1:5174/?modelId=${encodeURIComponent(modelId)}&content=${encodedContent}`;
   
-  await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
-  
-  // Wait for rendering to complete
-  await page.waitForFunction(
-    () => {
-      const container = document.querySelector('[data-render-container]');
-      if (!container) return false;
-      return container.hasAttribute('data-render-complete');
-    },
-    { timeout: 30000 }
-  );
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+  await page.waitForFunction(pageStateReady, undefined, { timeout: 30000 });
   
   // Take screenshot
   const element = await page.$('[data-render-container]');

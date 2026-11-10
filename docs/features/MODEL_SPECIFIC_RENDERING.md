@@ -363,7 +363,17 @@ Implement a model-specific rendering registry where each model has its own:
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** January 2025  
-**Status:** Planning Phase
+**Document Version:** 1.1  
+**Last Updated:** November 2026  
+**Status:** Planning Phase, with an offline rendering harness in `rendering-harness/`
+
+## Harness coverage beyond the original six prompts
+
+The rendering harness now includes `prompts/07-rare-formats.md` for constructs the first six prompts do not draw out: footnotes, task lists, strikethrough, autolinks and bare URLs, inline HTML (`<br>`, `<sup>`, `<details>`), nested blockquotes that hold a list and code, tables with alignment plus inline math and escaped pipes, a mermaid fence, chemistry `\ce{}`, `\begin{cases}`, `\begin{aligned}`, `\boxed`, `\text` containing unicode, emoji, RTL and CJK text, overflow stress (a long unbroken token, a wide table, a long code line), and a dollar amount beside math.
+
+`LatexRenderer` renders KaTeX through `safeRenderKatex` without importing `katex/contrib/mhchem`. `\ce{}` is therefore not a supported command. The harness still asserts that `\ce{}` renders without a KaTeX error, so the gap stays visible. Do not treat a prompt 07 failure on chemistry as a reason to change the renderer in the same change that only widens the harness.
+
+Phone-width (390 CSS px, device pixel ratio 3) and dark-mode captures run in render-only mode. Dark mode is the site mechanism: `localStorage['compareintel-theme']`, `data-theme`, and `color-scheme`, the same path as `frontend/index.html` and `ThemeContext`. Layout checks at phone width flag horizontal overflow outside table, code, and display-math scrollers, clipped KaTeX, and overlapping text. `npm run layout-audit` applies those checks to the saved cells offline. Evidence images are CI artifacts, not committed files.
+
+`npm run triage -- --cell=<model>:<prompt>` writes the whole heading range, a reference-versus-renderer line diff, a 960 CSS px device-pixel-ratio 2 screenshot, and a regression stub that asserts that full section. `npm run before-after -- --cell=... --base=<ref> --head=<ref>` builds both refs and stacks Before above After for that section without cropping it.
 

@@ -996,7 +996,7 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.rendering-harness == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 90
     
     steps:
       - name: Checkout code
@@ -1039,6 +1039,9 @@ jobs:
           npx playwright test production-validation.test.ts
           npx playwright test production-styling.test.ts
           npx playwright test dom-assertions.test.ts
+          npx playwright test rare-formats.test.ts
+          npx playwright test layout-checks.test.ts
+          npx playwright test section-slice.test.ts
           npx playwright test test-with-fixtures.test.ts
 
       - name: Run full offline fixture suite
@@ -1052,6 +1055,18 @@ jobs:
           name: harness-test-results
           path: rendering-harness/test-results/
           retention-days: 7
+
+      - name: Phone and dark layout audit
+        working-directory: rendering-harness
+        run: npm run layout-audit
+
+      - name: Upload phone and dark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-layout-evidence
+          path: rendering-harness/layout-audit/
+          retention-days: 14
 
   extension-test:
     name: Extension Tests

@@ -140,3 +140,7 @@ extension/compareintel-extension.zip
 rendering-harness/full-section-audit/screenshots/*.png
 rendering-harness/full-section-audit/before-after/*.png
 rendering-harness/full-section-audit/*.zip
+rendering-harness/layout-audit/
+rendering-harness/triage-out/
+rendering-harness/runs/**/*.phone.png
+rendering-harness/runs/**/*.dark.png
