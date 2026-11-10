@@ -18,6 +18,12 @@ from openai import APIConnectionError, APIError, APITimeoutError, NotFoundError,
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from scripts.harness_replies import (
+    admin_setup_failure_message,
+    harness_summary_from_output,
+    regenerate_coverage_manifest,
+)
+
 from ...config import settings
 from ...database import get_db
 from ...dependencies import require_admin_role
@@ -169,6 +175,21 @@ def _is_image_generation_model(model_data: dict[str, Any] | None) -> bool:
         " ".join(str(m) for m in out_mods).lower() if isinstance(out_mods, (list, tuple)) else ""
     )
     return "image" in out_str
+
+
+def persist_added_registry(registry: dict[str, Any], *, setup_returncode: int | None) -> None:
+    """Save models_registry.json only after text harness setup exits 0.
+
+    Image models pass setup_returncode None (they have no text harness). A
+    non-zero setup must not leave the new id in the registry file.
+    """
+    if setup_returncode not in (0, None):
+        raise HTTPException(
+            status_code=500,
+            detail="Refusing to save models_registry.json because harness setup did not succeed.",
+        )
+    save_registry(registry)
+    reload_registry()
 
 
 def _sort_providers_alphabetically(mbp: dict[str, list]) -> dict[str, list]:
@@ -370,6 +391,7 @@ async def add_model(
 
     # Check against fresh registry (avoids stale MODELS_BY_PROVIDER from import caching)
     registry = load_registry()
+    registry_before = json.loads(json.dumps(registry))
     for provider, models in registry["models_by_provider"].items():
         for model in models:
             if model["id"] == model_id:
@@ -503,27 +525,43 @@ async def add_model(
                 ]
                 new_model["image_sizes"] = ["1K", "2K"]
 
-        save_registry(registry)
-        reload_registry()
-        _upsert_openrouter_snapshot_for_added_model(model_data)
-
-        refresh_model_token_limits(model_id)
-
+        harness_note = ""
         if not is_image_model:
             script_path = backend_dir / "scripts" / "setup_model_renderer.py"
             result = subprocess.run(
-                [sys.executable, str(script_path), model_id],
+                [sys.executable, str(script_path), model_id, "--defer-coverage"],
                 capture_output=True,
                 text=True,
-                timeout=600,
+                timeout=900,
                 cwd=str(backend_dir),
             )
             if result.returncode != 0:
-                error_msg = result.stderr[:500] if result.stderr else "Unknown error"
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Model added but renderer config generation failed: {error_msg}",
+                    detail=admin_setup_failure_message(
+                        result.returncode, result.stdout or "", result.stderr or ""
+                    ),
                 )
+            harness_note = harness_summary_from_output(result.stdout or "")
+
+        persist_added_registry(registry, setup_returncode=None if is_image_model else 0)
+        if not is_image_model:
+            coverage = regenerate_coverage_manifest()
+            if coverage.returncode != 0:
+                save_registry(registry_before)
+                reload_registry()
+                detail = (coverage.stderr or coverage.stdout or "generate-coverage failed")[-400:]
+                raise HTTPException(
+                    status_code=500,
+                    detail=(
+                        "Rendering harness passed but coverage.json could not be updated, "
+                        "so the model was not kept in the registry. "
+                        f"{detail}"
+                    ),
+                )
+        _upsert_openrouter_snapshot_for_added_model(model_data)
+
+        refresh_model_token_limits(model_id)
 
         benchmark_script = backend_dir / "scripts" / "research_model_benchmarks.py"
         if benchmark_script.exists():
@@ -557,12 +595,16 @@ async def add_model(
             request=request,
         )
 
+        message = f"Model {model_id} added successfully"
+        if harness_note:
+            message = f"{message}. {harness_note}"
         return {
             "success": True,
             "model_id": model_id,
             "provider": provider_name,
             "supports_web_search": supports_web_search,
-            "message": f"Model {model_id} added successfully",
+            "message": message,
+            "harness": harness_note or None,
         }
 
     except HTTPException:
@@ -811,10 +853,6 @@ async def add_model_stream(
                 except disconnect_exceptions:
                     raise
 
-            save_registry(registry)
-            reload_registry()
-            _upsert_openrouter_snapshot_for_added_model(model_data)
-
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': f'Model classified as {tier_classification} tier', 'progress': 27})}\n\n"
             except disconnect_exceptions:
@@ -825,6 +863,7 @@ async def add_model_stream(
             except disconnect_exceptions:
                 raise
 
+            harness_stdout_lines: list[str] = []
             if is_image_model:
                 try:
                     yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': 'Image model: skipping renderer setup', 'progress': 90})}\n\n"
@@ -832,39 +871,17 @@ async def add_model_stream(
                     raise
                 process = None
             else:
-
-                def _has_model_config(mid: str, path: Path) -> bool:
-                    if not path.exists():
-                        return False
-                    try:
-                        with open(path, encoding="utf-8") as f:
-                            configs = json.load(f)
-                    except Exception:
-                        return False
-                    if isinstance(configs, list):
-                        return any(c.get("modelId") == mid for c in configs if isinstance(c, dict))
-                    if isinstance(configs, dict):
-                        return mid in configs
-                    return False
-
                 backend_dir = Path(__file__).parent.parent.parent.parent
                 script_path = backend_dir / "scripts" / "setup_model_renderer.py"
-
-                if _has_model_config(model_id, config_path):
-                    try:
-                        yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': 'Renderer config already exists, skipping setup...', 'progress': 90})}\n\n"
-                    except disconnect_exceptions:
-                        raise
-                    process = None
-                else:
-                    process = await asyncio.create_subprocess_exec(
-                        sys.executable,
-                        str(script_path),
-                        model_id,
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                        cwd=str(backend_dir),
-                    )
+                process = await asyncio.create_subprocess_exec(
+                    sys.executable,
+                    str(script_path),
+                    model_id,
+                    "--defer-coverage",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    cwd=str(backend_dir),
+                )
 
             if process is not None:
                 stderr_lines = []
@@ -883,6 +900,7 @@ async def add_model_stream(
                         break
 
                     line_str = line_bytes.decode("utf-8").strip()
+                    harness_stdout_lines.append(line_str)
                     if line_str.startswith("PROGRESS:"):
                         try:
                             progress_json = json.loads(line_str[9:])
@@ -900,6 +918,8 @@ async def add_model_stream(
                                 mapped_progress = 80 + (script_progress * 0.1)
                             elif stage == "saving":
                                 mapped_progress = 90 + (script_progress * 0.05)
+                            elif stage == "harness":
+                                mapped_progress = 88 + (script_progress * 0.04)
                             else:
                                 mapped_progress = 30 + (script_progress * 0.65)
 
@@ -922,14 +942,51 @@ async def add_model_stream(
                 return_code = await process.wait()
 
                 if return_code != 0:
-                    error_msg = (
-                        "\n".join(stderr_lines[-10:])[:500] if stderr_lines else "Unknown error"
+                    error_msg = admin_setup_failure_message(
+                        return_code,
+                        "\n".join(harness_stdout_lines),
+                        "\n".join(stderr_lines),
                     )
                     try:
-                        yield f"data: {json.dumps({'type': 'error', 'message': f'Renderer config generation failed: {error_msg}'})}\n\n"
+                        yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
                     except disconnect_exceptions:
                         raise
                     return
+
+            try:
+                persist_added_registry(registry, setup_returncode=None if is_image_model else 0)
+            except HTTPException as persist_error:
+                try:
+                    yield f"data: {json.dumps({'type': 'error', 'message': persist_error.detail})}\n\n"
+                except disconnect_exceptions:
+                    raise
+                return
+
+            if not is_image_model:
+                coverage = await asyncio.to_thread(regenerate_coverage_manifest)
+                if coverage.returncode != 0:
+                    try:
+                        save_registry(registry_backup)
+                        reload_registry()
+                    except Exception as restore_error:
+                        logger.error(
+                            "Failed to restore registry after coverage error: %s", restore_error
+                        )
+                    detail = (coverage.stderr or coverage.stdout or "generate-coverage failed")[
+                        -400:
+                    ]
+                    message = (
+                        "Rendering harness passed but coverage.json could not be updated, "
+                        "so the model was not kept in the registry. "
+                        f"{detail}"
+                    )
+                    try:
+                        yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
+                    except disconnect_exceptions:
+                        raise
+                    return
+
+            _upsert_openrouter_snapshot_for_added_model(model_data)
 
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'benchmarks', 'message': 'Researching benchmarks for Help Me Choose...', 'progress': 92})}\n\n"
@@ -984,7 +1041,11 @@ async def add_model_stream(
             )
 
             try:
-                yield f"data: {json.dumps({'type': 'success', 'message': f'Model {model_id} added successfully', 'model_id': model_id, 'provider': provider_name, 'supports_web_search': supports_web_search, 'progress': 100})}\n\n"
+                harness_note = harness_summary_from_output("\n".join(harness_stdout_lines))
+                success_message = f"Model {model_id} added successfully"
+                if harness_note:
+                    success_message = f"{success_message}. {harness_note}"
+                yield f"data: {json.dumps({'type': 'success', 'message': success_message, 'model_id': model_id, 'provider': provider_name, 'supports_web_search': supports_web_search, 'harness': harness_note or None, 'progress': 100})}\n\n"
             except disconnect_exceptions:
                 raise
 

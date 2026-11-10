@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import LatexRenderer from '../frontend/src/components/LatexRenderer';
 import { initializeRegistry } from '../frontend/src/config/loadModelConfigs';
+import { contentExpectsKatex } from './render-ready';
 import '../frontend/src/styles/variables.css';
 import '../frontend/src/styles/base.css';
 import '../frontend/src/styles/models.css';
@@ -12,18 +13,6 @@ interface RenderRequest {
   content: string;
 }
 
-const SKIP_PRISM_LANGS = new Set([
-  '',
-  'none',
-  'plain',
-  'plaintext',
-  'text',
-  // Prism's markdown grammar often emits no .token spans (and nested ```
-  // inside a markdown fence can throw). Do not block screenshots on it.
-  'markdown',
-  'md',
-]);
-
 function markFailed(reason: string) {
   const root = document.getElementById('root');
   root?.setAttribute('data-render-failed', reason);
@@ -32,15 +21,23 @@ function markFailed(reason: string) {
   container?.removeAttribute('data-render-complete');
 }
 
-function languageFromCode(block: Element): string {
-  const cls = Array.from(block.classList).find(c => c.startsWith('language-'));
-  return cls ? cls.replace('language-', '').toLowerCase() : '';
+/** True when visible text is present and KaTeX is not still measuring itself. */
+function renderDomReady(container: Element): boolean {
+  const text = (container.textContent || '').replace(/\s+/g, ' ').trim();
+  if (!text) return false;
+
+  const katexProcessing = container.querySelectorAll('.katex-html[style*="visibility: hidden"]');
+  if (katexProcessing.length > 0) return false;
+
+  for (const img of Array.from(container.querySelectorAll('img'))) {
+    if (!img.complete) return false;
+  }
+  return true;
 }
 
 function HarnessApp() {
   const [ready, setReady] = useState(false);
   const [renderData, setRenderData] = useState<RenderRequest | null>(null);
-  const [renderComplete, setRenderComplete] = useState(false);
 
   useEffect(() => {
     initializeRegistry()
@@ -76,74 +73,57 @@ function HarnessApp() {
   }, []);
 
   useEffect(() => {
-    if (!ready || !renderData || renderComplete) return;
+    if (!ready || !renderData) return;
 
-    let attempts = 0;
-    const maxAttempts = 50;
     let cancelled = false;
-
-    const checkRenderState = () => {
-      if (cancelled) return;
+    let settled = false;
+    let frame = 0;
+    const finishIfReady = () => {
+      if (cancelled || settled) return;
       const container = document.querySelector('[data-render-container]');
-      if (!container) {
-        retry('render-container-missing');
-        return;
-      }
-
-      const katexProcessing = container.querySelectorAll('.katex-html[style*="visibility: hidden"]');
-      if (katexProcessing.length > 0) {
-        retry('katex-processing');
-        return;
-      }
-
-      const codeBlocks = container.querySelectorAll('pre code[class*="language-"]');
-      const prism = (window as Window & { Prism?: { languages?: Record<string, unknown> } }).Prism;
-      for (const block of Array.from(codeBlocks)) {
-        const lang = languageFromCode(block);
-        if (SKIP_PRISM_LANGS.has(lang)) continue;
-        if (!prism) {
-          retry('prism-not-loaded');
-          return;
-        }
-        if (!prism.languages || !prism.languages[lang]) {
-          // Unknown language, or Prism has no grammar: do not wait for .token
-          continue;
-        }
-        const isEmpty = block.textContent?.trim() === '';
-        if (!isEmpty && block.querySelectorAll('.token').length === 0) {
-          retry('prism-highlighting');
-          return;
-        }
-      }
-
-      const images = container.querySelectorAll('img');
-      for (const img of Array.from(images)) {
-        if (!img.complete) {
-          retry('images-loading');
-          return;
-        }
-      }
-
+      if (!container || !renderDomReady(container)) return;
+      settled = true;
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
       container.setAttribute('data-render-complete', 'true');
       container.removeAttribute('data-render-failed');
       document.getElementById('root')?.removeAttribute('data-render-failed');
-      setRenderComplete(true);
     };
 
-    const retry = (reason: string) => {
-      attempts += 1;
-      if (attempts >= maxAttempts) {
-        markFailed(reason);
-        return;
-      }
-      window.setTimeout(checkRenderState, 200);
-    };
+    const container = document.querySelector('[data-render-container]');
+    if (!container) return;
 
-    window.setTimeout(checkRenderState, 50);
+    const observer = new MutationObserver(() => {
+      container.querySelectorAll('img').forEach(img => {
+        if (!img.complete) {
+          img.addEventListener('load', finishIfReady, { once: true });
+          img.addEventListener('error', finishIfReady, { once: true });
+        }
+      });
+      finishIfReady();
+    });
+    observer.observe(container, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
+    });
+    void document.fonts.ready.then(() => finishIfReady());
+    // Sample the DOM every frame until KaTeX and text are actually present.
+    // The frame stops as soon as the container is ready. It is not a sleep.
+    const tick = () => {
+      if (cancelled || settled) return;
+      finishIfReady();
+      if (!cancelled && !settled) frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    finishIfReady();
     return () => {
       cancelled = true;
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
     };
-  }, [ready, renderData, renderComplete]);
+  }, [ready, renderData]);
 
   if (!ready) {
     return <div>Initializing renderer...</div>;
@@ -154,7 +134,11 @@ function HarnessApp() {
   }
 
   return (
-    <div data-render-container className="results-section">
+    <div
+      data-render-container
+      data-expects-katex={contentExpectsKatex(renderData.content) ? 'true' : 'false'}
+      className="results-section"
+    >
       <div className="results-grid">
         <article className="result-card conversation-card">
           <div className="message-content">
