@@ -5,6 +5,7 @@ import { initializeRegistry } from '../frontend/src/config/loadModelConfigs';
 import { contentExpectsKatex } from './render-ready';
 import '../frontend/src/styles/variables.css';
 import '../frontend/src/styles/base.css';
+import '../frontend/src/styles/models.css';
 import '../frontend/src/styles/results.css';
 
 interface RenderRequest {

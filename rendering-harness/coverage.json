@@ -28,16 +28,7 @@
     "sourceful/riverflow-v2-pro",
     "sourceful/riverflow-v2.6-pro"
   ],
-  "allowlist": [
-    {
-      "modelId": "deepseek/deepseek-v4.1-flash-1017",
-      "reason": "Replaced deepseek/deepseek-v4.1-flash in #225. The October 17 snapshot has no saved six-prompt harness batch yet."
-    },
-    {
-      "modelId": "tencent/hy4",
-      "reason": "Replaced tencent/hy4-preview in #225. Hy4 has no saved six-prompt harness batch yet."
-    }
-  ],
+  "allowlist": [],
   "models": {
     "anthropic/claude-fable-5": {
       "01-math-basics": {
@@ -431,28 +422,28 @@
     },
     "deepseek/deepseek-v4.1-flash-1017": {
       "01-math-basics": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_06-edge-cases-boundaries.json"
       }
     },
     "google/gemini-2.5-flash": {
@@ -1861,28 +1852,28 @@
     },
     "tencent/hy4": {
       "01-math-basics": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_06-edge-cases-boundaries.json"
       }
     },
     "x-ai/grok-4.20": {
@@ -2202,13 +2193,13 @@
     "registryModels": 100,
     "textModels": 83,
     "imageModels": 17,
-    "allowlisted": 2,
+    "allowlisted": 0,
     "cells": 498,
-    "pass": 476,
+    "pass": 488,
     "notCovered": 10,
     "fail": 0,
-    "incomplete": 12,
+    "incomplete": 0,
     "sourceIssue": 0,
-    "missing": 12
+    "missing": 0
   }
 }
