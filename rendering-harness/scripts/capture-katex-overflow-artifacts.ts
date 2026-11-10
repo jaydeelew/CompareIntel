@@ -12,7 +12,7 @@ import { chromium, type Page } from 'playwright'
 import {
   ARTIFACT_REPRESENTATIVE_CELLS,
   applyBeforeClipCss,
-  captureCardFullViewport,
+  captureClipTargetViewportBand,
   loadHarnessResponse,
   openHarnessWithContent,
   probeWideContentClip,
@@ -89,7 +89,7 @@ async function capturePhasesForCell(
     await beforePage.close()
     throw new Error(`BEFORE did not clip for ${cellLabel}: ${JSON.stringify(probeBefore)}`)
   }
-  const beforeShot = await captureCardFullViewport(beforePage)
+  const beforeShot = await captureClipTargetViewportBand(beforePage, probeBefore)
   await beforePage.close()
 
   const afterPage = await browser.newPage(pageOpts)
@@ -99,9 +99,9 @@ async function capturePhasesForCell(
     await afterPage.close()
     throw new Error(`AFTER still reports clip for ${cellLabel}: ${JSON.stringify(probeAfter)}`)
   }
-  const afterShot = await captureCardFullViewport(afterPage)
+  const afterShot = await captureClipTargetViewportBand(afterPage, probeBefore)
   await scrollClipTargetToEnd(afterPage, probeBefore)
-  const afterScrolledShot = await captureCardFullViewport(afterPage)
+  const afterScrolledShot = await captureClipTargetViewportBand(afterPage, probeBefore)
   await afterPage.close()
 
   const source = rawSourceExcerptForProbe(probeBefore, content)

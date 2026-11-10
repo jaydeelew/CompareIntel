@@ -144,6 +144,15 @@ export async function applyBeforeClipCss(page: Page): Promise<void> {
   await page.evaluate(() => document.fonts.ready)
 }
 
+export function selectorForClipKind(
+  kind: ClipProbe['kind']
+): '.katex-display' | '.markdown-table-scroll' | '.code-block' | 'pre' {
+  if (kind === 'markdown-table-scroll') return '.markdown-table-scroll'
+  if (kind === 'code-block') return '.code-block'
+  if (kind === 'pre') return 'pre'
+  return '.katex-display'
+}
+
 export type ClipProbe = {
   clipped: boolean
   kind: 'katex-display' | 'markdown-table-scroll' | 'code-block' | 'pre' | 'none'
@@ -177,6 +186,8 @@ export async function probeWideContentClip(page: Page): Promise<ClipProbe> {
 
     const cardRect = card.getBoundingClientRect()
     const cardClientWidth = card.clientWidth
+    const cardOx = getComputedStyle(card).overflowX
+    const cardClips = cardOx === 'hidden' || cardOx === 'clip'
     const candidates: Array<{
       kind: string
       index: number
@@ -219,9 +230,13 @@ export async function probeWideContentClip(page: Page): Promise<ClipProbe> {
           }
           node = node.parentElement
         }
-        const cardOx = getComputedStyle(card).overflowX
-        if (cardOx === 'hidden' || cardOx === 'clip') clips = true
+        if (cardClips) clips = true
         if (!clips) continue
+
+        const elOx = getComputedStyle(htmlEl).overflowX
+        const selfScrollable =
+          (elOx === 'auto' || elOx === 'scroll' || elOx === 'overlay') && scrollWidth > clientWidth + 2
+        if (selfScrollable && !cardClips) continue
 
         const widerThanVisible = scrollWidth > clientWidth + 2
         const widerThanCard = scrollWidth > cardClientWidth + 2
@@ -273,17 +288,71 @@ export async function probeWideContentClip(page: Page): Promise<ClipProbe> {
   }) as Promise<ClipProbe>
 }
 
-export async function captureCardFullViewport(page: Page): Promise<Buffer> {
-  const clip = await page.evaluate(() => {
-    const card = document.querySelector('.result-card.conversation-card, .result-card') as HTMLElement | null
-    if (!card) return null
-    const r = card.getBoundingClientRect()
-    const top = Math.max(0, Math.floor(r.top))
-    const height = Math.ceil(r.height) + 1
-    return { x: 0, y: top, width: 390, height: Math.min(height, 2400) }
-  })
-  if (!clip) throw new Error('No result card for viewport capture')
+/** Scroll the probed wide element to the vertical center of the viewport. */
+export async function scrollProbeTargetIntoView(page: Page, probe: ClipProbe): Promise<void> {
+  await page.evaluate(
+    ({ kind, elementIndex }) => {
+      const card = document.querySelector('.result-card')
+      if (!card) return
+      let selector = '.katex-display'
+      if (kind === 'markdown-table-scroll') selector = '.markdown-table-scroll'
+      else if (kind === 'code-block') selector = '.code-block'
+      else if (kind === 'pre') selector = 'pre'
+      const el = card.querySelectorAll(selector)[elementIndex] as HTMLElement | undefined
+      el?.scrollIntoView({ block: 'center', inline: 'nearest' })
+    },
+    { kind: probe.kind, elementIndex: probe.elementIndex }
+  )
+  await page.evaluate(() => document.fonts.ready)
+}
+
+const CLIP_CAPTURE_PADDING_CSS = 150
+
+/** Full page width (390 CSS px) band around the probed element. */
+export async function captureClipTargetViewportBand(
+  page: Page,
+  probe: ClipProbe,
+  paddingCss = CLIP_CAPTURE_PADDING_CSS
+): Promise<Buffer> {
+  await scrollProbeTargetIntoView(page, probe)
+  const clip = await page.evaluate(
+    ({ kind, elementIndex, paddingCss }) => {
+      const card = document.querySelector('.result-card')
+      if (!card) return null
+      let selector = '.katex-display'
+      if (kind === 'markdown-table-scroll') selector = '.markdown-table-scroll'
+      else if (kind === 'code-block') selector = '.code-block'
+      else if (kind === 'pre') selector = 'pre'
+      const el = card.querySelectorAll(selector)[elementIndex] as HTMLElement | undefined
+      if (!el) return null
+      const rect = el.getBoundingClientRect()
+      const viewportWidth = document.documentElement.clientWidth
+      const docHeight = document.documentElement.clientHeight
+      const y = Math.max(0, Math.floor(rect.top - paddingCss))
+      const bottom = Math.min(docHeight, Math.ceil(rect.bottom + paddingCss))
+      const height = Math.max(64, bottom - y)
+      return { x: 0, y, width: viewportWidth, height }
+    },
+    { kind: probe.kind, elementIndex: probe.elementIndex, paddingCss }
+  )
+  if (!clip) throw new Error('No clip target for viewport band capture')
   return page.screenshot({ clip })
+}
+
+/** @deprecated use captureClipTargetViewportBand */
+export async function captureCardFullViewport(page: Page): Promise<Buffer> {
+  const probe = await probeWideContentClip(page)
+  if (probe.kind === 'none' || probe.elementIndex < 0) {
+    const clip = await page.evaluate(() => {
+      const card = document.querySelector('.result-card') as HTMLElement | null
+      if (!card) return null
+      const r = card.getBoundingClientRect()
+      return { x: 0, y: Math.max(0, Math.floor(r.top)), width: 390, height: Math.min(Math.ceil(r.height) + 1, 2400) }
+    })
+    if (!clip) throw new Error('No result card for viewport capture')
+    return page.screenshot({ clip })
+  }
+  return captureClipTargetViewportBand(page, probe)
 }
 
 export async function scrollClipTargetToEnd(page: Page, probe: ClipProbe): Promise<void> {

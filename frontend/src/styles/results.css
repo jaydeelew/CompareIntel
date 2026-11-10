@@ -2460,7 +2460,15 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
     -webkit-overflow-scrolling: touch;
   }
 
-  .result-card .latex-content .markdown-table-scroll,
+  .result-card .latex-content .markdown-table-scroll {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .result-card .message-content .latex-content .code-block,
   .result-card .message-content .latex-content pre:not(.code-block),
   .result-card .code-block-direct {
