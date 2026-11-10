@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test'
 
-import { test, expect, waitForReactHydration } from './fixtures'
+import { test, expect, waitForReactHydration, waitForAuthState } from './fixtures'
+import { clickNavSignUpButton } from './helpers/navAuth'
 
 /**
  * E2E Smoke Tests (@smoke)
@@ -188,19 +189,18 @@ test.describe('Smoke Tests @smoke', () => {
 
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout })
     await waitForReactHydration(page)
+    await waitForAuthState(page)
 
     // Generate unique test user email
     const testEmail = `smoke-test-${Date.now()}@example.com`
     const testPassword = 'TestPassword123!'
 
-    // Click sign up button
     const signupButton = page.getByTestId('nav-sign-up-button')
     await expect(signupButton).toBeVisible({ timeout: 15000 })
-    await signupButton.click()
+    await clickNavSignUpButton(page, { browserName })
 
-    // Wait for auth modal to open
-    const authModal = page.locator('.auth-modal, [role="dialog"]').first()
-    await expect(authModal).toBeVisible({ timeout: 10000 })
+    const authModal = page.getByTestId('auth-modal')
+    await expect(authModal).toBeVisible()
 
     // Fill signup form
     await page.locator('input[type="email"]').first().fill(testEmail)
