@@ -4,6 +4,7 @@ import LatexRenderer from '../frontend/src/components/LatexRenderer';
 import { initializeRegistry } from '../frontend/src/config/loadModelConfigs';
 import '../frontend/src/styles/variables.css';
 import '../frontend/src/styles/base.css';
+import '../frontend/src/styles/models.css';
 import '../frontend/src/styles/results.css';
 
 interface RenderRequest {
