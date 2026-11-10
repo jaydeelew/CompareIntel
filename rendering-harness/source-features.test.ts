@@ -31,6 +31,34 @@ test.describe('Source feature detection vs renderer loss', () => {
     expect(src.hasCodeDollars).toBe(true)
   })
 
+  test('a column-0 pipe block inside a list is not table loss (Llama 4 Maverick 05)', () => {
+    const source = [
+      '2. **Tables with Mathematical Formulas**: Various formulas for reference.',
+      '| Formula | Result |',
+      '|---|---|',
+      '| Quadratic | $x = 1$ |',
+      '',
+      '3. **Next item**',
+    ].join('\n')
+    expect(detectSourceFeatures(source).hasTables).toBe(true)
+    const html = renderReferenceHtml(source)
+    expect(html).not.toContain('<table')
+    const result = validateRenderedHTML(html, { tables: true, noKatexErrors: true }, source)
+    expect(result.assertions.filter(a => a.status === 'fail')).toEqual([])
+    expect(
+      result.assertions.some(a => a.status === 'not-covered' && /tables/.test(a.message))
+    ).toBe(true)
+    expect(result.status).not.toBe('fail')
+  })
+
+  test('dropping a block-level GFM table is still renderer loss', () => {
+    const source = ['Intro.', '', '| A | B |', '|---|---|', '| 1 | 2 |', ''].join('\n')
+    expect(renderReferenceHtml(source)).toContain('<table')
+    const result = validateRenderedHTML('<div>Intro.</div>', { tables: true }, source)
+    expect(result.status).toBe('fail')
+    expect(result.assertions.some(a => a.status === 'fail' && /tables/.test(a.message))).toBe(true)
+  })
+
   test('|x| piecewise math is not a markdown table (GLM 5 05)', () => {
     const md = [
       'The absolute value function:',

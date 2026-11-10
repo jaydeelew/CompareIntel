@@ -180,6 +180,11 @@ export function validateRenderedHTML(
   const dom = new JSDOM(html)
   const container = dom.window.document.body
   const source = sourceMarkdown ? detectSourceFeatures(sourceMarkdown) : undefined
+  // A pipe row inside a list is not a GFM table. The loss check follows the
+  // markdown-it reference, not the raw `| header |` / `|---|` heuristic.
+  const referenceDocument = sourceMarkdown
+    ? new JSDOM(renderReferenceHtml(sourceMarkdown)).window.document
+    : undefined
   const assertions: AssertionResult[] = []
 
   const displayMath = container.querySelectorAll('.katex-display')
@@ -226,7 +231,10 @@ export function validateRenderedHTML(
   const tables = container.querySelectorAll('table')
   const hasTables = tables.length > 0
   const tableCellCount = container.querySelectorAll('td, th').length
-  const table = presentAssertion(expectedFeatures.tables, source?.hasTables, hasTables, {
+  const sourceHasTable = referenceDocument
+    ? referenceDocument.querySelector('table') !== null
+    : source?.hasTables
+  const table = presentAssertion(expectedFeatures.tables, sourceHasTable, hasTables, {
     feature: 'tables',
     expectedYes: 'tables present',
     expectedNo: 'no tables',
@@ -316,7 +324,7 @@ export function validateRenderedHTML(
 
   // Always-on: leftover visible `\begin{env}` is a user-visible defect even when
   // the prompt's requiredFeatures dropped displayMath (GPT-5 05 cases).
-  if (sourceMarkdown) {
+  if (sourceMarkdown && referenceDocument) {
     const envs = explicitMathEnvsOutsideCode(sourceMarkdown)
     const leftover = visibleUnrenderedMathEnvs(container, envs.matched)
     if (envs.matched.length > 0) {
@@ -362,8 +370,7 @@ export function validateRenderedHTML(
     // Silent math loss: the harness used to pass when *some* math survived.
     // Every TeX source the independent reference renders must be KaTeX here,
     // and raw `\(` / `\[` / `\begin{` / `\frac` must not remain in prose.
-    const refDom = new JSDOM(renderReferenceHtml(sourceMarkdown))
-    const refTex = texSourceCounts(refDom.window.document.body)
+    const refTex = texSourceCounts(referenceDocument.body)
     const actualTex = texSourceCounts(container)
     const missingTex: string[] = []
     for (const [tex, count] of refTex) {
