@@ -1,7 +1,9 @@
 /**
- * Unique saved harness replies. One cell per model and prompt. A later complete
- * reply replaces a truncated or empty one. This is the offline corpus (83 text
- * models x 6 prompts = 498 when every cell was saved).
+ * Unique saved harness replies. One cell per model and prompt. A complete
+ * later attempt, including a file under runs/<batch>/reruns/, replaces a
+ * truncated or empty original. That is the same rule as uniqueCoverageRecords
+ * and the batch rollups. This is the offline corpus (83 text models x 6
+ * prompts = 498 when every cell was saved).
  */
 
 import fs from 'fs/promises'
@@ -42,44 +44,61 @@ export function cellKey(modelId: string, promptName: string): string {
   return `${modelId}:${promptName}`
 }
 
+function replyFile(name: string): boolean {
+  return name.endsWith('.json') && !name.startsWith('unique-') && !SKIP_JSON.has(name)
+}
+
+async function readCell(filePath: string): Promise<SavedCell | null> {
+  let data: Record<string, unknown>
+  try {
+    data = JSON.parse(await fs.readFile(filePath, 'utf-8')) as Record<string, unknown>
+  } catch {
+    return null
+  }
+  if (typeof data.modelId !== 'string' || typeof data.promptName !== 'string') return null
+  if (typeof data.response !== 'string') return null
+  const error =
+    data.error == null ? undefined : typeof data.error === 'string' ? data.error : JSON.stringify(data.error)
+  return {
+    modelId: data.modelId,
+    modelName: typeof data.modelName === 'string' ? data.modelName : data.modelId,
+    promptName: data.promptName,
+    promptText: typeof data.promptText === 'string' ? data.promptText : '',
+    response: data.response,
+    timestamp: typeof data.timestamp === 'string' ? data.timestamp : '',
+    filePath,
+    truncated: isTruncatedReply({
+      truncated: data.truncated === true,
+      finishReason: typeof data.finishReason === 'string' ? data.finishReason : null,
+      nativeFinishReason: typeof data.nativeFinishReason === 'string' ? data.nativeFinishReason : null,
+    }),
+    emptyVisible: isEmptyVisibleReply(data.response),
+    finishReason: typeof data.finishReason === 'string' ? data.finishReason : null,
+    nativeFinishReason: typeof data.nativeFinishReason === 'string' ? data.nativeFinishReason : null,
+    error,
+  }
+}
+
 export async function loadUniqueSavedCells(runsDir = path.join(__dirname, 'runs')): Promise<SavedCell[]> {
   const entries = await fs.readdir(runsDir, { withFileTypes: true })
   const found: SavedCell[] = []
   for (const entry of entries) {
     if (!entry.isDirectory()) continue
     const dir = path.join(runsDir, entry.name)
-    const files = await fs.readdir(dir)
-    for (const file of files) {
-      if (!file.endsWith('.json') || file.startsWith('unique-') || SKIP_JSON.has(file)) continue
-      const filePath = path.join(dir, file)
-      let data: Record<string, unknown>
-      try {
-        data = JSON.parse(await fs.readFile(filePath, 'utf-8')) as Record<string, unknown>
-      } catch {
-        continue
+    const names = await fs.readdir(dir)
+    const files = names.filter(replyFile).map(name => path.join(dir, name))
+    const rerunsDir = path.join(dir, 'reruns')
+    try {
+      const reruns = await fs.readdir(rerunsDir)
+      for (const name of reruns) {
+        if (replyFile(name)) files.push(path.join(rerunsDir, name))
       }
-      if (typeof data.modelId !== 'string' || typeof data.promptName !== 'string') continue
-      if (typeof data.response !== 'string') continue
-      const error =
-        data.error == null ? undefined : typeof data.error === 'string' ? data.error : JSON.stringify(data.error)
-      found.push({
-        modelId: data.modelId,
-        modelName: typeof data.modelName === 'string' ? data.modelName : data.modelId,
-        promptName: data.promptName,
-        promptText: typeof data.promptText === 'string' ? data.promptText : '',
-        response: data.response,
-        timestamp: typeof data.timestamp === 'string' ? data.timestamp : '',
-        filePath,
-        truncated: isTruncatedReply({
-          truncated: data.truncated === true,
-          finishReason: typeof data.finishReason === 'string' ? data.finishReason : null,
-          nativeFinishReason: typeof data.nativeFinishReason === 'string' ? data.nativeFinishReason : null,
-        }),
-        emptyVisible: isEmptyVisibleReply(data.response),
-        finishReason: typeof data.finishReason === 'string' ? data.finishReason : null,
-        nativeFinishReason: typeof data.nativeFinishReason === 'string' ? data.nativeFinishReason : null,
-        error,
-      })
+    } catch {
+      // This batch has no reruns directory.
+    }
+    for (const filePath of files) {
+      const cell = await readCell(filePath)
+      if (cell) found.push(cell)
     }
   }
   return uniqueCoverageRecords(found)
