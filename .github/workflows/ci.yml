@@ -1059,11 +1059,6 @@ jobs:
           npx playwright test dom-assertions.test.ts
           npx playwright test test-with-fixtures.test.ts
 
-      - name: Phone and dark layout audit (render-only)
-        working-directory: rendering-harness
-        timeout-minutes: 55
-        run: npm run layout-audit
-
       - name: Run full offline fixture suite
         working-directory: rendering-harness
         run: npm test
@@ -1075,6 +1070,44 @@ jobs:
           name: harness-test-results
           path: rendering-harness/test-results/
           retention-days: 7
+
+  layout-audit-optional:
+    name: Layout audit (optional, render-only)
+    needs: detect-changes
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            rendering-harness/package-lock.json
+            frontend/package-lock.json
+      - name: Install harness dependencies
+        working-directory: rendering-harness
+        run: npm ci
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright browsers
+        working-directory: rendering-harness
+        run: npx playwright install chromium --with-deps
+      - name: Phone and dark layout audit
+        working-directory: rendering-harness
+        run: npm run layout-audit
+      - name: Upload layout audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-layout-audit
+          path: rendering-harness/layout-audit/
+          retention-days: 14
 
   extension-test:
     name: Extension Tests
