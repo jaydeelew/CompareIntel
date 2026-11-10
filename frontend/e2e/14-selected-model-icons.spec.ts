@@ -8,7 +8,7 @@ import { writeFileSync, mkdirSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
-import { dismissTutorialOverlay, test, expect } from './fixtures'
+import { dismissTutorialOverlay, ensureUnfoldedNavbar, test, expect } from './fixtures'
 import { mockModelsApi } from './helpers/mockModels'
 import { dismissMobileBlockers, toggleModelCheckbox } from './helpers/modelCheckbox'
 
@@ -99,6 +99,9 @@ test.describe('Hero selected-model icons', () => {
     await page.waitForLoadState('load')
     await waitForHero(page)
     await dismissTutorialOverlay(page)
+    // Desktop navbar folds ~5s after load. Folded vs open changes hero
+    // min-height by --navbar-height (736 vs 800 at this viewport).
+    await ensureUnfoldedNavbar(page)
 
     await expect(page.getByTestId('selected-model-icons')).toHaveCount(0)
     const before = await measureHeroLayout(page)
@@ -130,10 +133,14 @@ test.describe('Hero selected-model icons', () => {
     await expect(icons.nth(0)).toHaveAttribute('data-provider', 'OpenAI')
     await expect(icons.nth(1)).toHaveAttribute('data-provider', 'OpenAI')
 
+    // Re-open the navbar before hover. A fold mid-hover moves the icon out
+    // from under the pointer and unmounts the tooltip.
+    await ensureUnfoldedNavbar(page)
     await icons.nth(0).hover()
     await expect(page.getByRole('tooltip')).toHaveText('GPT-4o Mini')
     await expect(page.getByRole('tooltip')).not.toHaveText('OpenAI')
 
+    await ensureUnfoldedNavbar(page)
     const after = await measureHeroLayout(page)
     expect(after).not.toBeNull()
     expect(after!.heroHeight).toBe(before!.heroHeight)
