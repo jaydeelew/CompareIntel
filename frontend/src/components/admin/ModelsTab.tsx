@@ -183,7 +183,9 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
                   progress: data.progress || 0,
                 })
               } else if (data.type === 'success') {
-                setModelSuccess(`Model ${data.model_id || newModelId.trim()} added successfully!`)
+                setModelSuccess(
+                  data.message || `Model ${data.model_id || newModelId.trim()} added successfully!`,
+                )
                 setNewModelId('')
                 setNewModelKnowledgeCutoff('')
                 setModelProgress({

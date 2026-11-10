@@ -1,309 +1,107 @@
-# Adding New Models Workflow
+# Adding New Models
 
-This document describes the workflow for adding new AI models to CompareIntel and ensuring they have proper renderer configurations.
+Text models cannot be added to CompareIntel unless the rendering harness has a saved reply for all six prompts and none of those cells are `fail` or `incomplete`. `not-covered` is allowed: it means the model omitted a feature the prompt asked for, and the manifest records that. Image-generation models are excluded.
 
-## Overview
+The gate reads `backend/data/models_registry.json` and `rendering-harness/coverage.json`. A model is image-only when its registry `category` is exactly `"Image"`. Every other category is text-capable. See `rendering-harness/README.md` for the same rule.
 
-When new models are added to `backend/app/model_runner.py`, they need renderer configurations to properly display their responses.
+CI runs the gate when the registry, the renderer config, `LatexRenderer.tsx`, `frontend/src/utils/latex/**`, or `rendering-harness/**` changes. The check makes no OpenRouter calls. For models that are new versus the base branch it re-renders the saved replies with `npm run harness -- --render-only`.
 
-### Image Models
+## Path A: Admin panel (development only)
 
-Image generation models follow a different workflow. When adding via admin, the system detects `output_modalities` includes `"image"` and:
-- Sets `supports_image_generation: true`, `category: "Image"`
-- **Skips** `setup_model_renderer.py` (no math/formatting analysis)
-- **Runs** `research_model_benchmarks.py` to fetch benchmark scores (SWE-bench, MATH/GSM8K, Vision Arena, Text-to-Image Arena, etc.) and add the model to the "Help me choose" dropdown when scores are available
-- **Runs** `test_image_config_aspect_ratio.py` to get supported aspect ratios and image sizes; stores in registry as `image_aspect_ratios`, `image_sizes`. The script validates that returned images actually match the requested aspect ratio (dimension check) and resolution (longest-edge check) before including them; use `--skip-dimension-validation` to bypass.
+Adding a model in the admin UI calls `add_model` / `add_model_stream` in `backend/app/routers/admin/models_management.py`. Both refuse to run unless `ENVIRONMENT=development`.
 
-See `docs/features/IMAGE_GENERATION.md` for details. The workflow consists of three main steps:
+For a text model the handler:
 
-1. **Collect Responses** - Gather sample responses from new models
-2. **Analyze Responses** - Identify formatting patterns and issues
-3. **Generate Configs** - Create renderer configurations based on analysis
+1. Builds the registry row in memory. It does **not** write `models_registry.json` yet.
+2. Runs `python scripts/setup_model_renderer.py <model_id> --defer-coverage`.
+3. That script calls OpenRouter with the six files in `rendering-harness/prompts` (the same prompts the harness scores). It pattern-analyzes the replies, writes `frontend/src/config/model_renderer_configs.json` when that model has no row yet, and writes harness-format JSON under `rendering-harness/runs/admin-<timestamp>/`.
+4. It then runs the offline render (`npm run harness -- --render-only`) when `npm` and `rendering-harness/node_modules` are available.
+5. On success the handler saves the registry and regenerates `rendering-harness/coverage.json`.
+6. The stream event `harness` and the final success message include the harness result. The models tab shows that message.
 
-**Important:** All three scripts automatically skip models that already have individual renderer configurations, preserving your manual customizations.
+If rendering fails, the response is an error that says **Rendering harness failed**. It does not report success, and the new id is not left in `models_registry.json`. A config written during that attempt is removed so the next attempt can regenerate it. Saved reply JSON is kept.
 
-## Prerequisites
+If the machine cannot start Playwright, the response says the harness **did not run** and prints the exact `npm run harness -- --render-only --render-dir=...` command. That is also not success. The renderer config and reply JSON stay on disk; the registry row is not written. Run the command from `rendering-harness/`, then add the model again. The script reuses the saved replies and does not call OpenRouter a second time.
 
-- New models added to `MODELS_BY_PROVIDER` in `backend/app/model_runner.py`
-- Python 3.9+ with all dependencies installed (Python 3.11 recommended)
-- OpenRouter API key configured in environment variables
-- Access to the project repository
+Image models skip the harness. The handler still probes aspect ratios and then saves the registry. See `docs/features/IMAGE_GENERATION.md`.
 
-## Step-by-Step Workflow
+The registry write is after a successful harness setup. These writes are still not one transaction: the OpenRouter snapshot upsert and the Help Me Choose benchmark script run after the registry is saved, and a coverage-manifest failure rolls the registry file back to the pre-add snapshot but does not undo a benchmark edit that already landed.
 
-### Step 1: Collect Model Responses
+## Path B: CLI
 
-Collect raw responses from the new models using test prompts.
-
-```bash
-cd backend
-
-# Collect from all models (will automatically skip models with existing configs)
-python scripts/collect_model_responses.py
-
-# Or collect from specific new models only
-python scripts/collect_model_responses.py --models openai/gpt-6-luna openai/gpt-5.6-sol
-
-# With custom options
-python scripts/collect_model_responses.py \
-  --models openai/gpt-6-luna openai/gpt-5.6-sol \
-  --delay 1.5 \
-  --max-retries 5 \
-  --concurrency 10 \
-  --output-dir data/model_responses
-```
-
-**What happens:**
-
-- Script checks which models already have configs
-- Skips those models automatically
-- Collects responses from new models only (concurrently for faster collection)
-- Saves results to `backend/data/model_responses/model_responses_TIMESTAMP.json`
-
-**Output:** JSON file with collected responses
-
-**Time:** ~30-60 seconds per model (down from 5-15 minutes) thanks to concurrent collection
-
-- Uses parallel API calls with configurable concurrency (default: 5 concurrent requests)
-- Adjust `--concurrency` if you hit rate limits (lower) or want faster collection (higher)
-
-### Step 2: Analyze Responses
-
-Analyze the collected responses to identify formatting patterns.
-
-```bash
-cd backend
-
-# Analyze the most recent responses file
-python scripts/analyze_responses.py data/model_responses/model_responses_TIMESTAMP.json
-
-# Or specify the file explicitly
-python scripts/analyze_responses.py data/model_responses/model_responses_20250101_120000.json
-
-# With custom output directory
-python scripts/analyze_responses.py responses.json --output-dir data/analysis
-
-# Output format options
-python scripts/analyze_responses.py responses.json --format json      # JSON only
-python scripts/analyze_responses.py responses.json --format markdown  # Markdown only
-python scripts/analyze_responses.py responses.json --format both       # Both (default)
-```
-
-**What happens:**
-
-- Script loads collected responses
-- Skips models that already have configs
-- Analyzes formatting patterns (math delimiters, markdown, issues)
-- Generates analysis report
-
-**Output:**
-
-- `backend/data/analysis/analysis_TIMESTAMP.json` - Detailed analysis data
-- `backend/data/analysis/analysis_TIMESTAMP.md` - Human-readable report
-
-**Time:** ~1-2 minutes
-
-### Step 3: Generate Renderer Configurations
-
-Generate renderer configurations from the analysis data.
-
-```bash
-cd backend
-
-# Generate configs (preserves existing configs by default)
-python scripts/generate_renderer_configs.py data/analysis/analysis_TIMESTAMP.json
-
-# Or specify output file
-python scripts/generate_renderer_configs.py analysis.json --output frontend/src/config/model_renderer_configs.json
-
-# To overwrite existing configs (use with caution!)
-python scripts/generate_renderer_configs.py analysis.json --overwrite
-```
-
-**What happens:**
-
-- Script loads analysis data
-- Skips models that already have configs
-- Generates new configs for analyzed models
-- Merges with existing configs (preserves manual changes)
-- Writes updated config file
-
-**Output:** Updated `frontend/src/config/model_renderer_configs.json`
-
-**Time:** ~10-30 seconds
-
-**Runtime delimiter fill:** `getModelConfig()` in `frontend/src/config/modelRendererRegistry.ts` keeps the model's listed `$$` / `$` patterns, then fills standard `\[...\]` (display) and `\(...\)` (inline) when the JSON row omitted them. You do not need to copy those bracket/paren patterns into every new config; leaving them out is fine. Per-model JSON is not the only place those delimiters exist.
-
-## Complete Example
-
-Here's a complete example for adding 4 new GPT 5.6 / GPT-6 models:
-
-```bash
-cd backend
-
-# Step 1: Collect responses from new models
-python scripts/collect_model_responses.py \
-  --models openai/gpt-6-luna openai/gpt-5.6-sol openai/gpt-5.1-codex-max openai/gpt-5.1-codex-mini \
-  --delay 1.0
-
-# Step 2: Analyze responses (use the file created in step 1)
-python scripts/analyze_responses.py \
-  data/model_responses/model_responses_20250101_120000.json
-
-# Step 3: Generate configs (use the analysis file from step 2)
-python scripts/generate_renderer_configs.py \
-  data/analysis/analysis_20250101_120500.json
-```
-
-## How Config Preservation Works
-
-### Automatic Skipping
-
-All three scripts automatically check for existing configurations in `frontend/src/config/model_renderer_configs.json`:
-
-- **collect_model_responses.py**: Skips collecting responses for models with configs
-- **analyze_responses.py**: Skips analyzing responses for models with configs
-- **generate_renderer_configs.py**: Skips generating configs for models with configs AND preserves existing configs
-
-### Manual Changes Preserved
-
-When `generate_renderer_configs.py` runs:
-
-- ✅ Models with existing configs are skipped (not regenerated)
-- ✅ Existing configs are preserved in the output file
-- ✅ Only new models get configs generated
-- ✅ Manual customizations are never overwritten
-
-### Override Behavior
-
-If you need to regenerate configs for models that already have them:
-
-```bash
-# Use --overwrite flag (use with caution!)
-python scripts/generate_renderer_configs.py analysis.json --overwrite
-```
-
-**Warning:** This will overwrite existing configs, including manual changes. Always backup first!
-
-## Verifying Results
-
-After running the workflow:
-
-1. **Check config file:**
+1. Add the text model to `backend/data/models_registry.json` with a category other than `"Image"`.
+2. From `backend/`, generate the renderer config and the six saved replies:
 
    ```bash
-   # View the config file
-   cat frontend/src/config/model_renderer_configs.json | jq '.[] | select(.modelId | startswith("openai/gpt-6"))'
+   python scripts/setup_model_renderer.py provider/model-id
    ```
 
-2. **Test in application:**
+   The script uses the harness prompts, writes the renderer config, writes the reply JSON, renders offline when it can, and refreshes `rendering-harness/coverage.json`. Re-running it reuses complete reply files instead of paying again.
 
-   - Start the application
-   - Select one of the new models
-   - Send a test prompt with math/markdown
-   - Verify rendering looks correct
-
-3. **Review analysis report:**
-   - Open the markdown report from Step 2
-   - Check for any "Needs Manual Review" flags
-   - Review identified issues
-
-## Troubleshooting
-
-### Models Still Being Processed
-
-If models with configs are still being processed:
-
-1. Check that configs exist in `frontend/src/config/model_renderer_configs.json`
-2. Verify the `modelId` matches exactly (case-sensitive)
-3. Check script output for skip messages
-
-### Configs Not Preserved
-
-If existing configs are being overwritten:
-
-1. Ensure you're not using `--overwrite` flag
-2. Check that `preserve_existing=True` in the script
-3. Verify the config file path is correct
-
-### Import Errors
-
-If you see import errors:
-
-```bash
-# Ensure you're running from backend directory
-cd backend
-
-# Check Python path
-python -c "import sys; print(sys.path)"
-
-# Verify scripts can import helpers
-python -c "from scripts.config_helpers import has_model_config; print('OK')"
-```
-
-### Rate Limiting
-
-If you hit rate limits during collection:
-
-```bash
-# Increase delay between requests
-python scripts/collect_model_responses.py --delay 2.0
-
-# Or collect in smaller batches
-python scripts/collect_model_responses.py --models model1 model2
-```
-
-## Best Practices
-
-1. **Always backup before overwriting:**
+3. If the script tells you the offline render did not run, estimate the cost and then either render the saved replies or collect them with the harness (only when replies are not already on disk):
 
    ```bash
-   cp frontend/src/config/model_renderer_configs.json frontend/src/config/model_renderer_configs.json.backup
+   cd rendering-harness
+   npm run harness -- --dry-run --models=provider/model-id --max-usd=2
+   npm run harness -- --render-only --render-dir=runs/admin-<timestamp>
+   # or, when you still need a paid collection:
+   npm run harness -- --models=provider/model-id --max-usd=2
+   npm run generate-coverage
    ```
 
-2. **Test with a few models first:**
+   `--max-usd` is the cap you are willing to approve for that batch. The dry-run prints the estimate and does not call the chat API. The error from CI names the models and a concrete `--max-usd` command when replies are missing.
 
-   ```bash
-   python scripts/collect_model_responses.py --models model1 model2
-   ```
+4. Open the screenshots next to the saved replies and look for leftover math, KaTeX errors, and currency or code that was swallowed. Do not commit PNGs or tarballs. `rendering-harness/runs/**/*.png` and `*.tar.gz` are gitignored; screenshots already tracked in older runs stay in history.
+5. Commit the registry row, `frontend/src/config/model_renderer_configs.json` if it changed, the reply JSON files, and `rendering-harness/coverage.json`.
+6. Open the PR. The rendering harness job must pass. A `fail` or `incomplete` cell fails the job. `not-covered` does not.
 
-3. **Review analysis reports** before generating configs
+There is no separate "type a prompt in the app and look at it" step. The harness render is the check.
 
-4. **Commit config changes** after verifying they work:
-
-   ```bash
-   git add frontend/src/config/model_renderer_configs.json
-   git commit -m "Add renderer configs for GPT 5.1 models"
-   ```
-
-5. **Don't commit response/analysis files** (they're large and change frequently)
-
-## File Locations
-
-- **Model definitions:** `backend/app/model_runner.py`
-- **Renderer configs:** `frontend/src/config/model_renderer_configs.json`
-- **Collected responses:** `backend/data/model_responses/model_responses_*.json`
-- **Analysis results:** `backend/data/analysis/analysis_*.json` and `analysis_*.md`
-- **Helper functions:** `backend/scripts/config_helpers.py`
-
-## Related Documentation
-
-- [Model-Specific Rendering](../features/MODEL_SPECIFIC_RENDERING.md) - Complete implementation guide
-- [Scripts README](../../backend/scripts/README.md) - Detailed script documentation
-- [Development Workflow](WORKFLOW.md) - General development practices
-
-## Quick Reference
+### Several new models
 
 ```bash
-# Full workflow (replace TIMESTAMP with actual timestamps)
-cd backend
-
-# 1. Collect
-python scripts/collect_model_responses.py --models MODEL1 MODEL2
-
-# 2. Analyze
-python scripts/analyze_responses.py data/model_responses/model_responses_TIMESTAMP.json
-
-# 3. Generate
-python scripts/generate_renderer_configs.py data/analysis/analysis_TIMESTAMP.json
+cd rendering-harness
+npm run harness -- --dry-run --models=provider/a,provider/b --max-usd=4
+npm run harness -- --models=provider/a,provider/b --max-usd=4
+npm run generate-coverage
 ```
+
+Each id still needs its own renderer config (`setup_model_renderer.py`, or the older collect / analyze / generate scripts if you are only refreshing delimiter patterns). The harness replies are what the gate requires.
+
+## Allowlist
+
+`rendering-harness/coverage-allowlist.json` is the only place a text model may ship without six passing or not-covered cells. Each entry needs `modelId` and a non-empty `reason`. An empty `entries` array means the gate applies to every text model. Regenerate the manifest after editing the allowlist:
+
+```bash
+cd rendering-harness
+npm run generate-coverage
+```
+
+## Image models
+
+Image models are not scored by the harness. Admin add detects `output_modalities` containing `"image"`, sets `category` to `"Image"` and `supports_image_generation` to true, skips renderer setup, and stores aspect ratios from `scripts/test_image_config_aspect_ratio.py`.
+
+## Older renderer-config scripts
+
+`scripts/collect_model_responses.py`, `scripts/analyze_responses.py`, and `scripts/generate_renderer_configs.py` still analyze delimiter patterns and skip models that already have a config. They are not the coverage gate. Text models added for the product need the harness replies above, not a visual pass in the running app.
+
+`getModelConfig()` in `frontend/src/config/modelRendererRegistry.ts` keeps the model's `$$` / `$` patterns and fills standard `\[...\]` and `\(...\)` when the JSON row omitted them.
+
+## Files
+
+| Piece | Path |
+| --- | --- |
+| Registry | `backend/data/models_registry.json` |
+| Renderer configs | `frontend/src/config/model_renderer_configs.json` |
+| Harness prompts | `rendering-harness/prompts/` |
+| Saved replies | `rendering-harness/runs/<batch>/*.json` |
+| Coverage manifest | `rendering-harness/coverage.json` |
+| Allowlist | `rendering-harness/coverage-allowlist.json` |
+| Admin add | `backend/app/routers/admin/models_management.py` |
+| CLI setup | `backend/scripts/setup_model_renderer.py` |
+
+## Related
+
+- [Rendering harness](../../rendering-harness/README.md)
+- [Model-specific rendering](../features/MODEL_SPECIFIC_RENDERING.md)
+- [Image generation](../features/IMAGE_GENERATION.md)

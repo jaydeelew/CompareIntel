@@ -33,6 +33,7 @@ import {
   uniqueCoverageRecords,
   type OverallStatus,
 } from './overall-status.js';
+import { harnessRenderReady } from './render-ready.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -440,14 +441,7 @@ async function renderResponse(
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-  await page.waitForFunction(
-    () => {
-      const failed = document.querySelector('[data-render-failed]');
-      const complete = document.querySelector('[data-render-complete]');
-      return !!(failed || complete);
-    },
-    { timeout: 30000 }
-  );
+  await page.waitForFunction(harnessRenderReady, { timeout: 30000 });
 
   const failReason = await page.evaluate(() => {
     const el = document.querySelector('[data-render-failed]');
