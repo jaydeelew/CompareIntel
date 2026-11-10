@@ -1,8 +1,7 @@
 /**
- * Captures labeled equation-region screenshots for before/after comparisons.
- * Harness dev server must already be running (default http://127.0.0.1:5174).
- *
- *   HARNESS_BASE_URL=http://127.0.0.1:5175 npx tsx scripts/capture-katex-overflow-artifacts.ts --phase=before
+ * Full-width result-card before/after captures at 390 CSS px (DPR 3).
+ * Requires harness on :5174. Regenerate stacks:
+ *   npx tsx scripts/capture-katex-overflow-artifacts.ts
  */
 import fs from 'fs'
 import path from 'path'
@@ -12,34 +11,18 @@ import { chromium, type Page } from 'playwright'
 
 import {
   ARTIFACT_REPRESENTATIVE_CELLS,
+  applyBeforeClipCss,
+  captureCardFullViewport,
   loadHarnessResponse,
-  harnessUrl,
-  waitForHarnessRender,
+  openHarnessWithContent,
+  probeWideContentClip,
+  scrollClipTargetToEnd,
+  texExcerptFromProbe,
+  type ClipProbe,
 } from '../../frontend/e2e/helpers/harnessKatexOverflow'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const artifactRoot = process.env.ARTIFACT_ROOT || '/opt/cursor/artifacts'
 const harnessBase = process.env.HARNESS_BASE_URL || 'http://127.0.0.1:5174'
-const phase = (process.argv.find(a => a.startsWith('--phase='))?.split('=')[1] || 'after') as
-  | 'before'
-  | 'after'
-
-const MASTER_MOBILE_CLIP_CSS = `
-.message-content,
-.message-content .result-output {
-  overflow-x: hidden !important;
-}
-@media (max-width: 768px) {
-  .result-card {
-    overflow-x: hidden !important;
-  }
-  .results-section {
-    overflow-x: hidden !important;
-  }
-}
-`
-
-const DESKTOP_CELL = ARTIFACT_REPRESENTATIVE_CELLS[0]
 
 function slugFromLabel(label: string): string {
   return label
@@ -48,204 +31,111 @@ function slugFromLabel(label: string): string {
     .replace(/^-|-$/g, '')
 }
 
-function excerptForDisplayMath(content: string): string {
-  const match = content.match(/(\$\$[\s\S]{20,900}?\$\$)/)
-  if (match) return match[1].trim()
-  const idx = content.indexOf('Edge Case D')
-  if (idx >= 0) return content.slice(idx, idx + 700).trim()
-  return content.slice(0, 600).trim()
+async function renderCell(page: Page, modelId: string, content: string): Promise<void> {
+  await openHarnessWithContent(page, harnessBase, modelId, content)
 }
 
-/** Smallest markdown slice that still includes the widest `$$` block (fast harness renders). */
-function visualCaptureMarkdown(content: string): string {
-  const blocks = [...content.matchAll(/\$\$[\s\S]*?\$\$/g)].map(m => m[0])
-  const display = blocks.sort((a, b) => b.length - a.length)[0]
-  if (!display) return content.slice(0, 3500)
-  return ['### Wide display math region', '', display, ''].join('\n')
-}
-
-async function cropWidestKatexRegion(page: Page): Promise<Buffer> {
-  const box = await page.evaluate(() => {
-    const displays = Array.from(document.querySelectorAll('.katex-display')) as HTMLElement[]
-    if (displays.length === 0) {
-      const card = document.querySelector('.result-card')
-      if (!card) return null
-      const r = card.getBoundingClientRect()
-      return { x: r.x, y: r.y, width: r.width, height: Math.min(r.height, 520) }
-    }
-    let best = displays[0].getBoundingClientRect()
-    for (const el of displays) {
-      const r = el.getBoundingClientRect()
-      if (r.width > best.width) best = r
-    }
-    const pad = 12
-    return {
-      x: Math.max(0, best.x - pad),
-      y: Math.max(0, best.y - pad),
-      width: best.width + pad * 2,
-      height: best.height + pad * 2,
-    }
-  })
-  if (!box) throw new Error('No result card region to capture')
-  if (box.width < 8 || box.height < 8) {
-    const card = page.locator('.result-card').first()
-    return card.screenshot()
-  }
-  try {
-    return await page.screenshot({ clip: box })
-  } catch {
-    const card = page.locator('.result-card').first()
-    return card.screenshot()
-  }
-}
-
-async function labeledComposite(
+async function stackCellComposite(
   page: Page,
-  label: string,
-  shot: Buffer,
+  cellLabel: string,
+  slug: string,
+  before: Buffer,
+  after: Buffer,
+  afterScrolled: Buffer,
+  source: string,
   outPath: string
 ): Promise<void> {
-  const b64 = shot.toString('base64')
-  await page.setViewportSize({ width: 420, height: 2200 })
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  await page.setViewportSize({ width: 390, height: 800 })
   await page.setContent(`<!doctype html><html><head><style>
-    body{margin:0;font-family:system-ui,sans-serif;background:#0f172a;color:#f8fafc}
-    .banner{font-size:30px;font-weight:800;padding:18px 12px;text-align:center;letter-spacing:0.06em}
-    img{display:block;width:390px;margin:0 auto;background:#fff}
+    *{box-sizing:border-box}
+    body{margin:0;width:390px;font-family:system-ui,sans-serif;background:#fff;color:#111}
+    .label{font-size:22px;font-weight:800;line-height:1.2;padding:10px 8px 6px;background:#fef3c7;color:#78350f;border-top:3px solid #f59e0b}
+    .label.after{background:#dcfce7;color:#14532d;border-top-color:#22c55e}
+    .label.after-scroll{background:#e0f2fe;color:#0c4a6e;border-top-color:#0ea5e9}
+    .label.cell{padding:12px 8px;background:#1e293b;color:#f8fafc;font-size:18px;border-top:none}
+    img{display:block;width:390px;height:auto;margin:0}
+    pre{margin:0;padding:10px 8px 14px;font-size:11px;line-height:1.35;white-space:pre-wrap;word-break:break-word;background:#f8fafc;border-top:1px solid #e2e8f0;font-family:ui-monospace,monospace}
   </style></head><body>
-    <div class="banner">${label}</div>
-    <img alt="capture" src="data:image/png;base64,${b64}" />
+    <div class="label cell">${esc(cellLabel)} · 390px CSS · DPR 3</div>
+    <div class="label">BEFORE — equation clipped at card edge</div>
+    <img alt="before" src="data:image/png;base64,${before.toString('base64')}" />
+    <div class="label after">AFTER — scrollable box (start)</div>
+    <img alt="after" src="data:image/png;base64,${after.toString('base64')}" />
+    <div class="label after-scroll">AFTER — scrolled to reveal right side</div>
+    <img alt="after-scrolled" src="data:image/png;base64,${afterScrolled.toString('base64')}" />
+    <pre>${esc(source)}</pre>
   </body></html>`)
-  await page.screenshot({ path: outPath, fullPage: true })
+  const height = await page.evaluate(() => document.documentElement.scrollHeight)
+  await page.setViewportSize({ width: 390, height: Math.min(height, 8000) })
+  await page.screenshot({ path: outPath, clip: { x: 0, y: 0, width: 390, height } })
 }
 
-async function openHarnessWithContent(
-  page: Page,
+async function capturePhasesForCell(
+  browser: Awaited<ReturnType<typeof chromium.launch>>,
+  slug: string,
+  cellLabel: string,
   modelId: string,
   content: string
-): Promise<void> {
-  const useUrl = content.length < 6000
-  if (useUrl) {
-    await page.goto(`${harnessBase}${harnessUrl(modelId, content)}`)
-  } else {
-    await page.goto(`${harnessBase}/?modelId=${encodeURIComponent(modelId)}`)
-    await page.waitForFunction(
-      () => {
-        const text = document.body.textContent || ''
-        return (
-          text.includes('Waiting for render request') ||
-          Boolean(document.querySelector('[data-render-complete]'))
-        )
-      },
-      { timeout: 90000 }
-    )
-    await page.evaluate(
-      ({ modelId: mid, content: body }) => {
-        window.postMessage({ type: 'render', modelId: mid, content: body }, '*')
-      },
-      { modelId, content }
-    )
+): Promise<{ source: string; probeBefore: ClipProbe }> {
+  const pageOpts = { deviceScaleFactor: 3, viewport: { width: 390, height: 900 } } as const
+
+  const beforePage = await browser.newPage(pageOpts)
+  await renderCell(beforePage, modelId, content)
+  await applyBeforeClipCss(beforePage)
+  const probeBefore = await probeWideContentClip(beforePage)
+  if (!probeBefore.clipped) {
+    await beforePage.close()
+    throw new Error(`BEFORE did not clip for ${cellLabel}: ${JSON.stringify(probeBefore)}`)
   }
-  await waitForHarnessRender(page)
-  if (phase === 'before') {
-    await page.addStyleTag({ content: MASTER_MOBILE_CLIP_CSS })
-    await page.evaluate(() => document.fonts.ready)
+  const beforeShot = await captureCardFullViewport(beforePage)
+  await beforePage.close()
+
+  const afterPage = await browser.newPage(pageOpts)
+  await renderCell(afterPage, modelId, content)
+  const probeAfter = await probeWideContentClip(afterPage)
+  if (probeAfter.clipped) {
+    await afterPage.close()
+    throw new Error(`AFTER still reports clip for ${cellLabel}: ${JSON.stringify(probeAfter)}`)
   }
-}
+  const afterShot = await captureCardFullViewport(afterPage)
+  await scrollClipTargetToEnd(afterPage, probeBefore)
+  const afterScrolledShot = await captureCardFullViewport(afterPage)
+  await afterPage.close()
 
-async function captureRepresentatives(browser: Awaited<ReturnType<typeof chromium.launch>>) {
-  for (const cell of ARTIFACT_REPRESENTATIVE_CELLS) {
-    const slug = slugFromLabel(cell.label)
-    const page = await browser.newPage({ deviceScaleFactor: 3, viewport: { width: 390, height: 900 } })
-    const { modelId, content } = loadHarnessResponse(cell.jsonPath)
-    await openHarnessWithContent(page, modelId, visualCaptureMarkdown(content))
-    const shot = await cropWidestKatexRegion(page)
-    const out = path.join(artifactRoot, `mobile-${slug}-${phase}-dpr3-region.png`)
-    await labeledComposite(page, `${phase.toUpperCase()} · ${cell.label} · 390px DPR 3`, shot, out)
-
-    const excerptPath = path.join(artifactRoot, `mobile-${slug}-source-excerpt.txt`)
-    if (!fs.existsSync(excerptPath)) {
-      fs.writeFileSync(excerptPath, excerptForDisplayMath(content) + '\n', 'utf-8')
-    }
-    console.log(out)
-    await page.close()
-  }
-
-  const desktopPage = await browser.newPage({
-    deviceScaleFactor: 2,
-    viewport: { width: 960, height: 900 },
-  })
-  const { modelId, content } = loadHarnessResponse(DESKTOP_CELL.jsonPath)
-  await openHarnessWithContent(desktopPage, modelId, visualCaptureMarkdown(content))
-  const desktopShot = await cropWidestKatexRegion(desktopPage)
-  const desktopOut = path.join(
-    artifactRoot,
-    `desktop-${slugFromLabel(DESKTOP_CELL.label)}-${phase}-dpr2-region.png`
-  )
-  await labeledComposite(
-    desktopPage,
-    `${phase.toUpperCase()} · ${DESKTOP_CELL.label} · 960px DPR 2`,
-    desktopShot,
-    desktopOut
-  )
-  console.log(desktopOut)
-  await desktopPage.close()
-}
-
-async function stackBeforeAfter(): Promise<void> {
+  const source = texExcerptFromProbe(probeBefore, content)
   const stacker = await chromium.launch()
-  const page = await stacker.newPage({ viewport: { width: 440, height: 4000 } })
-
-  for (const cell of ARTIFACT_REPRESENTATIVE_CELLS) {
-    const slug = slugFromLabel(cell.label)
-    const beforePath = path.join(artifactRoot, `mobile-${slug}-before-dpr3-region.png`)
-    const afterPath = path.join(artifactRoot, `mobile-${slug}-after-dpr3-region.png`)
-    if (!fs.existsSync(beforePath) || !fs.existsSync(afterPath)) continue
-    const beforeB64 = fs.readFileSync(beforePath).toString('base64')
-    const afterB64 = fs.readFileSync(afterPath).toString('base64')
-    const out = path.join(artifactRoot, `mobile-${slug}-before-after-stacked.png`)
-    await page.setContent(`<!doctype html><html><head><style>
-      body{margin:0;font-family:system-ui,sans-serif;background:#020617;color:#e2e8f0}
-      h1{font-size:22px;text-align:center;padding:12px}
-      img{display:block;width:100%;margin:0 0 16px}
-    </style></head><body>
-      <h1>${cell.label}</h1>
-      <img src="data:image/png;base64,${beforeB64}" />
-      <img src="data:image/png;base64,${afterB64}" />
-    </body></html>`)
-    await page.screenshot({ path: out, fullPage: true })
-    console.log(out)
-  }
-
-  const dslug = slugFromLabel(DESKTOP_CELL.label)
-  const db = path.join(artifactRoot, `desktop-${dslug}-before-dpr2-region.png`)
-  const da = path.join(artifactRoot, `desktop-${dslug}-after-dpr2-region.png`)
-  if (fs.existsSync(db) && fs.existsSync(da)) {
-    const out = path.join(artifactRoot, `desktop-${dslug}-before-after-stacked.png`)
-    await page.setContent(`<!doctype html><html><head><style>
-      body{margin:0;font-family:system-ui,sans-serif;background:#020617}
-      img{display:block;width:100%;margin:0 0 12px}
-    </style></head><body>
-      <img src="data:image/png;base64,${fs.readFileSync(db).toString('base64')}" />
-      <img src="data:image/png;base64,${fs.readFileSync(da).toString('base64')}" />
-    </body></html>`)
-    await page.screenshot({ path: out, fullPage: true })
-    console.log(out)
-  }
+  const stackPage = await stacker.newPage()
+  const stackedPath = path.join(artifactRoot, `mobile-${slug}-before-after-stacked.png`)
+  await stackCellComposite(
+    stackPage,
+    cellLabel,
+    slug,
+    beforeShot,
+    afterShot,
+    afterScrolledShot,
+    source,
+    stackedPath
+  )
   await stacker.close()
+
+  fs.writeFileSync(path.join(artifactRoot, `mobile-${slug}-source-excerpt.txt`), `${source}\n`, 'utf-8')
+  console.log(stackedPath)
+  return { source, probeBefore }
 }
 
 async function main() {
   fs.mkdirSync(artifactRoot, { recursive: true })
-  if (process.argv.includes('--stack-only')) {
-    await stackBeforeAfter()
-    return
-  }
   const browser = await chromium.launch()
-  await captureRepresentatives(browser)
-  await browser.close()
-  if (phase === 'after') {
-    await stackBeforeAfter()
+
+  for (const cell of ARTIFACT_REPRESENTATIVE_CELLS) {
+    const slug = slugFromLabel(cell.label)
+    const { modelId, content } = loadHarnessResponse(cell.jsonPath)
+    await capturePhasesForCell(browser, slug, cell.label, modelId, content)
   }
+
+  await browser.close()
 }
 
 main().catch(err => {
