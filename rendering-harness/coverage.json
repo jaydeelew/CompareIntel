@@ -23,7 +23,7 @@
     "google/gemini-nano-banana-2.1",
     "openai/gpt-5-image",
     "openai/gpt-5-image-mini",
-    "openai/gpt-image-2.6-sunburst",
+    "openai/gpt-image-2.5-sunburst",
     "qwen/qwen-image-2.1-pro",
     "sourceful/riverflow-v2-pro",
     "sourceful/riverflow-v2.6-pro"
@@ -420,30 +420,30 @@
         "replyPath": "runs/2026-11-08-21/deepseek_deepseek-v4-pro_06-edge-cases-boundaries.json"
       }
     },
-    "deepseek/deepseek-v4.1-flash-1017": {
+    "deepseek/deepseek-v4.1-flash": {
       "01-math-basics": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_01-math-basics.json"
+        "replyPath": "runs/2026-11-08-06/deepseek_deepseek-v4.1-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_02-markdown-formatting.json"
+        "replyPath": "runs/2026-11-08-06/deepseek_deepseek-v4.1-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_03-code-blocks.json"
+        "replyPath": "runs/2026-11-08-06/deepseek_deepseek-v4.1-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_04-mixed-markdown-latex.json"
+        "replyPath": "runs/2026-11-08-06/deepseek_deepseek-v4.1-flash_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_05-complex-scenarios.json"
+        "replyPath": "runs/2026-11-08-06/deepseek_deepseek-v4.1-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_06-edge-cases-boundaries.json"
+        "replyPath": "runs/2026-11-08-06/deepseek_deepseek-v4.1-flash_06-edge-cases-boundaries.json"
       }
     },
     "google/gemini-2.5-flash": {
@@ -1850,30 +1850,30 @@
         "replyPath": "runs/2026-11-08-10/stepfun_step-5-preview_06-edge-cases-boundaries.json"
       }
     },
-    "tencent/hy4": {
+    "tencent/hy4-preview": {
       "01-math-basics": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_01-math-basics.json"
+        "replyPath": "runs/2026-11-08-11/reruns/tencent_hy4-preview_01-math-basics.json"
       },
       "02-markdown-formatting": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_02-markdown-formatting.json"
+        "replyPath": "runs/2026-11-08-11/tencent_hy4-preview_02-markdown-formatting.json"
       },
       "03-code-blocks": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_03-code-blocks.json"
+        "replyPath": "runs/2026-11-08-11/tencent_hy4-preview_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_04-mixed-markdown-latex.json"
+        "replyPath": "runs/2026-11-08-11/tencent_hy4-preview_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_05-complex-scenarios.json"
+        "replyPath": "runs/2026-11-08-11/tencent_hy4-preview_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
         "status": "pass",
-        "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_06-edge-cases-boundaries.json"
+        "replyPath": "runs/2026-11-08-21-incomplete/tencent_hy4-preview_06-edge-cases-boundaries.json"
       }
     },
     "x-ai/grok-4.20": {
