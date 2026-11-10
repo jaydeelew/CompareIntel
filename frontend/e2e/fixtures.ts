@@ -346,12 +346,18 @@ async function ensureUnfoldedNavbar(page: Page): Promise<void> {
     .evaluate((el: HTMLElement) => el.classList.contains('app-header-shell--folded'))
     .catch(() => false)
   if (!folded) {
+    // Restart the 5s inactivity hide. Returning while that timer is about to
+    // fire lets the bar fold between this helper and the next measurement,
+    // which changes hero min-height by --navbar-height (736 vs 800).
+    await shell.dispatchEvent('pointerdown').catch(() => {})
     await waitForHeaderShellOpen(shell)
     return
   }
 
-  // Navigation arms wheel-reveal after ~280ms once folded at top (AT_TOP_SETTLE_MS).
-  await safeWait(page, 400)
+  // Landing at the top from a scrolled page suppresses wheel-reveal for 480ms,
+  // and a second wheel is ignored until 280ms after the first. Wait past both
+  // before the first attempt, then space attempts the same way.
+  await safeWait(page, 600)
 
   const viewport = page.viewportSize()
   if (viewport) {
@@ -378,7 +384,7 @@ async function ensureUnfoldedNavbar(page: Page): Promise<void> {
         )
       })
       .catch(() => {})
-    await safeWait(page, 250)
+    await safeWait(page, 500)
   }
 
   await expect(shell).not.toHaveClass(/app-header-shell--folded/, { timeout: 5000 })
