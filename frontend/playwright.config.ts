@@ -158,6 +158,13 @@ export default defineConfig({
       },
     },
     {
+      command: 'npm run dev',
+      url: 'http://127.0.0.1:5174',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      cwd: path.resolve(__dirname, '../rendering-harness'),
+    },
+    {
       command: 'python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8000',
       url: 'http://localhost:8000/docs',
       reuseExistingServer: !process.env.CI,
