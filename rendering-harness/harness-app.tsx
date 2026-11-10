@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import LatexRenderer from '../frontend/src/components/LatexRenderer';
-import { initializeRegistry } from '../frontend/src/config/loadModelConfigs';
+import LatexRenderer from '@/components/LatexRenderer';
+import { initializeRegistry } from '@/config/loadModelConfigs';
 import { contentExpectsKatex } from './render-ready';
-import '../frontend/src/styles/variables.css';
-import '../frontend/src/styles/base.css';
-import '../frontend/src/styles/models.css';
-import '../frontend/src/styles/results.css';
+import '@/styles/variables.css';
+import '@/styles/base.css';
+import '@/styles/models.css';
+import '@/styles/results.css';
 
 interface RenderRequest {
   modelId: string;
   content: string;
+  generation: string;
 }
 
 function markFailed(reason: string) {
@@ -19,20 +20,6 @@ function markFailed(reason: string) {
   const container = document.querySelector('[data-render-container]');
   container?.setAttribute('data-render-failed', reason);
   container?.removeAttribute('data-render-complete');
-}
-
-/** True when visible text is present and KaTeX is not still measuring itself. */
-function renderDomReady(container: Element): boolean {
-  const text = (container.textContent || '').replace(/\s+/g, ' ').trim();
-  if (!text) return false;
-
-  const katexProcessing = container.querySelectorAll('.katex-html[style*="visibility: hidden"]');
-  if (katexProcessing.length > 0) return false;
-
-  for (const img of Array.from(container.querySelectorAll('img'))) {
-    if (!img.complete) return false;
-  }
-  return true;
 }
 
 function HarnessApp() {
@@ -46,13 +33,16 @@ function HarnessApp() {
         setReady(true);
 
         window.addEventListener('message', (event) => {
-          if (event.data?.type === 'render') {
+          if (event.data?.type === 'render' && typeof event.data.content === 'string') {
             setRenderData({
-              modelId: event.data.modelId,
+              modelId: String(event.data.modelId || 'test'),
               content: event.data.content,
+              generation: String(event.data.generation || ''),
             });
           }
         });
+
+        document.documentElement.setAttribute('data-harness-listening', 'true');
 
         if (window.opener) {
           window.opener.postMessage({ type: 'harness-ready' }, '*');
@@ -62,9 +52,7 @@ function HarnessApp() {
         const modelId = params.get('modelId');
         const content = params.get('content');
         if (modelId && content) {
-          // URLSearchParams already decodes. A second decodeURIComponent throws
-          // URI malformed on replies that contain a literal `%` (Qwen 05 8192 rerun).
-          setRenderData({ modelId, content });
+          setRenderData({ modelId, content, generation: '' });
         }
       })
       .catch((err: unknown) => {
@@ -77,21 +65,55 @@ function HarnessApp() {
 
     let cancelled = false;
     let settled = false;
-    let frame = 0;
+    let attempt = 0;
+
+    const nextFrame = () =>
+      new Promise<void>(resolve => {
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()));
+      });
+
+    const domReady = (container: Element) => {
+      const text = (container.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!text) return false;
+      if (container.querySelectorAll('.katex-html[style*="visibility: hidden"]').length > 0) return false;
+      const images = Array.from(container.querySelectorAll('img'));
+      if (images.some(img => !img.complete)) return false;
+      return true;
+    };
+
     const finishIfReady = () => {
       if (cancelled || settled) return;
       const container = document.querySelector('[data-render-container]');
-      if (!container || !renderDomReady(container)) return;
-      settled = true;
-      observer.disconnect();
-      window.cancelAnimationFrame(frame);
-      container.setAttribute('data-render-complete', 'true');
-      container.removeAttribute('data-render-failed');
-      document.getElementById('root')?.removeAttribute('data-render-failed');
+      if (!container || !domReady(container)) return;
+      const token = ++attempt;
+      void (async () => {
+        for (let cycle = 0; cycle < 40; cycle++) {
+          if (cancelled || token !== attempt) return;
+          await document.fonts.ready;
+          if (cancelled || token !== attempt) return;
+          const size = document.fonts.size;
+          await nextFrame();
+          if (cancelled || token !== attempt) return;
+          const current = document.querySelector('[data-render-container]');
+          if (!current || !domReady(current)) return;
+          if (document.fonts.status === 'loaded' && document.fonts.size === size) {
+            settled = true;
+            observer.disconnect();
+            current.setAttribute('data-render-complete', 'true');
+            if (renderData.generation) current.setAttribute('data-render-generation', renderData.generation);
+            else current.removeAttribute('data-render-generation');
+            current.removeAttribute('data-render-failed');
+            document.getElementById('root')?.removeAttribute('data-render-failed');
+            return;
+          }
+        }
+        if (!cancelled && token === attempt) markFailed('fonts did not settle');
+      })();
     };
 
     const container = document.querySelector('[data-render-container]');
     if (!container) return;
+    container.removeAttribute('data-render-complete');
 
     const observer = new MutationObserver(() => {
       container.querySelectorAll('img').forEach(img => {
@@ -109,19 +131,10 @@ function HarnessApp() {
       characterData: true,
     });
     void document.fonts.ready.then(() => finishIfReady());
-    // Sample the DOM every frame until KaTeX and text are actually present.
-    // The frame stops as soon as the container is ready. It is not a sleep.
-    const tick = () => {
-      if (cancelled || settled) return;
-      finishIfReady();
-      if (!cancelled && !settled) frame = window.requestAnimationFrame(tick);
-    };
-    frame = window.requestAnimationFrame(tick);
     finishIfReady();
     return () => {
       cancelled = true;
       observer.disconnect();
-      window.cancelAnimationFrame(frame);
     };
   }, [ready, renderData]);
 

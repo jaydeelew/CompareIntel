@@ -184,10 +184,16 @@ export async function probeWideContentClip(page: Page): Promise<ClipProbe> {
     const card = document.querySelector('.result-card.conversation-card, .result-card')
     if (!card) return empty
 
+    const section = (card.closest('.results-section') ||
+      document.querySelector('.results-section')) as HTMLElement | null
     const cardRect = card.getBoundingClientRect()
+    const sectionRect = section?.getBoundingClientRect() ?? cardRect
     const cardClientWidth = card.clientWidth
     const cardOx = getComputedStyle(card).overflowX
     const cardClips = cardOx === 'hidden' || cardOx === 'clip'
+    const sectionOx = section ? getComputedStyle(section).overflowX : ''
+    const sectionClips = sectionOx === 'hidden' || sectionOx === 'clip'
+    const outerClips = cardClips || sectionClips
     const candidates: Array<{
       kind: string
       index: number
@@ -222,7 +228,8 @@ export async function probeWideContentClip(page: Page): Promise<ClipProbe> {
 
         let clips = false
         let node = htmlEl.parentElement
-        while (node && node !== card) {
+        const clipBoundary = section ?? card
+        while (node && clipBoundary.contains(node)) {
           const ox = getComputedStyle(node).overflowX
           if (ox === 'hidden' || ox === 'clip') {
             clips = true
@@ -230,22 +237,23 @@ export async function probeWideContentClip(page: Page): Promise<ClipProbe> {
           }
           node = node.parentElement
         }
+        if (sectionClips && section && section.contains(htmlEl)) clips = true
         if (cardClips) clips = true
         if (!clips) continue
 
         const elOx = getComputedStyle(htmlEl).overflowX
         const selfScrollable =
           (elOx === 'auto' || elOx === 'scroll' || elOx === 'overlay') && scrollWidth > clientWidth + 2
-        if (selfScrollable && !cardClips) continue
+        if (selfScrollable && !outerClips) continue
 
         const widerThanVisible = scrollWidth > clientWidth + 2
         const widerThanCard = scrollWidth > cardClientWidth + 2
-        const pastCardEdge = contentRight > cardRect.right - 0.5
-        if (!widerThanVisible && !widerThanCard && !pastCardEdge) continue
+        const pastOuterEdge = contentRight > Math.min(cardRect.right, sectionRect.right) - 0.5
+        if (!widerThanVisible && !widerThanCard && !pastOuterEdge) continue
 
         const overflowPx = Math.max(
           scrollWidth - clientWidth,
-          contentRight - cardRect.right,
+          contentRight - Math.min(cardRect.right, sectionRect.right),
           scrollWidth - cardClientWidth
         )
         if (overflowPx <= 4) continue
