@@ -38,6 +38,8 @@ export {
   unescapeLeftoverBracketParenDelimiters,
   restoreLiteralDollars,
   extractInlineCode,
+  gfmSplitRow,
+  gfmTableSpan,
   restoreInlineCode,
   renderInlineCodeSpan,
   unescapeGfmTableCellCodePipes,

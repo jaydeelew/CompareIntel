@@ -19,7 +19,10 @@ export function markBlockquotes(text: string): string {
       .join('\n')
     // One marker per level so `> > nested` stays a blockquote inside the outer one.
     const nested = markBlockquotes(inner)
-    return `\n${BLOCKQUOTE_OPEN}\n${nested}\n${BLOCKQUOTE_CLOSE}\n${hasTrailingNewline ? '\n' : ''}`
+    // Keep the quote's indent so a `>` under a list item stays inside that item.
+    // A column-0 quote still ends the list, the way CommonMark does.
+    const indent = block.match(/^[ \t]*/)?.[0] ?? ''
+    return `\n${indent}${BLOCKQUOTE_OPEN}\n${nested}\n${indent}${BLOCKQUOTE_CLOSE}\n${hasTrailingNewline ? '\n' : ''}`
   })
 }
 

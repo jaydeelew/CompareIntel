@@ -102,7 +102,10 @@ describe('bug 2: $ in table cells does not merge cells or rows', () => {
   })
 
   it('never pairs $ across a | boundary', () => {
-    const el = renderReply('| A | B |\n|---|---|\n| $0.03 | Claude | 200k | $0.02 |', CLAUDE)
+    const el = renderReply(
+      '| A | B | C | D |\n|---|---|---|---|\n| $0.03 | Claude | 200k | $0.02 |',
+      CLAUDE
+    )
     const cells = Array.from(el.querySelectorAll('tr:last-child td')).map(c => c.textContent)
     expect(cells).toEqual(['$0.03', 'Claude', '200k', '$0.02'])
   })

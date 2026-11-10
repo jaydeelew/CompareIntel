@@ -78,7 +78,8 @@ export const looksMathematical = (content: string): boolean => {
   if (/[a-z0-9]\^[0-9{]/.test(content) || /[a-z0-9][²³⁴⁵⁶⁷⁸⁹⁰¹]/.test(content)) {
     return true
   }
-  if (/[a-z]'/.test(content) || /d[a-z]/.test(content)) {
+  // `dx` / `dy` are derivatives. A `d` inside a word (`Product`, `rendered`) is not.
+  if (/[a-z]'/.test(content) || /(?:^|[^a-z])d[a-z](?:[^a-z]|$)/.test(content)) {
     return true
   }
   return false
