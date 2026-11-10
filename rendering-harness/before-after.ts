@@ -19,7 +19,6 @@ import { chromium } from 'playwright'
 import { EVIDENCE_VIEW, openThemedPage, readRenderedHtml, renderOnPage, shootContainer } from './captures.js'
 import { launchVite, type ViteProcess } from './launch-vite.js'
 import { findSavedCell } from './saved-cells.js'
-import { splitHeadingSections } from './section-slice.js'
 import { stackBeforeAfter } from './stack-shot.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -99,7 +98,7 @@ async function main() {
     process.exit(1)
   }
   const cell = await findSavedCell(spec)
-  const sections = splitHeadingSections(cell.response)
+  const sections = [{ index: 0, level: 0, text: '', markdown: cell.response }]
   const base = materialize(baseRef)
   const head = materialize(headRef)
   const outDir = path.join(
