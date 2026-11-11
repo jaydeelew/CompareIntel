@@ -128,8 +128,8 @@ export function usePerModeModelSelection({
     queueMicrotask(() => {
       isRestoringFromModeSwitchRef.current = false
     })
-  // selectedModels captured when modelMode changes; sync effects update cache between toggles.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only on mode/catalog changes
+    // selectedModels captured when modelMode changes; sync effects update cache between toggles.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only on mode/catalog changes
   }, [
     modelMode,
     modelsLoaded,
