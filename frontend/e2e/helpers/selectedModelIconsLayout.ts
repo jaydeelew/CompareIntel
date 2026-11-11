@@ -1,8 +1,8 @@
 import type { Page } from '@playwright/test'
 
 import { MODEL_LIMITS } from '../../src/config/constants'
-
 import { dismissTutorialOverlay } from '../fixtures'
+
 import { dismissMobileBlockers, toggleModelCheckbox } from './modelCheckbox'
 
 function tierModel(id: string, name: string, provider: string, tierAccess: 'free' | 'pro_plus') {
@@ -23,12 +23,7 @@ function tierModel(id: string, name: string, provider: string, tierAccess: 'free
 /** Twelve distinct models under one provider so the picker stays on one expanded dropdown. */
 export function buildTwelveModelCatalog() {
   const models = Array.from({ length: MODEL_LIMITS.pro_plus }, (_, i) =>
-    tierModel(
-      `openai/hero-icon-mock-${i}`,
-      `Hero Icon Mock ${i + 1}`,
-      'OpenAI',
-      'pro_plus'
-    )
+    tierModel(`openai/hero-icon-mock-${i}`, `Hero Icon Mock ${i + 1}`, 'OpenAI', 'pro_plus')
   )
   return {
     models,
@@ -91,13 +86,17 @@ export async function selectModelCount(
   projectName: string
 ): Promise<void> {
   await dismissMobileBlockers(page)
-  const openaiHeader = page.locator('.provider-dropdown[data-provider-name="OpenAI"] .provider-header')
+  const openaiHeader = page.locator(
+    '.provider-dropdown[data-provider-name="OpenAI"] .provider-header'
+  )
   await openaiHeader.scrollIntoViewIfNeeded()
   if ((await openaiHeader.getAttribute('aria-expanded')) !== 'true') {
     await openaiHeader.click()
   }
   await openaiHeader.getAttribute('aria-expanded')
-  const checkboxes = page.locator('input.model-checkbox[id^="model-checkbox-openai/hero-icon-mock-"]')
+  const checkboxes = page.locator(
+    'input.model-checkbox[id^="model-checkbox-openai/hero-icon-mock-"]'
+  )
   const available = await checkboxes.count()
   const toSelect = Math.min(count, available)
   for (let i = 0; i < toSelect; i++) {
@@ -160,7 +159,7 @@ export async function screenshotCreditsAndIconRow(page: Page, path: string): Pro
     const icons = document
       .querySelector('[data-testid="selected-model-icons"]')
       ?.getBoundingClientRect()
-  const credits = document
+    const credits = document
       .querySelector('.credits-remaining-wrapper, .usage-preview-container')
       ?.getBoundingClientRect()
     if (!icons) return null

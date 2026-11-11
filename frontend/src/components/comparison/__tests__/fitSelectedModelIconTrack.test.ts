@@ -48,10 +48,7 @@ describe('computeIconTrackFit', () => {
         const m = metricsForViewport(availableWidthPx)
         const fit = computeIconTrackFit({ ...m, availableWidthPx, iconCount })
         if (!fit.fitted) {
-          const natural =
-            m.trackPaddingInlinePx +
-            iconCount * m.slotPx +
-            (iconCount - 1) * m.gapPx
+          const natural = m.trackPaddingInlinePx + iconCount * m.slotPx + (iconCount - 1) * m.gapPx
           expect(natural).toBeLessThanOrEqual(availableWidthPx + 0.5)
           return
         }

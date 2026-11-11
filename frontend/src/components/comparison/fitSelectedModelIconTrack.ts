@@ -44,7 +44,10 @@ export function getDefaultIconSlotPx(viewportWidth: number): number {
     : SELECTED_MODEL_ICON_SLOT_DESKTOP_PX
 }
 
-export function getDefaultTrackMetrics(viewportWidth: number, rootFontSizePx = 16): IconTrackFitInput {
+export function getDefaultTrackMetrics(
+  viewportWidth: number,
+  rootFontSizePx = 16
+): IconTrackFitInput {
   const slotPx = getDefaultIconSlotPx(viewportWidth)
   return {
     availableWidthPx: 0,

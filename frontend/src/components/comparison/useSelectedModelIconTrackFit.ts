@@ -26,8 +26,7 @@ export function useSelectedModelIconTrackFit(
       return
     }
 
-    const rootFontSizePx =
-      parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+    const rootFontSizePx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
     const metrics = getDefaultTrackMetrics(window.innerWidth, rootFontSizePx)
     const availableWidthPx = container.clientWidth
 
