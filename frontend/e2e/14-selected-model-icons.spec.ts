@@ -17,6 +17,7 @@ import {
   measureHeroHeight,
   measureIconsInViewport,
   prepareHeroForIconLayout,
+  screenshotCreditsAndIconRow,
   selectModelCount,
 } from './helpers/selectedModelIconsLayout'
 
@@ -302,9 +303,10 @@ test.describe('Hero selected-model icons width fit', () => {
 
         if (viewport.width === 412 && (count === 9 || count === 12)) {
           mkdirSync(SCREENSHOT_DIR, { recursive: true })
-          await page.locator('.usage-preview-container').screenshot({
-            path: join(SCREENSHOT_DIR, `mobile-412-${count}-icons.png`),
-          })
+          await screenshotCreditsAndIconRow(
+            page,
+            join(SCREENSHOT_DIR, `mobile-412-${count}-icons.png`)
+          )
         }
       }
     }

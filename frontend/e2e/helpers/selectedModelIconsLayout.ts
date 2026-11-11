@@ -154,6 +154,32 @@ export async function measureHeroHeight(page: Page): Promise<number> {
   })
 }
 
+/** Icons are absolutely positioned below credits; clip captures both for visual regression. */
+export async function screenshotCreditsAndIconRow(page: Page, path: string): Promise<void> {
+  const clip = await page.evaluate(() => {
+    const icons = document
+      .querySelector('[data-testid="selected-model-icons"]')
+      ?.getBoundingClientRect()
+  const credits = document
+      .querySelector('.credits-remaining-wrapper, .usage-preview-container')
+      ?.getBoundingClientRect()
+    if (!icons) return null
+    const pad = 6
+    const top = Math.max(0, (credits?.top ?? icons.top) - pad)
+    const bottom = Math.min(window.innerHeight, icons.bottom + pad)
+    return {
+      x: Math.max(0, icons.left - pad),
+      y: top,
+      width: Math.min(window.innerWidth, icons.width + pad * 2),
+      height: Math.max(icons.height, bottom - top),
+    }
+  })
+  if (!clip) {
+    throw new Error('Could not measure credits/icon row for screenshot')
+  }
+  await page.screenshot({ path, clip })
+}
+
 export async function prepareHeroForIconLayout(
   page: Page,
   viewport: { width: number; height: number }
