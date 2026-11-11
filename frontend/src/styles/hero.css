@@ -3532,10 +3532,12 @@ video.capability-tile-image-lightbox-img {
     padding: 0.5rem 0.75rem 0.5rem 1rem;
     border-top: none !important;
     margin-top: -1px;
+    min-width: 0;
   }
 
-  .textarea-actions {
-    gap: 8px;
+  .composer-toolbar .textarea-actions {
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .textarea-icon-button {
@@ -3657,6 +3659,16 @@ video.capability-tile-image-lightbox-img {
 
   .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
     top: clamp(11.25rem, 22svh, 11.75rem);
+  }
+
+  /* Phone toolbar: tighter action-button cluster; PR #233 layout keeps submit inside composer. */
+  .composer-toolbar {
+    padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+    gap: 0.125rem;
+  }
+
+  .composer-toolbar .textarea-actions {
+    gap: 4px;
   }
 }
 
