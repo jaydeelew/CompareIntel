@@ -92,7 +92,11 @@ import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
 import { isModelIdSelectableForUser } from '../utils/modelTierAccess'
 import { splitModelIdsByMode } from '../utils/perModeModelSelection'
 import { filterKnownModelIds, parseModelsQueryParam } from '../utils/preselectModelsFromQuery'
-import { saveSessionState, onSaveStateEvent, type PersistedSessionState } from '../utils/sessionState'
+import {
+  saveSessionState,
+  onSaveStateEvent,
+  type PersistedSessionState,
+} from '../utils/sessionState'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 import {
   filterModelsByProviderToImage,

@@ -3,7 +3,11 @@ import { useEffect, useRef } from 'react'
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison/FileUpload'
 import type { CreditBalance } from '../services/creditService'
 import type { ActiveResultTabs, CompareResponse, ModelConversation } from '../types'
-import { loadSessionState, clearSessionState, type PersistedSessionState } from '../utils/sessionState'
+import {
+  loadSessionState,
+  clearSessionState,
+  type PersistedSessionState,
+} from '../utils/sessionState'
 
 interface UseAuthStateEffectsConfig {
   isAuthenticated: boolean
