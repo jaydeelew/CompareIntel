@@ -302,9 +302,9 @@ test.describe('Hero selected-model icons width fit', () => {
 
         if (viewport.width === 412 && (count === 9 || count === 12)) {
           mkdirSync(SCREENSHOT_DIR, { recursive: true })
-          await page
-            .locator('.hero-section')
-            .screenshot({ path: join(SCREENSHOT_DIR, `mobile-412-${count}-icons.png`) })
+          await page.locator('.usage-preview-container').screenshot({
+            path: join(SCREENSHOT_DIR, `mobile-412-${count}-icons.png`),
+          })
         }
       }
     }
