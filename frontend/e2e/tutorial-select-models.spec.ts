@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test'
 
 import { TUTORIAL_GOOGLE_MODEL_IDS } from '../src/data/tutorialSteps'
 
+import { dismissMobileBlockers, toggleModelCheckbox } from './helpers/modelCheckbox'
+
 /**
  * Regression: Starter Selection / restored models must not block picking both tutorial Google models on step 2.
  */
@@ -57,7 +59,7 @@ test.describe('Tutorial step 2 — select both Google models', () => {
 
   test('with Starter Selection timing, both tutorial Google models stay selectable', async ({
     page,
-  }) => {
+  }, testInfo) => {
     await page.getByRole('button', { name: 'Start Tutorial' }).click()
     await expect(page.locator('.tutorial-tooltip, .mobile-tutorial-tooltip').first()).toBeVisible()
 
@@ -72,10 +74,13 @@ test.describe('Tutorial step 2 — select both Google models', () => {
         .getByRole('heading', { name: 'Select Models', exact: true })
     ).toBeVisible({ timeout: 10000 })
 
+    await dismissMobileBlockers(page)
+
     for (const modelId of TUTORIAL_GOOGLE_MODEL_IDS) {
       const checkbox = page.getByTestId(`model-checkbox-${modelId}`)
       await expect(checkbox).toBeEnabled()
-      await checkbox.click({ force: true })
+      await checkbox.scrollIntoViewIfNeeded()
+      await toggleModelCheckbox(checkbox, testInfo.project.name)
       await expect(checkbox).toBeChecked()
     }
   })
