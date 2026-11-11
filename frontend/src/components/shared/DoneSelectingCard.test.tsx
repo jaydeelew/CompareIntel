@@ -58,7 +58,7 @@ describe('DoneSelectingCard', () => {
     const closeButton = screen.getByRole('button', { name: /close done selecting card/i })
 
     // Verify the button has the done-selecting-close-button class
-    // which in CSS applies min-width: 48px and min-height: 48px
+    // which in CSS applies min-width: 44px and min-height: 44px
     // to meet WCAG 2.5.5 Level AAA touch target size recommendations
     expect(closeButton).toHaveClass('done-selecting-close-button')
   })
