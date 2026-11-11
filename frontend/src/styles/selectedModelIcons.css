@@ -32,7 +32,7 @@
 .selected-model-icons-track {
   display: flex;
   flex-wrap: nowrap;
-  justify-content: center;
+  justify-content: safe center;
   align-items: center;
   gap: 0.125rem;
   width: max-content;
@@ -46,6 +46,39 @@
   padding: 0 0.25rem;
   margin: 0;
   list-style: none;
+}
+
+@supports not (justify-content: safe center) {
+  .selected-model-icons-track {
+    justify-content: center;
+  }
+}
+
+.selected-model-icons-track--fitted {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: visible;
+  gap: 0;
+}
+
+.selected-model-icons-track--fitted > li + li {
+  margin-left: calc(-1 * var(--selected-model-icon-overlap, 0px));
+}
+
+.selected-model-icons-track--fitted .selected-model-icon-button {
+  width: var(--selected-model-icon-slot);
+  min-width: var(--selected-model-icon-slot);
+}
+
+.selected-model-icons-track--fitted .selected-model-icon-inner {
+  transform: scale(var(--selected-model-icon-disc-scale, 1));
+}
+
+.selected-model-icons-track--fitted .selected-model-icon-button:hover .selected-model-icon-inner,
+.selected-model-icons-track--fitted
+  .selected-model-icon-button:focus-visible
+  .selected-model-icon-inner {
+  transform: scale(calc(var(--selected-model-icon-disc-scale, 1) * 1.08));
 }
 
 .selected-model-icons-track > li {

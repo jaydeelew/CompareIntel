@@ -14,6 +14,7 @@ import { createMockModel } from '../../../__tests__/utils'
 import { createModelId } from '../../../types'
 import { ComparisonForm } from '../ComparisonForm'
 import type { HistoryProps, SelectionProps } from '../ComparisonFormTypes'
+import { computeIconTrackFit, getDefaultTrackMetrics } from '../fitSelectedModelIconTrack'
 import { resolveSelectedModelIcons } from '../resolveSelectedModelIcons'
 import { SelectedModelIcons } from '../SelectedModelIcons'
 
@@ -236,6 +237,40 @@ describe('SelectedModelIcons', () => {
     await user.click(screen.getByRole('button', { name: 'GPT-4' }))
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByTestId('selected-model-name-sheet')).not.toBeInTheDocument()
+  })
+
+  it('marks the track fitted when many models exceed the container width', () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 360, writable: true })
+
+    const providers = ['OpenAI', 'Anthropic', 'Google', 'Meta', 'Mistral'] as const
+    const many: string[] = []
+    const catalog: Record<string, ReturnType<typeof createMockModel>[]> = {}
+    for (let i = 0; i < 12; i++) {
+      const provider = providers[i % providers.length]
+      const id = createModelId(`provider-${i}/model-${i}`)
+      many.push(id)
+      catalog[provider] = [
+        ...(catalog[provider] ?? []),
+        createMockModel({
+          id,
+          name: `Model ${i}`,
+          provider,
+        }),
+      ]
+    }
+
+    renderIcons(many, catalog)
+    const row = screen.getByTestId('selected-model-icons')
+    Object.defineProperty(row, 'clientWidth', { configurable: true, value: 360 })
+    fireEvent(window, new Event('resize'))
+
+    const metrics = getDefaultTrackMetrics(360, 16)
+    const expectedFit = computeIconTrackFit({ ...metrics, availableWidthPx: 360, iconCount: 12 })
+    expect(expectedFit.fitted).toBe(true)
+
+    const track = screen.getByRole('list', { name: 'Selected models' })
+    expect(track).toHaveAttribute('data-track-fit', 'fitted')
+    expect(track).toHaveClass('selected-model-icons-track--fitted')
   })
 
   it('fits many models in a single non-wrapping track without leaving the credits container', () => {
