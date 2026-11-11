@@ -59,6 +59,7 @@ import {
   useSavedSelectionsComplete,
   useMainPageEffects,
   useDefaultTestComparison,
+  usePerModeModelSelection,
   ANONYMOUS_STARTER_SYSTEM_KEY,
 } from '../hooks'
 import { ApiError, isCancellationError } from '../services/api/errors'
@@ -89,8 +90,9 @@ import {
 import logger from '../utils/logger'
 import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
 import { isModelIdSelectableForUser } from '../utils/modelTierAccess'
+import { splitModelIdsByMode } from '../utils/perModeModelSelection'
 import { filterKnownModelIds, parseModelsQueryParam } from '../utils/preselectModelsFromQuery'
-import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
+import { saveSessionState, onSaveStateEvent, type PersistedSessionState } from '../utils/sessionState'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 import {
   filterModelsByProviderToImage,
@@ -151,6 +153,7 @@ export function MainPage() {
   }>({ conflictType: null, incompatibleModelIds: [] })
   /** After user dismisses "no common config", do not reopen until selection changes */
   const imageConflictImpossibleDismissedKeyRef = useRef<string | null>(null)
+  const clearAllModeCachesRef = useRef<() => void>(() => {})
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
 
@@ -627,6 +630,7 @@ export function MainPage() {
     userId: user?.id,
     tier: user?.subscription_tier ?? 'unregistered',
     selectedModels,
+    modelMode,
     modelsByProvider,
     modelsLoaded: !isLoadingModels && Object.keys(modelsByProvider).length > 0,
     isAuthenticated,
@@ -699,6 +703,7 @@ export function MainPage() {
     setError(null)
     setSelectedModels([])
     setOriginalSelectedModels([])
+    clearAllModeCachesRef.current()
     setIsModelsHidden(false)
     setOpenDropdowns(new Set())
     setModelErrors({})
@@ -1014,20 +1019,62 @@ export function MainPage() {
     [modelMode]
   )
 
-  // Clear selected models when switching modes if they no longer match the filtered list
-  useEffect(() => {
-    const ids = new Set(
-      Object.values(
-        modelMode === 'image'
-          ? filterModelsByProviderToImage(modelsByProvider)
-          : filterModelsByProviderToText(modelsByProvider)
-      )
-        .flat()
-        .map(m => String(m.id))
-    )
-    setSelectedModels(prev => prev.filter(id => ids.has(id)))
-    setOriginalSelectedModels(prev => prev.filter(id => ids.has(id)))
-  }, [modelMode, setSelectedModels, setOriginalSelectedModels, modelsByProvider])
+  const modelsLoadedForSelection = !isLoadingModels && Object.keys(modelsByProvider).length > 0
+
+  const {
+    clearAllModeCaches,
+    getPerModeCacheSnapshot,
+    hydratePerModeCache,
+    rememberCurrentModeInCache,
+  } = usePerModeModelSelection({
+    modelMode,
+    selectedModels,
+    setSelectedModels,
+    originalSelectedModels,
+    setOriginalSelectedModels,
+    modelsByProvider,
+    isAuthenticated,
+    user,
+    maxModelsLimit,
+    modelsLoaded: modelsLoadedForSelection,
+  })
+  clearAllModeCachesRef.current = clearAllModeCaches
+
+  const handleRestoreSessionModels = useCallback(
+    (savedState: PersistedSessionState) => {
+      if (savedState.selectedModelsByMode) {
+        const mode = savedState.modelMode ?? 'text'
+        hydratePerModeCache(savedState.selectedModelsByMode, mode)
+        setModelMode(mode)
+        const active = savedState.selectedModelsByMode[mode] ?? savedState.selectedModels ?? []
+        setSelectedModels(active)
+        setOriginalSelectedModels(active)
+        return
+      }
+      if (savedState.selectedModels && savedState.selectedModels.length > 0) {
+        const split = splitModelIdsByMode(savedState.selectedModels, modelsByProvider)
+        const targetMode = inferModelModeForLoadedModels(
+          savedState.selectedModels,
+          modelsByProvider
+        )
+        hydratePerModeCache(split, targetMode)
+        setModelMode(targetMode)
+        setSelectedModels(savedState.selectedModels)
+        setOriginalSelectedModels(savedState.selectedModels)
+      } else {
+        clearAllModeCaches()
+        setSelectedModels([])
+        setOriginalSelectedModels([])
+      }
+    },
+    [
+      hydratePerModeCache,
+      clearAllModeCaches,
+      modelsByProvider,
+      setSelectedModels,
+      setOriginalSelectedModels,
+    ]
+  )
 
   /**
    * Image Advanced (aspect ratio, image size): when selected models shrink, swap for a new set,
@@ -1518,6 +1565,8 @@ export function MainPage() {
     if (!user) return
 
     const cleanup = onSaveStateEvent(() => {
+      rememberCurrentModeInCache()
+      const selectedModelsByMode = getPerModeCacheSnapshot()
       saveSessionState({
         input,
         isFollowUpMode,
@@ -1527,6 +1576,8 @@ export function MainPage() {
         maxTokens,
         response,
         selectedModels,
+        modelMode,
+        selectedModelsByMode,
         conversations,
         userId: user.id,
       })
@@ -1544,6 +1595,9 @@ export function MainPage() {
     response,
     selectedModels,
     conversations,
+    modelMode,
+    rememberCurrentModeInCache,
+    getPerModeCacheSnapshot,
   ])
 
   // Load usage and models on mount
@@ -1766,28 +1820,6 @@ export function MainPage() {
     setImageSize,
   ])
 
-  useEffect(() => {
-    if (authLoading || isLoadingModels || Object.keys(modelsByProvider).length === 0) {
-      return
-    }
-    const kept = selectedModels.filter(id =>
-      isModelIdSelectableForUser(id, modelsByProvider, isAuthenticated, user)
-    )
-    const same =
-      kept.length === selectedModels.length && kept.every((id, i) => id === selectedModels[i])
-    if (!same) {
-      setSelectedModels(kept)
-    }
-  }, [
-    authLoading,
-    isLoadingModels,
-    modelsByProvider,
-    isAuthenticated,
-    user,
-    selectedModels,
-    setSelectedModels,
-  ])
-
   // Refetch credit balance
   useEffect(() => {
     if (!isAuthenticated && browserFingerprint && !user) {
@@ -1904,6 +1936,7 @@ export function MainPage() {
       hasScrolledToResultsRef,
       shouldScrollToTopAfterFormattingRef,
       clearStreamingReasoningUi,
+      onRestoreSessionModels: handleRestoreSessionModels,
     }
   )
 
@@ -2030,6 +2063,7 @@ export function MainPage() {
     setInput('')
     setSelectedModels([])
     setOriginalSelectedModels([])
+    clearAllModeCachesRef.current()
     setOpenDropdowns(new Set())
     setDefaultSelectionOverridden(true)
     setIsFollowUpMode(false)
@@ -2129,6 +2163,7 @@ export function MainPage() {
     setClosedCards(new Set())
     setError(null)
     setOriginalSelectedModels([])
+    clearAllModeCachesRef.current()
     setIsModelsHidden(false)
     setCurrentVisibleComparisonId(null)
     setModelErrors({})

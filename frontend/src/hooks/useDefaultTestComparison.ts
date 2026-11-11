@@ -60,6 +60,8 @@ interface UseDefaultTestComparisonParams {
   tier: SubscriptionTier
   /** Currently selected models */
   selectedModels: string[]
+  /** Text vs image model listing mode */
+  modelMode?: 'text' | 'image'
   /** Available models by provider */
   modelsByProvider: ModelsByProvider
   /** Whether models are loaded */
@@ -207,6 +209,7 @@ export function useDefaultTestComparison(
 ): UseDefaultTestComparisonReturn {
   const {
     selectedModels,
+    modelMode = 'text',
     modelsByProvider,
     modelsLoaded,
     isAuthenticated,
@@ -360,6 +363,7 @@ export function useDefaultTestComparison(
   // Load the managed default, or mark opt-out only after we have seen it in this session
   useEffect(() => {
     if (!isAnonymous || !isInitialized) return
+    if (modelMode !== 'text') return
 
     const starter = findManagedStarter(savedSelections)
 
@@ -382,6 +386,7 @@ export function useDefaultTestComparison(
   }, [
     isAnonymous,
     isInitialized,
+    modelMode,
     savedSelections,
     isOptedOut,
     selectedModels.length,

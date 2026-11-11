@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison/FileUpload'
 import type { CreditBalance } from '../services/creditService'
 import type { ActiveResultTabs, CompareResponse, ModelConversation } from '../types'
-import { loadSessionState, clearSessionState } from '../utils/sessionState'
+import { loadSessionState, clearSessionState, type PersistedSessionState } from '../utils/sessionState'
 
 interface UseAuthStateEffectsConfig {
   isAuthenticated: boolean
@@ -40,6 +40,8 @@ interface UseAuthStateEffectsCallbacks {
   hasScrolledToResultsRef: React.MutableRefObject<boolean>
   shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
   clearStreamingReasoningUi: () => void
+  /** Hydrate per-mode model caches (and optionally mode) after session restore. */
+  onRestoreSessionModels?: (savedState: PersistedSessionState) => void
 }
 
 export function useAuthStateEffects(
@@ -76,6 +78,7 @@ export function useAuthStateEffects(
     hasScrolledToResultsRef,
     shouldScrollToTopAfterFormattingRef,
     clearStreamingReasoningUi,
+    onRestoreSessionModels,
   } = callbacks
 
   const prevIsAuthenticatedRef = useRef<boolean | null>(null)
@@ -129,8 +132,10 @@ export function useAuthStateEffects(
           setMaxTokens(savedState.maxTokens)
         }
 
-        // Restore model selections
-        if (savedState.selectedModels && savedState.selectedModels.length > 0) {
+        // Restore model selections (per-mode handler restores both caches + active list)
+        if (onRestoreSessionModels) {
+          onRestoreSessionModels(savedState)
+        } else if (savedState.selectedModels && savedState.selectedModels.length > 0) {
           setSelectedModels(savedState.selectedModels)
           setOriginalSelectedModels(savedState.selectedModels)
         } else {
