@@ -199,6 +199,26 @@ describe('useDefaultTestComparison', () => {
         expect(handleLoadSelection).toHaveBeenCalledWith('starter-id')
       })
     })
+
+    it('does not auto-load Starter Selection while the onboarding tutorial is active', async () => {
+      const handleLoadSelection = vi.fn()
+      const setDefaultSelection = vi.fn()
+      const params = createDefaultParams({
+        savedSelections: [managedSelection()],
+        selectedModels: [],
+        getDefaultSelectionId: vi.fn(() => 'starter-id'),
+        handleLoadSelection,
+        setDefaultSelection,
+        tutorialIsActive: true,
+      })
+
+      renderHook(() => useDefaultTestComparison(params))
+
+      await waitFor(() => {
+        expect(setDefaultSelection).not.toHaveBeenCalled()
+        expect(handleLoadSelection).not.toHaveBeenCalled()
+      })
+    })
   })
 
   describe('Display name identity', () => {
