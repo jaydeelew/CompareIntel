@@ -706,4 +706,73 @@ test.describe('Layout Regression Tests', () => {
       ).toBeLessThanOrEqual(clientWidth + 1) // +1px for subpixel rounding
     })
   })
+
+  test.describe('Mobile composer toolbar (saved selection + actions)', () => {
+    const phoneWidths = [360, 375, 390, 412] as const
+
+    for (const width of phoneWidths) {
+      test(`submit button stays inside composer at ${width}px with prefilled prompt`, async ({
+        page,
+      }) => {
+        await page.addInitScript(() => {
+          localStorage.setItem('compareintel_tutorial_completed', 'true')
+          localStorage.setItem('compareintel_welcome_dismissed', 'true')
+          const anon = 'layout_regression_anon'
+          localStorage.setItem('compareintel_anonymous_id', anon)
+          localStorage.setItem(
+            `compareintel_saved_model_selections_${anon}`,
+            JSON.stringify([
+              {
+                id: 'starter-layout',
+                name: 'Starter Selection',
+                modelIds: ['openai/gpt-4o-mini', 'openai/gpt-3.5-turbo'],
+                createdAt: '2020-01-01T00:00:00.000Z',
+                updatedAt: '2020-01-01T00:00:00.000Z',
+                systemKey: 'anonymous-starter',
+              },
+            ])
+          )
+          localStorage.setItem(
+            `compareintel_default_model_selection_${anon}`,
+            'starter-layout'
+          )
+        })
+
+        await page.setViewportSize({ width, height: 800 })
+        await gotoStable(page, '/')
+
+        const textarea = page.getByTestId('comparison-input-textarea').first()
+        await expect(textarea).toBeVisible({ timeout: 15000 })
+        await textarea.fill('what is the quadratic formula?')
+        await waitForStableLayout(page)
+
+        const layout = await page.evaluate(() => {
+          const composer = document.querySelector('.hero-section .composer')
+          const submit = document.querySelector('[data-testid="comparison-submit-button"]')
+          if (!composer || !submit) {
+            return { ok: false, insetRight: -1, actionsGap: '' }
+          }
+          const cr = composer.getBoundingClientRect()
+          const sr = submit.getBoundingClientRect()
+          const actions = document.querySelector('.composer-toolbar .textarea-actions')
+          const ok =
+            sr.right <= cr.right + 0.5 &&
+            sr.left >= cr.left - 0.5 &&
+            sr.width >= 30 &&
+            sr.height >= 30
+          return {
+            ok,
+            insetRight: cr.right - sr.right,
+            actionsGap: actions ? getComputedStyle(actions).gap : '',
+          }
+        })
+
+        expect(
+          layout.ok,
+          `submit must be fully visible inside composer at ${width}px (insetRight=${layout.insetRight})`
+        ).toBe(true)
+        expect(layout.insetRight).toBeGreaterThanOrEqual(2)
+      })
+    }
+  })
 })

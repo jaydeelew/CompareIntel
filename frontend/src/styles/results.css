@@ -3748,7 +3748,17 @@ button.nav-button-primary {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
+  /* Absorb space between history and action buttons so the label stays beside the icon. */
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.saved-selections-container:has(.default-selection-name)::after {
+  content: '';
+  flex: 1 0 auto;
+  min-width: 0.75rem;
 }
 
 /* Default selection name display */
@@ -3758,7 +3768,10 @@ button.nav-button-primary {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 150px;
+  flex: 0 0 auto;
+  min-width: 0;
+  /* Leave room for the bookmark icon and toolbar gap; spacer sits after the label. */
+  max-width: calc(100% - 2.25rem);
   cursor: default;
   transition: color 0.2s ease;
 }
