@@ -72,9 +72,8 @@ test.describe('Tutorial step 2 — select both Google models', () => {
         .getByRole('heading', { name: 'Select Models', exact: true })
     ).toBeVisible({ timeout: 10000 })
 
-    const googleSection = page.locator('.provider-dropdown[data-provider-name="Google"]')
     for (const modelId of TUTORIAL_GOOGLE_MODEL_IDS) {
-      const checkbox = googleSection.locator(`#model-checkbox-${CSS.escape(modelId)}`)
+      const checkbox = page.getByTestId(`model-checkbox-${modelId}`)
       await expect(checkbox).toBeEnabled()
       await checkbox.click({ force: true })
       await expect(checkbox).toBeChecked()
