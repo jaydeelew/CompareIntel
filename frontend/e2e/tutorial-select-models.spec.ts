@@ -66,7 +66,11 @@ test.describe('Tutorial step 2 — select both Google models', () => {
 
     await expandGoogleProvider(page)
 
-    await expect(page.getByText('Select Models', { exact: false })).toBeVisible({ timeout: 10000 })
+    await expect(
+      page
+        .locator('.tutorial-tooltip, .mobile-tutorial-tooltip')
+        .getByRole('heading', { name: 'Select Models', exact: true })
+    ).toBeVisible({ timeout: 10000 })
 
     const googleSection = page.locator('.provider-dropdown[data-provider-name="Google"]')
     for (const modelId of TUTORIAL_GOOGLE_MODEL_IDS) {
