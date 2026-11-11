@@ -6,6 +6,7 @@
  */
 
 import logger from './logger'
+import type { PerModeSelectionCache } from './perModeModelSelection'
 
 const SESSION_STATE_KEY = 'compareintel_session_state'
 const SAVE_STATE_EVENT = 'compareintel:saveStateBeforeLogout'
@@ -22,6 +23,10 @@ export interface PersistedSessionState {
   maxTokens?: number | null // cap on output length
   response: unknown | null
   selectedModels: string[]
+  /** Active text vs image mode when state was saved (optional for backward compatibility). */
+  modelMode?: 'text' | 'image'
+  /** Per-mode model picks so toggling mode after login restores both lists (optional). */
+  selectedModelsByMode?: PerModeSelectionCache
   conversations: unknown[]
   savedAt: string
   userId: number
