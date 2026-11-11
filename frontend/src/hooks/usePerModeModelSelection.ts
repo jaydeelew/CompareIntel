@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 
 import type { ModelsByProvider, User } from '../types'
 import {
@@ -76,19 +76,22 @@ export function usePerModeModelSelection({
     prevModeRef.current = mode
   }, [])
 
-  // Keep per-mode caches aligned with the active selection while staying in one mode.
-  useEffect(() => {
-    if (isRestoringFromModeSwitchRef.current) return
-    selectionCacheRef.current[modelMode] = [...selectedModels]
-  }, [selectedModels, modelMode])
+  // Keep per-mode caches aligned when the user changes selection (not on mode-only re-renders).
+  const modelModeRef = useRef(modelMode)
+  modelModeRef.current = modelMode
 
   useEffect(() => {
     if (isRestoringFromModeSwitchRef.current) return
-    originalCacheRef.current[modelMode] = [...originalSelectedModels]
-  }, [originalSelectedModels, modelMode])
+    selectionCacheRef.current[modelModeRef.current] = [...selectedModels]
+  }, [selectedModels])
+
+  useEffect(() => {
+    if (isRestoringFromModeSwitchRef.current) return
+    originalCacheRef.current[modelModeRef.current] = [...originalSelectedModels]
+  }, [originalSelectedModels])
 
   // Restore the other mode's selection when toggling text ↔ image.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prevMode = prevModeRef.current
     if (prevMode === modelMode) return
     if (!modelsLoaded) {
@@ -125,6 +128,8 @@ export function usePerModeModelSelection({
     queueMicrotask(() => {
       isRestoringFromModeSwitchRef.current = false
     })
+  // selectedModels captured when modelMode changes; sync effects update cache between toggles.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run only on mode/catalog changes
   }, [
     modelMode,
     modelsLoaded,
@@ -132,14 +137,13 @@ export function usePerModeModelSelection({
     isAuthenticated,
     user,
     maxModelsLimit,
-    selectedModels,
-    originalSelectedModels,
     setSelectedModels,
     setOriginalSelectedModels,
   ])
 
   // When the catalog or user tier changes, prune both mode caches and re-apply current mode.
   useEffect(() => {
+    if (isRestoringFromModeSwitchRef.current) return
     if (!modelsLoaded) return
 
     const sanitizedSelection = sanitizePerModeCache(

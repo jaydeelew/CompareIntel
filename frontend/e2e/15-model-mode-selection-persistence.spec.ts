@@ -161,11 +161,15 @@ test.describe('Model mode selection persistence', () => {
     await expandProviderAndSelectModel(page, 'OpenAI', 'openai/image-gen', projectName)
 
     await page.getByRole('button', { name: 'Text models' }).click()
-    const textCheckboxAfter = page.getByTestId('model-checkbox-openai/gpt-text')
-    await expect(textCheckboxAfter).toBeChecked()
+    await expect(async () => {
+      const textCheckboxAfter = page.getByTestId('model-checkbox-openai/gpt-text')
+      await expect(textCheckboxAfter).toBeChecked({ timeout: 3000 })
+    }).toPass({ timeout: 15000 })
 
     await page.getByRole('button', { name: 'Image generation models' }).click()
-    const imageCheckboxAfter = page.getByTestId('model-checkbox-openai/image-gen')
-    await expect(imageCheckboxAfter).toBeChecked()
+    await expect(async () => {
+      const imageCheckboxAfter = page.getByTestId('model-checkbox-openai/image-gen')
+      await expect(imageCheckboxAfter).toBeChecked({ timeout: 3000 })
+    }).toPass({ timeout: 15000 })
   })
 })
