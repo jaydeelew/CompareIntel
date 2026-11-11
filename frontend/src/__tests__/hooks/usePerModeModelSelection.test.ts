@@ -131,4 +131,22 @@ describe('usePerModeModelSelection', () => {
     })
     expect(result.current.selectedModels).toEqual(['openai/image-gen', 'openai/image-gen-2'])
   })
+
+  it('preserves text cache when toggling to image without selecting image models', () => {
+    const { result } = renderHook(() => useHarness('text'))
+
+    act(() => {
+      result.current.setSelectedModels(['openai/gpt-text', 'openai/gpt-text-2'])
+    })
+
+    act(() => {
+      result.current.setModelMode('image')
+    })
+    expect(result.current.selectedModels).toEqual([])
+
+    act(() => {
+      result.current.setModelMode('text')
+    })
+    expect(result.current.selectedModels).toEqual(['openai/gpt-text', 'openai/gpt-text-2'])
+  })
 })

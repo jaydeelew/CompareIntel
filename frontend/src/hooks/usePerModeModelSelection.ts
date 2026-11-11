@@ -173,8 +173,8 @@ export function usePerModeModelSelection({
     selectionCacheRef.current = sanitizedSelection
     originalCacheRef.current = sanitizedOriginal
 
-    const currentSelection = sanitizedSelection[modelMode]
-    const currentOriginal = sanitizedOriginal[modelMode]
+    const currentSelection = sanitizedSelection[modelModeRef.current]
+    const currentOriginal = sanitizedOriginal[modelModeRef.current]
     const selectionSame =
       currentSelection.length === selectedModels.length &&
       currentSelection.every((id, i) => id === selectedModels[i])
@@ -194,7 +194,6 @@ export function usePerModeModelSelection({
     isAuthenticated,
     user,
     maxModelsLimit,
-    modelMode,
     selectedModels,
     originalSelectedModels,
     setSelectedModels,
