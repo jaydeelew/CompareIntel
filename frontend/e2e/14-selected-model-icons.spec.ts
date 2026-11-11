@@ -8,9 +8,17 @@ import { writeFileSync, mkdirSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
+import { MODEL_LIMITS } from '../src/config/constants'
+
 import { dismissTutorialOverlay, ensureUnfoldedNavbar, test, expect } from './fixtures'
 import { mockModelsApi } from './helpers/mockModels'
 import { dismissMobileBlockers, toggleModelCheckbox } from './helpers/modelCheckbox'
+import {
+  measureHeroHeight,
+  measureIconsInViewport,
+  prepareHeroForIconLayout,
+  selectModelCount,
+} from './helpers/selectedModelIconsLayout'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -247,5 +255,82 @@ test.describe('Hero selected-model icons', () => {
       join(SCREENSHOT_DIR, 'mobile-390-meta.json'),
       JSON.stringify({ before, after }, null, 2)
     )
+  })
+})
+
+const MOBILE_VIEWPORTS = [
+  { width: 320, height: 640 },
+  { width: 360, height: 740 },
+  { width: 390, height: 844 },
+  { width: 412, height: 915 },
+] as const
+
+const ICON_COUNTS = [6, 8, 9, 12] as const
+
+test.describe('Hero selected-model icons width fit', () => {
+  test('mobile widths: icons stay in viewport and hero height is stable', async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== 'chromium',
+      'Width-fit checks use mobile CSS breakpoints on Chromium'
+    )
+
+    for (const viewport of MOBILE_VIEWPORTS) {
+      await prepareHeroForIconLayout(page, viewport)
+      const baselineHeight = await measureHeroHeight(page)
+      expect(baselineHeight).toBeGreaterThan(0)
+
+      for (const count of ICON_COUNTS) {
+        await selectModelCount(page, count, testInfo.project.name)
+        const icons = page.getByTestId('selected-model-icon')
+        await expect(icons).toHaveCount(count)
+
+        await page.evaluate(
+          () =>
+            new Promise<void>(resolve => {
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+            })
+        )
+
+        const layout = await measureIconsInViewport(page)
+        expect(layout.iconCount).toBe(count)
+        expect(layout.allVisible, JSON.stringify(layout.overflows)).toBe(true)
+
+        const height = await measureHeroHeight(page)
+        expect(height).toBe(baselineHeight)
+
+        if (viewport.width === 412 && (count === 9 || count === 12)) {
+          mkdirSync(SCREENSHOT_DIR, { recursive: true })
+          await page
+            .locator('.hero-section')
+            .screenshot({ path: join(SCREENSHOT_DIR, `mobile-412-${count}-icons.png`) })
+        }
+      }
+    }
+  })
+
+  test('desktop: max models visible without horizontal clip', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Desktop layout checks on Chromium')
+
+    await prepareHeroForIconLayout(page, { width: 1280, height: 800 })
+    const before = await measureOpenHeroLayout(page)
+    expect(before).not.toBeNull()
+
+    await selectModelCount(page, MODEL_LIMITS.pro_plus, testInfo.project.name)
+    await expect(page.getByTestId('selected-model-icon')).toHaveCount(MODEL_LIMITS.pro_plus)
+    await ensureUnfoldedNavbar(page)
+
+    const layout = await measureIconsInViewport(page)
+    expect(layout.allVisible, JSON.stringify(layout.overflows)).toBe(true)
+
+    const after = await measureOpenHeroLayout(page)
+    expect(after).not.toBeNull()
+    expect(after!.heroHeight).toBe(before!.heroHeight)
+
+    mkdirSync(SCREENSHOT_DIR, { recursive: true })
+    await page
+      .locator('.hero-section')
+      .screenshot({ path: join(SCREENSHOT_DIR, 'desktop-1280-max-icons.png') })
   })
 })

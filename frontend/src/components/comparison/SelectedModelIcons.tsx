@@ -16,6 +16,7 @@ import { ProviderIcon } from '../layout/ProviderIcon'
 import { StyledTooltip } from '../shared'
 
 import { resolveSelectedModelIcons } from './resolveSelectedModelIcons'
+import { useSelectedModelIconTrackFit } from './useSelectedModelIconTrackFit'
 
 import './DisabledButtonInfoModal.css'
 import '../../styles/selectedModelIcons.css'
@@ -94,11 +95,13 @@ interface SelectedModelIconsProps {
 export function SelectedModelIcons({ selectedModels, modelsByProvider }: SelectedModelIconsProps) {
   const { useModalForTooltips } = useResponsive()
   const [sheetName, setSheetName] = useState<string | null>(null)
-
   const items = useMemo(
     () => resolveSelectedModelIcons(selectedModels, modelsByProvider),
     [selectedModels, modelsByProvider]
   )
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const fit = useSelectedModelIconTrackFit(items.length, containerRef)
 
   const closeSheet = useCallback(() => setSheetName(null), [])
 
@@ -116,10 +119,27 @@ export function SelectedModelIcons({ selectedModels, modelsByProvider }: Selecte
     return null
   }
 
+  const trackStyle = fit.fitted
+    ? ({
+        '--selected-model-icon-overlap': `${fit.overlapPx}px`,
+        '--selected-model-icon-slot': `${fit.slotPx}px`,
+        '--selected-model-icon-disc-scale': String(fit.discScale),
+      } as React.CSSProperties)
+    : undefined
+
   return (
     <>
-      <div className="selected-model-icons" data-testid="selected-model-icons">
-        <ul className="selected-model-icons-track" aria-label="Selected models">
+      <div ref={containerRef} className="selected-model-icons" data-testid="selected-model-icons">
+        <ul
+          className={
+            fit.fitted
+              ? 'selected-model-icons-track selected-model-icons-track--fitted'
+              : 'selected-model-icons-track'
+          }
+          style={trackStyle}
+          data-track-fit={fit.fitted ? 'fitted' : 'default'}
+          aria-label="Selected models"
+        >
           {items.map((item, index) => {
             const button = (
               <button
