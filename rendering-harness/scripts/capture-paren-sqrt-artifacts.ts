@@ -24,7 +24,7 @@ import { stackBeforeAfter } from '../stack-shot.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO = path.resolve(__dirname, '../..')
 const PARAGRAPH =
-  'The square root of 2 \\(\\sqrt{2}\\) is an irrational number, meaning it cannot be expressed as a simple fraction. Its approximate value is **1.41421356…** The decimal representation goes on forever without repeating.'
+  'The square root of 2 (\\sqrt{2}) is an irrational number, meaning it cannot be expressed as a simple fraction. Its approximate value is **1.41421356…** The decimal representation goes on forever without repeating.'
 const MODEL = 'google/gemma-3-27b-it'
 
 function argValue(name: string): string | undefined {
@@ -106,7 +106,7 @@ async function main() {
         beforePng: path.join(work, 'before-phone.png'),
         afterPng: path.join(work, 'after-phone.png'),
         beforeLabel: `Before ${baseRef}`,
-        afterLabel: 'After standard delimiters',
+        afterLabel: 'After bare paren math',
         sourceExcerpt: PARAGRAPH,
         outputPath: phoneOut,
       })
@@ -122,7 +122,7 @@ async function main() {
         beforePng: path.join(work, 'before-960.png'),
         afterPng: path.join(work, 'after-960.png'),
         beforeLabel: `Before ${baseRef}`,
-        afterLabel: 'After standard delimiters',
+        afterLabel: 'After bare paren math',
         outputPath: wideOut,
       })
       console.log(`Wrote ${wideOut}`)

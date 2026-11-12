@@ -2,9 +2,8 @@
  * Standard LaTeX delimiters render for every model, including dollar-only
  * configs such as Gemma 3 27B. Jack's production paragraph is the fixture.
  *
- * `\(\sqrt{2}\)` and `\[...\]` become KaTeX. Bare `(\sqrt{2})` does not:
- * convertImplicitMath skips a parenthetical that already contains `\sqrt`,
- * `\cdot`, or `\pm`, and there is no other paren-math heuristic for it.
+ * `\(\sqrt{2}\)` and `\[...\]` become KaTeX. Bare `(\sqrt{2})` also renders,
+ * with the parentheses kept as text around the math. See bareParenLatex.test.tsx.
  */
 import { render } from '@testing-library/react'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -32,7 +31,7 @@ const ESCAPED_VISIBLE =
   'The square root of 2 2 is an irrational number, meaning it cannot be expressed as a simple fraction. Its approximate value is 1.41421356… The decimal representation goes on forever without repeating.'
 
 const BARE_VISIBLE =
-  'The square root of 2 (\\sqrt{2}) is an irrational number, meaning it cannot be expressed as a simple fraction. Its approximate value is 1.41421356… The decimal representation goes on forever without repeating.'
+  'The square root of 2 (2) is an irrational number, meaning it cannot be expressed as a simple fraction. Its approximate value is 1.41421356… The decimal representation goes on forever without repeating.'
 
 function renderReply(markdown: string, modelId: string): HTMLElement {
   const { container } = render(<LatexRenderer modelId={modelId}>{markdown}</LatexRenderer>)
@@ -114,10 +113,13 @@ describe('standard \\( \\) and \\[ \\] delimiters', () => {
     expect(text).toContain(ESCAPED_VISIBLE)
   })
 
-  it('leaves bare (\\sqrt{2}) as text because the paren heuristic skips \\sqrt', () => {
+  it('renders bare (\\sqrt{2}) with the parentheses kept as text', () => {
     const el = renderReply(BARE_PARAGRAPH, 'google/gemma-3-27b-it')
-    expect(el.querySelector('.katex')).toBeNull()
-    expect(texSources(el)).toEqual([])
+    expect(el.querySelector('.katex-error')).toBeNull()
+    expect(texSources(el)).toEqual(['\\sqrt{2}'])
     expect(visibleText(el)).toBe(BARE_VISIBLE)
+    expect(el.querySelector('strong')?.textContent).toBe('1.41421356…')
+    expect(el.innerHTML).toMatch(/\(\s*<span class="katex">/)
+    expect(el.innerHTML).toMatch(/<\/span>\)/)
   })
 })
