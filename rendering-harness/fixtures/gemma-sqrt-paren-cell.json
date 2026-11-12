@@ -1,0 +1,17 @@
+{
+  "modelId": "google/gemma-3-27b-it",
+  "modelName": "Google: Gemma 3 27B",
+  "promptName": "paren-sqrt-delimiter",
+  "promptText": "Explain that the square root of 2 is irrational, using LaTeX delimiters, a code span, a fence, and currency.",
+  "response": "The square root of 2 \\(\\sqrt{2}\\) is an irrational number, meaning it cannot be expressed as a simple fraction. Its approximate value is **1.41421356…** The decimal representation goes on forever without repeating.\n\nShown as display math:\n\n\\[\n\\sqrt{2}\n\\]\n\nThe command `\\(\\sqrt{2}\\)` is code, and so is this fence:\n\n```latex\n\\(\\sqrt{2}\\)\n```\n\nIt costs $5 and shipping is $10.\n",
+  "timestamp": "2026-11-12T04:50:00Z",
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "cost": 0
+  },
+  "cost": 0,
+  "finishReason": "stop",
+  "nativeFinishReason": "stop"
+}

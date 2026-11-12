@@ -99,6 +99,41 @@ def has_model_config(model_id: str, config_path: Path | None = None) -> bool:
     return model_id in configs
 
 
+# Same sources the renderer baseline uses for `\[...\]` and `\(...\)`.
+# `[\s\S]` is required: `[^\\]` cannot match a TeX command such as `\sqrt`.
+STANDARD_BRACKET_DELIMITER = {
+    "pattern": r"/\\\[\s*([\s\S]*?)\s*\\\]/g",
+    "name": "bracket",
+}
+STANDARD_PAREN_DELIMITER = {
+    "pattern": r"/\\\(\s*([\s\S]*?)\s*\\\)/g",
+    "name": "paren",
+}
+
+
+def ensure_standard_math_delimiters(
+    display: list[dict[str, Any]], inline: list[dict[str, Any]]
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Append `\\[...\\]` and `\\(...\\)` when a model's analysis never emitted them.
+
+    Saved harness replies often use only `$` / `$$`, so delimiter detection
+    omits the standard LaTeX delimiters. New configs must still carry them.
+    Existing entries keep their order and priority. The added rows use
+    priority 2, matching the renderer baseline that fills the same holes.
+    """
+    display_out = list(display)
+    inline_out = list(inline)
+
+    def append(patterns: list[dict[str, Any]], standard: dict[str, Any]) -> None:
+        if any(item.get("name") == standard["name"] for item in patterns):
+            return
+        patterns.append({**standard, "priority": 2})
+
+    append(display_out, STANDARD_BRACKET_DELIMITER)
+    append(inline_out, STANDARD_PAREN_DELIMITER)
+    return display_out, inline_out
+
+
 def filter_models_without_configs(
     model_ids: list[str], config_path: Path | None = None
 ) -> list[str]:
