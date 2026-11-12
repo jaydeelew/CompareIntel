@@ -25,6 +25,7 @@ export type DeployEnvName = 'preview' | 'production' | 'development' | string
 
 export interface DeployEnvVars {
   VITE_DEPLOY_ENV?: string
+  VITE_ENABLE_VERDICT_PANEL?: string
   VITE_API_URL?: string
   VITE_API_BASE_URL?: string
   VITE_SENTRY_DSN?: string

@@ -204,7 +204,7 @@ echo ""
 echo "🌐 Test 8: All prerendered routes"
 echo "========================================"
 
-ROUTES=("/" "/about" "/features" "/how-it-works" "/faq" "/image-generation" "/help-me-choose-methodology" "/verdict-methodology" "/privacy-policy" "/terms-of-service" "/models" "/models/claude-opus-5")
+ROUTES=("/" "/about" "/features" "/how-it-works" "/faq" "/image-generation" "/help-me-choose-methodology" "/privacy-policy" "/terms-of-service" "/models" "/models/claude-opus-5")
 
 for route in "${ROUTES[@]}"; do
     STATUS=$(curl -sI "$BASE_URL$route" | grep -i "^HTTP" | head -1)

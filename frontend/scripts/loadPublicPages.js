@@ -9,6 +9,8 @@ import { existsSync, readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
+import { isVerdictPanelEnabledInBuild } from './verdictPanelFlag.js'
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const FRONTEND_ROOT = join(__dirname, '..')
 const STATIC_PAGES_PATH = join(FRONTEND_ROOT, 'src/config/staticPublicPages.json')
@@ -40,10 +42,14 @@ function expandStaticPages(staticPages) {
   return expanded
 }
 
+const VERDICT_METHODOLOGY_PATH = '/verdict-methodology'
+
 export function getPublicPages() {
   const staticPages = expandStaticPages(readJson(STATIC_PAGES_PATH))
   const catalog = loadSeoCatalog()
-  return [...staticPages, catalog.index, ...catalog.models.map(model => model.page)]
+  const pages = [...staticPages, catalog.index, ...catalog.models.map(model => model.page)]
+  if (isVerdictPanelEnabledInBuild()) return pages
+  return pages.filter(page => page.path !== VERDICT_METHODOLOGY_PATH)
 }
 
 export function getPublicPaths() {
