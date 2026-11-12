@@ -62,6 +62,7 @@ import {
   usePerModeModelSelection,
   ANONYMOUS_STARTER_SYSTEM_KEY,
 } from '../hooks'
+import type { TutorialStep } from '../hooks/useTutorial'
 import { ApiError, isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
 import { getCreditBalance, getSpendableCreditsRemaining } from '../services/creditService'
@@ -480,6 +481,34 @@ export function MainPage() {
     prevTutorialActiveForSwipeHintRef.current = tutorialState.isActive
   }, [tutorialState.isActive])
 
+  const prevTutorialStepForSelectionRef = useRef<TutorialStep | null>(null)
+  useEffect(() => {
+    const step = tutorialState.currentStep
+    const prevStep = prevTutorialStepForSelectionRef.current
+    prevTutorialStepForSelectionRef.current = step
+
+    if (!tutorialState.isActive) return
+
+    if (step === 'select-models' && prevStep !== 'select-models') {
+      setSelectedModels([])
+      setOriginalSelectedModels([])
+      clearAllModeCachesRef.current()
+      setDefaultSelectionOverridden(true)
+      setOpenDropdowns(prev => {
+        if (prev.has('Google')) return prev
+        const next = new Set(prev)
+        next.add('Google')
+        return next
+      })
+    }
+  }, [
+    tutorialState.isActive,
+    tutorialState.currentStep,
+    setSelectedModels,
+    setOriginalSelectedModels,
+    setOpenDropdowns,
+  ])
+
   /** Once the welcome modal was shown, Navigation can tell “Start” dismiss from “never shown”. */
   const welcomeModalEverShownRef = useRef(false)
   if (showWelcomeModal && !isAuthenticated) {
@@ -647,6 +676,7 @@ export function MainPage() {
     handleLoadSelection: handleLoadModelSelection,
     setDefaultSelection,
     getDefaultSelectionId,
+    tutorialIsActive: tutorialState.isActive,
   })
 
   const isUntouchedStarterSelection = useMemo(() => {
@@ -1737,6 +1767,10 @@ export function MainPage() {
       return
     }
 
+    if (tutorialState.isActive) {
+      return
+    }
+
     if (defaultSelectionOverridden) {
       return
     }
@@ -1807,6 +1841,7 @@ export function MainPage() {
   }, [
     isLoadingModels,
     modelsByProvider,
+    tutorialState.isActive,
     defaultSelectionOverridden,
     selectedModels.length,
     getDefaultSelection,

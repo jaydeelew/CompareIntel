@@ -91,6 +91,8 @@ interface UseDefaultTestComparisonParams {
   setDefaultSelection: (id: string | null) => void
   /** Function to get default selection ID */
   getDefaultSelectionId: () => string | null
+  /** When true, do not auto-load Starter Selection (onboarding tutorial owns model picks). */
+  tutorialIsActive?: boolean
 }
 
 interface UseDefaultTestComparisonReturn {
@@ -221,6 +223,7 @@ export function useDefaultTestComparison(
     handleLoadSelection,
     setDefaultSelection,
     getDefaultSelectionId,
+    tutorialIsActive = false,
   } = params
 
   const [isInitialized, setIsInitialized] = useState(false)
@@ -362,6 +365,7 @@ export function useDefaultTestComparison(
 
   // Load the managed default, or mark opt-out only after we have seen it in this session
   useEffect(() => {
+    if (tutorialIsActive) return
     if (!isAnonymous || !isInitialized) return
     if (modelMode !== 'text') return
 
@@ -384,6 +388,7 @@ export function useDefaultTestComparison(
       setIsOptedOut(true)
     }
   }, [
+    tutorialIsActive,
     isAnonymous,
     isInitialized,
     modelMode,
