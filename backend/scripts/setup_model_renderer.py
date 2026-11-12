@@ -25,7 +25,11 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.model_runner import call_openrouter
-from scripts.config_helpers import has_model_config, load_existing_configs
+from scripts.config_helpers import (
+    ensure_standard_math_delimiters,
+    has_model_config,
+    load_existing_configs,
+)
 from scripts.harness_replies import (
     PROMPT_ORDER,
     HarnessRenderFailedError,
@@ -389,6 +393,11 @@ class ModelRendererSetup:
             if pattern:
                 inline_patterns.append(pattern)
                 priority += 1
+
+        # `$`-only samples must not drop `\(...\)` / `\[...\]`.
+        display_patterns, inline_patterns = ensure_standard_math_delimiters(
+            display_patterns, inline_patterns
+        )
 
         # Build preprocessing options
         preprocessing = {

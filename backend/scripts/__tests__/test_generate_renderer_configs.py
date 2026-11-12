@@ -10,6 +10,7 @@ from pathlib import Path
 # Add parent directory to path to import the script
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from config_helpers import ensure_standard_math_delimiters
 from generate_renderer_configs import ConfigGenerator
 
 
@@ -249,6 +250,64 @@ class TestConfigGenerator(unittest.TestCase):
 
         # Verify model-2 has manual review flag
         self.assertTrue(configs[1]["metadata"]["needsManualReview"])
+
+    def test_dollar_only_analysis_still_gets_standard_delimiters(self):
+        """`$` / `$$` samples must not omit `\\(...\\)` and `\\[...\\]`."""
+        analysis = {
+            "delimiters": {"display": ["double-dollar"], "inline": ["single-dollar"]},
+            "issues": [],
+            "markdown_elements": {},
+            "needs_manual_review": False,
+        }
+
+        config = self.generator.generate_config("google/gemma-3-27b-it", analysis)
+        display_names = [item["name"] for item in config["displayMathDelimiters"]]
+        inline_names = [item["name"] for item in config["inlineMathDelimiters"]]
+
+        self.assertEqual(display_names, ["double-dollar", "bracket"])
+        self.assertEqual(inline_names, ["single-dollar", "paren"])
+        paren = config["inlineMathDelimiters"][1]
+        self.assertIn(r"[\s\S]", paren["pattern"])
+        self.assertNotIn("[^\\\\]", paren["pattern"])
+        self.assertEqual(paren["priority"], 2)
+        self.assertEqual(config["displayMathDelimiters"][1]["priority"], 2)
+
+    def test_existing_paren_and_bracket_are_not_duplicated(self):
+        analysis = {
+            "delimiters": {"display": ["bracket", "double-dollar"], "inline": ["paren"]},
+            "issues": [],
+            "markdown_elements": {},
+            "needs_manual_review": False,
+        }
+
+        config = self.generator.generate_config("test-model", analysis)
+
+        self.assertEqual(
+            [item["name"] for item in config["displayMathDelimiters"]],
+            ["bracket", "double-dollar"],
+        )
+        self.assertEqual(
+            [item["name"] for item in config["inlineMathDelimiters"]],
+            ["paren"],
+        )
+
+    def test_ensure_standard_math_delimiters_appends_only_missing(self):
+        display, inline = ensure_standard_math_delimiters(
+            [{"pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs", "name": "double-dollar", "priority": 1}],
+            [
+                {
+                    "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+                    "name": "single-dollar",
+                    "priority": 1,
+                }
+            ],
+        )
+        self.assertEqual([item["name"] for item in display], ["double-dollar", "bracket"])
+        self.assertEqual([item["name"] for item in inline], ["single-dollar", "paren"])
+
+        again_display, again_inline = ensure_standard_math_delimiters(display, inline)
+        self.assertEqual(len(again_display), 2)
+        self.assertEqual(len(again_inline), 2)
 
 
 if __name__ == "__main__":
