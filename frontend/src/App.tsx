@@ -13,6 +13,7 @@ import './App.css'
 
 import { Layout, ThemeSync } from './components'
 import { ErrorBoundary, LoadingSpinner } from './components/shared'
+import { isVerdictPanelEnabled } from './config/featureFlags'
 import { AuthProvider } from './contexts/AuthContext'
 import { PWAInstallProvider } from './contexts/PWAInstallContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -150,14 +151,16 @@ function App() {
                     </Suspense>
                   }
                 />
-                <Route
-                  path="/verdict-methodology"
-                  element={
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <VerdictMethodology />
-                    </Suspense>
-                  }
-                />
+                {isVerdictPanelEnabled() ? (
+                  <Route
+                    path="/verdict-methodology"
+                    element={
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <VerdictMethodology />
+                      </Suspense>
+                    }
+                  />
+                ) : null}
                 <Route
                   path="/image-generation"
                   element={

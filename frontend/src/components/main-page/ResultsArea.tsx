@@ -9,6 +9,7 @@
  * the results-related UI logic.
  */
 
+import { isVerdictPanelEnabled } from '../../config/featureFlags'
 import type { ExportFormat } from '../../hooks/useExport'
 import type { Model, ActiveResultTabs, ResultTab } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
@@ -135,7 +136,8 @@ export function ResultsArea({
           isTutorialActive={isTutorialActive}
         />
 
-        {conversations.length > 0 &&
+        {isVerdictPanelEnabled() &&
+          conversations.length > 0 &&
           !isComparisonLoading &&
           conversations.every(conversation => !modelProcessingStates[conversation.modelId]) && (
             <VerdictPanel

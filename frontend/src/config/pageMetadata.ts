@@ -11,6 +11,7 @@
 
 import seoCatalogJson from '../data/generated/seoCatalog.json'
 
+import { isVerdictMethodologyPath, isVerdictPanelEnabled } from './featureFlags'
 import staticPublicPagesJson from './staticPublicPages.json'
 
 export interface PageMetadata {
@@ -24,9 +25,12 @@ export interface PageMetadata {
 }
 
 const staticPagesWithAliases = staticPublicPagesJson as PageMetadata[]
-const staticPublicPages: PageMetadata[] = staticPagesWithAliases.map(
+const staticPublicPagesAll: PageMetadata[] = staticPagesWithAliases.map(
   ({ aliases: _aliases, ...page }) => page
 )
+const staticPublicPages: PageMetadata[] = isVerdictPanelEnabled()
+  ? staticPublicPagesAll
+  : staticPublicPagesAll.filter(page => !isVerdictMethodologyPath(page.path))
 const pathAliases = new Map<string, string>()
 for (const page of staticPagesWithAliases) {
   for (const alias of page.aliases ?? []) {
