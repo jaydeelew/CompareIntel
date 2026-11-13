@@ -110,6 +110,12 @@
   animation: none !important;
 }
 
+/* Step 8: saved-selections button lives in a flex wrapper with overflow:hidden (label ellipsis).
+   That clips the spotlight box-shadow; the history toggle (step 7) is a direct toolbar child. */
+.composer-toolbar .saved-selections-container:has(.saved-selections-button.mobile-tutorial-highlight) {
+  overflow: visible;
+}
+
 /* Pulsing effect for model results tab text on steps 5 (follow-up) and 6 (view-follow-up-results) - draws attention to tabs via size pulse */
 .results-tabs-header.mobile-tutorial-tabs-pulse .results-tab-name {
   display: inline-block;
