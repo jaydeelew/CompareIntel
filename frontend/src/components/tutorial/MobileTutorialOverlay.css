@@ -112,7 +112,8 @@
 
 /* Step 8: saved-selections button lives in a flex wrapper with overflow:hidden (label ellipsis).
    That clips the spotlight box-shadow; the history toggle (step 7) is a direct toolbar child. */
-.composer-toolbar .saved-selections-container:has(.saved-selections-button.mobile-tutorial-highlight) {
+.composer-toolbar
+  .saved-selections-container:has(.saved-selections-button.mobile-tutorial-highlight) {
   overflow: visible;
 }
 
