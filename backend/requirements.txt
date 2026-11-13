@@ -176,7 +176,7 @@ sniffio==1.3.1
     #   -r requirements.in
     #   anthropic
     #   openai
-soupsieve==3.0.4
+soupsieve==4.0.0
     # via
     #   -r requirements.in
     #   beautifulsoup4
