@@ -13,7 +13,7 @@ const HARNESS_BASE = 'http://127.0.0.1:5174'
 test.describe('Mobile touch scroll over wide result content', () => {
   test.describe.configure({ mode: 'parallel' })
 
-  test.beforeEach((_fixtures, testInfo) => {
+  test.beforeEach(({ browserName: _browserName }, testInfo) => {
     test.skip(
       !isMobileTouchScrollProject(testInfo.project.name),
       'Runs on Mobile Chrome and Mobile Safari device projects only'
