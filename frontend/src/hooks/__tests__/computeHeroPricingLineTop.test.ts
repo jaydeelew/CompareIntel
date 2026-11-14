@@ -10,7 +10,7 @@ describe('computeHeroPricingLineTop', () => {
       lineHeight: 20,
       containerTop: 50,
     })
-  // 100 + (400 - 20) / 2 = 290 viewport; relative to container: 240
+    // 100 + (400 - 20) / 2 = 290 viewport; relative to container: 240
     expect(top).toBe(240)
   })
 
