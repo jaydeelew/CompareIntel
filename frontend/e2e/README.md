@@ -42,6 +42,7 @@ Tests are organized by user journey and functionality:
 - **`09-results-display-regression.spec.ts`**: Results grids, tabs, follow-up mode, breakout
 - **`10-accessibility.spec.ts`**: WCAG-oriented checks on core flows and landmarks
 - **`11-pwa-features.spec.ts`**: Install prompt / PWA-oriented behavior
+- **`17-clipboard-copy.spec.ts`**: Rendering-harness clipboard paste (KaTeX, tables, code; Chromium only)
 
 CI runs a **focused Chromium subset** (`ci.yml`) matching these journeys (see `--grep=` in **E2E Tests — Critical User Flows**); full **`npm run test:e2e`** still exercises every spec locally and in cross-browser jobs.
 
