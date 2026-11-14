@@ -7,11 +7,7 @@ import {
   selectStarterSelectionModels,
 } from '../starterSelectionModels'
 
-function createModel(
-  id: string,
-  provider: string,
-  tier: 'unregistered' | 'paid' = 'unregistered'
-) {
+function createModel(id: string, provider: string, tier: 'unregistered' | 'paid' = 'unregistered') {
   return {
     id,
     name: id,

@@ -19,7 +19,9 @@ def _long_word_salad(repeats: int = 12) -> str:
 
 
 def test_word_salad_after_normal_answer_triggers_degenerate_detection():
-    prefix = "Here is a Python swap function:\n\n```python\ndef swap(a, b):\n    return b, a\n```\n\n"
+    prefix = (
+        "Here is a Python swap function:\n\n```python\ndef swap(a, b):\n    return b, a\n```\n\n"
+    )
     content = prefix + _long_word_salad()
     assert detect_degenerate_prose(content)
     assert detect_repetition(content)
@@ -50,10 +52,7 @@ def test_markdown_table_does_not_trigger():
 
 
 def test_katex_does_not_trigger():
-    content = (
-        "The integral is $\\\\int_0^1 x^2 dx = \\\\frac{1}{3}$. "
-        "Display: $$E = mc^2$$ "
-    ) * 30
+    content = ("The integral is $\\\\int_0^1 x^2 dx = \\\\frac{1}{3}$. Display: $$E = mc^2$$ ") * 30
     assert not detect_degenerate_prose(content)
 
 
