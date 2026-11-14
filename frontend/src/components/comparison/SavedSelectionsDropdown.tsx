@@ -242,24 +242,26 @@ export function SavedSelectionsDropdown({
 
   return (
     <div className="saved-selections-container" ref={containerRef}>
-      {hideTooltip ? (
-        triggerButton
-      ) : (
-        <StyledTooltip usePortal={tooltipUsePortal} text="Save or load model selections">
-          {triggerButton}
-        </StyledTooltip>
-      )}
-      {!defaultSelectionOverridden && defaultSelection && (
-        <span
-          className="default-selection-name"
-          title={
-            getModelNamesFromIds(defaultSelection.modelIds, modelsByProvider) ||
-            'Default model selection'
-          }
-        >
-          {defaultSelection.name}
-        </span>
-      )}
+      <div className="saved-selections-bookmark-cluster">
+        {hideTooltip ? (
+          triggerButton
+        ) : (
+          <StyledTooltip usePortal={tooltipUsePortal} text="Save or load model selections">
+            {triggerButton}
+          </StyledTooltip>
+        )}
+        {!defaultSelectionOverridden && defaultSelection && (
+          <span
+            className="default-selection-name"
+            title={
+              getModelNamesFromIds(defaultSelection.modelIds, modelsByProvider) ||
+              'Default model selection'
+            }
+          >
+            {defaultSelection.name}
+          </span>
+        )}
+      </div>
 
       {showDropdown &&
         (() => {

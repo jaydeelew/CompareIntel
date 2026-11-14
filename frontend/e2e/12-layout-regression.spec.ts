@@ -732,10 +732,7 @@ test.describe('Layout Regression Tests', () => {
               },
             ])
           )
-          localStorage.setItem(
-            `compareintel_default_model_selection_${anon}`,
-            'starter-layout'
-          )
+          localStorage.setItem(`compareintel_default_model_selection_${anon}`, 'starter-layout')
         })
 
         await page.setViewportSize({ width, height: 800 })
@@ -749,12 +746,18 @@ test.describe('Layout Regression Tests', () => {
         const layout = await page.evaluate(() => {
           const composer = document.querySelector('.hero-section .composer')
           const submit = document.querySelector('[data-testid="comparison-submit-button"]')
+          const bookmark = document.querySelector('.saved-selections-button')
+          const label = document.querySelector('.default-selection-name')
           if (!composer || !submit) {
-            return { ok: false, insetRight: -1, actionsGap: '' }
+            return { ok: false, insetRight: -1, actionsGap: '', bookmarkLabelGap: -1 }
           }
           const cr = composer.getBoundingClientRect()
           const sr = submit.getBoundingClientRect()
           const actions = document.querySelector('.composer-toolbar .textarea-actions')
+          const bookmarkLabelGap =
+            bookmark && label
+              ? label.getBoundingClientRect().left - bookmark.getBoundingClientRect().right
+              : -1
           const ok =
             sr.right <= cr.right + 0.5 &&
             sr.left >= cr.left - 0.5 &&
@@ -764,6 +767,7 @@ test.describe('Layout Regression Tests', () => {
             ok,
             insetRight: cr.right - sr.right,
             actionsGap: actions ? getComputedStyle(actions).gap : '',
+            bookmarkLabelGap,
           }
         })
 
@@ -772,6 +776,11 @@ test.describe('Layout Regression Tests', () => {
           `submit must be fully visible inside composer at ${width}px (insetRight=${layout.insetRight})`
         ).toBe(true)
         expect(layout.insetRight).toBeGreaterThanOrEqual(2)
+        expect(
+          layout.bookmarkLabelGap,
+          `default selection label should sit tight against bookmark at ${width}px`
+        ).toBeLessThanOrEqual(3)
+        expect(layout.bookmarkLabelGap).toBeGreaterThanOrEqual(0)
       })
     }
   })
