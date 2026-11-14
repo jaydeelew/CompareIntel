@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import type { TutorialState, TutorialStep } from '../../hooks/useTutorial'
+import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 import type { User } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { countSelectableModelsInSelection } from '../../utils/modelTierAccess'

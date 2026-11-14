@@ -28,7 +28,6 @@ import {
   pickTwoDemoModels,
 } from '../data/capabilityDemoPresets'
 import { filterModelsForTutorial } from '../data/tutorialSteps'
-import { resolveStarterSelectionModelIds } from '../utils/starterSelectionModels'
 import {
   useConversationHistory,
   useBrowserFingerprint,
@@ -99,6 +98,7 @@ import {
   onSaveStateEvent,
   type PersistedSessionState,
 } from '../utils/sessionState'
+import { resolveStarterSelectionModelIds } from '../utils/starterSelectionModels'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 import {
   filterModelsByProviderToImage,

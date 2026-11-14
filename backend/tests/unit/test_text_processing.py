@@ -1,6 +1,10 @@
 """Unit tests for runaway output detection in text_processing."""
 
-from app.llm.text_processing import detect_degenerate_prose, detect_repetition, trim_degenerate_prose_tail
+from app.llm.text_processing import (
+    detect_degenerate_prose,
+    detect_repetition,
+    trim_degenerate_prose_tail,
+)
 
 WORD_SALAD_CHUNK = (
     "serving culture safeguarding heritage enriching experience deepening understanding "
