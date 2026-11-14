@@ -18,7 +18,6 @@ describe('useCenteredPricingLine', () => {
 
     mockHeroSection.className = 'hero-section'
     mockCredits.className = 'credits-remaining-wrapper'
-
     mockContainer.appendChild(mockCredits)
     mockContainer.appendChild(mockElement)
     mockHeroSection.appendChild(mockContainer)
