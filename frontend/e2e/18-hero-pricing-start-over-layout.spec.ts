@@ -10,12 +10,7 @@ import type { Page } from '@playwright/test'
 
 import { TUTORIAL_GOOGLE_MODEL_IDS } from '../src/data/tutorialSteps'
 
-import {
-  test,
-  expect,
-  dismissTutorialOverlay,
-  dismissBlockingOnboardingOverlays,
-} from './fixtures'
+import { test, expect, dismissTutorialOverlay, dismissBlockingOnboardingOverlays } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { mockComparisonStream } from './helpers/mockModels'
 import { dismissMobileBlockers, toggleModelCheckbox } from './helpers/modelCheckbox'
@@ -179,17 +174,28 @@ async function runComparisonFromHero(page: Page, prompt: string): Promise<void> 
   await textarea.fill(prompt)
   await dismissMobileBlockers(page)
   await submitAndAwaitCompareStream(page, { timeoutMs: 60000 })
-  await expect(
-    page.locator('.follow-up-header, h2:has-text("Start over")').first()
-  ).toBeVisible({ timeout: 30000 })
+  await expect(page.locator('.follow-up-header, h2:has-text("Start over")').first()).toBeVisible({
+    timeout: 30000,
+  })
 }
 
-async function tapStartOver(page: Page): Promise<void> {
+function isMobileSafariProject(projectName: string): boolean {
+  return projectName.startsWith('Mobile Safari')
+}
+
+/** DOM click on WebKit — avoids CDP/touch quirks; layout is asserted via geometry, not gestures. */
+async function tapStartOver(page: Page, projectName: string): Promise<void> {
   const startOver = page
     .locator('.follow-up-header:has-text("Start over"), h2:has-text("Start over")')
     .first()
   await expect(startOver).toBeVisible({ timeout: 15000 })
-  await startOver.click()
+  if (isMobileSafariProject(projectName)) {
+    await startOver.evaluate(el => {
+      ;(el as HTMLElement).click()
+    })
+  } else {
+    await startOver.click()
+  }
   await page
     .waitForFunction(
       () =>
@@ -207,18 +213,21 @@ async function tapStartOver(page: Page): Promise<void> {
 }
 
 test.describe('Hero pricing stack after Start over', () => {
-  test.beforeEach(async ({ page }, testInfo) => {
+  test.beforeEach(({ browserName: _browserName }, testInfo) => {
     test.skip(
       !isMobileChromeOrSafari(testInfo.project.name),
       'Layout regression runs on Mobile Chrome and Mobile Safari only'
     )
     test.setTimeout(120000)
+  })
+
+  test.beforeEach(async ({ page }) => {
     await prepareMobileViewport(page)
   })
 
   test('normal follow-up Start over keeps credits, icons, and pricing separated', async ({
     page,
-  }) => {
+  }, testInfo) => {
     await page.addInitScript(() => {
       localStorage.setItem('compareintel_tutorial_completed', 'true')
       localStorage.setItem('compareintel_welcome_dismissed', 'true')
@@ -233,7 +242,7 @@ test.describe('Hero pricing stack after Start over', () => {
     const productionHeight = baselines.hero.viewports['390x844']?.light ?? baselineHero.heroHeight
 
     await runComparisonFromHero(page, 'What is photosynthesis in one sentence?')
-    await tapStartOver(page)
+    await tapStartOver(page, testInfo.project.name)
 
     const after = await assertHeroMetaSettled(page)
     expect(
@@ -274,13 +283,16 @@ test.describe('Hero pricing stack after Start over', () => {
     await dismissMobileBlockers(page)
 
     for (const modelId of TUTORIAL_GOOGLE_MODEL_IDS) {
-      await toggleModelCheckbox(page.getByTestId(`model-checkbox-${modelId}`), testInfo.project.name)
+      await toggleModelCheckbox(
+        page.getByTestId(`model-checkbox-${modelId}`),
+        testInfo.project.name
+      )
     }
 
     const baselineHero = await measureHeroMetaStack(page)
 
     await runComparisonFromHero(page, 'Compare these models briefly.')
-    await tapStartOver(page)
+    await tapStartOver(page, testInfo.project.name)
 
     const after = await assertHeroMetaSettled(page)
     expect(Math.abs(after.heroHeight - baselineHero.heroHeight)).toBeLessThanOrEqual(
