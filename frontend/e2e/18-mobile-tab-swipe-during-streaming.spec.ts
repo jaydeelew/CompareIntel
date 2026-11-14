@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { isMobileChromeProject, touchSwipe } from './helpers/harnessTouchScroll'
-import { selectSelectableTextModels } from './helpers/modelCheckbox'
+import { toggleModelCheckbox } from './helpers/modelCheckbox'
 
 test.describe('Mobile model-tab swipe while result content churns', () => {
   test.describe.configure({ timeout: 120000 })
@@ -15,12 +15,24 @@ test.describe('Mobile model-tab swipe while result content churns', () => {
 
   test('horizontal swipe switches model tabs while the panel DOM is being replaced', async ({
     mockedModelsAuthenticatedPage: page,
-  }) => {
+  }, testInfo) => {
+    const projectName = testInfo.project.name
     const input = page.getByTestId('comparison-input-textarea')
     await input.fill('Tab swipe during streaming')
 
     await page.locator('.loading-message').waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {})
-    await selectSelectableTextModels(page, 2, 'Mobile Chrome - Pixel 5')
+
+    const providerHeader = page.locator('.provider-header').first()
+    if ((await providerHeader.getAttribute('aria-expanded')) !== 'true') {
+      await providerHeader.click()
+      await page.waitForTimeout(500)
+    }
+    for (const modelId of ['openai/gpt-5', 'openai/gpt-4.1']) {
+      const checkbox = page.getByTestId(`model-checkbox-${modelId}`)
+      await expect(checkbox).toBeVisible({ timeout: 15000 })
+      await toggleModelCheckbox(checkbox, projectName)
+    }
+
     await submitAndAwaitCompareStream(page)
 
     await expect(page.locator('.results-tabs-container')).toBeVisible({ timeout: 30000 })
