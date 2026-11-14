@@ -3753,7 +3753,6 @@ button.nav-button-primary {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
   /* Absorb space between history and action buttons so the label stays beside the icon. */
   flex: 1 1 0;
   min-width: 0;
@@ -3766,6 +3765,16 @@ button.nav-button-primary {
   min-width: 0.75rem;
 }
 
+/* Icon + active saved-selection name read as one toolbar control */
+.saved-selections-bookmark-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* Default selection name display */
 .default-selection-name {
   font-size: 0.8125rem;
@@ -3773,10 +3782,8 @@ button.nav-button-primary {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-width: 0;
-  /* Leave room for the bookmark icon and toolbar gap; spacer sits after the label. */
-  max-width: calc(100% - 2.25rem);
   cursor: default;
   transition: color 0.2s ease;
 }
