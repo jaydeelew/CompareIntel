@@ -503,11 +503,14 @@
   }
 }
 
-/* Prefer horizontal pans for scrolling code; pairs with ResultsDisplay touch gating on model-tab swipe. */
+/* Allow vertical pans to reach the page while overflow-x still scrolls wide code.
+   Model-tab horizontal swipes are gated in ResultsDisplay (see shouldSuppressMobileModelTabSwipe). */
 .results-section-tabbed .message-content .latex-content .code-block,
 .results-section-tabbed .code-block-direct,
-.results-section-tabbed pre.raw-output {
-  touch-action: pan-x pinch-zoom;
+.results-section-tabbed pre.raw-output,
+.results-section-tabbed .latex-content .katex-display,
+.results-section-tabbed .latex-content .markdown-table-scroll {
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 /* Reinforces N models in a horizontal row (tabbed / narrow layout). */
