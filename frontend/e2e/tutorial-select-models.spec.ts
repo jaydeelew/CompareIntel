@@ -65,6 +65,7 @@ test.describe('Tutorial step 2 — select starter selection models', () => {
 
   test('with Starter Selection timing, both tutorial models stay selectable', async ({
     page,
+    browserName: _browserName,
   }, testInfo) => {
     await page.getByRole('button', { name: 'Start Tutorial' }).click()
     await expect(page.locator('.tutorial-tooltip, .mobile-tutorial-tooltip').first()).toBeVisible()
