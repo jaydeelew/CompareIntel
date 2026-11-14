@@ -1,7 +1,14 @@
-import type { TutorialState, TutorialStep } from '../../hooks/useTutorial'
+import { useMemo } from 'react'
+
+import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 import type { User } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
-import { countSelectableGoogleModelsInSelection } from '../../utils/modelTierAccess'
+import { countSelectableModelsInSelection } from '../../utils/modelTierAccess'
+import {
+  getProvidersForModelIds,
+  isAnyProviderExpanded,
+  resolveStarterSelectionModelIds,
+} from '../../utils/starterSelectionModels'
 
 import { MobileTutorialController } from './MobileTutorialController'
 import { TutorialController } from './TutorialController'
@@ -71,14 +78,25 @@ export function TutorialManager({
   setTutorialHasSavedSelection,
   onTutorialWelcomeSkipped,
 }: TutorialManagerProps) {
-  const googleProviderExpanded = 'Google' in modelsByProvider && openDropdowns.has('Google')
-  const selectableGoogleSelectedCount = countSelectableGoogleModelsInSelection(
+  const tutorialModelIds = useMemo(
+    () => resolveStarterSelectionModelIds(modelsByProvider),
+    [modelsByProvider]
+  )
+  const tutorialProviders = useMemo(
+    () => getProvidersForModelIds(modelsByProvider, tutorialModelIds),
+    [modelsByProvider, tutorialModelIds]
+  )
+  const googleProviderExpanded = isAnyProviderExpanded(openDropdowns, tutorialProviders)
+  const selectableStarterCount = countSelectableModelsInSelection(
     selectedModels,
+    tutorialModelIds,
     modelsByProvider,
     isAuthenticated,
     user
   )
-  const googleModelsSelected = selectableGoogleSelectedCount >= 2
+  const requiredStarterCount = Math.min(2, tutorialModelIds.length)
+  const googleModelsSelected =
+    requiredStarterCount > 0 && selectableStarterCount >= requiredStarterCount
 
   return (
     <>

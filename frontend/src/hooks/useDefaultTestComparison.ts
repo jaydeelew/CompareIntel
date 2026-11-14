@@ -23,28 +23,16 @@ import { useEffect, useRef, useState } from 'react'
 import type { SubscriptionTier } from '../config/constants'
 import type { ModelsByProvider } from '../types'
 import logger from '../utils/logger'
+import {
+  getSelectableUnregisteredTextModels,
+  selectStarterSelectionModels,
+} from '../utils/starterSelectionModels'
 
 export const STARTER_SELECTION_NAME = 'Starter Selection'
 export const ANONYMOUS_STARTER_SYSTEM_KEY = 'anonymous-starter'
 const STARTER_SELECTION_OPTED_OUT_KEY = 'compareintel_starter_selection_opted_out'
 const LEGACY_TEST_COMPARISON_OPTED_OUT_KEY = 'compareintel_test_comparison_opted_out'
 const LEGACY_DISPLAY_NAME = 'Test Comparison'
-
-/**
- * Model priority list for the anonymous Starter Selection.
- * Ordered by recognizability and popularity for anonymous users.
- * Must be models from unregistered_tier_models in backend/data/models_registry.json.
- */
-const DEFAULT_MODEL_PRIORITY = [
-  'google/gemini-2.5-flash', // Highly recognizable Google model
-  'deepseek/deepseek-v4.1-flash-1017', // Very popular recent model
-  'deepseek/deepseek-v4-flash', // Alternative DeepSeek
-  'google/gemini-3.1-flash-lite-preview', // Alternative Google
-  'microsoft/phi-4', // Recognizable Microsoft model
-  'deepseek/deepseek-v3.2', // Alternative DeepSeek
-  'google/gemma-4-31b-it', // Alternative Google
-  'qwen/qwen3-coder-next', // Alternative popular model
-] as const
 
 interface SavedSelectionLike {
   id: string
@@ -153,57 +141,6 @@ function setStarterSelectionOptedOut(optedOut: boolean): void {
 }
 
 /**
- * Get selectable model IDs for unregistered tier from current registry
- */
-function getSelectableUnregisteredModels(modelsByProvider: ModelsByProvider): Set<string> {
-  const selectable = new Set<string>()
-  for (const providerModels of Object.values(modelsByProvider)) {
-    for (const model of providerModels) {
-      // Only text models that are available and unregistered tier
-      if (
-        model.available !== false &&
-        model.tier_access === 'unregistered' &&
-        !model.supports_image_generation
-      ) {
-        selectable.add(String(model.id))
-      }
-    }
-  }
-  return selectable
-}
-
-/**
- * Select best 2 models from priority list that are currently available
- */
-function selectBestTwoModels(selectableModels: Set<string>): string[] {
-  const selected: string[] = []
-
-  // Try priority list first
-  for (const modelId of DEFAULT_MODEL_PRIORITY) {
-    if (selectableModels.has(modelId)) {
-      selected.push(modelId)
-      if (selected.length === 2) {
-        return selected
-      }
-    }
-  }
-
-  // If we don't have 2 yet, add any remaining selectable models
-  if (selected.length < 2) {
-    for (const modelId of selectableModels) {
-      if (!selected.includes(modelId)) {
-        selected.push(modelId)
-        if (selected.length === 2) {
-          break
-        }
-      }
-    }
-  }
-
-  return selected
-}
-
-/**
  * Hook to manage the system-owned "Starter Selection" for anonymous users
  */
 export function useDefaultTestComparison(
@@ -263,7 +200,7 @@ export function useDefaultTestComparison(
       return
     }
 
-    const selectableModels = getSelectableUnregisteredModels(modelsByProvider)
+    const selectableModels = getSelectableUnregisteredTextModels(modelsByProvider)
 
     if (selectableModels.size < 2) {
       logger.warn('Not enough unregistered-tier models available for Starter Selection', {
@@ -273,7 +210,7 @@ export function useDefaultTestComparison(
       return
     }
 
-    const bestTwoModels = selectBestTwoModels(selectableModels)
+    const bestTwoModels = selectStarterSelectionModels(selectableModels)
     const managed = findManagedStarter(savedSelections)
     const legacyDefault = managed
       ? undefined

@@ -27,7 +27,7 @@ import {
   CAPABILITY_DEMO_SUBMIT_DELAY_MS,
   pickTwoDemoModels,
 } from '../data/capabilityDemoPresets'
-import { filterGoogleModelsForTutorial } from '../data/tutorialSteps'
+import { filterModelsForTutorial } from '../data/tutorialSteps'
 import {
   useConversationHistory,
   useBrowserFingerprint,
@@ -98,6 +98,7 @@ import {
   onSaveStateEvent,
   type PersistedSessionState,
 } from '../utils/sessionState'
+import { resolveStarterSelectionModelIds } from '../utils/starterSelectionModels'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 import {
   filterModelsByProviderToImage,
@@ -1031,14 +1032,24 @@ export function MainPage() {
       ? filterModelsByProviderToImage(modelsByProvider)
       : filterModelsByProviderToText(modelsByProvider)
 
-  const tutorialGoogleModelFilterActive =
+  const tutorialModelFilterActive =
     tutorialState.isActive &&
     (tutorialState.currentStep === 'expand-provider' ||
       tutorialState.currentStep === 'select-models')
 
+  const tutorialModelIds = useMemo(
+    () => resolveStarterSelectionModelIds(filteredModelsByProvider),
+    [filteredModelsByProvider]
+  )
+
   const displayModelsByProvider = useMemo(
-    () => filterGoogleModelsForTutorial(filteredModelsByProvider, tutorialGoogleModelFilterActive),
-    [filteredModelsByProvider, tutorialGoogleModelFilterActive]
+    () =>
+      filterModelsForTutorial(
+        filteredModelsByProvider,
+        tutorialModelFilterActive,
+        tutorialModelIds
+      ),
+    [filteredModelsByProvider, tutorialModelFilterActive, tutorialModelIds]
   )
 
   const allModels = Object.values(displayModelsByProvider).flat()

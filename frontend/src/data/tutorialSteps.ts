@@ -1,30 +1,39 @@
 import type { TutorialStep } from '../hooks/useTutorial'
 import type { ModelsByProvider } from '../types/models'
-
-/** Google text models shown while the tutorial is on provider steps (expand + select models; step 2 lists only these). */
-export const TUTORIAL_GOOGLE_MODEL_IDS: readonly string[] = [
-  'google/gemma-3-27b-it',
-  'google/gemini-3.1-flash-lite-preview',
-]
+import { resolveStarterSelectionModelIds } from '../utils/starterSelectionModels'
 
 /**
- * During the onboarding tutorial, limit the Google provider row to {@link TUTORIAL_GOOGLE_MODEL_IDS}.
- * No-op when `enabled` is false or the allowlist would drop every model (safety fallback).
+ * During provider steps, limit the model picker to Starter Selection models only.
+ * No-op when `enabled` is false or filtering would drop every model (safety fallback).
  */
-export function filterGoogleModelsForTutorial(
+export function filterModelsForTutorial(
   modelsByProvider: ModelsByProvider,
-  enabled: boolean
+  enabled: boolean,
+  tutorialModelIds: readonly string[] = resolveStarterSelectionModelIds(modelsByProvider)
 ): ModelsByProvider {
   if (!enabled) return modelsByProvider
-  const google = modelsByProvider['Google']
-  if (!google?.length) return modelsByProvider
-  const allowed = new Set(TUTORIAL_GOOGLE_MODEL_IDS)
-  const filtered = google.filter(m => allowed.has(String(m.id)))
-  if (filtered.length === 0) return modelsByProvider
-  const order = new Map(TUTORIAL_GOOGLE_MODEL_IDS.map((id, i) => [id, i]))
-  filtered.sort((a, b) => (order.get(String(a.id)) ?? 99) - (order.get(String(b.id)) ?? 99))
-  return { ...modelsByProvider, Google: filtered }
+  if (tutorialModelIds.length === 0) return modelsByProvider
+
+  const allowed = new Set(tutorialModelIds.map(String))
+  const order = new Map(tutorialModelIds.map((id, i) => [id, i]))
+  const result: ModelsByProvider = {}
+  let keptAny = false
+
+  for (const [provider, models] of Object.entries(modelsByProvider)) {
+    const filtered = models.filter(m => allowed.has(String(m.id)))
+    if (filtered.length > 0) {
+      filtered.sort((a, b) => (order.get(String(a.id)) ?? 99) - (order.get(String(b.id)) ?? 99))
+      result[provider] = filtered
+      keptAny = true
+    }
+  }
+
+  if (!keptAny) return modelsByProvider
+  return result
 }
+
+/** @deprecated Use filterModelsForTutorial */
+export const filterGoogleModelsForTutorial = filterModelsForTutorial
 
 export interface StepConfig {
   step: TutorialStep
@@ -40,14 +49,14 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'expand-provider',
     targetSelector: '.provider-dropdown .provider-header',
     title: 'Expand a Provider',
-    description: 'Click the Google dropdown to see available AI models.',
+    description: 'Open a provider dropdown to see the suggested starter models.',
     position: 'top',
   },
   'select-models': {
     step: 'select-models',
     targetSelector: '.provider-dropdown[data-provider-name="Google"]',
     title: 'Select Models',
-    description: 'For this tutorial, select the 2 Google models.',
+    description: 'Select the same two models used for Starter Selection.',
     position: 'top',
   },
   'enter-prompt': {

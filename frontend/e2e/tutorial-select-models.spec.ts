@@ -1,11 +1,14 @@
 import { test, expect } from '@playwright/test'
 
-import { TUTORIAL_GOOGLE_MODEL_IDS } from '../src/data/tutorialSteps'
+import {
+  getProvidersForModelIds,
+  resolveStarterSelectionModelIds,
+} from '../src/utils/starterSelectionModels'
 
 import { dismissMobileBlockers, toggleModelCheckbox } from './helpers/modelCheckbox'
 
 /**
- * Regression: Starter Selection / restored models must not block picking both tutorial Google models on step 2.
+ * Regression: Starter Selection / restored models must not block picking both tutorial models on step 2.
  */
 
 const mockModel = (
@@ -40,15 +43,18 @@ const MOCK_MODELS_RESPONSE = {
   models_by_provider: MOCK_MODELS,
 }
 
-async function expandGoogleProvider(page: import('@playwright/test').Page) {
-  const googleHeader = page
-    .locator('.provider-dropdown[data-provider-name="Google"] .provider-header')
+const TUTORIAL_MODEL_IDS = resolveStarterSelectionModelIds(MOCK_MODELS)
+const TUTORIAL_PROVIDERS = getProvidersForModelIds(MOCK_MODELS, TUTORIAL_MODEL_IDS)
+
+async function expandProvider(page: import('@playwright/test').Page, providerName: string) {
+  const header = page
+    .locator(`.provider-dropdown[data-provider-name="${providerName}"] .provider-header`)
     .first()
-  await googleHeader.click()
-  await expect(googleHeader).toHaveAttribute('aria-expanded', 'true')
+  await header.click()
+  await expect(header).toHaveAttribute('aria-expanded', 'true')
 }
 
-test.describe('Tutorial step 2 — select both Google models', () => {
+test.describe('Tutorial step 2 — select starter selection models', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
     await page.goto('/')
@@ -57,8 +63,9 @@ test.describe('Tutorial step 2 — select both Google models', () => {
     })
   })
 
-  test('with Starter Selection timing, both tutorial Google models stay selectable', async ({
+  test('with Starter Selection timing, both tutorial models stay selectable', async ({
     page,
+    browserName: _browserName,
   }, testInfo) => {
     await page.getByRole('button', { name: 'Start Tutorial' }).click()
     await expect(page.locator('.tutorial-tooltip, .mobile-tutorial-tooltip').first()).toBeVisible()
@@ -66,7 +73,7 @@ test.describe('Tutorial step 2 — select both Google models', () => {
     // Give Starter Selection auto-load time to run if the tutorial guard is broken.
     await page.waitForTimeout(800)
 
-    await expandGoogleProvider(page)
+    await expandProvider(page, TUTORIAL_PROVIDERS[0] ?? 'Google')
 
     await expect(
       page
@@ -76,8 +83,18 @@ test.describe('Tutorial step 2 — select both Google models', () => {
 
     await dismissMobileBlockers(page)
 
-    for (const modelId of TUTORIAL_GOOGLE_MODEL_IDS) {
+    for (const modelId of TUTORIAL_MODEL_IDS) {
       const checkbox = page.getByTestId(`model-checkbox-${modelId}`)
+      const provider = MOCK_MODELS_RESPONSE.models.find(m => m.id === modelId)?.provider
+      if (provider) {
+        const header = page
+          .locator(`.provider-dropdown[data-provider-name="${provider}"] .provider-header`)
+          .first()
+        const expanded = await header.getAttribute('aria-expanded')
+        if (expanded !== 'true') {
+          await expandProvider(page, provider)
+        }
+      }
       await expect(checkbox).toBeEnabled()
       await checkbox.scrollIntoViewIfNeeded()
       await toggleModelCheckbox(checkbox, testInfo.project.name)
