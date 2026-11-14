@@ -12,6 +12,10 @@ export function isMobileTouchScrollProject(projectName: string): boolean {
   return projectName.startsWith('Mobile Chrome') || projectName.startsWith('Mobile Safari')
 }
 
+export function isMobileChromeProject(projectName: string): boolean {
+  return projectName.startsWith('Mobile Chrome')
+}
+
 /** Mirror tabbed multi-model results so production touch-action rules apply. */
 export async function applyTabbedResultsHarnessContext(page: Page): Promise<void> {
   await waitForHarnessRender(page)
@@ -98,29 +102,16 @@ async function touchSwipeViaCdp(
   })
 }
 
-/**
- * Simulates a touch drag on mobile projects.
- * Chromium: CDP touch (reliable scroll on emulated mobile).
- * WebKit: mouse drag (Playwright maps to touch when hasTouch is enabled).
- */
+/** CDP touch drag (Mobile Chrome emulation only — WebKit has no CDP and mouse drag does not scroll). */
 export async function touchSwipe(
   page: Page,
-  browserName: string,
   fromX: number,
   fromY: number,
   toX: number,
   toY: number,
   steps = 14
 ): Promise<void> {
-  if (browserName === 'chromium') {
-    await touchSwipeViaCdp(page, fromX, fromY, toX, toY, steps)
-    return
-  }
-
-  await page.mouse.move(fromX, fromY)
-  await page.mouse.down()
-  await page.mouse.move(toX, toY, { steps })
-  await page.mouse.up()
+  await touchSwipeViaCdp(page, fromX, fromY, toX, toY, steps)
 }
 
 export async function openHarnessWideCode(
