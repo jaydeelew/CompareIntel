@@ -244,11 +244,15 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const mobileTabsAttentionScrollRef = useRef<HTMLDivElement>(null)
   const modelTabsHeaderRef = useRef<HTMLDivElement>(null)
   const modelTabButtonRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const resultsTabSwipeZoneRef = useRef<HTMLDivElement>(null)
   const swipeTouchStartRef = useRef<{
     x: number
     y: number
-    target: EventTarget | null
+    suppress: boolean
   } | null>(null)
+  const goToModelTabRef = useRef<(nextIndex: number, source?: TabChangeSource) => void>(() => {})
+  const activeTabIndexRef = useRef(activeTabIndex)
+  const viewportWidthRef = useRef(viewportWidth)
   /** Mobile tabbed UI: first model to emit answer/reasoning tokens this round (pin resets when answer-started map clears). */
   const firstMobileStreamerPinnedRef = useRef<string | null>(null)
   const prevStreamAnswerStartedRef = useRef<Record<string, boolean>>({})
@@ -423,6 +427,83 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     onDismissMobileCapabilityDemoModelTabsHighlight,
   ])
 
+  const goToModelTab = (nextIndex: number, source: TabChangeSource = 'programmatic') => {
+    const n = visibleConversations.length
+    if (n < 2 || nextIndex < 0 || nextIndex >= n || nextIndex === activeTabIndex) return
+
+    const direction: 'forward' | 'backward' =
+      activeTabIndex < 0 || nextIndex > activeTabIndex ? 'forward' : 'backward'
+
+    setSlideEnter(direction === 'forward' ? 'from-right' : 'from-left')
+    setActiveTabIndex(nextIndex)
+    onDismissMobileCapabilityDemoModelTabsHighlight?.()
+
+    if (source === 'swipe-touch') {
+      if (isTutorialActive) {
+        setTutorialFingerSwipeDismissed(true)
+      } else if (capabilitySwipeHintNonce > 0) {
+        setCapabilityFingerSwipeDismissed(true)
+      }
+    }
+  }
+
+  goToModelTabRef.current = goToModelTab
+  activeTabIndexRef.current = activeTabIndex
+  viewportWidthRef.current = viewportWidth
+
+  useLayoutEffect(() => {
+    if (!useTabbedMultiModelResults || visibleConversations.length < 2) return
+
+    const zone = resultsTabSwipeZoneRef.current
+    if (!zone) return
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) {
+        swipeTouchStartRef.current = null
+        return
+      }
+      swipeTouchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        suppress: shouldSuppressMobileModelTabSwipe(e.target),
+      }
+    }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      const start = swipeTouchStartRef.current
+      swipeTouchStartRef.current = null
+      if (!start || start.suppress || e.changedTouches.length !== 1) return
+
+      const dx = e.changedTouches[0].clientX - start.x
+      const dy = e.changedTouches[0].clientY - start.y
+      const absDx = Math.abs(dx)
+      const absDy = Math.abs(dy)
+      const threshold = mobileModelTabSwipeThreshold(viewportWidthRef.current)
+      if (absDx < threshold) return
+      /* Require a clearer horizontal intent than a shallow diagonal (avoids conflict with vertical reading). */
+      if (absDx < absDy * 1.35) return
+
+      const tabIndex = activeTabIndexRef.current
+      if (dx < 0) {
+        const next = tabIndex < 0 ? 0 : tabIndex + 1
+        goToModelTabRef.current(next, 'swipe-touch')
+      } else {
+        goToModelTabRef.current(tabIndex - 1, 'swipe-touch')
+      }
+    }
+
+    zone.addEventListener('touchstart', onTouchStart, { passive: true })
+    zone.addEventListener('touchend', onTouchEnd, { passive: true })
+    // Streaming replaces nodes under the finger; detached targets do not bubble touchend to `zone`.
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+
+    return () => {
+      zone.removeEventListener('touchstart', onTouchStart)
+      zone.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [useTabbedMultiModelResults, visibleConversations.length, modelTabStripKey])
+
   if (visibleConversations.length === 0) return null
 
   // Compute breakout animation class from phase
@@ -470,60 +551,6 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const activeTab = activeConversation
     ? activeResultTabs[activeConversation.modelId] || RESULT_TAB.FORMATTED
     : RESULT_TAB.FORMATTED
-
-  const goToModelTab = (nextIndex: number, source: TabChangeSource = 'programmatic') => {
-    const n = visibleConversations.length
-    if (n < 2 || nextIndex < 0 || nextIndex >= n || nextIndex === activeTabIndex) return
-
-    const direction: 'forward' | 'backward' =
-      activeTabIndex < 0 || nextIndex > activeTabIndex ? 'forward' : 'backward'
-
-    setSlideEnter(direction === 'forward' ? 'from-right' : 'from-left')
-    setActiveTabIndex(nextIndex)
-    onDismissMobileCapabilityDemoModelTabsHighlight?.()
-
-    if (source === 'swipe-touch') {
-      if (isTutorialActive) {
-        setTutorialFingerSwipeDismissed(true)
-      } else if (capabilitySwipeHintNonce > 0) {
-        setCapabilityFingerSwipeDismissed(true)
-      }
-    }
-  }
-
-  const handleSwipeTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length !== 1) {
-      swipeTouchStartRef.current = null
-      return
-    }
-    swipeTouchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
-      target: e.target,
-    }
-  }
-
-  const handleSwipeTouchEnd = (e: React.TouchEvent) => {
-    const start = swipeTouchStartRef.current
-    swipeTouchStartRef.current = null
-    if (!start || e.changedTouches.length !== 1) return
-    if (shouldSuppressMobileModelTabSwipe(start.target)) return
-    const dx = e.changedTouches[0].clientX - start.x
-    const dy = e.changedTouches[0].clientY - start.y
-    const absDx = Math.abs(dx)
-    const absDy = Math.abs(dy)
-    const threshold = mobileModelTabSwipeThreshold(viewportWidth)
-    if (absDx < threshold) return
-    /* Require a clearer horizontal intent than a shallow diagonal (avoids conflict with vertical reading). */
-    if (absDx < absDy * 1.35) return
-
-    if (dx < 0) {
-      const next = activeTabIndex < 0 ? 0 : activeTabIndex + 1
-      goToModelTab(next, 'swipe-touch')
-    } else {
-      goToModelTab(activeTabIndex - 1, 'swipe-touch')
-    }
-  }
 
   const slidePanelClass =
     slideEnter !== 'none'
@@ -643,9 +670,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           )}
 
           <div
+            ref={resultsTabSwipeZoneRef}
             className="results-tab-content results-tab-content--swipe-zone"
-            onTouchStart={handleSwipeTouchStart}
-            onTouchEnd={handleSwipeTouchEnd}
           >
             {showFingerSwipeOverlay ? (
               <div className="results-tab-swipe-hint-overlay">
