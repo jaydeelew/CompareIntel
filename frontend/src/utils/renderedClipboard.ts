@@ -194,8 +194,12 @@ function getEnclosedCodeBlockSource(range: Range, container: HTMLElement): strin
 }
 
 function elementPlainText(el: HTMLElement): string {
-  const raw = ('innerText' in el && typeof el.innerText === 'string' ? el.innerText : el.textContent) ?? ''
-  return raw.replace(/\u00a0/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
+  const raw =
+    ('innerText' in el && typeof el.innerText === 'string' ? el.innerText : el.textContent) ?? ''
+  return raw
+    .replace(/\u00a0/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 /**

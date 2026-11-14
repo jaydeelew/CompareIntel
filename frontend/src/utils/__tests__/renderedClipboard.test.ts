@@ -59,7 +59,7 @@ describe('renderedClipboard', () => {
   })
 
   it('decodes fenced code from data-code-base64 in a selection', () => {
-    const code = "line1\nline2"
+    const code = 'line1\nline2'
     const b64 = btoa(unescape(encodeURIComponent(code)))
     document.body.innerHTML = `
       <div id="root" class="latex-content">
