@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 
 import type { ModelConversation, ResultTab, ActiveResultTabs } from '../types'
 import { RESULT_TAB } from '../types'
-import { showNotification, getSafeId, formatConversationMessage } from '../utils'
+import { showNotification, getSafeId } from '../utils'
 import logger from '../utils/logger'
 
 /** Omit ephemeral reasoning panels from html-to-image captures (return false = exclude node). */
@@ -284,13 +284,10 @@ export function useScreenshotCopy({
         return
       }
 
-      // Format the entire conversation history
-      const formattedHistory = conversation.messages
-        .map(msg => formatConversationMessage(msg.type, msg.content, msg.timestamp))
-        .join('\n\n---\n\n')
+      const rawHistory = conversation.messages.map(msg => msg.content).join('\n\n---\n\n')
 
       try {
-        await navigator.clipboard.writeText(formattedHistory)
+        await navigator.clipboard.writeText(rawHistory)
         showNotification('Raw conversation copied to clipboard!', 'success')
       } catch (err) {
         showNotification('Failed to copy to clipboard.', 'error')

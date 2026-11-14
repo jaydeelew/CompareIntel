@@ -30,6 +30,7 @@
 import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react'
 
 import { getModelConfig } from '../config/modelRendererRegistry'
+import { useRenderedCopyHandler } from '../hooks/useRenderedCopyHandler'
 import { extractCodeBlocks } from '../utils/codeBlockPreservation'
 import { loadKatexCss } from '../utils/katexLoader'
 import {
@@ -168,6 +169,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
   // Initialize hooks that don't depend on renderLatex - MUST be called before any early returns
   const contentRef = useRef<HTMLDivElement>(null)
   const [prismLoaded, setPrismLoaded] = useState(false)
+
+  useRenderedCopyHandler(contentRef, isValidChildren ? children : undefined)
 
   const mathRendererConfig = useMemo(
     () => ({
