@@ -6,7 +6,7 @@ import { selectSelectableTextModels } from './helpers/modelCheckbox'
 test.describe('Mobile model-tab swipe while result content churns', () => {
   test.describe.configure({ timeout: 120000 })
 
-  test.beforeEach((_fixtures, testInfo) => {
+  test.beforeEach(({ browserName: _browserName }, testInfo) => {
     test.skip(
       !isMobileChromeProject(testInfo.project.name),
       'CDP touch gestures run on Mobile Chrome device projects only'
