@@ -96,9 +96,27 @@ export function isModelIdSelectableForAccessContext(
 const GOOGLE_PROVIDER_NAME = 'Google'
 
 /**
- * How many of the current selection are Google models the user may select (same rules as the model picker).
- * Used by the onboarding tutorial: advance after the user picks two such models.
+ * How many starter/tutorial model IDs in the current selection are selectable for this user.
  */
+export function countSelectableModelsInSelection(
+  selectedModels: string[],
+  targetModelIds: readonly string[],
+  modelsByProvider: ModelsByProvider,
+  isAuthenticated: boolean,
+  user: User | null
+): number {
+  const targets = new Set(targetModelIds.map(String))
+  let count = 0
+  for (const modelId of selectedModels) {
+    if (!targets.has(String(modelId))) continue
+    if (isModelIdSelectableForUser(modelId, modelsByProvider, isAuthenticated, user)) {
+      count += 1
+    }
+  }
+  return count
+}
+
+/** @deprecated Prefer countSelectableModelsInSelection with starter model IDs */
 export function countSelectableGoogleModelsInSelection(
   selectedModels: string[],
   modelsByProvider: ModelsByProvider,
