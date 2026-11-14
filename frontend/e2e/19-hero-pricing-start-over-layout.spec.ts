@@ -126,20 +126,24 @@ async function runComparisonFromHero(page: Page, prompt: string): Promise<void> 
   })
 }
 
-/** DOM click on mobile — avoids touch/CDP quirks; geometry is asserted after hero pricing is visible. */
+/** Exit follow-up via the real control (header h2 is not clickable; hero + floater duplicate the header). */
 async function tapStartOver(page: Page, projectName: string): Promise<void> {
-  const startOver = page
-    .locator('.follow-up-header:has-text("Start over"), h2:has-text("Start over")')
-    .first()
-  await expect(startOver).toBeVisible({ timeout: 15000 })
+  const exitFollowUp = page.getByTestId('exit-follow-up-button').filter({ visible: true }).first()
+  await expect(
+    page.locator('.follow-up-header:has-text("Start over"), h2:has-text("Start over")').first()
+  ).toBeVisible({ timeout: 15000 })
+  await expect(exitFollowUp).toBeVisible({ timeout: 15000 })
+  await expect(exitFollowUp).toBeEnabled({ timeout: 15000 })
   if (isMobileChromeOrSafari(projectName)) {
-    await startOver.evaluate(el => {
+    await exitFollowUp.evaluate(el => {
       ;(el as HTMLElement).click()
     })
   } else {
-    await startOver.click()
+    await exitFollowUp.click()
   }
-  await expect(page.locator('.follow-up-header')).toHaveCount(0, { timeout: 20000 })
+  await expect(page.getByTestId('exit-follow-up-button').filter({ visible: true })).toHaveCount(0, {
+    timeout: 20000,
+  })
   await expect(page.locator('.hero-section .hero-pricing-line')).toBeVisible({ timeout: 30000 })
   await page.locator('.hero-section').scrollIntoViewIfNeeded()
   await waitForStableLayout(page)
