@@ -66,14 +66,13 @@ export async function findWidestHorizScrollable(
   return { locator, scrollRange }
 }
 
-/** Touch drag via CDP (Playwright mouse drag does not scroll on mobile emulation). */
-export async function touchSwipe(
+async function touchSwipeViaCdp(
   page: Page,
   fromX: number,
   fromY: number,
   toX: number,
   toY: number,
-  steps = 14
+  steps: number
 ): Promise<void> {
   const session = await page.context().newCDPSession(page)
   const points = Array.from({ length: steps + 1 }, (_, i) => ({
@@ -97,6 +96,31 @@ export async function touchSwipe(
     type: 'touchEnd',
     touchPoints: [],
   })
+}
+
+/**
+ * Simulates a touch drag on mobile projects.
+ * Chromium: CDP touch (reliable scroll on emulated mobile).
+ * WebKit: mouse drag (Playwright maps to touch when hasTouch is enabled).
+ */
+export async function touchSwipe(
+  page: Page,
+  browserName: string,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  steps = 14
+): Promise<void> {
+  if (browserName === 'chromium') {
+    await touchSwipeViaCdp(page, fromX, fromY, toX, toY, steps)
+    return
+  }
+
+  await page.mouse.move(fromX, fromY)
+  await page.mouse.down()
+  await page.mouse.move(toX, toY, { steps })
+  await page.mouse.up()
 }
 
 export async function openHarnessWideCode(

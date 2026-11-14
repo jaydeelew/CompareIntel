@@ -22,6 +22,7 @@ test.describe('Mobile touch scroll over wide result content', () => {
 
   test('vertical swipe on a code block scrolls the page; horizontal swipe scrolls the block', async ({
     page,
+    browserName,
   }) => {
     await openHarnessWideCode(page, HARNESS_BASE)
 
@@ -45,7 +46,7 @@ test.describe('Mobile touch scroll over wide result content', () => {
     const startY = box!.y + box!.height * 0.5
     const scrollBefore = await page.evaluate(() => window.scrollY)
 
-    await touchSwipe(page, startX, startY, startX, startY - 120)
+    await touchSwipe(page, browserName, startX, startY, startX, startY - 120)
 
     await page.waitForTimeout(200)
     const scrollAfter = await page.evaluate(() => window.scrollY)
@@ -73,7 +74,7 @@ test.describe('Mobile touch scroll over wide result content', () => {
     const hx = boxAfterVertical!.x + 24
     const hy = boxAfterVertical!.y + boxAfterVertical!.height * 0.65
 
-    await touchSwipe(page, hx + 40, hy, hx - 160, hy)
+    await touchSwipe(page, browserName, hx + 40, hy, hx - 160, hy)
     await page.waitForTimeout(200)
     const horizAfter = await codeBlock.evaluate(el => {
       const pre = el.querySelector('pre')
@@ -91,7 +92,10 @@ test.describe('Mobile touch scroll over wide result content', () => {
     ).toBeGreaterThan((horizScrollable?.before ?? 0) + 8)
   })
 
-  test('wide KaTeX display allows vertical page scroll from touch', async ({ page }) => {
+  test('wide KaTeX display allows vertical page scroll from touch', async ({
+    page,
+    browserName,
+  }) => {
     await openHarnessSavedFixture(
       page,
       HARNESS_BASE,
@@ -113,7 +117,7 @@ test.describe('Mobile touch scroll over wide result content', () => {
     const startX = box!.x + Math.min(box!.width * 0.5, box!.width - 8)
     const startY = box!.y + Math.min(box!.height * 0.5, box!.height - 8)
     const scrollBefore = await page.evaluate(() => window.scrollY)
-    await touchSwipe(page, startX, startY, startX, startY - 100)
+    await touchSwipe(page, browserName, startX, startY, startX, startY - 100)
     await page.waitForTimeout(200)
     const scrollAfter = await page.evaluate(() => window.scrollY)
     expect(scrollAfter).toBeGreaterThan(scrollBefore + 30)
