@@ -6,6 +6,8 @@ import type { TutorialStep } from '../../hooks/useTutorial'
 const STEPS_WITH_DYNAMIC_POSITION: TutorialStep[] = [
   'expand-provider',
   'select-models',
+  'select-starter-model-1',
+  'select-starter-model-2',
   'enter-prompt',
   'follow-up',
   'enter-prompt-2',

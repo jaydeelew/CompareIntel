@@ -66,6 +66,27 @@ function stubScrollToForTutorialTests() {
 describe('TutorialOverlay', () => {
   const defaultProps = {
     step: null as 'enter-prompt' | null,
+    tutorialProviderNames: ['Google', 'DeepSeek'] as const,
+    tutorialVisibleStepOrder: [
+      'expand-provider',
+      'select-starter-model-1',
+      'select-starter-model-2',
+      'enter-prompt',
+      'submit-comparison',
+      'follow-up',
+      'view-follow-up-results',
+      'history-dropdown',
+      'save-selection',
+    ] as const,
+    tutorialStarterEntries: [
+      { modelId: 'google/gemini-2.5-flash', provider: 'Google', displayName: 'Gemini 2.5 Flash' },
+      {
+        modelId: 'deepseek/deepseek-v4.1-flash-1017',
+        provider: 'DeepSeek',
+        displayName: 'DeepSeek V4.1 Flash',
+      },
+    ],
+    tutorialSplitModelSteps: true,
     onComplete: vi.fn(),
     onSkip: vi.fn(),
     isStepCompleted: false,

@@ -1,6 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
-import { TUTORIAL_STEPS_CONFIG, getTutorialVisibleStepProgress } from '../../data/tutorialSteps'
+import {
+  isProviderPickerTutorialStep,
+  isSelectModelTutorialStep,
+  resolveTutorialStepConfig,
+  type StarterModelEntry,
+} from '../../data/tutorialStepPlan'
+import {
+  TUTORIAL_STEPS_CONFIG,
+  TUTORIAL_VISIBLE_STEP_ORDER,
+  getTutorialVisibleStepProgress,
+} from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import logger from '../../utils/logger'
 import {
@@ -11,9 +21,11 @@ import {
   computeTargetCutout,
   computeTooltipPosition,
   getScrollTargetForStep,
-  getGoogleProviderTutorialAnchor,
-  scrollGoogleProviderTutorialIntoCenter,
+  getTutorialProviderDropdowns,
+  getTutorialProviderStepLayout,
+  scrollTutorialProvidersIntoView,
   getTutorialScrollRoot,
+  type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
 
 import {
@@ -60,8 +72,14 @@ function attachScrollResizeRaf(update: () => void): () => void {
 export function useTutorialOverlay(
   step: TutorialStep | null,
   isLoading: boolean,
-  streamAnswerStarted = false
+  streamAnswerStarted = false,
+  tutorialProviderNames: readonly string[] = [],
+  tutorialVisibleStepOrder: readonly TutorialStep[] = TUTORIAL_VISIBLE_STEP_ORDER,
+  tutorialStarterEntries: readonly StarterModelEntry[] = [],
+  tutorialSplitModelSteps = false
 ) {
+  const tutorialProviderNamesRef = useRef(tutorialProviderNames)
+  tutorialProviderNamesRef.current = tutorialProviderNames
   const overlayRef = useRef<HTMLDivElement>(null)
   const stepRef = useRef<TutorialStep | null>(step)
   // Keep in sync during render so effect cleanups see the *incoming* step (not the previous one).
@@ -270,7 +288,7 @@ export function useTutorialOverlay(
   // Default overlay position for early frames; visibility for provider steps is set
   // after the initial scroll finishes so the tooltip does not track a moving target.
   useEffect(() => {
-    if (step === 'expand-provider' || step === 'select-models') {
+    if (isProviderPickerTutorialStep(step)) {
       setOverlayPosition({ top: 320, left: window.innerWidth / 2 })
     } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
       // Do NOT force visibility for enter-prompt steps.
@@ -495,22 +513,19 @@ export function useTutorialOverlay(
     const findElement = () => {
       let element: HTMLElement | null = null
 
-      // Special handling for Google provider steps
-      if (step === 'expand-provider' || step === 'select-models') {
-        // Find Google provider dropdown - use data attribute for reliable selection
-        const googleDropdown = document.querySelector(
-          '.provider-dropdown[data-provider-name="Google"]'
-        ) as HTMLElement
-        if (googleDropdown) {
+      // Tutorial provider steps: first provider (step 1) or all tutorial providers (step 2)
+      if (isProviderPickerTutorialStep(step)) {
+        const layout = getTutorialProviderStepLayout(
+          step as TutorialProviderLayoutStep,
+          tutorialProviderNamesRef.current
+        )
+        if (layout.anchor && layout.highlights.length > 0) {
           if (step === 'expand-provider') {
-            element = googleDropdown.querySelector('.provider-header') as HTMLElement
-            // Highlight the entire dropdown (same as when expanded)
-            setHighlightedElements([googleDropdown])
-          } else if (step === 'select-models') {
-            // Always highlight the entire Google provider section
-            element = googleDropdown
-            setHighlightedElements([googleDropdown])
+            element = layout.anchor
+          } else {
+            element = layout.highlights[0]
           }
+          setHighlightedElements(layout.highlights)
         }
       } else if (step === 'history-dropdown') {
         // Special handling for history dropdown step - create circular cutout for button
@@ -613,8 +628,7 @@ export function useTutorialOverlay(
             step !== 'enter-prompt' &&
             step !== 'enter-prompt-2' &&
             step !== 'follow-up' &&
-            step !== 'expand-provider' &&
-            step !== 'select-models' &&
+            !isProviderPickerTutorialStep(step) &&
             !(step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current)
           ) {
             setIsVisible(true)
@@ -654,20 +668,19 @@ export function useTutorialOverlay(
             setTargetElement(fallbackElement)
             setIsVisible(true)
           } else {
-            // For expand-provider step, try to use the Google dropdown as fallback
-            if (step === 'expand-provider' || step === 'select-models') {
-              const googleDropdown = document.querySelector(
-                '.provider-dropdown[data-provider-name="Google"]'
-              ) as HTMLElement
-              if (googleDropdown) {
-                const headerElement =
-                  step === 'expand-provider'
-                    ? (googleDropdown.querySelector('.provider-header') as HTMLElement)
-                    : googleDropdown
-                if (headerElement) {
-                  setTargetElement(headerElement)
-                  return
+            if (isProviderPickerTutorialStep(step)) {
+              const layout = getTutorialProviderStepLayout(
+                step as TutorialProviderLayoutStep,
+                tutorialProviderNamesRef.current
+              )
+              const headerElement =
+                step === 'expand-provider' ? layout.anchor : layout.highlights[0]
+              if (headerElement) {
+                setTargetElement(headerElement)
+                if (layout.highlights.length > 0) {
+                  setHighlightedElements(layout.highlights)
                 }
+                return
               }
             }
             // Last resort: show tooltip anyway (it will be positioned at 0,0 but visible)
@@ -711,10 +724,20 @@ export function useTutorialOverlay(
       return targetElement
     }
 
+    const layoutRectForStep = (): DOMRect | null => {
+      if (isProviderPickerTutorialStep(step)) {
+        return getTutorialProviderStepLayout(
+          step as TutorialProviderLayoutStep,
+          tutorialProviderNamesRef.current
+        ).layoutRect
+      }
+      return null
+    }
+
     const updatePosition = () => {
       const el = layoutTarget()
       if (!el) return
-      const rect = el.getBoundingClientRect()
+      const rect = layoutRectForStep() ?? el.getBoundingClientRect()
       const { top, left, effectivePosition: effPos } = computeTooltipPosition(rect, step, config)
       setEffectivePosition(effPos)
       setOverlayPosition({ top, left })
@@ -722,7 +745,7 @@ export function useTutorialOverlay(
 
     // Provider steps: skip a pre-scroll updatePosition so we never commit tooltip coords from a
     // pre-centered layout (avoids a flash of tooltip at the bottom while Google is off-center).
-    if (step !== 'expand-provider' && step !== 'select-models') {
+    if (!isProviderPickerTutorialStep(step)) {
       updatePosition()
     }
 
@@ -731,7 +754,7 @@ export function useTutorialOverlay(
       if (!el) return
 
       const root = getTutorialScrollRoot()
-      const scrollTarget = getScrollTargetForStep(step, el)
+      const scrollTarget = getScrollTargetForStep(step, el, layoutRectForStep())
 
       if (
         step === 'enter-prompt' ||
@@ -781,14 +804,13 @@ export function useTutorialOverlay(
         }
 
         scrollAnimFrame = requestAnimationFrame(animateScroll)
-      } else if (step === 'expand-provider' || step === 'select-models') {
+      } else if (isProviderPickerTutorialStep(step)) {
         // Center the full provider card (step 1); step 2 aligns expanded card top to viewport middle
         // so the tooltip above stays visible (tall expanded layout otherwise crowds it).
-        if (getGoogleProviderTutorialAnchor()) {
-          scrollGoogleProviderTutorialIntoCenter(step)
-        } else {
-          root.scrollToTop(scrollTarget, 'auto')
-        }
+        scrollTutorialProvidersIntoView(
+          tutorialProviderNamesRef.current,
+          step as TutorialProviderLayoutStep
+        )
       } else {
         root.scrollToTop(scrollTarget, 'smooth')
       }
@@ -801,7 +823,7 @@ export function useTutorialOverlay(
     const isFollowUpStep = step === 'follow-up'
     const isReviewStepFromFollowUp =
       step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current
-    const isProviderStep = step === 'expand-provider' || step === 'select-models'
+    const isProviderStep = isProviderPickerTutorialStep(step)
     // Delay reveal for dropdown steps when target is offscreen, or for steps that smooth-scroll
     // to the composer before showing the tooltip, or for step 6 when transitioning from step 5.
     // Provider steps: scroll to vertical center first, then show the tooltip above (no tracking).
@@ -870,7 +892,7 @@ export function useTutorialOverlay(
         step === 'enter-prompt-2' ||
         step === 'follow-up' ||
         isReviewStepFromFollowUp
-      const isProviderSnapScrollStep = step === 'expand-provider' || step === 'select-models'
+      const isProviderSnapScrollStep = isProviderPickerTutorialStep(step)
       const waitForScroll =
         shouldDelayReveal && !shouldSkipScroll
           ? isCustomScrollStep
@@ -878,9 +900,15 @@ export function useTutorialOverlay(
             : isProviderSnapScrollStep
               ? new Promise<void>(resolve => {
                   requestAnimationFrame(() => {
-                    scrollGoogleProviderTutorialIntoCenter(step)
+                    scrollTutorialProvidersIntoView(
+                      tutorialProviderNamesRef.current,
+                      step as TutorialProviderLayoutStep
+                    )
                     requestAnimationFrame(() => {
-                      scrollGoogleProviderTutorialIntoCenter(step)
+                      scrollTutorialProvidersIntoView(
+                        tutorialProviderNamesRef.current,
+                        step as TutorialProviderLayoutStep
+                      )
                       resolve()
                     })
                   })
@@ -955,13 +983,15 @@ export function useTutorialOverlay(
             postScrollTimers = [t1, t2]
           } else {
             setIsVisible(true)
-            // Step 2: expanded Google block can change height after mount; re-scroll so top stays
-            // near viewport middle and the tooltip above remains uncrowded.
             let selectModelsRecenterTimers: number[] = []
-            if (step === 'select-models') {
+            if (isSelectModelTutorialStep(step)) {
               const recenterStep2 = () => {
-                if (stepRef.current !== 'select-models') return
-                scrollGoogleProviderTutorialIntoCenter('select-models')
+                if (!isSelectModelTutorialStep(stepRef.current)) return
+                if (!stepRef.current) return
+                scrollTutorialProvidersIntoView(
+                  tutorialProviderNamesRef.current,
+                  stepRef.current as TutorialProviderLayoutStep
+                )
                 updatePosition()
               }
               selectModelsRecenterTimers = [
@@ -1015,10 +1045,7 @@ export function useTutorialOverlay(
       ) {
         return
       }
-      if (
-        (step === 'expand-provider' || step === 'select-models') &&
-        !initialScrollCompleteRef.current
-      ) {
+      if (isProviderPickerTutorialStep(step) && !initialScrollCompleteRef.current) {
         return
       }
       updatePosition()
@@ -1055,21 +1082,15 @@ export function useTutorialOverlay(
     const shouldSkipHighlight = false
     const isDropdownStep = step === 'history-dropdown' || step === 'save-selection'
 
-    // For expand-provider and select-models steps, always find and highlight the entire Google provider section
-    // This ensures the highlight persists even if the DOM updates
-    // We re-query the element each time to ensure we always have the current reference
     let elementsToHighlight: HTMLElement[] = []
-    if (step === 'expand-provider' || step === 'select-models') {
+    if (isProviderPickerTutorialStep(step)) {
       if (step === 'expand-provider' && !expandProviderEffectsReady) {
         elementsToHighlight = []
       } else {
-        // Always re-query to get the current element reference (in case DOM updates)
-        const googleDropdown = document.querySelector(
-          '.provider-dropdown[data-provider-name="Google"]'
-        ) as HTMLElement
-        if (googleDropdown) {
-          elementsToHighlight = [googleDropdown]
-        }
+        elementsToHighlight = getTutorialProviderStepLayout(
+          step as TutorialProviderLayoutStep,
+          tutorialProviderNamesRef.current
+        ).highlights
       }
     } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
       // Highlight the textarea container for step 3 and step 6 (consistent highlight)
@@ -1198,8 +1219,7 @@ export function useTutorialOverlay(
       // Only remove highlights when step actually changes away from steps that maintain highlights.
       // If we're still on these steps, keep the highlight even if elements change.
       if (
-        currentStep !== 'expand-provider' &&
-        currentStep !== 'select-models' &&
+        !isProviderPickerTutorialStep(currentStep) &&
         currentStep !== 'enter-prompt' &&
         currentStep !== 'enter-prompt-2' &&
         currentStep !== 'submit-comparison' &&
@@ -1217,15 +1237,11 @@ export function useTutorialOverlay(
             el.style.position = ''
           }
         })
-        // Also clean up any Google dropdown highlights that might still exist
-        const googleDropdown = document.querySelector(
-          '.provider-dropdown[data-provider-name="Google"]'
-        ) as HTMLElement
-        if (googleDropdown) {
-          googleDropdown.classList.remove('tutorial-highlight')
-          googleDropdown.style.pointerEvents = ''
-          googleDropdown.style.position = ''
-        }
+        getTutorialProviderDropdowns(tutorialProviderNamesRef.current).forEach(providerEl => {
+          providerEl.classList.remove('tutorial-highlight')
+          providerEl.style.pointerEvents = ''
+          providerEl.style.position = ''
+        })
         // Also clean up any textarea container highlights that might still exist
         const composerElement = getComposerElement()
         if (composerElement) {
@@ -1279,24 +1295,25 @@ export function useTutorialOverlay(
     }
   }, [step, highlightedElements, targetElement, expandProviderEffectsReady])
 
-  // Re-apply Google highlight if the DOM dropped it (production timing). Tooltip/position come from
-  // the main scroll + computeTooltipPosition path — not here — so step 1 stays: center → effects → tooltip.
+  // Re-apply tutorial provider highlight if the DOM dropped it (production timing).
   useEffect(() => {
     if (step !== 'expand-provider' || !expandProviderEffectsReady) return
 
     const ensureHighlight = () => {
-      const googleDropdown = document.querySelector(
-        '.provider-dropdown[data-provider-name="Google"]'
-      ) as HTMLElement
-      if (!googleDropdown) return
-      if (!googleDropdown.classList.contains('tutorial-highlight')) {
-        googleDropdown.classList.add('tutorial-highlight')
-        googleDropdown.style.pointerEvents = 'auto'
-        googleDropdown.style.position = 'relative'
+      const layout = getTutorialProviderStepLayout(
+        'expand-provider',
+        tutorialProviderNamesRef.current
+      )
+      const primary = layout.highlights[0]
+      if (!primary || !layout.anchor) return
+      if (!primary.classList.contains('tutorial-highlight')) {
+        primary.classList.add('tutorial-highlight')
+        primary.style.pointerEvents = 'auto'
+        primary.style.position = 'relative'
       }
-      const headerElement = googleDropdown.querySelector('.provider-header') as HTMLElement
-      if (headerElement) {
-        setTargetElement(prev => (prev === headerElement ? prev : headerElement))
+      const anchor = layout.anchor
+      if (anchor) {
+        setTargetElement(prev => (prev === anchor ? prev : anchor))
       }
     }
 
@@ -1308,53 +1325,55 @@ export function useTutorialOverlay(
       detachScrollResize()
       clearInterval(interval)
       if (stepRef.current !== 'expand-provider') {
-        const googleDropdown = document.querySelector(
-          '.provider-dropdown[data-provider-name="Google"]'
-        ) as HTMLElement
-        if (googleDropdown) {
-          googleDropdown.classList.remove('tutorial-highlight')
-          googleDropdown.style.pointerEvents = ''
-          googleDropdown.style.position = ''
-        }
+        getTutorialProviderDropdowns(tutorialProviderNamesRef.current).forEach(providerEl => {
+          providerEl.classList.remove('tutorial-highlight')
+          providerEl.style.pointerEvents = ''
+          providerEl.style.position = ''
+        })
       }
     }
-  }, [step, expandProviderEffectsReady])
+  }, [step, expandProviderEffectsReady, tutorialProviderNames])
 
   // Separate effect to continuously maintain highlight for select-models step
   // Uses simple interval instead of MutationObserver to avoid performance issues
   // ALSO ensures visibility, targetElement, and position are set (fixes production timing issues)
   useEffect(() => {
-    if (step !== 'select-models') return
+    if (!step || !isSelectModelTutorialStep(step)) return
 
     // FORCE visibility immediately on mount to ensure tooltip appears
     setIsVisible(true)
 
     const ensureHighlightVisibilityAndPosition = () => {
-      const googleDropdown = document.querySelector(
-        '.provider-dropdown[data-provider-name="Google"]'
-      ) as HTMLElement
-      if (googleDropdown) {
-        if (!googleDropdown.classList.contains('tutorial-highlight')) {
-          googleDropdown.classList.add('tutorial-highlight')
-          googleDropdown.style.pointerEvents = 'auto'
-          googleDropdown.style.position = 'relative'
-        }
-        // Ensure visibility, target, and position when interval finds element (main findElement may have failed)
-        setTargetElement(googleDropdown)
+      const layout = getTutorialProviderStepLayout(
+        step as TutorialProviderLayoutStep,
+        tutorialProviderNamesRef.current
+      )
+      const { highlights, layoutRect } = layout
+      if (highlights.length > 0 && layoutRect) {
+        highlights.forEach(providerEl => {
+          if (!providerEl.classList.contains('tutorial-highlight')) {
+            providerEl.classList.add('tutorial-highlight')
+            providerEl.style.pointerEvents = 'auto'
+            providerEl.style.position = 'relative'
+          }
+        })
+        setTargetElement(highlights[0])
+        setHighlightedElements(highlights)
         setIsVisible(true)
 
-        const rect = googleDropdown.getBoundingClientRect()
-        // Single source of truth with main overlay effect (avoids viewport vs column center fight).
-        const config = TUTORIAL_STEPS_CONFIG['select-models']
+        const stepConfig = resolveTutorialStepConfig(
+          step,
+          tutorialStarterEntries,
+          tutorialSplitModelSteps
+        )
         const {
           top,
           left,
           effectivePosition: effPos,
-        } = computeTooltipPosition(rect, 'select-models', config)
+        } = computeTooltipPosition(layoutRect, step, stepConfig)
         setEffectivePosition(effPos)
         setOverlayPosition({ top, left })
       } else {
-        // Fallback: even if we don't find Google dropdown, still show tooltip at center-top
         setIsVisible(true)
         setOverlayPosition({ top: 300, left: window.innerWidth / 2 })
       }
@@ -1371,17 +1390,13 @@ export function useTutorialOverlay(
     return () => {
       detachScrollResize()
       clearInterval(interval)
-      // Clean up highlight when leaving this step
-      const googleDropdown = document.querySelector(
-        '.provider-dropdown[data-provider-name="Google"]'
-      ) as HTMLElement
-      if (googleDropdown) {
-        googleDropdown.classList.remove('tutorial-highlight')
-        googleDropdown.style.pointerEvents = ''
-        googleDropdown.style.position = ''
-      }
+      getTutorialProviderDropdowns(tutorialProviderNamesRef.current).forEach(providerEl => {
+        providerEl.classList.remove('tutorial-highlight')
+        providerEl.style.pointerEvents = ''
+        providerEl.style.position = ''
+      })
     }
-  }, [step])
+  }, [step, tutorialProviderNames, tutorialStarterEntries, tutorialSplitModelSteps])
 
   // Separate effect to continuously maintain highlight and cutout for enter-prompt step
   // Respects the initial scroll phase - only updates position after main effect completes scroll
@@ -2153,7 +2168,7 @@ export function useTutorialOverlay(
   // Uses viewport coordinates (getBoundingClientRect); TutorialBackdrop positions with fixed.
   useEffect(() => {
     const needsTargetCutout =
-      step === 'expand-provider' || step === 'select-models' || step === 'view-follow-up-results'
+      isProviderPickerTutorialStep(step) || step === 'view-follow-up-results'
 
     const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
 
@@ -2184,7 +2199,7 @@ export function useTutorialOverlay(
               : []
       }
       const padding = 8
-      const isProviderStep = step === 'expand-provider' || step === 'select-models'
+      const isProviderStep = isProviderPickerTutorialStep(step)
       /* Concentric outer radius: element radius + cutout padding (8px). */
       const borderRadius =
         step === 'view-follow-up-results'
@@ -2213,8 +2228,10 @@ export function useTutorialOverlay(
   const isLoadingStreamingPhase = Boolean(
     (isSubmitStep || step === 'view-follow-up-results') && isLoading && loadingStreamingCutout
   )
-  const config = step ? TUTORIAL_STEPS_CONFIG[step] : null
-  const { stepIndex, totalSteps } = getTutorialVisibleStepProgress(step)
+  const config = step
+    ? resolveTutorialStepConfig(step, tutorialStarterEntries, tutorialSplitModelSteps)
+    : null
+  const { stepIndex, totalSteps } = getTutorialVisibleStepProgress(step, tutorialVisibleStepOrder)
   const shouldExcludeTextarea =
     step === 'enter-prompt' ||
     step === 'submit-comparison' ||

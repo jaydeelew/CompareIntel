@@ -49,14 +49,28 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'expand-provider',
     targetSelector: '.provider-dropdown .provider-header',
     title: 'Expand a Provider',
-    description: 'Open a provider dropdown to see the suggested starter models.',
+    description: 'Open a provider dropdown to see the suggested models.',
     position: 'top',
   },
   'select-models': {
     step: 'select-models',
-    targetSelector: '.provider-dropdown[data-provider-name="Google"]',
+    targetSelector: '.provider-dropdown',
     title: 'Select Models',
-    description: 'Select the same two models used for Starter Selection.',
+    description: 'Select both models below to compare their responses.',
+    position: 'top',
+  },
+  'select-starter-model-1': {
+    step: 'select-starter-model-1',
+    targetSelector: '.provider-dropdown',
+    title: 'Select a Model',
+    description: 'Check the box next to this model.',
+    position: 'top',
+  },
+  'select-starter-model-2': {
+    step: 'select-starter-model-2',
+    targetSelector: '.provider-dropdown',
+    title: 'Select a Model',
+    description: 'Check this second model to compare their responses.',
     position: 'top',
   },
   'enter-prompt': {
@@ -136,20 +150,23 @@ export const TUTORIAL_VISIBLE_STEP_ORDER: TutorialStep[] = [
 ]
 
 /** 1-based step index for UI progress (e.g. review results = 6 of 8). */
-export function getTutorialVisibleStepProgress(step: TutorialStep | null): {
+export function getTutorialVisibleStepProgress(
+  step: TutorialStep | null,
+  visibleOrder: readonly TutorialStep[] = TUTORIAL_VISIBLE_STEP_ORDER
+): {
   stepIndex: number
   totalSteps: number
 } {
-  const totalSteps = TUTORIAL_VISIBLE_STEP_ORDER.length
+  const totalSteps = visibleOrder.length
   if (!step) {
     return { stepIndex: 0, totalSteps }
   }
-  const i = TUTORIAL_VISIBLE_STEP_ORDER.indexOf(step)
+  const i = visibleOrder.indexOf(step)
   if (i >= 0) {
     return { stepIndex: i + 1, totalSteps }
   }
   if (step === 'enter-prompt-2' || step === 'submit-comparison-2') {
-    const j = TUTORIAL_VISIBLE_STEP_ORDER.indexOf('follow-up')
+    const j = visibleOrder.indexOf('follow-up')
     return { stepIndex: j + 1, totalSteps }
   }
   return { stepIndex: 1, totalSteps }

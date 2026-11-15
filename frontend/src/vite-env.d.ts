@@ -127,6 +127,8 @@ interface Window {
   // Test environment flags (used by Playwright E2E tests)
   __TEST_ENV__?: boolean
   __PLAYWRIGHT__?: boolean
+  /** Set under Playwright for reliable tutorial step assertions */
+  __TUTORIAL_CURRENT_STEP__?: string | null
   __PW_INTERNAL__?: boolean
 }
 

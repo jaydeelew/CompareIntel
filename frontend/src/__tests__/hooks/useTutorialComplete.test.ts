@@ -97,6 +97,35 @@ describe('useTutorialComplete', () => {
       expect(result.current.tutorialState.completedSteps.has('expand-provider')).toBe(true)
     })
 
+    it('advances through split provider model steps when started with split sequence', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.startTutorial([
+          'expand-provider',
+          'select-starter-model-1',
+          'select-starter-model-2',
+          'enter-prompt',
+          'submit-comparison',
+          'follow-up',
+          'enter-prompt-2',
+          'submit-comparison-2',
+          'view-follow-up-results',
+          'history-dropdown',
+          'save-selection',
+        ])
+      })
+
+      act(() => {
+        result.current.completeStep('expand-provider')
+      })
+      expect(result.current.tutorialState.currentStep).toBe('select-starter-model-1')
+      act(() => {
+        result.current.completeStep('select-starter-model-1')
+      })
+      expect(result.current.tutorialState.currentStep).toBe('select-starter-model-2')
+    })
+
     it('should not advance when completing wrong step', () => {
       const { result } = renderHook(() => useTutorialComplete(defaultConfig))
 
