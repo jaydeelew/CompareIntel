@@ -61,6 +61,8 @@ import {
   useDefaultTestComparison,
   usePerModeModelSelection,
   ANONYMOUS_STARTER_SYSTEM_KEY,
+  isStarterAutoApplyDone,
+  markStarterAutoApplyDone,
 } from '../hooks'
 import type { TutorialStep } from '../hooks/useTutorial'
 import { ApiError, isCancellationError } from '../services/api/errors'
@@ -142,7 +144,9 @@ export function MainPage() {
   const [temperature, setTemperature] = useState(0.7) // 0.0-2.0, controls response randomness
   const [topP, setTopP] = useState(1) // 0.0-1.0, nucleus sampling
   const [maxTokens, setMaxTokens] = useState<number | null>(null) // cap on output length
-  const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
+  const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(() =>
+    isStarterAutoApplyDone()
+  )
   const [visionNoticeMessage, setVisionNoticeMessage] = useState<string | null>(null)
   const [modelMode, setModelMode] = useState<'text' | 'image'>('text')
   const [aspectRatio, setAspectRatio] = useState('1:1')
@@ -426,7 +430,10 @@ export function MainPage() {
     error,
     setError,
     accurateInputTokens,
-    onDeselectToEmpty: () => setDefaultSelectionOverridden(true),
+    onDeselectToEmpty: () => {
+      setDefaultSelectionOverridden(true)
+      markStarterAutoApplyDone()
+    },
     hidePremiumModels,
   })
 
@@ -1059,6 +1066,7 @@ export function MainPage() {
     (newMode: 'text' | 'image') => {
       if (newMode === modelMode) return
       setDefaultSelectionOverridden(true)
+      markStarterAutoApplyDone()
       setModelMode(newMode)
     },
     [modelMode]
@@ -1795,6 +1803,10 @@ export function MainPage() {
       return
     }
 
+    if (defaultSelection.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY && isStarterAutoApplyDone()) {
+      return
+    }
+
     const modelIds = defaultSelection.modelIds
 
     const validModelIds = modelIds
@@ -1811,6 +1823,10 @@ export function MainPage() {
         imageComposerAdvanced: defaultSelection.imageComposerAdvanced,
       })
       setModelMode(targetMode)
+
+      if (defaultSelection.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY) {
+        markStarterAutoApplyDone()
+      }
 
       setSelectedModels(limitedModelIds)
 
@@ -2143,6 +2159,9 @@ export function MainPage() {
       }
       // User deselected all models - hide default name since selection doesn't match
       setDefaultSelectionOverridden(true)
+      if (defaultSelection.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY) {
+        markStarterAutoApplyDone()
+      }
       return
     }
 
@@ -2157,6 +2176,9 @@ export function MainPage() {
       setDefaultSelectionOverridden(false)
     } else {
       setDefaultSelectionOverridden(true)
+      if (defaultSelection.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY) {
+        markStarterAutoApplyDone()
+      }
     }
   }, [selectedModels, getDefaultSelection, isLoadingModels, modelsByProvider])
 

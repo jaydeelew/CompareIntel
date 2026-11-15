@@ -32,7 +32,44 @@ export const STARTER_SELECTION_NAME = 'Starter Selection'
 export const ANONYMOUS_STARTER_SYSTEM_KEY = 'anonymous-starter'
 const STARTER_SELECTION_OPTED_OUT_KEY = 'compareintel_starter_selection_opted_out'
 const LEGACY_TEST_COMPARISON_OPTED_OUT_KEY = 'compareintel_test_comparison_opted_out'
+const STARTER_AUTO_APPLY_DONE_PREFIX = 'compareintel_starter_auto_apply_done'
+const ANONYMOUS_ID_KEY = 'compareintel_anonymous_id'
 const LEGACY_DISPLAY_NAME = 'Test Comparison'
+
+function getAnonymousIdForStarterFlags(): string {
+  try {
+    let anonymousId = localStorage.getItem(ANONYMOUS_ID_KEY)
+    if (!anonymousId) {
+      anonymousId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+      localStorage.setItem(ANONYMOUS_ID_KEY, anonymousId)
+    }
+    return anonymousId
+  } catch {
+    return `anon_session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+  }
+}
+
+function getStarterAutoApplyDoneKey(): string {
+  return `${STARTER_AUTO_APPLY_DONE_PREFIX}_${getAnonymousIdForStarterFlags()}`
+}
+
+/** True after the anonymous starter default was auto-applied once or the user changed selection away from it. */
+export function isStarterAutoApplyDone(): boolean {
+  try {
+    return localStorage.getItem(getStarterAutoApplyDoneKey()) === 'true'
+  } catch (error) {
+    logger.warn('Failed to read Starter Selection auto-apply flag:', error)
+    return false
+  }
+}
+
+export function markStarterAutoApplyDone(): void {
+  try {
+    localStorage.setItem(getStarterAutoApplyDoneKey(), 'true')
+  } catch (error) {
+    logger.warn('Failed to persist Starter Selection auto-apply flag:', error)
+  }
+}
 
 interface SavedSelectionLike {
   id: string
@@ -311,13 +348,19 @@ export function useDefaultTestComparison(
     if (starter) {
       seenManagedRef.current = true
 
+      if (isStarterAutoApplyDone()) {
+        return
+      }
+
       if (selectedModels.length === 0 && getDefaultSelectionId() === null) {
         logger.debug('Setting Starter Selection as default and loading')
         setDefaultSelection(starter.id)
         handleLoadSelection(starter.id)
+        markStarterAutoApplyDone()
       } else if (selectedModels.length === 0 && getDefaultSelectionId() === starter.id) {
         logger.debug('Loading Starter Selection (default selection)')
         handleLoadSelection(starter.id)
+        markStarterAutoApplyDone()
       }
     } else if (seenManagedRef.current && !isOptedOut) {
       logger.info('Starter Selection deleted, marking as opted out')
