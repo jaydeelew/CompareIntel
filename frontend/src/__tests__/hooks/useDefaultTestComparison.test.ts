@@ -16,8 +16,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   ANONYMOUS_STARTER_SYSTEM_KEY,
-  isStarterAutoApplyDone,
-  markStarterAutoApplyDone,
+  isStarterSelectionDismissed,
+  markStarterSelectionDismissed,
   STARTER_SELECTION_NAME,
   useDefaultTestComparison,
 } from '../../hooks/useDefaultTestComparison'
@@ -203,28 +203,11 @@ describe('useDefaultTestComparison', () => {
         expect(handleLoadSelection).toHaveBeenCalledWith('starter-id')
       })
     })
-
-    it('persists auto-apply flag after the first anonymous auto-load', async () => {
-      const handleLoadSelection = vi.fn()
-      const params = createDefaultParams({
-        savedSelections: [managedSelection()],
-        selectedModels: [],
-        getDefaultSelectionId: vi.fn(() => 'starter-id'),
-        handleLoadSelection,
-      })
-
-      renderHook(() => useDefaultTestComparison(params))
-
-      await waitFor(() => {
-        expect(handleLoadSelection).toHaveBeenCalledWith('starter-id')
-        expect(isStarterAutoApplyDone()).toBe(true)
-      })
-    })
   })
 
-  describe('Starter auto-apply persistence', () => {
-    it('does not auto-load again when selection is empty after auto-apply (reload simulation)', async () => {
-      markStarterAutoApplyDone()
+  describe('Starter dismiss persistence', () => {
+    it('does not auto-load again when selection is empty after the user dismissed starter (reload simulation)', async () => {
+      markStarterSelectionDismissed()
       const handleLoadSelection = vi.fn()
       const params = createDefaultParams({
         savedSelections: [managedSelection()],
@@ -264,6 +247,7 @@ describe('useDefaultTestComparison', () => {
     })
 
     it('does not re-apply Starter when the user clears all models after dismissing defaults', async () => {
+      markStarterSelectionDismissed()
       const handleLoadSelection = vi.fn()
       const params = createDefaultParams({
         savedSelections: [managedSelection()],
@@ -272,20 +256,11 @@ describe('useDefaultTestComparison', () => {
         handleLoadSelection,
       })
 
-      const { rerender } = renderHook(p => useDefaultTestComparison(p), { initialProps: params })
+      renderHook(() => useDefaultTestComparison(params))
 
       await waitFor(() => {
-        expect(handleLoadSelection).toHaveBeenCalledTimes(1)
+        expect(handleLoadSelection).not.toHaveBeenCalled()
       })
-
-      markStarterAutoApplyDone()
-
-      rerender({
-        ...params,
-        selectedModels: [],
-      })
-
-      expect(handleLoadSelection).toHaveBeenCalledTimes(1)
     })
 
     it('does not auto-load Starter Selection in image mode', async () => {

@@ -32,7 +32,7 @@ export const STARTER_SELECTION_NAME = 'Starter Selection'
 export const ANONYMOUS_STARTER_SYSTEM_KEY = 'anonymous-starter'
 const STARTER_SELECTION_OPTED_OUT_KEY = 'compareintel_starter_selection_opted_out'
 const LEGACY_TEST_COMPARISON_OPTED_OUT_KEY = 'compareintel_test_comparison_opted_out'
-const STARTER_AUTO_APPLY_DONE_PREFIX = 'compareintel_starter_auto_apply_done'
+const STARTER_SELECTION_DISMISSED_PREFIX = 'compareintel_starter_selection_dismissed'
 const ANONYMOUS_ID_KEY = 'compareintel_anonymous_id'
 const LEGACY_DISPLAY_NAME = 'Test Comparison'
 
@@ -49,25 +49,25 @@ function getAnonymousIdForStarterFlags(): string {
   }
 }
 
-function getStarterAutoApplyDoneKey(): string {
-  return `${STARTER_AUTO_APPLY_DONE_PREFIX}_${getAnonymousIdForStarterFlags()}`
+function getStarterSelectionDismissedKey(): string {
+  return `${STARTER_SELECTION_DISMISSED_PREFIX}_${getAnonymousIdForStarterFlags()}`
 }
 
-/** True after the anonymous starter default was auto-applied once or the user changed selection away from it. */
-export function isStarterAutoApplyDone(): boolean {
+/** True when the user explicitly changed away from the managed starter default (deselect), not on Start over. */
+export function isStarterSelectionDismissed(): boolean {
   try {
-    return localStorage.getItem(getStarterAutoApplyDoneKey()) === 'true'
+    return localStorage.getItem(getStarterSelectionDismissedKey()) === 'true'
   } catch (error) {
-    logger.warn('Failed to read Starter Selection auto-apply flag:', error)
+    logger.warn('Failed to read Starter Selection dismissed flag:', error)
     return false
   }
 }
 
-export function markStarterAutoApplyDone(): void {
+export function markStarterSelectionDismissed(): void {
   try {
-    localStorage.setItem(getStarterAutoApplyDoneKey(), 'true')
+    localStorage.setItem(getStarterSelectionDismissedKey(), 'true')
   } catch (error) {
-    logger.warn('Failed to persist Starter Selection auto-apply flag:', error)
+    logger.warn('Failed to persist Starter Selection dismissed flag:', error)
   }
 }
 
@@ -348,7 +348,7 @@ export function useDefaultTestComparison(
     if (starter) {
       seenManagedRef.current = true
 
-      if (isStarterAutoApplyDone()) {
+      if (isStarterSelectionDismissed()) {
         return
       }
 
@@ -356,11 +356,9 @@ export function useDefaultTestComparison(
         logger.debug('Setting Starter Selection as default and loading')
         setDefaultSelection(starter.id)
         handleLoadSelection(starter.id)
-        markStarterAutoApplyDone()
       } else if (selectedModels.length === 0 && getDefaultSelectionId() === starter.id) {
         logger.debug('Loading Starter Selection (default selection)')
         handleLoadSelection(starter.id)
-        markStarterAutoApplyDone()
       }
     } else if (seenManagedRef.current && !isOptedOut) {
       logger.info('Starter Selection deleted, marking as opted out')
