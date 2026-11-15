@@ -1,4 +1,3 @@
-import { test, expect } from './test-setup'
 
 import { resolveStarterSelectionModelIds } from '../src/utils/starterSelectionModels'
 
@@ -14,6 +13,7 @@ import {
   selectTutorialModelCheckbox,
   tutorialTooltip,
 } from './helpers/tutorialFlow'
+import { test, expect } from './test-setup'
 
 const mockModel = (
   id: string,

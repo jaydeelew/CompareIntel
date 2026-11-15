@@ -1,7 +1,7 @@
-import { expect, test } from './test-setup'
 
 import { dismissTutorialOverlay, waitForReactHydration } from './fixtures'
 import { mockModelsApi } from './helpers/mockModels'
+import { expect, test } from './test-setup'
 
 test.describe('onboarding tutorial toolbar highlights (steps 7–8)', () => {
   test.use({ viewport: { width: 393, height: 800 } })
