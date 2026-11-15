@@ -16,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   ANONYMOUS_STARTER_SYSTEM_KEY,
+  markStarterSelectionDismissed,
   STARTER_SELECTION_NAME,
   useDefaultTestComparison,
 } from '../../hooks/useDefaultTestComparison'
@@ -23,6 +24,7 @@ import type { ModelsByProvider } from '../../types'
 
 const STARTER_SELECTION_OPTED_OUT_KEY = 'compareintel_starter_selection_opted_out'
 const LEGACY_TEST_COMPARISON_OPTED_OUT_KEY = 'compareintel_test_comparison_opted_out'
+const ANONYMOUS_ID_KEY = 'compareintel_anonymous_id'
 const LEGACY_DISPLAY_NAME = 'Test Comparison'
 
 // Mock localStorage
@@ -84,6 +86,7 @@ function managedSelection(
 describe('useDefaultTestComparison', () => {
   beforeEach(() => {
     localStorageMock.clear()
+    localStorageMock.setItem(ANONYMOUS_ID_KEY, 'anon_test')
     vi.clearAllMocks()
   })
 
@@ -199,7 +202,85 @@ describe('useDefaultTestComparison', () => {
         expect(handleLoadSelection).toHaveBeenCalledWith('starter-id')
       })
     })
+  })
 
+  describe('Starter dismiss persistence', () => {
+    it('does not auto-load again when selection is empty after the user dismissed starter (reload simulation)', async () => {
+      markStarterSelectionDismissed()
+      const handleLoadSelection = vi.fn()
+      const params = createDefaultParams({
+        savedSelections: [managedSelection()],
+        selectedModels: [],
+        getDefaultSelectionId: vi.fn(() => 'starter-id'),
+        handleLoadSelection,
+      })
+
+      renderHook(() => useDefaultTestComparison(params))
+
+      await waitFor(() => {
+        expect(handleLoadSelection).not.toHaveBeenCalled()
+      })
+    })
+
+    it('does not re-apply Starter when the user deselects down to one model', async () => {
+      const handleLoadSelection = vi.fn()
+      const params = createDefaultParams({
+        savedSelections: [managedSelection()],
+        selectedModels: [],
+        getDefaultSelectionId: vi.fn(() => 'starter-id'),
+        handleLoadSelection,
+      })
+
+      const { rerender } = renderHook(p => useDefaultTestComparison(p), { initialProps: params })
+
+      await waitFor(() => {
+        expect(handleLoadSelection).toHaveBeenCalledTimes(1)
+      })
+
+      rerender({
+        ...params,
+        selectedModels: ['google/gemini-2.5-flash'],
+      })
+
+      expect(handleLoadSelection).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not re-apply Starter when the user clears all models after dismissing defaults', async () => {
+      markStarterSelectionDismissed()
+      const handleLoadSelection = vi.fn()
+      const params = createDefaultParams({
+        savedSelections: [managedSelection()],
+        selectedModels: [],
+        getDefaultSelectionId: vi.fn(() => 'starter-id'),
+        handleLoadSelection,
+      })
+
+      renderHook(() => useDefaultTestComparison(params))
+
+      await waitFor(() => {
+        expect(handleLoadSelection).not.toHaveBeenCalled()
+      })
+    })
+
+    it('does not auto-load Starter Selection in image mode', async () => {
+      const handleLoadSelection = vi.fn()
+      const params = createDefaultParams({
+        savedSelections: [managedSelection()],
+        selectedModels: [],
+        modelMode: 'image' as const,
+        getDefaultSelectionId: vi.fn(() => 'starter-id'),
+        handleLoadSelection,
+      })
+
+      renderHook(() => useDefaultTestComparison(params))
+
+      await waitFor(() => {
+        expect(handleLoadSelection).not.toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('Tutorial guard', () => {
     it('does not auto-load Starter Selection while the onboarding tutorial is active', async () => {
       const handleLoadSelection = vi.fn()
       const setDefaultSelection = vi.fn()

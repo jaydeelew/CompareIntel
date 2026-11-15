@@ -61,6 +61,8 @@ import {
   useDefaultTestComparison,
   usePerModeModelSelection,
   ANONYMOUS_STARTER_SYSTEM_KEY,
+  isStarterSelectionDismissed,
+  markStarterSelectionDismissed,
 } from '../hooks'
 import type { TutorialStep } from '../hooks/useTutorial'
 import { ApiError, isCancellationError } from '../services/api/errors'
@@ -142,7 +144,9 @@ export function MainPage() {
   const [temperature, setTemperature] = useState(0.7) // 0.0-2.0, controls response randomness
   const [topP, setTopP] = useState(1) // 0.0-1.0, nucleus sampling
   const [maxTokens, setMaxTokens] = useState<number | null>(null) // cap on output length
-  const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
+  const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(() =>
+    isStarterSelectionDismissed()
+  )
   const [visionNoticeMessage, setVisionNoticeMessage] = useState<string | null>(null)
   const [modelMode, setModelMode] = useState<'text' | 'image'>('text')
   const [aspectRatio, setAspectRatio] = useState('1:1')
@@ -426,7 +430,10 @@ export function MainPage() {
     error,
     setError,
     accurateInputTokens,
-    onDeselectToEmpty: () => setDefaultSelectionOverridden(true),
+    onDeselectToEmpty: () => {
+      setDefaultSelectionOverridden(true)
+      markStarterSelectionDismissed()
+    },
     hidePremiumModels,
   })
 
@@ -1795,6 +1802,13 @@ export function MainPage() {
       return
     }
 
+    if (
+      defaultSelection.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY &&
+      isStarterSelectionDismissed()
+    ) {
+      return
+    }
+
     const modelIds = defaultSelection.modelIds
 
     const validModelIds = modelIds
@@ -2143,6 +2157,9 @@ export function MainPage() {
       }
       // User deselected all models - hide default name since selection doesn't match
       setDefaultSelectionOverridden(true)
+      if (defaultSelection.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY) {
+        markStarterSelectionDismissed()
+      }
       return
     }
 
@@ -2157,6 +2174,9 @@ export function MainPage() {
       setDefaultSelectionOverridden(false)
     } else {
       setDefaultSelectionOverridden(true)
+      if (defaultSelection.systemKey === ANONYMOUS_STARTER_SYSTEM_KEY) {
+        markStarterSelectionDismissed()
+      }
     }
   }, [selectedModels, getDefaultSelection, isLoadingModels, modelsByProvider])
 
