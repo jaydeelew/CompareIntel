@@ -148,22 +148,8 @@ export async function selectTutorialModelCheckbox(
           const checkedCount = await page.evaluate(
             () => document.querySelectorAll<HTMLInputElement>('input.model-checkbox:checked').length
           )
-          const count = Math.max(railCount, checkedCount)
-          if (count >= minSelected) {
-            const step = await readTutorialCurrentStep(page)
-            if (step === 'enter-prompt' || step === 'submit-comparison') {
-              return true
-            }
-            const title = await readTutorialTitle(page)
-            if (title.includes('Enter Your Prompt')) {
-              return true
-            }
-            const header = await page.evaluate(() => {
-              return document.querySelector('.mobile-tutorial-tooltip-header')?.textContent ?? ''
-            })
-            if (header.includes('Step 4 of')) {
-              return true
-            }
+          if (Math.max(railCount, checkedCount) >= minSelected) {
+            return true
           }
         }
 
