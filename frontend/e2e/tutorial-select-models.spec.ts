@@ -1,4 +1,6 @@
 
+import { test, expect } from '@playwright/test'
+
 import {
   getProvidersForModelIds,
   resolveStarterSelectionModelIds,
@@ -12,7 +14,6 @@ import {
   selectTutorialModelCheckbox,
   tutorialTooltip,
 } from './helpers/tutorialFlow'
-import { test, expect } from './test-setup'
 
 const mockModel = (
   id: string,

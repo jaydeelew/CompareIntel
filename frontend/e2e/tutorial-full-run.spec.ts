@@ -1,4 +1,6 @@
 
+import { test, expect } from '@playwright/test'
+
 import { resolveStarterSelectionModelIds } from '../src/utils/starterSelectionModels'
 
 import { mockComparisonStream } from './helpers/mockModels'
@@ -13,7 +15,6 @@ import {
   selectTutorialModelCheckbox,
   tutorialTooltip,
 } from './helpers/tutorialFlow'
-import { test, expect } from './test-setup'
 
 const mockModel = (
   id: string,

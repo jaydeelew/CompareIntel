@@ -2,7 +2,6 @@ import { useEffect, useMemo } from 'react'
 
 import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
-import { shouldSuppressWelcomeModalForAutomation } from '../../hooks/useTutorialComplete'
 import type { User } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { isAnyProviderExpanded } from '../../utils/starterSelectionModels'
@@ -95,7 +94,6 @@ export function TutorialManager({
   const bothModelsSelected = firstModelSelected && secondModelSelected
 
   useEffect(() => {
-    if (!shouldSuppressWelcomeModalForAutomation()) return
     const w = window as Window & { __TUTORIAL_CURRENT_STEP__?: TutorialStep | null }
     w.__TUTORIAL_CURRENT_STEP__ = tutorialState.isActive ? tutorialState.currentStep : null
   }, [tutorialState.isActive, tutorialState.currentStep])
