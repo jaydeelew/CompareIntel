@@ -122,11 +122,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onModelsSelected?.()
     }
 
-    if (
-      currentStep === 'select-models' &&
-      bothModelsSelected &&
-      !completed.has('select-models')
-    ) {
+    if (currentStep === 'select-models' && bothModelsSelected && !completed.has('select-models')) {
       completeStep('select-models')
       onModelsSelected?.()
     }
