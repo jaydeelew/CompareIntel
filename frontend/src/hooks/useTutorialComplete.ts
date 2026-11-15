@@ -38,7 +38,7 @@ const TUTORIAL_STORAGE_KEY = 'compareintel_tutorial_completed'
 const WELCOME_DONT_SHOW_KEY = 'compareintel_welcome_dont_show_again'
 
 /** Playwright injects these in e2e; welcome modal would otherwise race after auth and block the whole suite. */
-function shouldSuppressWelcomeModalForAutomation(): boolean {
+export function shouldSuppressWelcomeModalForAutomation(): boolean {
   if (typeof window === 'undefined') return false
   return window.__PLAYWRIGHT__ === true || window.__TEST_ENV__ === true
 }

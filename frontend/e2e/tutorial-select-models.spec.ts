@@ -90,6 +90,6 @@ test.describe('Tutorial model selection steps', () => {
       }
     }
 
-    await expectTutorialEnterPromptStep(page)
+    await expectTutorialEnterPromptStep(page, testInfo)
   })
 })

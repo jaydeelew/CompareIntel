@@ -41,16 +41,31 @@ async function readTutorialTitle(page: Page): Promise<string> {
   }, TUTORIAL_TITLE_SELECTOR)
 }
 
+async function readTutorialCurrentStep(page: Page): Promise<string | null> {
+  return page.evaluate(() => {
+    const w = window as Window & { __TUTORIAL_CURRENT_STEP__?: string | null }
+    return w.__TUTORIAL_CURRENT_STEP__ ?? null
+  })
+}
+
+async function countSelectedModelCards(page: Page): Promise<number> {
+  return page.locator('.selected-model-card').count()
+}
+
 async function isModelCheckedInDom(page: Page, modelId: string): Promise<boolean> {
   return page.evaluate(id => {
-    const el = document.querySelector(`[data-testid="model-checkbox-${id}"]`) as HTMLInputElement | null
+    const el = document.querySelector(
+      `[data-testid="model-checkbox-${id}"]`
+    ) as HTMLInputElement | null
     return el?.checked === true
   }, modelId)
 }
 
 async function clickModelInDom(page: Page, modelId: string): Promise<void> {
   await page.evaluate(id => {
-    const el = document.querySelector(`[data-testid="model-checkbox-${id}"]`) as HTMLInputElement | null
+    const el = document.querySelector(
+      `[data-testid="model-checkbox-${id}"]`
+    ) as HTMLInputElement | null
     el?.click()
   }, modelId)
 }
@@ -83,11 +98,21 @@ export async function selectTutorialModelCheckbox(
 
   if (isMobileE2eProject(testInfo.project.name)) {
     const label = page.locator(`label:has([data-testid="model-checkbox-${modelId}"])`).first()
-    await label.tap({ force: true, timeout: 10_000 }).catch(() => {})
-    await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
-    if (!(await isModelCheckedInDom(page, modelId))) {
-      await clickModelInDom(page, modelId)
-    }
+    await expect(async () => {
+      if (await isModelCheckedInDom(page, modelId)) {
+        return
+      }
+      await label.click({ force: true, timeout: 5000 }).catch(() => {})
+      if (!(await isModelCheckedInDom(page, modelId))) {
+        await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
+      }
+      if (!(await isModelCheckedInDom(page, modelId))) {
+        await clickModelInDom(page, modelId)
+      }
+      if (!(await isModelCheckedInDom(page, modelId))) {
+        throw new Error(`model ${modelId} still unchecked`)
+      }
+    }).toPass({ timeout: pollTimeout })
   } else {
     const label = page.locator(`label:has([data-testid="model-checkbox-${modelId}"])`).first()
     await label.click({ timeout: 10000 })
@@ -129,11 +154,26 @@ export async function selectTutorialModelCheckbox(
 
         const minSelected = options?.requireMinSelected
         if (minSelected) {
-          const count = await page.evaluate(
+          const railCount = await countSelectedModelCards(page)
+          const checkedCount = await page.evaluate(
             () => document.querySelectorAll<HTMLInputElement>('input.model-checkbox:checked').length
           )
+          const count = Math.max(railCount, checkedCount)
           if (count >= minSelected) {
-            return true
+            const step = await readTutorialCurrentStep(page)
+            if (step === 'enter-prompt' || step === 'submit-comparison') {
+              return true
+            }
+            const title = await readTutorialTitle(page)
+            if (title.includes('Enter Your Prompt')) {
+              return true
+            }
+            const header = await page.evaluate(() => {
+              return document.querySelector('.mobile-tutorial-tooltip-header')?.textContent ?? ''
+            })
+            if (header.includes('Step 4 of')) {
+              return true
+            }
           }
         }
 
@@ -158,10 +198,14 @@ export async function expectTutorialStepNumber(
   await expect
     .poll(
       async () => {
-        const inTooltip = await tutorialTooltip(page).first().textContent().catch(() => '')
+        const inTooltip = await tutorialTooltip(page)
+          .first()
+          .textContent()
+          .catch(() => '')
         if (inTooltip?.includes(needle)) return true
         return page.evaluate(expected => {
-          const header = document.querySelector('.mobile-tutorial-tooltip-header')?.textContent ?? ''
+          const header =
+            document.querySelector('.mobile-tutorial-tooltip-header')?.textContent ?? ''
           return header.includes(expected)
         }, needle)
       },
@@ -175,10 +219,21 @@ export function tutorialStepTitle(page: Page) {
 }
 
 /** Mobile tooltips often omit heading roles; match title text in the live DOM. */
-export async function expectTutorialEnterPromptStep(page: Page, timeout = 30_000): Promise<void> {
+export async function expectTutorialEnterPromptStep(
+  page: Page,
+  testInfo?: TestInfo,
+  timeout?: number
+): Promise<void> {
+  const pollTimeout =
+    timeout ?? (testInfo && isMobileE2eProject(testInfo.project.name) ? 45_000 : 30_000)
+
   await expect
     .poll(
       async () => {
+        const step = await readTutorialCurrentStep(page)
+        if (step === 'enter-prompt') {
+          return true
+        }
         const title = await readTutorialTitle(page)
         if (title.includes('Enter Your Prompt')) {
           return true
@@ -207,17 +262,20 @@ export async function expectTutorialEnterPromptStep(page: Page, timeout = 30_000
           return Boolean(composer && enterPromptBtn?.textContent?.includes('Done with input'))
         })
       },
-      { timeout, message: 'tutorial enter-prompt step' }
+      { timeout: pollTimeout, message: 'tutorial enter-prompt step' }
     )
     .toBe(true)
 
   await expect
     .poll(
       async () =>
-        page.evaluate(
-          () => document.querySelectorAll<HTMLInputElement>('input.model-checkbox:checked').length
+        Math.max(
+          await countSelectedModelCards(page),
+          await page.evaluate(
+            () => document.querySelectorAll<HTMLInputElement>('input.model-checkbox:checked').length
+          )
         ),
-      { timeout: 10_000 }
+      { timeout: 15_000 }
     )
     .toBeGreaterThanOrEqual(2)
 }
@@ -305,7 +363,10 @@ export async function runTutorialComparison(
     .waitFor({ state: 'visible', timeout: timeoutMs })
 }
 
-export async function waitForCompareSubmitTutorialStep(page: Page, timeout = 30_000): Promise<void> {
+export async function waitForCompareSubmitTutorialStep(
+  page: Page,
+  timeout = 30_000
+): Promise<void> {
   await expect
     .poll(
       async () => {
@@ -375,7 +436,9 @@ export async function completeTutorialPromptInput(
               return true
             }
           }
-          const tooltip = document.querySelector('.mobile-tutorial-tooltip-title, .tutorial-tooltip-title')
+          const tooltip = document.querySelector(
+            '.mobile-tutorial-tooltip-title, .tutorial-tooltip-title'
+          )
           return (tooltip?.textContent ?? '').includes('Run Your Comparison')
         })
       },

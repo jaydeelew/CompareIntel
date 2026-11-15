@@ -104,7 +104,7 @@ test.describe('Onboarding tutorial full run (split model steps)', () => {
       )
       .toBeGreaterThanOrEqual(2)
 
-    await expectTutorialEnterPromptStep(page)
+    await expectTutorialEnterPromptStep(page, testInfo)
 
     await completeTutorialPromptInput(
       page,

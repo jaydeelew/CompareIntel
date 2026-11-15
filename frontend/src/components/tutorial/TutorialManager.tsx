@@ -1,4 +1,6 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+
+import { shouldSuppressWelcomeModalForAutomation } from '../../hooks/useTutorialComplete'
 
 import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
@@ -92,6 +94,12 @@ export function TutorialManager({
   const secondModelSelected =
     tutorialModelIds.length > 1 && selectedModels.includes(tutorialModelIds[1])
   const bothModelsSelected = firstModelSelected && secondModelSelected
+
+  useEffect(() => {
+    if (!shouldSuppressWelcomeModalForAutomation()) return
+    const w = window as Window & { __TUTORIAL_CURRENT_STEP__?: TutorialStep | null }
+    w.__TUTORIAL_CURRENT_STEP__ = tutorialState.isActive ? tutorialState.currentStep : null
+  }, [tutorialState.isActive, tutorialState.currentStep])
 
   const sharedControllerProps = {
     tutorialState,
