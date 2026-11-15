@@ -295,21 +295,24 @@ test.describe('Layout Regression Tests', () => {
             // A line that never settles still fails after the timeout; tolerance is unchanged.
             const measure = () =>
               page.evaluate(() => {
-                const rect = (selector: string) =>
-                  document.querySelector(selector)?.getBoundingClientRect() ?? null
-                const hero = rect('.hero-section')
-                const credits = rect('.credits-remaining-wrapper')
-                const pricing = rect('.hero-pricing-line')
+                const heroEl = document.querySelector('.hero-section')
+                if (!heroEl) return null
+                const rect = (el: Element | null) => el?.getBoundingClientRect() ?? null
+                const hero = rect(heroEl)
+                const credits = rect(heroEl.querySelector('.credits-remaining-wrapper'))
+                const icons = rect(heroEl.querySelector('[data-testid="selected-model-icons"]'))
+                const pricing = rect(heroEl.querySelector('.hero-pricing-line'))
                 if (!hero || !credits || !pricing) return null
-                const creditsBottom = credits.bottom
+                const stackTop = Math.max(credits.bottom, icons?.bottom ?? credits.bottom)
                 const heroBottom = hero.bottom
                 return {
-                  creditsBottom,
+                  creditsBottom: credits.bottom,
+                  stackTop,
                   heroBottom,
                   pricingTop: pricing.top,
                   pricingBottom: pricing.bottom,
                   centeringError: Math.abs(
-                    pricing.top + pricing.height / 2 - (creditsBottom + heroBottom) / 2
+                    pricing.top + pricing.height / 2 - (stackTop + heroBottom) / 2
                   ),
                 }
               })
@@ -320,16 +323,16 @@ test.describe('Layout Regression Tests', () => {
 
               expect(
                 m!.centeringError,
-                `Pricing line should be vertically centered between credits and hero bottom ` +
+                `Pricing line should be vertically centered between the credits/icon stack and hero bottom ` +
                   `at ${vpName} (${theme}) (tolerance: ±${CENTERING_TOLERANCE}px). ` +
-                  `Credits bottom: ${m!.creditsBottom.toFixed(1)}px, ` +
+                  `Stack top: ${m!.stackTop.toFixed(1)}px, ` +
                   `Hero bottom: ${m!.heroBottom.toFixed(1)}px`
               ).toBeLessThanOrEqual(CENTERING_TOLERANCE)
 
               expect(
                 m!.pricingTop,
-                `Pricing line at ${vpName} (${theme}) should be below credits line`
-              ).toBeGreaterThanOrEqual(m!.creditsBottom - 1)
+                `Pricing line at ${vpName} (${theme}) should be below credits and icons`
+              ).toBeGreaterThanOrEqual(m!.stackTop - 1)
 
               expect(
                 m!.pricingBottom,

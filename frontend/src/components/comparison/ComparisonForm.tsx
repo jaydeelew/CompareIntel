@@ -195,7 +195,29 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const baseInputWhenSpeechStartedRef = useRef<string>('')
     const mobileBaseInputRef = useRef<string>('')
     const pricingLineRef = useRef<HTMLDivElement>(null)
-    useCenteredPricingLine(pricingLineRef, !isFollowUpMode && !isAuthenticated)
+    const showHeroPricingLine = !isFollowUpMode && !isAuthenticated
+    const pricingLayoutRevision = useMemo(
+      () =>
+        [
+          isFollowUpMode ? 1 : 0,
+          composerFloating ? 1 : 0,
+          tutorialIsActive ? 1 : 0,
+          tutorialStep ?? '',
+          selectedModels.length,
+          creditsRemaining,
+          isLoading ? 1 : 0,
+        ].join('|'),
+      [
+        isFollowUpMode,
+        composerFloating,
+        tutorialIsActive,
+        tutorialStep,
+        selectedModels.length,
+        creditsRemaining,
+        isLoading,
+      ]
+    )
+    useCenteredPricingLine(pricingLineRef, showHeroPricingLine, pricingLayoutRevision)
     const currentInputRef = useRef<string>(input)
 
     const handleSpeechResult = useCallback(
@@ -1223,7 +1245,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const composerContent = buildComposerContent(false)
     const composerContentMirror = buildComposerContent(true)
 
-    const usageAndContextBelowComposer = (
+    const buildUsageAndContextBelowComposer = (attachPricingLineRef: boolean) => (
       <>
         {!isFollowUpMode && (
           <div className="usage-preview-container">
@@ -1237,8 +1259,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         {isFollowUpMode && conversations.length > 0 && (
           <ContextWarning tokenUsageInfo={tokenUsageInfo} renderUsagePreview={renderUsagePreview} />
         )}
-        {!isFollowUpMode && !isAuthenticated && (
-          <div className="hero-pricing-line" ref={pricingLineRef}>
+        {showHeroPricingLine && (
+          <div
+            className="hero-pricing-line"
+            ref={attachPricingLineRef ? pricingLineRef : undefined}
+          >
             <span className="hero-pricing-free">
               {DAILY_CREDIT_LIMITS.unregistered} free credits/day, {DAILY_CREDIT_LIMITS.free} with a
               free account
@@ -1274,7 +1299,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           onOpenHelpMeChoose={onOpenHelpMeChoose}
         />
         {composerContent}
-        {usageAndContextBelowComposer}
+        {buildUsageAndContextBelowComposer(!composerFloating)}
       </>
     )
 
@@ -1290,7 +1315,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           onOpenHelpMeChoose={onOpenHelpMeChoose}
         />
         {composerContentMirror}
-        {usageAndContextBelowComposer}
+        {buildUsageAndContextBelowComposer(composerFloating)}
       </>
     )
 

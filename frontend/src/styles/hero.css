@@ -1664,6 +1664,11 @@ video.capability-tile-image-lightbox-img {
   margin-bottom: 0.35rem;
 }
 
+/* Pricing is anchored to the hero mirror while the live composer is portaled below results. */
+.composer-below-results-stack .hero-pricing-line {
+  display: none;
+}
+
 .after-results-composer-slot .context-warning {
   margin-bottom: 0;
 }
@@ -2132,7 +2137,7 @@ video.capability-tile-image-lightbox-img {
 }
 
 /* Hero pricing line. Absolutely positioned inside the hero's existing bottom padding
-   (useCenteredPricingLine centers it), so it contributes no height to the hero.
+   (useCenteredPricingLine places it below credits + icons), so it adds no hero height.
    The hero is a blue gradient in both themes, so the text is always light. */
 .hero-pricing-line {
   position: absolute;
