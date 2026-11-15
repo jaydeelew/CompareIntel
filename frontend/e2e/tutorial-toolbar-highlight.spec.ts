@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './test-setup'
 
 import { dismissTutorialOverlay, waitForReactHydration } from './fixtures'
 import { mockModelsApi } from './helpers/mockModels'
@@ -17,9 +17,7 @@ test.describe('onboarding tutorial toolbar highlights (steps 7–8)', () => {
     const styles = await page.evaluate(() => {
       const history = document.querySelector('.history-toggle-button') as HTMLElement | null
       const saved = document.querySelector('.saved-selections-button') as HTMLElement | null
-      const container = document.querySelector(
-        '.saved-selections-container'
-      ) as HTMLElement | null
+      const container = document.querySelector('.saved-selections-container') as HTMLElement | null
       if (!history || !saved || !container) return null
 
       history.classList.add('mobile-tutorial-highlight')
