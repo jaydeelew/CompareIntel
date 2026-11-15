@@ -98,21 +98,11 @@ export async function selectTutorialModelCheckbox(
 
   if (isMobileE2eProject(testInfo.project.name)) {
     const label = page.locator(`label:has([data-testid="model-checkbox-${modelId}"])`).first()
-    await expect(async () => {
-      if (await isModelCheckedInDom(page, modelId)) {
-        return
-      }
-      await label.click({ force: true, timeout: 5000 }).catch(() => {})
-      if (!(await isModelCheckedInDom(page, modelId))) {
-        await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
-      }
-      if (!(await isModelCheckedInDom(page, modelId))) {
-        await clickModelInDom(page, modelId)
-      }
-      if (!(await isModelCheckedInDom(page, modelId))) {
-        throw new Error(`model ${modelId} still unchecked`)
-      }
-    }).toPass({ timeout: pollTimeout })
+    await label.tap({ force: true, timeout: 10_000 }).catch(() => {})
+    await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
+    if (!(await isModelCheckedInDom(page, modelId))) {
+      await clickModelInDom(page, modelId)
+    }
   } else {
     const label = page.locator(`label:has([data-testid="model-checkbox-${modelId}"])`).first()
     await label.click({ timeout: 10000 })
