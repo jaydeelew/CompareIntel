@@ -106,11 +106,7 @@ test.describe('Onboarding tutorial full run (split model steps)', () => {
 
     await expectTutorialEnterPromptStep(page, testInfo)
 
-    await completeTutorialPromptInput(
-      page,
-      'Hello from the tutorial E2E test.',
-      testInfo
-    )
+    await completeTutorialPromptInput(page, 'Hello from the tutorial E2E test.', testInfo)
 
     if (isMobileE2eProject(testInfo.project.name)) {
       const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()

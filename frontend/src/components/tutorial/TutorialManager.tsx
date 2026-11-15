@@ -1,9 +1,8 @@
 import { useEffect, useMemo } from 'react'
 
-import { shouldSuppressWelcomeModalForAutomation } from '../../hooks/useTutorialComplete'
-
 import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
+import { shouldSuppressWelcomeModalForAutomation } from '../../hooks/useTutorialComplete'
 import type { User } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { isAnyProviderExpanded } from '../../utils/starterSelectionModels'
