@@ -16,7 +16,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   ANONYMOUS_STARTER_SYSTEM_KEY,
-  isStarterSelectionDismissed,
   markStarterSelectionDismissed,
   STARTER_SELECTION_NAME,
   useDefaultTestComparison,
