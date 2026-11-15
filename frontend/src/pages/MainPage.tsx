@@ -27,7 +27,15 @@ import {
   CAPABILITY_DEMO_SUBMIT_DELAY_MS,
   pickTwoDemoModels,
 } from '../data/capabilityDemoPresets'
-import { filterModelsForTutorial } from '../data/tutorialSteps'
+import {
+  buildTutorialRuntimeStepSequence,
+  buildTutorialVisibleStepOrder,
+  filterModelsForTutorialStep,
+  isProviderPickerTutorialStep,
+  resolveStarterModelEntries,
+  resolveTutorialProviderNamesForStep,
+  tutorialUsesSplitModelSteps,
+} from '../data/tutorialStepPlan'
 import {
   useConversationHistory,
   useBrowserFingerprint,
@@ -493,7 +501,7 @@ export function MainPage() {
 
     if (!tutorialState.isActive) return
 
-    if (step === 'select-models' && prevStep !== 'select-models') {
+    if ((step === 'select-models' || step === 'select-starter-model-1') && prevStep !== step) {
       setSelectedModels([])
       setOriginalSelectedModels([])
       clearAllModeCachesRef.current()
@@ -1028,24 +1036,43 @@ export function MainPage() {
       ? filterModelsByProviderToImage(modelsByProvider)
       : filterModelsByProviderToText(modelsByProvider)
 
-  const tutorialModelFilterActive =
-    tutorialState.isActive &&
-    (tutorialState.currentStep === 'expand-provider' ||
-      tutorialState.currentStep === 'select-models')
-
   const tutorialModelIds = useMemo(
     () => resolveStarterSelectionModelIds(filteredModelsByProvider),
     [filteredModelsByProvider]
   )
 
+  const tutorialSplitModelSteps = useMemo(
+    () => tutorialUsesSplitModelSteps(filteredModelsByProvider, tutorialModelIds),
+    [filteredModelsByProvider, tutorialModelIds]
+  )
+
+  const tutorialStarterEntries = useMemo(
+    () => resolveStarterModelEntries(filteredModelsByProvider, tutorialModelIds),
+    [filteredModelsByProvider, tutorialModelIds]
+  )
+
+  const tutorialVisibleStepOrder = useMemo(
+    () => buildTutorialVisibleStepOrder(tutorialSplitModelSteps),
+    [tutorialSplitModelSteps]
+  )
+
+  const tutorialModelFilterActive =
+    tutorialState.isActive && isProviderPickerTutorialStep(tutorialState.currentStep)
+
   const displayModelsByProvider = useMemo(
     () =>
-      filterModelsForTutorial(
+      filterModelsForTutorialStep(
         filteredModelsByProvider,
+        tutorialState.currentStep,
         tutorialModelFilterActive,
         tutorialModelIds
       ),
-    [filteredModelsByProvider, tutorialModelFilterActive, tutorialModelIds]
+    [
+      filteredModelsByProvider,
+      tutorialState.currentStep,
+      tutorialModelFilterActive,
+      tutorialModelIds,
+    ]
   )
 
   const tutorialProviderNames = useMemo(
@@ -1053,13 +1080,40 @@ export function MainPage() {
     [displayModelsByProvider, tutorialModelIds]
   )
 
+  const tutorialProviderNamesForStep = useMemo(
+    () =>
+      resolveTutorialProviderNamesForStep(
+        tutorialState.currentStep,
+        tutorialStarterEntries,
+        tutorialProviderNames
+      ),
+    [tutorialState.currentStep, tutorialStarterEntries, tutorialProviderNames]
+  )
+
+  const handleStartTutorial = useCallback(() => {
+    startTutorial(buildTutorialRuntimeStepSequence(tutorialSplitModelSteps))
+  }, [startTutorial, tutorialSplitModelSteps])
+
   useEffect(() => {
     const step = tutorialState.currentStep
-    if (!tutorialState.isActive || step !== 'select-models') return
+    if (!tutorialState.isActive) return
+    const providersToOpen =
+      step === 'select-models'
+        ? tutorialProviderNames
+        : step === 'select-starter-model-1'
+          ? tutorialStarterEntries[0]?.provider
+            ? [tutorialStarterEntries[0].provider]
+            : []
+          : step === 'select-starter-model-2'
+            ? tutorialStarterEntries[1]?.provider
+              ? [tutorialStarterEntries[1].provider]
+              : []
+            : []
+    if (providersToOpen.length === 0) return
     setOpenDropdowns(prev => {
       const next = new Set(prev)
       let changed = false
-      for (const provider of tutorialProviderNames) {
+      for (const provider of providersToOpen) {
         if (!next.has(provider)) {
           next.add(provider)
           changed = true
@@ -1067,7 +1121,13 @@ export function MainPage() {
       }
       return changed ? next : prev
     })
-  }, [tutorialState.isActive, tutorialState.currentStep, tutorialProviderNames, setOpenDropdowns])
+  }, [
+    tutorialState.isActive,
+    tutorialState.currentStep,
+    tutorialProviderNames,
+    tutorialStarterEntries,
+    setOpenDropdowns,
+  ])
 
   const allModels = Object.values(displayModelsByProvider).flat()
 
@@ -3156,12 +3216,17 @@ export function MainPage() {
             isAuthenticated={isAuthenticated}
             user={user}
             resetAppStateForTutorial={resetAppStateForTutorial}
-            startTutorial={startTutorial}
+            startTutorial={handleStartTutorial}
             skipTutorial={skipTutorial}
             isTouchDevice={isTouchDevice}
             currentView={currentView}
             isMobileLayout={isMobileLayout}
             modelsByProvider={displayModelsByProvider}
+            tutorialModelIds={tutorialModelIds}
+            tutorialSplitModelSteps={tutorialSplitModelSteps}
+            tutorialStarterEntries={tutorialStarterEntries}
+            tutorialVisibleStepOrder={tutorialVisibleStepOrder}
+            tutorialProviderNamesForStep={tutorialProviderNamesForStep}
             openDropdowns={openDropdowns}
             selectedModels={selectedModels}
             input={input}

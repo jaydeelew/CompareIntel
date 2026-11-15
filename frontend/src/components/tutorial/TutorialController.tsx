@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, Suspense, lazy } from 'react'
 
+import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 
 // Lazy load TutorialOverlay to prevent blocking React mount
@@ -22,9 +23,14 @@ interface TutorialControllerProps {
   completeStep: (step: TutorialStep) => void
   skipTutorial: () => void
   // State to watch for completion detection
-  googleProviderExpanded?: boolean
-  googleModelsSelected?: boolean
+  tutorialProviderExpanded?: boolean
+  firstModelSelected?: boolean
+  secondModelSelected?: boolean
+  bothModelsSelected?: boolean
   tutorialProviderNames?: readonly string[]
+  tutorialVisibleStepOrder?: readonly TutorialStep[]
+  tutorialStarterEntries?: readonly StarterModelEntry[]
+  tutorialSplitModelSteps?: boolean
   hasPromptText?: boolean
   hasCompletedComparison?: boolean
   isFollowUpMode?: boolean
@@ -51,8 +57,13 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   tutorialState,
   completeStep,
   skipTutorial,
-  googleProviderExpanded,
-  googleModelsSelected,
+  tutorialProviderExpanded,
+  firstModelSelected,
+  secondModelSelected,
+  bothModelsSelected,
+  tutorialVisibleStepOrder = [],
+  tutorialStarterEntries = [],
+  tutorialSplitModelSteps = false,
   hasPromptText,
   hasCompletedComparison,
   isFollowUpMode,
@@ -95,8 +106,10 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   }, [tutorialState.currentStep])
 
   const previousStateRef = useRef({
-    googleProviderExpanded: false,
-    googleModelsSelected: false,
+    tutorialProviderExpanded: false,
+    firstModelSelected: false,
+    secondModelSelected: false,
+    bothModelsSelected: false,
     hasPromptText: false,
     hasCompletedComparison: false,
     isFollowUpMode: false,
@@ -111,21 +124,38 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
 
     const currentStep = tutorialState.currentStep
 
-    // Expand provider completion (Google provider)
     if (
       currentStep === 'expand-provider' &&
-      googleProviderExpanded &&
-      !previousStateRef.current.googleProviderExpanded
+      tutorialProviderExpanded &&
+      !previousStateRef.current.tutorialProviderExpanded
     ) {
       completeStep('expand-provider')
       onProviderExpanded?.()
     }
 
-    // Select models completion (two selectable Google models selected)
+    if (
+      currentStep === 'select-starter-model-1' &&
+      firstModelSelected &&
+      !previousStateRef.current.firstModelSelected
+    ) {
+      completeStep('select-starter-model-1')
+      onModelsSelected?.()
+    }
+
+    if (
+      currentStep === 'select-starter-model-2' &&
+      secondModelSelected &&
+      firstModelSelected &&
+      !previousStateRef.current.secondModelSelected
+    ) {
+      completeStep('select-starter-model-2')
+      onModelsSelected?.()
+    }
+
     if (
       currentStep === 'select-models' &&
-      googleModelsSelected &&
-      !previousStateRef.current.googleModelsSelected
+      bothModelsSelected &&
+      !previousStateRef.current.bothModelsSelected
     ) {
       completeStep('select-models')
       onModelsSelected?.()
@@ -177,8 +207,10 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
 
     // Update previous state
     previousStateRef.current = {
-      googleProviderExpanded: googleProviderExpanded || false,
-      googleModelsSelected: googleModelsSelected || false,
+      tutorialProviderExpanded: tutorialProviderExpanded || false,
+      firstModelSelected: firstModelSelected || false,
+      secondModelSelected: secondModelSelected || false,
+      bothModelsSelected: bothModelsSelected || false,
       hasPromptText: hasPromptText || false,
       hasCompletedComparison: hasCompletedComparison || false,
       isFollowUpMode: isFollowUpMode || false,
@@ -189,8 +221,10 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   }, [
     tutorialState.isActive,
     tutorialState.currentStep,
-    googleProviderExpanded,
-    googleModelsSelected,
+    tutorialProviderExpanded,
+    firstModelSelected,
+    secondModelSelected,
+    bothModelsSelected,
     hasPromptText,
     hasCompletedComparison,
     isFollowUpMode,
@@ -216,9 +250,13 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
 
     switch (currentStep) {
       case 'expand-provider':
-        return googleProviderExpanded || false
+        return tutorialProviderExpanded || false
+      case 'select-starter-model-1':
+        return firstModelSelected || false
+      case 'select-starter-model-2':
+        return (secondModelSelected && firstModelSelected) || false
       case 'select-models':
-        return googleModelsSelected || false
+        return bothModelsSelected || false
       case 'enter-prompt':
         return hasPromptText || false
       case 'submit-comparison':
@@ -276,6 +314,9 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
         key={tutorialSessionKey}
         step={tutorialState.currentStep}
         tutorialProviderNames={tutorialProviderNames}
+        tutorialVisibleStepOrder={tutorialVisibleStepOrder}
+        tutorialStarterEntries={tutorialStarterEntries}
+        tutorialSplitModelSteps={tutorialSplitModelSteps}
         onComplete={handleComplete}
         onSkip={skipTutorial}
         isStepCompleted={isCurrentStepCompleted()}

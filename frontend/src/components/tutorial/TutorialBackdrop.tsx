@@ -263,7 +263,11 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
 
   if (targetCutout && !shouldExcludeTextarea && !shouldExcludeDropdown && !useRoundedCutout) {
     const usesInsetBlueRing =
-      step === 'expand-provider' || step === 'select-models' || step === 'view-follow-up-results'
+      step === 'expand-provider' ||
+      step === 'select-models' ||
+      step === 'select-starter-model-1' ||
+      step === 'select-starter-model-2' ||
+      step === 'view-follow-up-results'
     return (
       <div
         className="tutorial-backdrop-cutout"

@@ -1,6 +1,12 @@
 import { getComposerCutoutRects, getComposerElement } from '../components/tutorial/tutorialUtils'
+import { isSingleProviderSpotlightStep } from '../data/tutorialStepPlan'
 import type { StepConfig } from '../data/tutorialSteps'
 import type { TutorialStep } from '../hooks/useTutorial'
+
+export type TutorialProviderLayoutStep = Extract<
+  TutorialStep,
+  'expand-provider' | 'select-models' | 'select-starter-model-1' | 'select-starter-model-2'
+>
 
 export interface RectCutout {
   top: number
@@ -224,27 +230,35 @@ export interface TutorialProviderStepLayout {
 
 /** Layout for tutorial provider steps (step 1 = first provider; step 2 = union of all tutorial providers). */
 export function getTutorialProviderStepLayout(
-  step: 'expand-provider' | 'select-models',
+  step: TutorialProviderLayoutStep,
   providerNames: readonly string[]
 ): TutorialProviderStepLayout {
   const dropdowns = getTutorialProviderDropdowns(providerNames)
   if (dropdowns.length === 0) {
     return { anchor: null, highlights: [], layoutRect: null }
   }
-  if (step === 'expand-provider') {
-    const primary = dropdowns[0]
-    const header = primary.querySelector('.provider-header') as HTMLElement | null
+  if (step === 'select-models') {
     return {
-      anchor: header ?? primary,
-      highlights: [primary],
-      layoutRect: primary.getBoundingClientRect(),
+      anchor: dropdowns[0],
+      highlights: dropdowns,
+      layoutRect: getUnionClientRect(dropdowns),
     }
   }
+  const primary = dropdowns[0]
+  const header = primary.querySelector('.provider-header') as HTMLElement | null
+  const anchor = step === 'expand-provider' ? (header ?? primary) : primary
   return {
-    anchor: dropdowns[0],
-    highlights: dropdowns,
-    layoutRect: getUnionClientRect(dropdowns),
+    anchor,
+    highlights: [primary],
+    layoutRect: primary.getBoundingClientRect(),
   }
+}
+
+export function scrollLayoutForTutorialStep(step: TutorialStep | null): TutorialProviderLayoutStep {
+  if (step === 'select-models') return 'select-models'
+  if (step === 'select-starter-model-2') return 'select-starter-model-2'
+  if (step === 'select-starter-model-1') return 'select-starter-model-1'
+  return 'expand-provider'
 }
 
 /**
@@ -254,15 +268,20 @@ export function getTutorialProviderStepLayout(
  */
 export function scrollTutorialProvidersIntoView(
   providerNames: readonly string[],
-  providerStep: 'expand-provider' | 'select-models' = 'expand-provider'
+  providerStep: TutorialProviderLayoutStep = 'expand-provider'
 ): void {
-  const { layoutRect } = getTutorialProviderStepLayout(providerStep, providerNames)
+  const layoutStep: TutorialProviderLayoutStep =
+    providerStep === 'select-models' ? 'select-models' : 'expand-provider'
+  const { layoutRect } = getTutorialProviderStepLayout(
+    providerStep === 'select-models' ? 'select-models' : providerStep,
+    providerNames
+  )
   if (!layoutRect) return
   const root = getTutorialScrollRoot()
   const y0 = root.getScrollTop()
   let nextTop: number
   const viewH = window.innerHeight
-  if (providerStep === 'select-models') {
+  if (layoutStep === 'select-models') {
     const margin = 80
     if (layoutRect.height > viewH - margin * 2) {
       nextTop = y0 + layoutRect.top - margin
@@ -311,6 +330,8 @@ export function computeTooltipPosition(
   const isTopSteps =
     (step === 'expand-provider' ||
       step === 'select-models' ||
+      step === 'select-starter-model-1' ||
+      step === 'select-starter-model-2' ||
       step === 'history-dropdown' ||
       step === 'save-selection') &&
     config.position === 'top'
@@ -532,6 +553,11 @@ export function getScrollTargetForStep(
     const centeredTop = (viewH - rect.height) / 2
     return Math.max(0, y0 + rect.top - centeredTop)
   }
+  if (step === 'select-starter-model-1' || step === 'select-starter-model-2') {
+    const margin = 80
+    const desiredViewportTop = margin
+    return Math.max(0, y0 + rect.top - desiredViewportTop)
+  }
   if (step === 'follow-up') {
     const desiredElementTopInViewport = TOP_MARGIN + tooltipOffset + estimatedTooltipHeight
     return Math.max(0, y0 + rect.top - desiredElementTopInViewport)
@@ -559,8 +585,11 @@ export function findTargetForStep(
   let element: HTMLElement | null = null
   let highlights: HTMLElement[] = []
 
-  if (step === 'expand-provider' || step === 'select-models') {
-    const layout = getTutorialProviderStepLayout(step, tutorialProviderNames)
+  if (isSingleProviderSpotlightStep(step) || step === 'select-models') {
+    const layout = getTutorialProviderStepLayout(
+      step as TutorialProviderLayoutStep,
+      tutorialProviderNames
+    )
     if (!layout.anchor || layout.highlights.length === 0) return null
     element = step === 'expand-provider' ? layout.anchor : layout.highlights[0]
     highlights = layout.highlights

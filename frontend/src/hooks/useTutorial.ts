@@ -1,8 +1,12 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+
+import { buildTutorialRuntimeStepSequenceSameProvider } from '../data/tutorialStepPlan'
 
 export type TutorialStep =
   | 'expand-provider'
   | 'select-models'
+  | 'select-starter-model-1'
+  | 'select-starter-model-2'
   | 'enter-prompt'
   | 'submit-comparison'
   | 'follow-up'
@@ -19,20 +23,10 @@ export interface TutorialState {
 }
 
 const TUTORIAL_STORAGE_KEY = 'compareintel_tutorial_completed'
-const TUTORIAL_STEPS: TutorialStep[] = [
-  'expand-provider',
-  'select-models',
-  'enter-prompt',
-  'submit-comparison',
-  'follow-up',
-  'enter-prompt-2',
-  'submit-comparison-2',
-  'view-follow-up-results',
-  'history-dropdown',
-  'save-selection',
-]
-
 export function useTutorial() {
+  const runtimeStepSequenceRef = useRef<TutorialStep[]>(
+    buildTutorialRuntimeStepSequenceSameProvider()
+  )
   const [tutorialState, setTutorialState] = useState<TutorialState>(() => {
     // Check if user has completed tutorial
     const completed = localStorage.getItem(TUTORIAL_STORAGE_KEY)
@@ -51,13 +45,13 @@ export function useTutorial() {
     }
   })
 
-  const startTutorial = useCallback(() => {
-    // Always remove the completion flag when starting tutorial
-    // This ensures the tutorial can be restarted cleanly
+  const startTutorial = useCallback((stepSequence?: TutorialStep[]) => {
+    const sequence = stepSequence ?? buildTutorialRuntimeStepSequenceSameProvider()
+    runtimeStepSequenceRef.current = sequence
     localStorage.removeItem(TUTORIAL_STORAGE_KEY)
     setTutorialState({
       isActive: true,
-      currentStep: TUTORIAL_STEPS[0],
+      currentStep: sequence[0] ?? null,
       completedSteps: new Set(),
     })
   }, [])
@@ -81,10 +75,11 @@ export function useTutorial() {
         }
       }
 
-      const currentIndex = TUTORIAL_STEPS.indexOf(step)
+      const sequence = runtimeStepSequenceRef.current
+      const currentIndex = sequence.indexOf(step)
       const nextIndex = currentIndex + 1
 
-      if (nextIndex >= TUTORIAL_STEPS.length) {
+      if (nextIndex >= sequence.length) {
         // Tutorial complete
         localStorage.setItem(TUTORIAL_STORAGE_KEY, 'true')
         return {
@@ -96,7 +91,7 @@ export function useTutorial() {
 
       return {
         isActive: true,
-        currentStep: TUTORIAL_STEPS[nextIndex],
+        currentStep: sequence[nextIndex],
         completedSteps: newCompleted,
       }
     })

@@ -79,7 +79,9 @@ test.describe('Tutorial step 2 — select starter selection models', () => {
     await expect(tooltip.getByRole('heading', { name: 'Select Models', exact: true })).toBeVisible({
       timeout: 10000,
     })
-    await expect(tooltip).toContainText('Select both models below to compare their responses.')
+    const splitHeading = page.getByRole('heading', { name: 'Select Gemini 2.5 Flash', exact: true })
+    const combinedHeading = page.getByRole('heading', { name: 'Select Models', exact: true })
+    await expect(splitHeading.or(combinedHeading)).toBeVisible({ timeout: 10000 })
     await expect(tooltip).not.toContainText('Starter Selection')
 
     await dismissMobileBlockers(page)

@@ -10,12 +10,15 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 
+import { buildTutorialRuntimeStepSequenceSameProvider } from '../data/tutorialStepPlan'
 import type { ModelConversation } from '../types'
 
 // Tutorial step types
 export type TutorialStep =
   | 'expand-provider'
   | 'select-models'
+  | 'select-starter-model-1'
+  | 'select-starter-model-2'
   | 'enter-prompt'
   | 'submit-comparison'
   | 'follow-up'
@@ -39,19 +42,6 @@ function shouldSuppressWelcomeModalForAutomation(): boolean {
   if (typeof window === 'undefined') return false
   return window.__PLAYWRIGHT__ === true || window.__TEST_ENV__ === true
 }
-
-const TUTORIAL_STEPS: TutorialStep[] = [
-  'expand-provider',
-  'select-models',
-  'enter-prompt',
-  'submit-comparison',
-  'follow-up',
-  'enter-prompt-2',
-  'submit-comparison-2',
-  'view-follow-up-results',
-  'history-dropdown',
-  'save-selection',
-]
 
 export interface UseTutorialCompleteConfig {
   /** Current view ('main' or 'admin') */
@@ -81,7 +71,7 @@ export interface UseTutorialCompleteReturn {
   followUpSubmitStarted: boolean
 
   // Actions
-  startTutorial: () => void
+  startTutorial: (stepSequence?: TutorialStep[]) => void
   completeStep: (step: TutorialStep) => void
   skipTutorial: () => void
   resetTutorial: () => void
@@ -93,6 +83,9 @@ export interface UseTutorialCompleteReturn {
 }
 
 export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutorialCompleteReturn {
+  const runtimeStepSequenceRef = useRef<TutorialStep[]>(
+    buildTutorialRuntimeStepSequenceSameProvider()
+  )
   const {
     currentView,
     locationPathname: _locationPathname,
@@ -109,7 +102,9 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     return {
       isActive: false,
       currentStep: null,
-      completedSteps: completed ? new Set(TUTORIAL_STEPS) : new Set<TutorialStep>(),
+      completedSteps: completed
+        ? new Set(buildTutorialRuntimeStepSequenceSameProvider())
+        : new Set<TutorialStep>(),
     }
   })
 
@@ -139,11 +134,13 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
 
   // Tutorial Actions
 
-  const startTutorial = useCallback(() => {
+  const startTutorial = useCallback((stepSequence?: TutorialStep[]) => {
+    const sequence = stepSequence ?? buildTutorialRuntimeStepSequenceSameProvider()
+    runtimeStepSequenceRef.current = sequence
     localStorage.removeItem(TUTORIAL_STORAGE_KEY)
     setTutorialState({
       isActive: true,
-      currentStep: TUTORIAL_STEPS[0],
+      currentStep: sequence[0] ?? null,
       completedSteps: new Set(),
     })
   }, [])
@@ -168,10 +165,11 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
         }
       }
 
-      const currentIndex = TUTORIAL_STEPS.indexOf(step)
+      const sequence = runtimeStepSequenceRef.current
+      const currentIndex = sequence.indexOf(step)
       const nextIndex = currentIndex + 1
 
-      if (nextIndex >= TUTORIAL_STEPS.length) {
+      if (nextIndex >= sequence.length) {
         localStorage.setItem(TUTORIAL_STORAGE_KEY, 'true')
         return {
           isActive: false,
@@ -182,7 +180,7 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
 
       return {
         isActive: true,
-        currentStep: TUTORIAL_STEPS[nextIndex],
+        currentStep: sequence[nextIndex],
         completedSteps: newCompleted,
       }
     })

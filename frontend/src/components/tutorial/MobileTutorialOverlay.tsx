@@ -2,7 +2,12 @@ import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from
 import { createPortal } from 'react-dom'
 
 import {
-  TUTORIAL_STEPS_CONFIG,
+  isProviderPickerTutorialStep,
+  isSelectModelTutorialStep,
+  resolveTutorialStepConfig,
+  type StarterModelEntry,
+} from '../../data/tutorialStepPlan'
+import {
   TUTORIAL_VISIBLE_STEP_ORDER,
   getTutorialVisibleStepProgress,
 } from '../../data/tutorialSteps'
@@ -11,6 +16,7 @@ import {
   getTutorialProviderStepLayout,
   getTutorialScrollRoot,
   scrollTutorialProvidersIntoView,
+  type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
 
 import {
@@ -28,6 +34,9 @@ import './MobileTutorialOverlay.css'
 interface MobileTutorialOverlayProps {
   step: TutorialStep | null
   tutorialProviderNames: readonly string[]
+  tutorialVisibleStepOrder?: readonly TutorialStep[]
+  tutorialStarterEntries?: readonly StarterModelEntry[]
+  tutorialSplitModelSteps?: boolean
   onComplete: () => void
   onSkip: () => void
   isStepCompleted?: boolean
@@ -91,6 +100,9 @@ const DROPDOWN_STEPS: TutorialStep[] = ['history-dropdown', 'save-selection']
 const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   step,
   tutorialProviderNames,
+  tutorialVisibleStepOrder = TUTORIAL_VISIBLE_STEP_ORDER,
+  tutorialStarterEntries = [],
+  tutorialSplitModelSteps = false,
   onComplete,
   onSkip,
   isStepCompleted = false,
@@ -272,15 +284,18 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       return
     }
 
-    const config = TUTORIAL_STEPS_CONFIG[step]
+    const config = resolveTutorialStepConfig(step, tutorialStarterEntries, tutorialSplitModelSteps)
     if (!config) return
 
     const findElement = (): boolean => {
       let element: HTMLElement | null = null
 
       // Special handling for certain steps
-      if (step === 'expand-provider' || step === 'select-models') {
-        const layout = getTutorialProviderStepLayout(step, tutorialProviderNamesRef.current)
+      if (isProviderPickerTutorialStep(step)) {
+        const layout = getTutorialProviderStepLayout(
+          step as TutorialProviderLayoutStep,
+          tutorialProviderNamesRef.current
+        )
         if (layout.highlights.length > 0) {
           element = step === 'expand-provider' ? layout.highlights[0] : layout.highlights[0]
         }
@@ -317,7 +332,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               setIsVisible(true)
             }
           })
-        } else if (step === 'expand-provider' || step === 'select-models') {
+        } else if (isProviderPickerTutorialStep(step)) {
           setIsVisible(false)
         } else {
           setIsVisible(true)
@@ -342,7 +357,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       setTimeout(tryFind, 300)
     }
-  }, [step])
+  }, [step, tutorialStarterEntries, tutorialSplitModelSteps])
 
   // Calculate target rect and tooltip position
   const calculatePositions = useCallback(() => {
@@ -352,10 +367,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       setFollowUpComposerHoleRect(null)
     }
 
-    const providerLayout =
-      step === 'expand-provider' || step === 'select-models'
-        ? getTutorialProviderStepLayout(step, tutorialProviderNamesRef.current)
-        : null
+    const providerLayout = isProviderPickerTutorialStep(step)
+      ? getTutorialProviderStepLayout(
+          step as TutorialProviderLayoutStep,
+          tutorialProviderNamesRef.current
+        )
+      : null
     const rect =
       providerLayout?.layoutRect ??
       (step === 'select-models'
@@ -473,7 +490,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       } else {
         setBackdropRect(null)
       }
-    } else if (step === 'expand-provider' || step === 'select-models') {
+    } else if (isProviderPickerTutorialStep(step)) {
       if (providerLayout?.layoutRect) {
         const r = providerLayout.layoutRect
         setBackdropRect({
@@ -584,7 +601,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const minTopBelowComposer = rect.bottom + d + underComposerGap
       tooltipTop = Math.max(padding, minTopBelowComposer)
       arrowDirection = 'up'
-    } else if (step === 'expand-provider' || step === 'select-models') {
+    } else if (isProviderPickerTutorialStep(step)) {
       // Step 1: anchor on .provider-header (collapsed row). Step 2: anchor on the full expanded card
       // so "below" clears the entire highlighted dropdown — header-only anchoring left the tooltip
       // sitting on the model list / body and obscuring it.
@@ -754,8 +771,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         // For enter-prompt steps, scroll to the top of the page initially
         // The tooltip appears above the textarea, and the user should see the top of the page
         root.scrollToTop(0, 'smooth')
-      } else if (currentStep === 'expand-provider' || currentStep === 'select-models') {
-        scrollTutorialProvidersIntoView(tutorialProviderNamesRef.current, currentStep)
+      } else if (isProviderPickerTutorialStep(currentStep)) {
+        scrollTutorialProvidersIntoView(
+          tutorialProviderNamesRef.current,
+          currentStep as TutorialProviderLayoutStep
+        )
         waitForScrollStop(() => {
           if (stepRef.current !== currentStep) return
           calculatePositions()
@@ -1164,13 +1184,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     return null
   }
 
-  const config = TUTORIAL_STEPS_CONFIG[step]
-  const { stepIndex, totalSteps } = getTutorialVisibleStepProgress(step)
+  const config = resolveTutorialStepConfig(step, tutorialStarterEntries, tutorialSplitModelSteps)
+  const { stepIndex, totalSteps } = getTutorialVisibleStepProgress(step, tutorialVisibleStepOrder)
   const progressDotIndex = (() => {
-    const i = TUTORIAL_VISIBLE_STEP_ORDER.indexOf(step)
+    const i = tutorialVisibleStepOrder.indexOf(step)
     if (i >= 0) return i
     if (step === 'enter-prompt-2' || step === 'submit-comparison-2') {
-      return TUTORIAL_VISIBLE_STEP_ORDER.indexOf('follow-up')
+      return tutorialVisibleStepOrder.indexOf('follow-up')
     }
     return 0
   })()
@@ -1179,6 +1199,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const actionSteps: TutorialStep[] = [
     'expand-provider',
     'select-models',
+    'select-starter-model-1',
+    'select-starter-model-2',
     'submit-comparison',
     'follow-up',
     'submit-comparison-2',
@@ -1286,7 +1308,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                 step === 'history-dropdown' ||
                 step === 'save-selection'
               ? '32px'
-              : step === 'expand-provider' || step === 'select-models'
+              : isProviderPickerTutorialStep(step)
                 ? '20px'
                 : step === 'follow-up' || step === 'view-follow-up-results'
                   ? '24px'
@@ -1480,7 +1502,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             <p className="mobile-tutorial-tooltip-description">{getDescription()}</p>
 
             {/* Tap indicator for action steps (exclude step 2 - select-models) */}
-            {isActionStep && !showButton && step !== 'select-models' && (
+            {isActionStep && !showButton && !isSelectModelTutorialStep(step) && (
               <div className="mobile-tutorial-tap-indicator">
                 <span>
                   {step === 'submit-comparison' ||
@@ -1512,7 +1534,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
             {/* Progress dots */}
             <div className="mobile-tutorial-progress">
-              {TUTORIAL_VISIBLE_STEP_ORDER.map((s, i) => (
+              {tutorialVisibleStepOrder.map((s, i) => (
                 <div
                   key={s}
                   className={`mobile-tutorial-progress-dot ${i < progressDotIndex ? 'completed' : ''} ${i === progressDotIndex ? 'current' : ''}`}

@@ -1,14 +1,10 @@
 import { useMemo } from 'react'
 
+import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 import type { User } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
-import { countSelectableModelsInSelection } from '../../utils/modelTierAccess'
-import {
-  getProvidersForModelIds,
-  isAnyProviderExpanded,
-  resolveStarterSelectionModelIds,
-} from '../../utils/starterSelectionModels'
+import { isAnyProviderExpanded } from '../../utils/starterSelectionModels'
 
 import { MobileTutorialController } from './MobileTutorialController'
 import { TutorialController } from './TutorialController'
@@ -26,6 +22,11 @@ interface TutorialManagerProps {
   currentView: 'main' | 'admin'
   isMobileLayout: boolean
   modelsByProvider: ModelsByProvider
+  tutorialModelIds: string[]
+  tutorialSplitModelSteps: boolean
+  tutorialStarterEntries: StarterModelEntry[]
+  tutorialVisibleStepOrder: TutorialStep[]
+  tutorialProviderNamesForStep: string[]
   openDropdowns: Set<string>
   selectedModels: string[]
   input: string
@@ -37,14 +38,11 @@ interface TutorialManagerProps {
   tutorialHasSavedSelection: boolean
   showHistoryDropdown: boolean
   isLoading: boolean
-  /** True when any model has started streaming an answer (loading cutout switches to results). */
   streamAnswerStarted: boolean
-  /** After user submits a follow-up on step 5 (mobile loading/streaming cutout gating). */
   followUpSubmitStarted: boolean
   setTutorialHasCompletedComparison: (value: boolean) => void
   setTutorialHasBreakout: (value: boolean) => void
   setTutorialHasSavedSelection: (value: boolean) => void
-  /** Called when the user dismisses the welcome modal via “Skip for Now” (navbar fold timing). */
   onTutorialWelcomeSkipped?: () => void
 }
 
@@ -52,14 +50,19 @@ export function TutorialManager({
   showWelcomeModal,
   setShowWelcomeModal,
   isAuthenticated,
-  user,
+  user: _user,
   resetAppStateForTutorial,
   startTutorial,
   skipTutorial,
   isTouchDevice: _isTouchDevice,
   currentView,
   isMobileLayout,
-  modelsByProvider,
+  modelsByProvider: _modelsByProvider,
+  tutorialModelIds,
+  tutorialSplitModelSteps,
+  tutorialStarterEntries,
+  tutorialVisibleStepOrder,
+  tutorialProviderNamesForStep,
   openDropdowns,
   selectedModels,
   input,
@@ -78,25 +81,57 @@ export function TutorialManager({
   setTutorialHasSavedSelection,
   onTutorialWelcomeSkipped,
 }: TutorialManagerProps) {
-  const tutorialModelIds = useMemo(
-    () => resolveStarterSelectionModelIds(modelsByProvider),
-    [modelsByProvider]
+  const providersForExpandCheck = useMemo(
+    () => tutorialStarterEntries.map(e => e.provider).filter(Boolean),
+    [tutorialStarterEntries]
   )
-  const tutorialProviders = useMemo(
-    () => getProvidersForModelIds(modelsByProvider, tutorialModelIds),
-    [modelsByProvider, tutorialModelIds]
-  )
-  const googleProviderExpanded = isAnyProviderExpanded(openDropdowns, tutorialProviders)
-  const selectableStarterCount = countSelectableModelsInSelection(
-    selectedModels,
+  const tutorialProviderExpanded = isAnyProviderExpanded(openDropdowns, providersForExpandCheck)
+
+  const firstModelSelected =
+    tutorialModelIds.length > 0 && selectedModels.includes(tutorialModelIds[0])
+  const secondModelSelected =
+    tutorialModelIds.length > 1 && selectedModels.includes(tutorialModelIds[1])
+  const bothModelsSelected = firstModelSelected && secondModelSelected
+
+  const sharedControllerProps = {
+    tutorialState,
+    completeStep,
+    skipTutorial,
+    tutorialProviderExpanded,
     tutorialModelIds,
-    modelsByProvider,
-    isAuthenticated,
-    user
-  )
-  const requiredStarterCount = Math.min(2, tutorialModelIds.length)
-  const googleModelsSelected =
-    requiredStarterCount > 0 && selectableStarterCount >= requiredStarterCount
+    tutorialSplitModelSteps,
+    tutorialStarterEntries,
+    tutorialVisibleStepOrder,
+    tutorialProviderNames: tutorialProviderNamesForStep,
+    firstModelSelected,
+    secondModelSelected,
+    bothModelsSelected,
+    hasPromptText: input.trim().length > 0,
+    hasCompletedComparison: tutorialHasCompletedComparison,
+    isFollowUpMode,
+    hasBreakoutConversation: tutorialHasBreakout,
+    showHistoryDropdown,
+    hasSavedSelection: tutorialHasSavedSelection,
+    isLoading,
+    streamAnswerStarted,
+    followUpSubmitStarted,
+    onProviderExpanded: () => {},
+    onModelsSelected: () => {},
+    onPromptEntered: () => {},
+    onComparisonComplete: () => {
+      setTutorialHasCompletedComparison(false)
+    },
+    onFollowUpActivated: () => {
+      setTutorialHasCompletedComparison(false)
+    },
+    onBreakoutCreated: () => {
+      setTutorialHasBreakout(false)
+    },
+    onHistoryOpened: () => {},
+    onSelectionSaved: () => {
+      setTutorialHasSavedSelection(false)
+    },
+  }
 
   return (
     <>
@@ -120,75 +155,11 @@ export function TutorialManager({
       )}
 
       {currentView === 'main' && !isMobileLayout && (
-        <TutorialController
-          tutorialState={tutorialState}
-          completeStep={completeStep}
-          skipTutorial={skipTutorial}
-          googleProviderExpanded={googleProviderExpanded}
-          googleModelsSelected={googleModelsSelected}
-          tutorialProviderNames={tutorialProviders}
-          hasPromptText={input.trim().length > 0}
-          hasCompletedComparison={tutorialHasCompletedComparison}
-          isFollowUpMode={isFollowUpMode}
-          hasBreakoutConversation={tutorialHasBreakout}
-          showHistoryDropdown={showHistoryDropdown}
-          hasSavedSelection={tutorialHasSavedSelection}
-          isLoading={isLoading}
-          streamAnswerStarted={streamAnswerStarted}
-          followUpSubmitStarted={followUpSubmitStarted}
-          onProviderExpanded={() => {}}
-          onModelsSelected={() => {}}
-          onPromptEntered={() => {}}
-          onComparisonComplete={() => {
-            setTutorialHasCompletedComparison(false)
-          }}
-          onFollowUpActivated={() => {
-            setTutorialHasCompletedComparison(false)
-          }}
-          onBreakoutCreated={() => {
-            setTutorialHasBreakout(false)
-          }}
-          onHistoryOpened={() => {}}
-          onSelectionSaved={() => {
-            setTutorialHasSavedSelection(false)
-          }}
-        />
+        <TutorialController {...sharedControllerProps} />
       )}
 
       {currentView === 'main' && isMobileLayout && (
-        <MobileTutorialController
-          tutorialState={tutorialState}
-          completeStep={completeStep}
-          skipTutorial={skipTutorial}
-          googleProviderExpanded={googleProviderExpanded}
-          googleModelsSelected={googleModelsSelected}
-          tutorialProviderNames={tutorialProviders}
-          hasPromptText={input.trim().length > 0}
-          hasCompletedComparison={tutorialHasCompletedComparison}
-          isFollowUpMode={isFollowUpMode}
-          hasBreakoutConversation={tutorialHasBreakout}
-          showHistoryDropdown={showHistoryDropdown}
-          hasSavedSelection={tutorialHasSavedSelection}
-          isLoading={isLoading}
-          streamAnswerStarted={streamAnswerStarted}
-          followUpSubmitStarted={followUpSubmitStarted}
-          onProviderExpanded={() => {}}
-          onModelsSelected={() => {}}
-          onPromptEntered={() => {}}
-          onComparisonComplete={() => {
-            setTutorialHasCompletedComparison(false)
-          }}
-          onFollowUpActivated={() => {
-            setTutorialHasCompletedComparison(false)
-          }}
-          onBreakoutCreated={() => {
-            setTutorialHasBreakout(false)
-          }}
-          onHistoryOpened={() => {}}
-          onSelectionSaved={() => {
-            setTutorialHasSavedSelection(false)
-          }}
-        />
+        <MobileTutorialController {...sharedControllerProps} />
       )}
     </>
   )

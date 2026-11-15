@@ -1,6 +1,7 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
 
+import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep } from '../../hooks/useTutorial'
 
 import { TutorialBackdrop } from './TutorialBackdrop'
@@ -11,6 +12,9 @@ import './TutorialOverlay.css'
 interface TutorialOverlayProps {
   step: TutorialStep | null
   tutorialProviderNames: readonly string[]
+  tutorialVisibleStepOrder: readonly TutorialStep[]
+  tutorialStarterEntries: readonly StarterModelEntry[]
+  tutorialSplitModelSteps: boolean
   onComplete: () => void
   onSkip: () => void
   isStepCompleted?: boolean
@@ -24,6 +28,9 @@ interface TutorialOverlayProps {
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   step,
   tutorialProviderNames,
+  tutorialVisibleStepOrder,
+  tutorialStarterEntries,
+  tutorialSplitModelSteps,
   onComplete,
   onSkip,
   isStepCompleted = false,
@@ -53,7 +60,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     useRoundedCutout,
     textareaCutoutToUse,
     shouldBlock,
-  } = useTutorialOverlay(step, isLoading ?? false, streamAnswerStarted, tutorialProviderNames)
+  } = useTutorialOverlay(
+    step,
+    isLoading ?? false,
+    streamAnswerStarted,
+    tutorialProviderNames,
+    tutorialVisibleStepOrder,
+    tutorialStarterEntries,
+    tutorialSplitModelSteps
+  )
 
   if (!step) {
     return null

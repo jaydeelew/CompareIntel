@@ -1,30 +1,31 @@
 import React, { useEffect, useRef, useState } from 'react'
 
+import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 
 import MobileTutorialOverlay from './MobileTutorialOverlay'
 
 interface MobileTutorialControllerProps {
-  // Tutorial state and functions (passed from parent to share state)
   tutorialState: TutorialState
   completeStep: (step: TutorialStep) => void
   skipTutorial: () => void
-  // State to watch for completion detection
-  googleProviderExpanded?: boolean
-  googleModelsSelected?: boolean
+  tutorialProviderExpanded?: boolean
+  firstModelSelected?: boolean
+  secondModelSelected?: boolean
+  bothModelsSelected?: boolean
   hasPromptText?: boolean
   hasCompletedComparison?: boolean
   isFollowUpMode?: boolean
   hasBreakoutConversation?: boolean
   showHistoryDropdown?: boolean
   hasSavedSelection?: boolean
-  // Loading state for submit-comparison steps
   isLoading?: boolean
   streamAnswerStarted?: boolean
-  /** True after user submits follow-up on step 5 (for mobile loading/stream cutout). */
   followUpSubmitStarted?: boolean
   tutorialProviderNames?: readonly string[]
-  // Callbacks for when user performs actions
+  tutorialVisibleStepOrder?: readonly TutorialStep[]
+  tutorialStarterEntries?: readonly StarterModelEntry[]
+  tutorialSplitModelSteps?: boolean
   onProviderExpanded?: () => void
   onModelsSelected?: () => void
   onPromptEntered?: () => void
@@ -39,8 +40,10 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
   tutorialState,
   completeStep,
   skipTutorial,
-  googleProviderExpanded,
-  googleModelsSelected,
+  tutorialProviderExpanded,
+  firstModelSelected,
+  secondModelSelected,
+  bothModelsSelected,
   hasPromptText,
   hasCompletedComparison,
   isFollowUpMode,
@@ -49,16 +52,17 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
   streamAnswerStarted,
   followUpSubmitStarted = false,
   tutorialProviderNames = [],
+  tutorialVisibleStepOrder = [],
+  tutorialStarterEntries = [],
+  tutorialSplitModelSteps = false,
   onProviderExpanded,
   onModelsSelected,
   onComparisonComplete,
   onFollowUpActivated,
 }) => {
-  // Track tutorial session to force remount when tutorial restarts
   const [tutorialSessionKey, setTutorialSessionKey] = useState(0)
   const previousStepRef = useRef<TutorialStep | null>(null)
 
-  // Increment session key when tutorial restarts
   useEffect(() => {
     const currentStep = tutorialState.currentStep
     const previousStep = previousStepRef.current
@@ -71,43 +75,58 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
   }, [tutorialState.currentStep])
 
   const previousStateRef = useRef({
-    googleProviderExpanded: false,
-    googleModelsSelected: false,
+    tutorialProviderExpanded: false,
+    firstModelSelected: false,
+    secondModelSelected: false,
+    bothModelsSelected: false,
     hasPromptText: false,
     hasCompletedComparison: false,
     isFollowUpMode: false,
-    hasBreakoutConversation: false,
     showHistoryDropdown: false,
-    hasSavedSelection: false,
   })
 
-  // Detect completion of each step
   useEffect(() => {
     if (!tutorialState.isActive || !tutorialState.currentStep) return
 
     const currentStep = tutorialState.currentStep
 
-    // Expand provider completion (Google provider)
     if (
       currentStep === 'expand-provider' &&
-      googleProviderExpanded &&
-      !previousStateRef.current.googleProviderExpanded
+      tutorialProviderExpanded &&
+      !previousStateRef.current.tutorialProviderExpanded
     ) {
       completeStep('expand-provider')
       onProviderExpanded?.()
     }
 
-    // Select models completion (two selectable Google models selected)
+    if (
+      currentStep === 'select-starter-model-1' &&
+      firstModelSelected &&
+      !previousStateRef.current.firstModelSelected
+    ) {
+      completeStep('select-starter-model-1')
+      onModelsSelected?.()
+    }
+
+    if (
+      currentStep === 'select-starter-model-2' &&
+      secondModelSelected &&
+      firstModelSelected &&
+      !previousStateRef.current.secondModelSelected
+    ) {
+      completeStep('select-starter-model-2')
+      onModelsSelected?.()
+    }
+
     if (
       currentStep === 'select-models' &&
-      googleModelsSelected &&
-      !previousStateRef.current.googleModelsSelected
+      bothModelsSelected &&
+      !previousStateRef.current.bothModelsSelected
     ) {
       completeStep('select-models')
       onModelsSelected?.()
     }
 
-    // Submit comparison completion
     if (
       currentStep === 'submit-comparison' &&
       hasCompletedComparison &&
@@ -126,7 +145,6 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onFollowUpActivated?.()
     }
 
-    // Submit comparison 2 completion (step 7)
     if (
       currentStep === 'submit-comparison-2' &&
       hasCompletedComparison &&
@@ -136,22 +154,23 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onComparisonComplete?.()
     }
 
-    // Update previous state
     previousStateRef.current = {
-      googleProviderExpanded: googleProviderExpanded || false,
-      googleModelsSelected: googleModelsSelected || false,
+      tutorialProviderExpanded: tutorialProviderExpanded || false,
+      firstModelSelected: firstModelSelected || false,
+      secondModelSelected: secondModelSelected || false,
+      bothModelsSelected: bothModelsSelected || false,
       hasPromptText: hasPromptText || false,
       hasCompletedComparison: hasCompletedComparison || false,
       isFollowUpMode: isFollowUpMode || false,
-      hasBreakoutConversation: false,
       showHistoryDropdown: showHistoryDropdown || false,
-      hasSavedSelection: false,
     }
   }, [
     tutorialState.isActive,
     tutorialState.currentStep,
-    googleProviderExpanded,
-    googleModelsSelected,
+    tutorialProviderExpanded,
+    firstModelSelected,
+    secondModelSelected,
+    bothModelsSelected,
     hasPromptText,
     hasCompletedComparison,
     isFollowUpMode,
@@ -163,7 +182,6 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     onFollowUpActivated,
   ])
 
-  // Check if current step is completed
   const isCurrentStepCompleted = (): boolean => {
     if (!tutorialState.currentStep) return false
 
@@ -171,9 +189,13 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
 
     switch (currentStep) {
       case 'expand-provider':
-        return googleProviderExpanded || false
+        return tutorialProviderExpanded || false
+      case 'select-starter-model-1':
+        return firstModelSelected || false
+      case 'select-starter-model-2':
+        return (secondModelSelected && firstModelSelected) || false
       case 'select-models':
-        return googleModelsSelected || false
+        return bothModelsSelected || false
       case 'enter-prompt':
         return hasPromptText || false
       case 'submit-comparison':
@@ -185,7 +207,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       case 'submit-comparison-2':
         return hasCompletedComparison || false
       case 'view-follow-up-results':
-        return true // Always allow completion
+        return true
       case 'history-dropdown':
         return showHistoryDropdown || false
       case 'save-selection': {
@@ -197,17 +219,14 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     }
   }
 
-  // Handle manual completion via button click
   const handleComplete = () => {
     if (!tutorialState.currentStep) return
 
     const currentStep = tutorialState.currentStep
 
-    // For view-follow-up-results step, allow immediate completion via Done
     if (currentStep === 'view-follow-up-results') {
       completeStep(currentStep)
     } else if (currentStep === 'history-dropdown' || currentStep === 'save-selection') {
-      // For dropdown steps, complete immediately when "Done" is clicked
       completeStep(currentStep)
     } else if (isCurrentStepCompleted()) {
       completeStep(currentStep)
@@ -223,6 +242,9 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       key={tutorialSessionKey}
       step={tutorialState.currentStep}
       tutorialProviderNames={tutorialProviderNames}
+      tutorialVisibleStepOrder={tutorialVisibleStepOrder}
+      tutorialStarterEntries={tutorialStarterEntries}
+      tutorialSplitModelSteps={tutorialSplitModelSteps}
       onComplete={handleComplete}
       onSkip={skipTutorial}
       isStepCompleted={isCurrentStepCompleted()}

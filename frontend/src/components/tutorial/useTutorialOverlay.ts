@@ -1,6 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
-import { TUTORIAL_STEPS_CONFIG, getTutorialVisibleStepProgress } from '../../data/tutorialSteps'
+import {
+  isProviderPickerTutorialStep,
+  isSelectModelTutorialStep,
+  resolveTutorialStepConfig,
+  type StarterModelEntry,
+} from '../../data/tutorialStepPlan'
+import {
+  TUTORIAL_STEPS_CONFIG,
+  TUTORIAL_VISIBLE_STEP_ORDER,
+  getTutorialVisibleStepProgress,
+} from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import logger from '../../utils/logger'
 import {
@@ -15,6 +25,7 @@ import {
   getTutorialProviderStepLayout,
   scrollTutorialProvidersIntoView,
   getTutorialScrollRoot,
+  type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
 
 import {
@@ -62,7 +73,10 @@ export function useTutorialOverlay(
   step: TutorialStep | null,
   isLoading: boolean,
   streamAnswerStarted = false,
-  tutorialProviderNames: readonly string[] = []
+  tutorialProviderNames: readonly string[] = [],
+  tutorialVisibleStepOrder: readonly TutorialStep[] = TUTORIAL_VISIBLE_STEP_ORDER,
+  tutorialStarterEntries: readonly StarterModelEntry[] = [],
+  tutorialSplitModelSteps = false
 ) {
   const tutorialProviderNamesRef = useRef(tutorialProviderNames)
   tutorialProviderNamesRef.current = tutorialProviderNames
@@ -274,7 +288,7 @@ export function useTutorialOverlay(
   // Default overlay position for early frames; visibility for provider steps is set
   // after the initial scroll finishes so the tooltip does not track a moving target.
   useEffect(() => {
-    if (step === 'expand-provider' || step === 'select-models') {
+    if (isProviderPickerTutorialStep(step)) {
       setOverlayPosition({ top: 320, left: window.innerWidth / 2 })
     } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
       // Do NOT force visibility for enter-prompt steps.
@@ -500,8 +514,11 @@ export function useTutorialOverlay(
       let element: HTMLElement | null = null
 
       // Tutorial provider steps: first provider (step 1) or all tutorial providers (step 2)
-      if (step === 'expand-provider' || step === 'select-models') {
-        const layout = getTutorialProviderStepLayout(step, tutorialProviderNamesRef.current)
+      if (isProviderPickerTutorialStep(step)) {
+        const layout = getTutorialProviderStepLayout(
+          step as TutorialProviderLayoutStep,
+          tutorialProviderNamesRef.current
+        )
         if (layout.anchor && layout.highlights.length > 0) {
           if (step === 'expand-provider') {
             element = layout.anchor
@@ -611,8 +628,7 @@ export function useTutorialOverlay(
             step !== 'enter-prompt' &&
             step !== 'enter-prompt-2' &&
             step !== 'follow-up' &&
-            step !== 'expand-provider' &&
-            step !== 'select-models' &&
+            !isProviderPickerTutorialStep(step) &&
             !(step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current)
           ) {
             setIsVisible(true)
@@ -652,8 +668,11 @@ export function useTutorialOverlay(
             setTargetElement(fallbackElement)
             setIsVisible(true)
           } else {
-            if (step === 'expand-provider' || step === 'select-models') {
-              const layout = getTutorialProviderStepLayout(step, tutorialProviderNamesRef.current)
+            if (isProviderPickerTutorialStep(step)) {
+              const layout = getTutorialProviderStepLayout(
+                step as TutorialProviderLayoutStep,
+                tutorialProviderNamesRef.current
+              )
               const headerElement =
                 step === 'expand-provider' ? layout.anchor : layout.highlights[0]
               if (headerElement) {
@@ -706,8 +725,11 @@ export function useTutorialOverlay(
     }
 
     const layoutRectForStep = (): DOMRect | null => {
-      if (step === 'expand-provider' || step === 'select-models') {
-        return getTutorialProviderStepLayout(step, tutorialProviderNamesRef.current).layoutRect
+      if (isProviderPickerTutorialStep(step)) {
+        return getTutorialProviderStepLayout(
+          step as TutorialProviderLayoutStep,
+          tutorialProviderNamesRef.current
+        ).layoutRect
       }
       return null
     }
@@ -723,7 +745,7 @@ export function useTutorialOverlay(
 
     // Provider steps: skip a pre-scroll updatePosition so we never commit tooltip coords from a
     // pre-centered layout (avoids a flash of tooltip at the bottom while Google is off-center).
-    if (step !== 'expand-provider' && step !== 'select-models') {
+    if (!isProviderPickerTutorialStep(step)) {
       updatePosition()
     }
 
@@ -782,10 +804,13 @@ export function useTutorialOverlay(
         }
 
         scrollAnimFrame = requestAnimationFrame(animateScroll)
-      } else if (step === 'expand-provider' || step === 'select-models') {
+      } else if (isProviderPickerTutorialStep(step)) {
         // Center the full provider card (step 1); step 2 aligns expanded card top to viewport middle
         // so the tooltip above stays visible (tall expanded layout otherwise crowds it).
-        scrollTutorialProvidersIntoView(tutorialProviderNamesRef.current, step)
+        scrollTutorialProvidersIntoView(
+          tutorialProviderNamesRef.current,
+          step as TutorialProviderLayoutStep
+        )
       } else {
         root.scrollToTop(scrollTarget, 'smooth')
       }
@@ -798,7 +823,7 @@ export function useTutorialOverlay(
     const isFollowUpStep = step === 'follow-up'
     const isReviewStepFromFollowUp =
       step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current
-    const isProviderStep = step === 'expand-provider' || step === 'select-models'
+    const isProviderStep = isProviderPickerTutorialStep(step)
     // Delay reveal for dropdown steps when target is offscreen, or for steps that smooth-scroll
     // to the composer before showing the tooltip, or for step 6 when transitioning from step 5.
     // Provider steps: scroll to vertical center first, then show the tooltip above (no tracking).
@@ -867,7 +892,7 @@ export function useTutorialOverlay(
         step === 'enter-prompt-2' ||
         step === 'follow-up' ||
         isReviewStepFromFollowUp
-      const isProviderSnapScrollStep = step === 'expand-provider' || step === 'select-models'
+      const isProviderSnapScrollStep = isProviderPickerTutorialStep(step)
       const waitForScroll =
         shouldDelayReveal && !shouldSkipScroll
           ? isCustomScrollStep
@@ -875,9 +900,15 @@ export function useTutorialOverlay(
             : isProviderSnapScrollStep
               ? new Promise<void>(resolve => {
                   requestAnimationFrame(() => {
-                    scrollTutorialProvidersIntoView(tutorialProviderNamesRef.current, step)
+                    scrollTutorialProvidersIntoView(
+                      tutorialProviderNamesRef.current,
+                      step as TutorialProviderLayoutStep
+                    )
                     requestAnimationFrame(() => {
-                      scrollTutorialProvidersIntoView(tutorialProviderNamesRef.current, step)
+                      scrollTutorialProvidersIntoView(
+                        tutorialProviderNamesRef.current,
+                        step as TutorialProviderLayoutStep
+                      )
                       resolve()
                     })
                   })
@@ -953,10 +984,14 @@ export function useTutorialOverlay(
           } else {
             setIsVisible(true)
             let selectModelsRecenterTimers: number[] = []
-            if (step === 'select-models') {
+            if (isSelectModelTutorialStep(step)) {
               const recenterStep2 = () => {
-                if (stepRef.current !== 'select-models') return
-                scrollTutorialProvidersIntoView(tutorialProviderNamesRef.current, 'select-models')
+                if (!isSelectModelTutorialStep(stepRef.current)) return
+                if (!stepRef.current) return
+                scrollTutorialProvidersIntoView(
+                  tutorialProviderNamesRef.current,
+                  stepRef.current as TutorialProviderLayoutStep
+                )
                 updatePosition()
               }
               selectModelsRecenterTimers = [
@@ -1010,10 +1045,7 @@ export function useTutorialOverlay(
       ) {
         return
       }
-      if (
-        (step === 'expand-provider' || step === 'select-models') &&
-        !initialScrollCompleteRef.current
-      ) {
+      if (isProviderPickerTutorialStep(step) && !initialScrollCompleteRef.current) {
         return
       }
       updatePosition()
@@ -1051,12 +1083,12 @@ export function useTutorialOverlay(
     const isDropdownStep = step === 'history-dropdown' || step === 'save-selection'
 
     let elementsToHighlight: HTMLElement[] = []
-    if (step === 'expand-provider' || step === 'select-models') {
+    if (isProviderPickerTutorialStep(step)) {
       if (step === 'expand-provider' && !expandProviderEffectsReady) {
         elementsToHighlight = []
       } else {
         elementsToHighlight = getTutorialProviderStepLayout(
-          step,
+          step as TutorialProviderLayoutStep,
           tutorialProviderNamesRef.current
         ).highlights
       }
@@ -1187,8 +1219,7 @@ export function useTutorialOverlay(
       // Only remove highlights when step actually changes away from steps that maintain highlights.
       // If we're still on these steps, keep the highlight even if elements change.
       if (
-        currentStep !== 'expand-provider' &&
-        currentStep !== 'select-models' &&
+        !isProviderPickerTutorialStep(currentStep) &&
         currentStep !== 'enter-prompt' &&
         currentStep !== 'enter-prompt-2' &&
         currentStep !== 'submit-comparison' &&
@@ -1307,14 +1338,14 @@ export function useTutorialOverlay(
   // Uses simple interval instead of MutationObserver to avoid performance issues
   // ALSO ensures visibility, targetElement, and position are set (fixes production timing issues)
   useEffect(() => {
-    if (step !== 'select-models') return
+    if (!step || !isSelectModelTutorialStep(step)) return
 
     // FORCE visibility immediately on mount to ensure tooltip appears
     setIsVisible(true)
 
     const ensureHighlightVisibilityAndPosition = () => {
       const layout = getTutorialProviderStepLayout(
-        'select-models',
+        step as TutorialProviderLayoutStep,
         tutorialProviderNamesRef.current
       )
       const { highlights, layoutRect } = layout
@@ -1330,12 +1361,16 @@ export function useTutorialOverlay(
         setHighlightedElements(highlights)
         setIsVisible(true)
 
-        const config = TUTORIAL_STEPS_CONFIG['select-models']
+        const stepConfig = resolveTutorialStepConfig(
+          step,
+          tutorialStarterEntries,
+          tutorialSplitModelSteps
+        )
         const {
           top,
           left,
           effectivePosition: effPos,
-        } = computeTooltipPosition(layoutRect, 'select-models', config)
+        } = computeTooltipPosition(layoutRect, step, stepConfig)
         setEffectivePosition(effPos)
         setOverlayPosition({ top, left })
       } else {
@@ -1361,7 +1396,7 @@ export function useTutorialOverlay(
         providerEl.style.position = ''
       })
     }
-  }, [step, tutorialProviderNames])
+  }, [step, tutorialProviderNames, tutorialStarterEntries, tutorialSplitModelSteps])
 
   // Separate effect to continuously maintain highlight and cutout for enter-prompt step
   // Respects the initial scroll phase - only updates position after main effect completes scroll
@@ -2133,7 +2168,7 @@ export function useTutorialOverlay(
   // Uses viewport coordinates (getBoundingClientRect); TutorialBackdrop positions with fixed.
   useEffect(() => {
     const needsTargetCutout =
-      step === 'expand-provider' || step === 'select-models' || step === 'view-follow-up-results'
+      isProviderPickerTutorialStep(step) || step === 'view-follow-up-results'
 
     const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
 
@@ -2164,7 +2199,7 @@ export function useTutorialOverlay(
               : []
       }
       const padding = 8
-      const isProviderStep = step === 'expand-provider' || step === 'select-models'
+      const isProviderStep = isProviderPickerTutorialStep(step)
       /* Concentric outer radius: element radius + cutout padding (8px). */
       const borderRadius =
         step === 'view-follow-up-results'
@@ -2193,8 +2228,10 @@ export function useTutorialOverlay(
   const isLoadingStreamingPhase = Boolean(
     (isSubmitStep || step === 'view-follow-up-results') && isLoading && loadingStreamingCutout
   )
-  const config = step ? TUTORIAL_STEPS_CONFIG[step] : null
-  const { stepIndex, totalSteps } = getTutorialVisibleStepProgress(step)
+  const config = step
+    ? resolveTutorialStepConfig(step, tutorialStarterEntries, tutorialSplitModelSteps)
+    : null
+  const { stepIndex, totalSteps } = getTutorialVisibleStepProgress(step, tutorialVisibleStepOrder)
   const shouldExcludeTextarea =
     step === 'enter-prompt' ||
     step === 'submit-comparison' ||
