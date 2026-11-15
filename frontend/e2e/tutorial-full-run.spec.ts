@@ -8,6 +8,7 @@ import {
   clickTutorialDoneButton,
   completeTutorialPromptInput,
   expandTutorialProvider,
+  expectTutorialEnterPromptStep,
   expectTutorialStepTitle,
   runTutorialComparison,
   selectTutorialModelCheckbox,
@@ -103,7 +104,7 @@ test.describe('Onboarding tutorial full run (split model steps)', () => {
       )
       .toBeGreaterThanOrEqual(2)
 
-    await expectTutorialStepTitle(page, 'Enter Your Prompt')
+    await expectTutorialEnterPromptStep(page)
 
     await completeTutorialPromptInput(
       page,

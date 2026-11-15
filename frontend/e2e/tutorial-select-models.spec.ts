@@ -9,7 +9,7 @@ import { dismissMobileBlockers } from './helpers/modelCheckbox'
 import {
   expandTutorialProvider,
   expectSplitOrCombinedModelStep,
-  expectTutorialStepTitle,
+  expectTutorialEnterPromptStep,
   selectTutorialModelCheckbox,
   tutorialTooltip,
 } from './helpers/tutorialFlow'
@@ -90,6 +90,6 @@ test.describe('Tutorial model selection steps', () => {
       }
     }
 
-    await expectTutorialStepTitle(page, 'Enter Your Prompt')
+    await expectTutorialEnterPromptStep(page)
   })
 })

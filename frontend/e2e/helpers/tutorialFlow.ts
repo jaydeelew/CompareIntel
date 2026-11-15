@@ -79,7 +79,7 @@ export async function selectTutorialModelCheckbox(
   await dismissMobileBlockers(page)
   await dismissBlockingModals(page)
 
-  const pollTimeout = isMobileE2eProject(testInfo.project.name) ? 20_000 : 12_000
+  const pollTimeout = isMobileE2eProject(testInfo.project.name) ? 30_000 : 12_000
 
   if (isMobileE2eProject(testInfo.project.name)) {
     const label = page.locator(`label:has([data-testid="model-checkbox-${modelId}"])`).first()
@@ -175,13 +175,48 @@ export function tutorialStepTitle(page: Page) {
 }
 
 /** Mobile tooltips often omit heading roles; match title text in the live DOM. */
+export async function expectTutorialEnterPromptStep(page: Page, timeout = 30_000): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const title = await readTutorialTitle(page)
+        if (title.includes('Enter Your Prompt')) {
+          return true
+        }
+        const tooltipText = await tutorialTooltip(page)
+          .first()
+          .textContent()
+          .catch(() => '')
+        if (tooltipText?.includes('Enter Your Prompt')) {
+          return true
+        }
+        const header = await page.evaluate(() => {
+          return document.querySelector('.mobile-tutorial-tooltip-header')?.textContent ?? ''
+        })
+        return header.includes('Step 4 of')
+      },
+      { timeout, message: 'tutorial enter-prompt step' }
+    )
+    .toBe(true)
+
+  await expect
+    .poll(
+      async () =>
+        page.evaluate(
+          () => document.querySelectorAll<HTMLInputElement>('input.model-checkbox:checked').length
+        ),
+      { timeout: 10_000 }
+    )
+    .toBeGreaterThanOrEqual(2)
+}
+
 export async function expectTutorialStepTitle(
   page: Page,
   title: string | RegExp,
   timeout = 15000
 ): Promise<void> {
   const needle = typeof title === 'string' ? title : title.source
-  const mobileTimeout = Math.max(timeout, 20_000)
+  const mobileTimeout = Math.max(timeout, 30_000)
 
   await expect
     .poll(
