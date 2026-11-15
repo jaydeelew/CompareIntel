@@ -99,10 +99,14 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onProviderExpanded?.()
     }
 
+    // Use completedSteps (not only rising-edge refs) so a fast second model select
+    // on touch/WebKit cannot mark secondModelSelected in previousState before we enter step 2.
+    const completed = tutorialState.completedSteps
+
     if (
       currentStep === 'select-starter-model-1' &&
       firstModelSelected &&
-      !previousStateRef.current.firstModelSelected
+      !completed.has('select-starter-model-1')
     ) {
       completeStep('select-starter-model-1')
       onModelsSelected?.()
@@ -112,7 +116,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       currentStep === 'select-starter-model-2' &&
       secondModelSelected &&
       firstModelSelected &&
-      !previousStateRef.current.secondModelSelected
+      !completed.has('select-starter-model-2')
     ) {
       completeStep('select-starter-model-2')
       onModelsSelected?.()
@@ -121,7 +125,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     if (
       currentStep === 'select-models' &&
       bothModelsSelected &&
-      !previousStateRef.current.bothModelsSelected
+      !completed.has('select-models')
     ) {
       completeStep('select-models')
       onModelsSelected?.()
@@ -167,6 +171,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
   }, [
     tutorialState.isActive,
     tutorialState.currentStep,
+    tutorialState.completedSteps,
     tutorialProviderExpanded,
     firstModelSelected,
     secondModelSelected,

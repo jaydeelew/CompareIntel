@@ -133,10 +133,12 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       onProviderExpanded?.()
     }
 
+    const completed = tutorialState.completedSteps
+
     if (
       currentStep === 'select-starter-model-1' &&
       firstModelSelected &&
-      !previousStateRef.current.firstModelSelected
+      !completed.has('select-starter-model-1')
     ) {
       completeStep('select-starter-model-1')
       onModelsSelected?.()
@@ -146,7 +148,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       currentStep === 'select-starter-model-2' &&
       secondModelSelected &&
       firstModelSelected &&
-      !previousStateRef.current.secondModelSelected
+      !completed.has('select-starter-model-2')
     ) {
       completeStep('select-starter-model-2')
       onModelsSelected?.()
@@ -155,7 +157,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
     if (
       currentStep === 'select-models' &&
       bothModelsSelected &&
-      !previousStateRef.current.bothModelsSelected
+      !completed.has('select-models')
     ) {
       completeStep('select-models')
       onModelsSelected?.()
@@ -221,6 +223,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   }, [
     tutorialState.isActive,
     tutorialState.currentStep,
+    tutorialState.completedSteps,
     tutorialProviderExpanded,
     firstModelSelected,
     secondModelSelected,

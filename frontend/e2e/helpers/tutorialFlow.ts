@@ -190,10 +190,22 @@ export async function expectTutorialEnterPromptStep(page: Page, timeout = 30_000
         if (tooltipText?.includes('Enter Your Prompt')) {
           return true
         }
+        if (tooltipText?.includes('Done with input')) {
+          return true
+        }
         const header = await page.evaluate(() => {
           return document.querySelector('.mobile-tutorial-tooltip-header')?.textContent ?? ''
         })
-        return header.includes('Step 4 of')
+        if (header.includes('Step 4 of')) {
+          return true
+        }
+        return page.evaluate(() => {
+          const composer = document.querySelector('.composer.mobile-tutorial-highlight')
+          const enterPromptBtn = document.querySelector(
+            '.mobile-tutorial-tooltip button.mobile-tutorial-button-primary'
+          )
+          return Boolean(composer && enterPromptBtn?.textContent?.includes('Done with input'))
+        })
       },
       { timeout, message: 'tutorial enter-prompt step' }
     )
