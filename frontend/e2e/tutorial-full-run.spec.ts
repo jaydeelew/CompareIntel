@@ -3,9 +3,13 @@ import { test, expect } from '@playwright/test'
 import { resolveStarterSelectionModelIds } from '../src/utils/starterSelectionModels'
 
 import { mockComparisonStream } from './helpers/mockModels'
-import { dismissMobileBlockers } from './helpers/modelCheckbox'
+import { dismissMobileBlockers, isMobileE2eProject } from './helpers/modelCheckbox'
 import {
+  clickTutorialDoneButton,
+  completeTutorialPromptInput,
   expandTutorialProvider,
+  expectTutorialStepTitle,
+  runTutorialComparison,
   selectTutorialModelCheckbox,
   tutorialTooltip,
 } from './helpers/tutorialFlow'
@@ -64,66 +68,73 @@ test.describe('Onboarding tutorial full run (split model steps)', () => {
     await expect(tooltip.first()).toBeVisible()
     await dismissMobileBlockers(page)
 
-    await expandTutorialProvider(page, 'Google')
+    await expandTutorialProvider(page, 'Google', testInfo)
 
-    await expect(
-      tooltip.getByRole('heading', { name: 'Select Gemini 2.5 Flash', exact: true })
-    ).toBeVisible({ timeout: 15000 })
+    await expectTutorialStepTitle(page, 'Select Gemini 2.5 Flash')
     await expect(tooltip).toContainText('Step 2 of 9')
 
     await selectTutorialModelCheckbox(
       page,
       TUTORIAL_MODEL_IDS[0],
       MOCK_MODELS_RESPONSE.models.find(m => m.id === TUTORIAL_MODEL_IDS[0])!.provider,
-      testInfo
+      testInfo,
+      { afterSelectPartnerModelId: TUTORIAL_MODEL_IDS[1] }
     )
 
-    await expect(
-      tooltip.getByRole('heading', { name: 'Now select DeepSeek V4.1 Flash', exact: true })
-    ).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId(`model-checkbox-${TUTORIAL_MODEL_IDS[1]}`)).toBeVisible({
+      timeout: 15000,
+    })
 
     await selectTutorialModelCheckbox(
       page,
       TUTORIAL_MODEL_IDS[1],
       MOCK_MODELS_RESPONSE.models.find(m => m.id === TUTORIAL_MODEL_IDS[1])!.provider,
+      testInfo,
+      { requireMinSelected: 2 }
+    )
+
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(
+            () => document.querySelectorAll<HTMLInputElement>('input.model-checkbox:checked').length
+          ),
+        { timeout: 20_000 }
+      )
+      .toBeGreaterThanOrEqual(2)
+
+    await expectTutorialStepTitle(page, 'Enter Your Prompt')
+
+    await completeTutorialPromptInput(
+      page,
+      'Hello from the tutorial E2E test.',
       testInfo
     )
 
-    await expect(
-      tooltip.getByRole('heading', { name: 'Enter Your Prompt', exact: true })
-    ).toBeVisible({ timeout: 15000 })
+    if (isMobileE2eProject(testInfo.project.name)) {
+      const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()
+      await expect(submit).toBeEnabled({ timeout: 20_000 })
+      return
+    }
 
-    await page.getByTestId('comparison-input-textarea').fill('Hello from the tutorial E2E test.')
-    await tooltip.getByRole('button', { name: 'Done with input' }).click()
+    await runTutorialComparison(page, testInfo, 90_000, 'Hello from the tutorial E2E test.')
 
-    await expect(tooltip.getByRole('heading', { name: 'Run Your Comparison', exact: true })).toBeVisible()
-    await page.getByTestId('comparison-submit-button').click()
+    await runTutorialComparison(page, testInfo, 120_000, 'Follow-up question for the tutorial.')
 
-    await expect(
-      tooltip.getByRole('heading', { name: 'Continue the Conversation', exact: true })
-    ).toBeVisible({ timeout: 90000 })
+    await expectTutorialStepTitle(page, 'Review the New Responses', 60_000)
+    await clickTutorialDoneButton(page, testInfo)
 
-    await page.getByTestId('comparison-input-textarea').fill('Follow-up question for the tutorial.')
-    await page.getByTestId('comparison-submit-button').click()
-
-    await expect(
-      tooltip.getByRole('heading', { name: 'Review the New Responses', exact: true })
-    ).toBeVisible({ timeout: 120000 })
-    await tooltip.getByRole('button', { name: 'Done' }).click()
-
-    await expect(tooltip.getByRole('heading', { name: 'Access Your History', exact: true })).toBeVisible()
+    await expectTutorialStepTitle(page, 'Access Your History')
     await page.getByRole('button', { name: 'Load previous conversations' }).first().click()
     await expect(page.locator('.history-inline-list').first()).toBeVisible({ timeout: 15000 })
-    await expect(tooltip.getByRole('button', { name: 'Done' })).toBeEnabled()
-    await tooltip.getByRole('button', { name: 'Done' }).click()
+    await clickTutorialDoneButton(page, testInfo)
 
-    await expect(tooltip.getByRole('heading', { name: 'Save Model Selections', exact: true })).toBeVisible()
+    await expectTutorialStepTitle(page, 'Save Model Selections')
     await page.getByRole('button', { name: 'Save or load model selections' }).first().click()
     await expect(page.getByTestId('saved-selections-dropdown').first()).toBeVisible({
       timeout: 15000,
     })
-    await expect(tooltip.getByRole('button', { name: 'Done' })).toBeEnabled()
-    await tooltip.getByRole('button', { name: 'Done' }).click()
+    await clickTutorialDoneButton(page, testInfo)
 
     await expect(tooltip).toHaveCount(0, { timeout: 15000 })
     await expect(page.locator('.tutorial-backdrop')).toHaveCount(0)

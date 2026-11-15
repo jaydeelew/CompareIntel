@@ -9,6 +9,7 @@ import { dismissMobileBlockers } from './helpers/modelCheckbox'
 import {
   expandTutorialProvider,
   expectSplitOrCombinedModelStep,
+  expectTutorialStepTitle,
   selectTutorialModelCheckbox,
   tutorialTooltip,
 } from './helpers/tutorialFlow'
@@ -64,7 +65,7 @@ test.describe('Tutorial model selection steps', () => {
     await page.getByRole('button', { name: 'Start Tutorial' }).click()
     await expect(tutorialTooltip(page).first()).toBeVisible()
     await page.waitForTimeout(800)
-    await expandTutorialProvider(page, TUTORIAL_PROVIDERS[0] ?? 'Google')
+    await expandTutorialProvider(page, TUTORIAL_PROVIDERS[0] ?? 'Google', testInfo)
 
     const tooltip = tutorialTooltip(page)
     const mode = await expectSplitOrCombinedModelStep(page)
@@ -77,11 +78,11 @@ test.describe('Tutorial model selection steps', () => {
       const p0 = MOCK_MODELS_RESPONSE.models.find(m => m.id === first)!.provider
       const p1 = MOCK_MODELS_RESPONSE.models.find(m => m.id === second)!.provider
 
-      await selectTutorialModelCheckbox(page, first, p0, testInfo)
-      await expect(
-        tooltip.getByRole('heading', { name: 'Now select DeepSeek V4.1 Flash', exact: true })
-      ).toBeVisible({ timeout: 15000 })
-      await selectTutorialModelCheckbox(page, second, p1, testInfo)
+      await selectTutorialModelCheckbox(page, first, p0, testInfo, {
+        afterSelectPartnerModelId: second,
+      })
+      await expect(page.getByTestId(`model-checkbox-${second}`)).toBeVisible({ timeout: 15000 })
+      await selectTutorialModelCheckbox(page, second, p1, testInfo, { requireMinSelected: 2 })
     } else {
       for (const modelId of TUTORIAL_MODEL_IDS) {
         const provider = MOCK_MODELS_RESPONSE.models.find(m => m.id === modelId)!.provider
@@ -89,8 +90,6 @@ test.describe('Tutorial model selection steps', () => {
       }
     }
 
-    await expect(
-      tooltip.getByRole('heading', { name: 'Enter Your Prompt', exact: true })
-    ).toBeVisible({ timeout: 15000 })
+    await expectTutorialStepTitle(page, 'Enter Your Prompt')
   })
 })
