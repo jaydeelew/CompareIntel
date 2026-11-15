@@ -5,11 +5,13 @@ import {
   resolveStarterSelectionModelIds,
 } from '../src/utils/starterSelectionModels'
 
-import { dismissMobileBlockers, toggleModelCheckbox } from './helpers/modelCheckbox'
-
-/**
- * Regression: Starter Selection / restored models must not block picking both tutorial models on step 2.
- */
+import { dismissMobileBlockers } from './helpers/modelCheckbox'
+import {
+  expandTutorialProvider,
+  expectSplitOrCombinedModelStep,
+  selectTutorialModelCheckbox,
+  tutorialTooltip,
+} from './helpers/tutorialFlow'
 
 const mockModel = (
   id: string,
@@ -46,15 +48,7 @@ const MOCK_MODELS_RESPONSE = {
 const TUTORIAL_MODEL_IDS = resolveStarterSelectionModelIds(MOCK_MODELS)
 const TUTORIAL_PROVIDERS = getProvidersForModelIds(MOCK_MODELS, TUTORIAL_MODEL_IDS)
 
-async function expandProvider(page: import('@playwright/test').Page, providerName: string) {
-  const header = page
-    .locator(`.provider-dropdown[data-provider-name="${providerName}"] .provider-header`)
-    .first()
-  await header.click()
-  await expect(header).toHaveAttribute('aria-expanded', 'true')
-}
-
-test.describe('Tutorial step 2 — select starter selection models', () => {
+test.describe('Tutorial model selection steps', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
     await page.goto('/')
@@ -63,45 +57,40 @@ test.describe('Tutorial step 2 — select starter selection models', () => {
     })
   })
 
-  test('with Starter Selection timing, both tutorial models stay selectable', async ({
+  test('both starter models selectable through split or combined steps', async ({
     page,
     browserName: _browserName,
   }, testInfo) => {
     await page.getByRole('button', { name: 'Start Tutorial' }).click()
-    await expect(page.locator('.tutorial-tooltip, .mobile-tutorial-tooltip').first()).toBeVisible()
-
-    // Give Starter Selection auto-load time to run if the tutorial guard is broken.
+    await expect(tutorialTooltip(page).first()).toBeVisible()
     await page.waitForTimeout(800)
+    await expandTutorialProvider(page, TUTORIAL_PROVIDERS[0] ?? 'Google')
 
-    await expandProvider(page, TUTORIAL_PROVIDERS[0] ?? 'Google')
-
-    const tooltip = page.locator('.tutorial-tooltip, .mobile-tutorial-tooltip')
-    await expect(tooltip.getByRole('heading', { name: 'Select Models', exact: true })).toBeVisible({
-      timeout: 10000,
-    })
-    const splitHeading = page.getByRole('heading', { name: 'Select Gemini 2.5 Flash', exact: true })
-    const combinedHeading = page.getByRole('heading', { name: 'Select Models', exact: true })
-    await expect(splitHeading.or(combinedHeading)).toBeVisible({ timeout: 10000 })
+    const tooltip = tutorialTooltip(page)
+    const mode = await expectSplitOrCombinedModelStep(page)
     await expect(tooltip).not.toContainText('Starter Selection')
-
     await dismissMobileBlockers(page)
 
-    for (const modelId of TUTORIAL_MODEL_IDS) {
-      const checkbox = page.getByTestId(`model-checkbox-${modelId}`)
-      const provider = MOCK_MODELS_RESPONSE.models.find(m => m.id === modelId)?.provider
-      if (provider) {
-        const header = page
-          .locator(`.provider-dropdown[data-provider-name="${provider}"] .provider-header`)
-          .first()
-        const expanded = await header.getAttribute('aria-expanded')
-        if (expanded !== 'true') {
-          await expandProvider(page, provider)
-        }
+    if (mode === 'split') {
+      const first = TUTORIAL_MODEL_IDS[0]
+      const second = TUTORIAL_MODEL_IDS[1]
+      const p0 = MOCK_MODELS_RESPONSE.models.find(m => m.id === first)!.provider
+      const p1 = MOCK_MODELS_RESPONSE.models.find(m => m.id === second)!.provider
+
+      await selectTutorialModelCheckbox(page, first, p0, testInfo)
+      await expect(
+        tooltip.getByRole('heading', { name: 'Now select DeepSeek V4.1 Flash', exact: true })
+      ).toBeVisible({ timeout: 15000 })
+      await selectTutorialModelCheckbox(page, second, p1, testInfo)
+    } else {
+      for (const modelId of TUTORIAL_MODEL_IDS) {
+        const provider = MOCK_MODELS_RESPONSE.models.find(m => m.id === modelId)!.provider
+        await selectTutorialModelCheckbox(page, modelId, provider, testInfo)
       }
-      await expect(checkbox).toBeEnabled()
-      await checkbox.scrollIntoViewIfNeeded()
-      await toggleModelCheckbox(checkbox, testInfo.project.name)
-      await expect(checkbox).toBeChecked()
     }
+
+    await expect(
+      tooltip.getByRole('heading', { name: 'Enter Your Prompt', exact: true })
+    ).toBeVisible({ timeout: 15000 })
   })
 })
