@@ -208,7 +208,14 @@ export async function expectTutorialEnterPromptStep(
       async () => {
         const step = await readTutorialCurrentStep(page)
         if (step === 'enter-prompt') {
-          return true
+          const tourUiMounted = await page.evaluate(() => {
+            const tooltip = document.querySelector('.mobile-tutorial-tooltip, .tutorial-tooltip')
+            const composer = document.querySelector('.composer.mobile-tutorial-highlight')
+            return Boolean(tooltip || composer)
+          })
+          if (tourUiMounted) {
+            return true
+          }
         }
         const title = await readTutorialTitle(page)
         if (title.includes('Enter Your Prompt')) {
@@ -373,14 +380,58 @@ export async function completeTutorialPromptInput(
   testInfo: TestInfo
 ): Promise<void> {
   await dismissBlockingModals(page)
+  const mobile = isMobileE2eProject(testInfo.project.name)
+  const uiTimeout = mobile ? 45_000 : 20_000
+
+  await expect
+    .poll(
+      async () => {
+        const step = await readTutorialCurrentStep(page)
+        if (step !== 'enter-prompt') {
+          return false
+        }
+        return page.evaluate(() =>
+          Boolean(document.querySelector('.mobile-tutorial-tooltip, .tutorial-tooltip'))
+        )
+      },
+      { timeout: uiTimeout, message: 'enter-prompt tutorial tooltip mounted' }
+    )
+    .toBe(true)
+
+  if (mobile) {
+    await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }))
+  }
+
   const textarea = page.getByTestId('comparison-input-textarea').filter({ visible: true }).first()
+  await textarea.scrollIntoViewIfNeeded()
+  if (mobile) {
+    await textarea.tap({ force: true }).catch(() => {})
+  }
   await textarea.fill(text)
+  await textarea.blur().catch(() => {})
+
   const doneButton = page
     .locator(
       '.mobile-tutorial-tooltip button:has-text("Done with input"), .tutorial-tooltip button:has-text("Done with input")'
     )
     .first()
-  await expect(doneButton).toBeEnabled({ timeout: 20_000 })
+
+  await expect
+    .poll(
+      async () => {
+        const count = await page
+          .locator(
+            '.mobile-tutorial-tooltip button:has-text("Done with input"), .tutorial-tooltip button:has-text("Done with input")'
+          )
+          .count()
+        if (count === 0) {
+          return false
+        }
+        return doneButton.isEnabled().catch(() => false)
+      },
+      { timeout: uiTimeout, message: 'Done with input enabled' }
+    )
+    .toBe(true)
   await dismissBlockingModals(page)
   if (isMobileE2eProject(testInfo.project.name)) {
     await doneButton.tap({ force: true }).catch(() => {})
