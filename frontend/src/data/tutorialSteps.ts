@@ -49,14 +49,14 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'expand-provider',
     targetSelector: '.provider-dropdown .provider-header',
     title: 'Expand a Provider',
-    description: 'Open a provider dropdown to see the suggested starter models.',
+    description: 'Open a provider dropdown to see the suggested models.',
     position: 'top',
   },
   'select-models': {
     step: 'select-models',
-    targetSelector: '.provider-dropdown[data-provider-name="Google"]',
+    targetSelector: '.provider-dropdown',
     title: 'Select Models',
-    description: 'Select the same two models used for Starter Selection.',
+    description: 'Select both models below to compare their responses.',
     position: 'top',
   },
   'enter-prompt': {

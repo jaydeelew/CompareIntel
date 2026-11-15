@@ -7,7 +7,11 @@ import {
   getTutorialVisibleStepProgress,
 } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
-import { getTutorialScrollMax, getTutorialScrollRoot } from '../../utils/tutorialPositioning'
+import {
+  getTutorialProviderStepLayout,
+  getTutorialScrollRoot,
+  scrollTutorialProvidersIntoView,
+} from '../../utils/tutorialPositioning'
 
 import {
   getComposerElement,
@@ -23,6 +27,7 @@ import './MobileTutorialOverlay.css'
 
 interface MobileTutorialOverlayProps {
   step: TutorialStep | null
+  tutorialProviderNames: readonly string[]
   onComplete: () => void
   onSkip: () => void
   isStepCompleted?: boolean
@@ -85,6 +90,7 @@ const DROPDOWN_STEPS: TutorialStep[] = ['history-dropdown', 'save-selection']
 
 const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   step,
+  tutorialProviderNames,
   onComplete,
   onSkip,
   isStepCompleted = false,
@@ -93,6 +99,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   followUpSubmitStarted = false,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null)
+  const tutorialProviderNamesRef = useRef(tutorialProviderNames)
+  tutorialProviderNamesRef.current = tutorialProviderNames
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null)
   const [backdropRect, setBackdropRect] = useState<TargetRect | null>(null)
@@ -272,12 +280,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
       // Special handling for certain steps
       if (step === 'expand-provider' || step === 'select-models') {
-        const googleDropdown = document.querySelector(
-          '.provider-dropdown[data-provider-name="Google"]'
-        ) as HTMLElement
-        if (googleDropdown) {
-          // Use the full provider card for both steps so highlight/cutout styling is consistent.
-          element = googleDropdown
+        const layout = getTutorialProviderStepLayout(step, tutorialProviderNamesRef.current)
+        if (layout.highlights.length > 0) {
+          element = step === 'expand-provider' ? layout.highlights[0] : layout.highlights[0]
         }
       } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
         element = getComposerElement()
@@ -347,11 +352,17 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       setFollowUpComposerHoleRect(null)
     }
 
-    const rect = targetElement.getBoundingClientRect()
-    const placementRect =
-      step === 'select-models'
-        ? (targetElement.querySelector('.provider-header')?.getBoundingClientRect() ?? rect)
-        : rect
+    const providerLayout =
+      step === 'expand-provider' || step === 'select-models'
+        ? getTutorialProviderStepLayout(step, tutorialProviderNamesRef.current)
+        : null
+    const rect =
+      providerLayout?.layoutRect ??
+      (step === 'select-models'
+        ? (targetElement.querySelector('.provider-header')?.getBoundingClientRect() ??
+          targetElement.getBoundingClientRect())
+        : targetElement.getBoundingClientRect())
+    const placementRect = rect
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
     const padding = 12 // Padding from screen edges
@@ -458,6 +469,20 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           height,
           centerX: minLeft + width / 2,
           centerY: minTop + height / 2,
+        })
+      } else {
+        setBackdropRect(null)
+      }
+    } else if (step === 'expand-provider' || step === 'select-models') {
+      if (providerLayout?.layoutRect) {
+        const r = providerLayout.layoutRect
+        setBackdropRect({
+          top: r.top,
+          left: r.left,
+          width: r.width,
+          height: r.height,
+          centerX: r.left + r.width / 2,
+          centerY: r.top + r.height / 2,
         })
       } else {
         setBackdropRect(null)
@@ -724,29 +749,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const rect = targetEl.getBoundingClientRect()
       const viewportHeight = window.innerHeight
       const root = getTutorialScrollRoot()
-      const y0 = root.getScrollTop()
 
       if (TEXTAREA_STEPS.includes(currentStep)) {
         // For enter-prompt steps, scroll to the top of the page initially
         // The tooltip appears above the textarea, and the user should see the top of the page
         root.scrollToTop(0, 'smooth')
       } else if (currentStep === 'expand-provider' || currentStep === 'select-models') {
-        let nextTop: number
-        if (currentStep === 'expand-provider') {
-          const centeredTop = viewportHeight / 2 - rect.height / 2
-          nextTop = y0 + rect.top - centeredTop
-        } else {
-          const headerEl = targetEl.querySelector('.provider-header') as HTMLElement | null
-          const headerRect = headerEl?.getBoundingClientRect() ?? rect
-          const topMargin = 80
-          const arrowSize = 10
-          const tooltipSpacing = arrowSize + 8
-          const totalTooltipHeight = tooltipEstimatedHeight + tooltipSpacing
-          const idealHeaderTop = topMargin + totalTooltipHeight
-          nextTop = y0 + headerRect.top - idealHeaderTop
-        }
-        nextTop = Math.max(0, Math.min(nextTop, getTutorialScrollMax()))
-        root.scrollToTop(nextTop, 'smooth')
+        scrollTutorialProvidersIntoView(tutorialProviderNamesRef.current, currentStep)
         waitForScrollStop(() => {
           if (stepRef.current !== currentStep) return
           calculatePositions()
@@ -909,8 +918,16 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   useEffect(() => {
     if (!targetElement || !step) return
 
-    // Apply highlight
-    targetElement.classList.add('mobile-tutorial-highlight')
+    const providerHighlights =
+      step === 'select-models'
+        ? getTutorialProviderStepLayout('select-models', tutorialProviderNamesRef.current)
+            .highlights
+        : step === 'expand-provider'
+          ? getTutorialProviderStepLayout('expand-provider', tutorialProviderNamesRef.current)
+              .highlights
+          : [targetElement]
+
+    providerHighlights.forEach(el => el.classList.add('mobile-tutorial-highlight'))
 
     // Add button pulsate when tooltip says "Tap the highlighted button" (same ring + pulse as submit step).
     if (
@@ -960,7 +977,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     return () => {
       getHeroComposerForDropdownSteps()?.classList.remove('tutorial-dropdown-container-active')
-      targetElement.classList.remove('mobile-tutorial-highlight')
+      providerHighlights.forEach(el => {
+        el.classList.remove('mobile-tutorial-highlight')
+      })
       targetElement.classList.remove('mobile-tutorial-button-pulsate')
       // Clean up tabs pulse
       document.querySelectorAll('.mobile-tutorial-tabs-pulse').forEach(el => {

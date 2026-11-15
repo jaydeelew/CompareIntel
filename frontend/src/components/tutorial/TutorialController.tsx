@@ -24,6 +24,7 @@ interface TutorialControllerProps {
   // State to watch for completion detection
   googleProviderExpanded?: boolean
   googleModelsSelected?: boolean
+  tutorialProviderNames?: readonly string[]
   hasPromptText?: boolean
   hasCompletedComparison?: boolean
   isFollowUpMode?: boolean
@@ -61,6 +62,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   isLoading,
   streamAnswerStarted,
   followUpSubmitStarted,
+  tutorialProviderNames = [],
   onProviderExpanded,
   onModelsSelected,
   onPromptEntered,
@@ -273,6 +275,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       <TutorialOverlayLazy
         key={tutorialSessionKey}
         step={tutorialState.currentStep}
+        tutorialProviderNames={tutorialProviderNames}
         onComplete={handleComplete}
         onSkip={skipTutorial}
         isStepCompleted={isCurrentStepCompleted()}

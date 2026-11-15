@@ -98,7 +98,10 @@ import {
   onSaveStateEvent,
   type PersistedSessionState,
 } from '../utils/sessionState'
-import { resolveStarterSelectionModelIds } from '../utils/starterSelectionModels'
+import {
+  getProvidersForModelIds,
+  resolveStarterSelectionModelIds,
+} from '../utils/starterSelectionModels'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 import {
   filterModelsByProviderToImage,
@@ -495,19 +498,12 @@ export function MainPage() {
       setOriginalSelectedModels([])
       clearAllModeCachesRef.current()
       setDefaultSelectionOverridden(true)
-      setOpenDropdowns(prev => {
-        if (prev.has('Google')) return prev
-        const next = new Set(prev)
-        next.add('Google')
-        return next
-      })
     }
   }, [
     tutorialState.isActive,
     tutorialState.currentStep,
     setSelectedModels,
     setOriginalSelectedModels,
-    setOpenDropdowns,
   ])
 
   /** Once the welcome modal was shown, Navigation can tell “Start” dismiss from “never shown”. */
@@ -1051,6 +1047,27 @@ export function MainPage() {
       ),
     [filteredModelsByProvider, tutorialModelFilterActive, tutorialModelIds]
   )
+
+  const tutorialProviderNames = useMemo(
+    () => getProvidersForModelIds(displayModelsByProvider, tutorialModelIds),
+    [displayModelsByProvider, tutorialModelIds]
+  )
+
+  useEffect(() => {
+    const step = tutorialState.currentStep
+    if (!tutorialState.isActive || step !== 'select-models') return
+    setOpenDropdowns(prev => {
+      const next = new Set(prev)
+      let changed = false
+      for (const provider of tutorialProviderNames) {
+        if (!next.has(provider)) {
+          next.add(provider)
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [tutorialState.isActive, tutorialState.currentStep, tutorialProviderNames, setOpenDropdowns])
 
   const allModels = Object.values(displayModelsByProvider).flat()
 

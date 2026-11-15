@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ModelsByProvider } from '../../types'
-import { filterModelsForTutorial } from '../tutorialSteps'
+import { TUTORIAL_STEPS_CONFIG, filterModelsForTutorial } from '../tutorialSteps'
 
 const MODELS: ModelsByProvider = {
   Google: [
@@ -49,5 +49,21 @@ describe('filterModelsForTutorial', () => {
 
   it('no-ops when disabled', () => {
     expect(filterModelsForTutorial(MODELS, false, starterIds)).toEqual(MODELS)
+  })
+
+  it('keeps both starter providers for tutorial step 2 filtering', () => {
+    const filtered = filterModelsForTutorial(MODELS, true, starterIds)
+    expect(Object.keys(filtered).sort()).toEqual(['DeepSeek', 'Google'])
+    expect(filtered.Google).toHaveLength(1)
+    expect(filtered.DeepSeek).toHaveLength(1)
+  })
+})
+
+describe('tutorial step copy', () => {
+  it('uses plain wording on step 2 (no Starter Selection jargon)', () => {
+    expect(TUTORIAL_STEPS_CONFIG['select-models'].description).toBe(
+      'Select both models below to compare their responses.'
+    )
+    expect(TUTORIAL_STEPS_CONFIG['expand-provider'].description).not.toMatch(/Starter Selection/i)
   })
 })

@@ -75,11 +75,12 @@ test.describe('Tutorial step 2 — select starter selection models', () => {
 
     await expandProvider(page, TUTORIAL_PROVIDERS[0] ?? 'Google')
 
-    await expect(
-      page
-        .locator('.tutorial-tooltip, .mobile-tutorial-tooltip')
-        .getByRole('heading', { name: 'Select Models', exact: true })
-    ).toBeVisible({ timeout: 10000 })
+    const tooltip = page.locator('.tutorial-tooltip, .mobile-tutorial-tooltip')
+    await expect(tooltip.getByRole('heading', { name: 'Select Models', exact: true })).toBeVisible({
+      timeout: 10000,
+    })
+    await expect(tooltip).toContainText('Select both models below to compare their responses.')
+    await expect(tooltip).not.toContainText('Starter Selection')
 
     await dismissMobileBlockers(page)
 

@@ -126,6 +126,7 @@ export function TutorialManager({
           skipTutorial={skipTutorial}
           googleProviderExpanded={googleProviderExpanded}
           googleModelsSelected={googleModelsSelected}
+          tutorialProviderNames={tutorialProviders}
           hasPromptText={input.trim().length > 0}
           hasCompletedComparison={tutorialHasCompletedComparison}
           isFollowUpMode={isFollowUpMode}
@@ -161,6 +162,7 @@ export function TutorialManager({
           skipTutorial={skipTutorial}
           googleProviderExpanded={googleProviderExpanded}
           googleModelsSelected={googleModelsSelected}
+          tutorialProviderNames={tutorialProviders}
           hasPromptText={input.trim().length > 0}
           hasCompletedComparison={tutorialHasCompletedComparison}
           isFollowUpMode={isFollowUpMode}

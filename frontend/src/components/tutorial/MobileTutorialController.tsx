@@ -23,6 +23,7 @@ interface MobileTutorialControllerProps {
   streamAnswerStarted?: boolean
   /** True after user submits follow-up on step 5 (for mobile loading/stream cutout). */
   followUpSubmitStarted?: boolean
+  tutorialProviderNames?: readonly string[]
   // Callbacks for when user performs actions
   onProviderExpanded?: () => void
   onModelsSelected?: () => void
@@ -47,6 +48,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
   isLoading,
   streamAnswerStarted,
   followUpSubmitStarted = false,
+  tutorialProviderNames = [],
   onProviderExpanded,
   onModelsSelected,
   onComparisonComplete,
@@ -220,6 +222,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     <MobileTutorialOverlay
       key={tutorialSessionKey}
       step={tutorialState.currentStep}
+      tutorialProviderNames={tutorialProviderNames}
       onComplete={handleComplete}
       onSkip={skipTutorial}
       isStepCompleted={isCurrentStepCompleted()}

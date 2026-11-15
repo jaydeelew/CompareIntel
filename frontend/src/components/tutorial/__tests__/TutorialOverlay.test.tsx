@@ -66,6 +66,7 @@ function stubScrollToForTutorialTests() {
 describe('TutorialOverlay', () => {
   const defaultProps = {
     step: null as 'enter-prompt' | null,
+    tutorialProviderNames: ['Google', 'DeepSeek'] as const,
     onComplete: vi.fn(),
     onSkip: vi.fn(),
     isStepCompleted: false,

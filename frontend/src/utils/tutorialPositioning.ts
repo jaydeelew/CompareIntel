@@ -192,39 +192,104 @@ export function landOnFollowUpComposerAfterTutorial(): void {
   })
 }
 
-export function getGoogleProviderTutorialAnchor(): HTMLElement | null {
+export function escapeProviderNameForSelector(providerName: string): string {
+  if (typeof CSS !== 'undefined' && 'escape' in CSS) {
+    return CSS.escape(providerName)
+  }
+  return providerName.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
+export function getProviderDropdownByName(providerName: string): HTMLElement | null {
   return document.querySelector(
-    '.provider-dropdown[data-provider-name="Google"]'
+    `.provider-dropdown[data-provider-name="${escapeProviderNameForSelector(providerName)}"]`
   ) as HTMLElement | null
 }
 
+export function getTutorialProviderDropdowns(providerNames: readonly string[]): HTMLElement[] {
+  return providerNames.map(getProviderDropdownByName).filter((el): el is HTMLElement => el != null)
+}
+
+export function getUnionClientRect(elements: HTMLElement[]): DOMRect | null {
+  const rects = elements.map(el => el.getBoundingClientRect())
+  const union = computeRectUnion(rects, 0)
+  if (!union) return null
+  return new DOMRect(union.left, union.top, union.width, union.height)
+}
+
+export interface TutorialProviderStepLayout {
+  anchor: HTMLElement | null
+  highlights: HTMLElement[]
+  layoutRect: DOMRect | null
+}
+
+/** Layout for tutorial provider steps (step 1 = first provider; step 2 = union of all tutorial providers). */
+export function getTutorialProviderStepLayout(
+  step: 'expand-provider' | 'select-models',
+  providerNames: readonly string[]
+): TutorialProviderStepLayout {
+  const dropdowns = getTutorialProviderDropdowns(providerNames)
+  if (dropdowns.length === 0) {
+    return { anchor: null, highlights: [], layoutRect: null }
+  }
+  if (step === 'expand-provider') {
+    const primary = dropdowns[0]
+    const header = primary.querySelector('.provider-header') as HTMLElement | null
+    return {
+      anchor: header ?? primary,
+      highlights: [primary],
+      layoutRect: primary.getBoundingClientRect(),
+    }
+  }
+  return {
+    anchor: dropdowns[0],
+    highlights: dropdowns,
+    layoutRect: getUnionClientRect(dropdowns),
+  }
+}
+
 /**
- * Scrolls so the Google provider block is positioned for the tutorial tooltip.
- * - Step 1 (`expand-provider`): vertically center the whole card (collapsed row).
- * - Step 2 (`select-models`): align the card’s **top edge** to viewport vertical center so the
- *   expanded section leaves plenty of room above for the tooltip (centering the full tall card
- *   pushes the top up and crowds the tooltip).
+ * Scrolls tutorial provider block(s) into view for the tooltip.
+ * - Step 1: vertically center the first tutorial provider card.
+ * - Step 2: vertically center the union of all tutorial provider cards (both model rows visible).
  */
-export function scrollGoogleProviderTutorialIntoCenter(
+export function scrollTutorialProvidersIntoView(
+  providerNames: readonly string[],
   providerStep: 'expand-provider' | 'select-models' = 'expand-provider'
 ): void {
-  const anchor = getGoogleProviderTutorialAnchor()
-  if (!anchor) return
+  const { layoutRect } = getTutorialProviderStepLayout(providerStep, providerNames)
+  if (!layoutRect) return
   const root = getTutorialScrollRoot()
-  const rect = anchor.getBoundingClientRect()
   const y0 = root.getScrollTop()
   let nextTop: number
+  const viewH = window.innerHeight
   if (providerStep === 'select-models') {
-    const desiredViewportTop = window.innerHeight / 2
-    nextTop = y0 + rect.top - desiredViewportTop
+    const margin = 80
+    if (layoutRect.height > viewH - margin * 2) {
+      nextTop = y0 + layoutRect.top - margin
+    } else {
+      const centeredTop = (viewH - layoutRect.height) / 2
+      nextTop = y0 + layoutRect.top - centeredTop
+    }
   } else {
-    const centeredTop = window.innerHeight / 2 - rect.height / 2
-    nextTop = y0 + rect.top - centeredTop
+    const centeredTop = viewH / 2 - layoutRect.height / 2
+    nextTop = y0 + layoutRect.top - centeredTop
   }
   nextTop = Math.max(0, nextTop)
   const maxScroll = getTutorialScrollMax()
   nextTop = Math.min(nextTop, maxScroll)
   root.scrollToTop(nextTop, 'auto')
+}
+
+/** @deprecated Use getProviderDropdownByName or getTutorialProviderStepLayout */
+export function getGoogleProviderTutorialAnchor(): HTMLElement | null {
+  return getProviderDropdownByName('Google')
+}
+
+/** @deprecated Use scrollTutorialProvidersIntoView */
+export function scrollGoogleProviderTutorialIntoCenter(
+  providerStep: 'expand-provider' | 'select-models' = 'expand-provider'
+): void {
+  scrollTutorialProvidersIntoView(['Google'], providerStep)
 }
 
 function getEstimatedTooltipHeight(): number {
@@ -443,8 +508,12 @@ export function computeTooltipPosition(
   }
 }
 
-export function getScrollTargetForStep(step: TutorialStep, targetElement: HTMLElement): number {
-  const rect = targetElement.getBoundingClientRect()
+export function getScrollTargetForStep(
+  step: TutorialStep,
+  targetElement: HTMLElement,
+  layoutRect?: DOMRect | null
+): number {
+  const rect = layoutRect ?? targetElement.getBoundingClientRect()
   const y0 = getTutorialScrollRoot().getScrollTop()
   const estimatedTooltipHeight = 210
   const tooltipOffset = 16
@@ -455,9 +524,13 @@ export function getScrollTargetForStep(step: TutorialStep, targetElement: HTMLEl
     return Math.max(0, y0 + rect.top - centeredTop)
   }
   if (step === 'select-models') {
-    // Align expanded card top to viewport middle so tooltip has space above.
-    const desiredViewportTop = window.innerHeight / 2
-    return Math.max(0, y0 + rect.top - desiredViewportTop)
+    const margin = 80
+    const viewH = window.innerHeight
+    if (rect.height > viewH - margin * 2) {
+      return Math.max(0, y0 + rect.top - margin)
+    }
+    const centeredTop = (viewH - rect.height) / 2
+    return Math.max(0, y0 + rect.top - centeredTop)
   }
   if (step === 'follow-up') {
     const desiredElementTopInViewport = TOP_MARGIN + tooltipOffset + estimatedTooltipHeight
@@ -480,23 +553,17 @@ export function getScrollTargetForStep(step: TutorialStep, targetElement: HTMLEl
 
 export function findTargetForStep(
   step: TutorialStep,
-  config: StepConfig
+  config: StepConfig,
+  tutorialProviderNames: readonly string[] = []
 ): { element: HTMLElement; highlights: HTMLElement[] } | null {
   let element: HTMLElement | null = null
   let highlights: HTMLElement[] = []
 
   if (step === 'expand-provider' || step === 'select-models') {
-    const googleDropdown = document.querySelector(
-      '.provider-dropdown[data-provider-name="Google"]'
-    ) as HTMLElement | null
-    if (!googleDropdown) return null
-    if (step === 'expand-provider') {
-      element = googleDropdown.querySelector('.provider-header') as HTMLElement
-      highlights = [googleDropdown]
-    } else {
-      element = googleDropdown
-      highlights = [googleDropdown]
-    }
+    const layout = getTutorialProviderStepLayout(step, tutorialProviderNames)
+    if (!layout.anchor || layout.highlights.length === 0) return null
+    element = step === 'expand-provider' ? layout.anchor : layout.highlights[0]
+    highlights = layout.highlights
   } else if (step === 'history-dropdown') {
     element = document.querySelector(config.targetSelector) as HTMLElement | null
     const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement

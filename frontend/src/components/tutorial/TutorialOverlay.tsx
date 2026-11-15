@@ -10,6 +10,7 @@ import './TutorialOverlay.css'
 
 interface TutorialOverlayProps {
   step: TutorialStep | null
+  tutorialProviderNames: readonly string[]
   onComplete: () => void
   onSkip: () => void
   isStepCompleted?: boolean
@@ -22,6 +23,7 @@ interface TutorialOverlayProps {
 
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   step,
+  tutorialProviderNames,
   onComplete,
   onSkip,
   isStepCompleted = false,
@@ -51,7 +53,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     useRoundedCutout,
     textareaCutoutToUse,
     shouldBlock,
-  } = useTutorialOverlay(step, isLoading ?? false, streamAnswerStarted)
+  } = useTutorialOverlay(step, isLoading ?? false, streamAnswerStarted, tutorialProviderNames)
 
   if (!step) {
     return null
