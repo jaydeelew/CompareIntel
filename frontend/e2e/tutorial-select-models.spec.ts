@@ -11,6 +11,8 @@ import {
   expandTutorialProvider,
   expectSplitOrCombinedModelStep,
   expectTutorialEnterPromptStep,
+  expectTutorialTooltipDoesNotOverlapCheckbox,
+  expectTutorialTooltipStaysVisible,
   selectTutorialModelCheckbox,
   tutorialTooltip,
 } from './helpers/tutorialFlow'
@@ -78,6 +80,8 @@ test.describe('Tutorial model selection steps', () => {
     if (mode === 'split') {
       const first = TUTORIAL_MODEL_IDS[0]
       const second = TUTORIAL_MODEL_IDS[1]
+      await expectTutorialTooltipStaysVisible(page, 2000)
+      await expectTutorialTooltipDoesNotOverlapCheckbox(page, first)
       const p0 = MOCK_MODELS_RESPONSE.models.find(m => m.id === first)!.provider
       const p1 = MOCK_MODELS_RESPONSE.models.find(m => m.id === second)!.provider
 
@@ -86,6 +90,8 @@ test.describe('Tutorial model selection steps', () => {
       })
       await expandTutorialProvider(page, p1, testInfo)
       await expect(page.getByTestId(`model-checkbox-${second}`)).toBeVisible({ timeout: 15000 })
+      await expectTutorialTooltipStaysVisible(page, 2000)
+      await expectTutorialTooltipDoesNotOverlapCheckbox(page, second)
       await selectTutorialModelCheckbox(page, second, p1, testInfo, { requireMinSelected: 2 })
     } else {
       for (const modelId of TUTORIAL_MODEL_IDS) {

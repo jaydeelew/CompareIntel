@@ -1,5 +1,5 @@
 import { getComposerCutoutRects, getComposerElement } from '../components/tutorial/tutorialUtils'
-import { isSingleProviderSpotlightStep } from '../data/tutorialStepPlan'
+import { isSelectModelTutorialStep, isSingleProviderSpotlightStep } from '../data/tutorialStepPlan'
 import type { StepConfig } from '../data/tutorialSteps'
 import type { TutorialStep } from '../hooks/useTutorial'
 
@@ -250,6 +250,15 @@ export function getTutorialProviderStepLayout(
   }
   const primary = dropdowns[0]
   const header = primary.querySelector('.provider-header') as HTMLElement | null
+  if (step === 'select-starter-model-1' || step === 'select-starter-model-2') {
+    const modelRow = primary.querySelector('.provider-models .model-option') as HTMLElement | null
+    const spotlight = modelRow ?? primary
+    return {
+      anchor: spotlight,
+      highlights: [primary],
+      layoutRect: spotlight.getBoundingClientRect(),
+    }
+  }
   const anchor =
     step === 'expand-provider' || step === 'expand-starter-provider-2'
       ? (header ?? primary)
@@ -278,18 +287,16 @@ export function scrollTutorialProvidersIntoView(
   providerNames: readonly string[],
   providerStep: TutorialProviderLayoutStep = 'expand-provider'
 ): void {
-  const layoutStep: TutorialProviderLayoutStep =
-    providerStep === 'select-models' ? 'select-models' : 'expand-provider'
-  const { layoutRect } = getTutorialProviderStepLayout(
-    providerStep === 'select-models' ? 'select-models' : providerStep,
-    providerNames
-  )
+  const { layoutRect } = getTutorialProviderStepLayout(providerStep, providerNames)
   if (!layoutRect) return
   const root = getTutorialScrollRoot()
   const y0 = root.getScrollTop()
   let nextTop: number
   const viewH = window.innerHeight
-  if (layoutStep === 'select-models') {
+  if (providerStep === 'select-starter-model-1' || providerStep === 'select-starter-model-2') {
+    const tooltipReserve = getEstimatedTooltipHeight() + TOOLTIP_OFFSET + 48
+    nextTop = Math.max(0, y0 + layoutRect.top - tooltipReserve)
+  } else if (providerStep === 'select-models') {
     const margin = 80
     if (layoutRect.height > viewH - margin * 2) {
       nextTop = y0 + layoutRect.top - margin
@@ -335,6 +342,42 @@ export function computeTooltipPosition(
 
   const isEnterPromptStep =
     (step === 'enter-prompt' || step === 'enter-prompt-2') && config.position === 'bottom'
+
+  if (isSelectModelTutorialStep(step)) {
+    const selectGap = 18
+    const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+    const spaceAbove = rect.top - MARGIN
+    const spaceBelow = viewportHeight - MARGIN - rect.bottom
+    const needAbove = estimatedTooltipHeight + selectGap
+    const needBelow = estimatedTooltipHeight + selectGap
+
+    if (spaceAbove >= needAbove) {
+      let top = rect.top - selectGap
+      const tooltipTopEdge = top - estimatedTooltipHeight
+      if (tooltipTopEdge < MARGIN) {
+        top = MARGIN + estimatedTooltipHeight
+      }
+      return { top, left, effectivePosition: 'top' }
+    }
+    if (spaceBelow >= needBelow) {
+      const top = Math.min(
+        rect.bottom + selectGap,
+        viewportHeight - estimatedTooltipHeight - MARGIN
+      )
+      return { top, left, effectivePosition: 'bottom' }
+    }
+    if (spaceBelow >= spaceAbove) {
+      const top = Math.min(
+        rect.bottom + selectGap,
+        viewportHeight - estimatedTooltipHeight - MARGIN
+      )
+      return { top, left, effectivePosition: 'bottom' }
+    }
+    let top = rect.top - selectGap
+    top = Math.max(MARGIN + estimatedTooltipHeight, top)
+    return { top, left, effectivePosition: 'top' }
+  }
+
   const isTopSteps =
     (step === 'expand-provider' ||
       step === 'expand-starter-provider-2' ||
