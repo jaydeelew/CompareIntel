@@ -15,12 +15,13 @@
     "black-forest-labs/flux.2-klein-4b",
     "black-forest-labs/flux.2-max",
     "black-forest-labs/flux.2-pro",
-    "bytedance-seed/seedream-4.5",
     "bytedance-seed/seedream-5-0-flash",
+    "bytedance-seed/seedream-5-5",
     "google/gemini-2.5-flash-image",
     "google/gemini-3-pro-image",
     "google/gemini-3.1-flash-image",
     "google/gemini-nano-banana-2.1",
+    "minimax/minimax-h3-image",
     "openai/gpt-5-image",
     "openai/gpt-5-image-mini",
     "openai/gpt-image-2.6-sunburst",
@@ -28,58 +29,53 @@
     "sourceful/riverflow-v2-pro",
     "sourceful/riverflow-v2.6-pro"
   ],
-  "allowlist": [],
-  "models": {
-    "anthropic/claude-fable-5": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5_06-edge-cases-boundaries.json"
-      }
+  "allowlist": [
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
     },
-    "anthropic/claude-fable-5.1": {
+    {
+      "modelId": "google/gemini-4-carbon",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+    }
+  ],
+  "models": {
+    "anthropic/claude-fable-5.2": {
       "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5.1_01-math-basics.json"
+        "status": "incomplete",
+        "replyPath": null
       },
       "02-markdown-formatting": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5.1_02-markdown-formatting.json"
+        "status": "incomplete",
+        "replyPath": null
       },
       "03-code-blocks": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5.1_03-code-blocks.json"
+        "status": "incomplete",
+        "replyPath": null
       },
       "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5.1_04-mixed-markdown-latex.json"
+        "status": "incomplete",
+        "replyPath": null
       },
       "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5.1_05-complex-scenarios.json"
+        "status": "incomplete",
+        "replyPath": null
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-19/anthropic_claude-fable-5.1_06-edge-cases-boundaries.json"
+        "status": "incomplete",
+        "replyPath": null
       }
     },
     "anthropic/claude-haiku-4.5": {
@@ -652,6 +648,58 @@
       "06-edge-cases-boundaries": {
         "status": "pass",
         "replyPath": "runs/2026-11-08-16/google_gemini-4-argon_06-edge-cases-boundaries.json"
+      }
+    },
+    "google/gemini-4-carbon": {
+      "01-math-basics": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "02-markdown-formatting": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "03-code-blocks": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "04-mixed-markdown-latex": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "05-complex-scenarios": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "06-edge-cases-boundaries": {
+        "status": "incomplete",
+        "replyPath": null
+      }
+    },
+    "google/gemini-4-hydrogen": {
+      "01-math-basics": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "02-markdown-formatting": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "03-code-blocks": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "04-mixed-markdown-latex": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "05-complex-scenarios": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "06-edge-cases-boundaries": {
+        "status": "incomplete",
+        "replyPath": null
       }
     },
     "google/gemma-3-27b-it": {
@@ -1434,58 +1482,6 @@
         "replyPath": "runs/2026-11-08-19/openai_gpt-5.5_06-edge-cases-boundaries.json"
       }
     },
-    "openai/gpt-5.6-luna": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-13/openai_gpt-5.6-luna_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-13/openai_gpt-5.6-luna_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-13/openai_gpt-5.6-luna_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-13/openai_gpt-5.6-luna_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-13/openai_gpt-5.6-luna_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-13/openai_gpt-5.6-luna_06-edge-cases-boundaries.json"
-      }
-    },
-    "openai/gpt-5.6-sol": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-18/openai_gpt-5.6-sol_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-18/openai_gpt-5.6-sol_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-18/openai_gpt-5.6-sol_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-18/openai_gpt-5.6-sol_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-18/openai_gpt-5.6-sol_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-18/openai_gpt-5.6-sol_06-edge-cases-boundaries.json"
-      }
-    },
     "openai/gpt-6-astra": {
       "01-math-basics": {
         "status": "pass",
@@ -1824,6 +1820,32 @@
         "replyPath": "runs/2026-11-08-12/qwen_qwen3.8-max-0902_06-edge-cases-boundaries.json"
       }
     },
+    "qwen/qwen4-max": {
+      "01-math-basics": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "02-markdown-formatting": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "03-code-blocks": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "04-mixed-markdown-latex": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "05-complex-scenarios": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "06-edge-cases-boundaries": {
+        "status": "incomplete",
+        "replyPath": null
+      }
+    },
     "stepfun/step-5-preview": {
       "01-math-basics": {
         "status": "pass",
@@ -1874,6 +1896,32 @@
       "06-edge-cases-boundaries": {
         "status": "pass",
         "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_06-edge-cases-boundaries.json"
+      }
+    },
+    "tencent/hy4-flash": {
+      "01-math-basics": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "02-markdown-formatting": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "03-code-blocks": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "04-mixed-markdown-latex": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "05-complex-scenarios": {
+        "status": "incomplete",
+        "replyPath": null
+      },
+      "06-edge-cases-boundaries": {
+        "status": "incomplete",
+        "replyPath": null
       }
     },
     "x-ai/grok-4.20": {
@@ -2190,16 +2238,16 @@
     }
   },
   "totals": {
-    "registryModels": 100,
-    "textModels": 83,
-    "imageModels": 17,
-    "allowlisted": 0,
-    "cells": 498,
-    "pass": 488,
+    "registryModels": 102,
+    "textModels": 84,
+    "imageModels": 18,
+    "allowlisted": 5,
+    "cells": 504,
+    "pass": 464,
     "notCovered": 10,
     "fail": 0,
-    "incomplete": 0,
+    "incomplete": 30,
     "sourceIssue": 0,
-    "missing": 0
+    "missing": 30
   }
 }

@@ -809,7 +809,7 @@ describe('bug 29: parenthesized ($$) / ($ ) / (\\[ \\]) labels are not math (Gro
         '     And it evaluates to 0.5',
         '   - Third item',
       ].join('\n'),
-      'anthropic/claude-fable-5'
+      'anthropic/claude-fable-5.2'
     )
     const lists = Array.from(el.querySelectorAll('ul, ol')).filter(
       node => !node.closest('.katex, pre, code')

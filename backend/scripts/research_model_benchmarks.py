@@ -742,7 +742,6 @@ SWE_BENCH_PRO_SLUG_TO_MODEL_ID: dict[str, str] = {
     "gpt-oss-120b": "openai/gpt-oss-120b",
     "claude-opus-5 (thinking)*": "anthropic/claude-opus-5",
     "claude-opus-5": "anthropic/claude-opus-5",
-    "gpt-5.6-sol": "openai/gpt-5.6-sol",
     "grok-4.5": "x-ai/grok-4.5",
     "kimi-k3": "moonshotai/kimi-k3",
     "llama4-maverick-17b-instruct": "meta-llama/llama-4-maverick",
@@ -843,7 +842,6 @@ MMLU_PRO_NAME_TO_MODEL_ID: dict[str, str] = {
     "Gemini 3 Pro": "google/gemini-3.1-pro-preview",
     "Qwen 3.5": "qwen/qwen3.5-397b-a17b",
     "Claude Opus 5": "anthropic/claude-opus-5",
-    "GPT-5.6 Sol": "openai/gpt-5.6-sol",
     "Grok 4.5": "x-ai/grok-4.5",
     "Kimi K3": "moonshotai/kimi-k3",
 }
@@ -894,7 +892,6 @@ WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
     "Gemini 3 Flash": "google/gemini-3-flash-preview",
     "Gemini 3 Flash (thinking Minimal)": "google/gemini-3-flash-preview",
     "Claude Opus 5": "anthropic/claude-opus-5",
-    "Gpt 5.6 Sol": "openai/gpt-5.6-sol",
     "Grok 4.5": "x-ai/grok-4.5",
     "Kimi K3": "moonshotai/kimi-k3",
 }
@@ -917,8 +914,6 @@ VISION_ARENA_SLUG_TO_MODEL_ID: dict[str, str] = {
     "claude-opus-5": "anthropic/claude-opus-5",
     "claude-opus-5-thinking": "anthropic/claude-opus-5",
     "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
-    "gpt-5.6-sol": "openai/gpt-5.6-sol",
-    "gpt-5.6-sol-high": "openai/gpt-5.6-sol",
     "grok-4.5": "x-ai/grok-4.5",
     "kimi-k3": "moonshotai/kimi-k3",
     "gemini-3-pro": "google/gemini-3.1-pro-preview",
@@ -1024,7 +1019,8 @@ TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
     "flux-2-pro": "black-forest-labs/flux.2-pro",
     "flux-2-flex": "black-forest-labs/flux.2-flex",
     "flux-2-klein-4b": "black-forest-labs/flux.2-klein-4b",
-    "seedream-4.5": "bytedance-seed/seedream-4.5",
+    "seedream-5-5": "bytedance-seed/seedream-5-5",
+    "seedream-5.5": "bytedance-seed/seedream-5-5",
     "seedream-5.0-flash": "bytedance-seed/seedream-5-0-flash",
     "flux-3-image": "black-forest-labs/flux-3-image",
     "gpt-image-2.6-sunburst": "openai/gpt-image-2.6-sunburst",
@@ -1047,7 +1043,7 @@ TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
     "flux.2 [flex]": "black-forest-labs/flux.2-flex",
     "flux.2 [pro]": "black-forest-labs/flux.2-pro",
     "flux.2 [klein-4b]": "black-forest-labs/flux.2-klein-4b",
-    "seedream 4.5": "bytedance-seed/seedream-4.5",
+    "seedream 5.5": "bytedance-seed/seedream-5-5",
     "gemini 2.5 flash image preview": "google/gemini-2.5-flash-image",
 }
 
@@ -1257,7 +1253,6 @@ AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID: dict[str, str] = {
     "Claude Sonnet 4.6": "anthropic/claude-sonnet-4.6",
     "Llama 4 Scout": "meta-llama/llama-4-scout",
     "Claude Opus 5": "anthropic/claude-opus-5",
-    "GPT-5.6 Sol": "openai/gpt-5.6-sol",
     "Grok 4.5": "x-ai/grok-4.5",
     "Kimi K3": "moonshotai/kimi-k3",
 }

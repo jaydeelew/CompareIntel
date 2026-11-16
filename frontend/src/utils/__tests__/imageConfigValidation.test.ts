@@ -113,18 +113,18 @@ describe('imageConfigValidation', () => {
       ).toBe(true)
     })
 
-    it('returns only 2K and 4K for Seedream 4.5 (1K has RES_MISMATCH per test results)', () => {
+    it('returns only 2K and 4K for Seedream 5.5 (copied from Seedream 4.5; 1K excluded)', () => {
       const supported = getSupportedImageSizesForModels(
-        ['bytedance-seed/seedream-4.5'],
+        ['bytedance-seed/seedream-5-5'],
         {} as ModelsByProvider
       )
       expect(supported).toEqual(['2K', '4K'])
       expect(supported).not.toContain('1K')
     })
 
-    it('excludes 4:5 and 5:4 for Seedream 4.5 (AR_MISMATCH at 1K per test results)', () => {
+    it('excludes 4:5 and 5:4 for Seedream 5.5 (copied from Seedream 4.5)', () => {
       const supported = getSupportedAspectRatiosForModels(
-        ['bytedance-seed/seedream-4.5'],
+        ['bytedance-seed/seedream-5-5'],
         {} as ModelsByProvider
       )
       expect(supported).not.toContain('4:5')

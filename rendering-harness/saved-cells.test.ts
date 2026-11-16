@@ -21,7 +21,8 @@ const RENAMED_IDS = ['deepseek/deepseek-v4.1-flash-1017', 'tencent/hy4']
 
 test('unique coverage uses the complete rerun, not the empty original', async () => {
   const cells = await loadUniqueSavedCells()
-  // 498 current registry cells, plus 12 pre-rename replies that #231 left in place.
+  // 498 saved text-model cells (including 24 for models removed on 2026-11-16),
+  // plus 12 pre-rename replies that #231 left in place.
   expect(cells).toHaveLength(510)
   expect(cells.filter(cell => cell.emptyVisible || cell.error)).toEqual([])
   const retired = cells.filter(cell => RETIRED_IDS.includes(cell.modelId))

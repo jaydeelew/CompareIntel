@@ -51,6 +51,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     models: [
       { modelId: 'z-ai/glm-5.3-flash', evidence: 'Avg. $0.06/1M tokens. Fetched 2026-11-16.' },
       { modelId: 'microsoft/phi-4', evidence: 'Avg. $0.11/1M tokens. Fetched 2026-11-16.' },
+      { modelId: 'tencent/hy4-flash', evidence: 'Avg. $0.11/1M tokens. Fetched 2026-11-16.' },
       {
         modelId: 'deepseek/deepseek-v4-flash',
         evidence: 'Avg. $0.14/1M tokens. Fetched 2026-11-16.',
@@ -107,7 +108,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'meta-llama/llama-4-maverick',
         evidence: 'Avg. $0.68/1M tokens. Fetched 2026-11-16.',
       },
-      { modelId: 'openai/gpt-5.6-luna', evidence: 'Avg. $0.70/1M tokens. Fetched 2026-11-16.' },
       {
         modelId: 'meta-llama/llama-3.3-70b-instruct',
         evidence: 'Avg. $0.71/1M tokens. Fetched 2026-11-16.',
@@ -304,16 +304,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       'Ranked by Vision Arena (lmarena.ai), human preference votes on image+text prompts. Higher Arena Score = better at interpreting photos, diagrams, and screenshots. Required when you attach images to your prompt.',
     models: [
       {
-        modelId: 'anthropic/claude-fable-5',
-        evidence: 'Vision Arena (lmarena.ai): 1326. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'anthropic/claude-opus-5.5',
         evidence: 'Vision Arena (lmarena.ai): 1324. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'anthropic/claude-fable-5.1',
-        evidence: 'Vision Arena (lmarena.ai): 1322. Fetched 2026-11-16.',
       },
       {
         modelId: 'anthropic/claude-opus-4.7',
@@ -380,10 +372,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Vision Arena (lmarena.ai): 1282. Fetched 2026-11-16.',
       },
       {
-        modelId: 'openai/gpt-5.6-sol',
-        evidence: 'Vision Arena (lmarena.ai): 1282. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'openai/gpt-6-astra',
         evidence: 'Vision Arena (lmarena.ai): 1279. Fetched 2026-11-16.',
       },
@@ -402,10 +390,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'xiaomi/mimo-v2.6-flash',
         evidence: 'Vision Arena (lmarena.ai): 1260. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'openai/gpt-5.6-luna',
-        evidence: 'Vision Arena (lmarena.ai): 1256. Fetched 2026-11-16.',
       },
       {
         modelId: 'xiaomi/mimo-v2.5',
@@ -504,10 +488,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       },
       {
         modelId: 'google/gemini-2.5-flash-image',
-        evidence: 'Text-to-Image Arena (lmarena.ai): 1148. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'bytedance-seed/seedream-4.5',
         evidence: 'Text-to-Image Arena (lmarena.ai): 1148. Fetched 2026-11-16.',
       },
       {
@@ -649,14 +629,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       'Ranked by LegalBench (vals.ai) across 161 legal reasoning tasks. Higher % = stronger legal analysis and statutory interpretation.',
     models: [
       {
-        modelId: 'anthropic/claude-fable-5',
-        evidence: 'LegalBench (vals.ai): 88.56%. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'anthropic/claude-fable-5.1',
-        evidence: 'LegalBench (vals.ai): 88.51%. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'google/gemini-4-argon',
         evidence: 'LegalBench (vals.ai): 88.3%. Fetched 2026-11-16.',
       },
@@ -670,10 +642,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       },
       {
         modelId: 'anthropic/claude-opus-5',
-        evidence: 'LegalBench (vals.ai): 86.97%. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'openai/gpt-5.6-sol',
         evidence: 'LegalBench (vals.ai): 86.97%. Fetched 2026-11-16.',
       },
       {
@@ -709,10 +677,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'x-ai/grok-4.7', evidence: 'LegalBench (vals.ai): 84.39%. Fetched 2026-11-16.' },
       { modelId: 'z-ai/glm-5.2', evidence: 'LegalBench (vals.ai): 84.07%. Fetched 2026-11-16.' },
       { modelId: 'z-ai/glm-5', evidence: 'LegalBench (vals.ai): 84.06%. Fetched 2026-11-16.' },
-      {
-        modelId: 'openai/gpt-5.6-luna',
-        evidence: 'LegalBench (vals.ai): 84.03%. Fetched 2026-11-16.',
-      },
       {
         modelId: 'z-ai/glm-5.3-flash',
         evidence: 'LegalBench (vals.ai): 83.93%. Fetched 2026-11-16.',

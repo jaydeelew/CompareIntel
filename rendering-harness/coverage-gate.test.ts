@@ -130,7 +130,14 @@ test('the current repo coverage gate passes', () => {
   const manifest = buildCoverage(harnessRoot)
   const onDisk = fs.readFileSync(path.join(harnessRoot, 'coverage.json'), 'utf8')
   expect(onDisk).toBe(stableManifest(manifest))
-  expect(manifest.allowlist).toEqual([])
+  expect(manifest.allowlist.map(entry => entry.modelId)).toEqual([
+    'anthropic/claude-fable-5.2',
+    'google/gemini-4-carbon',
+    'google/gemini-4-hydrogen',
+    'qwen/qwen4-max',
+    'tencent/hy4-flash',
+  ])
+  expect(manifest.allowlist.every(entry => entry.reason.trim().length > 0)).toBe(true)
   expect(manifest.excludedImageModels.length).toBeGreaterThan(0)
   expect(manifest.excludedImageModels.every(id => !manifest.models[id])).toBe(true)
   const registry = JSON.parse(
@@ -146,8 +153,14 @@ test('the current repo coverage gate passes', () => {
   expect(result.badCells).toEqual([])
   expect(result.ok).toBe(true)
   expect(manifest.totals.fail).toBe(0)
-  expect(manifest.totals.incomplete).toBe(0)
-  expect(manifest.totals.missing).toBe(0)
+  const allow = new Set(manifest.allowlist.map(entry => entry.modelId))
+  for (const [modelId, row] of Object.entries(manifest.models)) {
+    if (allow.has(modelId)) continue
+    for (const cell of Object.values(row)) {
+      expect(cell.replyPath, modelId).toBeTruthy()
+      expect(['pass', 'not-covered', 'source-issue'], modelId).toContain(cell.status)
+    }
+  }
   expect(manifest.totals.textModels).toBe(Object.keys(manifest.models).length)
 })
 

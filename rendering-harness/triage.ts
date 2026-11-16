@@ -2,7 +2,7 @@
 /**
  * Build a fix folder for one saved cell.
  *
- *   npm run triage -- --cell=anthropic/claude-fable-5:01-math-basics
+ *   npm run triage -- --cell=anthropic/claude-opus-5:01-math-basics
  *
  * Writes triage-out/<model>__<prompt>/ with the heading-range source, a
  * reference-vs-ours line diff, a 960 CSS px DPR 2 screenshot, and a

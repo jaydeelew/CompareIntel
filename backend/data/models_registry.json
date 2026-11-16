@@ -67,18 +67,6 @@
         "knowledge_cutoff": null
       },
       {
-        "id": "anthropic/claude-fable-5",
-        "name": "Claude Fable 5",
-        "description": "Claude Fable 5 is a Mythos-class model from Anthropic, built for autonomous knowledge work and coding.",
-        "category": "Language",
-        "provider": "Anthropic",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "is_thinking_model": true,
-        "supports_vision_probed": true,
-        "knowledge_cutoff": null
-      },
-      {
         "id": "anthropic/claude-opus-5",
         "name": "Claude Opus 5",
         "description": "Claude Opus 5 is Anthropic’s flagship model for demanding reasoning, coding, and long-horizon agentic work.",
@@ -91,15 +79,14 @@
         "knowledge_cutoff": null
       },
       {
-        "id": "anthropic/claude-fable-5.1",
-        "name": "Claude Fable 5.1",
-        "description": "Claude Fable 5.1 improves on Claude Fable 5 across the board, with the biggest gains in agentic coding, long-running agentic workflows, and knowledge work: long code refactors, front-end and visual code generation, and finance and analysis tasks in particular.",
+        "id": "anthropic/claude-fable-5.2",
+        "name": "Claude Fable 5.2",
+        "description": "Claude Fable 5.2 is Anthropic's most capable model for the most demanding technical work, with gains over Fable 5.1 in coding, reasoning, and vision.",
         "category": "Language",
         "provider": "Anthropic",
         "supports_web_search": true,
         "supports_image_generation": false,
         "is_thinking_model": true,
-        "supports_vision_probed": true,
         "knowledge_cutoff": null
       },
       {
@@ -259,9 +246,9 @@
     ],
     "ByteDance Seed": [
       {
-        "id": "bytedance-seed/seedream-4.5",
-        "name": "Seedream 4.5",
-        "description": "ByteDance's image model with improved editing consistency, portrait refinement, and text rendering. Per-image pricing.",
+        "id": "bytedance-seed/seedream-5-5",
+        "name": "Seedream 5.5",
+        "description": "Seedream 5.5 is an image generation and editing model from ByteDance Seed.",
         "category": "Image",
         "provider": "ByteDance Seed",
         "supports_image_generation": true,
@@ -598,6 +585,28 @@
         "supports_image_generation": false,
         "is_thinking_model": true,
         "knowledge_cutoff": null
+      },
+      {
+        "id": "google/gemini-4-carbon",
+        "name": "Gemini 4 Carbon",
+        "description": "Gemini 4 Carbon is a frontier Gemini 4 model from Google for coding, agentic and complex reasoning work.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "google/gemini-4-hydrogen",
+        "name": "Gemini 4 Hydrogen",
+        "description": "Gemini 4 Hydrogen is the high-efficiency workhorse model of the Gemini 4 family from Google, built for high-throughput agentic workflows, coding and multi-model routing at lower cost and latency.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
       }
     ],
     "Kwaipilot": [],
@@ -677,6 +686,33 @@
         "supports_image_generation": false,
         "is_thinking_model": true,
         "knowledge_cutoff": null
+      },
+      {
+        "id": "minimax/minimax-h3-image",
+        "name": "Minimax H3 Image",
+        "description": "MiniMax H3 Image is MiniMax's image generation and editing model.",
+        "category": "Image",
+        "provider": "Minimax",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "9:16",
+          "2:3",
+          "3:4",
+          "4:5",
+          "1:1",
+          "5:4",
+          "4:3",
+          "3:2",
+          "16:9",
+          "21:9"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ],
+        "returns_multiple_images": false
       }
     ],
     "Mistral": [
@@ -832,18 +868,6 @@
         "supports_web_search": true,
         "knowledge_cutoff": "June 2025",
         "supports_vision_probed": true
-      },
-      {
-        "id": "openai/gpt-5.6-luna",
-        "name": "Gpt 5.6 Luna",
-        "description": "GPT-5.6 Luna is a fast, cost-efficient model in OpenAI's GPT-5.6 series.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "is_thinking_model": true,
-        "supports_vision_probed": true,
-        "knowledge_cutoff": null
       },
       {
         "id": "openai/gpt-6-luna",
@@ -1005,17 +1029,6 @@
         "supports_vision_probed": true
       },
       {
-        "id": "openai/gpt-5.6-sol",
-        "name": "Gpt 5.6 Sol",
-        "description": "GPT-5.6 Sol is the flagship model in OpenAI's GPT-5.6 series.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "supports_vision_probed": true,
-        "knowledge_cutoff": null
-      },
-      {
         "id": "openai/gpt-6.1-sol",
         "name": "Gpt 6.1 Sol",
         "description": "GPT-6.1 Sol is an upgrade to GPT-6 Sol from OpenAI, positioned below the flagship GPT-6 Astra in the GPT-6 series.",
@@ -1114,6 +1127,17 @@
         "id": "qwen/qwen3.8-max-0902",
         "name": "Qwen3.8 Max 0902",
         "description": "Qwen3.8 Max 0902 is an updated snapshot of Qwen3.8 Max from Alibaba's Qwen team.",
+        "category": "Language",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "qwen/qwen4-max",
+        "name": "Qwen4 Max",
+        "description": "Qwen4 Max is the flagship model in Alibaba's Qwen4 series.",
         "category": "Language",
         "provider": "Qwen",
         "supports_web_search": true,
@@ -1224,6 +1248,17 @@
         "id": "tencent/hy4",
         "name": "Hy4",
         "description": "The official release of Hy4 delivers comprehensive and substantial improvements over Hy4 Preview, with particularly strong gains in agentic capabilities and performance across a wide range of long-horizon, real-world productivity...",
+        "category": "Language",
+        "provider": "Tencent",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "tencent/hy4-flash",
+        "name": "Hy4 Flash",
+        "description": "Hy4 flash is a cost-efficient variant of Hy4 from Tencent, served with roughly a quarter of the flagship's parameter count for lower latency and cost.",
         "category": "Language",
         "provider": "Tencent",
         "supports_web_search": true,
@@ -1395,6 +1430,7 @@
     "openai/gpt-5.2",
     "openai/gpt-oss-120b",
     "qwen/qwen3-coder-next",
+    "tencent/hy4-flash",
     "xiaomi/mimo-v2.5",
     "xiaomi/mimo-v2.6-flash"
   ],
@@ -1410,7 +1446,7 @@
     "black-forest-labs/flux.2-klein-4b",
     "sourceful/riverflow-v2.6-pro",
     "sourceful/riverflow-v2-pro",
-    "bytedance-seed/seedream-4.5",
+    "bytedance-seed/seedream-5-5",
     "openai/gpt-5-image",
     "openai/gpt-5-image-mini",
     "black-forest-labs/flux-3-image",
@@ -1419,15 +1455,16 @@
     "google/gemini-3.1-flash-image",
     "google/gemini-nano-banana-2.1",
     "openai/gpt-image-2.6-sunburst",
-    "qwen/qwen-image-2.1-pro"
+    "qwen/qwen-image-2.1-pro",
+    "minimax/minimax-h3-image"
   ],
   "free_tier_additional_models": [
     "anthropic/claude-haiku-4.5",
     "anthropic/claude-haiku-5.5",
     "black-forest-labs/flux.2-flex",
     "black-forest-labs/flux.2-pro",
-    "bytedance-seed/seedream-4.5",
     "bytedance-seed/seedream-5-0-flash",
+    "bytedance-seed/seedream-5-5",
     "deepseek/deepseek-v4-pro",
     "google/gemini-2.5-flash-image",
     "google/gemini-3.1-flash-image",
@@ -1436,6 +1473,7 @@
     "meta-llama/llama-4-maverick",
     "meta-llama/llama-4-scout",
     "meta/muse-spark-1.3",
+    "minimax/minimax-h3-image",
     "minimax/minimax-m2.5",
     "minimax/minimax-m3.1-flash",
     "mistralai/mistral-medium-3.1",
@@ -1444,7 +1482,6 @@
     "openai/gpt-5-mini",
     "openai/gpt-5-nano",
     "openai/gpt-5.1-codex-mini",
-    "openai/gpt-5.6-luna",
     "openai/gpt-6-luna",
     "qwen/qwen3-30b-a3b-instruct-2507",
     "qwen/qwen3-coder-flash",

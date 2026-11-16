@@ -1,12 +1,12 @@
 {
   "data": [
     {
-      "id": "anthropic/claude-fable-5",
-      "canonical_slug": "anthropic/claude-5-fable-20260609",
+      "id": "anthropic/claude-fable-5.2",
+      "canonical_slug": "anthropic/claude-fable-5.2-20261109",
       "hugging_face_id": null,
-      "name": "Anthropic: Claude Fable 5",
-      "created": 1781007515,
-      "description": "Claude Fable 5 is a Mythos-class model from Anthropic, built for autonomous knowledge work and coding. It supports text, image, and file inputs with text output, with reasoning support and...",
+      "name": "Anthropic: Claude Fable 5.2",
+      "created": 1794253781,
+      "description": "Claude Fable 5.2 is Anthropic's most capable model for the most demanding technical work, with gains over Fable 5.1 in coding, reasoning, and vision. In prerelease testing it completed otherwise-infeasible...",
       "context_length": 1000000,
       "architecture": {
         "modality": "text+image+file->text",
@@ -22,221 +22,12 @@
         "instruct_type": null
       },
       "pricing": {
-        "prompt": "0.00001",
-        "completion": "0.00005",
+        "prompt": "0.000008",
+        "completion": "0.00004",
         "web_search": "0.01",
-        "input_cache_read": "0.000001",
-        "input_cache_write": "0.0000125",
-        "input_cache_write_1h": "0.00002"
-      },
-      "top_provider": {
-        "context_length": 1000000,
-        "max_completion_tokens": 128000,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "include_reasoning",
-        "max_completion_tokens",
-        "max_tokens",
-        "reasoning",
-        "reasoning_effort",
-        "response_format",
-        "stop",
-        "structured_outputs",
-        "tool_choice",
-        "tools",
-        "verbosity"
-      ],
-      "default_parameters": {
-        "temperature": null,
-        "top_p": null,
-        "top_k": null,
-        "frequency_penalty": null,
-        "presence_penalty": null,
-        "repetition_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": null,
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/anthropic/claude-5-fable-20260609/endpoints"
-      },
-      "benchmarks": {
-        "design_arena": [
-          {
-            "arena": "agents",
-            "category": "agenticgamedev",
-            "elo": 1295,
-            "win_rate": 64.7,
-            "rank": 1
-          },
-          {
-            "arena": "agents",
-            "category": "agentichtmlslides",
-            "elo": 1254,
-            "win_rate": 59.4,
-            "rank": 1
-          },
-          {
-            "arena": "agents",
-            "category": "agenticslides(html)",
-            "elo": 1252,
-            "win_rate": 59.5,
-            "rank": 1
-          },
-          {
-            "arena": "agents",
-            "category": "androidnative",
-            "elo": 1303,
-            "win_rate": 65,
-            "rank": 2
-          },
-          {
-            "arena": "agents",
-            "category": "fullstack",
-            "elo": 1295,
-            "win_rate": 60.9,
-            "rank": 5
-          },
-          {
-            "arena": "agents",
-            "category": "godotgamedev",
-            "elo": 1344,
-            "win_rate": 70.2,
-            "rank": 1
-          },
-          {
-            "arena": "agents",
-            "category": "htmlslides",
-            "elo": 1270,
-            "win_rate": 60.8,
-            "rank": 1
-          },
-          {
-            "arena": "agents",
-            "category": "mobileapps",
-            "elo": 1261,
-            "win_rate": 56.3,
-            "rank": 5
-          },
-          {
-            "arena": "agents",
-            "category": "python-pptxslides",
-            "elo": 1314,
-            "win_rate": 62.2,
-            "rank": 2
-          },
-          {
-            "arena": "agents",
-            "category": "webapps",
-            "elo": 1294,
-            "win_rate": 59,
-            "rank": 3
-          },
-          {
-            "arena": "models",
-            "category": "3d",
-            "elo": 1365,
-            "win_rate": 62.4,
-            "rank": 4
-          },
-          {
-            "arena": "models",
-            "category": "asciiart",
-            "elo": 1367,
-            "win_rate": 70.9,
-            "rank": 1
-          },
-          {
-            "arena": "models",
-            "category": "codecategories",
-            "elo": 1339,
-            "win_rate": 59.2,
-            "rank": 4
-          },
-          {
-            "arena": "models",
-            "category": "dataviz",
-            "elo": 1333,
-            "win_rate": 58.1,
-            "rank": 6
-          },
-          {
-            "arena": "models",
-            "category": "gamedev",
-            "elo": 1383,
-            "win_rate": 63.5,
-            "rank": 2
-          },
-          {
-            "arena": "models",
-            "category": "svg",
-            "elo": 1344,
-            "win_rate": 65.2,
-            "rank": 3
-          },
-          {
-            "arena": "models",
-            "category": "uicomponent",
-            "elo": 1344,
-            "win_rate": 58.6,
-            "rank": 5
-          },
-          {
-            "arena": "models",
-            "category": "website",
-            "elo": 1321,
-            "win_rate": 58.1,
-            "rank": 8
-          }
-        ],
-        "artificial_analysis": {
-          "intelligence_index": 62.1,
-          "coding_index": 76.5,
-          "agentic_index": 56.6
-        }
-      },
-      "reasoning": {
-        "mandatory": true,
-        "supported_efforts": [
-          "max",
-          "xhigh",
-          "high",
-          "medium",
-          "low"
-        ],
-        "default_effort": "high"
-      }
-    },
-    {
-      "id": "anthropic/claude-fable-5.1",
-      "canonical_slug": "anthropic/claude-fable-5.1-20260831",
-      "hugging_face_id": null,
-      "name": "Anthropic: Claude Fable 5.1",
-      "created": 1788285838,
-      "description": "Claude Fable 5.1 improves on Claude Fable 5 across the board, with the biggest gains in agentic coding, long-running agentic workflows, and knowledge work: long code refactors, front-end and visual...",
-      "context_length": 1000000,
-      "architecture": {
-        "modality": "text+image+file->text",
-        "input_modalities": [
-          "text",
-          "image",
-          "file"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "Claude",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.00001",
-        "completion": "0.00005",
-        "web_search": "0.01",
-        "input_cache_read": "0.00000025",
-        "input_cache_write": "0.0000125",
-        "input_cache_write_1h": "0.00002"
+        "input_cache_read": "0.0000002",
+        "input_cache_write": "0.00001",
+        "input_cache_write_1h": "0.000016"
       },
       "top_provider": {
         "context_length": 1000000,
@@ -262,120 +53,85 @@
       "knowledge_cutoff": null,
       "expiration_date": null,
       "links": {
-        "details": "/api/v1/models/anthropic/claude-fable-5.1-20260831/endpoints"
+        "details": "/api/v1/models/anthropic/claude-fable-5.2-20261109/endpoints"
       },
       "benchmarks": {
         "design_arena": [
           {
             "arena": "agents",
+            "category": "codetovideo",
+            "elo": 1433,
+            "win_rate": 80.5,
+            "rank": 1
+          },
+          {
+            "arena": "agents",
             "category": "fullstack",
-            "elo": 1326,
-            "win_rate": 57.2,
-            "rank": 1
-          },
-          {
-            "arena": "agents",
-            "category": "godotgamedev",
-            "elo": 1327,
-            "win_rate": 60.7,
-            "rank": 1
-          },
-          {
-            "arena": "agents",
-            "category": "htmlslides",
-            "elo": 1394,
-            "win_rate": 56.5,
+            "elo": 1397,
+            "win_rate": 73,
             "rank": 1
           },
           {
             "arena": "agents",
             "category": "mobileapps",
-            "elo": 1265,
-            "win_rate": 56.3,
-            "rank": 6
+            "elo": 1317,
+            "win_rate": 65.5,
+            "rank": 2
           },
           {
             "arena": "agents",
-            "category": "python-pptxslides",
-            "elo": 1318,
-            "win_rate": 60.8,
+            "category": "pdf",
+            "elo": 1337,
+            "win_rate": 72.1,
             "rank": 1
           },
           {
             "arena": "agents",
             "category": "spreadsheet",
-            "elo": 1418,
-            "win_rate": 70.4,
+            "elo": 1429,
+            "win_rate": 74.9,
             "rank": 1
-          },
-          {
-            "arena": "agents",
-            "category": "webapps",
-            "elo": 1296,
-            "win_rate": 54.9,
-            "rank": 2
           },
           {
             "arena": "models",
             "category": "3d",
-            "elo": 1403,
-            "win_rate": 63.4,
-            "rank": 5
-          },
-          {
-            "arena": "models",
-            "category": "asciiart",
-            "elo": 1321,
-            "win_rate": 65,
-            "rank": 4
+            "elo": 1494,
+            "win_rate": 72.5,
+            "rank": 1
           },
           {
             "arena": "models",
             "category": "codecategories",
-            "elo": 1333,
-            "win_rate": 57.4,
-            "rank": 8
-          },
-          {
-            "arena": "models",
-            "category": "dataviz",
-            "elo": 1344,
-            "win_rate": 61.8,
-            "rank": 5
+            "elo": 1377,
+            "win_rate": 62.7,
+            "rank": 3
           },
           {
             "arena": "models",
             "category": "gamedev",
-            "elo": 1373,
-            "win_rate": 60.2,
-            "rank": 6
-          },
-          {
-            "arena": "models",
-            "category": "svg",
-            "elo": 1296,
-            "win_rate": 56.4,
-            "rank": 9
+            "elo": 1404,
+            "win_rate": 65.1,
+            "rank": 4
           },
           {
             "arena": "models",
             "category": "uicomponent",
-            "elo": 1333,
-            "win_rate": 59.6,
-            "rank": 11
+            "elo": 1382,
+            "win_rate": 63.9,
+            "rank": 3
           },
           {
             "arena": "models",
             "category": "website",
-            "elo": 1308,
-            "win_rate": 55.1,
-            "rank": 10
+            "elo": 1352,
+            "win_rate": 60.5,
+            "rank": 3
           }
         ],
         "artificial_analysis": {
-          "intelligence_index": 49.7,
-          "coding_index": 80.7,
-          "agentic_index": 57.2
+          "intelligence_index": 64.6,
+          "coding_index": null,
+          "agentic_index": null
         }
       },
       "reasoning": {
@@ -1493,54 +1249,6 @@
       }
     },
     {
-      "id": "bytedance-seed/seedream-4.5",
-      "canonical_slug": "bytedance-seed/seedream-4.5-20251203",
-      "hugging_face_id": "",
-      "name": "ByteDance Seed: Seedream 4.5",
-      "created": 1766519506,
-      "description": "Seedream 4.5 is the latest in-house image generation model developed by ByteDance. Compared with Seedream 4.0, it delivers comprehensive improvements, especially in editing consistency, including better preservation of subject details,...",
-      "context_length": 4096,
-      "architecture": {
-        "modality": "text+image->image",
-        "input_modalities": [
-          "image",
-          "text"
-        ],
-        "output_modalities": [
-          "image"
-        ],
-        "tokenizer": "Other",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0",
-        "completion": "0"
-      },
-      "top_provider": {
-        "context_length": 4096,
-        "max_completion_tokens": null,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "frequency_penalty",
-        "max_tokens",
-        "temperature",
-        "top_p"
-      ],
-      "default_parameters": {
-        "temperature": null,
-        "top_p": null,
-        "frequency_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": null,
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/bytedance-seed/seedream-4.5-20251203/endpoints"
-      }
-    },
-    {
       "id": "bytedance-seed/seedream-5-0-flash",
       "canonical_slug": "bytedance-seed/seedream-5-0-flash-20261001",
       "hugging_face_id": null,
@@ -1585,6 +1293,53 @@
       "expiration_date": null,
       "links": {
         "details": "/api/v1/models/bytedance-seed/seedream-5-0-flash-20261001/endpoints"
+      }
+    },
+    {
+      "id": "bytedance-seed/seedream-5-5",
+      "canonical_slug": "bytedance-seed/seedream-5-5-20261112",
+      "hugging_face_id": null,
+      "name": "ByteDance Seed: Seedream 5.5",
+      "created": 1794517601,
+      "description": "Seedream 5.5 is an image generation and editing model from ByteDance Seed. It is suited for creating images from text prompts and for editing or combining existing images, using up...",
+      "context_length": 0,
+      "architecture": {
+        "modality": "text+image->image",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "image"
+        ],
+        "tokenizer": "Media",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0",
+        "completion": "0",
+        "image": "0.008",
+        "image_token": "0.00000479041916167665",
+        "image_output": "0.00000479041916167665"
+      },
+      "top_provider": {
+        "context_length": 0,
+        "max_completion_tokens": 0,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "frequency_penalty",
+        "max_tokens",
+        "temperature",
+        "top_p"
+      ],
+      "default_parameters": {},
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/bytedance-seed/seedream-5-5-20261112/endpoints"
       }
     },
     {
@@ -3014,6 +2769,293 @@
       }
     },
     {
+      "id": "google/gemini-4-carbon",
+      "canonical_slug": "google/gemini-4-carbon-20261110",
+      "hugging_face_id": null,
+      "name": "Google: Gemini 4 Carbon",
+      "created": 1794326871,
+      "description": "Gemini 4 Carbon is a frontier Gemini 4 model from Google for coding, agentic and complex reasoning work. It takes text, image, audio, video and file input, supports long decode...",
+      "context_length": 1048576,
+      "architecture": {
+        "modality": "text+image+file+audio+video->text",
+        "input_modalities": [
+          "audio",
+          "file",
+          "image",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Gemini",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.000002",
+        "completion": "0.00001",
+        "image": "0.000002",
+        "audio": "0.000002",
+        "input_audio_cache": "0.0000001",
+        "web_search": "0.014",
+        "internal_reasoning": "0.00001",
+        "input_cache_read": "0.0000001",
+        "input_cache_write": "0.0000001875"
+      },
+      "top_provider": {
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "include_reasoning",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p"
+      ],
+      "default_parameters": {
+        "temperature": null,
+        "top_p": null,
+        "top_k": null,
+        "frequency_penalty": null,
+        "presence_penalty": null,
+        "repetition_penalty": null
+      },
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/google/gemini-4-carbon-20261110/endpoints"
+      },
+      "benchmarks": {
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "mobileapps",
+            "elo": 1294,
+            "win_rate": 61.6,
+            "rank": 4
+          },
+          {
+            "arena": "agents",
+            "category": "pdf",
+            "elo": 1334,
+            "win_rate": 69.5,
+            "rank": 2
+          },
+          {
+            "arena": "agents",
+            "category": "spreadsheet",
+            "elo": 1220,
+            "win_rate": 48.3,
+            "rank": 13
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1428,
+            "win_rate": 69.2,
+            "rank": 5
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1350,
+            "win_rate": 60.2,
+            "rank": 7
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1334,
+            "win_rate": 57.6,
+            "rank": 12
+          },
+          {
+            "arena": "models",
+            "category": "svg",
+            "elo": 1404,
+            "win_rate": 69.8,
+            "rank": 1
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1347,
+            "win_rate": 59.8,
+            "rank": 8
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1318,
+            "win_rate": 56.5,
+            "rank": 8
+          }
+        ],
+        "artificial_analysis": {
+          "intelligence_index": 60,
+          "coding_index": null,
+          "agentic_index": null
+        }
+      },
+      "reasoning": {
+        "mandatory": true,
+        "supported_efforts": [
+          "high",
+          "medium",
+          "low"
+        ],
+        "default_effort": "medium"
+      }
+    },
+    {
+      "id": "google/gemini-4-hydrogen",
+      "canonical_slug": "google/gemini-4-hydrogen-20261112",
+      "hugging_face_id": null,
+      "name": "Google: Gemini 4 Hydrogen",
+      "created": 1794506460,
+      "description": "Gemini 4 Hydrogen is the high-efficiency workhorse model of the Gemini 4 family from Google, built for high-throughput agentic workflows, coding and multi-model routing at lower cost and latency than...",
+      "context_length": 1048576,
+      "architecture": {
+        "modality": "text+image+file+audio+video->text",
+        "input_modalities": [
+          "audio",
+          "file",
+          "image",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Gemini",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.0000015",
+        "completion": "0.0000075",
+        "image": "0.0000015",
+        "audio": "0.0000015",
+        "input_audio_cache": "0.000000075",
+        "web_search": "0.014",
+        "internal_reasoning": "0.0000075",
+        "input_cache_read": "0.000000075",
+        "input_cache_write": "0.0000000833333333333333"
+      },
+      "top_provider": {
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "include_reasoning",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p"
+      ],
+      "default_parameters": {
+        "temperature": null,
+        "top_p": null,
+        "top_k": null,
+        "frequency_penalty": null,
+        "presence_penalty": null,
+        "repetition_penalty": null
+      },
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/google/gemini-4-hydrogen-20261112/endpoints"
+      },
+      "benchmarks": {
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "pdf",
+            "elo": 1242,
+            "win_rate": 59.6,
+            "rank": 8
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1413,
+            "win_rate": 67.5,
+            "rank": 7
+          },
+          {
+            "arena": "models",
+            "category": "asciiart",
+            "elo": 1468,
+            "win_rate": 74.8,
+            "rank": 1
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1335,
+            "win_rate": 57.1,
+            "rank": 10
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1353,
+            "win_rate": 54.5,
+            "rank": 10
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1328,
+            "win_rate": 53.7,
+            "rank": 15
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1328,
+            "win_rate": 58.8,
+            "rank": 5
+          }
+        ],
+        "artificial_analysis": {
+          "intelligence_index": 53.9,
+          "coding_index": null,
+          "agentic_index": null
+        }
+      },
+      "reasoning": {
+        "mandatory": true,
+        "supported_efforts": [
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ],
+        "default_effort": "medium"
+      }
+    },
+    {
       "id": "google/gemini-nano-banana-2.1",
       "canonical_slug": "google/gemini-nano-banana-2.1-20261006",
       "hugging_face_id": null,
@@ -3663,6 +3705,51 @@
       "expiration_date": null,
       "links": {
         "details": "/api/v1/models/microsoft/phi-4/endpoints"
+      }
+    },
+    {
+      "id": "minimax/minimax-h3-image",
+      "canonical_slug": "minimax/minimax-h3-image-20261110",
+      "hugging_face_id": "MiniMaxAI/MiniMax-H3-Image",
+      "name": "MiniMax: MiniMax H3 Image",
+      "created": 1794340143,
+      "description": "MiniMax H3 Image is MiniMax's image generation and editing model. It creates images from text prompts and edits or composes images from 1 to 16 reference images, with output up...",
+      "context_length": 4096,
+      "architecture": {
+        "modality": "text+image->image",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "image"
+        ],
+        "tokenizer": "Other",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.0000023",
+        "completion": "0",
+        "image_token": "0.0000038",
+        "image_output": "0.0000038"
+      },
+      "top_provider": {
+        "context_length": 4096,
+        "max_completion_tokens": 3686,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "max_tokens",
+        "temperature",
+        "top_p"
+      ],
+      "default_parameters": {},
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/minimax/minimax-h3-image-20261110/endpoints"
       }
     },
     {
@@ -5443,188 +5530,6 @@
       }
     },
     {
-      "id": "openai/gpt-5.6-luna",
-      "canonical_slug": "openai/gpt-5.6-luna-20260709",
-      "hugging_face_id": null,
-      "name": "OpenAI: GPT-5.6 Luna",
-      "created": 1783590864,
-      "description": "GPT-5.6 Luna is a fast, cost-efficient model in OpenAI's GPT-5.6 series. It is suited for high-volume, latency-sensitive tasks such as chat, classification, and lightweight agentic workflows, providing capable reasoning for...",
-      "context_length": 1050000,
-      "architecture": {
-        "modality": "text+image+file->text",
-        "input_modalities": [
-          "file",
-          "image",
-          "text"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "GPT",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.0000002",
-        "completion": "0.0000012",
-        "web_search": "0.01",
-        "input_cache_read": "0.00000002",
-        "input_cache_write": "0.00000025",
-        "overrides": [
-          {
-            "min_prompt_tokens": 272000,
-            "prompt": "0.0000004",
-            "completion": "0.0000018",
-            "input_cache_read": "0.00000004",
-            "input_cache_write": "0.0000005"
-          }
-        ]
-      },
-      "top_provider": {
-        "context_length": 1050000,
-        "max_completion_tokens": 128000,
-        "is_moderated": true
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "include_reasoning",
-        "max_completion_tokens",
-        "max_tokens",
-        "reasoning",
-        "reasoning_effort",
-        "response_format",
-        "seed",
-        "structured_outputs",
-        "tool_choice",
-        "tools"
-      ],
-      "default_parameters": {
-        "temperature": null,
-        "top_p": null,
-        "top_k": null,
-        "frequency_penalty": null,
-        "presence_penalty": null,
-        "repetition_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": "2026-02-16",
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/openai/gpt-5.6-luna-20260709/endpoints"
-      },
-      "benchmarks": {
-        "design_arena": [],
-        "artificial_analysis": {
-          "intelligence_index": 52.3,
-          "coding_index": 71.4,
-          "agentic_index": 46.9
-        }
-      },
-      "reasoning": {
-        "mandatory": false,
-        "default_enabled": true,
-        "supported_efforts": [
-          "max",
-          "xhigh",
-          "high",
-          "medium",
-          "low",
-          "none"
-        ],
-        "default_effort": "medium"
-      }
-    },
-    {
-      "id": "openai/gpt-5.6-sol",
-      "canonical_slug": "openai/gpt-5.6-sol-20260709",
-      "hugging_face_id": null,
-      "name": "OpenAI: GPT-5.6 Sol",
-      "created": 1783590850,
-      "description": "GPT-5.6 Sol is the flagship model in OpenAI's GPT-5.6 series. It is suited for complex reasoning, coding, and agentic workflows, and is particularly strong at command-line and multi-step coding tasks...",
-      "context_length": 1050000,
-      "architecture": {
-        "modality": "text+image+file->text",
-        "input_modalities": [
-          "file",
-          "image",
-          "text"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "GPT",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.000002",
-        "completion": "0.00001",
-        "web_search": "0.01",
-        "input_cache_read": "0.0000002",
-        "input_cache_write": "0.0000025",
-        "overrides": [
-          {
-            "min_prompt_tokens": 272000,
-            "prompt": "0.000004",
-            "completion": "0.000015",
-            "input_cache_read": "0.0000004",
-            "input_cache_write": "0.000005"
-          }
-        ]
-      },
-      "top_provider": {
-        "context_length": 1050000,
-        "max_completion_tokens": 128000,
-        "is_moderated": true
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "include_reasoning",
-        "max_completion_tokens",
-        "max_tokens",
-        "reasoning",
-        "reasoning_effort",
-        "response_format",
-        "seed",
-        "structured_outputs",
-        "tool_choice",
-        "tools"
-      ],
-      "default_parameters": {
-        "temperature": null,
-        "top_p": null,
-        "top_k": null,
-        "frequency_penalty": null,
-        "presence_penalty": null,
-        "repetition_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": "2026-02-16",
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/openai/gpt-5.6-sol-20260709/endpoints"
-      },
-      "benchmarks": {
-        "design_arena": [],
-        "artificial_analysis": {
-          "intelligence_index": 60.9,
-          "coding_index": 77.4,
-          "agentic_index": 57.8
-        }
-      },
-      "reasoning": {
-        "mandatory": false,
-        "default_enabled": true,
-        "supported_efforts": [
-          "max",
-          "xhigh",
-          "high",
-          "medium",
-          "low",
-          "none"
-        ],
-        "default_effort": "medium"
-      }
-    },
-    {
       "id": "openai/gpt-6-astra",
       "canonical_slug": "openai/gpt-6-astra-20260903",
       "hugging_face_id": null,
@@ -6671,6 +6576,78 @@
       }
     },
     {
+      "id": "qwen/qwen4-max",
+      "canonical_slug": "qwen/qwen4-max-20261115",
+      "hugging_face_id": null,
+      "name": "Qwen: Qwen4 Max",
+      "created": 1794795526,
+      "description": "Qwen4 Max is the flagship model in Alibaba's Qwen4 series. It accepts text, image, and video input and returns text, with a 1M-token context window and reasoning enabled by default....",
+      "context_length": 1000000,
+      "architecture": {
+        "modality": "text+image+video->text",
+        "input_modalities": [
+          "text",
+          "image",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Qwen",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.0000015",
+        "completion": "0.0000045",
+        "input_cache_read": "0.000000075",
+        "input_cache_write": "0.000001875"
+      },
+      "top_provider": {
+        "context_length": 1000000,
+        "max_completion_tokens": 131072,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logprobs",
+        "max_tokens",
+        "presence_penalty",
+        "reasoning",
+        "reasoning_effort",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "default_parameters": {},
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/qwen/qwen4-max-20261115/endpoints"
+      },
+      "reasoning": {
+        "mandatory": false,
+        "default_enabled": true,
+        "supported_efforts": [
+          "xhigh",
+          "high",
+          "low",
+          "none"
+        ],
+        "default_effort": "high"
+      }
+    },
+    {
       "id": "sourceful/riverflow-v2-pro",
       "canonical_slug": "sourceful/riverflow-v2-pro-20260130",
       "hugging_face_id": "",
@@ -6965,6 +6942,61 @@
           "none"
         ],
         "default_effort": "high"
+      }
+    },
+    {
+      "id": "tencent/hy4-flash",
+      "canonical_slug": "tencent/hy4-flash-20261116",
+      "hugging_face_id": null,
+      "name": "Tencent: Hy4 flash",
+      "created": 1794838706,
+      "description": "Hy4 flash is a cost-efficient variant of Hy4 from Tencent, served with roughly a quarter of the flagship's parameter count for lower latency and cost. It targets code assistance, agent...",
+      "context_length": 1048576,
+      "architecture": {
+        "modality": "text+image->text",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Other",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.00000004375",
+        "completion": "0.000000175625",
+        "input_cache_read": "0.000000001875"
+      },
+      "top_provider": {
+        "context_length": 1048576,
+        "max_completion_tokens": 65536,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "response_format",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools"
+      ],
+      "default_parameters": {},
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/tencent/hy4-flash-20261116/endpoints"
+      },
+      "reasoning": {
+        "mandatory": false,
+        "default_enabled": true
       }
     },
     {

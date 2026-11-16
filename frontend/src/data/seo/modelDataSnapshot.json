@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-02",
+  "generated": "2026-11-16",
   "sources": {
     "registry": "backend/data/models_registry.json (master)",
     "renderer": "frontend/src/config/model_renderer_configs.json",
@@ -7,9 +7,9 @@
     "rankings": "https://openrouter.ai/rankings (fetched 2026-10-25)",
     "compareintel_api": "UNREACHABLE (no response)"
   },
-  "model_count": 93,
+  "model_count": 96,
   "models": [
-    {
+{
       "id": "anthropic/claude-haiku-4.5",
       "slug": "claude-haiku-4-5",
       "name": "Claude Haiku 4.5",
@@ -42,7 +42,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "anthropic/claude-opus-4.1",
       "slug": "claude-opus-4-1",
       "name": "Claude Opus 4.1",
@@ -75,7 +75,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "anthropic/claude-opus-4.5",
       "slug": "claude-opus-4-5",
       "name": "Claude Opus 4.5",
@@ -108,7 +108,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "anthropic/claude-sonnet-4.5",
       "slug": "claude-sonnet-4-5",
       "name": "Claude Sonnet 4.5",
@@ -141,7 +141,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "anthropic/claude-opus-4.6",
       "slug": "claude-opus-4-6",
       "name": "Claude Opus 4.6",
@@ -174,7 +174,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "anthropic/claude-sonnet-4.6",
       "slug": "claude-sonnet-4-6",
       "name": "Claude Sonnet 4.6",
@@ -207,7 +207,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "anthropic/claude-opus-4.7",
       "slug": "claude-opus-4-7",
       "name": "Claude Opus 4.7",
@@ -240,7 +240,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "anthropic/claude-opus-4.8",
       "slug": "claude-opus-4-8",
       "name": "Claude Opus 4.8",
@@ -273,40 +273,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
-      "id": "anthropic/claude-fable-5",
-      "slug": "claude-fable-5",
-      "name": "Claude Fable 5",
-      "provider": "Anthropic",
-      "category": "Language",
-      "description_registry": "Claude Fable 5 is a Mythos-class model from Anthropic, built for autonomous knowledge work and coding.",
-      "description_openrouter": "Claude Fable 5 is a Mythos-class model from Anthropic, built for autonomous knowledge work and coding. It supports text, image, and file inputs with text output, with reasoning support and...",
-      "knowledge_cutoff": null,
-      "supports_web_search": true,
-      "supports_vision": true,
-      "supports_image_generation": false,
-      "is_thinking_model": true,
-      "available": null,
-      "context_length": 1000000,
-      "max_completion_tokens": 128000,
-      "input_modalities": [
-        "text",
-        "image",
-        "file"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 10.0,
-      "price_output_usd_per_mtok": 50.0,
-      "price_per_image_usd": null,
-      "openrouter_created": "2026-06-09",
-      "openrouter_url": "https://openrouter.ai/anthropic/claude-fable-5",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-    {
+{
       "id": "anthropic/claude-opus-5",
       "slug": "claude-opus-5",
       "name": "Claude Opus 5",
@@ -339,7 +306,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "black-forest-labs/flux.2-flex",
       "slug": "flux-2-flex",
       "name": "Flux 2 Flex",
@@ -371,7 +338,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "black-forest-labs/flux.2-pro",
       "slug": "flux-2-pro",
       "name": "Flux 2 Pro",
@@ -403,7 +370,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "black-forest-labs/flux.2-klein-4b",
       "slug": "flux-2-klein-4b",
       "name": "Flux 2 Klein 4B",
@@ -435,7 +402,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "black-forest-labs/flux.2-max",
       "slug": "flux-2-max",
       "name": "Flux 2 Max",
@@ -467,39 +434,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
-      "id": "bytedance-seed/seedream-4.5",
-      "slug": "seedream-4-5",
-      "name": "Seedream 4.5",
-      "provider": "ByteDance Seed",
-      "category": "Image",
-      "description_registry": "ByteDance's image model with improved editing consistency, portrait refinement, and text rendering. Per-image pricing.",
-      "description_openrouter": "Seedream 4.5 is the latest in-house image generation model developed by ByteDance. Compared with Seedream 4.0, it delivers comprehensive improvements, especially in editing consistency, including better preservation of subject details,...",
-      "knowledge_cutoff": "N/A",
-      "supports_web_search": false,
-      "supports_vision": null,
-      "supports_image_generation": true,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 4096,
-      "max_completion_tokens": 3686,
-      "input_modalities": [
-        "image",
-        "text"
-      ],
-      "output_modalities": [
-        "image"
-      ],
-      "price_input_usd_per_mtok": 0.0,
-      "price_output_usd_per_mtok": 0.0,
-      "price_per_image_usd": 0.0,
-      "openrouter_created": "2025-12-23",
-      "openrouter_url": "https://openrouter.ai/bytedance-seed/seedream-4.5",
-      "has_renderer_config": false,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-        {
+{
       "id": "cohere/command-r-plus-08-2024",
       "slug": "command-r-plus-08-2024",
       "name": "Command R+",
@@ -530,7 +465,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "cohere/command-a",
       "slug": "command-a",
       "name": "Command A",
@@ -561,7 +496,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "deepseek/deepseek-chat-v3.1",
       "slug": "deepseek-chat-v3-1",
       "name": "DeepSeek Chat V3.1",
@@ -592,7 +527,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "deepseek/deepseek-v3.2-exp",
       "slug": "deepseek-v3-2-exp",
       "name": "DeepSeek V3.2 Exp",
@@ -623,7 +558,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "deepseek/deepseek-v3.2",
       "slug": "deepseek-v3-2",
       "name": "Deepseek V3.2",
@@ -654,7 +589,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "deepseek/deepseek-v4-flash",
       "slug": "deepseek-v4-flash",
       "name": "Deepseek V4 Flash",
@@ -685,7 +620,7 @@
       "openrouter_rankings_position": 7,
       "in_openrouter": true
     },
-    {
+{
       "id": "deepseek/deepseek-v4-pro",
       "slug": "deepseek-v4-pro",
       "name": "Deepseek V4 Pro",
@@ -716,7 +651,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemini-2.5-flash",
       "slug": "gemini-2-5-flash",
       "name": "Gemini 2.5 Flash",
@@ -751,7 +686,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemini-2.5-flash-image",
       "slug": "gemini-2-5-flash-image",
       "name": "Gemini 2.5 Flash Image",
@@ -784,7 +719,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemma-3-27b-it",
       "slug": "gemma-3-27b-it",
       "name": "Gemma 3 27B It",
@@ -816,7 +751,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemini-3.1-flash-lite-preview",
       "slug": "gemini-3-1-flash-lite-preview",
       "name": "Gemini 3.1 Flash Lite Preview",
@@ -851,7 +786,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemma-4-26b-a4b-it",
       "slug": "gemma-4-26b-a4b-it",
       "name": "Gemma 4 26B A4B It",
@@ -884,7 +819,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemma-4-31b-it",
       "slug": "gemma-4-31b-it",
       "name": "Gemma 4 31B It",
@@ -917,7 +852,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemini-3.1-flash-image-preview",
       "slug": "gemini-3-1-flash-image-preview",
       "name": "Gemini 3.1 Flash Image",
@@ -950,7 +885,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemini-3.6-flash",
       "slug": "gemini-3-6-flash",
       "name": "Gemini 3.6 Flash",
@@ -985,7 +920,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemini-2.5-pro",
       "slug": "gemini-2-5-pro",
       "name": "Gemini 2.5 Pro",
@@ -1020,7 +955,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemini-3-flash-preview",
       "slug": "gemini-3-flash-preview",
       "name": "Gemini 3 Flash Preview",
@@ -1055,7 +990,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemini-3-pro-image-preview",
       "slug": "gemini-3-pro-image-preview",
       "name": "Gemini 3 Pro Image (Nano Banana Pro)",
@@ -1088,7 +1023,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "google/gemini-3.1-pro-preview",
       "slug": "gemini-3-1-pro-preview",
       "name": "Gemini 3.1 Pro Preview",
@@ -1123,7 +1058,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "meta-llama/llama-4-maverick",
       "slug": "llama-4-maverick",
       "name": "Llama 4 Maverick",
@@ -1155,7 +1090,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "meta-llama/llama-4-scout",
       "slug": "llama-4-scout",
       "name": "Llama 4 Scout",
@@ -1187,7 +1122,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "meta-llama/llama-3.3-70b-instruct",
       "slug": "llama-3-3-70b-instruct",
       "name": "Llama 3.3 70B Instruct",
@@ -1218,7 +1153,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "microsoft/phi-4",
       "slug": "phi-4",
       "name": "Phi 4",
@@ -1249,7 +1184,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "minimax/minimax-m2.5",
       "slug": "minimax-m2-5",
       "name": "Minimax M2.5",
@@ -1280,7 +1215,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "minimax/minimax-m2",
       "slug": "minimax-m2",
       "name": "Minimax M2",
@@ -1311,7 +1246,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "mistralai/mistral-medium-3.1",
       "slug": "mistral-medium-3-1",
       "name": "Mistral Medium 3.1",
@@ -1344,7 +1279,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "mistralai/mistral-small-3.2-24b-instruct",
       "slug": "mistral-small-3-2-24b-instruct",
       "name": "Mistral Small 3.2 24B",
@@ -1376,7 +1311,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "mistralai/mistral-large",
       "slug": "mistral-large",
       "name": "Mistral Large",
@@ -1408,7 +1343,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "mistralai/codestral-2508",
       "slug": "codestral-2508",
       "name": "Codestral 2508",
@@ -1440,7 +1375,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "moonshotai/kimi-k2.5",
       "slug": "kimi-k2-5",
       "name": "Kimi K2.5",
@@ -1472,7 +1407,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "moonshotai/kimi-k2.6",
       "slug": "kimi-k2-6",
       "name": "Kimi K2.6",
@@ -1504,7 +1439,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "moonshotai/kimi-k3",
       "slug": "kimi-k3",
       "name": "Kimi K3",
@@ -1537,7 +1472,7 @@
       "openrouter_rankings_position": 18,
       "in_openrouter": true
     },
-    {
+{
       "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
       "slug": "nemotron-3-ultra-550b-a55b",
       "name": "Nemotron 3 Ultra 550B A55B:Free",
@@ -1568,7 +1503,7 @@
       "openrouter_rankings_position": 9,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5-image-mini",
       "slug": "gpt-5-image-mini",
       "name": "GPT-5 Image Mini",
@@ -1602,7 +1537,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-oss-120b",
       "slug": "gpt-oss-120b",
       "name": "Gpt Oss 120B",
@@ -1633,7 +1568,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/o3-mini",
       "slug": "o3-mini",
       "name": "o3 Mini",
@@ -1665,7 +1600,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5-mini",
       "slug": "gpt-5-mini",
       "name": "GPT-5 Mini",
@@ -1698,7 +1633,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5-nano",
       "slug": "gpt-5-nano",
       "name": "GPT-5 Nano",
@@ -1731,7 +1666,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.1-codex-mini",
       "slug": "gpt-5-1-codex-mini",
       "name": "GPT-5.1-Codex-Mini",
@@ -1763,40 +1698,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
-      "id": "openai/gpt-5.6-luna",
-      "slug": "gpt-5-6-luna",
-      "name": "Gpt 5.6 Luna",
-      "provider": "OpenAI",
-      "category": "Language",
-      "description_registry": "GPT-5.6 Luna is a fast, cost-efficient model in OpenAI's GPT-5.6 series.",
-      "description_openrouter": "GPT-5.6 Luna is a fast, cost-efficient model in OpenAI's GPT-5.6 series. It is suited for high-volume, latency-sensitive tasks such as chat, classification, and lightweight agentic workflows, providing capable reasoning for...",
-      "knowledge_cutoff": null,
-      "supports_web_search": true,
-      "supports_vision": true,
-      "supports_image_generation": false,
-      "is_thinking_model": true,
-      "available": null,
-      "context_length": 1050000,
-      "max_completion_tokens": 128000,
-      "input_modalities": [
-        "file",
-        "image",
-        "text"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 0.19999999999999998,
-      "price_output_usd_per_mtok": 1.2,
-      "price_per_image_usd": null,
-      "openrouter_created": "2026-07-09",
-      "openrouter_url": "https://openrouter.ai/openai/gpt-5.6-luna",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-    {
+{
       "id": "openai/o3",
       "slug": "o3",
       "name": "o3",
@@ -1829,7 +1731,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-        {
+{
       "id": "openai/gpt-4o-mini",
       "slug": "gpt-4o-mini",
       "name": "Gpt 4o Mini",
@@ -1862,7 +1764,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5",
       "slug": "gpt-5",
       "name": "GPT-5",
@@ -1895,7 +1797,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5-image",
       "slug": "gpt-5-image",
       "name": "GPT-5 Image",
@@ -1929,7 +1831,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.1",
       "slug": "gpt-5-1",
       "name": "GPT-5.1",
@@ -1962,7 +1864,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.1-codex",
       "slug": "gpt-5-1-codex",
       "name": "GPT-5.1-Codex",
@@ -1994,7 +1896,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.1-codex-max",
       "slug": "gpt-5-1-codex-max",
       "name": "Gpt 5.1 Codex Max",
@@ -2026,7 +1928,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.2",
       "slug": "gpt-5-2",
       "name": "Gpt 5.2",
@@ -2059,7 +1961,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.2-chat",
       "slug": "gpt-5-2-chat",
       "name": "Gpt 5.2 Chat",
@@ -2092,7 +1994,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.2-codex",
       "slug": "gpt-5-2-codex",
       "name": "Gpt 5.2 Codex",
@@ -2124,7 +2026,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.2-pro",
       "slug": "gpt-5-2-pro",
       "name": "Gpt 5.2 Pro",
@@ -2157,7 +2059,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.3-codex",
       "slug": "gpt-5-3-codex",
       "name": "Gpt 5.3 Codex",
@@ -2190,7 +2092,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.4",
       "slug": "gpt-5-4",
       "name": "Gpt 5.4",
@@ -2223,7 +2125,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.4-pro",
       "slug": "gpt-5-4-pro",
       "name": "Gpt 5.4 Pro",
@@ -2256,7 +2158,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-5.5",
       "slug": "gpt-5-5",
       "name": "Gpt 5.5",
@@ -2289,40 +2191,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
-      "id": "openai/gpt-5.6-sol",
-      "slug": "gpt-5-6-sol",
-      "name": "Gpt 5.6 Sol",
-      "provider": "OpenAI",
-      "category": "Language",
-      "description_registry": "GPT-5.6 Sol is the flagship model in OpenAI's GPT-5.6 series.",
-      "description_openrouter": "GPT-5.6 Sol is the flagship model in OpenAI's GPT-5.6 series. It is suited for complex reasoning, coding, and agentic workflows, and is particularly strong at command-line and multi-step coding tasks...",
-      "knowledge_cutoff": null,
-      "supports_web_search": true,
-      "supports_vision": true,
-      "supports_image_generation": false,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 1050000,
-      "max_completion_tokens": 128000,
-      "input_modalities": [
-        "file",
-        "image",
-        "text"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 4.0,
-      "price_output_usd_per_mtok": 20.0,
-      "price_per_image_usd": null,
-      "openrouter_created": "2026-07-09",
-      "openrouter_url": "https://openrouter.ai/openai/gpt-5.6-sol",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-        {
+{
       "id": "qwen/qwen3-coder-next",
       "slug": "qwen3-coder-next",
       "name": "Qwen3 Coder Next",
@@ -2353,7 +2222,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "qwen/qwen3-30b-a3b-instruct-2507",
       "slug": "qwen3-30b-a3b-instruct-2507",
       "name": "Qwen3 30B A3B Instruct 2507",
@@ -2384,7 +2253,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "qwen/qwen3-coder-flash",
       "slug": "qwen3-coder-flash",
       "name": "Qwen3 Coder Flash",
@@ -2415,7 +2284,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "qwen/qwen3-next-80b-a3b-instruct",
       "slug": "qwen3-next-80b-a3b-instruct",
       "name": "Qwen3 Next 80B A3B Instruct",
@@ -2446,7 +2315,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "qwen/qwen3.5-397b-a17b",
       "slug": "qwen3-5-397b-a17b",
       "name": "Qwen3.5 397B A17B",
@@ -2479,7 +2348,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "qwen/qwen3.5-plus-02-15",
       "slug": "qwen3-5-plus-02-15",
       "name": "Qwen3.5 Plus 02 15",
@@ -2512,7 +2381,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "qwen/qwen3-coder",
       "slug": "qwen3-coder",
       "name": "Qwen3 Coder 480B A35B",
@@ -2543,7 +2412,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "qwen/qwen3-next-80b-a3b-thinking",
       "slug": "qwen3-next-80b-a3b-thinking",
       "name": "Qwen3 Next 80B A3B Thinking",
@@ -2574,7 +2443,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-        {
+{
       "id": "sourceful/riverflow-v2-pro",
       "slug": "riverflow-v2-pro",
       "name": "Riverflow V2 Pro",
@@ -2606,7 +2475,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "x-ai/grok-4.3",
       "slug": "grok-4-3",
       "name": "Grok 4.3",
@@ -2639,7 +2508,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "x-ai/grok-4.5",
       "slug": "grok-4-5",
       "name": "Grok 4.5",
@@ -2672,7 +2541,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "x-ai/grok-4.20",
       "slug": "grok-4-20",
       "name": "Grok 4.20",
@@ -2705,7 +2574,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "xiaomi/mimo-v2.5",
       "slug": "mimo-v2-5",
       "name": "Mimo V2.5",
@@ -2739,7 +2608,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "xiaomi/mimo-v2.5-pro",
       "slug": "mimo-v2-5-pro",
       "name": "Mimo V2.5 Pro",
@@ -2770,7 +2639,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "z-ai/glm-5",
       "slug": "glm-5",
       "name": "Glm 5",
@@ -2801,7 +2670,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "z-ai/glm-5-turbo",
       "slug": "glm-5-turbo",
       "name": "Glm 5 Turbo",
@@ -2832,7 +2701,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "z-ai/glm-5.2",
       "slug": "glm-5-2",
       "name": "Glm 5.2",
@@ -2863,7 +2732,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "z-ai/glm-4.7",
       "slug": "glm-4-7",
       "name": "Glm 4.7",
@@ -2894,7 +2763,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-6-astra",
       "slug": "gpt-6-astra",
       "name": "Gpt 6 Astra",
@@ -2927,7 +2796,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "openai/gpt-6.1-terra",
       "slug": "gpt-6-1-terra",
       "name": "Gpt 6.1 Terra",
@@ -2960,7 +2829,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "sourceful/riverflow-v2.6-pro",
       "slug": "riverflow-v2-6-pro",
       "name": "Riverflow V2.6 Pro",
@@ -2992,7 +2861,7 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
-    {
+{
       "id": "qwen/qwen-image-2.1-pro",
       "slug": "qwen-image-2-1-pro",
       "name": "Qwen Image 2.1 Pro",
@@ -3021,6 +2890,238 @@
       "openrouter_created": "2026-10-16",
       "openrouter_url": "https://openrouter.ai/qwen/qwen-image-2.1-pro",
       "has_renderer_config": false,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "google/gemini-4-carbon",
+      "slug": "gemini-4-carbon",
+      "name": "Gemini 4 Carbon",
+      "provider": "Google",
+      "category": "Language",
+      "description_registry": "Gemini 4 Carbon is a frontier Gemini 4 model from Google for coding, agentic and complex reasoning work.",
+      "description_openrouter": "Gemini 4 Carbon is a frontier Gemini 4 model from Google for coding, agentic and complex reasoning work. It takes text, image, audio, video and file input, supports long decode...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1048576,
+      "max_completion_tokens": 943718,
+      "input_modalities": [
+        "audio",
+        "file",
+        "image",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 2.0,
+      "price_output_usd_per_mtok": 10.0,
+      "price_per_image_usd": 2e-06,
+      "openrouter_created": "2026-11-10",
+      "openrouter_url": "https://openrouter.ai/google/gemini-4-carbon",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "google/gemini-4-hydrogen",
+      "slug": "gemini-4-hydrogen",
+      "name": "Gemini 4 Hydrogen",
+      "provider": "Google",
+      "category": "Language",
+      "description_registry": "Gemini 4 Hydrogen is the high-efficiency workhorse model of the Gemini 4 family from Google, built for high-throughput agentic workflows, coding and multi-model routing at lower cost and latency.",
+      "description_openrouter": "Gemini 4 Hydrogen is the high-efficiency workhorse model of the Gemini 4 family from Google, built for high-throughput agentic workflows, coding and multi-model routing at lower cost and latency than...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1048576,
+      "max_completion_tokens": 943718,
+      "input_modalities": [
+        "audio",
+        "file",
+        "image",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 1.5,
+      "price_output_usd_per_mtok": 7.5,
+      "price_per_image_usd": 1.5e-06,
+      "openrouter_created": "2026-11-12",
+      "openrouter_url": "https://openrouter.ai/google/gemini-4-hydrogen",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "anthropic/claude-fable-5.2",
+      "slug": "claude-fable-5-2",
+      "name": "Claude Fable 5.2",
+      "provider": "Anthropic",
+      "category": "Language",
+      "description_registry": "Claude Fable 5.2 is Anthropic's most capable model for the most demanding technical work, with gains over Fable 5.1 in coding, reasoning, and vision.",
+      "description_openrouter": "Claude Fable 5.2 is Anthropic's most capable model for the most demanding technical work, with gains over Fable 5.1 in coding, reasoning, and vision. In prerelease testing it completed otherwise-infeasible...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1000000,
+      "max_completion_tokens": 128000,
+      "input_modalities": [
+        "text",
+        "image",
+        "file"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 8.0,
+      "price_output_usd_per_mtok": 40.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-09",
+      "openrouter_url": "https://openrouter.ai/anthropic/claude-fable-5.2",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "qwen/qwen4-max",
+      "slug": "qwen4-max",
+      "name": "Qwen4 Max",
+      "provider": "Qwen",
+      "category": "Language",
+      "description_registry": "Qwen4 Max is the flagship model in Alibaba's Qwen4 series.",
+      "description_openrouter": "Qwen4 Max is the flagship model in Alibaba's Qwen4 series. It accepts text, image, and video input and returns text, with a 1M-token context window and reasoning enabled by default....",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1000000,
+      "max_completion_tokens": 131072,
+      "input_modalities": [
+        "text",
+        "image",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 1.5,
+      "price_output_usd_per_mtok": 4.5,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-16",
+      "openrouter_url": "https://openrouter.ai/qwen/qwen4-max",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "bytedance-seed/seedream-5-5",
+      "slug": "seedream-5-5",
+      "name": "Seedream 5.5",
+      "provider": "ByteDance Seed",
+      "category": "Image",
+      "description_registry": "Seedream 5.5 is an image generation and editing model from ByteDance Seed.",
+      "description_openrouter": "Seedream 5.5 is an image generation and editing model from ByteDance Seed. It is suited for creating images from text prompts and for editing or combining existing images, using up...",
+      "knowledge_cutoff": "N/A",
+      "supports_web_search": false,
+      "supports_vision": null,
+      "supports_image_generation": true,
+      "is_thinking_model": null,
+      "available": null,
+      "context_length": 0,
+      "max_completion_tokens": 0,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "image"
+      ],
+      "price_input_usd_per_mtok": 0.0,
+      "price_output_usd_per_mtok": 0.0,
+      "price_per_image_usd": 0.008,
+      "openrouter_created": "2026-11-12",
+      "openrouter_url": "https://openrouter.ai/bytedance-seed/seedream-5-5",
+      "has_renderer_config": false,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "minimax/minimax-h3-image",
+      "slug": "minimax-h3-image",
+      "name": "Minimax H3 Image",
+      "provider": "Minimax",
+      "category": "Image",
+      "description_registry": "MiniMax H3 Image is MiniMax's image generation and editing model.",
+      "description_openrouter": "MiniMax H3 Image is MiniMax's image generation and editing model. It creates images from text prompts and edits or composes images from 1 to 16 reference images, with output up...",
+      "knowledge_cutoff": "N/A",
+      "supports_web_search": false,
+      "supports_vision": null,
+      "supports_image_generation": true,
+      "is_thinking_model": null,
+      "available": null,
+      "context_length": 4096,
+      "max_completion_tokens": 3686,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "image"
+      ],
+      "price_input_usd_per_mtok": 2.3,
+      "price_output_usd_per_mtok": 0.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-10",
+      "openrouter_url": "https://openrouter.ai/minimax/minimax-h3-image",
+      "has_renderer_config": false,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "tencent/hy4-flash",
+      "slug": "hy4-flash",
+      "name": "Hy4 Flash",
+      "provider": "Tencent",
+      "category": "Language",
+      "description_registry": "Hy4 flash is a cost-efficient variant of Hy4 from Tencent, served with roughly a quarter of the flagship's parameter count for lower latency and cost.",
+      "description_openrouter": "Hy4 flash is a cost-efficient variant of Hy4 from Tencent, served with roughly a quarter of the flagship's parameter count for lower latency and cost. It targets code assistance, agent...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1048576,
+      "max_completion_tokens": 65536,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 0.04375,
+      "price_output_usd_per_mtok": 0.175625,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-16",
+      "openrouter_url": "https://openrouter.ai/tencent/hy4-flash",
+      "has_renderer_config": true,
       "openrouter_rankings_position": null,
       "in_openrouter": true
     }
