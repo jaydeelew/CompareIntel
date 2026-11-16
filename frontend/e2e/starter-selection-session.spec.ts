@@ -60,6 +60,14 @@ async function countCheckedModels(page: import('@playwright/test').Page): Promis
   )
 }
 
+async function getCheckedModelIds(page: import('@playwright/test').Page): Promise<string[]> {
+  return page.evaluate(() =>
+    Array.from(document.querySelectorAll<HTMLInputElement>('input.model-checkbox:checked'))
+      .map(el => el.getAttribute('data-testid')?.replace(/^model-checkbox-/, '') ?? '')
+      .filter(Boolean)
+  )
+}
+
 async function waitForStarterApplied(page: import('@playwright/test').Page) {
   await expect
     .poll(async () => countCheckedModels(page), { timeout: 20000 })
@@ -200,17 +208,23 @@ test.describe('Starter Selection session behavior', () => {
     await page.goto('/')
     await dismissTutorialOverlay(page)
 
-    await waitForStarterApplied(page)
+    await expect
+      .poll(
+        async () => {
+          const checked = await getCheckedModelIds(page)
+          return (
+            checked.length === userModelIds.length &&
+            userModelIds.every(id => checked.includes(id))
+          )
+        },
+        { timeout: 20000 }
+      )
+      .toBe(true)
 
-    for (const modelId of userModelIds) {
-      const checkbox = await starterCheckbox(page, modelId)
-      await expect(checkbox).toBeChecked({ timeout: 20000 })
-    }
-
-    const offStarter = STARTER_IDS.filter(id => !userModelIds.includes(id))
-    for (const modelId of offStarter) {
-      const checkbox = await starterCheckbox(page, modelId)
-      await expect(checkbox).not.toBeChecked({ timeout: 5000 })
+    const checked = await getCheckedModelIds(page)
+    expect(checked.slice().sort()).toEqual([...userModelIds].sort())
+    for (const starterOnlyId of STARTER_IDS.filter(id => !userModelIds.includes(id))) {
+      expect(checked).not.toContain(starterOnlyId)
     }
   })
 })
