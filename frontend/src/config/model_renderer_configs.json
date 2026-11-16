@@ -1,5 +1,5 @@
 [
-{
+  {
     "modelId": "anthropic/claude-haiku-4.5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -63,7 +63,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "cohere/command-a",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -127,7 +127,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-2.5-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -191,7 +191,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-2.5-pro",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -255,7 +255,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "meta-llama/llama-4-maverick",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -319,7 +319,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "meta-llama/llama-4-scout",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -388,7 +388,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "microsoft/phi-4",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -452,7 +452,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "mistralai/codestral-2508",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -516,7 +516,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "mistralai/mistral-medium-3.1",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -580,7 +580,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "mistralai/mistral-small-3.2-24b-instruct",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -644,7 +644,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -708,7 +708,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5-mini",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -772,7 +772,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5-nano",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -836,7 +836,7 @@
       "needsManualReview": false
     }
   },
-{
+  {
     "modelId": "openai/gpt-5.1-codex-mini",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -900,7 +900,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/o3",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -964,7 +964,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "qwen/qwen3-30b-a3b-instruct-2507",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1028,7 +1028,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "qwen/qwen3-coder",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1097,7 +1097,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "qwen/qwen3-coder-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1161,7 +1161,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "qwen/qwen3-next-80b-a3b-instruct",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1225,7 +1225,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-2.0-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1294,7 +1294,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-oss-120b",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1363,7 +1363,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "meta-llama/llama-3.3-70b-instruct",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1427,7 +1427,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-3-flash-preview",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1491,7 +1491,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5.2",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1555,7 +1555,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5.2-pro",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1619,7 +1619,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5.1-codex-max",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1683,7 +1683,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-4o-mini",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1747,7 +1747,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "anthropic/claude-sonnet-4.6",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1811,7 +1811,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "minimax/minimax-m2.5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1875,7 +1875,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "anthropic/claude-opus-4.6",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -1939,7 +1939,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "qwen/qwen3.5-397b-a17b",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2003,7 +2003,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "qwen/qwen3-coder-next",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2067,7 +2067,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-3.1-pro-preview",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2131,7 +2131,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5.4",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2195,7 +2195,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5.4-pro",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2259,7 +2259,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5.3-codex",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2323,7 +2323,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-3.1-flash-lite-preview",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2387,7 +2387,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "z-ai/glm-5-turbo",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2456,7 +2456,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "x-ai/grok-4.20",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2520,7 +2520,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemma-3-27b-it",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2584,7 +2584,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemma-4-26b-a4b-it",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2648,7 +2648,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemma-4-31b-it",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2712,7 +2712,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-5.5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2776,7 +2776,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "x-ai/grok-4.3",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2840,7 +2840,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "deepseek/deepseek-v4-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2904,7 +2904,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "anthropic/claude-opus-4.7",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2968,7 +2968,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "deepseek/deepseek-v3.2",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3032,7 +3032,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "deepseek/deepseek-v4-pro",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3096,7 +3096,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "moonshotai/kimi-k2.6",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3155,7 +3155,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "anthropic/claude-opus-4.8",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3219,7 +3219,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "xiaomi/mimo-v2.5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3283,7 +3283,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "xiaomi/mimo-v2.5-pro",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3347,7 +3347,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "x-ai/grok-4.5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3411,7 +3411,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "moonshotai/kimi-k3",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3475,7 +3475,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "z-ai/glm-5.2",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3539,7 +3539,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3603,7 +3603,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "anthropic/claude-opus-5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3672,7 +3672,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-3.6-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3736,7 +3736,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "deepseek/deepseek-v4.1-flash-1017",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3800,7 +3800,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "minimax/minimax-m3.1-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3864,7 +3864,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "z-ai/glm-5.3-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3928,7 +3928,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "z-ai/glm-5.3",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -3992,7 +3992,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-6-luna",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4056,7 +4056,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-6.1-sol",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4120,7 +4120,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "anthropic/claude-opus-5.5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4189,7 +4189,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "anthropic/claude-sonnet-5.5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4253,7 +4253,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "anthropic/claude-haiku-5.5",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4317,7 +4317,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "xiaomi/mimo-v2.6-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4381,7 +4381,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "moonshotai/kimi-k3.1-pro",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4445,7 +4445,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "x-ai/grok-4.7",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4509,7 +4509,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-4-argon",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4573,7 +4573,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-3.8-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4637,7 +4637,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "mistralai/mistral-large-4-0",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4701,7 +4701,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "qwen/qwen3.8-max-0902",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4765,7 +4765,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "meta/muse-spark-1.3",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4829,7 +4829,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "tencent/hy4",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4893,7 +4893,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "stepfun/step-5-preview",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4957,7 +4957,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-6-astra",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -5021,7 +5021,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "openai/gpt-6.1-terra",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -5085,7 +5085,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-4-carbon",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -5149,7 +5149,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "google/gemini-4-hydrogen",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -5213,7 +5213,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "anthropic/claude-fable-5.2",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -5277,7 +5277,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "qwen/qwen4-max",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -5341,7 +5341,7 @@
       "needsManualReview": true
     }
   },
-{
+  {
     "modelId": "tencent/hy4-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
