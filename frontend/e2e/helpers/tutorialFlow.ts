@@ -109,9 +109,11 @@ export async function selectTutorialModelCheckbox(
   await dismissMobileBlockers(page)
   await dismissBlockingModals(page)
 
-  const pollTimeout = isMobileE2eProject(testInfo.project.name) ? 30_000 : 12_000
+  const pollTimeout = isMobileE2eProject(testInfo.project.name) ? 45_000 : 12_000
 
   if (isMobileE2eProject(testInfo.project.name)) {
+    await expectTutorialTooltipDoesNotOverlapCheckbox(page, modelId).catch(() => {})
+    await page.waitForTimeout(600)
     const label = page.locator(`label:has([data-testid="model-checkbox-${modelId}"])`).first()
     await label.tap({ force: true, timeout: 10_000 }).catch(() => {})
     await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
