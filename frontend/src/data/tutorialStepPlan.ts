@@ -56,11 +56,7 @@ export function tutorialUsesSplitModelSteps(
 
 export function buildTutorialVisibleStepOrder(splitProviderModelSteps: boolean): TutorialStep[] {
   const modelSteps: TutorialStep[] = splitProviderModelSteps
-    ? [
-        'select-starter-model-1',
-        'expand-starter-provider-2',
-        'select-starter-model-2',
-      ]
+    ? ['select-starter-model-1', 'expand-starter-provider-2', 'select-starter-model-2']
     : ['select-models']
   return [
     'expand-provider',

@@ -251,7 +251,9 @@ export function getTutorialProviderStepLayout(
   const primary = dropdowns[0]
   const header = primary.querySelector('.provider-header') as HTMLElement | null
   const anchor =
-    step === 'expand-provider' || step === 'expand-starter-provider-2' ? (header ?? primary) : primary
+    step === 'expand-provider' || step === 'expand-starter-provider-2'
+      ? (header ?? primary)
+      : primary
   return {
     anchor,
     highlights: [primary],

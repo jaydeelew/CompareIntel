@@ -297,10 +297,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         if (isExpandProviderTutorialStep(step) && names.length === 0) {
           return false
         }
-        const layout = getTutorialProviderStepLayout(
-          step as TutorialProviderLayoutStep,
-          names
-        )
+        const layout = getTutorialProviderStepLayout(step as TutorialProviderLayoutStep, names)
         if (layout.highlights.length > 0) {
           element = layout.highlights[0]
         }

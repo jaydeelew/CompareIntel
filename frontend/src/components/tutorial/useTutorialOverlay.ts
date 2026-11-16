@@ -674,8 +674,9 @@ export function useTutorialOverlay(
                 step as TutorialProviderLayoutStep,
                 tutorialProviderNamesRef.current
               )
-              const headerElement =
-                isExpandProviderTutorialStep(step) ? layout.anchor : layout.highlights[0]
+              const headerElement = isExpandProviderTutorialStep(step)
+                ? layout.anchor
+                : layout.highlights[0]
               if (headerElement) {
                 setTargetElement(headerElement)
                 if (layout.highlights.length > 0) {
@@ -871,14 +872,13 @@ export function useTutorialOverlay(
 
     // Step 1: scroll immediately so the first paint with the overlay never shows Google at the rim.
     // Other steps: small delay so hero lock / layout can settle before scroll.
-    const scrollDelay =
-      isExpandProviderTutorialStep(step)
-        ? 0
-        : step === 'enter-prompt' || step === 'enter-prompt-2'
-          ? 150
-          : step === 'follow-up'
-            ? 220
-            : 100
+    const scrollDelay = isExpandProviderTutorialStep(step)
+      ? 0
+      : step === 'enter-prompt' || step === 'enter-prompt-2'
+        ? 150
+        : step === 'follow-up'
+          ? 220
+          : 100
     scrollDelayTimer = setTimeout(() => {
       scrollDelayTimer = null
       const shouldSkipScroll =
@@ -2249,7 +2249,8 @@ export function useTutorialOverlay(
   const shouldBlock =
     !isLoadingStreamingPhase &&
     hasAttemptedElementFindRef.current &&
-    ((!isVisible && !targetElement) || (isExpandProviderTutorialStep(step) && !expandProviderEffectsReady))
+    ((!isVisible && !targetElement) ||
+      (isExpandProviderTutorialStep(step) && !expandProviderEffectsReady))
   return {
     overlayRef,
     stepRef,
