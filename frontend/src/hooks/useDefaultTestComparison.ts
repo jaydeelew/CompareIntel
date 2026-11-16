@@ -6,11 +6,12 @@
  * - Identifying it with systemKey (never by display name alone)
  * - Preselecting 2 popular models available to the unregistered tier
  * - Automatically updating the selection when models are added/removed from registry
- * - Respecting explicit user actions (deletion persists forever, manual selections not overwritten)
+ * - Respecting explicit user actions within a visit (deselects are not re-applied until reload)
+ * - Deleting the system-managed entry opts out permanently (localStorage)
  *
  * Lifecycle:
  * - Fresh visit: creates "Starter Selection" with 2 models, marks as default, and activates them
- * - Returning visit: loads the selection if still default (no manual override)
+ * - Returning visit (new tab/session): loads the selection if still default (deselects reset on reload)
  * - Registry changes: automatically replaces stale/removed/restricted models with eligible fallbacks
  * - Active sync: only updates active selection if user is following the default (no manual override)
  * - Opted-out visit: if the user deleted the system-managed entry, NEVER recreate
@@ -32,43 +33,23 @@ export const STARTER_SELECTION_NAME = 'Starter Selection'
 export const ANONYMOUS_STARTER_SYSTEM_KEY = 'anonymous-starter'
 const STARTER_SELECTION_OPTED_OUT_KEY = 'compareintel_starter_selection_opted_out'
 const LEGACY_TEST_COMPARISON_OPTED_OUT_KEY = 'compareintel_test_comparison_opted_out'
-const STARTER_SELECTION_DISMISSED_PREFIX = 'compareintel_starter_selection_dismissed'
-const ANONYMOUS_ID_KEY = 'compareintel_anonymous_id'
 const LEGACY_DISPLAY_NAME = 'Test Comparison'
 
-function getAnonymousIdForStarterFlags(): string {
-  try {
-    let anonymousId = localStorage.getItem(ANONYMOUS_ID_KEY)
-    if (!anonymousId) {
-      anonymousId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-      localStorage.setItem(ANONYMOUS_ID_KEY, anonymousId)
-    }
-    return anonymousId
-  } catch {
-    return `anon_session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-  }
-}
-
-function getStarterSelectionDismissedKey(): string {
-  return `${STARTER_SELECTION_DISMISSED_PREFIX}_${getAnonymousIdForStarterFlags()}`
-}
+/** In-memory only: cleared on full page reload so Starter Selection can apply again on the next visit. */
+let starterSelectionDismissedThisSession = false
 
 /** True when the user explicitly changed away from the managed starter default (deselect), not on Start over. */
 export function isStarterSelectionDismissed(): boolean {
-  try {
-    return localStorage.getItem(getStarterSelectionDismissedKey()) === 'true'
-  } catch (error) {
-    logger.warn('Failed to read Starter Selection dismissed flag:', error)
-    return false
-  }
+  return starterSelectionDismissedThisSession
 }
 
 export function markStarterSelectionDismissed(): void {
-  try {
-    localStorage.setItem(getStarterSelectionDismissedKey(), 'true')
-  } catch (error) {
-    logger.warn('Failed to persist Starter Selection dismissed flag:', error)
-  }
+  starterSelectionDismissedThisSession = true
+}
+
+/** Test helper: simulates a fresh browser tab after reload. */
+export function resetStarterSelectionDismissedForTests(): void {
+  starterSelectionDismissedThisSession = false
 }
 
 interface SavedSelectionLike {
