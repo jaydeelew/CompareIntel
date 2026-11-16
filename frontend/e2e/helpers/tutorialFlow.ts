@@ -333,8 +333,11 @@ export async function runTutorialComparison(
   await dismissBlockingModals(page)
   if (promptText) {
     const textarea = page.getByTestId('comparison-input-textarea').filter({ visible: true }).first()
-    await textarea.fill(promptText)
-    await textarea.blur()
+    const current = await textarea.inputValue().catch(() => '')
+    if (current !== promptText) {
+      await textarea.fill(promptText)
+      await textarea.blur()
+    }
   }
   const doneSelecting = page.getByRole('button', { name: 'Done selecting models' })
   if (await doneSelecting.isVisible().catch(() => false)) {
@@ -344,7 +347,6 @@ export async function runTutorialComparison(
   const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()
   await expect(submit).toBeEnabled({ timeout: 20_000 })
   await submit.scrollIntoViewIfNeeded().catch(() => {})
-  await waitForCompareSubmitTutorialStep(page, Math.min(30_000, timeoutMs))
   const matchesStream = (res: Response) =>
     res.url().includes('compare-stream') && res.request().method() === 'POST'
 
@@ -367,9 +369,11 @@ export async function waitForCompareSubmitTutorialStep(
   await expect
     .poll(
       async () => {
+        const title = await readTutorialTitle(page)
+        if (title.includes('Run Your Comparison')) return true
+        const step = await readTutorialCurrentStep(page)
+        if (step === 'submit-comparison' || step === 'submit-comparison-2') return true
         return page.evaluate(() => {
-          const title = document.querySelector('.mobile-tutorial-tooltip-title')?.textContent ?? ''
-          if (title.includes('Run Your Comparison')) return true
           const buttons = document.querySelectorAll<HTMLButtonElement>(
             '[data-testid="comparison-submit-button"]'
           )
