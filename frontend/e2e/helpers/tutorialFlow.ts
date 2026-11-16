@@ -282,6 +282,47 @@ export async function expectTutorialStepTitle(
     .toBe(true)
 }
 
+/** DOM click on the tutorial-highlighted submit (Firefox/WebKit pointer clicks can miss overlays). */
+async function clickTutorialCompareSubmitButton(page: Page, testInfo: TestInfo): Promise<void> {
+  const clicked = await page.evaluate(() => {
+    const buttons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-testid="comparison-submit-button"]')
+    )
+    const tryClick = (button: HTMLButtonElement) => {
+      if (button.disabled || button.getAttribute('aria-disabled') === 'true') return false
+      const cs = window.getComputedStyle(button)
+      if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) === 0) {
+        return false
+      }
+      const rect = button.getBoundingClientRect()
+      if (rect.width < 1 || rect.height < 1) return false
+      if (typeof button.checkVisibility === 'function' && !button.checkVisibility()) return false
+      button.scrollIntoView({ block: 'center', inline: 'nearest' })
+      button.click()
+      return true
+    }
+    for (const button of buttons) {
+      if (
+        button.classList.contains('mobile-tutorial-highlight') ||
+        button.classList.contains('tutorial-highlight')
+      ) {
+        if (tryClick(button)) return true
+      }
+    }
+    for (const button of buttons) {
+      if (tryClick(button)) return true
+    }
+    return false
+  })
+  if (clicked) return
+  const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()
+  if (isMobileE2eProject(testInfo.project.name)) {
+    await submit.tap({ force: true })
+  } else {
+    await submit.click({ force: true })
+  }
+}
+
 /** Avoid DOM `checkVisibility()` (breaks on mobile fixed composer); use Playwright tap on last submit. */
 export async function runTutorialComparison(
   page: Page,
@@ -303,32 +344,12 @@ export async function runTutorialComparison(
   const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()
   await expect(submit).toBeEnabled({ timeout: 20_000 })
   await submit.scrollIntoViewIfNeeded().catch(() => {})
+  await waitForCompareSubmitTutorialStep(page, Math.min(30_000, timeoutMs))
   const matchesStream = (res: Response) =>
     res.url().includes('compare-stream') && res.request().method() === 'POST'
 
   const fireSubmit = async () => {
-    if (isMobileE2eProject(testInfo.project.name)) {
-      const clicked = await page.evaluate(() => {
-        const buttons = document.querySelectorAll<HTMLButtonElement>(
-          '[data-testid="comparison-submit-button"]'
-        )
-        for (const button of buttons) {
-          const highlighted =
-            button.classList.contains('mobile-tutorial-highlight') ||
-            button.classList.contains('tutorial-highlight')
-          if (!highlighted && buttons.length > 1) continue
-          if (button.disabled || button.getAttribute('aria-disabled') === 'true') continue
-          button.click()
-          return true
-        }
-        return false
-      })
-      if (!clicked) {
-        await submit.tap({ force: true })
-      }
-    } else {
-      await submit.click({ force: true })
-    }
+    await clickTutorialCompareSubmitButton(page, testInfo)
   }
 
   await Promise.all([page.waitForResponse(matchesStream, { timeout: timeoutMs }), fireSubmit()])
