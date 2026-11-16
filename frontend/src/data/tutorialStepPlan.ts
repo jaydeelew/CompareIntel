@@ -5,6 +5,7 @@ import {
   resolveStarterSelectionModelIds,
 } from '../utils/starterSelectionModels'
 
+import type { StepConfig } from './tutorialSteps'
 import { TUTORIAL_STEPS_CONFIG, filterModelsForTutorial } from './tutorialSteps'
 
 export interface StarterModelEntry {
