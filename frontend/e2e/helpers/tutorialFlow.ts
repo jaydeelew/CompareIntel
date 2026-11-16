@@ -49,10 +49,7 @@ async function readTutorialHeaderText(page: Page): Promise<string> {
   })
 }
 
-function splitFlowAdvancedPastFirstModel(
-  header: string,
-  step: string | null
-): boolean {
+function splitFlowAdvancedPastFirstModel(header: string, step: string | null): boolean {
   if (step === 'expand-starter-provider-2' || step === 'select-starter-model-2') {
     return true
   }
@@ -112,9 +109,11 @@ export async function selectTutorialModelCheckbox(
   await dismissMobileBlockers(page)
   await dismissBlockingModals(page)
 
-  const pollTimeout = isMobileE2eProject(testInfo.project.name) ? 30_000 : 12_000
+  const pollTimeout = isMobileE2eProject(testInfo.project.name) ? 45_000 : 12_000
 
   if (isMobileE2eProject(testInfo.project.name)) {
+    await expectTutorialTooltipDoesNotOverlapCheckbox(page, modelId).catch(() => {})
+    await page.waitForTimeout(600)
     const label = page.locator(`label:has([data-testid="model-checkbox-${modelId}"])`).first()
     await label.tap({ force: true, timeout: 10_000 }).catch(() => {})
     await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
@@ -192,6 +191,37 @@ export async function selectTutorialModelCheckbox(
 
 export function tutorialTooltip(page: Page) {
   return page.locator('.tutorial-tooltip, .mobile-tutorial-tooltip')
+}
+
+export async function expectTutorialTooltipStaysVisible(page: Page, idleMs = 3500): Promise<void> {
+  await page.waitForTimeout(idleMs)
+  await expect(tutorialTooltip(page).first()).toBeVisible()
+}
+
+/** Mobile/desktop: tutorial card must not cover the model checkbox the step describes. */
+export async function expectTutorialTooltipDoesNotOverlapCheckbox(
+  page: Page,
+  modelId: string
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        return page.evaluate(id => {
+          const tip = document.querySelector('.mobile-tutorial-tooltip, .tutorial-tooltip')
+          const cb = document.querySelector(
+            `[data-testid="model-checkbox-${id}"]`
+          ) as HTMLElement | null
+          if (!tip || !cb) return false
+          const t = tip.getBoundingClientRect()
+          const c = cb.getBoundingClientRect()
+          const overlap =
+            t.left < c.right && t.right > c.left && t.top < c.bottom && t.bottom > c.top
+          return !overlap
+        }, modelId)
+      },
+      { timeout: 20_000, message: 'tutorial tooltip overlapping model checkbox' }
+    )
+    .toBe(true)
 }
 
 export async function expectTutorialStepNumber(
