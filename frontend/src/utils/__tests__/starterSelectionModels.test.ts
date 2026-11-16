@@ -21,6 +21,8 @@ function createModel(id: string, provider: string, tier: 'unregistered' | 'paid'
 
 describe('starterSelectionModels', () => {
   const registry: ModelsByProvider = {
+    Anthropic: [createModel('anthropic/claude-sonnet-5.5', 'Anthropic')],
+    OpenAI: [createModel('openai/gpt-5.2', 'OpenAI')],
     Google: [
       createModel('google/gemini-2.5-flash', 'Google'),
       createModel('google/gemma-3-27b-it', 'Google'),
@@ -30,8 +32,8 @@ describe('starterSelectionModels', () => {
 
   it('picks the same two models as Starter Selection priority list', () => {
     expect(resolveStarterSelectionModelIds(registry)).toEqual([
-      'google/gemini-2.5-flash',
-      'deepseek/deepseek-v4.1-flash-1017',
+      'anthropic/claude-sonnet-5.5',
+      'openai/gpt-5.2',
     ])
   })
 
@@ -47,6 +49,6 @@ describe('starterSelectionModels', () => {
 
   it('lists providers that host the resolved model ids', () => {
     const ids = resolveStarterSelectionModelIds(registry)
-    expect(getProvidersForModelIds(registry, ids).sort()).toEqual(['DeepSeek', 'Google'])
+    expect(getProvidersForModelIds(registry, ids).sort()).toEqual(['Anthropic', 'OpenAI'])
   })
 })

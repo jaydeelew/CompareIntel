@@ -32,6 +32,8 @@ const mockModel = (
 })
 
 const MOCK_MODELS = {
+  Anthropic: [mockModel('anthropic/claude-sonnet-5.5', 'Claude Sonnet 5.5', 'Anthropic')],
+  OpenAI: [mockModel('openai/gpt-5.2', 'GPT-5.2', 'OpenAI')],
   Google: [
     mockModel('google/gemma-3-27b-it', 'Gemma 3 27B It', 'Google'),
     mockModel('google/gemini-2.5-flash', 'Gemini 2.5 Flash', 'Google'),
@@ -70,9 +72,9 @@ test.describe('Onboarding tutorial full run (split model steps)', () => {
     await expect(tooltip.first()).toBeVisible()
     await dismissMobileBlockers(page)
 
-    await expandTutorialProvider(page, 'Google', testInfo)
+    await expandTutorialProvider(page, 'Anthropic', testInfo)
 
-    await expectTutorialStepTitle(page, 'Select Gemini 2.5 Flash')
+    await expectTutorialStepTitle(page, 'Select Claude Sonnet 5.5')
     await expect(tooltip).toContainText('Step 2 of 9')
 
     await selectTutorialModelCheckbox(

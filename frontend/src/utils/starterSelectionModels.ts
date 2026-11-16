@@ -6,6 +6,8 @@ import type { ModelsByProvider } from '../types'
  * Must be models from unregistered_tier_models in backend/data/models_registry.json.
  */
 export const DEFAULT_MODEL_PRIORITY = [
+  'anthropic/claude-sonnet-5.5',
+  'openai/gpt-5.2',
   'google/gemini-2.5-flash',
   'deepseek/deepseek-v4.1-flash-1017',
   'deepseek/deepseek-v4-flash',
