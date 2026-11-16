@@ -1,7 +1,10 @@
 
 import { test, expect } from '@playwright/test'
 
-import { resolveStarterSelectionModelIds } from '../src/utils/starterSelectionModels'
+import {
+  getProvidersForModelIds,
+  resolveStarterSelectionModelIds,
+} from '../src/utils/starterSelectionModels'
 
 import { mockComparisonStream } from './helpers/mockModels'
 import { dismissMobileBlockers, isMobileE2eProject } from './helpers/modelCheckbox'
@@ -50,6 +53,7 @@ const MOCK_MODELS_RESPONSE = {
 }
 
 const TUTORIAL_MODEL_IDS = resolveStarterSelectionModelIds(MOCK_MODELS)
+const TUTORIAL_PROVIDERS = getProvidersForModelIds(MOCK_MODELS, TUTORIAL_MODEL_IDS)
 
 test.describe('Onboarding tutorial full run (split model steps)', () => {
   test.beforeEach(async ({ page }) => {
@@ -75,19 +79,19 @@ test.describe('Onboarding tutorial full run (split model steps)', () => {
     await expandTutorialProvider(page, 'Anthropic', testInfo)
 
     await expectTutorialStepTitle(page, 'Select Claude Sonnet 5.5')
-    await expect(tooltip).toContainText('Step 2 of 9')
+    await expect(tooltip).toContainText('Step 2 of 10')
 
     await selectTutorialModelCheckbox(
       page,
       TUTORIAL_MODEL_IDS[0],
       MOCK_MODELS_RESPONSE.models.find(m => m.id === TUTORIAL_MODEL_IDS[0])!.provider,
-      testInfo,
-      { afterSelectPartnerModelId: TUTORIAL_MODEL_IDS[1] }
+      testInfo
     )
 
-    await expect(page.getByTestId(`model-checkbox-${TUTORIAL_MODEL_IDS[1]}`)).toBeVisible({
-      timeout: 15000,
-    })
+    const secondProvider = TUTORIAL_PROVIDERS[1] ?? 'OpenAI'
+    await expectTutorialStepTitle(page, `Expand ${secondProvider}`)
+    await expandTutorialProvider(page, secondProvider, testInfo)
+    await expectTutorialStepTitle(page, 'Select GPT-5.2')
 
     await selectTutorialModelCheckbox(
       page,

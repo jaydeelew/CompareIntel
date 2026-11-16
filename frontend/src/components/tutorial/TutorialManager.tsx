@@ -1,10 +1,9 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 
 import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 import type { User } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
-import { isAnyProviderExpanded } from '../../utils/starterSelectionModels'
 
 import { MobileTutorialController } from './MobileTutorialController'
 import { TutorialController } from './TutorialController'
@@ -81,11 +80,14 @@ export function TutorialManager({
   setTutorialHasSavedSelection,
   onTutorialWelcomeSkipped,
 }: TutorialManagerProps) {
-  const providersForExpandCheck = useMemo(
-    () => tutorialStarterEntries.map(e => e.provider).filter(Boolean),
-    [tutorialStarterEntries]
+  const firstStarterProvider = tutorialStarterEntries[0]?.provider ?? ''
+  const secondStarterProvider = tutorialStarterEntries[1]?.provider ?? ''
+  const firstStarterProviderExpanded = Boolean(
+    firstStarterProvider && openDropdowns.has(firstStarterProvider)
   )
-  const tutorialProviderExpanded = isAnyProviderExpanded(openDropdowns, providersForExpandCheck)
+  const secondStarterProviderExpanded = Boolean(
+    secondStarterProvider && openDropdowns.has(secondStarterProvider)
+  )
 
   const firstModelSelected =
     tutorialModelIds.length > 0 && selectedModels.includes(tutorialModelIds[0])
@@ -102,7 +104,8 @@ export function TutorialManager({
     tutorialState,
     completeStep,
     skipTutorial,
-    tutorialProviderExpanded,
+    firstStarterProviderExpanded,
+    secondStarterProviderExpanded,
     tutorialModelIds,
     tutorialSplitModelSteps,
     tutorialStarterEntries,

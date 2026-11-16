@@ -23,7 +23,8 @@ interface TutorialControllerProps {
   completeStep: (step: TutorialStep) => void
   skipTutorial: () => void
   // State to watch for completion detection
-  tutorialProviderExpanded?: boolean
+  firstStarterProviderExpanded?: boolean
+  secondStarterProviderExpanded?: boolean
   firstModelSelected?: boolean
   secondModelSelected?: boolean
   bothModelsSelected?: boolean
@@ -57,7 +58,8 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   tutorialState,
   completeStep,
   skipTutorial,
-  tutorialProviderExpanded,
+  firstStarterProviderExpanded,
+  secondStarterProviderExpanded,
   firstModelSelected,
   secondModelSelected,
   bothModelsSelected,
@@ -106,7 +108,8 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   }, [tutorialState.currentStep])
 
   const previousStateRef = useRef({
-    tutorialProviderExpanded: false,
+    firstStarterProviderExpanded: false,
+    secondStarterProviderExpanded: false,
     firstModelSelected: false,
     secondModelSelected: false,
     bothModelsSelected: false,
@@ -126,10 +129,19 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
 
     if (
       currentStep === 'expand-provider' &&
-      tutorialProviderExpanded &&
-      !previousStateRef.current.tutorialProviderExpanded
+      firstStarterProviderExpanded &&
+      !previousStateRef.current.firstStarterProviderExpanded
     ) {
       completeStep('expand-provider')
+      onProviderExpanded?.()
+    }
+
+    if (
+      currentStep === 'expand-starter-provider-2' &&
+      secondStarterProviderExpanded &&
+      !previousStateRef.current.secondStarterProviderExpanded
+    ) {
+      completeStep('expand-starter-provider-2')
       onProviderExpanded?.()
     }
 
@@ -205,7 +217,8 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
 
     // Update previous state
     previousStateRef.current = {
-      tutorialProviderExpanded: tutorialProviderExpanded || false,
+      firstStarterProviderExpanded: firstStarterProviderExpanded || false,
+      secondStarterProviderExpanded: secondStarterProviderExpanded || false,
       firstModelSelected: firstModelSelected || false,
       secondModelSelected: secondModelSelected || false,
       bothModelsSelected: bothModelsSelected || false,
@@ -220,7 +233,8 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
     tutorialState.isActive,
     tutorialState.currentStep,
     tutorialState.completedSteps,
-    tutorialProviderExpanded,
+    firstStarterProviderExpanded,
+    secondStarterProviderExpanded,
     firstModelSelected,
     secondModelSelected,
     bothModelsSelected,
@@ -249,7 +263,9 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
 
     switch (currentStep) {
       case 'expand-provider':
-        return tutorialProviderExpanded || false
+        return firstStarterProviderExpanded || false
+      case 'expand-starter-provider-2':
+        return secondStarterProviderExpanded || false
       case 'select-starter-model-1':
         return firstModelSelected || false
       case 'select-starter-model-2':

@@ -84,6 +84,7 @@ test.describe('Tutorial model selection steps', () => {
       await selectTutorialModelCheckbox(page, first, p0, testInfo, {
         afterSelectPartnerModelId: second,
       })
+      await expandTutorialProvider(page, p1, testInfo)
       await expect(page.getByTestId(`model-checkbox-${second}`)).toBeVisible({ timeout: 15000 })
       await selectTutorialModelCheckbox(page, second, p1, testInfo, { requireMinSelected: 2 })
     } else {

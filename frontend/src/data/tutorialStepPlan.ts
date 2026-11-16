@@ -35,6 +35,7 @@ export function buildTutorialRuntimeStepSequenceSplitProviders(): TutorialStep[]
   return [
     'expand-provider',
     'select-starter-model-1',
+    'expand-starter-provider-2',
     'select-starter-model-2',
     ...TUTORIAL_TAIL_STEPS,
   ]
@@ -55,7 +56,11 @@ export function tutorialUsesSplitModelSteps(
 
 export function buildTutorialVisibleStepOrder(splitProviderModelSteps: boolean): TutorialStep[] {
   const modelSteps: TutorialStep[] = splitProviderModelSteps
-    ? ['select-starter-model-1', 'select-starter-model-2']
+    ? [
+        'select-starter-model-1',
+        'expand-starter-provider-2',
+        'select-starter-model-2',
+      ]
     : ['select-models']
   return [
     'expand-provider',
@@ -101,7 +106,10 @@ export function resolveTutorialProviderNamesForStep(
     return [...allTutorialProviders]
   }
   if (step === 'expand-provider') {
-    return entries[0]?.provider ? [entries[0].provider] : [...allTutorialProviders]
+    return entries[0]?.provider ? [entries[0].provider] : []
+  }
+  if (step === 'expand-starter-provider-2') {
+    return entries[1]?.provider ? [entries[1].provider] : []
   }
   return []
 }
@@ -114,9 +122,13 @@ export function isSelectModelTutorialStep(step: TutorialStep | null | undefined)
   )
 }
 
+export function isExpandProviderTutorialStep(step: TutorialStep | null | undefined): boolean {
+  return step === 'expand-provider' || step === 'expand-starter-provider-2'
+}
+
 export function isProviderPickerTutorialStep(step: TutorialStep | null | undefined): boolean {
   return (
-    step === 'expand-provider' ||
+    isExpandProviderTutorialStep(step) ||
     step === 'select-models' ||
     step === 'select-starter-model-1' ||
     step === 'select-starter-model-2'
@@ -125,7 +137,7 @@ export function isProviderPickerTutorialStep(step: TutorialStep | null | undefin
 
 export function isSingleProviderSpotlightStep(step: TutorialStep | null | undefined): boolean {
   return (
-    step === 'expand-provider' ||
+    isExpandProviderTutorialStep(step) ||
     step === 'select-starter-model-1' ||
     step === 'select-starter-model-2'
   )
@@ -141,10 +153,13 @@ export function filterModelsForTutorialStep(
   if (!enabled || !step || !isProviderPickerTutorialStep(step)) {
     return modelsByProvider
   }
-  if (step === 'select-starter-model-1' && tutorialModelIds[0]) {
+  if ((step === 'expand-provider' || step === 'select-starter-model-1') && tutorialModelIds[0]) {
     return filterIds(modelsByProvider, true, [tutorialModelIds[0]])
   }
-  if (step === 'select-starter-model-2' && tutorialModelIds[1]) {
+  if (
+    (step === 'expand-starter-provider-2' || step === 'select-starter-model-2') &&
+    tutorialModelIds[1]
+  ) {
     return filterIds(modelsByProvider, true, [tutorialModelIds[1]])
   }
   return filterIds(modelsByProvider, true, tutorialModelIds)
@@ -164,18 +179,32 @@ export function resolveTutorialStepConfig(
   splitProviderModelSteps: boolean
 ): StepConfig {
   const base = TUTORIAL_STEPS_CONFIG[step]
+  if (step === 'expand-provider' && splitProviderModelSteps && entries[0]?.provider) {
+    return {
+      ...base,
+      title: `Expand ${entries[0].provider}`,
+      description: `Open the ${entries[0].provider} dropdown to see ${entries[0].displayName}.`,
+    }
+  }
+  if (step === 'expand-starter-provider-2' && splitProviderModelSteps && entries[1]?.provider) {
+    return {
+      ...base,
+      title: `Expand ${entries[1].provider}`,
+      description: `Open the ${entries[1].provider} dropdown to see ${entries[1].displayName}.`,
+    }
+  }
   if (step === 'select-starter-model-1' && splitProviderModelSteps && entries[0]) {
     return {
       ...base,
       title: `Select ${entries[0].displayName}`,
-      description: 'Check the box next to this model.',
+      description: 'Select this model to compare.',
     }
   }
   if (step === 'select-starter-model-2' && splitProviderModelSteps && entries[1]) {
     return {
       ...base,
-      title: `Now select ${entries[1].displayName}`,
-      description: 'Check this second model to compare their responses.',
+      title: `Select ${entries[1].displayName}`,
+      description: 'Select the second model to compare.',
     }
   }
   return base

@@ -40,8 +40,9 @@ describe('tutorialStepPlan', () => {
     const runtime = buildTutorialRuntimeStepSequence(true)
     expect(runtime).toContain('select-starter-model-1')
     expect(runtime).toContain('select-starter-model-2')
+    expect(runtime).toContain('expand-starter-provider-2')
     expect(runtime).not.toContain('select-models')
-    expect(buildTutorialVisibleStepOrder(true)).toHaveLength(9)
+    expect(buildTutorialVisibleStepOrder(true)).toHaveLength(10)
   })
 
   it('uses single select-models step when both models share a provider', () => {
@@ -69,8 +70,11 @@ describe('tutorialStepPlan', () => {
     const entries = resolveStarterModelEntries(REGISTRY)
     const cfg1 = resolveTutorialStepConfig('select-starter-model-1', entries, true)
     const cfg2 = resolveTutorialStepConfig('select-starter-model-2', entries, true)
+    const cfgExpand = resolveTutorialStepConfig('expand-provider', entries, true)
     expect(cfg1.title).toBe('Select Claude Sonnet 5.5')
-    expect(cfg2.title).toBe('Now select GPT-5.2')
+    expect(cfg1.description).toMatch(/Select this model to compare/)
+    expect(cfgExpand.title).toBe('Expand Anthropic')
+    expect(cfg2.title).toBe('Select GPT-5.2')
     expect(cfg1.description).not.toMatch(/Starter Selection/i)
   })
 })

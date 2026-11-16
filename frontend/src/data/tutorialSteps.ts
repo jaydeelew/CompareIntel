@@ -49,7 +49,14 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'expand-provider',
     targetSelector: '.provider-dropdown .provider-header',
     title: 'Expand a Provider',
-    description: 'Open a provider dropdown to see the suggested models.',
+    description: 'Open a provider dropdown to see the models you can compare.',
+    position: 'top',
+  },
+  'expand-starter-provider-2': {
+    step: 'expand-starter-provider-2',
+    targetSelector: '.provider-dropdown .provider-header',
+    title: 'Expand a Provider',
+    description: 'Open the other provider dropdown for the second model.',
     position: 'top',
   },
   'select-models': {

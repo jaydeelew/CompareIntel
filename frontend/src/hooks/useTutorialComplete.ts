@@ -16,6 +16,7 @@ import type { ModelConversation } from '../types'
 // Tutorial step types
 export type TutorialStep =
   | 'expand-provider'
+  | 'expand-starter-provider-2'
   | 'select-models'
   | 'select-starter-model-1'
   | 'select-starter-model-2'

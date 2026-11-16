@@ -5,7 +5,11 @@ import type { TutorialStep } from '../hooks/useTutorial'
 
 export type TutorialProviderLayoutStep = Extract<
   TutorialStep,
-  'expand-provider' | 'select-models' | 'select-starter-model-1' | 'select-starter-model-2'
+  | 'expand-provider'
+  | 'expand-starter-provider-2'
+  | 'select-models'
+  | 'select-starter-model-1'
+  | 'select-starter-model-2'
 >
 
 export interface RectCutout {
@@ -246,7 +250,8 @@ export function getTutorialProviderStepLayout(
   }
   const primary = dropdowns[0]
   const header = primary.querySelector('.provider-header') as HTMLElement | null
-  const anchor = step === 'expand-provider' ? (header ?? primary) : primary
+  const anchor =
+    step === 'expand-provider' || step === 'expand-starter-provider-2' ? (header ?? primary) : primary
   return {
     anchor,
     highlights: [primary],
@@ -258,6 +263,7 @@ export function scrollLayoutForTutorialStep(step: TutorialStep | null): Tutorial
   if (step === 'select-models') return 'select-models'
   if (step === 'select-starter-model-2') return 'select-starter-model-2'
   if (step === 'select-starter-model-1') return 'select-starter-model-1'
+  if (step === 'expand-starter-provider-2') return 'expand-starter-provider-2'
   return 'expand-provider'
 }
 
@@ -329,6 +335,7 @@ export function computeTooltipPosition(
     (step === 'enter-prompt' || step === 'enter-prompt-2') && config.position === 'bottom'
   const isTopSteps =
     (step === 'expand-provider' ||
+      step === 'expand-starter-provider-2' ||
       step === 'select-models' ||
       step === 'select-starter-model-1' ||
       step === 'select-starter-model-2' ||
@@ -449,7 +456,7 @@ export function computeTooltipPosition(
     const anchorMidY = rect.top + rect.height / 2
 
     let shouldUseBottom: boolean
-    if (step === 'expand-provider') {
+    if (step === 'expand-provider' || step === 'expand-starter-provider-2') {
       const preferBelowBecauseUpperHalf = anchorMidY < viewportMid
       const gapAboveNeeded = EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX
       const needAboveForTop = estimatedTooltipHeight + gapAboveNeeded + MARGIN
@@ -487,7 +494,10 @@ export function computeTooltipPosition(
         effectivePosition: 'bottom',
       }
     }
-    const topPlacementGap = step === 'expand-provider' ? EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX : offset
+    const topPlacementGap =
+      step === 'expand-provider' || step === 'expand-starter-provider-2'
+        ? EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX
+        : offset
     top = rect.top - topPlacementGap
     const tooltipTopEdge = top - estimatedTooltipHeight
     if (tooltipTopEdge < MARGIN) {
@@ -540,7 +550,7 @@ export function getScrollTargetForStep(
   const tooltipOffset = 16
 
   // Provider steps: scroll before tooltip (see useTutorialOverlay).
-  if (step === 'expand-provider') {
+  if (step === 'expand-provider' || step === 'expand-starter-provider-2') {
     const centeredTop = window.innerHeight / 2 - rect.height / 2
     return Math.max(0, y0 + rect.top - centeredTop)
   }
@@ -591,7 +601,10 @@ export function findTargetForStep(
       tutorialProviderNames
     )
     if (!layout.anchor || layout.highlights.length === 0) return null
-    element = step === 'expand-provider' ? layout.anchor : layout.highlights[0]
+    element =
+      step === 'expand-provider' || step === 'expand-starter-provider-2'
+        ? layout.anchor
+        : layout.highlights[0]
     highlights = layout.highlights
   } else if (step === 'history-dropdown') {
     element = document.querySelector(config.targetSelector) as HTMLElement | null
