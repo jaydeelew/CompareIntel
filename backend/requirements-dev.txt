@@ -17,7 +17,7 @@ watchfiles>=0.18.0    # Development auto-reload for uvicorn
 # Code Quality Tools (Linting, Formatting, Type Checking)
 # ============================================================================
 ruff>=0.6.0              # Fast Python linter (replaces flake8, isort, etc.)
-black>=24.0.0            # Code formatter
+black>=26.10.1            # Code formatter
 mypy>=2.4.0             # Static type checker
 pre-commit>=4.7.0        # Git hooks framework
 
