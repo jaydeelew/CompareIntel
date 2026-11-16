@@ -10,24 +10,24 @@ import {
 } from '../tutorialStepPlan'
 
 const REGISTRY: ModelsByProvider = {
-  Google: [
+  Anthropic: [
     {
-      id: 'google/gemini-2.5-flash',
-      name: 'Gemini 2.5 Flash',
+      id: 'anthropic/claude-sonnet-5.5',
+      name: 'Claude Sonnet 5.5',
       description: '',
-      category: 'google',
-      provider: 'Google',
+      category: 'anthropic',
+      provider: 'Anthropic',
       available: true,
       tier_access: 'unregistered',
     },
   ],
-  DeepSeek: [
+  OpenAI: [
     {
-      id: 'deepseek/deepseek-v4.1-flash-1017',
-      name: 'DeepSeek V4.1 Flash',
+      id: 'openai/gpt-5.2',
+      name: 'GPT-5.2',
       description: '',
-      category: 'deepseek',
-      provider: 'DeepSeek',
+      category: 'openai',
+      provider: 'OpenAI',
       available: true,
       tier_access: 'unregistered',
     },
@@ -46,14 +46,14 @@ describe('tutorialStepPlan', () => {
 
   it('uses single select-models step when both models share a provider', () => {
     const single: ModelsByProvider = {
-      Google: [
-        ...REGISTRY.Google!,
+      Anthropic: [
+        ...REGISTRY.Anthropic!,
         {
-          id: 'deepseek/deepseek-v4.1-flash-1017',
-          name: 'DeepSeek V4.1 Flash',
+          id: 'openai/gpt-5.2',
+          name: 'GPT-5.2',
           description: '',
-          category: 'deepseek',
-          provider: 'Google',
+          category: 'openai',
+          provider: 'Anthropic',
           available: true,
           tier_access: 'unregistered',
         },
@@ -69,8 +69,8 @@ describe('tutorialStepPlan', () => {
     const entries = resolveStarterModelEntries(REGISTRY)
     const cfg1 = resolveTutorialStepConfig('select-starter-model-1', entries, true)
     const cfg2 = resolveTutorialStepConfig('select-starter-model-2', entries, true)
-    expect(cfg1.title).toBe('Select Gemini 2.5 Flash')
-    expect(cfg2.title).toBe('Now select DeepSeek V4.1 Flash')
+    expect(cfg1.title).toBe('Select Claude Sonnet 5.5')
+    expect(cfg2.title).toBe('Now select GPT-5.2')
     expect(cfg1.description).not.toMatch(/Starter Selection/i)
   })
 })

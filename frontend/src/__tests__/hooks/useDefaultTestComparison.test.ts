@@ -75,7 +75,7 @@ function managedSelection(
   return {
     id: 'starter-id',
     name: STARTER_SELECTION_NAME,
-    modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
+    modelIds: ['anthropic/claude-sonnet-5.5', 'openai/gpt-5.2'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     systemKey: ANONYMOUS_STARTER_SYSTEM_KEY,
@@ -95,6 +95,14 @@ describe('useDefaultTestComparison', () => {
   })
 
   const createMockModelsByProvider = (): ModelsByProvider => ({
+    Anthropic: [
+      createModel('anthropic/claude-sonnet-5.5', 'Anthropic', 'unregistered'),
+      createModel('anthropic/claude-haiku-5.5', 'Anthropic', 'unregistered'),
+    ],
+    OpenAI: [
+      createModel('openai/gpt-5.2', 'OpenAI', 'unregistered'),
+      createModel('openai/gpt-5-nano', 'OpenAI', 'unregistered'),
+    ],
     Google: [
       createModel('google/gemini-2.5-flash', 'Google', 'unregistered'),
       createModel('google/gemini-3.1-flash-lite-preview', 'Google', 'unregistered'),
@@ -134,7 +142,7 @@ describe('useDefaultTestComparison', () => {
       await waitFor(() => {
         expect(saveSelection).toHaveBeenCalledWith(
           STARTER_SELECTION_NAME,
-          ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
+          ['anthropic/claude-sonnet-5.5', 'openai/gpt-5.2'],
           { systemKey: ANONYMOUS_STARTER_SYSTEM_KEY }
         )
       })
@@ -336,7 +344,7 @@ describe('useDefaultTestComparison', () => {
       const legacy = {
         id: 'legacy-id',
         name: LEGACY_DISPLAY_NAME,
-        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
+        modelIds: ['anthropic/claude-sonnet-5.5', 'openai/gpt-5.2'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -396,7 +404,7 @@ describe('useDefaultTestComparison', () => {
       const legacy = {
         id: 'legacy-id',
         name: LEGACY_DISPLAY_NAME,
-        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
+        modelIds: ['anthropic/claude-sonnet-5.5', 'openai/gpt-5.2'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -421,7 +429,7 @@ describe('useDefaultTestComparison', () => {
       const legacy = {
         id: 'legacy-id',
         name: LEGACY_DISPLAY_NAME,
-        modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
+        modelIds: ['anthropic/claude-sonnet-5.5', 'openai/gpt-5.2'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -553,7 +561,7 @@ describe('useDefaultTestComparison', () => {
 
       await waitFor(() => {
         expect(patchSelection).toHaveBeenCalledWith('starter-id', {
-          modelIds: ['google/gemini-2.5-flash', 'deepseek/deepseek-v4.1-flash-1017'],
+          modelIds: ['anthropic/claude-sonnet-5.5', 'openai/gpt-5.2'],
         })
       })
       expect(saveSelection).not.toHaveBeenCalled()

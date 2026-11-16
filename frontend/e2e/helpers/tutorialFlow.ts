@@ -441,10 +441,12 @@ export async function expectSplitOrCombinedModelStep(page: Page): Promise<'split
   await expect
     .poll(async () => {
       const title = await readTutorialTitle(page)
-      return title.includes('Select Gemini 2.5 Flash') || title.includes('Select Models')
+      const splitStarterStep = title.startsWith('Select ') && !title.includes('Select Models')
+      return splitStarterStep || title.includes('Select Models')
     })
     .toBe(true)
 
   const title = await readTutorialTitle(page)
-  return title.includes('Select Gemini 2.5 Flash') ? 'split' : 'combined'
+  const splitStarterStep = title.startsWith('Select ') && !title.includes('Select Models')
+  return splitStarterStep ? 'split' : 'combined'
 }
