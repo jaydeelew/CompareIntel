@@ -212,6 +212,7 @@ def _get_huggingface_model_name(model_id: str) -> str | None:
         "microsoft/phi-4": "microsoft/phi-4",
         "minimax/minimax-m2.5": "MiniMaxAI/MiniMax-M2.5",
         "minimax/minimax-m3.1-flash": "MiniMaxAI/MiniMax-M3.1-Flash",
+        "minimax/minimax-h3-image": "MiniMaxAI/MiniMax-H3-Image",
         "moonshotai/kimi-k2.6": "moonshotai/Kimi-K2.6",
         "moonshotai/kimi-k3": "moonshotai/Kimi-K3",
         "xiaomi/mimo-v2.5": "XiaomiMiMo/MiMo-V2.5",

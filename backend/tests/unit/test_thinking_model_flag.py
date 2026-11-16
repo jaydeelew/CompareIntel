@@ -19,8 +19,13 @@ from app.llm.registry import (
 def test_anthropic_opus_and_sonnet_flagged_when_in_snapshot() -> None:
     assert get_openrouter_thinking_model_flag("anthropic/claude-opus-5.5") is True
     assert get_openrouter_thinking_model_flag("anthropic/claude-sonnet-5.5") is True
-    assert get_openrouter_thinking_model_flag("anthropic/claude-fable-5") is True
-    assert get_openrouter_thinking_model_flag("anthropic/claude-fable-5.1") is True
+    assert get_openrouter_thinking_model_flag("anthropic/claude-fable-5.2") is True
+    assert get_openrouter_thinking_model_flag("google/gemini-4-carbon") is True
+    assert get_openrouter_thinking_model_flag("google/gemini-4-hydrogen") is True
+    assert get_openrouter_thinking_model_flag("qwen/qwen4-max") is True
+    assert get_openrouter_thinking_model_flag("tencent/hy4-flash") is True
+    assert get_openrouter_thinking_model_flag("anthropic/claude-fable-5") is None
+    assert get_openrouter_thinking_model_flag("anthropic/claude-fable-5.1") is None
 
 
 def test_unknown_model_id_returns_none() -> None:
@@ -37,7 +42,7 @@ def test_qwen_instruct_not_thinking_in_snapshot() -> None:
 
 def test_registry_file_value_includes_snapshot_overrides() -> None:
     assert is_thinking_model_registry_file_value("anthropic/claude-opus-5.5") is True
-    assert is_thinking_model_registry_file_value("anthropic/claude-fable-5.1") is True
+    assert is_thinking_model_registry_file_value("anthropic/claude-fable-5.2") is True
     assert is_thinking_model_registry_file_value("qwen/qwen3-next-80b-a3b-instruct") is False
 
 

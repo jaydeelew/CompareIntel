@@ -92,8 +92,8 @@ At phone width the harness checks that the page itself does not scroll horizonta
 
 ```bash
 npm run layout-audit
-npm run triage -- --cell=anthropic/claude-fable-5:01-math-basics
-npm run before-after -- --cell=anthropic/claude-fable-5:01-math-basics --base=<ref> --head=<ref>
+npm run triage -- --cell=anthropic/claude-opus-5:01-math-basics
+npm run before-after -- --cell=anthropic/claude-opus-5:01-math-basics --base=<ref> --head=<ref>
 ```
 
 `layout-audit` rerenders the saved cells offline and writes `layout-audit/report.json` plus 960 CSS px DPR 2 stacked evidence for failures. A cell's source is the unique-coverage winner: a complete file under `runs/<batch>/reruns/` replaces the truncated or empty original in that batch. `triage` writes the heading-range source, a reference-vs-ours line diff, a 960 CSS px DPR 2 screenshot, and a full-section regression stub under `triage-out/`. `before-after` checks out both refs and stacks Before above After for the affected section, uncropped. PNGs from these commands are gitignored. CI uploads `layout-audit/` as an artifact.

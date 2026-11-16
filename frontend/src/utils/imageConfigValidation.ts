@@ -20,8 +20,8 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
   'black-forest-labs/flux.2-klein-4b': { image_sizes: ['2K'] },
   'black-forest-labs/flux.2-max': { image_sizes: ['2K'] },
 
-  // ByteDance Seed - 2K/4K only; excludes 4:5, 5:4
-  'bytedance-seed/seedream-4.5': {
+  // ByteDance Seed - copied from Seedream 4.5 (2K/4K only; excludes 4:5, 5:4). Not re-probed.
+  'bytedance-seed/seedream-5-5': {
     image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
     image_sizes: ['2K', '4K'],
   },
@@ -50,6 +50,8 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
   'sourceful/riverflow-v2.6-pro': { image_sizes: ['1K', '2K'] },
   // Qwen Image 2.1 Pro: 1K and 2K (4K not validated)
   'qwen/qwen-image-2.1-pro': { image_sizes: ['1K', '2K'] },
+  // MiniMax H3 Image: conservative 1K and 2K (4K not claimed; aspect ratios not probe-validated)
+  'minimax/minimax-h3-image': { image_sizes: ['1K', '2K'] },
   'sourceful/riverflow-v2-fast-preview': {
     image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
     image_sizes: ['1K'],

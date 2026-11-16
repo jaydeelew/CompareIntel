@@ -1,3 +1,24 @@
 {
-  "entries": []
+  "entries": [
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+    }
+  ]
 }
