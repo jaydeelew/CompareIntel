@@ -334,8 +334,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               setIsVisible(true)
             }
           })
-        } else if (isProviderPickerTutorialStep(step)) {
+        } else if (isExpandProviderTutorialStep(step)) {
           setIsVisible(false)
+        } else if (isSelectModelTutorialStep(step)) {
+          setIsVisible(true)
+        } else if (isProviderPickerTutorialStep(step)) {
+          setIsVisible(true)
         } else {
           setIsVisible(true)
         }
@@ -604,36 +608,55 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       tooltipTop = Math.max(padding, minTopBelowComposer)
       arrowDirection = 'up'
     } else if (isProviderPickerTutorialStep(step)) {
-      // Step 1: anchor on .provider-header (collapsed row). Step 2: anchor on the full expanded card
-      // so "below" clears the entire highlighted dropdown — header-only anchoring left the tooltip
-      // sitting on the model list / body and obscuring it.
-      const anchorRect =
-        step === 'select-models'
-          ? rect
-          : ((
-              targetElement.querySelector('.provider-header') as HTMLElement | null
-            )?.getBoundingClientRect() ?? placementRect)
-      const anchorMidY = anchorRect.top + anchorRect.height / 2
-      const viewportMid = viewportHeight / 2
       const verticalGap = arrowSize + 8
-      const needAbove = tooltipHeight + verticalGap + padding
-      const needBelow = tooltipHeight + verticalGap + padding
-      const roomAbove = anchorRect.top - padding
-      const roomBelow = viewportHeight - padding - anchorRect.bottom
+      const layoutRect = placementRect
 
-      let useBelow = anchorMidY < viewportMid
-      if (useBelow && roomBelow < needBelow && roomAbove >= needAbove) {
-        useBelow = false
-      } else if (!useBelow && roomAbove < needAbove && roomBelow >= needBelow) {
-        useBelow = true
-      }
-
-      if (useBelow) {
-        tooltipTop = anchorRect.bottom + verticalGap
-        arrowDirection = 'up'
+      if (isSelectModelTutorialStep(step)) {
+        const needAbove = tooltipHeight + verticalGap
+        const needBelow = tooltipHeight + verticalGap
+        const roomAbove = layoutRect.top - padding
+        const roomBelow = viewportHeight - padding - layoutRect.bottom
+        let placeAbove = roomAbove >= needAbove
+        if (placeAbove && roomBelow < needBelow) {
+          placeAbove = true
+        } else if (!placeAbove && roomBelow >= needBelow) {
+          placeAbove = false
+        } else if (roomAbove >= roomBelow) {
+          placeAbove = roomAbove >= needAbove
+        } else {
+          placeAbove = false
+        }
+        if (placeAbove) {
+          tooltipTop = layoutRect.top - tooltipHeight - verticalGap
+          arrowDirection = 'down'
+        } else {
+          tooltipTop = layoutRect.bottom + verticalGap
+          arrowDirection = 'up'
+        }
       } else {
-        tooltipTop = anchorRect.top - tooltipHeight - verticalGap
-        arrowDirection = 'down'
+        const header = targetElement.querySelector('.provider-header') as HTMLElement | null
+        const anchorRect = (header ?? targetElement).getBoundingClientRect()
+        const anchorMidY = anchorRect.top + anchorRect.height / 2
+        const viewportMid = viewportHeight / 2
+        const needAbove = tooltipHeight + verticalGap + padding
+        const needBelow = tooltipHeight + verticalGap + padding
+        const roomAbove = anchorRect.top - padding
+        const roomBelow = viewportHeight - padding - anchorRect.bottom
+
+        let useBelow = anchorMidY < viewportMid
+        if (useBelow && roomBelow < needBelow && roomAbove >= needAbove) {
+          useBelow = false
+        } else if (!useBelow && roomAbove < needAbove && roomBelow >= needBelow) {
+          useBelow = true
+        }
+
+        if (useBelow) {
+          tooltipTop = anchorRect.bottom + verticalGap
+          arrowDirection = 'up'
+        } else {
+          tooltipTop = anchorRect.top - tooltipHeight - verticalGap
+          arrowDirection = 'down'
+        }
       }
       tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
     } else {
@@ -775,6 +798,18 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         // For enter-prompt steps, scroll to the top of the page initially
         // The tooltip appears above the textarea, and the user should see the top of the page
         root.scrollToTop(0, 'smooth')
+      } else if (isSelectModelTutorialStep(currentStep)) {
+        scrollTutorialProvidersIntoView(
+          tutorialProviderNamesRef.current,
+          currentStep as TutorialProviderLayoutStep
+        )
+        const revealOverlay = () => {
+          if (stepRef.current !== currentStep) return
+          calculatePositions()
+          setIsVisible(true)
+        }
+        revealOverlay()
+        providerRevealFallback = window.setTimeout(revealOverlay, 400)
       } else if (isProviderPickerTutorialStep(currentStep)) {
         scrollTutorialProvidersIntoView(
           tutorialProviderNamesRef.current,
@@ -940,6 +975,36 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (interval) clearInterval(interval)
     }
   }, [targetElement, step, calculatePositions, tooltipEstimatedHeight])
+
+  useEffect(() => {
+    if (!step || !isSelectModelTutorialStep(step)) return
+
+    setIsVisible(true)
+
+    const maintainSelectStepOverlay = () => {
+      if (!isSelectModelTutorialStep(stepRef.current)) return
+      const current = stepRef.current
+      if (!current) return
+      const layout = getTutorialProviderStepLayout(
+        current as TutorialProviderLayoutStep,
+        tutorialProviderNamesRef.current
+      )
+      if (layout.highlights.length > 0) {
+        setTargetElement(layout.highlights[0])
+        setIsVisible(true)
+        calculatePositions()
+      } else {
+        setIsVisible(true)
+      }
+    }
+
+    maintainSelectStepOverlay()
+    const interval = window.setInterval(maintainSelectStepOverlay, 250)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [step, tutorialProviderNames, calculatePositions])
 
   // Add highlight class to target element
   useEffect(() => {
