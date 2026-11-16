@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import {
+  isExpandProviderTutorialStep,
   isProviderPickerTutorialStep,
   isSelectModelTutorialStep,
   resolveTutorialStepConfig,
@@ -279,7 +280,7 @@ export function useTutorialOverlay(
   }, [isVisible, step, overlayPosition.top, overlayPosition.left])
 
   useLayoutEffect(() => {
-    if (step === 'expand-provider' && prevStepForExpandProviderRef.current !== 'expand-provider') {
+    if (isExpandProviderTutorialStep(step) && prevStepForExpandProviderRef.current !== step) {
       setExpandProviderEffectsReady(false)
     }
     prevStepForExpandProviderRef.current = step
@@ -349,7 +350,7 @@ export function useTutorialOverlay(
     cleanupHeroObservers()
 
     // When starting a new tutorial (first step), reset the lock state
-    if (step === 'expand-provider') {
+    if (isExpandProviderTutorialStep(step)) {
       restoreHeroStyles()
       heroHeightLockedRef.current = false
     }
@@ -520,7 +521,7 @@ export function useTutorialOverlay(
           tutorialProviderNamesRef.current
         )
         if (layout.anchor && layout.highlights.length > 0) {
-          if (step === 'expand-provider') {
+          if (isExpandProviderTutorialStep(step)) {
             element = layout.anchor
           } else {
             element = layout.highlights[0]
@@ -673,8 +674,9 @@ export function useTutorialOverlay(
                 step as TutorialProviderLayoutStep,
                 tutorialProviderNamesRef.current
               )
-              const headerElement =
-                step === 'expand-provider' ? layout.anchor : layout.highlights[0]
+              const headerElement = isExpandProviderTutorialStep(step)
+                ? layout.anchor
+                : layout.highlights[0]
               if (headerElement) {
                 setTargetElement(headerElement)
                 if (layout.highlights.length > 0) {
@@ -870,14 +872,13 @@ export function useTutorialOverlay(
 
     // Step 1: scroll immediately so the first paint with the overlay never shows Google at the rim.
     // Other steps: small delay so hero lock / layout can settle before scroll.
-    const scrollDelay =
-      step === 'expand-provider'
-        ? 0
-        : step === 'enter-prompt' || step === 'enter-prompt-2'
-          ? 150
-          : step === 'follow-up'
-            ? 220
-            : 100
+    const scrollDelay = isExpandProviderTutorialStep(step)
+      ? 0
+      : step === 'enter-prompt' || step === 'enter-prompt-2'
+        ? 150
+        : step === 'follow-up'
+          ? 220
+          : 100
     scrollDelayTimer = setTimeout(() => {
       scrollDelayTimer = null
       const shouldSkipScroll =
@@ -935,26 +936,26 @@ export function useTutorialOverlay(
         waitForScroll.then(() => {
           if (stepRef.current !== step) return
 
-          if (step === 'expand-provider') {
+          if (isExpandProviderTutorialStep(step)) {
             setExpandProviderEffectsReady(true)
             // Phase 1 – let highlight/cutout effects mount after expandProviderEffectsReady.
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
-                if (stepRef.current !== 'expand-provider') return
+                if (!isExpandProviderTutorialStep(stepRef.current)) return
                 // Phase 2 – compute the final tooltip position (batched into next render).
                 updatePosition()
                 initialScrollCompleteRef.current = true
                 // Phase 3 – the position state commits on the next render.  Reveal the
                 // tooltip one frame later so it paints at the final coords, not the default.
                 requestAnimationFrame(() => {
-                  if (stepRef.current !== 'expand-provider') return
+                  if (!isExpandProviderTutorialStep(stepRef.current)) return
                   setIsVisible(true)
                   // Phase 4 – enable CSS transitions only after the clamp layoutEffect
                   // has had a chance to adjust the just-revealed tooltip.  Without this
                   // delay the clamp adjustment is *animated* and the user sees the tooltip
                   // slide from its unclamped position.
                   requestAnimationFrame(() => {
-                    if (stepRef.current !== 'expand-provider') return
+                    if (!isExpandProviderTutorialStep(stepRef.current)) return
                     setPositionStabilized(true)
                   })
                 })
@@ -1084,7 +1085,7 @@ export function useTutorialOverlay(
 
     let elementsToHighlight: HTMLElement[] = []
     if (isProviderPickerTutorialStep(step)) {
-      if (step === 'expand-provider' && !expandProviderEffectsReady) {
+      if (isExpandProviderTutorialStep(step) && !expandProviderEffectsReady) {
         elementsToHighlight = []
       } else {
         elementsToHighlight = getTutorialProviderStepLayout(
@@ -1297,11 +1298,11 @@ export function useTutorialOverlay(
 
   // Re-apply tutorial provider highlight if the DOM dropped it (production timing).
   useEffect(() => {
-    if (step !== 'expand-provider' || !expandProviderEffectsReady) return
+    if (!isExpandProviderTutorialStep(step) || !expandProviderEffectsReady) return
 
     const ensureHighlight = () => {
       const layout = getTutorialProviderStepLayout(
-        'expand-provider',
+        step as TutorialProviderLayoutStep,
         tutorialProviderNamesRef.current
       )
       const primary = layout.highlights[0]
@@ -1324,7 +1325,7 @@ export function useTutorialOverlay(
     return () => {
       detachScrollResize()
       clearInterval(interval)
-      if (stepRef.current !== 'expand-provider') {
+      if (!isExpandProviderTutorialStep(stepRef.current)) {
         getTutorialProviderDropdowns(tutorialProviderNamesRef.current).forEach(providerEl => {
           providerEl.classList.remove('tutorial-highlight')
           providerEl.style.pointerEvents = ''
@@ -2180,7 +2181,7 @@ export function useTutorialOverlay(
       return
     }
 
-    if (step === 'expand-provider' && !expandProviderEffectsReady) {
+    if (isExpandProviderTutorialStep(step) && !expandProviderEffectsReady) {
       setTargetCutout(null)
       return
     }
@@ -2248,7 +2249,8 @@ export function useTutorialOverlay(
   const shouldBlock =
     !isLoadingStreamingPhase &&
     hasAttemptedElementFindRef.current &&
-    ((!isVisible && !targetElement) || (step === 'expand-provider' && !expandProviderEffectsReady))
+    ((!isVisible && !targetElement) ||
+      (isExpandProviderTutorialStep(step) && !expandProviderEffectsReady))
   return {
     overlayRef,
     stepRef,

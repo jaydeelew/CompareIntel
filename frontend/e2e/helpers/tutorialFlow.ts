@@ -28,7 +28,7 @@ export async function expandTutorialProvider(
   await header.scrollIntoViewIfNeeded()
   await dismissMobileBlockers(page)
   if (testInfo && isMobileE2eProject(testInfo.project.name)) {
-    await header.tap({ timeout: 10000 })
+    await header.tap({ timeout: 10000 }).catch(() => header.click({ timeout: 10000 }))
   } else {
     await header.click({ timeout: 10000 })
   }
@@ -39,6 +39,24 @@ async function readTutorialTitle(page: Page): Promise<string> {
   return page.evaluate(selector => {
     return document.querySelector(selector)?.textContent?.trim() ?? ''
   }, TUTORIAL_TITLE_SELECTOR)
+}
+
+async function readTutorialHeaderText(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const mobile = document.querySelector('.mobile-tutorial-tooltip-header')?.textContent ?? ''
+    const desktop = document.querySelector('.tutorial-tooltip-header')?.textContent ?? ''
+    return mobile || desktop
+  })
+}
+
+function splitFlowAdvancedPastFirstModel(
+  header: string,
+  step: string | null
+): boolean {
+  if (step === 'expand-starter-provider-2' || step === 'select-starter-model-2') {
+    return true
+  }
+  return /Step (3|[4-9]|10) of/.test(header)
 }
 
 async function readTutorialCurrentStep(page: Page): Promise<string | null> {
@@ -120,10 +138,9 @@ export async function selectTutorialModelCheckbox(
           return true
         }
 
-        const header = await page.evaluate(() => {
-          return document.querySelector('.mobile-tutorial-tooltip-header')?.textContent ?? ''
-        })
-        if (header.includes('Step 3 of') || header.includes('Step 4 of')) {
+        const header = await readTutorialHeaderText(page)
+        const step = await readTutorialCurrentStep(page)
+        if (splitFlowAdvancedPastFirstModel(header, step)) {
           return true
         }
 
@@ -136,6 +153,19 @@ export async function selectTutorialModelCheckbox(
               ) as HTMLInputElement | null
               const next = document.querySelector(`[data-testid="model-checkbox-${nextId}"]`)
               if (selected?.checked) return true
+              const headerText =
+                document.querySelector('.mobile-tutorial-tooltip-header')?.textContent ??
+                document.querySelector('.tutorial-tooltip-header')?.textContent ??
+                ''
+              const currentStep = (window as Window & { __TUTORIAL_CURRENT_STEP__?: string | null })
+                .__TUTORIAL_CURRENT_STEP__
+              if (
+                currentStep === 'expand-starter-provider-2' ||
+                currentStep === 'select-starter-model-2' ||
+                /Step (3|[4-9]|10) of/.test(headerText)
+              ) {
+                return true
+              }
               return !selected && next !== null
             },
             { selectedId: modelId, nextId: partnerId }
@@ -167,7 +197,7 @@ export function tutorialTooltip(page: Page) {
 export async function expectTutorialStepNumber(
   page: Page,
   step: number,
-  total = 9,
+  total = 10,
   timeout = 20_000
 ): Promise<void> {
   const needle = `Step ${step} of ${total}`

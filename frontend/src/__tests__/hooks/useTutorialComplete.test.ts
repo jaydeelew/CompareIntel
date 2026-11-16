@@ -104,6 +104,7 @@ describe('useTutorialComplete', () => {
         result.current.startTutorial([
           'expand-provider',
           'select-starter-model-1',
+          'expand-starter-provider-2',
           'select-starter-model-2',
           'enter-prompt',
           'submit-comparison',
@@ -122,6 +123,10 @@ describe('useTutorialComplete', () => {
       expect(result.current.tutorialState.currentStep).toBe('select-starter-model-1')
       act(() => {
         result.current.completeStep('select-starter-model-1')
+      })
+      expect(result.current.tutorialState.currentStep).toBe('expand-starter-provider-2')
+      act(() => {
+        result.current.completeStep('expand-starter-provider-2')
       })
       expect(result.current.tutorialState.currentStep).toBe('select-starter-model-2')
     })

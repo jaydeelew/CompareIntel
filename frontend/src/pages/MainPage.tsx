@@ -1098,12 +1098,45 @@ export function MainPage() {
   )
 
   const handleStartTutorial = useCallback(() => {
+    if (tutorialStarterEntries.length < 2 || !tutorialStarterEntries[0]?.provider) {
+      return
+    }
     startTutorial(buildTutorialRuntimeStepSequence(tutorialSplitModelSteps))
-  }, [startTutorial, tutorialSplitModelSteps])
+  }, [startTutorial, tutorialSplitModelSteps, tutorialStarterEntries])
 
+  const prevTutorialStepForDropdownRef = useRef<TutorialStep | null>(null)
   useEffect(() => {
     const step = tutorialState.currentStep
+    const prevStep = prevTutorialStepForDropdownRef.current
+    prevTutorialStepForDropdownRef.current = step
     if (!tutorialState.isActive) return
+
+    if (step === 'expand-provider' && prevStep !== step && tutorialStarterEntries[0]?.provider) {
+      const provider = tutorialStarterEntries[0].provider
+      setOpenDropdowns(prev => {
+        if (!prev.has(provider)) return prev
+        const next = new Set(prev)
+        next.delete(provider)
+        return next
+      })
+      return
+    }
+
+    if (
+      step === 'expand-starter-provider-2' &&
+      prevStep !== step &&
+      tutorialStarterEntries[1]?.provider
+    ) {
+      const provider = tutorialStarterEntries[1].provider
+      setOpenDropdowns(prev => {
+        if (!prev.has(provider)) return prev
+        const next = new Set(prev)
+        next.delete(provider)
+        return next
+      })
+      return
+    }
+
     const providersToOpen =
       step === 'select-models'
         ? tutorialProviderNames
@@ -2207,6 +2240,11 @@ export function MainPage() {
     clearAllModeCachesRef.current()
     setOpenDropdowns(new Set())
     setDefaultSelectionOverridden(true)
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('.mobile-tutorial-highlight, .tutorial-highlight').forEach(el => {
+        el.classList.remove('mobile-tutorial-highlight', 'tutorial-highlight')
+      })
+    }
     setIsFollowUpMode(false)
     setConversations([])
     setResponse(null)

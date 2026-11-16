@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from
 import { createPortal } from 'react-dom'
 
 import {
+  isExpandProviderTutorialStep,
   isProviderPickerTutorialStep,
   isSelectModelTutorialStep,
   resolveTutorialStepConfig,
@@ -292,12 +293,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
       // Special handling for certain steps
       if (isProviderPickerTutorialStep(step)) {
-        const layout = getTutorialProviderStepLayout(
-          step as TutorialProviderLayoutStep,
-          tutorialProviderNamesRef.current
-        )
+        const names = tutorialProviderNamesRef.current
+        if (isExpandProviderTutorialStep(step) && names.length === 0) {
+          return false
+        }
+        const layout = getTutorialProviderStepLayout(step as TutorialProviderLayoutStep, names)
         if (layout.highlights.length > 0) {
-          element = step === 'expand-provider' ? layout.highlights[0] : layout.highlights[0]
+          element = layout.highlights[0]
         }
       } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
         element = getComposerElement()
@@ -357,7 +359,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       setTimeout(tryFind, 300)
     }
-  }, [step, tutorialStarterEntries, tutorialSplitModelSteps])
+  }, [step, tutorialStarterEntries, tutorialSplitModelSteps, tutorialProviderNames])
 
   // Calculate target rect and tooltip position
   const calculatePositions = useCallback(() => {
@@ -762,6 +764,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       requestAnimationFrame(check)
     }
 
+    let providerRevealFallback: ReturnType<typeof setTimeout> | undefined
+
     function scrollTargetIntoView() {
       const rect = targetEl.getBoundingClientRect()
       const viewportHeight = window.innerHeight
@@ -776,7 +780,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           tutorialProviderNamesRef.current,
           currentStep as TutorialProviderLayoutStep
         )
-        waitForScrollStop(() => {
+        const revealOverlay = () => {
           if (stepRef.current !== currentStep) return
           calculatePositions()
           setIsVisible(true)
@@ -784,7 +788,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             if (stepRef.current !== currentStep) return
             calculatePositions()
           })
-        })
+        }
+        waitForScrollStop(revealOverlay)
+        providerRevealFallback = window.setTimeout(revealOverlay, 1200)
       } else if (currentStep === 'follow-up') {
         // Step 5 tooltip is fixed *below* the composer; scroll the page if needed so there is
         // room under the composer (in-flow or near-bottom layout). Instant scroll while hidden.
@@ -924,6 +930,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const interval = isButtonPulsateStep ? null : setInterval(schedulePositionUpdate, 200)
 
     return () => {
+      if (providerRevealFallback) window.clearTimeout(providerRevealFallback)
       if (positionRaf) cancelAnimationFrame(positionRaf)
       window.removeEventListener('scroll', schedulePositionUpdate, true)
       window.removeEventListener('resize', schedulePositionUpdate)
@@ -942,9 +949,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       step === 'select-models'
         ? getTutorialProviderStepLayout('select-models', tutorialProviderNamesRef.current)
             .highlights
-        : step === 'expand-provider'
-          ? getTutorialProviderStepLayout('expand-provider', tutorialProviderNamesRef.current)
-              .highlights
+        : step === 'expand-provider' || step === 'expand-starter-provider-2'
+          ? getTutorialProviderStepLayout(
+              step as 'expand-provider' | 'expand-starter-provider-2',
+              tutorialProviderNamesRef.current
+            ).highlights
           : [targetElement]
 
     providerHighlights.forEach(el => el.classList.add('mobile-tutorial-highlight'))
@@ -1198,6 +1207,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Determine if current step requires an action (show tap indicator)
   const actionSteps: TutorialStep[] = [
     'expand-provider',
+    'expand-starter-provider-2',
     'select-models',
     'select-starter-model-1',
     'select-starter-model-2',
