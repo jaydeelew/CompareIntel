@@ -1,7 +1,6 @@
 import { resolveStarterSelectionModelIds } from '../src/utils/starterSelectionModels'
 
 import { test, expect, dismissTutorialOverlay } from './fixtures'
-
 import { dismissMobileBlockers } from './helpers/modelCheckbox'
 
 const mockModel = (
