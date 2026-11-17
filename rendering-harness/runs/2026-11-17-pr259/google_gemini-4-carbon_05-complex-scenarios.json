@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-4-carbon",
+  "modelName": "Gemini 4 Carbon",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "Here is a comprehensive test response featuring the requested scenarios along with additional formatting edge cases to thoroughly test Markdown and LaTeX rendering engines.\n\n---\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$ for any right-angled triangle.\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - **Step 1 (Substitute):** $c = \\sqrt{3^2 + 4^2}$\n   - *Step 2 (Simplify):* $c = \\sqrt{9 + 16} = \\sqrt{25}$\n   - ~~Step 3 (Incorrect):~~ ~~$c = \\pm 5$~~ *(Length cannot be negative, so $c > 0$)*\n   - ***Final Result:*** Therefore, **$c = 5$** units.\n3. Nested block math inside a list item:\n   - **Euler's Identity** is often cited as an example of deep mathematical beauty:\n     $$e^{i\\pi} + 1 = 0$$\n     where $e$ is Euler's number, $i = \\sqrt{-1}$, and $\\pi \\approx 3.14159$.\n\n---\n\n## Scenario 2: Tables with Math (Including Pipe Edge Cases)\n*Note: Absolute values using `\\lvert` and `\\rvert` prevent table column breakage.*\n\n| Formula Name | Standard Equation | Solution / Closed Form | Condition |\n| :--- | :---: | :---: | ---: |\n| **Quadratic** | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ | $a \\neq 0$ |\n| **Arithmetic Sum** | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ | $n \\in \\mathbb{Z}^+$ |\n| **Factorial Product** | $\\prod_{i=1}^{n} i$ | $n!$ | $n \\ge 1$ |\n| **Gaussian Integral** | $\\int_{-\\infty}^{\\infty} e^{-x^2} \\, dx$ | $\\sqrt{\\pi}$ | $x \\in \\mathbb{R}$ |\n| **Absolute Value** | $f(x) = \\lvert x \\rvert$ | $\\sqrt{x^2}$ | $\\forall x \\in \\mathbb{R}$ |\n\n---\n\n## Scenario 3: Code and Math Mixed\n\nHere we mix inline code like `math.pi`, bash variables like `$HOME` and `$PATH`, and LaTeX variables like $\\pi$ and $r^2$.\n\n```python\n# Calculate area and circumference of a circle with radius r\nimport math\n\ndef circle_metrics(r: float) -> tuple[float, float]:\n    \"\"\"\n    Formulas: \n      Area: A = πr²\n      Circumference: C = 2πr\n    Cost calculation test inside code: $5.00 * r + $10.00\n    \"\"\"\n    area = math.pi * (r ** 2)\n    circumference = 2 * math.pi * r\n    return area, circumference\n\nr_val = 5\na, c = circle_metrics(r_val)\nprint(f\"Radius: {r_val} -> Area: {a:.2f}, Circumference: {c:.2f}\")\n```\n\nIn the code above, `r ** 2` computes $r^2$. The mathematical formula for the area is $A = \\pi r^2$, while the inline literal `$A = \\pi r^2$` should **not** render as math because it is wrapped in backticks.\n\n---\n\n## Scenario 4: Horizontal Rules & Blockquotes\n\nFirst section: Standard text preceding a thematic break.\n\n---\n\nSecond section with inline math: $\\int_{0}^{1} x \\, dx = \\left[ \\frac{x^2}{2} \\right]_0^1 = \\frac{1}{2}$\n\n> **Blockquote Edge Case:** \n> According to the **Fundamental Theorem of Calculus**, if $F'(x) = f(x)$, then:\n> $$\\int_{a}^{b} f(x) \\, dx = F(b) - F(a)$$\n\n---\n\nThird section: Text immediately following a horizontal rule after a blockquote.\n\n---\n\n## Scenario 5: Multiple Dollar Signs (Currency vs. LaTeX)\n\n* **Pure Currency:** Prices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575. (Unescaped test: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.)\n* **Pure Math:** The formula $f(x) = x^2$ evaluates to $f(5) = 25$ and $f(10) = 100$.\n* **Mixed in the Same Sentence:** If you buy $x$ items at \\$25 each (plus a \\$10 shipping fee), your total cost function is $C(x) = 25x + 10$, meaning $5$ items will cost $C(5) = 25(5) + 10 = \\$135$ (or \\$135.00).",
+  "usage": {
+    "prompt_tokens": 474,
+    "completion_tokens": 1514,
+    "total_tokens": 1988,
+    "cost": 0.016088,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.016088,
+      "upstream_inference_prompt_cost": 0.000948,
+      "upstream_inference_completions_cost": 0.01514
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 303,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.016088,
+  "actualCost": 0.016088,
+  "timestamp": "2026-11-17T19:21:53.187Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

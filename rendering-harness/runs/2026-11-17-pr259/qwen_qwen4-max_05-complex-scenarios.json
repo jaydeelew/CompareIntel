@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen4-max",
+  "modelName": "Qwen4 Max",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "# Complex Scenario Response — Formatting Stress Test\n\nBelow, each scenario is reproduced and extended with harder variants. Notes on ambiguity resolution appear at the end.\n\n---\n\n## Scenario 1: Math in Nested Lists\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$ for a right triangle with legs $a, b$ and hypotenuse $c$.\n2. For a *right triangle* with $a = 3$ and $b = 4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units.\n   - Nested deeper (third level), with **bold math** and *italic variables*:\n     - The area is $A = \\tfrac{1}{2}ab = \\tfrac{1}{2}(3)(4) = 6$ square units.\n     - The inradius is $r = \\dfrac{a + b - c}{2} = \\dfrac{3 + 4 - 5}{2} = 1$.\n3. A display equation **inside** a list item:\n   - Generalization to $n$ dimensions:\n\n     $$\\lVert \\mathbf{v} \\rVert_2 = \\sqrt{\\sum_{i=1}^{n} v_i^2}$$\n\n   - Substituting $\\mathbf{v} = (3, 4)$ recovers $\\lVert \\mathbf{v} \\rVert_2 = 5$.\n4. Ordered sublist with an ordered restart:\n   1. Verify: $3^2 + 4^2 = 9 + 16 = 25 = 5^2$ ✓\n   2. Note the converse: if $a^2 + b^2 = c^2$, the triangle is right.\n\n---\n\n## Scenario 2: Tables with Math (including pipe-character hazards)\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\dfrac{n(n+1)}{2}$ |\n| Sum of squares | $\\sum_{i=1}^{n} i^2$ | $\\dfrac{n(n+1)(2n+1)}{6}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| Absolute value | $\\lvert x \\rvert$ | $\\max(x, -x)$ |\n| Set builder | $\\{x \\mid x > 0\\}$ | $(0, \\infty)$ |\n| Determinant | $\\det\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$ | $ad - bc$ |\n| Norm ‖·‖ | $\\lVert \\mathbf{v} \\rVert_\\infty$ | $\\max_i \\lvert v_i \\rvert$ |\n\n**Alignment variants:**\n\n| Left | Center | Right |\n|:-----|:------:|------:|\n| $\\alpha$ | $\\beta$ | $\\gamma$ |\n| $\\frac{1}{2}$ | $0.5$ | $50\\%$ |\n| $1{,}200$ | $1.2 \\times 10^3$ | $1200$ |\n\n> **Edge case:** a literal `|` inside `$...$` would split the cell. Use `\\lvert`, `\\rvert`, `\\mid`, `\\Vert`, or escape as `\\|` — e.g. $\\{x : x \\ne 0\\}$ rather than raw pipes.\n\n---\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²  (plain text here — NOT rendered as math)\n    return math.pi * r**2\n\n",
+  "usage": {
+    "prompt_tokens": 468,
+    "completion_tokens": 2048,
+    "total_tokens": 2516,
+    "cost": 0.0094221,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0094221,
+      "upstream_inference_prompt_cost": 0.0006669,
+      "upstream_inference_completions_cost": 0.0087552
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1111,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0094221,
+  "actualCost": 0.0094221,
+  "timestamp": "2026-11-17T19:24:38.040Z",
+  "finishReason": "length",
+  "nativeFinishReason": "length",
+  "error": null
+}
