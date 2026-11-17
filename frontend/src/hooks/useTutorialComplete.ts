@@ -117,9 +117,8 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   const [tutorialHasBreakout, setTutorialHasBreakout] = useState(false)
   const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
 
-  const hasShownWelcomeModalRef = useRef(
-    sessionStorage.getItem('compareintel_welcome_shown_session') === 'true'
-  )
+  /** Prevents re-showing the welcome modal within a single page load (effect re-runs). */
+  const hasShownWelcomeModalRef = useRef(false)
   /** True once the user has started a follow-up request (loading) on tutorial step 5. Prevents
    *  treating the first comparison's 2+ assistant messages as "round 2" before they submit. */
   const followUpSubmitInitiatedRef = useRef(false)
@@ -227,7 +226,7 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
       return
     }
 
-    // Don't show if already shown this session
+    // Don't show more than once per page load (e.g. after skip/close or tutorial end)
     if (hasShownWelcomeModalRef.current) {
       return
     }
@@ -242,7 +241,6 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     if (dontShowAgain !== 'true') {
       setShowWelcomeModal(true)
       hasShownWelcomeModalRef.current = true
-      sessionStorage.setItem('compareintel_welcome_shown_session', 'true')
     }
   }, [authLoading, isAuthenticated, tutorialState.isActive, currentView])
 

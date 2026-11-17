@@ -43,8 +43,6 @@ describe('useTutorialComplete', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorageMock.clear()
-    // Hook marks welcome as shown in sessionStorage; earlier tests share the same jsdom session.
-    sessionStorage.removeItem('compareintel_welcome_shown_session')
   })
 
   describe('initialization', () => {
@@ -347,6 +345,59 @@ describe('useTutorialComplete', () => {
       })
 
       expect(result.current.showWelcomeModal).toBe(false)
+    })
+
+    it('should not re-show welcome modal after dismiss within the same page load', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: {
+          ...defaultConfig,
+          isAuthenticated: false,
+          authLoading: false,
+          currentView: 'main' as const,
+        },
+      })
+
+      expect(result.current.showWelcomeModal).toBe(true)
+
+      act(() => {
+        result.current.setShowWelcomeModal(false)
+      })
+
+      rerender({
+        ...defaultConfig,
+        isAuthenticated: false,
+        authLoading: false,
+        currentView: 'main',
+        conversations: [{ modelId: 'test', messages: [] }] as ModelConversation[],
+      })
+
+      expect(result.current.showWelcomeModal).toBe(false)
+    })
+
+    it('should show welcome modal again on a fresh page load when not dismissed via localStorage', () => {
+      const first = renderHook(() =>
+        useTutorialComplete({
+          ...defaultConfig,
+          isAuthenticated: false,
+          authLoading: false,
+          currentView: 'main',
+        })
+      )
+      expect(first.result.current.showWelcomeModal).toBe(true)
+      act(() => {
+        first.result.current.setShowWelcomeModal(false)
+      })
+      first.unmount()
+
+      const second = renderHook(() =>
+        useTutorialComplete({
+          ...defaultConfig,
+          isAuthenticated: false,
+          authLoading: false,
+          currentView: 'main',
+        })
+      )
+      expect(second.result.current.showWelcomeModal).toBe(true)
     })
   })
 
