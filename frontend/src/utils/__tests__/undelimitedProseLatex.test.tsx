@@ -61,9 +61,7 @@ describe('undelimited LaTeX in prose', () => {
     expect(markedSentence(el)).toBe(
       '(the height is ⟨\\sqrt{3}⟩), and the space diagonal of a unit cube is ⟨\\sqrt{3}⟩.'
     )
-    expect(visibleText(el)).toBe(
-      '(the height is 3), and the space diagonal of a unit cube is 3.'
-    )
+    expect(visibleText(el)).toBe('(the height is 3), and the space diagonal of a unit cube is 3.')
     expect(visibleText(el)).not.toContain('\\sqrt')
   })
 
@@ -122,7 +120,10 @@ describe('undelimited LaTeX in prose', () => {
 })
 
 const SYNTHETIC_MARKDOWN = readFileSync(
-  path.resolve(__dirname, '../../../../rendering-harness/fixtures/undelimited-prose-latex-response.md'),
+  path.resolve(
+    __dirname,
+    '../../../../rendering-harness/fixtures/undelimited-prose-latex-response.md'
+  ),
   'utf8'
 )
 

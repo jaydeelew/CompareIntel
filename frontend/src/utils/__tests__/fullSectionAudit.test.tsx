@@ -55,11 +55,7 @@ describe('full-section CommonMark+KaTeX audit', () => {
     const actual = signatureFromElement(el)
     const result = {
       ...compareSignatures(ref, actual),
-      diffs: filterProseLatexEnhancementDiffs(
-        compareSignatures(ref, actual).diffs,
-        body,
-        actual
-      ),
+      diffs: filterProseLatexEnhancementDiffs(compareSignatures(ref, actual).diffs, body, actual),
     }
     result.pass = result.diffs.length === 0
     const sectionDir = path.join(REPO_ROOT, 'rendering-harness/full-section-audit/sections')

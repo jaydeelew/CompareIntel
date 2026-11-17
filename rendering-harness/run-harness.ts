@@ -736,7 +736,7 @@ async function renderOnlyMode(
         try {
           const { renderedHTML } = await renderResponse(page, data.modelId, data.response, screenshotPath);
           const validation = validateRenderedHTML(renderedHTML, getExpectedFeatures(SYNTHETIC_UNDELIMITED_PROMPT), data.response);
-          const status = overallStatus({ validation });
+          const status = overallStatus({ validation, truncated: false, emptyVisible: false });
           if (status === 'fail') {
             const raw = validation.assertions.find(a => a.message.includes('raw TeX outside code'))
             console.log(`  ✗ ${data.modelId} synthetic: ${raw?.actual ?? status}`)

@@ -21,7 +21,13 @@ export async function stackPhoneBeforeAfter(
   const after = (await fs.readFile(opts.afterPng)).toString('base64')
   const esc = (s: string) =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-  await page.setViewportSize({ width: PHONE_VIEW.width, height: 900 })
+  const maxImgW = await page.evaluate(
+    minW =>
+      Math.max(...Array.from(document.images).map(img => img.naturalWidth), minW),
+    PHONE_VIEW.width
+  )
+  const pageWidth = Math.min(Math.max(PHONE_VIEW.width, maxImgW), 800)
+  await page.setViewportSize({ width: pageWidth, height: 900 })
   await page.setContent(
     `<!DOCTYPE html><html><head><meta charset="utf-8" /><style>
       * { box-sizing: border-box; }
@@ -30,7 +36,7 @@ export async function stackPhoneBeforeAfter(
       figcaption.before { background: #fef3c7; color: #78350f; border-top: 3px solid #f59e0b; }
       figcaption.after { background: #dcfce7; color: #14532d; border-top: 3px solid #22c55e; }
       figcaption.title { background: #1e293b; color: #f8fafc; font-size: 16px; border-top: none; }
-      img { display: block; width: 390px; height: auto; margin: 0; background: #fff; }
+      img { display: block; width: auto; max-width: 100%; height: auto; margin: 0 auto; background: #fff; }
       pre { margin: 0; padding: 10px 8px 14px; font-size: 11px; line-height: 1.35; white-space: pre-wrap;
         word-break: break-word; background: #f8fafc; border-top: 1px solid #e2e8f0; font-family: ui-monospace, monospace; }
     </style></head><body>

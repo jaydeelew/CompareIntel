@@ -136,7 +136,9 @@ function wrapSimpleScripts(text: string): string {
 
 function containsPlaceholderSlice(source: string, offset: number, length: number): boolean {
   const slice = source.slice(offset, offset + length)
-  return /__(?:INLINE_MATH|DISPLAY_MATH|CODE_BLOCK|HR_PLACEHOLDER)_\d+__|[\uE000-\uE006]/.test(slice)
+  return /__(?:INLINE_MATH|DISPLAY_MATH|CODE_BLOCK|HR_PLACEHOLDER)_\d+__|[\uE000-\uE006]/.test(
+    slice
+  )
 }
 
 /**

@@ -1,6 +1,6 @@
 /**
- * Before/after phone screenshots (390 CSS px, DPR 3) for undelimited \\sqrt{3} prose.
- *   npx tsx scripts/capture-undelimited-prose-artifacts.ts --base=master
+ * Before/after screenshots for undelimited \\sqrt{3} prose (full card width, no crop).
+ *   npx tsx scripts/capture-undelimited-prose-artifacts.ts --base=93f92ba2
  */
 import { execFileSync } from 'child_process'
 import fs from 'fs'
@@ -8,16 +8,24 @@ import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { chromium } from 'playwright'
-import { PHONE_VIEW, openThemedPage, renderOnPage, shootContainer } from '../captures.js'
+import {
+  EVIDENCE_VIEW,
+  PHONE_VIEW,
+  openThemedPage,
+  renderOnPage,
+  shootContainer,
+} from '../captures.js'
 import { launchVite, type ViteProcess } from '../launch-vite.js'
+import { stackBeforeAfter } from '../stack-shot.js'
 import { stackPhoneBeforeAfter } from '../phone-stack-shot.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO = path.resolve(__dirname, '../..')
 const PARAGRAPH = [
   '(the height is \\sqrt{3}), and the space diagonal of a unit cube is \\sqrt{3}.',
+  '',
   'tan(60°) = \\sqrt{3} and sin(60°) = \\sqrt{3}/2.',
-].join('\n\n')
+].join('\n')
 const MODEL = 'google/gemma-3-27b-it'
 
 function argValue(name: string): string | undefined {
@@ -46,10 +54,14 @@ function cleanup(dir: string) {
   }
 }
 
-async function shoot(vite: ViteProcess, outputPath: string) {
+async function shoot(
+  vite: ViteProcess,
+  view: { width: number; height: number; deviceScaleFactor: number },
+  outputPath: string
+) {
   const browser = await chromium.launch()
   try {
-    const page = await openThemedPage(browser, vite.port, 'light', PHONE_VIEW)
+    const page = await openThemedPage(browser, vite.port, 'light', view)
     await renderOnPage(page, MODEL, PARAGRAPH, 'undelimited-prose')
     await shootContainer(page, outputPath)
   } finally {
@@ -58,7 +70,7 @@ async function shoot(vite: ViteProcess, outputPath: string) {
 }
 
 async function main() {
-  const baseRef = argValue('base') || 'master'
+  const baseRef = argValue('base') || '93f92ba2'
   const outDir = argValue('out') || '/opt/cursor/artifacts'
   fs.mkdirSync(outDir, { recursive: true })
   const work = fs.mkdtempSync(path.join(os.tmpdir(), 'undelimited-prose-shots-'))
@@ -68,33 +80,54 @@ async function main() {
   try {
     const baseVite = await launchVite({ port: 5176, frontendSrc: base.frontendSrc })
     try {
-      await shoot(baseVite, path.join(work, 'before-phone.png'))
+      await shoot(baseVite, PHONE_VIEW, path.join(work, 'before-phone.png'))
+      await shoot(baseVite, EVIDENCE_VIEW, path.join(work, 'before-960.png'))
     } finally {
       baseVite.stop()
     }
-    const headVite = await launchVite({ port: 5176, frontendSrc: headSrc })
+    const headVite = await launchVite({ port: 5177, frontendSrc: headSrc })
     try {
-      await shoot(headVite, path.join(work, 'after-phone.png'))
+      await shoot(headVite, PHONE_VIEW, path.join(work, 'after-phone.png'))
+      await shoot(headVite, EVIDENCE_VIEW, path.join(work, 'after-960.png'))
     } finally {
       headVite.stop()
     }
     const browser = await chromium.launch()
     try {
-      const phoneContext = await browser.newContext({
-        viewport: { width: PHONE_VIEW.width, height: PHONE_VIEW.height },
-        deviceScaleFactor: PHONE_VIEW.deviceScaleFactor,
-      })
-      const phonePage = await phoneContext.newPage()
-      const phoneOut = path.join(outDir, 'undelimited-sqrt3-prose-phone-before-after.png')
+      const phoneOut = path.join(outDir, 'undelimited-sqrt3-prose-phone-390-before-after.png')
+      const phonePage = await (
+        await browser.newContext({
+          viewport: { width: 800, height: 1200 },
+          deviceScaleFactor: 1,
+        })
+      ).newPage()
       await stackPhoneBeforeAfter(phonePage, {
         beforePng: path.join(work, 'before-phone.png'),
         afterPng: path.join(work, 'after-phone.png'),
-        beforeLabel: `Before ${baseRef}`,
-        afterLabel: 'After undelimited prose math',
+        beforeLabel: `BEFORE · ${baseRef.slice(0, 12)}`,
+        afterLabel: 'AFTER · undelimited prose LaTeX fix',
         sourceExcerpt: PARAGRAPH,
         outputPath: phoneOut,
       })
+
+      const widePage = await (
+        await browser.newContext({
+          viewport: { width: 1100, height: 2400 },
+          deviceScaleFactor: 1,
+        })
+      ).newPage()
+      const wideOut = path.join(outDir, 'undelimited-sqrt3-prose-960-before-after.png')
+      await stackBeforeAfter(widePage, {
+        beforePng: path.join(work, 'before-960.png'),
+        afterPng: path.join(work, 'after-960.png'),
+        beforeLabel: `BEFORE · ${baseRef.slice(0, 12)} · 960 CSS px · DPR 2`,
+        afterLabel: 'AFTER · undelimited prose LaTeX fix',
+        sourceExcerpt: PARAGRAPH,
+        outputPath: wideOut,
+      })
+
       console.log(`Wrote ${phoneOut}`)
+      console.log(`Wrote ${wideOut}`)
       console.log(`Base ${base.sha}  Head ${headSha}`)
     } finally {
       await browser.close()
