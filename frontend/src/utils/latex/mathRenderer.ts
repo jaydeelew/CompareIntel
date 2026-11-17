@@ -1,7 +1,12 @@
 import type { MathDelimiterPattern, ModelRendererConfig } from '../../types/rendererConfig'
 
 import { safeRenderKatex, looksMathematical, looksProse } from './helpers'
-import { LITERAL_DOLLAR } from './protection'
+import { isOffsetInGfmTableCell, LITERAL_DOLLAR } from './protection'
+
+function gfmUnescapeTableMathMatch(fullMatch: string, text: string, offset: number): string {
+  if (typeof offset !== 'number' || !isOffsetInGfmTableCell(text, offset)) return fullMatch
+  return fullMatch.replace(/\\\|/g, '|')
+}
 
 /** Inner of `$...$` / `$$...$$` / `\[...\]` / `\(...\)` after stripping delimiters. */
 export function delimiterExampleInner(fullMatch: string): string {
@@ -325,7 +330,7 @@ export function extractDisplayMath(
         return fullMatch
       }
       const index = mathBlocks.length
-      mathBlocks.push(stripQuotedDisplayLines(fullMatch))
+      mathBlocks.push(stripQuotedDisplayLines(gfmUnescapeTableMathMatch(fullMatch, processed, offset)))
       return `${placeholderPrefix}${index}${placeholderSuffix}`
     })
   })
@@ -368,11 +373,14 @@ export function extractInlineMath(
   const delimiters = sortDelimiters(inlineMathDelimiters)
 
   delimiters.forEach(({ pattern }) => {
-    processed = processed.replace(pattern, fullMatch => {
+    processed = processed.replace(pattern, (fullMatch, ...rest) => {
       if (displaySpanCrossesListItem(fullMatch)) return fullMatch
       if (isEllipsisDelimiterExample(fullMatch)) return leaveDelimiterExample(fullMatch)
+      const offset = rest[rest.length - 2]
       const index = mathBlocks.length
-      mathBlocks.push(fullMatch)
+      mathBlocks.push(
+        typeof offset === 'number' ? gfmUnescapeTableMathMatch(fullMatch, processed, offset) : fullMatch
+      )
       return `${placeholderPrefix}${index}${placeholderSuffix}`
     })
   })
@@ -483,14 +491,20 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
       }
       renderedFromDelimiters = true
       const body = typeof math === 'string' ? math : fullMatch
-      return safeRenderKatex(body, true, config.katexOptions)
+      const gfmTableCell =
+        typeof offset === 'number' && isOffsetInGfmTableCell(rendered, offset)
+      return safeRenderKatex(body, true, config.katexOptions, { gfmTableCell })
     })
   })
 
   inlineDelimiters.forEach(({ pattern }) => {
-    rendered = rendered.replace(pattern, (_match, math) => {
+    rendered = rendered.replace(pattern, (fullMatch, math, ...rest) => {
       renderedFromDelimiters = true
-      return safeRenderKatex(math, false, config.katexOptions)
+      const offset = rest[rest.length - 2]
+      const gfmTableCell =
+        typeof offset === 'number' && isOffsetInGfmTableCell(rendered, offset)
+      const tex = typeof math === 'string' ? math : fullMatch
+      return safeRenderKatex(tex, false, config.katexOptions, { gfmTableCell })
     })
   })
 

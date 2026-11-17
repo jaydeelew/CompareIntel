@@ -25,16 +25,26 @@ const DEFAULT_KATEX_OPTIONS = {
 const protectRenderedMath = (html: string): string =>
   html.replace(/\n/g, ' ').replace(/[_*|$`~[\]]/g, c => `&#${c.charCodeAt(0)};`)
 
+export interface SafeRenderKatexOptions {
+  /** Apply GFM table-cell `\\|` → `|` before KaTeX (absolute value, not norm). */
+  gfmTableCell?: boolean
+}
+
 export const safeRenderKatex = (
   latex: string,
   displayMode: boolean,
-  katexOptions?: ModelRendererConfig['katexOptions']
+  katexOptions?: ModelRendererConfig['katexOptions'],
+  renderOptions?: SafeRenderKatexOptions
 ): string => {
   try {
     let cleanLatex = literalDollarsToLatex(latex)
       .trim()
       .replace(/<[^>]*>/g, '')
       .replace(/style="[^"]*"/g, '')
+
+    if (renderOptions?.gfmTableCell) {
+      cleanLatex = cleanLatex.replace(/\\\|/g, '|')
+    }
 
     cleanLatex = cleanLatex
       .replace(/\\\)\s*$/, '')

@@ -13,6 +13,8 @@ import {
   restoreInlineCode,
   restoreLiteralDollars,
   safeRenderKatex,
+  isOffsetInGfmTableCell,
+  unescapeGfmPipesInTableMathLatex,
   unescapeGfmTableCellCodePipes,
   unescapeMarkdownEscapesOutsideKatex,
   literalizeUnpairedDoubleDollars,
@@ -232,6 +234,23 @@ describe('lists', () => {
     expect(out).toContain('<strong>$x = 0$</strong>')
     expect(out).toContain('<strong>$x = 2$</strong>')
     expect(out).not.toContain('**$x = 0$**')
+  })
+})
+
+describe('GFM table-cell pipe escapes (math)', () => {
+  it('detects offsets inside GFM table cells', () => {
+    const row =
+      '| Absolute | $f(x) = \\|x\\|$ | $5$ | Escaped pipes `\\|` inside table math |'
+    const header = '| Concept | Formula | Value | Notes |\n|---------|---------|-------|-------|\n'
+    const text = `${header}${row}`
+    const formulaStart = text.indexOf('$f(x)')
+    expect(isOffsetInGfmTableCell(text, formulaStart)).toBe(true)
+    expect(isOffsetInGfmTableCell('Norm $\\|x\\|_2$ prose', 6)).toBe(false)
+  })
+
+  it('unescapes \\| in table math TeX only', () => {
+    expect(unescapeGfmPipesInTableMathLatex('f(x)=\\|x\\|')).toBe('f(x)=|x|')
+    expect(unescapeGfmPipesInTableMathLatex('\\|x\\|_2')).toBe('|x|_2')
   })
 })
 

@@ -361,6 +361,29 @@ The formula $A = \\pi r^2$ stays outside the table.
     expect(texSources(el).some(t => t.includes('\\pi r^2'))).toBe(true)
   })
 
+  it('renders escaped \\| in table math as absolute value |x|, not norm', () => {
+    const el = renderReply(
+      '| Concept | Formula | Value | Notes |\n|---------|---------|-------|-------|\n| Absolute | $f(x) = \\|x\\|$ | $5$ | Escaped pipes `\\|` inside table math |\n',
+      'google/gemini-4-carbon'
+    )
+    const absKatex = Array.from(el.querySelectorAll('td .katex')).find(k =>
+      (k.querySelector('annotation')?.textContent ?? '').includes('f(x)')
+    )
+    expect(absKatex?.querySelector('.katex-mathml')?.textContent ?? '').not.toMatch(/∥/)
+    expect(absKatex?.querySelector('annotation')?.textContent?.replace(/\s+/g, '')).toBe('f(x)=|x|')
+    const notes = Array.from(el.querySelectorAll('td')).find(td =>
+      (td.textContent ?? '').includes('Escaped pipes')
+    )
+    expect(notes?.querySelector('code')?.textContent).toBe('|')
+  })
+
+  it('keeps \\| outside tables as KaTeX norm', () => {
+    const el = renderReply('Vector norm: $\\|x\\|_2$ equals the Euclidean length.', 'qwen/qwen4-max')
+    const katex = el.querySelector('.katex')
+    expect(katex?.querySelector('.katex-mathml')?.textContent ?? '').toMatch(/∥/)
+    expect(katex?.querySelector('annotation')?.textContent ?? '').toMatch(/\\?\|x\\?\|/)
+  })
+
   it('unescapes \\| inside table-cell code (GFM example 200)', () => {
     const el = renderReply(
       '| Feature | Challenge | Solution |\n|---------|-----------|----------|\n| Tables with math | `\\|` conflicts, complex fractions | Escape pipes |\n',

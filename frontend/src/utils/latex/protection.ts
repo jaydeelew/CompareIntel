@@ -469,10 +469,74 @@ export function restoreInlineCode(text: string, spans: string[]): string {
   })
 }
 
+/** Rejoin {@link gfmSplitRow} cells into a row (preserves leading/trailing `|`). */
+export function mapGfmTableRowCells(line: string, mapCell: (cell: string) => string): string {
+  const cells = gfmSplitRow(line)
+  if (cells.length === 0) return line
+  const mapped = cells.map(mapCell)
+  const leading = /^\s*\|/.test(line)
+  const trailing = /\|\s*$/.test(line)
+  const core = mapped.join('|')
+  return `${leading ? '|' : ''}${core}${trailing ? '|' : ''}`
+}
+
+function lineInGfmTable(lines: string[], lineIndex: number): boolean {
+  for (let i = 0; i < lines.length; i++) {
+    const end = gfmTableSpan(lines, i)
+    if (end === null) continue
+    if (lineIndex >= i && lineIndex < end) return true
+    i = end - 1
+  }
+  return false
+}
+
+/**
+ * True when `offset` lies in a GFM table **cell interior** (not on a column `|`).
+ * Cell boundaries use the same rules as {@link gfmSplitRow} while the source still
+ * contains escaped `\|` (so `|x|` inside math does not split the row).
+ */
+export function isOffsetInGfmTableCell(text: string, offset: number): boolean {
+  if (offset < 0 || offset > text.length) return false
+  const lineStart = text.lastIndexOf('\n', offset - 1) + 1
+  const lineEndIdx = text.indexOf('\n', offset)
+  const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx
+  const line = text.slice(lineStart, lineEnd)
+  const relOffset = offset - lineStart
+  if (!line.includes('|')) return false
+
+  const lineIndex = text.slice(0, lineStart).split('\n').length - 1
+  const lines = text.split('\n')
+  if (!lineInGfmTable(lines, lineIndex)) return false
+
+  const delimiterPositions: number[] = []
+  let pos = 0
+  while (pos < line.length) {
+    if (line.startsWith('<span class="katex', pos)) {
+      pos = endOfKatexSpan(line, pos)
+      continue
+    }
+    if (line.charCodeAt(pos) === 124 && line[pos - 1] !== '\\') delimiterPositions.push(pos)
+    pos += 1
+  }
+  if (delimiterPositions.length < 2) return false
+  for (let i = 0; i < delimiterPositions.length - 1; i++) {
+    const start = delimiterPositions[i] + 1
+    const end = delimiterPositions[i + 1]
+    if (relOffset >= start && relOffset < end) return true
+  }
+  return false
+}
+
+/** GFM table cells turn `\|` into `|` in math (KaTeX) only — not in the source row. */
+export function unescapeGfmPipesInTableMathLatex(tex: string): string {
+  return tex.replace(/\\\|/g, '|')
+}
+
 /**
  * GFM table cells unescape `\|` to `|` even inside code (spec example 200).
  * CommonMark code spans keep the backslash; only table cells strip it.
  */
+
 export function unescapeGfmTableCellCodePipes(html: string): string {
   return html.replace(
     /<(td|th)(\s[^>]*)?>([\s\S]*?)<\/\1>/gi,
