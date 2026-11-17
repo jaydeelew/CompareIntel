@@ -3778,6 +3778,20 @@ button.nav-button-primary {
   max-width: 100%;
 }
 
+/* StyledTooltip wrapper around default selection label — preserve cluster flex/ellipsis */
+.saved-selections-bookmark-cluster .default-selection-name-tooltip {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  justify-content: flex-start;
+}
+
+.saved-selections-bookmark-cluster .default-selection-name-tooltip .default-selection-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* Default selection name display */
 .default-selection-name {
   font-size: 0.8125rem;
