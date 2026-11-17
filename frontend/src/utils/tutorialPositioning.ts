@@ -1,5 +1,9 @@
 import { getComposerCutoutRects, getComposerElement } from '../components/tutorial/tutorialUtils'
-import { isSelectModelTutorialStep, isSingleProviderSpotlightStep } from '../data/tutorialStepPlan'
+import {
+  isExpandProviderTutorialStep,
+  isSelectModelTutorialStep,
+  isSingleProviderSpotlightStep,
+} from '../data/tutorialStepPlan'
 import type { StepConfig } from '../data/tutorialSteps'
 import type { TutorialStep } from '../hooks/useTutorial'
 
@@ -142,6 +146,19 @@ export function getTutorialScrollMax(): number {
   return Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
 }
 
+/** Scroll an element using the real page scroll root (`.app`), not `scrollIntoView` (window quirks). */
+export function scrollTutorialElementToViewportY(
+  element: HTMLElement,
+  desiredTopInViewportPx: number
+): void {
+  const root = getTutorialScrollRoot()
+  const rect = element.getBoundingClientRect()
+  const y0 = root.getScrollTop()
+  const maxScroll = getTutorialScrollMax()
+  const nextTop = Math.max(0, Math.min(y0 + rect.top - desiredTopInViewportPx, maxScroll))
+  root.scrollToTop(nextTop, 'auto')
+}
+
 const AFTER_RESULTS_COMPOSER_SLOT = '[data-after-results-composer-slot]'
 const COMPARISON_TEXTAREA = '[data-testid="comparison-input-textarea"]'
 
@@ -251,12 +268,10 @@ export function getTutorialProviderStepLayout(
   const primary = dropdowns[0]
   const header = primary.querySelector('.provider-header') as HTMLElement | null
   if (step === 'select-starter-model-1' || step === 'select-starter-model-2') {
-    const modelRow = primary.querySelector('.provider-models .model-option') as HTMLElement | null
-    const spotlight = modelRow ?? primary
     return {
-      anchor: spotlight,
+      anchor: primary,
       highlights: [primary],
-      layoutRect: spotlight.getBoundingClientRect(),
+      layoutRect: primary.getBoundingClientRect(),
     }
   }
   const anchor =
@@ -287,6 +302,12 @@ export function scrollTutorialProvidersIntoView(
   providerNames: readonly string[],
   providerStep: TutorialProviderLayoutStep = 'expand-provider'
 ): void {
+  const dropdowns = getTutorialProviderDropdowns(providerNames)
+  const primary = dropdowns[0]
+  const modelsSection = document.querySelector('.models-section') as HTMLElement | null
+  if (modelsSection) {
+    scrollTutorialElementToViewportY(modelsSection, 96)
+  }
   const { layoutRect } = getTutorialProviderStepLayout(providerStep, providerNames)
   if (!layoutRect) return
   const root = getTutorialScrollRoot()
@@ -294,8 +315,37 @@ export function scrollTutorialProvidersIntoView(
   let nextTop: number
   const viewH = window.innerHeight
   if (providerStep === 'select-starter-model-1' || providerStep === 'select-starter-model-2') {
+    const primary = dropdowns[0]
+    const fullRect = primary?.getBoundingClientRect() ?? layoutRect
     const tooltipReserve = getEstimatedTooltipHeight() + TOOLTIP_OFFSET + 48
-    nextTop = Math.max(0, y0 + layoutRect.top - tooltipReserve)
+    const checkbox = primary?.querySelector(
+      '.provider-models [data-testid^="model-checkbox-"]'
+    ) as HTMLElement | null
+    const maxProviderInView = viewH - tooltipReserve - 24
+    if (fullRect.height > maxProviderInView && checkbox) {
+      const cbRect = checkbox.getBoundingClientRect()
+      const footerPad = 72
+      let scrollDelta = 0
+      if (cbRect.bottom > viewH - footerPad) {
+        scrollDelta = cbRect.bottom - (viewH - footerPad)
+      } else if (cbRect.top < tooltipReserve) {
+        scrollDelta = cbRect.top - tooltipReserve
+      }
+      if (scrollDelta !== 0) {
+        nextTop = Math.max(0, y0 + scrollDelta)
+      } else {
+        nextTop = Math.max(0, y0 + fullRect.top - tooltipReserve)
+      }
+    } else {
+      nextTop = Math.max(0, y0 + fullRect.top - tooltipReserve)
+    }
+  } else if (providerStep === 'expand-provider' || providerStep === 'expand-starter-provider-2') {
+    const primary = dropdowns[0]
+    const header = primary?.querySelector('.provider-header') as HTMLElement | null
+    const anchorRect = header?.getBoundingClientRect() ?? layoutRect
+    const tooltipReserve =
+      getEstimatedTooltipHeight() + TOOLTIP_OFFSET + EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX
+    nextTop = Math.max(0, y0 + anchorRect.top - tooltipReserve)
   } else if (providerStep === 'select-models') {
     const margin = 80
     if (layoutRect.height > viewH - margin * 2) {
@@ -312,6 +362,30 @@ export function scrollTutorialProvidersIntoView(
   const maxScroll = getTutorialScrollMax()
   nextTop = Math.min(nextTop, maxScroll)
   root.scrollToTop(nextTop, 'auto')
+
+  if (
+    primary &&
+    (providerStep === 'expand-provider' ||
+      providerStep === 'expand-starter-provider-2' ||
+      providerStep === 'select-starter-model-1' ||
+      providerStep === 'select-starter-model-2')
+  ) {
+    const header = primary.querySelector('.provider-header') as HTMLElement | null
+    const headerRect = header?.getBoundingClientRect()
+    const tooltipReserve =
+      getEstimatedTooltipHeight() +
+      TOOLTIP_OFFSET +
+      (providerStep === 'expand-provider' || providerStep === 'expand-starter-provider-2'
+        ? EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX
+        : 48)
+    if (headerRect && (headerRect.top < tooltipReserve || headerRect.bottom > viewH - 40)) {
+      const y1 = root.getScrollTop()
+      root.scrollToTop(
+        Math.max(0, Math.min(y1 + headerRect.top - tooltipReserve, maxScroll)),
+        'auto'
+      )
+    }
+  }
 }
 
 /** @deprecated Use getProviderDropdownByName or getTutorialProviderStepLayout */
@@ -342,6 +416,16 @@ export function computeTooltipPosition(
 
   const isEnterPromptStep =
     (step === 'enter-prompt' || step === 'enter-prompt-2') && config.position === 'bottom'
+
+  const targetInView = rect.bottom > MARGIN && rect.top < viewportHeight - MARGIN
+  if (!targetInView && (isExpandProviderTutorialStep(step) || isSelectModelTutorialStep(step))) {
+    const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+    return {
+      top: MARGIN + estimatedTooltipHeight,
+      left,
+      effectivePosition: 'top',
+    }
+  }
 
   if (isSelectModelTutorialStep(step)) {
     const selectGap = 18
@@ -596,8 +680,8 @@ export function getScrollTargetForStep(
 
   // Provider steps: scroll before tooltip (see useTutorialOverlay).
   if (step === 'expand-provider' || step === 'expand-starter-provider-2') {
-    const centeredTop = window.innerHeight / 2 - rect.height / 2
-    return Math.max(0, y0 + rect.top - centeredTop)
+    const reserve = estimatedTooltipHeight + tooltipOffset + 40
+    return Math.max(0, y0 + rect.top - reserve)
   }
   if (step === 'select-models') {
     const margin = 80

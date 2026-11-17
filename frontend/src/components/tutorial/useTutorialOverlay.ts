@@ -873,7 +873,9 @@ export function useTutorialOverlay(
     // Step 1: scroll immediately so the first paint with the overlay never shows Google at the rim.
     // Other steps: small delay so hero lock / layout can settle before scroll.
     const scrollDelay = isExpandProviderTutorialStep(step)
-      ? 0
+      ? step === 'expand-provider'
+        ? 0
+        : 150
       : step === 'enter-prompt' || step === 'enter-prompt-2'
         ? 150
         : step === 'follow-up'
@@ -900,17 +902,21 @@ export function useTutorialOverlay(
             ? waitForProgrammaticScrollCompletion()
             : isProviderSnapScrollStep
               ? new Promise<void>(resolve => {
-                  requestAnimationFrame(() => {
+                  const snapScroll = () =>
                     scrollTutorialProvidersIntoView(
                       tutorialProviderNamesRef.current,
                       step as TutorialProviderLayoutStep
                     )
-                    requestAnimationFrame(() => {
-                      scrollTutorialProvidersIntoView(
-                        tutorialProviderNamesRef.current,
-                        step as TutorialProviderLayoutStep
-                      )
-                      resolve()
+                  snapScroll()
+                  requestAnimationFrame(() => {
+                    snapScroll()
+                    waitForScrollStop(() => {
+                      snapScroll()
+                      updatePosition()
+                      requestAnimationFrame(() => {
+                        updatePosition()
+                        resolve()
+                      })
                     })
                   })
                 })
@@ -942,6 +948,10 @@ export function useTutorialOverlay(
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
                 if (!isExpandProviderTutorialStep(stepRef.current)) return
+                scrollTutorialProvidersIntoView(
+                  tutorialProviderNamesRef.current,
+                  stepRef.current as TutorialProviderLayoutStep
+                )
                 // Phase 2 – compute the final tooltip position (batched into next render).
                 updatePosition()
                 initialScrollCompleteRef.current = true
@@ -985,19 +995,23 @@ export function useTutorialOverlay(
           } else {
             setIsVisible(true)
             let selectModelsRecenterTimers: number[] = []
-            if (isSelectModelTutorialStep(step)) {
-              const recenterStep2 = () => {
-                if (!isSelectModelTutorialStep(stepRef.current)) return
-                if (!stepRef.current) return
+            if (isSelectModelTutorialStep(step) || isExpandProviderTutorialStep(step)) {
+              const recenterProviderStep = () => {
+                const current = stepRef.current
+                if (!current) return
+                if (!isSelectModelTutorialStep(current) && !isExpandProviderTutorialStep(current)) {
+                  return
+                }
                 scrollTutorialProvidersIntoView(
                   tutorialProviderNamesRef.current,
-                  stepRef.current as TutorialProviderLayoutStep
+                  current as TutorialProviderLayoutStep
                 )
                 updatePosition()
               }
               selectModelsRecenterTimers = [
-                window.setTimeout(recenterStep2, 200),
-                window.setTimeout(recenterStep2, 500),
+                window.setTimeout(recenterProviderStep, 200),
+                window.setTimeout(recenterProviderStep, 500),
+                window.setTimeout(recenterProviderStep, 900),
               ]
             }
             // Layout can continue to shift (CSS transitions, expanding/collapsing sections)

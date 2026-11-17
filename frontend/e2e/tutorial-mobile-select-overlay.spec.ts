@@ -8,6 +8,7 @@ import {
 import { dismissMobileBlockers } from './helpers/modelCheckbox'
 import {
   expandTutorialProvider,
+  expectTutorialHighlightCoversProviderSection,
   expectTutorialTooltipDoesNotOverlapCheckbox,
   expectTutorialTooltipStaysVisible,
   selectTutorialModelCheckbox,
@@ -76,11 +77,13 @@ test.describe('Tutorial select steps on mobile', () => {
     await expect(tutorialTooltip(page)).toContainText('Gemini', { timeout: 15000 })
 
     await expectTutorialTooltipStaysVisible(page)
+    await expectTutorialHighlightCoversProviderSection(page, firstProvider!)
     await expectTutorialTooltipDoesNotOverlapCheckbox(page, firstId!)
     await selectTutorialModelCheckbox(page, firstId!, firstProvider!, testInfo)
 
     await expandTutorialProvider(page, secondProvider!, testInfo)
     await expectTutorialTooltipStaysVisible(page)
+    await expectTutorialHighlightCoversProviderSection(page, secondProvider!)
     await expectTutorialTooltipDoesNotOverlapCheckbox(page, secondId!)
 
     await selectTutorialModelCheckbox(page, secondId!, secondProvider!, testInfo, {
