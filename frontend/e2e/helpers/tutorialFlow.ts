@@ -272,6 +272,7 @@ export async function expectTutorialCutoutHasBlueFrame(
             if (sources.includes('inset')) return true
             const hasDimHole = sources.includes('9999px')
             const hasAccent =
+              sources.includes('var(--accent-color)') ||
               /14,\s*165,\s*233|14\s+165\s+233|rgb\(14,\s*165,\s*233\)|6,\s*182,\s*212/.test(
                 sources
               )
@@ -323,7 +324,8 @@ export async function expectTutorialHighlightCoversProviderSection(
             const frameOk =
               shadowSources.includes('inset') ||
               (shadowSources.includes('9999px') &&
-                /14,\s*165,\s*233|6,\s*182,\s*212/.test(shadowSources))
+                (shadowSources.includes('var(--accent-color)') ||
+                  /14,\s*165,\s*233|6,\s*182,\s*212/.test(shadowSources)))
             return heightOk && topOk && frameOk
           }
 

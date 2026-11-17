@@ -1381,9 +1381,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Follow-up: dual clear rects (results + composer) are rendered as SVG — skip the single box-shadow cutout
   const useFollowUpDualCutout =
     step === 'follow-up' && backdropRect && followUpComposerHoleRect && !isLoadingStreamingPhase
+  const keepFramedCutoutWhileOffScreen = tutorialStepUsesFramedCutoutShadow(step)
   const cutoutTarget: TargetRect | null = isLoadingStreamingPhase
     ? loadingStreamingRect
-    : shouldShowScrollIndicator
+    : shouldShowScrollIndicator && !keepFramedCutoutWhileOffScreen
       ? null
       : useFollowUpDualCutout
         ? null
