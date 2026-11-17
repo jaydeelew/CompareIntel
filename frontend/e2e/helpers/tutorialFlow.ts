@@ -199,6 +199,48 @@ export async function expectTutorialTooltipStaysVisible(page: Page, idleMs = 350
 }
 
 /** Mobile/desktop: tutorial card must not cover the model checkbox the step describes. */
+/** Spotlight/cutout should frame the full provider card (header + models), not a single row. */
+export async function expectTutorialHighlightCoversProviderSection(
+  page: Page,
+  providerName: string
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        return page.evaluate(name => {
+          const provider = document.querySelector(
+            `.provider-dropdown[data-provider-name="${name}"]`
+          ) as HTMLElement | null
+          if (!provider) return false
+          const header = provider.querySelector('.provider-header')
+          const models = provider.querySelector('.provider-models')
+          if (!header || !models) return false
+
+          const cutout = (document.querySelector(
+            '.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout'
+          ) ?? null) as HTMLElement | null
+
+          const providerRect = provider.getBoundingClientRect()
+          const headerRect = header.getBoundingClientRect()
+          const highlighted =
+            provider.classList.contains('mobile-tutorial-highlight') ||
+            provider.classList.contains('tutorial-highlight')
+
+          if (cutout) {
+            const cutoutRect = cutout.getBoundingClientRect()
+            const heightOk = cutoutRect.height >= providerRect.height * 0.82
+            const topOk = Math.abs(cutoutRect.top - providerRect.top) < 12
+            return heightOk && topOk
+          }
+
+          return highlighted && headerRect.height > 0 && providerRect.height > headerRect.height + 8
+        }, providerName)
+      },
+      { timeout: 20_000, message: `tutorial highlight should cover full ${providerName} section` }
+    )
+    .toBe(true)
+}
+
 export async function expectTutorialTooltipDoesNotOverlapCheckbox(
   page: Page,
   modelId: string

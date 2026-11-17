@@ -251,12 +251,10 @@ export function getTutorialProviderStepLayout(
   const primary = dropdowns[0]
   const header = primary.querySelector('.provider-header') as HTMLElement | null
   if (step === 'select-starter-model-1' || step === 'select-starter-model-2') {
-    const modelRow = primary.querySelector('.provider-models .model-option') as HTMLElement | null
-    const spotlight = modelRow ?? primary
     return {
-      anchor: spotlight,
+      anchor: primary,
       highlights: [primary],
-      layoutRect: spotlight.getBoundingClientRect(),
+      layoutRect: primary.getBoundingClientRect(),
     }
   }
   const anchor =
@@ -289,13 +287,36 @@ export function scrollTutorialProvidersIntoView(
 ): void {
   const { layoutRect } = getTutorialProviderStepLayout(providerStep, providerNames)
   if (!layoutRect) return
+  const dropdowns = getTutorialProviderDropdowns(providerNames)
   const root = getTutorialScrollRoot()
   const y0 = root.getScrollTop()
   let nextTop: number
   const viewH = window.innerHeight
   if (providerStep === 'select-starter-model-1' || providerStep === 'select-starter-model-2') {
+    const primary = dropdowns[0]
+    const fullRect = primary?.getBoundingClientRect() ?? layoutRect
     const tooltipReserve = getEstimatedTooltipHeight() + TOOLTIP_OFFSET + 48
-    nextTop = Math.max(0, y0 + layoutRect.top - tooltipReserve)
+    const checkbox = primary?.querySelector(
+      '.provider-models [data-testid^="model-checkbox-"]'
+    ) as HTMLElement | null
+    const maxProviderInView = viewH - tooltipReserve - 24
+    if (fullRect.height > maxProviderInView && checkbox) {
+      const cbRect = checkbox.getBoundingClientRect()
+      const footerPad = 72
+      let scrollDelta = 0
+      if (cbRect.bottom > viewH - footerPad) {
+        scrollDelta = cbRect.bottom - (viewH - footerPad)
+      } else if (cbRect.top < tooltipReserve) {
+        scrollDelta = cbRect.top - tooltipReserve
+      }
+      if (scrollDelta !== 0) {
+        nextTop = Math.max(0, y0 + scrollDelta)
+      } else {
+        nextTop = Math.max(0, y0 + fullRect.top - tooltipReserve)
+      }
+    } else {
+      nextTop = Math.max(0, y0 + fullRect.top - tooltipReserve)
+    }
   } else if (providerStep === 'select-models') {
     const margin = 80
     if (layoutRect.height > viewH - margin * 2) {
