@@ -252,6 +252,24 @@ export async function expectTutorialTargetProviderInViewport(
     .toBe(true)
 }
 
+export async function expectTutorialCutoutHasBlueFrame(page: Page): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        return page.evaluate(() => {
+          const cutout = document.querySelector(
+            '.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout'
+          ) as HTMLElement | null
+          if (!cutout) return false
+          const shadow = window.getComputedStyle(cutout).boxShadow
+          return shadow.includes('inset')
+        })
+      },
+      { timeout: 20_000, message: 'tutorial cutout should show inset blue accent frame' }
+    )
+    .toBe(true)
+}
+
 export async function expectTutorialHighlightCoversProviderSection(
   page: Page,
   providerName: string
@@ -282,7 +300,8 @@ export async function expectTutorialHighlightCoversProviderSection(
             const cutoutRect = cutout.getBoundingClientRect()
             const heightOk = cutoutRect.height >= providerRect.height * 0.82
             const topOk = Math.abs(cutoutRect.top - providerRect.top) < 12
-            return heightOk && topOk
+            const frameOk = window.getComputedStyle(cutout).boxShadow.includes('inset')
+            return heightOk && topOk && frameOk
           }
 
           return highlighted && headerRect.height > 0 && providerRect.height > headerRect.height + 8
@@ -408,6 +427,8 @@ export async function expectTutorialEnterPromptStep(
       { timeout: 15_000 }
     )
     .toBeGreaterThanOrEqual(2)
+
+  await expectTutorialCutoutHasBlueFrame(page)
 }
 
 export async function expectTutorialStepTitle(

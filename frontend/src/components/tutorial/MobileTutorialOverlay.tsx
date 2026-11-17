@@ -8,6 +8,7 @@ import {
   isProviderPickerTutorialStep,
   isSelectModelTutorialStep,
   resolveTutorialStepConfig,
+  tutorialStepUsesFramedCutoutShadow,
   type StarterModelEntry,
 } from '../../data/tutorialStepPlan'
 import {
@@ -1417,20 +1418,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                 : step === 'follow-up' || step === 'view-follow-up-results'
                   ? '24px'
                   : '16px',
-          boxShadow:
-            isLoadingStreamingPhase ||
-            step === 'expand-provider' ||
-            step === 'select-models' ||
-            step === 'enter-prompt' ||
-            step === 'enter-prompt-2' ||
-            step === 'submit-comparison' ||
-            step === 'submit-comparison-2' ||
-            step === 'follow-up' ||
-            step === 'view-follow-up-results' ||
-            step === 'history-dropdown' ||
-            step === 'save-selection'
-              ? tutorialFramedDimShadow
-              : tutorialDimShadow,
+          boxShadow: tutorialStepUsesFramedCutoutShadow(step, {
+            loadingOrStreaming: isLoadingStreamingPhase,
+          })
+            ? tutorialFramedDimShadow
+            : tutorialDimShadow,
           zIndex: 9998,
           pointerEvents: 'none' as const,
         }

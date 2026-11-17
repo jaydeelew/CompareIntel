@@ -9,6 +9,7 @@ import { dismissMobileBlockers, isMobileE2eProject } from './helpers/modelCheckb
 import {
   expandTutorialProvider,
   expectTutorialBackdropContinuous,
+  expectTutorialCutoutHasBlueFrame,
   expectTutorialTargetProviderInViewport,
   expectTutorialTooltipStaysVisible,
   selectTutorialModelCheckbox,
@@ -76,6 +77,7 @@ test.describe('Tutorial provider scroll (desktop ~1024px)', () => {
       timeout: 20000,
     })
     await expectTutorialTooltipStaysVisible(page, 1500)
+    await expectTutorialCutoutHasBlueFrame(page)
     await expectTutorialTargetProviderInViewport(page, secondProvider)
   })
 })

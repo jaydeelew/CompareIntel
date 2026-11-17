@@ -9,6 +9,7 @@ import { dismissMobileBlockers } from './helpers/modelCheckbox'
 import {
   expandTutorialProvider,
   expectSplitOrCombinedModelStep,
+  expectTutorialCutoutHasBlueFrame,
   expectTutorialEnterPromptStep,
   selectTutorialModelCheckbox,
   tutorialTooltip,
@@ -74,19 +75,23 @@ test.describe('Tutorial split providers on mobile', () => {
     await expect(tooltip).toContainText(`Expand ${firstProvider}`)
     await expect(tooltip).toContainText('Step 1 of 10')
     await expectTutorialStaysVisible(page)
+    await expectTutorialCutoutHasBlueFrame(page)
 
     await expandTutorialProvider(page, firstProvider, testInfo)
     await expect(tooltip).toContainText('Claude Sonnet 5.5', { timeout: 15000 })
 
     const mode = await expectSplitOrCombinedModelStep(page)
     expect(mode).toBe('split')
+    await expectTutorialCutoutHasBlueFrame(page)
     await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[0]!, firstProvider, testInfo)
 
     const secondProvider = TUTORIAL_PROVIDERS[1] ?? 'OpenAI'
     await expect(tooltip).toContainText(`Expand ${secondProvider}`, { timeout: 15000 })
     await expectTutorialStaysVisible(page)
+    await expectTutorialCutoutHasBlueFrame(page)
 
     await expandTutorialProvider(page, secondProvider, testInfo)
+    await expectTutorialCutoutHasBlueFrame(page)
     await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[1]!, secondProvider, testInfo, {
       requireMinSelected: 2,
     })
