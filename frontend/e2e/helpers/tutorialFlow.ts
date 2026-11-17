@@ -200,6 +200,31 @@ export async function expectTutorialTooltipStaysVisible(page: Page, idleMs = 350
 
 /** Mobile/desktop: tutorial card must not cover the model checkbox the step describes. */
 /** Spotlight/cutout should frame the full provider card (header + models), not a single row. */
+export async function expectTutorialTargetProviderInViewport(
+  page: Page,
+  providerName: string
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        return page.evaluate(name => {
+          const provider = document.querySelector(
+            `.provider-dropdown[data-provider-name="${name}"]`
+          ) as HTMLElement | null
+          if (!provider) return false
+          const r = provider.getBoundingClientRect()
+          const vh = window.innerHeight
+          const header = provider.querySelector('.provider-header') as HTMLElement | null
+          const headerRect = header?.getBoundingClientRect()
+          if (!headerRect) return false
+          return headerRect.bottom > 32 && headerRect.top < vh - 32 && r.bottom > 0 && r.top < vh
+        }, providerName)
+      },
+      { timeout: 35_000, message: `provider ${providerName} should be in viewport with tutorial` }
+    )
+    .toBe(true)
+}
+
 export async function expectTutorialHighlightCoversProviderSection(
   page: Page,
   providerName: string

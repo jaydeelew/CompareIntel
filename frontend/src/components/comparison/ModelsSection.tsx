@@ -327,6 +327,8 @@ export interface ModelsSectionProps {
   imageModelsDisabledForUnregistered?: boolean
   /** When true, disable info tooltips on model names */
   hideModelInfoTooltips?: boolean
+  /** Tutorial manages scroll; do not snap back after model checkbox focus/selection. */
+  disableProviderToggleScrollRestore?: boolean
 }
 
 /**
@@ -352,6 +354,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   user,
   selectedModelsGridRef,
   hideModelInfoTooltips = false,
+  disableProviderToggleScrollRestore = false,
   onToggleDropdown,
   onToggleModel,
   onToggleAllForProvider,
@@ -403,6 +406,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
     if (!el) return
 
     const ro = new ResizeObserver(() => {
+      if (disableProviderToggleScrollRestore) return
       if (Date.now() - providerTogglePointerTsRef.current > PROVIDER_TOGGLE_SCROLL_MAX_AGE_MS) {
         return
       }
@@ -425,20 +429,22 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
         resizeRestoreRafRef.current = null
       }
     }
-  }, [modelsListReady])
+  }, [disableProviderToggleScrollRestore, modelsListReady])
 
   // After React commits the new selection (extra card in the grid, flex height, etc.),
   // the scroll container can move again — restore using the pre-click snapshot.
   useLayoutEffect(() => {
+    if (disableProviderToggleScrollRestore) return
     if (Date.now() - providerTogglePointerTsRef.current > PROVIDER_TOGGLE_SCROLL_MAX_AGE_MS) {
       return
     }
     const snap = providerToggleScrollSnapRef.current
     if (!snap) return
     scheduleScrollRestores(snap)
-  }, [selectedModelsSignature])
+  }, [disableProviderToggleScrollRestore, selectedModelsSignature])
 
   const handleModelOptionPointerDownCapture = (e: React.PointerEvent<HTMLLabelElement>) => {
+    if (disableProviderToggleScrollRestore) return
     if ((e.target as HTMLElement).closest('button')) return
     if (providerToggleSnapClearTimeoutRef.current) {
       clearTimeout(providerToggleSnapClearTimeoutRef.current)
@@ -453,6 +459,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   }
 
   const handleModelCheckboxFocus = () => {
+    if (disableProviderToggleScrollRestore) return
     const saved = providerToggleScrollSnapRef.current
     if (!saved) return
     // Do not cancel the pointerdown timeout here: if selection does not change,

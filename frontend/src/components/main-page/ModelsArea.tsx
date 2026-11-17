@@ -465,6 +465,7 @@ export function ModelsArea({
               user={user}
               selectedModelsGridRef={selectedModelsGridRef}
               hideModelInfoTooltips={isTutorialActive}
+              disableProviderToggleScrollRestore={isTutorialActive}
               onToggleDropdown={onToggleDropdown}
               onToggleModel={onToggleModel}
               onToggleAllForProvider={onToggleAllForProvider}
