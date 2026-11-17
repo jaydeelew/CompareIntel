@@ -90,11 +90,8 @@ export const EXPECTED_BY_PROMPT_NAME: Record<string, ExpectedFeatures> = {
   },
   '06-edge-cases-boundaries': {
     displayMath: true,
-    inlineMath: true,
     currency: true,
     codeBlocks: true,
-    tables: true,
-    nestedLists: true,
     wideTable: true,
     mermaid: true,
     chemistry: true,

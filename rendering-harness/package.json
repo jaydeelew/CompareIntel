@@ -10,6 +10,7 @@
     "before-after": "tsx before-after.ts",
     "generate-coverage": "tsx generate-coverage.ts",
     "check-coverage": "tsx check-coverage.ts",
+    "verify-saved-renders": "tsx verify-saved-render-registry.ts",
     "test": "playwright test",
     "test-fixtures": "tsx test-with-fixtures.ts",
     "typecheck": "tsc --project tsconfig.check.json --noEmit",
