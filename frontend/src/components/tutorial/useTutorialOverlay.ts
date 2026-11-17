@@ -1364,10 +1364,7 @@ export function useTutorialOverlay(
   // Uses simple interval instead of MutationObserver to avoid performance issues
   // ALSO ensures visibility, targetElement, and position are set (fixes production timing issues)
   useEffect(() => {
-    if (
-      !step ||
-      (!isSelectModelTutorialStep(step) && step !== 'expand-starter-provider-2')
-    ) {
+    if (!step || (!isSelectModelTutorialStep(step) && step !== 'expand-starter-provider-2')) {
       return
     }
 

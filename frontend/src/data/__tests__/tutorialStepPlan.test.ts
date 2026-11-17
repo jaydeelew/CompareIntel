@@ -43,9 +43,7 @@ describe('tutorialStepPlan', () => {
     expect(
       isAdjacentProviderPickerTransition('select-starter-model-1', 'expand-starter-provider-2')
     ).toBe(true)
-    expect(isAdjacentProviderPickerTransition('select-starter-model-1', 'enter-prompt')).toBe(
-      false
-    )
+    expect(isAdjacentProviderPickerTransition('select-starter-model-1', 'enter-prompt')).toBe(false)
   })
 
   it('uses split provider steps when starter models span providers', () => {

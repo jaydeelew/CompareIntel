@@ -985,10 +985,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   }, [targetElement, step, calculatePositions, tooltipEstimatedHeight])
 
   useEffect(() => {
-    if (
-      !step ||
-      (!isSelectModelTutorialStep(step) && step !== 'expand-starter-provider-2')
-    ) {
+    if (!step || (!isSelectModelTutorialStep(step) && step !== 'expand-starter-provider-2')) {
       return
     }
 
@@ -1578,10 +1575,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       )}
 
       {/* Tooltip - hidden during loading/streaming phase on submit steps */}
-      {!shouldShowScrollIndicator &&
-        !isLoadingStreamingPhase &&
-        isVisible &&
-        tooltipPosition && (
+      {!shouldShowScrollIndicator && !isLoadingStreamingPhase && isVisible && tooltipPosition && (
         <div
           ref={overlayRef}
           className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
