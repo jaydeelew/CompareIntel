@@ -1,0 +1,3793 @@
+{
+  "runDate": "2026-11-17-pr259",
+  "config": {
+    "dryRun": false,
+    "modelIds": [
+      "anthropic/claude-fable-5.2",
+      "google/gemini-4-carbon",
+      "google/gemini-4-hydrogen",
+      "qwen/qwen4-max",
+      "tencent/hy4-flash"
+    ],
+    "maxUsd": 0,
+    "maxTokens": 0,
+    "outputDir": "/workspace/pr259wt/rendering-harness/runs/2026-11-17-pr259",
+    "runDate": "2026-11-17-pr259",
+    "textModelsOnly": true,
+    "cumulativeCostUsd": 0.3628173259999999
+  },
+  "results": [
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "modelName": "Claude Fable 5.2",
+      "promptName": "01-math-basics",
+      "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+      "response": "# Math Basics\n\n## 1. Inline math\n\nThe quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ gives the solutions of any equation of the form $ax^2 + bx + c = 0$, where $a \\neq 0$. The expression under the square root, $\\Delta = b^2 - 4ac$, is called the discriminant:\n\n- If $\\Delta > 0$, there are two distinct real roots.\n- If $\\Delta = 0$, there is one repeated real root, $x = -\\frac{b}{2a}$.\n- If $\\Delta < 0$, there are two complex conjugate roots.\n\n## 2. Display math with aligned equations\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding the two equations eliminates $y$:\n\n$$\\begin{align}\n3x &= 6 \\\\\nx &= 2 \\\\\ny &= 5 - x = 3\n\\end{align}$$\n\n## 3. Matrices and cases\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\nHere $I$ is the $2 \\times 2$ identity matrix, which satisfies $IA = AI = A$ for any $2 \\times 2$ matrix $A$. The function $f$ is defined piecewise; for example, $f(3) = 9$ and $f(-3) = 3$.\n\n## 4. Multiple equations\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nThese are mass–energy equivalence, Newton's second law, and the Pythagorean theorem.\n\n## 5. Links\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n## 6. Money context\n\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).",
+      "usage": {
+        "prompt_tokens": 410,
+        "completion_tokens": 1049,
+        "total_tokens": 1459,
+        "cost": 0.04524,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.04524,
+          "upstream_inference_prompt_cost": 0.00328,
+          "upstream_inference_completions_cost": 0.04196
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 324,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.04524,
+      "timestamp": "2026-11-17T19:19:44.104Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": true,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [
+          "https://en.wikipedia.org/wiki/Quadratic_formula"
+        ],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "6 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "23 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "links present",
+            "actual": "1 links",
+            "message": "links assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": true,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [
+            "https://en.wikipedia.org/wiki/Quadratic_formula"
+          ],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_01-math-basics.png",
+      "sourceFile": "anthropic_claude-fable-5.2_01-math-basics.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "modelName": "Claude Fable 5.2",
+      "promptName": "02-markdown-formatting",
+      "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
+      "response": "## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+      "usage": {
+        "prompt_tokens": 279,
+        "completion_tokens": 274,
+        "total_tokens": 553,
+        "cost": 0.013192,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.013192,
+          "upstream_inference_prompt_cost": 0.002232,
+          "upstream_inference_completions_cost": 0.01096
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 32,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.013192,
+      "timestamp": "2026-11-17T19:19:48.224Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (9 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "3+ level nested lists",
+            "actual": "1 nested list structures",
+            "message": "3+ level nested lists assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_02-markdown-formatting.png",
+      "sourceFile": "anthropic_claude-fable-5.2_02-markdown-formatting.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "modelName": "Claude Fable 5.2",
+      "promptName": "03-code-blocks",
+      "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+      "response": "# Code Blocks\n\n## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\nOutput:\n\n```\nSolutions: x = 3.0, x = 2.0\n```\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly, `a_b` and `$price` should be code.\n\nFurther inline cases that should stay literal:\n\n- `x^2 + y^2 = z^2` should show a caret, not a superscript.\n- `a_b` and `a_b_c` should show underscores, not subscripts or italics.\n- `$price` and `$total = $price * $qty` should show dollar signs, not math delimiters.\n- `**not bold**` and `*not italic*` should show asterisks.",
+      "usage": {
+        "prompt_tokens": 340,
+        "completion_tokens": 527,
+        "total_tokens": 867,
+        "cost": 0.0238,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0238,
+          "upstream_inference_prompt_cost": 0.00272,
+          "upstream_inference_completions_cost": 0.02108
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 57,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0238,
+      "timestamp": "2026-11-17T19:19:53.589Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": [
+          "python",
+          "javascript"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "2 code blocks (python, javascript)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [
+            "python",
+            "javascript"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_03-code-blocks.png",
+      "sourceFile": "anthropic_claude-fable-5.2_03-code-blocks.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "modelName": "Claude Fable 5.2",
+      "promptName": "04-mixed-markdown-latex",
+      "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+      "response": "## Problem Statement\n\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x)\\,dx$\n\n### Solution\n\nApplying the power rule term by term, the derivative is:\n\n$$f'(x) = 2x + 2$$\n\nReversing the power rule for each term, the integral is:\n\n$$\\int f(x)\\,dx = \\frac{x^3}{3} + x^2 + x + C$$\n\nSince $f(x) = (x+1)^2$, the integral can also be written as $\\frac{(x+1)^3}{3} + C$. The two forms differ only by a constant.\n\n## Linear Algebra with Lists\n\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (exists only if $ad - bc \\neq 0$):\n\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are \\$100 and variable costs are \\$5 per unit.\n\nMoney context: If you buy 10 units, that's \\$100 fixed plus \\$50 variable = \\$150 total. This matches the formula:\n\n$$C(10) = 100 + 5(10) = 150$$\n\nI escaped the currency dollar signs (`\\$`) so they display as literal dollar signs instead of being parsed as math delimiters.",
+      "usage": {
+        "prompt_tokens": 459,
+        "completion_tokens": 720,
+        "total_tokens": 1179,
+        "cost": 0.032472,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.032472,
+          "upstream_inference_prompt_cost": 0.003672,
+          "upstream_inference_completions_cost": 0.0288
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 139,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.032472,
+      "timestamp": "2026-11-17T19:20:01.363Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "4 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "14 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_04-mixed-markdown-latex.png",
+      "sourceFile": "anthropic_claude-fable-5.2_04-mixed-markdown-latex.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "modelName": "Claude Fable 5.2",
+      "promptName": "05-complex-scenarios",
+      "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+      "response": "# Rendering Test: Complex Scenarios\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n3. The ***converse*** also holds: if $a^2 + b^2 = c^2$, the triangle is a right triangle.\n   - Check with sides $5$, $12$, $13$: $5^2 + 12^2 = 25 + 144 = 169 = 13^2$\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| **Geometric series** | $\\sum_{k=0}^{\\infty} r^k$ | $\\frac{1}{1-r}$ for $-1 < r < 1$ |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")  # Area: 78.53981633974483\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius. For $r = 5$, this gives $A = 25\\pi \\approx 78.54$.\n\nInline code next to math: the expression `r**2` in Python corresponds to $r^2$. In the code block above, the `#` comments and `**` operator should appear literally, not as headings or bold text.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\n---\n\nThird section, with display math between rules:\n\n$$\\int_{0}^{\\pi} \\sin x \\, dx = 2$$\n\n---\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\nMixed: If each widget costs \\$5 and you buy $n$ widgets, the total cost in dollars is $C(n) = 5n$, so $C(10) = 50$, or \\$50.\n\nThe currency dollar signs above are escaped with backslashes so they aren't parsed as math delimiters. If any prices appear italicized or run together, the renderer is not handling the escapes.",
+      "usage": {
+        "prompt_tokens": 633,
+        "completion_tokens": 1319,
+        "total_tokens": 1952,
+        "cost": 0.057824,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.057824,
+          "upstream_inference_prompt_cost": 0.005064,
+          "upstream_inference_completions_cost": 0.05276
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 283,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.057824,
+      "timestamp": "2026-11-17T19:20:14.539Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 15,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "31 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (15 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 15,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_05-complex-scenarios.png",
+      "sourceFile": "anthropic_claude-fable-5.2_05-complex-scenarios.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "modelName": "Claude Fable 5.2",
+      "promptName": "06-edge-cases-boundaries",
+      "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+      "response": "# Edge Cases and Boundaries: Test Output\n\n## Delimiter Variants\n\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\nNothing in this block should render as math. `price = $50` isn't valid Python, but it is preserved verbatim for the test.\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\nThe values correspond to $r = 5$.\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\n## What to Check\n\n| Case | Expected | Common failure |\n|------|----------|----------------|\n| `$$...$$` and `\\[...\\]` | Display math | Rendered inline, or brackets shown literally |\n| `$...$` and `\\(...\\)` | Inline math | Parens shown literally |\n| Display math in a list | Stays inside the bullet, and the continuation text stays in the same item | List breaks, or the equation escapes its indentation |\n| Code block | Fully literal | `$50` or `**` is parsed as math or bold |\n| Multiple currency amounts | Literal dollar signs | `$25, $` or `$30, and $` is captured as inline math |\n| Escaped `\\$500` | Literal `$500` | Backslash is displayed, or the dollar sign opens math |\n| Math in table cells | Rendered inside the cells | Pipes or dollar signs break the table layout |\n| `$HOME` and `$99.99` | Literal text | The two dollar signs pair up and everything between them renders as math |\n\nThe highest-risk lines are the multiple-currency bullet and the raw dollar signs line, since each has several unescaped `$` characters that a greedy parser may pair as math delimiters.",
+      "usage": {
+        "prompt_tokens": 485,
+        "completion_tokens": 1135,
+        "total_tokens": 1620,
+        "cost": 0.04928,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.04928,
+          "upstream_inference_prompt_cost": 0.00388,
+          "upstream_inference_completions_cost": 0.0454
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 224,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.04928,
+      "timestamp": "2026-11-17T19:20:26.905Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": true,
+        "linkDestinations": [],
+        "tableCellCount": 36,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "3 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": true,
+          "linkDestinations": [],
+          "tableCellCount": 36,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "attempt": "original",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_06-edge-cases-boundaries.png",
+      "sourceFile": "anthropic_claude-fable-5.2_06-edge-cases-boundaries.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "modelName": "Gemini 4 Carbon",
+      "promptName": "01-math-basics",
+      "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+      "response": "Here is a demonstration of the requested mathematical notations and formatting tests:\n\n### 1. Inline Math\nTo find the roots of a standard quadratic equation $ax^2 + bx + c = 0$ (assuming $a \\neq 0$), you can use the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. Within this formula, the expression under the square root, $\\Delta = b^2 - 4ac$, is called the discriminant and determines whether the roots are real or complex.\n\n### 2. Display Math with Aligned Equations\nHere is a system of linear equations aligned at the equals sign, followed by its solution steps:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding the two equations together eliminates $y$:\n\n$$\\begin{align}\n(x + y) + (2x - y) &= 5 + 1 \\\\\n3x &= 6 \\\\\nx &= 2\n\\end{align}$$\n\n### 3. Matrices and Cases\nBelow is the $2 \\times 2$ identity matrix alongside a piecewise function definition:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n### 4. Multiple Equations\nHere are three foundational equations in physics and geometry displayed sequentially:\n\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n### 5. Links\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula, including its historical derivations and geometric interpretations.\n\n### 6. Money Context\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).",
+      "usage": {
+        "prompt_tokens": 308,
+        "completion_tokens": 1002,
+        "total_tokens": 1310,
+        "cost": 0.010636,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.010636,
+          "upstream_inference_prompt_cost": 0.000616,
+          "upstream_inference_completions_cost": 0.01002
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 541,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.010636,
+      "timestamp": "2026-11-17T19:20:54.196Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": true,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [
+          "https://en.wikipedia.org/wiki/Quadratic_formula"
+        ],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "6 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "12 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "links present",
+            "actual": "1 links",
+            "message": "links assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": true,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [
+            "https://en.wikipedia.org/wiki/Quadratic_formula"
+          ],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-carbon_01-math-basics.png",
+      "sourceFile": "google_gemini-4-carbon_01-math-basics.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "modelName": "Gemini 4 Carbon",
+      "promptName": "02-markdown-formatting",
+      "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
+      "response": "Here is the generated response demonstrating all the requested Markdown formatting elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+      "usage": {
+        "prompt_tokens": 227,
+        "completion_tokens": 198,
+        "total_tokens": 425,
+        "cost": 0.002434,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002434,
+          "upstream_inference_prompt_cost": 0.000454,
+          "upstream_inference_completions_cost": 0.00198
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.002434,
+      "timestamp": "2026-11-17T19:20:58.622Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (9 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "3+ level nested lists",
+            "actual": "1 nested list structures",
+            "message": "3+ level nested lists assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-carbon_02-markdown-formatting.png",
+      "sourceFile": "google_gemini-4-carbon_02-markdown-formatting.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "modelName": "Gemini 4 Carbon",
+      "promptName": "03-code-blocks",
+      "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+      "response": "Here is the response with the requested fenced code blocks and inline code elements:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code. Additionally, expressions like `$x + y$` or `e^{i\\pi}` inside backticks should remain strictly formatted as inline code.",
+      "usage": {
+        "prompt_tokens": 288,
+        "completion_tokens": 502,
+        "total_tokens": 790,
+        "cost": 0.005596,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.005596,
+          "upstream_inference_prompt_cost": 0.000576,
+          "upstream_inference_completions_cost": 0.00502
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 213,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.005596,
+      "timestamp": "2026-11-17T19:21:09.589Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": [
+          "python",
+          "javascript"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "2 code blocks (python, javascript)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [
+            "python",
+            "javascript"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-carbon_03-code-blocks.png",
+      "sourceFile": "google_gemini-4-carbon_03-code-blocks.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "modelName": "Gemini 4 Carbon",
+      "promptName": "04-mixed-markdown-latex",
+      "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+      "response": "Here is a test response demonstrating mixed Markdown formatting and LaTeX mathematical expressions, including proper handling of currency symbols alongside inline math.\n\n---\n\n# Advanced Calculus & Applications Test\n\n## Problem Statement\n**Exercise 2**: Given the Gaussian-like function $g(x) = x e^{-x^2}$, determine the following:\n\n1. The *first derivative* $g'(x)$ using the product rule.\n2. The **definite integral** $\\int_{0}^{\\infty} g(x) \\, dx$.\n\n### Solution\nTo find the derivative, we apply the product rule $(uv)' = u'v + uv'$:\n$$g'(x) = (1)e^{-x^2} + x(-2x e^{-x^2}) = e^{-x^2}(1 - 2x^2)$$\n\nTo evaluate the improper integral, we use the substitution $u = -x^2$, which gives $du = -2x \\, dx$:\n$$\\int_{0}^{\\infty} x e^{-x^2} \\, dx = \\lim_{b \\to \\infty} \\left[ -\\frac{1}{2}e^{-x^2} \\right]_{0}^{b} = 0 - \\left(-\\frac{1}{2}\\right) = \\frac{1}{2}$$\n\n---\n\n## Vector Calculus & Matrices\nConsider the vector field $\\mathbf{F}(x, y) = \\begin{pmatrix} P(x,y) \\\\ Q(x,y) \\end{pmatrix}$ and the Jacobian matrix $J$:\n\n* **Gradient** of a scalar field $\\phi$: $\\nabla \\phi = \\left( \\frac{\\partial \\phi}{\\partial x}, \\frac{\\partial \\phi}{\\partial y} \\right)$\n* **Divergence** of $\\mathbf{F}$: $\\nabla \\cdot \\mathbf{F} = \\frac{\\partial P}{\\partial x} + \\frac{\\partial Q}{\\partial y}$\n* **The Jacobian Matrix**:\n  $$J = \\begin{bmatrix} \\frac{\\partial P}{\\partial x} & \\frac{\\partial P}{\\partial y} \\\\ \\frac{\\partial Q}{\\partial x} & \\frac{\\partial Q}{\\partial y} \\end{bmatrix}$$\n\n### Common Operators Summary\n| Operator | Symbol | Type of Output | Formula (2D) |\n| :--- | :---: | :---: | :--- |\n| Gradient | $\\nabla f$ | Vector | $(\\partial_x f, \\partial_y f)$ |\n| Divergence | $\\nabla \\cdot \\mathbf{F}$ | Scalar | $\\partial_x P + \\partial_y Q$ |\n| Laplacian | $\\nabla^2 f$ | Scalar | $\\partial_{xx} f + \\partial_{yy} f$ |\n\n---\n\n## Financial Context (Currency vs. LaTeX Test)\n> **Note**: In financial modeling, continuous compounding is modeled by $A(t) = P e^{rt}$, where $P$ is the principal investment, $r$ is the annual interest rate, and $t$ is time in years.\n\n* **Scenario**: Suppose you invest \\$1,000 at an annual rate of $r = 0.05$ (5%) for $t = 10$ years. \n* **Calculation**: Using the formula $A(10) = 1000 \\cdot e^{0.05 \\times 10} = 1000 \\cdot e^{0.5}$, your investment grows to approximately \\$1,648.72. That represents a net profit of \\$648.72, assuming \\$0 in account maintenance fees!\n\n---\n\n## Algorithmic Representation\nWe can approximate the integral numerically using `Python`:\n\n```python\nimport numpy as np\n\n# Define the function g(x) = x * exp(-x^2)\ndef g(x):\n    return x * np.exp(-x**2)\n\n# Approximate integral from 0 to 100 using the trapezoidal rule\nx_vals = np.linspace(0, 100, 10000)\nintegral_approx = np.trapz(g(x_vals), x_vals)\n\nprint(f\"Approximate value: {integral_approx:.4f}\") # Outputs: 0.5000\n```",
+      "usage": {
+        "prompt_tokens": 350,
+        "completion_tokens": 936,
+        "total_tokens": 1286,
+        "cost": 0.01006,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01006,
+          "upstream_inference_prompt_cost": 0.0007,
+          "upstream_inference_completions_cost": 0.00936
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.01006,
+      "timestamp": "2026-11-17T19:21:25.799Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 16,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "3 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "28 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 16,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-carbon_04-mixed-markdown-latex.png",
+      "sourceFile": "google_gemini-4-carbon_04-mixed-markdown-latex.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "modelName": "Gemini 4 Carbon",
+      "promptName": "05-complex-scenarios",
+      "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+      "response": "Here is a comprehensive test response featuring the requested scenarios along with additional formatting edge cases to thoroughly test Markdown and LaTeX rendering engines.\n\n---\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$ for any right-angled triangle.\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - **Step 1 (Substitute):** $c = \\sqrt{3^2 + 4^2}$\n   - *Step 2 (Simplify):* $c = \\sqrt{9 + 16} = \\sqrt{25}$\n   - ~~Step 3 (Incorrect):~~ ~~$c = \\pm 5$~~ *(Length cannot be negative, so $c > 0$)*\n   - ***Final Result:*** Therefore, **$c = 5$** units.\n3. Nested block math inside a list item:\n   - **Euler's Identity** is often cited as an example of deep mathematical beauty:\n     $$e^{i\\pi} + 1 = 0$$\n     where $e$ is Euler's number, $i = \\sqrt{-1}$, and $\\pi \\approx 3.14159$.\n\n---\n\n## Scenario 2: Tables with Math (Including Pipe Edge Cases)\n*Note: Absolute values using `\\lvert` and `\\rvert` prevent table column breakage.*\n\n| Formula Name | Standard Equation | Solution / Closed Form | Condition |\n| :--- | :---: | :---: | ---: |\n| **Quadratic** | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ | $a \\neq 0$ |\n| **Arithmetic Sum** | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ | $n \\in \\mathbb{Z}^+$ |\n| **Factorial Product** | $\\prod_{i=1}^{n} i$ | $n!$ | $n \\ge 1$ |\n| **Gaussian Integral** | $\\int_{-\\infty}^{\\infty} e^{-x^2} \\, dx$ | $\\sqrt{\\pi}$ | $x \\in \\mathbb{R}$ |\n| **Absolute Value** | $f(x) = \\lvert x \\rvert$ | $\\sqrt{x^2}$ | $\\forall x \\in \\mathbb{R}$ |\n\n---\n\n## Scenario 3: Code and Math Mixed\n\nHere we mix inline code like `math.pi`, bash variables like `$HOME` and `$PATH`, and LaTeX variables like $\\pi$ and $r^2$.\n\n```python\n# Calculate area and circumference of a circle with radius r\nimport math\n\ndef circle_metrics(r: float) -> tuple[float, float]:\n    \"\"\"\n    Formulas: \n      Area: A = πr²\n      Circumference: C = 2πr\n    Cost calculation test inside code: $5.00 * r + $10.00\n    \"\"\"\n    area = math.pi * (r ** 2)\n    circumference = 2 * math.pi * r\n    return area, circumference\n\nr_val = 5\na, c = circle_metrics(r_val)\nprint(f\"Radius: {r_val} -> Area: {a:.2f}, Circumference: {c:.2f}\")\n```\n\nIn the code above, `r ** 2` computes $r^2$. The mathematical formula for the area is $A = \\pi r^2$, while the inline literal `$A = \\pi r^2$` should **not** render as math because it is wrapped in backticks.\n\n---\n\n## Scenario 4: Horizontal Rules & Blockquotes\n\nFirst section: Standard text preceding a thematic break.\n\n---\n\nSecond section with inline math: $\\int_{0}^{1} x \\, dx = \\left[ \\frac{x^2}{2} \\right]_0^1 = \\frac{1}{2}$\n\n> **Blockquote Edge Case:** \n> According to the **Fundamental Theorem of Calculus**, if $F'(x) = f(x)$, then:\n> $$\\int_{a}^{b} f(x) \\, dx = F(b) - F(a)$$\n\n---\n\nThird section: Text immediately following a horizontal rule after a blockquote.\n\n---\n\n## Scenario 5: Multiple Dollar Signs (Currency vs. LaTeX)\n\n* **Pure Currency:** Prices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575. (Unescaped test: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.)\n* **Pure Math:** The formula $f(x) = x^2$ evaluates to $f(5) = 25$ and $f(10) = 100$.\n* **Mixed in the Same Sentence:** If you buy $x$ items at \\$25 each (plus a \\$10 shipping fee), your total cost function is $C(x) = 25x + 10$, meaning $5$ items will cost $C(5) = 25(5) + 10 = \\$135$ (or \\$135.00).",
+      "usage": {
+        "prompt_tokens": 474,
+        "completion_tokens": 1514,
+        "total_tokens": 1988,
+        "cost": 0.016088,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.016088,
+          "upstream_inference_prompt_cost": 0.000948,
+          "upstream_inference_completions_cost": 0.01514
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 303,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.016088,
+      "timestamp": "2026-11-17T19:21:53.187Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": true,
+        "linkDestinations": [],
+        "tableCellCount": 24,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "41 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (24 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": true,
+          "linkDestinations": [],
+          "tableCellCount": 24,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-carbon_05-complex-scenarios.png",
+      "sourceFile": "google_gemini-4-carbon_05-complex-scenarios.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "modelName": "Gemini 4 Carbon",
+      "promptName": "06-edge-cases-boundaries",
+      "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+      "response": "Here is the test response evaluating delimiter variants, nested structures, code blocks, currency edge cases, and tables.\n\n## Delimiter Variants\n\n1. **Double dollar display:**\n$$x^2 + y^2 = r^2$$\n\n2. **Bracket display:**\n\\[E = mc^2\\]\n\n3. **Single dollar inline:** The Pythagorean theorem uses $a + b = c$ in some simplified non-Euclidean contexts, though usually $a^2 + b^2 = c^2$.\n\n4. **Paren inline:** Let us assume that \\(x = 5\\) for this step.\n\n---\n\n## Nested Structures\n\n1. **Display math in a list with continuation:**\n   - First item in the unordered list.\n   - The equation is:\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     And it evaluates to 0.5, continuing at the exact same indentation level as the bullet point.\n   - Third item in the unordered list.\n2. **Blockquote with inline and display math:**\n   > If $f(x) = e^x$, then the derivative is invariant:\n   > $$\\frac{d}{dx}e^x = e^x$$\n   > This holds for all $x \\in \\mathbb{R}$.\n\n---\n\n## Code with Math-like Syntax\n\nInline code test: `price = $50 + $100` and `$$not_math$$` and `$PATH`.\n\n```python\n# This should stay as literal code\nprice = $50  # Invalid Python, testing parser immunity\nbash_var = \"$HOME/bin/$USER\"\nformula = \"E = mc^2\"\nlatex_str = r\"$$\\int_0^\\infty e^{-x} dx$$\"\nresult = a**2 + b**2\n\ndef calc(x):\n    return x**2\n```\n\n---\n\n## Currency and Escaped Dollars\n\n- **Plain:** The price is $100\n- **Escaped:** The budget is \\$500 (and a pair of escaped dollars: \\$50 and \\$100)\n- **Multiple (The classic false-positive trap):** Costs $25, $30, and $45 for the three tiers.\n- **In sentence:** I spent $50 at the store, then earned $50 back, leaving my net change at $0.\n- **Currency next to actual math:** If one apple costs \\$2, then $n$ apples cost $\\$2n$ (or $2n$ dollars).\n\n---\n\n## Tables with Math\n\n| Variable | Formula | Value | Notes & Edge Cases |\n|----------|---------|-------|--------------------|\n| Area | $A = \\pi r^2$ | $78.54$ | Standard inline math |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ | Fractions in tables |\n| Absolute | $f(x) = \\|x\\|$ | $5$ | Escaped pipes `\\|` inside table math |\n| Cost | $C(x) = 10x + 5$ | \\$55.00 | Mixing math and escaped currency |\n\n---\n\n## Raw Dollar Signs and Boundaries\n\nThe shell variable $HOME is set, alongside $USER and $PATH, which could easily trigger a false inline math block if spaces aren't checked. Price: $99.99. \n\nBoundary punctuation tests: ($a + b$), [$x = 1$], \"$y = mx + b$\", and $z = 0$.",
+      "usage": {
+        "prompt_tokens": 384,
+        "completion_tokens": 786,
+        "total_tokens": 1170,
+        "cost": 0.008628,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.008628,
+          "upstream_inference_prompt_cost": 0.000768,
+          "upstream_inference_completions_cost": 0.00786
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.008628,
+      "timestamp": "2026-11-17T19:22:11.066Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": true,
+        "linkDestinations": [],
+        "tableCellCount": 20,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "4 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": true,
+          "linkDestinations": [],
+          "tableCellCount": 20,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-carbon_06-edge-cases-boundaries.png",
+      "sourceFile": "google_gemini-4-carbon_06-edge-cases-boundaries.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "modelName": "Gemini 4 Hydrogen",
+      "promptName": "01-math-basics",
+      "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+      "response": "Here is a demonstration of each requested formatting element:\n\n### 1. Inline Math\nFor a quadratic equation in standard form $ax^2 + bx + c = 0$ (where $a \\neq 0$), the solutions are given by the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$. The expression inside the square root, $\\Delta = b^2 - 4ac$, is called the discriminant: when $\\Delta > 0$, there are two distinct real roots; when $\\Delta = 0$, there is one repeated real root $x = -\\frac{b}{2a}$; and when $\\Delta < 0$, the roots are complex conjugates.\n\n### 2. Display Math with Aligned Equations\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n### 3. Matrices and Cases\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n### 4. Multiple Equations\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n### 5. Links\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n### 6. Money Context\nThe item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000.",
+      "usage": {
+        "prompt_tokens": 308,
+        "completion_tokens": 730,
+        "total_tokens": 1038,
+        "cost": 0.005937,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.005937,
+          "upstream_inference_prompt_cost": 0.000462,
+          "upstream_inference_completions_cost": 0.005475
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 350,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.005937,
+      "timestamp": "2026-11-17T19:22:15.982Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": true,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [
+          "https://en.wikipedia.org/wiki/Quadratic_formula"
+        ],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "5 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "13 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "links present",
+            "actual": "1 links",
+            "message": "links assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": true,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [
+            "https://en.wikipedia.org/wiki/Quadratic_formula"
+          ],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-hydrogen_01-math-basics.png",
+      "sourceFile": "google_gemini-4-hydrogen_01-math-basics.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "modelName": "Gemini 4 Hydrogen",
+      "promptName": "02-markdown-formatting",
+      "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
+      "response": "## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines",
+      "usage": {
+        "prompt_tokens": 227,
+        "completion_tokens": 538,
+        "total_tokens": 765,
+        "cost": 0.0043755,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0043755,
+          "upstream_inference_prompt_cost": 0.0003405,
+          "upstream_inference_completions_cost": 0.004035
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 354,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0043755,
+      "timestamp": "2026-11-17T19:22:19.596Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (9 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "3+ level nested lists",
+            "actual": "1 nested list structures",
+            "message": "3+ level nested lists assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-hydrogen_02-markdown-formatting.png",
+      "sourceFile": "google_gemini-4-hydrogen_02-markdown-formatting.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "modelName": "Gemini 4 Hydrogen",
+      "promptName": "03-code-blocks",
+      "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+      "response": "Here is the response with the requested fenced code blocks and inline code:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+      "usage": {
+        "prompt_tokens": 288,
+        "completion_tokens": 302,
+        "total_tokens": 590,
+        "cost": 0.002697,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002697,
+          "upstream_inference_prompt_cost": 0.000432,
+          "upstream_inference_completions_cost": 0.002265
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 42,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.002697,
+      "timestamp": "2026-11-17T19:22:22.015Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": [
+          "python",
+          "javascript"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "2 code blocks (python, javascript)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [
+            "python",
+            "javascript"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-hydrogen_03-code-blocks.png",
+      "sourceFile": "google_gemini-4-hydrogen_03-code-blocks.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "modelName": "Gemini 4 Hydrogen",
+      "promptName": "04-mixed-markdown-latex",
+      "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+      "response": "Here is an example combining Markdown formatting with inline and display LaTeX mathematical expressions:\n\n## Calculus Problem\n**Exercise**: Given the function $f(x) = 3x^2 - 4x + 5$, determine:\n\n1. The *first derivative* $f'(x)$\n2. The **indefinite integral** $\\int f(x)\\,dx$\n\n### Solution\nApplying the power rule, the derivative is:\n$$f'(x) = 6x - 4$$\n\nIntegrating term by term gives:\n$$\\int (3x^2 - 4x + 5)\\,dx = x^3 - 2x^2 + 5x + C$$\n\n---\n\n## Linear Algebra Overview\nConsider the $2 \\times 2$ matrix $M = \\begin{pmatrix} 2 & 1 \\\\ 1 & 3 \\end{pmatrix}$:\n\n- **Determinant**: $\\det(M) = (2)(3) - (1)(1) = 5$\n- **Trace**: $\\text{tr}(M) = 2 + 3 = 5$\n- **Inverse** (since $\\det(M) \\neq 0$):\n  $$M^{-1} = \\frac{1}{5}\\begin{pmatrix} 3 & -1 \\\\ -1 & 2 \\end{pmatrix} = \\begin{pmatrix} 0.6 & -0.2 \\\\ -0.2 & 0.4 \\end{pmatrix}$$\n\n---\n\n## Applied Economics Example\n> **Note**: Suppose a small business has a total cost function $C(q) = 200 + 10q$ and a revenue function $R(q) = 25q$, where $q$ is the number of units produced and sold.\n\nThe profit function $P(q)$ is defined as:\n$$P(q) = R(q) - C(q) = 15q - 200$$\n\n- **Fixed costs**: $200 regardless of output.\n- **Variable cost**: $10 per unit, sold at $25 per unit.\n- **Example**: At $q = 20$ units, total revenue is $500 and total cost is $400, resulting in $100 of profit.",
+      "usage": {
+        "prompt_tokens": 350,
+        "completion_tokens": 2045,
+        "total_tokens": 2395,
+        "cost": 0.0158625,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0158625,
+          "upstream_inference_prompt_cost": 0.000525,
+          "upstream_inference_completions_cost": 0.0153375
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1540,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0158625,
+      "timestamp": "2026-11-17T19:22:35.767Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "4 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "17 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-hydrogen_04-mixed-markdown-latex.png",
+      "sourceFile": "google_gemini-4-hydrogen_04-mixed-markdown-latex.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "modelName": "Gemini 4 Hydrogen",
+      "promptName": "05-complex-scenarios",
+      "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+      "response": "Here is a response designed to exercise each of those Markdown and LaTeX rendering edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$ for any *right triangle*.\n2. Given legs $a = 3$ and $b = 4$:\n   - Compute the hypotenuse: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - **Result:** $c = 5$ units\n   - *Note:* In general, using the `hypot` function avoids overflow for large values:\n     $$c = \\sqrt{a^2 + b^2}$$\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result / Closed Form |\n|---------|-------|----------------------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ |\n| Arithmetic Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Factorial Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| Norm / Absolute Value | $\\lVert \\vec{v} \\rVert = \\sqrt{x^2 + y^2}$ | $\\text{Magnitude of } (x, y)$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of a circle with radius r\n# Note: $A = \\pi r^2$ inside a code comment should NOT render as math\nimport math\n\ndef circle_area(r: float) -> float:\n    return math.pi * r**2\n\nprice_tag = \"$19.99\"\nprint(f\"Area: {circle_area(5):.4f}, Price: {price_tag}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius. For $r = 5$:\n\n$$A = \\pi (5)^2 = 25\\pi \\approx 78.5398$$\n\n## Scenario 4: Horizontal Rules\nFirst section with **bold text** and inline math $e^{i\\pi} + 1 = 0$.\n\n---\n\nSecond section with an integral immediately following a rule:\n\n$$\\int_{0}^{1} x \\, dx = \\left[ \\frac{x^2}{2} \\right]_{0}^{1} = \\frac{1}{2}$$\n\n---\n\nThird section immediately following another rule.\n\n## Scenario 5: Multiple Dollar Signs\n**Currency only:** The computer costs $1,200, monitor $300, keyboard $50, and mouse $25. Total: $1,575.\n\n**Math only:** The function $f(x) = x^2$ evaluates to $f(5) = 25$ and $f(10) = 100$.\n\n**Mixed on the same line:** If an item costs $50 and the tax rate is $r = 0.08$, the total cost is $C = 50(1 + r) = \\$54.00$.",
+      "usage": {
+        "prompt_tokens": 474,
+        "completion_tokens": 1342,
+        "total_tokens": 1816,
+        "cost": 0.010776,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.010776,
+          "upstream_inference_prompt_cost": 0.000711,
+          "upstream_inference_completions_cost": 0.010065
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 600,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.010776,
+      "timestamp": "2026-11-17T19:22:44.822Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": true,
+        "linkDestinations": [],
+        "tableCellCount": 15,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "25 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (15 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": true,
+          "linkDestinations": [],
+          "tableCellCount": 15,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-hydrogen_05-complex-scenarios.png",
+      "sourceFile": "google_gemini-4-hydrogen_05-complex-scenarios.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "modelName": "Gemini 4 Hydrogen",
+      "promptName": "06-edge-cases-boundaries",
+      "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+      "response": "Here is a response covering each of the requested delimiter variants, nested structures, code blocks, currency edge cases, tables, and raw dollar signs:\n\n## Delimiter Variants\n1. Double dollar display:\n$$x^2 + y^2 = r^2$$\n2. Bracket display:\n\\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n5. Inline math with adjacent punctuation: ($y = mx + b$), and $\\alpha + \\beta = \\gamma$.\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     And it evaluates to $0.5$ in decimal form.\n   - Another nested block using brackets:\n     \\[\n     \\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}\n     \\]\n     Followed by continuation text in the same list item.\n   - Third item\n\n> **Blockquote with math:**\n> Inline $f(x) = x^2$ and display:\n> $$g(x) = \\sqrt{x + 1}$$\n\n## Code with Math-like Syntax\nInline code should also remain literal: `$HOME`, `price = $50`, and `\\(x = 5\\)`.\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nlatex_str = r\"$$\\int_0^1 x dx$$\"\nresult = a**2 + b**2\n\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store and saved $15.25\n- Mixed currency and math on one line: A widget costs $12 when $x = 3$ and costs $20 when $x = 5$.\n\n## Tables with Math\n| Variable | Formula | Value | Currency Comparison |\n|----------|---------|-------|---------------------|\n| Area | $A = \\pi r^2$ | $78.54$ | $78.54 |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ | $523.60 |\n| Identity | \\(\\sin^2\\theta + \\cos^2\\theta = 1\\) | $1$ | \\$1.00 |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set, and $PATH contains binaries. Price: $99.99. A trailing dollar sign $ or standalone $ shouldn't trigger math mode.",
+      "usage": {
+        "prompt_tokens": 384,
+        "completion_tokens": 1054,
+        "total_tokens": 1438,
+        "cost": 0.008481,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.008481,
+          "upstream_inference_prompt_cost": 0.000576,
+          "upstream_inference_completions_cost": 0.007905
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 396,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.008481,
+      "timestamp": "2026-11-17T19:22:51.735Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": true,
+        "linkDestinations": [],
+        "tableCellCount": 16,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "5 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": true,
+          "linkDestinations": [],
+          "tableCellCount": 16,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "attempt": "original",
+      "screenshotRelpath": "google_gemini-4-hydrogen_06-edge-cases-boundaries.png",
+      "sourceFile": "google_gemini-4-hydrogen_06-edge-cases-boundaries.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "modelName": "Qwen4 Max",
+      "promptName": "01-math-basics",
+      "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+      "response": "# Math Basics Demo\n\n## 1. Inline Math\n\nThe quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ gives the roots of any quadratic equation $ax^2 + bx + c = 0$ with $a \\neq 0$. The quantity under the radical, $\\Delta = b^2 - 4ac$, is called the **discriminant**: if $\\Delta > 0$ there are two distinct real roots, if $\\Delta = 0$ there is one repeated root $x = -\\frac{b}{2a}$, and if $\\Delta < 0$ the roots are complex conjugates.\n\nFor example, $x^2 - 5x + 6 = 0$ has $a = 1$, $b = -5$, $c = 6$, so $\\Delta = 25 - 24 = 1$ and $x = \\frac{5 \\pm 1}{2} \\in \\{2, 3\\}$.\n\n## 2. Display Math with Aligned Equations\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nAdding the two equations eliminates $y$:\n\n$$\\begin{align}\n(x + y) + (2x - y) &= 5 + 1 \\\\\n3x &= 6 \\\\\nx &= 2 \\\\\ny &= 5 - x = 3\n\\end{align}$$\n\nSo the solution is $(x, y) = (2, 3)$.\n\n## 3. Matrices and Cases\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\nThe identity matrix satisfies $IA = AI = A$ for every $2 \\times 2$ matrix $A$. The piecewise function $f$ is continuous at $x = 0$ since $\\lim_{x \\to 0^-} (-x) = 0 = 0^2$, and $f(x) \\geq 0$ everywhere.\n\nA general matrix product:\n\n$$\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}\n\\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix} =\n\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$$\n\n## 4. Multiple Equations\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nThese are, respectively, mass–energy equivalence, Newton's second law, and the Pythagorean theorem.\n\n## 5. Links\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula, including its derivation by completing the square.\n\n## 6. Money Context (Not Math)\n\nThe item costs \\$5 and the shipping is \\$10, for a total of \\$15. Budget: \\$1000 (escaped dollar).\n\nRemaining after purchase: \\$1000 − \\$15 = \\$985. Note that currency symbols are escaped as `\\$` so the renderer treats them as literal text rather than math delimiters — otherwise a pair like `$5 ... $10` could be mistakenly parsed as an inline equation.",
+      "usage": {
+        "prompt_tokens": 304,
+        "completion_tokens": 1146,
+        "total_tokens": 1450,
+        "cost": 0.00533235,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00533235,
+          "upstream_inference_prompt_cost": 0.0004332,
+          "upstream_inference_completions_cost": 0.00489915
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 354,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.00533235,
+      "timestamp": "2026-11-17T19:23:12.150Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": true,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [
+          "https://en.wikipedia.org/wiki/Quadratic_formula"
+        ],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "7 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "30 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "links present",
+            "actual": "1 links",
+            "message": "links assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": true,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [
+            "https://en.wikipedia.org/wiki/Quadratic_formula"
+          ],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen4-max_01-math-basics.png",
+      "sourceFile": "qwen_qwen4-max_01-math-basics.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "modelName": "Qwen4 Max",
+      "promptName": "02-markdown-formatting",
+      "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
+      "response": "## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\nAdditional inline styles: `inline code`, ~~strikethrough~~, and a [link](https://example.com).\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\nTask list variant:\n- [x] Completed task\n- [ ] Pending task\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\nWith alignment control:\n\n| Left | Center | Right |\n|:-----|:------:|------:|\n| a | b | 1.00 |\n| longer text | mid | 25.50 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n>\n> > And a nested blockquote inside it.\n\n## Code\n```python\ndef greet(name: str) -> str:\n    return f\"Hello, {name}!\"\n```\n\n---\n\nThat covers headers, emphasis, nested lists, tables, blockquotes, code, and a horizontal rule. Let me know if you'd like any element rendered differently or tested in combination.",
+      "usage": {
+        "prompt_tokens": 226,
+        "completion_tokens": 432,
+        "total_tokens": 658,
+        "cost": 0.00216885,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00216885,
+          "upstream_inference_prompt_cost": 0.00032205,
+          "upstream_inference_completions_cost": 0.0018468
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 66,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.00216885,
+      "timestamp": "2026-11-17T19:23:19.882Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": true,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [
+          "https://example.com/"
+        ],
+        "tableCellCount": 18,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "2 tables (18 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "3+ level nested lists",
+            "actual": "1 nested list structures",
+            "message": "3+ level nested lists assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": true,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [
+            "https://example.com/"
+          ],
+          "tableCellCount": 18,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen4-max_02-markdown-formatting.png",
+      "sourceFile": "qwen_qwen4-max_02-markdown-formatting.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "modelName": "Qwen4 Max",
+      "promptName": "03-code-blocks",
+      "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+      "response": "## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\nOutput:\n\n```text\nSolutions: x = 3.0, x = 2.0\n```\n\nNote: `discriminant**0.5` yields a complex-valued result in Python 3 when the discriminant is negative (e.g. `(-4)**0.5` → `(1.2246467991473532e-16+2j)`), so the function still returns roots — just complex ones. For explicit handling, use `cmath.sqrt(discriminant)`.\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\nAn iterative version avoids the exponential call tree:\n\n```javascript\nconst fibonacci = (n) => {\n  let [a, b] = [0, 1];\n  for (let i = 0; i < n; i++) [a, b] = [b, a + b];\n  return a;\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nA few more cases that often trip up renderers:\n\n- Underscores in identifiers: `some_long_variable_name`, `__init__`, `MAX_SIZE`\n- Dollar signs: `$price`, `$100`, `${total}`, `$$hash`\n- Asterisks: `a*b*c`, `**kwargs`, `2**10`\n- Mixed delimiters: `f(x) = x^2 + a_1*x + a_0`\n- Backslash-heavy strings: `C:\\Users\\name`, `\\frac{a}{b}`, `\\n`\n\nAll of the above should appear verbatim inside monospace, with no italic emphasis, no superscripts, and no math typesetting.",
+      "usage": {
+        "prompt_tokens": 270,
+        "completion_tokens": 683,
+        "total_tokens": 953,
+        "cost": 0.003304575,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.003304575,
+          "upstream_inference_prompt_cost": 0.00038475,
+          "upstream_inference_completions_cost": 0.002919825
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 92,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.003304575,
+      "timestamp": "2026-11-17T19:23:30.650Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": [
+          "python",
+          "javascript"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "3 code blocks (python, javascript)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [
+            "python",
+            "javascript"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen4-max_03-code-blocks.png",
+      "sourceFile": "qwen_qwen4-max_03-code-blocks.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "modelName": "Qwen4 Max",
+      "promptName": "04-mixed-markdown-latex",
+      "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+      "response": "# Mixed Markdown & LaTeX — Worked Solutions\n\n## Exercise 1: Calculus of a Quadratic\n\nGiven $f(x) = x^2 + 2x + 1 = (x+1)^2$:\n\n### 1. The *derivative*\n\nApplying the power rule term by term:\n\n$$f'(x) = \\frac{d}{dx}\\left(x^2\\right) + \\frac{d}{dx}(2x) + \\frac{d}{dx}(1) = 2x + 2$$\n\n> **Observation**: Since $f'(x) = 2(x+1)$, the only critical point is $x = -1$, where $f(-1) = 0$. Because $f''(x) = 2 > 0$, this is a **global minimum** — consistent with $f$ being a perfect square.\n\n### 2. The **integral**\n\n$$\\int f(x)\\,dx = \\int \\left(x^2 + 2x + 1\\right)dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n**Verification** (differentiate the antiderivative):\n\n$$\\frac{d}{dx}\\left[\\frac{x^3}{3} + x^2 + x + C\\right] = x^2 + 2x + 1 = f(x) \\quad \\checkmark$$\n\n**Alternate form** via substitution $u = x+1$:\n\n$$\\int (x+1)^2\\,dx = \\frac{(x+1)^3}{3} + \\tilde{C}$$\n\nThese agree, since $\\frac{(x+1)^3}{3} = \\frac{x^3}{3} + x^2 + x + \\frac{1}{3}$, and the extra $\\tfrac{1}{3}$ is absorbed into the constant of integration.\n\n---\n\n## Linear Algebra with Lists\n\nFor the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n\n- **Determinant**: $\\det(A) = ad - bc$\n- **Trace**: $\\operatorname{tr}(A) = a + d$\n- **Characteristic polynomial**: $\\lambda^2 - \\operatorname{tr}(A)\\,\\lambda + \\det(A) = 0$\n- **Inverse** (exists iff $\\det(A) \\neq 0$):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n### Numerical example\n\nLet $A = \\begin{pmatrix} 2 & 1 \\\\ 1 & 3 \\end{pmatrix}$. Then:\n\n| Property | Expression | Value |\n|---|---|---|\n| Determinant | $ad - bc = 6 - 1$ | $5$ |\n| Trace | $a + d = 2 + 3$ | $5$ |\n| Eigenvalues | $\\dfrac{5 \\pm \\sqrt{5}}{2}$ | $\\approx 3.618,\\ 1.382$ |\n\n$$A^{-1} = \\frac{1}{5}\\begin{pmatrix} 3 & -1 \\\\ -1 & 2 \\end{pmatrix}, \\qquad A A^{-1} = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix} \\quad \\checkmark$$\n\n---\n\n## Real-World Context: Cost Functions\n\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means **fixed costs** are \\$100 (independent of output) and **variable costs** are \\$5 per unit.\n\nThree derived quantities:\n\n1. **Marginal cost**: $MC(q) = C'(q) = 5$ — constant, so each extra unit costs the same.\n2. **Average cost**: $AC(q) = \\dfrac{C(q)}{q} = \\dfrac{100}{q} + 5$ — declines with scale.\n3. **Asymptotic behavior**: $\\displaystyle\\lim_{q \\to \\infty} AC(q) = 5$, i.e. fixed costs get \"spread thin.\"\n\n| Quantity $q$ | Total cost $C(q)$ | Average cost $AC(q)$ |\n|---:|---:|---:|\n| 1 | \\$105 | \\$105.00 |\n| 5 | \\$125 | \\$25.00 |\n| 10 | \\$150 | \\$15.00 |\n| 50 | \\$350 | \\$7.00 |\n| 100 | \\$600 | \\$6.00 |\n\n**Money check**: buying 10 units costs \\$100 fixed $+$ \\$50 variable $= \\boxed{\\$150}$ total, matching $C(10) = 100 + 5(10) = 150$.\n\n---\n\n### Formatting footnote\n\nWhen mixing currency and math, dollar signs collide with LaTeX delimiters. Three safe options:\n\n- Escape them: `\\$100` → \\$100\n- Use code spans: `` `$100` `` → `$100`\n- Use a currency code: `USD 100` → USD 100\n\nInline math like $f'(x) = 2x+2$ stays inside single `$…$`, while display math uses `$$…$$` on its own lines — and matrices need `\\\\` row breaks inside `\\begin{pmatrix} … \\end{pmatrix}`.",
+      "usage": {
+        "prompt_tokens": 342,
+        "completion_tokens": 1955,
+        "total_tokens": 2297,
+        "cost": 0.008844975,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.008844975,
+          "upstream_inference_prompt_cost": 0.00048735,
+          "upstream_inference_completions_cost": 0.008357625
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 680,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.008844975,
+      "timestamp": "2026-11-17T19:23:59.608Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 30,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "6 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "38 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 30,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen4-max_04-mixed-markdown-latex.png",
+      "sourceFile": "qwen_qwen4-max_04-mixed-markdown-latex.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "modelName": "Qwen4 Max",
+      "promptName": "05-complex-scenarios",
+      "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+      "response": "# Complex Scenario Response — Formatting Stress Test\n\nBelow, each scenario is reproduced and extended with harder variants. Notes on ambiguity resolution appear at the end.\n\n---\n\n## Scenario 1: Math in Nested Lists\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$ for a right triangle with legs $a, b$ and hypotenuse $c$.\n2. For a *right triangle* with $a = 3$ and $b = 4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units.\n   - Nested deeper (third level), with **bold math** and *italic variables*:\n     - The area is $A = \\tfrac{1}{2}ab = \\tfrac{1}{2}(3)(4) = 6$ square units.\n     - The inradius is $r = \\dfrac{a + b - c}{2} = \\dfrac{3 + 4 - 5}{2} = 1$.\n3. A display equation **inside** a list item:\n   - Generalization to $n$ dimensions:\n\n     $$\\lVert \\mathbf{v} \\rVert_2 = \\sqrt{\\sum_{i=1}^{n} v_i^2}$$\n\n   - Substituting $\\mathbf{v} = (3, 4)$ recovers $\\lVert \\mathbf{v} \\rVert_2 = 5$.\n4. Ordered sublist with an ordered restart:\n   1. Verify: $3^2 + 4^2 = 9 + 16 = 25 = 5^2$ ✓\n   2. Note the converse: if $a^2 + b^2 = c^2$, the triangle is right.\n\n---\n\n## Scenario 2: Tables with Math (including pipe-character hazards)\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\dfrac{n(n+1)}{2}$ |\n| Sum of squares | $\\sum_{i=1}^{n} i^2$ | $\\dfrac{n(n+1)(2n+1)}{6}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| Absolute value | $\\lvert x \\rvert$ | $\\max(x, -x)$ |\n| Set builder | $\\{x \\mid x > 0\\}$ | $(0, \\infty)$ |\n| Determinant | $\\det\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$ | $ad - bc$ |\n| Norm ‖·‖ | $\\lVert \\mathbf{v} \\rVert_\\infty$ | $\\max_i \\lvert v_i \\rvert$ |\n\n**Alignment variants:**\n\n| Left | Center | Right |\n|:-----|:------:|------:|\n| $\\alpha$ | $\\beta$ | $\\gamma$ |\n| $\\frac{1}{2}$ | $0.5$ | $50\\%$ |\n| $1{,}200$ | $1.2 \\times 10^3$ | $1200$ |\n\n> **Edge case:** a literal `|` inside `$...$` would split the cell. Use `\\lvert`, `\\rvert`, `\\mid`, `\\Vert`, or escape as `\\|` — e.g. $\\{x : x \\ne 0\\}$ rather than raw pipes.\n\n---\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²  (plain text here — NOT rendered as math)\n    return math.pi * r**2\n\n",
+      "usage": {
+        "prompt_tokens": 468,
+        "completion_tokens": 2048,
+        "total_tokens": 2516,
+        "cost": 0.0094221,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0094221,
+          "upstream_inference_prompt_cost": 0.0006669,
+          "upstream_inference_completions_cost": 0.0087552
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1111,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0094221,
+      "timestamp": "2026-11-17T19:24:38.040Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 39,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": false,
+        "status": "fail",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "41 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": false,
+            "status": "fail",
+            "expected": "code blocks present",
+            "actual": "no code blocks",
+            "message": "Source included code blocks but rendered DOM lost it"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "2 tables (39 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 39,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "fail",
+      "truncated": true,
+      "emptyVisible": false,
+      "finishReason": "length",
+      "nativeFinishReason": "length",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen4-max_05-complex-scenarios.png",
+      "sourceFile": "qwen_qwen4-max_05-complex-scenarios.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "modelName": "Qwen4 Max",
+      "promptName": "06-edge-cases-boundaries",
+      "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+      "response": "# Delimiter & Edge-Case Rendering Test\n\nBelow each case is reproduced verbatim, followed by the expected rendering behavior. Note: I can emit the markup but cannot observe how your client renders it — the \"Expected\" column describes the correct outcome to check against.\n\n---\n\n## 1. Delimiter Variants\n\n**1.1 Double-dollar display**\n\n$$x^2 + y^2 = r^2$$\n\n**1.2 Bracket display**\n\n\\[E = mc^2\\]\n\n**1.3 Single-dollar inline**\n\nThe relation $a + b = c$ holds for these values.\n\n**1.4 Paren inline**\n\nGiven \\(x = 5\\), the substitution is trivial.\n\n**1.5 All four in one paragraph (adjacency stress)**\n\nDisplay variants $$x^2 + y^2 = r^2$$ and \\[E = mc^2\\] should both block-render, while $a + b = c$ and \\(x = 5\\) stay inline.\n\n| Variant | Open | Close | Expected |\n|---|---|---|---|\n| Display | `$$` | `$$` | Block, centered |\n| Display | `\\[` | `\\]` | Block, centered |\n| Inline | `$` | `$` | Inline, baseline-aligned |\n| Inline | `\\(` | `\\)` | Inline, baseline-aligned |\n\n---\n\n## 2. Nested Structures\n\n- First item\n- The equation is:\n  $$\\int_0^1 x\\,dx = \\frac{1}{2}$$\n  And it evaluates to 0.5 — this continuation line must stay inside the second list item, at the same indent level as \"The equation is:\".\n- Third item\n\n**Nested deeper (ordered → unordered → math):**\n\n1. Outer step one\n   - Inner bullet with inline $\\alpha^2 + \\beta^2$\n   - Inner bullet with display:\n     $$\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}$$\n     Continuation text after the display block.\n2. Outer step two\n\n**Blockquote containing math:**\n\n> The Gaussian integral is\n> $$\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}$$\n> which converges absolutely.\n\n---\n\n## 3. Code with Math-like Syntax\n\nEverything in this fence must remain literal — no math substitution, no currency detection:\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n**Inline code stress:** `$HOME`, `$50`, `$$not math$$`, `\\(not math\\)`, `a**2 + b**2`.\n\n**Fence with a language that itself uses `$`:**\n\n```bash\necho $HOME\necho \"Total: $50\"\nawk '{print $1}' file.txt\n```\n\n```latex\n\\documentclass{article}\n\\begin{document}\n$E = mc^2$ and \\[x^2\\]\n\\end{document}\n```\n\n---\n\n## 4. Currency and Escaped Dollars\n\n- **Plain:** The price is \\$100\n- **Escaped:** The budget is \\$500\n- **Multiple:** Costs \\$25, \\$30, and \\$45\n- **In sentence:** I spent \\$50 at the store\n- **Range:** Between \\$25 and \\$30 per unit\n- **Adjacent:** \\$5\\$10\\$15 (no space separators)\n- **With decimals:** \\$99.99, \\$1,234.56, \\$0.05\n- **Currency + real math:** At \\$50 each, $n$ units cost $50n$ dollars, i.e. \\(C = 50n\\).\n- **Literal escaped dollar next to math:** \\$500 versus $500$ — the first is currency, the second is the number 500 in math mode.\n\n**Critical ambiguity case:** The phrase \"Costs \\$25, \\$30, and \\$45\" contains three dollar signs. A naive parser pairing the 1st with the 2nd would swallow `, ` as math. Correct behavior: none of these are math delimiters.\n\n---\n\n## 5. Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n**Extended table (pipes inside math, currency in cells, mixed delimiters):**\n\n| Case | Expression | Cost | Notes |\n|---|---|---|---|\n| Norm | $\\lVert x \\rVert_2$ | \\$10 | Double-bar delimiters |\n| Set | $\\{x : x > 0\\}$ | \\$20 | Escaped braces |\n| Pipe | $\\{x \\mid x \\neq 0\\}$ | \\$30 | `\\mid` avoids table-pipe collision |\n| Bracket inline | \\(f(x) = x^2\\) | \\$40 | Paren variant in cell |\n| Escaped pipe | $\\left\\| A \\right\\|$ | \\$50 | Alternative norm syntax |\n| Literal `$` | `$x$` | \\$60 | Code span, must not render |\n\n---\n\n## 6. Raw Dollar Signs\n\nThe shell variable \\$HOME is set. Price: \\$99.99.\n\nAdditional raw-sign contexts:\n- Regex anchor: `^abc$` matches end-of-string\n- jQuery: `$(document).ready(...)`\n- Prompt: `$ npm install`\n- Trailing lone sign: 50\\$\n- Doubled currency: \\$\\$100 (two literal dollars, **not** a display block)\n\n---\n\n## 7. Additional Boundary Cases\n\n**7.1 Unmatched / stray delimiters**\n\nA lone \\$ in text. A lone \\( without a closer. A stray \\] here.\n\n**7.2 Empty and minimal math**\n\nEmpty inline: $$ (should not open a display block). Minimal: $x$. Single char display:\n\n$$x$$\n\n**7.3 Multiline display with alignment**\n\n$$\n\\begin{aligned}\n(a+b)^2 &= a^2 + 2ab + b^2 \\\\\n(a-b)^2 &= a^2 - 2ab + b^2\n\\end{aligned}\n$$\n\n**7.4 Math inside emphasis and headings**\n\nBold math: **$E = mc^2$**. Italic math: *$E = mc^2$*. Inline code vs math: `$E$` versus $E$.\n\n### Heading with $x^2$ inline\n\n**7.5 Math adjacent to punctuation**\n\nConsider $x = 5$, then $y = 6$; finally $z = 7$. Parenthesized ($a + b$) and quoted \"$c$\" forms.\n\n**7.6 Backslash-heavy content**\n\n$$\\mathbf{A}^{-1} = \\frac{1}{\\det \\mathbf{A}} \\operatorname{adj}(\\mathbf{A}), \\quad \\det \\mathbf{A} \\neq 0$$\n\n**7.7 Long unbroken inline run**\n\n$\\alpha\\beta\\gamma\\delta\\epsilon\\zeta\\eta\\theta\\iota\\kappa\\lambda\\mu\\nu\\xi\\omicron\\pi\\r",
+      "usage": {
+        "prompt_tokens": 384,
+        "completion_tokens": 2048,
+        "total_tokens": 2432,
+        "cost": 0.0093024,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0093024,
+          "upstream_inference_prompt_cost": 0.0005472,
+          "upstream_inference_completions_cost": 0.0087552
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 347,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0093024,
+      "timestamp": "2026-11-17T19:25:16.078Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": true,
+        "linkDestinations": [],
+        "tableCellCount": 57,
+        "codeBlockLanguages": [
+          "python",
+          "bash",
+          "latex"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "10 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "3 code blocks (python, bash, latex)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": true,
+          "linkDestinations": [],
+          "tableCellCount": 57,
+          "codeBlockLanguages": [
+            "python",
+            "bash",
+            "latex"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "truncated",
+      "truncated": true,
+      "emptyVisible": false,
+      "finishReason": "length",
+      "nativeFinishReason": "length",
+      "attempt": "original",
+      "screenshotRelpath": "qwen_qwen4-max_06-edge-cases-boundaries.png",
+      "sourceFile": "qwen_qwen4-max_06-edge-cases-boundaries.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "modelName": "Hy4 Flash",
+      "promptName": "01-math-basics",
+      "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+      "response": "The quadratic formula solves equations of the form $ax^2 + bx + c = 0$. The solutions are given by $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$, where $b^2 - 4ac$ is called the discriminant.\n\nA system of linear equations can be written in aligned form:\n\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\nMatrices and piecewise functions can also be written compactly:\n\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\nSome common equations are:\n\n$$E = mc^2$$\n\n$$F = ma$$\n\n$$a^2 + b^2 = c^2$$\n\nSee [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\nMoney context: The item costs \\$5 and the shipping is \\$10, for a total of \\$15. Budget: \\$1000.",
+      "usage": {
+        "prompt_tokens": 268,
+        "completion_tokens": 1179,
+        "total_tokens": 1447,
+        "cost": 0.0001750295,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001750295,
+          "upstream_inference_prompt_cost": 0.00000938,
+          "upstream_inference_completions_cost": 0.0001656495
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 924,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0001750295,
+      "timestamp": "2026-11-17T19:25:24.978Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": true,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [
+          "https://en.wikipedia.org/wiki/Quadratic_formula"
+        ],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "5 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "8 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "links present",
+            "actual": "1 links",
+            "message": "links assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": true,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [
+            "https://en.wikipedia.org/wiki/Quadratic_formula"
+          ],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "tencent_hy4-flash_01-math-basics.png",
+      "sourceFile": "tencent_hy4-flash_01-math-basics.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "modelName": "Hy4 Flash",
+      "promptName": "02-markdown-formatting",
+      "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
+      "response": "## Headers\n\n## This is H2\n### This is H3\n#### This is H4\n\n## Text formatting\n\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\n\nNested unordered list:\n\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n\n| Model  | Context | Price  |\n|--------|---------|--------|\n| GPT-4  | 128k    | $0.03  |\n| Claude | 200k    | $0.02  |\n\n## Blockquotes\n\n> This is a blockquote  \n> with multiple lines",
+      "usage": {
+        "prompt_tokens": 210,
+        "completion_tokens": 293,
+        "total_tokens": 503,
+        "cost": 0.0000485165,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0000485165,
+          "upstream_inference_prompt_cost": 0.00000735,
+          "upstream_inference_completions_cost": 0.0000411665
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 106,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0000485165,
+      "timestamp": "2026-11-17T19:25:27.641Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": false,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": true,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "tables present",
+            "actual": "1 tables (9 cells)",
+            "message": "tables assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "3+ level nested lists",
+            "actual": "1 nested list structures",
+            "message": "3+ level nested lists assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": false,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": true,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "tencent_hy4-flash_02-markdown-formatting.png",
+      "sourceFile": "tencent_hy4-flash_02-markdown-formatting.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "modelName": "Hy4 Flash",
+      "promptName": "03-code-blocks",
+      "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+      "response": "## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.",
+      "usage": {
+        "prompt_tokens": 258,
+        "completion_tokens": 501,
+        "total_tokens": 759,
+        "cost": 0.0000794205,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0000794205,
+          "upstream_inference_prompt_cost": 0.00000903,
+          "upstream_inference_completions_cost": 0.0000703905
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 277,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0000794205,
+      "timestamp": "2026-11-17T19:25:31.878Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": false,
+        "hasCodeBlocks": true,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": [
+          "python",
+          "javascript"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "2 code blocks (python, javascript)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": false,
+          "hasCodeBlocks": true,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [
+            "python",
+            "javascript"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "tencent_hy4-flash_03-code-blocks.png",
+      "sourceFile": "tencent_hy4-flash_03-code-blocks.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "modelName": "Hy4 Flash",
+      "promptName": "04-mixed-markdown-latex",
+      "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+      "response": "## Problem Statement\n\n**Exercise 1**: Given the function \\( f(x) = x^2 + 2x + 1 \\), find:\n\n1. The *derivative* \\( f'(x) \\)\n2. The **integral** \\( \\int f(x)\\,dx \\)\n\n### Solution\n\nThe derivative is:\n\n\\[\nf'(x) = 2x + 2\n\\]\n\nThe integral is:\n\n\\[\n\\int f(x)\\,dx\n= \\int (x^2 + 2x + 1)\\,dx\n= \\frac{x^3}{3} + x^2 + x + C\n\\]\n\n---\n\n## Linear Algebra with Lists\n\nFor the matrix\n\n\\[\nA =\n\\begin{pmatrix}\na & b \\\\\nc & d\n\\end{pmatrix},\n\\]\n\nwe have:\n\n- **Determinant**:  \n  \\[\n  \\det(A) = ad - bc\n  \\]\n\n- **Trace**:  \n  \\[\n  \\operatorname{tr}(A) = a + d\n  \\]\n\n- **Inverse**, if \\( ad - bc \\neq 0 \\):  \n  \\[\n  A^{-1}\n  =\n  \\frac{1}{ad - bc}\n  \\begin{pmatrix}\n  d & -b \\\\\n  -c & a\n  \\end{pmatrix}\n  \\]\n\n---\n\n## Real World Context\n\n> **Note**: In economics, the cost function  \n> \\[\n> C(q) = 100 + 5q\n> \\]\n> means fixed costs are **\\$100** and variable costs are **\\$5 per unit**.\n\nMoney context: If you buy \\(10\\) units, then\n\n\\[\nC(10) = 100 + 5(10) = 150.\n\\]\n\nSo the total cost is **\\$150**: \\$100 fixed plus \\$50 variable.",
+      "usage": {
+        "prompt_tokens": 306,
+        "completion_tokens": 1581,
+        "total_tokens": 1887,
+        "cost": 0.0002328405,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0002328405,
+          "upstream_inference_prompt_cost": 0.00001071,
+          "upstream_inference_completions_cost": 0.0002221305
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1208,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.0002328405,
+      "timestamp": "2026-11-17T19:25:41.108Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "8 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "13 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "explicit math environments rendered as KaTeX",
+            "actual": "environments rendered (no visible raw \\begin)",
+            "message": "explicit math environments rendered"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "tencent_hy4-flash_04-mixed-markdown-latex.png",
+      "sourceFile": "tencent_hy4-flash_04-mixed-markdown-latex.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "modelName": "Hy4 Flash",
+      "promptName": "05-complex-scenarios",
+      "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+      "response": "Here is a robust formatted response covering all scenarios:\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c",
+      "usage": {
+        "prompt_tokens": 432,
+        "completion_tokens": 2048,
+        "total_tokens": 2480,
+        "cost": 0.000302864,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000302864,
+          "upstream_inference_prompt_cost": 0.00001512,
+          "upstream_inference_completions_cost": 0.000287744
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1935,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.000302864,
+      "timestamp": "2026-11-17T19:25:54.371Z",
+      "featureCoverage": {
+        "hasDisplayMath": false,
+        "hasInlineMath": true,
+        "hasCodeBlocks": false,
+        "hasTables": false,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": false,
+        "preservedCodeDollars": false,
+        "linkDestinations": [],
+        "tableCellCount": 0,
+        "codeBlockLanguages": []
+      },
+      "validation": {
+        "pass": true,
+        "status": "not-covered",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "inline math present",
+            "actual": "4 inline math expressions",
+            "message": "inline math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "not-covered",
+            "expected": "code blocks present",
+            "actual": "not present in source markdown",
+            "message": "Source reply does not contain code blocks (not-covered, not a renderer failure)"
+          },
+          {
+            "pass": true,
+            "status": "not-covered",
+            "expected": "tables present",
+            "actual": "not present in source markdown",
+            "message": "Source reply does not contain tables (not-covered, not a renderer failure)"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": false,
+          "hasInlineMath": true,
+          "hasCodeBlocks": false,
+          "hasTables": false,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": false,
+          "preservedCodeDollars": false,
+          "linkDestinations": [],
+          "tableCellCount": 0,
+          "codeBlockLanguages": [],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "truncated",
+      "truncated": true,
+      "emptyVisible": false,
+      "finishReason": "length",
+      "nativeFinishReason": "length",
+      "attempt": "original",
+      "screenshotRelpath": "tencent_hy4-flash_05-complex-scenarios.png",
+      "sourceFile": "tencent_hy4-flash_05-complex-scenarios.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "modelName": "Hy4 Flash",
+      "promptName": "06-edge-cases-boundaries",
+      "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+      "response": "Here is the test response:\n\n## Delimiter Variants\n\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n\n1. First item\n2. The equation is:\n   $$\\int_0^1 x dx = \\frac{1}{2}$$\n   And it evaluates to 0.5\n3. Third item\n\n## Code with Math-like Syntax\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.",
+      "usage": {
+        "prompt_tokens": 350,
+        "completion_tokens": 1510,
+        "total_tokens": 1860,
+        "cost": 0.000224405,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000224405,
+          "upstream_inference_prompt_cost": 0.00001225,
+          "upstream_inference_completions_cost": 0.000212155
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1201,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "actualCost": 0.000224405,
+      "timestamp": "2026-11-17T19:26:05.142Z",
+      "featureCoverage": {
+        "hasDisplayMath": true,
+        "hasInlineMath": true,
+        "hasCodeBlocks": true,
+        "hasTables": true,
+        "hasLinks": false,
+        "hasNestedLists": false,
+        "mathErrors": [],
+        "preservedCurrency": true,
+        "preservedCodeDollars": true,
+        "linkDestinations": [],
+        "tableCellCount": 9,
+        "codeBlockLanguages": [
+          "python"
+        ]
+      },
+      "validation": {
+        "pass": true,
+        "status": "pass",
+        "assertions": [
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "display math present",
+            "actual": "3 display math blocks",
+            "message": "display math assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "code blocks present",
+            "actual": "1 code blocks (python)",
+            "message": "code blocks assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "all links safe (no javascript:)",
+            "actual": "all links safe",
+            "message": "All links are safe"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "preserved currency ($N)",
+            "actual": "found $N patterns",
+            "message": "preserved currency assertion passed"
+          },
+          {
+            "pass": true,
+            "status": "pass",
+            "expected": "no KaTeX errors",
+            "actual": "no errors",
+            "message": "No KaTeX errors"
+          }
+        ],
+        "coverage": {
+          "hasDisplayMath": true,
+          "hasInlineMath": true,
+          "hasCodeBlocks": true,
+          "hasTables": true,
+          "hasLinks": false,
+          "hasNestedLists": false,
+          "mathErrors": [],
+          "preservedCurrency": true,
+          "preservedCodeDollars": true,
+          "linkDestinations": [],
+          "tableCellCount": 9,
+          "codeBlockLanguages": [
+            "python"
+          ],
+          "hasUnsafeLinks": false
+        }
+      },
+      "validationStatus": "pass",
+      "truncated": false,
+      "emptyVisible": false,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "attempt": "original",
+      "screenshotRelpath": "tencent_hy4-flash_06-edge-cases-boundaries.png",
+      "sourceFile": "tencent_hy4-flash_06-edge-cases-boundaries.json",
+      "phoneLayout": [],
+      "darkLayout": []
+    }
+  ],
+  "uniqueCoverage": [
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "anthropic_claude-fable-5.2_01-math-basics.json",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_01-math-basics.png",
+      "actualCost": 0.04524
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "anthropic_claude-fable-5.2_02-markdown-formatting.json",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_02-markdown-formatting.png",
+      "actualCost": 0.013192
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "anthropic_claude-fable-5.2_03-code-blocks.json",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_03-code-blocks.png",
+      "actualCost": 0.0238
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "anthropic_claude-fable-5.2_04-mixed-markdown-latex.json",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_04-mixed-markdown-latex.png",
+      "actualCost": 0.032472
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "anthropic_claude-fable-5.2_05-complex-scenarios.json",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_05-complex-scenarios.png",
+      "actualCost": 0.057824
+    },
+    {
+      "modelId": "anthropic/claude-fable-5.2",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "anthropic_claude-fable-5.2_06-edge-cases-boundaries.json",
+      "screenshotRelpath": "anthropic_claude-fable-5.2_06-edge-cases-boundaries.png",
+      "actualCost": 0.04928
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-carbon_01-math-basics.json",
+      "screenshotRelpath": "google_gemini-4-carbon_01-math-basics.png",
+      "actualCost": 0.010636
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-carbon_02-markdown-formatting.json",
+      "screenshotRelpath": "google_gemini-4-carbon_02-markdown-formatting.png",
+      "actualCost": 0.002434
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-carbon_03-code-blocks.json",
+      "screenshotRelpath": "google_gemini-4-carbon_03-code-blocks.png",
+      "actualCost": 0.005596
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-carbon_04-mixed-markdown-latex.json",
+      "screenshotRelpath": "google_gemini-4-carbon_04-mixed-markdown-latex.png",
+      "actualCost": 0.01006
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-carbon_05-complex-scenarios.json",
+      "screenshotRelpath": "google_gemini-4-carbon_05-complex-scenarios.png",
+      "actualCost": 0.016088
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-carbon_06-edge-cases-boundaries.json",
+      "screenshotRelpath": "google_gemini-4-carbon_06-edge-cases-boundaries.png",
+      "actualCost": 0.008628
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-hydrogen_01-math-basics.json",
+      "screenshotRelpath": "google_gemini-4-hydrogen_01-math-basics.png",
+      "actualCost": 0.005937
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-hydrogen_02-markdown-formatting.json",
+      "screenshotRelpath": "google_gemini-4-hydrogen_02-markdown-formatting.png",
+      "actualCost": 0.0043755
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-hydrogen_03-code-blocks.json",
+      "screenshotRelpath": "google_gemini-4-hydrogen_03-code-blocks.png",
+      "actualCost": 0.002697
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-hydrogen_04-mixed-markdown-latex.json",
+      "screenshotRelpath": "google_gemini-4-hydrogen_04-mixed-markdown-latex.png",
+      "actualCost": 0.0158625
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-hydrogen_05-complex-scenarios.json",
+      "screenshotRelpath": "google_gemini-4-hydrogen_05-complex-scenarios.png",
+      "actualCost": 0.010776
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "google_gemini-4-hydrogen_06-edge-cases-boundaries.json",
+      "screenshotRelpath": "google_gemini-4-hydrogen_06-edge-cases-boundaries.png",
+      "actualCost": 0.008481
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "qwen_qwen4-max_01-math-basics.json",
+      "screenshotRelpath": "qwen_qwen4-max_01-math-basics.png",
+      "actualCost": 0.00533235
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "qwen_qwen4-max_02-markdown-formatting.json",
+      "screenshotRelpath": "qwen_qwen4-max_02-markdown-formatting.png",
+      "actualCost": 0.00216885
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "qwen_qwen4-max_03-code-blocks.json",
+      "screenshotRelpath": "qwen_qwen4-max_03-code-blocks.png",
+      "actualCost": 0.003304575
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "qwen_qwen4-max_04-mixed-markdown-latex.json",
+      "screenshotRelpath": "qwen_qwen4-max_04-mixed-markdown-latex.png",
+      "actualCost": 0.008844975
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "fail",
+      "truncated": true,
+      "finishReason": "length",
+      "attempt": "original",
+      "sourceFile": "qwen_qwen4-max_05-complex-scenarios.json",
+      "screenshotRelpath": "qwen_qwen4-max_05-complex-scenarios.png",
+      "actualCost": 0.0094221
+    },
+    {
+      "modelId": "qwen/qwen4-max",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "truncated",
+      "truncated": true,
+      "finishReason": "length",
+      "attempt": "original",
+      "sourceFile": "qwen_qwen4-max_06-edge-cases-boundaries.json",
+      "screenshotRelpath": "qwen_qwen4-max_06-edge-cases-boundaries.png",
+      "actualCost": 0.0093024
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "promptName": "01-math-basics",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "tencent_hy4-flash_01-math-basics.json",
+      "screenshotRelpath": "tencent_hy4-flash_01-math-basics.png",
+      "actualCost": 0.0001750295
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "promptName": "02-markdown-formatting",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "tencent_hy4-flash_02-markdown-formatting.json",
+      "screenshotRelpath": "tencent_hy4-flash_02-markdown-formatting.png",
+      "actualCost": 0.0000485165
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "promptName": "03-code-blocks",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "tencent_hy4-flash_03-code-blocks.json",
+      "screenshotRelpath": "tencent_hy4-flash_03-code-blocks.png",
+      "actualCost": 0.0000794205
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "promptName": "04-mixed-markdown-latex",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "tencent_hy4-flash_04-mixed-markdown-latex.json",
+      "screenshotRelpath": "tencent_hy4-flash_04-mixed-markdown-latex.png",
+      "actualCost": 0.0002328405
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "promptName": "05-complex-scenarios",
+      "validationStatus": "truncated",
+      "truncated": true,
+      "finishReason": "length",
+      "attempt": "original",
+      "sourceFile": "tencent_hy4-flash_05-complex-scenarios.json",
+      "screenshotRelpath": "tencent_hy4-flash_05-complex-scenarios.png",
+      "actualCost": 0.000302864
+    },
+    {
+      "modelId": "tencent/hy4-flash",
+      "promptName": "06-edge-cases-boundaries",
+      "validationStatus": "pass",
+      "truncated": false,
+      "finishReason": "stop",
+      "attempt": "original",
+      "sourceFile": "tencent_hy4-flash_06-edge-cases-boundaries.json",
+      "screenshotRelpath": "tencent_hy4-flash_06-edge-cases-boundaries.png",
+      "actualCost": 0.000224405
+    }
+  ],
+  "historyRecords": 30,
+  "uniqueCells": 30,
+  "freshRendered": "2026-11-17T19:28:34.033Z"
+}

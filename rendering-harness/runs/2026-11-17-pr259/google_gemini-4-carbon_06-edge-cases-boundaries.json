@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-4-carbon",
+  "modelName": "Gemini 4 Carbon",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here is the test response evaluating delimiter variants, nested structures, code blocks, currency edge cases, and tables.\n\n## Delimiter Variants\n\n1. **Double dollar display:**\n$$x^2 + y^2 = r^2$$\n\n2. **Bracket display:**\n\\[E = mc^2\\]\n\n3. **Single dollar inline:** The Pythagorean theorem uses $a + b = c$ in some simplified non-Euclidean contexts, though usually $a^2 + b^2 = c^2$.\n\n4. **Paren inline:** Let us assume that \\(x = 5\\) for this step.\n\n---\n\n## Nested Structures\n\n1. **Display math in a list with continuation:**\n   - First item in the unordered list.\n   - The equation is:\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     And it evaluates to 0.5, continuing at the exact same indentation level as the bullet point.\n   - Third item in the unordered list.\n2. **Blockquote with inline and display math:**\n   > If $f(x) = e^x$, then the derivative is invariant:\n   > $$\\frac{d}{dx}e^x = e^x$$\n   > This holds for all $x \\in \\mathbb{R}$.\n\n---\n\n## Code with Math-like Syntax\n\nInline code test: `price = $50 + $100` and `$$not_math$$` and `$PATH`.\n\n```python\n# This should stay as literal code\nprice = $50  # Invalid Python, testing parser immunity\nbash_var = \"$HOME/bin/$USER\"\nformula = \"E = mc^2\"\nlatex_str = r\"$$\\int_0^\\infty e^{-x} dx$$\"\nresult = a**2 + b**2\n\ndef calc(x):\n    return x**2\n```\n\n---\n\n## Currency and Escaped Dollars\n\n- **Plain:** The price is $100\n- **Escaped:** The budget is \\$500 (and a pair of escaped dollars: \\$50 and \\$100)\n- **Multiple (The classic false-positive trap):** Costs $25, $30, and $45 for the three tiers.\n- **In sentence:** I spent $50 at the store, then earned $50 back, leaving my net change at $0.\n- **Currency next to actual math:** If one apple costs \\$2, then $n$ apples cost $\\$2n$ (or $2n$ dollars).\n\n---\n\n## Tables with Math\n\n| Variable | Formula | Value | Notes & Edge Cases |\n|----------|---------|-------|--------------------|\n| Area | $A = \\pi r^2$ | $78.54$ | Standard inline math |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ | Fractions in tables |\n| Absolute | $f(x) = \\|x\\|$ | $5$ | Escaped pipes `\\|` inside table math |\n| Cost | $C(x) = 10x + 5$ | \\$55.00 | Mixing math and escaped currency |\n\n---\n\n## Raw Dollar Signs and Boundaries\n\nThe shell variable $HOME is set, alongside $USER and $PATH, which could easily trigger a false inline math block if spaces aren't checked. Price: $99.99. \n\nBoundary punctuation tests: ($a + b$), [$x = 1$], \"$y = mx + b$\", and $z = 0$.",
+  "usage": {
+    "prompt_tokens": 384,
+    "completion_tokens": 786,
+    "total_tokens": 1170,
+    "cost": 0.008628,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.008628,
+      "upstream_inference_prompt_cost": 0.000768,
+      "upstream_inference_completions_cost": 0.00786
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.008628,
+  "actualCost": 0.008628,
+  "timestamp": "2026-11-17T19:22:11.066Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

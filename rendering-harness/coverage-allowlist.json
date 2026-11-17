@@ -1,24 +1,12 @@
 {
   "entries": [
     {
-      "modelId": "anthropic/claude-fable-5.2",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
-    },
-    {
-      "modelId": "google/gemini-4-carbon",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
-    },
-    {
-      "modelId": "google/gemini-4-hydrogen",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
-    },
-    {
       "modelId": "qwen/qwen4-max",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+      "reason": "Six replies were collected on 2026-11-17, but 05-complex-scenarios and 06-edge-cases-boundaries were truncated at the harness completion cap of 2048 tokens (finish_reason=length). Not comprehensive coverage yet."
     },
     {
       "modelId": "tencent/hy4-flash",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+      "reason": "Six replies were collected on 2026-11-17, but 05-complex-scenarios was truncated at the harness completion cap of 2048 tokens (finish_reason=length). Not comprehensive coverage yet."
     }
   ]
 }

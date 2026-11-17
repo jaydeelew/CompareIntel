@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-4-carbon",
+  "modelName": "Gemini 4 Carbon",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "Here is a test response demonstrating mixed Markdown formatting and LaTeX mathematical expressions, including proper handling of currency symbols alongside inline math.\n\n---\n\n# Advanced Calculus & Applications Test\n\n## Problem Statement\n**Exercise 2**: Given the Gaussian-like function $g(x) = x e^{-x^2}$, determine the following:\n\n1. The *first derivative* $g'(x)$ using the product rule.\n2. The **definite integral** $\\int_{0}^{\\infty} g(x) \\, dx$.\n\n### Solution\nTo find the derivative, we apply the product rule $(uv)' = u'v + uv'$:\n$$g'(x) = (1)e^{-x^2} + x(-2x e^{-x^2}) = e^{-x^2}(1 - 2x^2)$$\n\nTo evaluate the improper integral, we use the substitution $u = -x^2$, which gives $du = -2x \\, dx$:\n$$\\int_{0}^{\\infty} x e^{-x^2} \\, dx = \\lim_{b \\to \\infty} \\left[ -\\frac{1}{2}e^{-x^2} \\right]_{0}^{b} = 0 - \\left(-\\frac{1}{2}\\right) = \\frac{1}{2}$$\n\n---\n\n## Vector Calculus & Matrices\nConsider the vector field $\\mathbf{F}(x, y) = \\begin{pmatrix} P(x,y) \\\\ Q(x,y) \\end{pmatrix}$ and the Jacobian matrix $J$:\n\n* **Gradient** of a scalar field $\\phi$: $\\nabla \\phi = \\left( \\frac{\\partial \\phi}{\\partial x}, \\frac{\\partial \\phi}{\\partial y} \\right)$\n* **Divergence** of $\\mathbf{F}$: $\\nabla \\cdot \\mathbf{F} = \\frac{\\partial P}{\\partial x} + \\frac{\\partial Q}{\\partial y}$\n* **The Jacobian Matrix**:\n  $$J = \\begin{bmatrix} \\frac{\\partial P}{\\partial x} & \\frac{\\partial P}{\\partial y} \\\\ \\frac{\\partial Q}{\\partial x} & \\frac{\\partial Q}{\\partial y} \\end{bmatrix}$$\n\n### Common Operators Summary\n| Operator | Symbol | Type of Output | Formula (2D) |\n| :--- | :---: | :---: | :--- |\n| Gradient | $\\nabla f$ | Vector | $(\\partial_x f, \\partial_y f)$ |\n| Divergence | $\\nabla \\cdot \\mathbf{F}$ | Scalar | $\\partial_x P + \\partial_y Q$ |\n| Laplacian | $\\nabla^2 f$ | Scalar | $\\partial_{xx} f + \\partial_{yy} f$ |\n\n---\n\n## Financial Context (Currency vs. LaTeX Test)\n> **Note**: In financial modeling, continuous compounding is modeled by $A(t) = P e^{rt}$, where $P$ is the principal investment, $r$ is the annual interest rate, and $t$ is time in years.\n\n* **Scenario**: Suppose you invest \\$1,000 at an annual rate of $r = 0.05$ (5%) for $t = 10$ years. \n* **Calculation**: Using the formula $A(10) = 1000 \\cdot e^{0.05 \\times 10} = 1000 \\cdot e^{0.5}$, your investment grows to approximately \\$1,648.72. That represents a net profit of \\$648.72, assuming \\$0 in account maintenance fees!\n\n---\n\n## Algorithmic Representation\nWe can approximate the integral numerically using `Python`:\n\n```python\nimport numpy as np\n\n# Define the function g(x) = x * exp(-x^2)\ndef g(x):\n    return x * np.exp(-x**2)\n\n# Approximate integral from 0 to 100 using the trapezoidal rule\nx_vals = np.linspace(0, 100, 10000)\nintegral_approx = np.trapz(g(x_vals), x_vals)\n\nprint(f\"Approximate value: {integral_approx:.4f}\") # Outputs: 0.5000\n```",
+  "usage": {
+    "prompt_tokens": 350,
+    "completion_tokens": 936,
+    "total_tokens": 1286,
+    "cost": 0.01006,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01006,
+      "upstream_inference_prompt_cost": 0.0007,
+      "upstream_inference_completions_cost": 0.00936
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.01006,
+  "actualCost": 0.01006,
+  "timestamp": "2026-11-17T19:21:25.799Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}
