@@ -1,0 +1,12 @@
+{
+  "modelId": "google/gemma-3-27b-it",
+  "modelName": "Google: Gemma 3 27B",
+  "promptName": "07-undelimited-prose-latex",
+  "promptText": "Synthetic undelimited LaTeX in prose with currency/code/path guards",
+  "response": "(the height is \\sqrt{3}), and the space diagonal of a unit cube is \\sqrt{3}.\n\ntan(60°) = \\sqrt{3} and sin(60°) = \\sqrt{3}/2.\n\nCosts $5 and $1,200.50. Inline `\\sqrt{x}` and:\n\n```latex\n\\sqrt{x}\n```\n\nPath C:\\\\Users\\\\dev.",
+  "timestamp": "2026-11-17T00:00:00Z",
+  "usage": { "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "cost": 0 },
+  "cost": 0,
+  "finishReason": "stop",
+  "nativeFinishReason": "stop"
+}

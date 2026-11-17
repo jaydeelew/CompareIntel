@@ -47,6 +47,7 @@ npm run harness -- --models=anthropic/claude-sonnet-4.6,openai/gpt-4o --max-usd=
 - `--dry-run`: Estimate costs without making API calls
 - `--render-only`: Re-screenshot existing responses without API calls
 - `--render-dir=PATH`: Directory containing saved responses (for `--render-only`)
+- `--include-synthetic-prose-latex`: With `--render-only`, also render the free undelimited-prose fixture for every renderer config (no OpenRouter calls)
 - `--models=ID1,ID2`: Comma-separated list of model IDs to test
 - `--prompts=NAME`: Comma-separated prompt names, for example `07-rare-formats`
 
