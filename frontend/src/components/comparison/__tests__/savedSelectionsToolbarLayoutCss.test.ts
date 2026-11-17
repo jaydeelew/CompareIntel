@@ -17,5 +17,8 @@ describe('saved selections composer toolbar layout CSS', () => {
   it('keeps ellipsis truncation on long default selection names', () => {
     expect(css).toMatch(/\.default-selection-name\s*\{[^}]*text-overflow:\s*ellipsis/)
     expect(css).toMatch(/\.default-selection-name\s*\{[^}]*min-width:\s*0/)
+    expect(css).toMatch(
+      /\.saved-selections-bookmark-cluster \.default-selection-name-tooltip\s*\{[^}]*min-width:\s*0/
+    )
   })
 })

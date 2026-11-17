@@ -211,6 +211,15 @@ export function SavedSelectionsDropdown({
   }, [showDropdown])
 
   const defaultSelection = getDefaultSelection()
+  const defaultSelectionTooltipText = defaultSelection
+    ? getModelNamesFromIds(defaultSelection.modelIds, modelsByProvider) || 'Default model selection'
+    : ''
+
+  const defaultSelectionName = defaultSelection ? (
+    <span className="default-selection-name" aria-label={defaultSelectionTooltipText}>
+      {defaultSelection.name}
+    </span>
+  ) : null
 
   const triggerButton = (
     <button
@@ -250,17 +259,19 @@ export function SavedSelectionsDropdown({
             {triggerButton}
           </StyledTooltip>
         )}
-        {!defaultSelectionOverridden && defaultSelection && (
-          <span
-            className="default-selection-name"
-            title={
-              getModelNamesFromIds(defaultSelection.modelIds, modelsByProvider) ||
-              'Default model selection'
-            }
-          >
-            {defaultSelection.name}
-          </span>
-        )}
+        {!defaultSelectionOverridden && defaultSelectionName ? (
+          hideTooltip ? (
+            defaultSelectionName
+          ) : (
+            <StyledTooltip
+              usePortal={tooltipUsePortal}
+              text={defaultSelectionTooltipText}
+              className="default-selection-name-tooltip"
+            >
+              {defaultSelectionName}
+            </StyledTooltip>
+          )
+        ) : null}
       </div>
 
       {showDropdown &&
