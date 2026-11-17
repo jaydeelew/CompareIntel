@@ -8,6 +8,7 @@ import {
 import { dismissMobileBlockers } from './helpers/modelCheckbox'
 import {
   expandTutorialProvider,
+  expectTutorialBackdropContinuous,
   expectTutorialHighlightCoversProviderSection,
   expectTutorialTooltipDoesNotOverlapCheckbox,
   expectTutorialTooltipStaysVisible,
@@ -80,6 +81,7 @@ test.describe('Tutorial select steps on mobile', () => {
     await expectTutorialHighlightCoversProviderSection(page, firstProvider!)
     await expectTutorialTooltipDoesNotOverlapCheckbox(page, firstId!)
     await selectTutorialModelCheckbox(page, firstId!, firstProvider!, testInfo)
+    await expectTutorialBackdropContinuous(page)
 
     await expandTutorialProvider(page, secondProvider!, testInfo)
     await expectTutorialTooltipStaysVisible(page)
