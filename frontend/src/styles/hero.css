@@ -640,11 +640,13 @@
   }
 }
 
-/* Hero Subtitle Container - stacks two subtitles in same space for CSS cross-fade */
+/* Hero Subtitle Container — stacked grid cell reserves height while opacity animates */
 .hero-subtitle-container {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
+  /* Both lines occupy the same cell; row height = taller line (no collapse when opacity is 0) */
+  align-items: start;
 }
 
 .hero-subtitle-container > * {
@@ -682,34 +684,68 @@
   white-space: normal;
 }
 
-/* Subtitle cross-fade animation - both subtitles in HTML for crawlers */
-@keyframes subtitleFadeInOut {
+/*
+ * Sequential subtitle rotation (24s full cycle = 12s per line).
+ * Timings: 8s visible · 1.5s fade · 0.5s gap (both opacity 0) — no overlap.
+ * Both lines stay in the DOM for crawlers; alternate remains aria-hidden in Hero.tsx.
+ */
+@keyframes subtitlePrimarySequential {
   0%,
-  43% {
+  33.33% {
     opacity: 1;
   }
-  48%,
-  93% {
+
+  39.58% {
     opacity: 0;
   }
-  98%,
+
+  39.58%,
+  89.58% {
+    opacity: 0;
+  }
+
   100% {
     opacity: 1;
+  }
+}
+
+@keyframes subtitleAlternateSequential {
+  0%,
+  41.67% {
+    opacity: 0;
+  }
+
+  47.92% {
+    opacity: 1;
+  }
+
+  47.92%,
+  81.25% {
+    opacity: 1;
+  }
+
+  87.5% {
+    opacity: 0;
+  }
+
+  87.5%,
+  100% {
+    opacity: 0;
   }
 }
 
 .hero-subtitle--primary {
   animation:
     fadeInUp 0.8s ease-out 0.1s both,
-    subtitleFadeInOut 16s ease-in-out infinite;
+    subtitlePrimarySequential 24s ease-in-out infinite;
 }
 
 .hero-subtitle--alternate {
   opacity: 0;
-  animation: subtitleFadeInOut 16s ease-in-out 8s infinite;
+  animation: subtitleAlternateSequential 24s ease-in-out infinite;
 }
 
-/* Prefers-reduced-motion: show only primary subtitle, no animation */
+/* Prefers-reduced-motion: show only primary subtitle, no rotation */
 @media (prefers-reduced-motion: reduce) {
   .hero-subtitle--primary {
     animation: fadeInUp 0.8s ease-out 0.1s both;
