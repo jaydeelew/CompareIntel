@@ -31,51 +31,39 @@
   ],
   "allowlist": [
     {
-      "modelId": "anthropic/claude-fable-5.2",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
-    },
-    {
-      "modelId": "google/gemini-4-carbon",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
-    },
-    {
-      "modelId": "google/gemini-4-hydrogen",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
-    },
-    {
       "modelId": "qwen/qwen4-max",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+      "reason": "Six replies were collected on 2026-11-17, but 05-complex-scenarios and 06-edge-cases-boundaries were truncated at the harness completion cap of 2048 tokens (finish_reason=length). Not comprehensive coverage yet."
     },
     {
       "modelId": "tencent/hy4-flash",
-      "reason": "No OpenRouter API key was available while adding this model, so the six rendering-harness replies were not collected."
+      "reason": "Six replies were collected on 2026-11-17, but 05-complex-scenarios was truncated at the harness completion cap of 2048 tokens (finish_reason=length). Not comprehensive coverage yet."
     }
   ],
   "models": {
     "anthropic/claude-fable-5.2": {
       "01-math-basics": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_06-edge-cases-boundaries.json"
       }
     },
     "anthropic/claude-haiku-4.5": {
@@ -652,54 +640,54 @@
     },
     "google/gemini-4-carbon": {
       "01-math-basics": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_06-edge-cases-boundaries.json"
       }
     },
     "google/gemini-4-hydrogen": {
       "01-math-basics": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_06-edge-cases-boundaries.json"
       }
     },
     "google/gemma-3-27b-it": {
@@ -1822,28 +1810,28 @@
     },
     "qwen/qwen4-max": {
       "01-math-basics": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
         "status": "incomplete",
-        "replyPath": null
+        "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
         "status": "incomplete",
-        "replyPath": null
+        "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_06-edge-cases-boundaries.json"
       }
     },
     "stepfun/step-5-preview": {
@@ -1900,28 +1888,28 @@
     },
     "tencent/hy4-flash": {
       "01-math-basics": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
         "status": "incomplete",
-        "replyPath": null
+        "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "incomplete",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_06-edge-cases-boundaries.json"
       }
     },
     "x-ai/grok-4.20": {
@@ -2241,13 +2229,13 @@
     "registryModels": 102,
     "textModels": 84,
     "imageModels": 18,
-    "allowlisted": 5,
+    "allowlisted": 2,
     "cells": 504,
-    "pass": 464,
+    "pass": 491,
     "notCovered": 10,
     "fail": 0,
-    "incomplete": 30,
+    "incomplete": 3,
     "sourceIssue": 0,
-    "missing": 30
+    "missing": 0
   }
 }

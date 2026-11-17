@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-fable-5.2",
+  "modelName": "Claude Fable 5.2",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "# Rendering Test: Complex Scenarios\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n3. The ***converse*** also holds: if $a^2 + b^2 = c^2$, the triangle is a right triangle.\n   - Check with sides $5$, $12$, $13$: $5^2 + 12^2 = 25 + 144 = 169 = 13^2$\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| **Geometric series** | $\\sum_{k=0}^{\\infty} r^k$ | $\\frac{1}{1-r}$ for $-1 < r < 1$ |\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")  # Area: 78.53981633974483\n```\n\nThe mathematical formula is $A = \\pi r^2$, where $r$ is the radius. For $r = 5$, this gives $A = 25\\pi \\approx 78.54$.\n\nInline code next to math: the expression `r**2` in Python corresponds to $r^2$. In the code block above, the `#` comments and `**` operator should appear literally, not as headings or bold text.\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x \\, dx = \\frac{1}{2}$\n\n---\n\nThird section, with display math between rules:\n\n$$\\int_{0}^{\\pi} \\sin x \\, dx = 2$$\n\n---\n\n## Scenario 5: Multiple Dollar Signs\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\nMixed: If each widget costs \\$5 and you buy $n$ widgets, the total cost in dollars is $C(n) = 5n$, so $C(10) = 50$, or \\$50.\n\nThe currency dollar signs above are escaped with backslashes so they aren't parsed as math delimiters. If any prices appear italicized or run together, the renderer is not handling the escapes.",
+  "usage": {
+    "prompt_tokens": 633,
+    "completion_tokens": 1319,
+    "total_tokens": 1952,
+    "cost": 0.057824,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.057824,
+      "upstream_inference_prompt_cost": 0.005064,
+      "upstream_inference_completions_cost": 0.05276
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 283,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.057824,
+  "actualCost": 0.057824,
+  "timestamp": "2026-11-17T19:20:14.539Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}
