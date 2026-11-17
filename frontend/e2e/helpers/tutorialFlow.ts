@@ -198,6 +198,33 @@ export async function expectTutorialTooltipStaysVisible(page: Page, idleMs = 350
   await expect(tutorialTooltip(page).first()).toBeVisible()
 }
 
+/** After model select advances the tour, the dimmed backdrop must not drop out briefly. */
+export async function expectTutorialBackdropContinuous(
+  page: Page,
+  sampleCount = 10,
+  sampleIntervalMs = 120
+): Promise<void> {
+  for (let i = 0; i < sampleCount; i++) {
+    const dimmed = await page.evaluate(() => {
+      const cutout = document.querySelector(
+        '.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout'
+      ) as HTMLElement | null
+      if (cutout) {
+        const opacity = Number.parseFloat(window.getComputedStyle(cutout).opacity || '1')
+        return opacity > 0.05
+      }
+      return (
+        document.querySelector('.mobile-tutorial-backdrop') != null ||
+        document.querySelector('.tutorial-backdrop') != null
+      )
+    })
+    expect(dimmed).toBe(true)
+    if (i < sampleCount - 1) {
+      await page.waitForTimeout(sampleIntervalMs)
+    }
+  }
+}
+
 /** Mobile/desktop: tutorial card must not cover the model checkbox the step describes. */
 /** Spotlight/cutout should frame the full provider card (header + models), not a single row. */
 export async function expectTutorialTargetProviderInViewport(

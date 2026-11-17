@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import {
+  isAdjacentProviderPickerTransition,
   isExpandProviderTutorialStep,
+  isPrimaryExpandProviderStep,
   isProviderPickerTutorialStep,
   isSelectModelTutorialStep,
   resolveTutorialStepConfig,
@@ -208,7 +210,10 @@ export function useTutorialOverlay(
       setDropdownCutout(null)
       setButtonCutout(null)
     }
-    setTargetCutout(null)
+    const preserveProviderTargetCutout = isAdjacentProviderPickerTransition(prev, step)
+    if (!preserveProviderTargetCutout) {
+      setTargetCutout(null)
+    }
     setLoadingStreamingCutout(null)
 
     prevStepForCutoutRef.current = step
@@ -280,8 +285,14 @@ export function useTutorialOverlay(
   }, [isVisible, step, overlayPosition.top, overlayPosition.left])
 
   useLayoutEffect(() => {
-    if (isExpandProviderTutorialStep(step) && prevStepForExpandProviderRef.current !== step) {
+    if (isPrimaryExpandProviderStep(step) && prevStepForExpandProviderRef.current !== step) {
       setExpandProviderEffectsReady(false)
+    } else if (
+      step === 'expand-starter-provider-2' &&
+      prevStepForExpandProviderRef.current !== step
+    ) {
+      // Second expand: provider list is already on-screen; no hero-centering deferral.
+      setExpandProviderEffectsReady(true)
     }
     prevStepForExpandProviderRef.current = step
   }, [step])
@@ -942,12 +953,12 @@ export function useTutorialOverlay(
         waitForScroll.then(() => {
           if (stepRef.current !== step) return
 
-          if (isExpandProviderTutorialStep(step)) {
+          if (isPrimaryExpandProviderStep(step)) {
             setExpandProviderEffectsReady(true)
             // Phase 1 – let highlight/cutout effects mount after expandProviderEffectsReady.
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
-                if (!isExpandProviderTutorialStep(stepRef.current)) return
+                if (!isPrimaryExpandProviderStep(stepRef.current)) return
                 scrollTutorialProvidersIntoView(
                   tutorialProviderNamesRef.current,
                   stepRef.current as TutorialProviderLayoutStep
@@ -958,14 +969,14 @@ export function useTutorialOverlay(
                 // Phase 3 – the position state commits on the next render.  Reveal the
                 // tooltip one frame later so it paints at the final coords, not the default.
                 requestAnimationFrame(() => {
-                  if (!isExpandProviderTutorialStep(stepRef.current)) return
+                  if (!isPrimaryExpandProviderStep(stepRef.current)) return
                   setIsVisible(true)
                   // Phase 4 – enable CSS transitions only after the clamp layoutEffect
                   // has had a chance to adjust the just-revealed tooltip.  Without this
                   // delay the clamp adjustment is *animated* and the user sees the tooltip
                   // slide from its unclamped position.
                   requestAnimationFrame(() => {
-                    if (!isExpandProviderTutorialStep(stepRef.current)) return
+                    if (!isPrimaryExpandProviderStep(stepRef.current)) return
                     setPositionStabilized(true)
                   })
                 })
@@ -1099,7 +1110,7 @@ export function useTutorialOverlay(
 
     let elementsToHighlight: HTMLElement[] = []
     if (isProviderPickerTutorialStep(step)) {
-      if (isExpandProviderTutorialStep(step) && !expandProviderEffectsReady) {
+      if (isPrimaryExpandProviderStep(step) && !expandProviderEffectsReady) {
         elementsToHighlight = []
       } else {
         elementsToHighlight = getTutorialProviderStepLayout(
@@ -1312,7 +1323,7 @@ export function useTutorialOverlay(
 
   // Re-apply tutorial provider highlight if the DOM dropped it (production timing).
   useEffect(() => {
-    if (!isExpandProviderTutorialStep(step) || !expandProviderEffectsReady) return
+    if (!isPrimaryExpandProviderStep(step) || !expandProviderEffectsReady) return
 
     const ensureHighlight = () => {
       const layout = getTutorialProviderStepLayout(
@@ -1339,7 +1350,7 @@ export function useTutorialOverlay(
     return () => {
       detachScrollResize()
       clearInterval(interval)
-      if (!isExpandProviderTutorialStep(stepRef.current)) {
+      if (!isPrimaryExpandProviderStep(stepRef.current)) {
         getTutorialProviderDropdowns(tutorialProviderNamesRef.current).forEach(providerEl => {
           providerEl.classList.remove('tutorial-highlight')
           providerEl.style.pointerEvents = ''
@@ -1353,7 +1364,12 @@ export function useTutorialOverlay(
   // Uses simple interval instead of MutationObserver to avoid performance issues
   // ALSO ensures visibility, targetElement, and position are set (fixes production timing issues)
   useEffect(() => {
-    if (!step || !isSelectModelTutorialStep(step)) return
+    if (
+      !step ||
+      (!isSelectModelTutorialStep(step) && step !== 'expand-starter-provider-2')
+    ) {
+      return
+    }
 
     // FORCE visibility immediately on mount to ensure tooltip appears
     setIsVisible(true)
@@ -2195,7 +2211,7 @@ export function useTutorialOverlay(
       return
     }
 
-    if (isExpandProviderTutorialStep(step) && !expandProviderEffectsReady) {
+    if (isPrimaryExpandProviderStep(step) && !expandProviderEffectsReady) {
       setTargetCutout(null)
       return
     }
@@ -2260,11 +2276,11 @@ export function useTutorialOverlay(
       step === 'submit-comparison-2') &&
     !isLoadingStreamingPhase
   const textareaCutoutToUse = textareaCutout || (isSubmitStep ? targetCutout : null)
-  const shouldBlock =
+  const shouldHideTooltip =
     !isLoadingStreamingPhase &&
     hasAttemptedElementFindRef.current &&
     ((!isVisible && !targetElement) ||
-      (isExpandProviderTutorialStep(step) && !expandProviderEffectsReady))
+      (isPrimaryExpandProviderStep(step) && !expandProviderEffectsReady))
   return {
     overlayRef,
     stepRef,
@@ -2291,6 +2307,6 @@ export function useTutorialOverlay(
     shouldExcludeDropdown,
     useRoundedCutout,
     textareaCutoutToUse,
-    shouldBlock,
+    shouldHideTooltip,
   }
 }

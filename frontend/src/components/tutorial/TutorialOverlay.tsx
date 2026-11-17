@@ -59,7 +59,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     shouldExcludeDropdown,
     useRoundedCutout,
     textareaCutoutToUse,
-    shouldBlock,
+    shouldHideTooltip,
   } = useTutorialOverlay(
     step,
     isLoading ?? false,
@@ -71,10 +71,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   )
 
   if (!step) {
-    return null
-  }
-
-  if (!isLoadingStreamingPhase && shouldBlock) {
     return null
   }
 
@@ -98,6 +94,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       {!isLoadingStreamingPhase &&
         !shouldHideTooltipDuringFollowUpStream &&
+        !shouldHideTooltip &&
         isVisible &&
         config && (
           <TutorialTooltip
