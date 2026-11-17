@@ -378,7 +378,10 @@ The formula $A = \\pi r^2$ stays outside the table.
   })
 
   it('keeps \\| outside tables as KaTeX norm', () => {
-    const el = renderReply('Vector norm: $\\|x\\|_2$ equals the Euclidean length.', 'qwen/qwen4-max')
+    const el = renderReply(
+      'Vector norm: $\\|x\\|_2$ equals the Euclidean length.',
+      'qwen/qwen4-max'
+    )
     const katex = el.querySelector('.katex')
     expect(katex?.querySelector('.katex-mathml')?.textContent ?? '').toMatch(/∥/)
     expect(katex?.querySelector('annotation')?.textContent ?? '').toMatch(/\\?\|x\\?\|/)

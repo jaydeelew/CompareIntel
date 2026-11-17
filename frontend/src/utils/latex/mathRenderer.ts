@@ -330,7 +330,9 @@ export function extractDisplayMath(
         return fullMatch
       }
       const index = mathBlocks.length
-      mathBlocks.push(stripQuotedDisplayLines(gfmUnescapeTableMathMatch(fullMatch, processed, offset)))
+      mathBlocks.push(
+        stripQuotedDisplayLines(gfmUnescapeTableMathMatch(fullMatch, processed, offset))
+      )
       return `${placeholderPrefix}${index}${placeholderSuffix}`
     })
   })
@@ -379,7 +381,9 @@ export function extractInlineMath(
       const offset = rest[rest.length - 2]
       const index = mathBlocks.length
       mathBlocks.push(
-        typeof offset === 'number' ? gfmUnescapeTableMathMatch(fullMatch, processed, offset) : fullMatch
+        typeof offset === 'number'
+          ? gfmUnescapeTableMathMatch(fullMatch, processed, offset)
+          : fullMatch
       )
       return `${placeholderPrefix}${index}${placeholderSuffix}`
     })
@@ -491,8 +495,7 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
       }
       renderedFromDelimiters = true
       const body = typeof math === 'string' ? math : fullMatch
-      const gfmTableCell =
-        typeof offset === 'number' && isOffsetInGfmTableCell(rendered, offset)
+      const gfmTableCell = typeof offset === 'number' && isOffsetInGfmTableCell(rendered, offset)
       return safeRenderKatex(body, true, config.katexOptions, { gfmTableCell })
     })
   })
@@ -501,8 +504,7 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
     rendered = rendered.replace(pattern, (fullMatch, math, ...rest) => {
       renderedFromDelimiters = true
       const offset = rest[rest.length - 2]
-      const gfmTableCell =
-        typeof offset === 'number' && isOffsetInGfmTableCell(rendered, offset)
+      const gfmTableCell = typeof offset === 'number' && isOffsetInGfmTableCell(rendered, offset)
       const tex = typeof math === 'string' ? math : fullMatch
       return safeRenderKatex(tex, false, config.katexOptions, { gfmTableCell })
     })

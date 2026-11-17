@@ -239,8 +239,7 @@ describe('lists', () => {
 
 describe('GFM table-cell pipe escapes (math)', () => {
   it('detects offsets inside GFM table cells', () => {
-    const row =
-      '| Absolute | $f(x) = \\|x\\|$ | $5$ | Escaped pipes `\\|` inside table math |'
+    const row = '| Absolute | $f(x) = \\|x\\|$ | $5$ | Escaped pipes `\\|` inside table math |'
     const header = '| Concept | Formula | Value | Notes |\n|---------|---------|-------|-------|\n'
     const text = `${header}${row}`
     const formulaStart = text.indexOf('$f(x)')
