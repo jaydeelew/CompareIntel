@@ -20,12 +20,12 @@ from scripts.harness_replies import (
 )
 
 
-def test_load_harness_prompts_matches_the_six_harness_files():
+def test_load_harness_prompts_matches_the_eight_harness_files():
     prompts = load_harness_prompts()
     assert [item["name"] for item in prompts] == list(PROMPT_ORDER)
     assert all(item["prompt"].strip() for item in prompts)
-    # Prompt 07 is a harness widening. It is not collected for a new text model.
     assert (prompts_dir() / "07-rare-formats.md").is_file()
+    assert (prompts_dir() / "08-casual-prose.md").is_file()
 
 
 def test_written_replies_are_found_and_reused(tmp_path):
@@ -55,7 +55,7 @@ def test_empty_or_truncated_reply_is_not_reused(tmp_path):
     target.write_text(json.dumps(data), encoding="utf-8")
     found = find_complete_replies("acme/new-model", tmp_path)
     assert "03-code-blocks" not in found
-    assert len(found) == 5
+    assert len(found) == 7
 
 
 def test_render_failure_is_not_reported_as_success():

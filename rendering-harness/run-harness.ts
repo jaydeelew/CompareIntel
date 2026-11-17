@@ -26,6 +26,8 @@ import {
 } from './paid-call.js';
 import { DEFAULT_GUARD_STATE_FILE, DurableStore } from './durable-spend.js';
 import { droppedNameExpectations, getExpectedFeatures } from './expected-features.js';
+import { hashPromptText } from './prompt-catalog.js';
+import { PROMPTS } from './prompts-constants.js';
 import {
   isTruncatedReply,
   isEmptyVisibleReply,
@@ -162,29 +164,30 @@ async function fetchOpenRouterPricing(): Promise<Map<string, PricingInfo>> {
  */
 async function loadPrompts(only?: string[] | null): Promise<Map<string, string>> {
   const promptsDir = path.join(__dirname, 'prompts');
-  const files = await fs.readdir(promptsDir);
+  const names = only && only.length > 0 ? only : [...PROMPTS];
   const prompts = new Map<string, string>();
-  
-  for (const file of files) {
-    if (file.endsWith('.md')) {
-      const content = await fs.readFile(path.join(promptsDir, file), 'utf-8');
-      const name = file.replace('.md', '');
+
+  for (const name of names) {
+    const filePath = path.join(promptsDir, `${name}.md`);
+    try {
+      const content = await fs.readFile(filePath, 'utf-8');
       prompts.set(name, content);
+    } catch {
+      console.error(`ERROR: Unknown prompt or missing file: ${name}`);
+      console.error(`Known prompts: ${PROMPTS.join(', ')}`);
+      process.exit(1);
     }
   }
 
   if (only && only.length > 0) {
-    const unknown = only.filter(name => !prompts.has(name));
+    const unknown = only.filter(name => !PROMPTS.includes(name as (typeof PROMPTS)[number]));
     if (unknown.length > 0) {
       console.error(`ERROR: Unknown prompt(s): ${unknown.join(', ')}`);
-      console.error(`Known prompts: ${[...prompts.keys()].sort().join(', ')}`);
+      console.error(`Known prompts: ${PROMPTS.join(', ')}`);
       process.exit(1);
     }
-    for (const name of [...prompts.keys()]) {
-      if (!only.includes(name)) prompts.delete(name);
-    }
   }
-  
+
   return prompts;
 }
 
@@ -1369,6 +1372,7 @@ async function main() {
             modelName: model.name,
             promptName,
             promptText,
+            promptHash: hashPromptText(promptText),
             response,
             usage,
             cost,

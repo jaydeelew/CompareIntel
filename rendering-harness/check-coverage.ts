@@ -11,6 +11,7 @@ import path from 'path'
 import { spawnSync } from 'child_process'
 import { fileURLToPath } from 'url'
 import {
+  COLLECTION_OPTIONAL_PROMPTS,
   PROMPTS,
   buildCoverage,
   collectCommand,
@@ -53,11 +54,15 @@ function renderNewModels(modelIds: string[], manifestModels: ReturnType<typeof b
     for (const modelId of modelIds) {
       const row = manifestModels[modelId]
       for (const promptName of PROMPTS) {
-        const replyPath = row?.[promptName]?.replyPath
-        if (!replyPath) {
-          errors.push(`${modelId} ${promptName} has no saved reply to render`)
+        const cell = row?.[promptName]
+        if (
+          !cell?.replyPath ||
+          cell.status === 'not-covered' ||
+          COLLECTION_OPTIONAL_PROMPTS.has(promptName)
+        ) {
           continue
         }
+        const replyPath = cell.replyPath
         const source = path.join(harnessRoot, replyPath)
         if (!fs.existsSync(source)) {
           errors.push(`${modelId} ${promptName} reply missing at ${replyPath}`)

@@ -55,12 +55,15 @@ npm run harness -- --models=anthropic/claude-sonnet-4.6,openai/gpt-4o --max-usd=
 Located in `prompts/`:
 
 1. **01-math-basics.md**: Inline/display math, matrices, cases, aligned equations, links, currency
-2. **02-markdown-formatting.md**: Headers, text formatting, nested lists, tables, blockquotes
-3. **03-code-blocks.md**: Syntax highlighting (Python, JavaScript, Shell), inline code
+2. **02-markdown-formatting.md**: Headers, nested lists, tables, blockquotes, strikethrough, task list, image, nested blockquote, autolink, bare URL, footnote, inline HTML (`<br>`, `<sup>`)
+3. **03-code-blocks.md**: Python, JavaScript, Shell (`$` in fences), inline code, long code line
 4. **04-mixed-markdown-latex.md**: Math in lists, tables with math, formatted text with math
 5. **05-complex-scenarios.md**: Edge cases (math in lists/tables, horizontal rules, multiple dollar signs)
-6. **06-edge-cases-boundaries.md**: Delimiter variants `$$`/`\[`, nested display math in lists, code with math-like syntax, escaped currency `\$`, raw dollar signs
-7. **07-rare-formats.md**: Footnotes, task lists, strikethrough, autolinks and bare URLs, inline HTML (`br`, `sup`, `details`), nested blockquotes holding a list and code, an aligned table with inline math and escaped pipes, a wide table, a mermaid fence, `\ce{}`, `cases`, `aligned`, `\boxed`, `\text` with unicode, emoji, RTL and CJK, a long unbroken token, a long code line, and a dollar amount beside math. Replies are not collected by this change. `npm run harness -- --dry-run --prompts=07-rare-formats` estimates the reserve for all text models.
+6. **06-edge-cases-boundaries.md**: Delimiters, nested display math in lists, currency/code edge cases, mid-sentence display math, wide table, mermaid, `\ce{}`, emoji/RTL/CJK, unbroken overflow token
+7. **07-rare-formats.md**: Remaining rare-format stress (aligned table, `<details>`, `cases`, `aligned`, `\boxed`, long URL, currency beside math, and related items not duplicated in `02`–`06`)
+8. **08-casual-prose.md**: Informal plain-text math (tan/sin 60°, cube diagonals, `$3` poster); targets undelimited math in prose (#272). No replies collected in this PR.
+
+The default harness run loads all eight prompts in numeric order. Use `--prompts=NAME` to narrow a dry-run or paid batch.
 
 ## Feature Coverage
 
@@ -142,11 +145,11 @@ See `BUDGET_GUARD_AUDIT.md` for limits (not a provider hard cap).
 
 ## Coverage gate
 
-`coverage.json` lists every text-capable model in `backend/data/models_registry.json` and, for each of the six prompts, the saved reply path and status (`pass`, `not-covered`, `fail`, `incomplete`, or `source-issue`).
+`coverage.json` lists every text-capable model in `backend/data/models_registry.json`, the current `promptHashes`, and for each of the eight prompts the saved reply path and status (`pass`, `not-covered`, `fail`, `incomplete`, or `source-issue`).
 
 A model is **image-only** when its registry `category` is exactly `"Image"`. Those ids are listed in `excludedImageModels` and are not required to have replies. Every other category is text-capable. The manifest does not read `supports_image_generation`. `output_modalities` is not stored on the registry; admin add copies an image output modality into `category: "Image"`.
 
-`not-covered` means the model omitted a feature the prompt asked for. It is allowed and must stay recorded. `fail` and `incomplete` (empty or truncated replies) fail the gate. `source-issue` is a malformed math environment in the model text, not a renderer loss, and does not fail the gate.
+`not-covered` means the model omitted a feature the prompt asked for, **or** the saved reply was collected under an older prompt body (SHA-256 mismatch), **or** the prompt has no grid yet (`07-rare-formats`, `08-casual-prose`). Those cells are allowed and must stay recorded. Historical JSON under `runs/` is never rewritten by a prompt edit. Re-collect with a paid `npm run harness` batch; new replies carry the current `promptHash`. `fail` and `incomplete` (empty or truncated replies on current prompts) fail the gate. `source-issue` is a malformed math environment in the model text, not a renderer loss, and does not fail the gate.
 
 Regenerate the manifest after replies change. This does not call a model API:
 
@@ -157,7 +160,7 @@ npm run check-coverage
 
 `coverage-allowlist.json` can exempt a text model. Each entry is `{ "modelId", "reason" }` and `reason` must be non-empty. An empty `entries` array means every text model is gated. Edit that file, then run `npm run generate-coverage`.
 
-CI runs `npm run check-coverage` when `backend/data/models_registry.json`, `frontend/src/config/model_renderer_configs.json`, `frontend/src/components/LatexRenderer.tsx`, `frontend/src/utils/latex/**`, or `rendering-harness/**` changes. The check fails if any text model lacks six saved replies or any cell is `fail` or `incomplete`. It re-renders replies for models that are new versus the base branch with `--render-only` and fails on an assertion failure. It deletes `OPENROUTER_API_KEY` from that child process and makes no paid call. A failure names the models and the exact `npm run harness -- --models=<ids> --max-usd=<n>` command.
+CI runs `npm run check-coverage` when `backend/data/models_registry.json`, `frontend/src/config/model_renderer_configs.json`, `frontend/src/components/LatexRenderer.tsx`, `frontend/src/utils/latex/**`, or `rendering-harness/**` changes. The check fails if any text model lacks current saved replies on gated prompts or any such cell is `fail` or `incomplete`. It re-renders replies for models that are new versus the base branch with `--render-only` and fails on an assertion failure. It deletes `OPENROUTER_API_KEY` from that child process and makes no paid call. A failure names the models and the exact `npm run harness -- --models=<ids> --max-usd=<n>` command.
 
 Screenshots (`*.png`) and archives (`*.tar.gz`) under `runs/` are gitignored. Commit the reply JSON and `coverage.json`.
 

@@ -29,7 +29,7 @@ Implement a model-specific rendering registry where each model has its own:
 ### Phase 1: Response Collection and Analysis
 
 #### Step 1.1: Test prompts
-The rendering harness owns the six prompts in `rendering-harness/prompts/`. New text models are collected with those prompts so the saved replies satisfy the coverage gate. The older prompts in `backend/scripts/test_prompts.py` are not the gate.
+The rendering harness owns the eight prompts in `rendering-harness/prompts/`. New text models are collected with those prompts so the saved replies satisfy the coverage gate. The older prompts in `backend/scripts/test_prompts.py` are not the gate.
 
 #### Step 1.2: Build Response Collection Script
 - Create a script that:
@@ -139,7 +139,7 @@ The rendering harness owns the six prompts in `rendering-harness/prompts/`. New 
 
 ### Phase 5: Testing Framework
 
-The required check for a new text model is the rendering harness, not a manual pass in the running app. `rendering-harness/coverage.json` must list a saved reply for all six prompts, with status `pass`, `not-covered`, or `source-issue`. CI re-renders models that are new versus the base branch offline. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
+The required check for a new text model is the rendering harness, not a manual pass in the running app. `rendering-harness/coverage.json` must list a saved reply for each current prompt version, with status `pass`, `not-covered`, or `source-issue`. Cells saved under an older prompt body (hash mismatch) or prompts not yet collected (`07-rare-formats`, `08-casual-prose`, or revised `02` / `03` / `06`) stay `not-covered` until a paid batch re-collects them. CI re-renders models that are new versus the base branch offline. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
 
 #### Step 5.1: Unit Tests for Renderer Configurations
 - Create tests for each model configuration:
@@ -336,7 +336,7 @@ The required check for a new text model is the rendering harness, not a manual p
 
 ## Implementation Workflow
 
-Adding a text model (admin panel or CLI) writes harness replies for the six prompts, renders them with `LatexRenderer`, and updates `rendering-harness/coverage.json`. CI rejects a registry row that lacks those replies or has a `fail` or `incomplete` cell. Screenshot review happens on the harness output. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
+Adding a text model (admin panel or CLI) writes harness replies for the eight prompts, renders them with `LatexRenderer`, and updates `rendering-harness/coverage.json`. CI rejects a registry row that lacks current replies or has a `fail` or `incomplete` cell on a non-optional prompt. Screenshot review happens on the harness output. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
 
 ## Next Steps
 
@@ -351,9 +351,17 @@ Adding a text model (admin panel or CLI) writes harness replies for the six prom
 **Last Updated:** November 2026  
 **Status:** Harness coverage gate is the check for new text models
 
-## Harness coverage beyond the original six prompts
+## Harness prompts (eight total)
 
-The rendering harness now includes `prompts/07-rare-formats.md` for constructs the first six prompts do not draw out: footnotes, task lists, strikethrough, autolinks and bare URLs, inline HTML (`<br>`, `<sup>`, `<details>`), nested blockquotes that hold a list and code, tables with alignment plus inline math and escaped pipes, a mermaid fence, chemistry `\ce{}`, `\begin{cases}`, `\begin{aligned}`, `\boxed`, `\text` containing unicode, emoji, RTL and CJK text, overflow stress (a long unbroken token, a wide table, a long code line), and a dollar amount beside math.
+| Prompt | Role |
+|--------|------|
+| `01`–`06` | Core math, markdown, code, mixed content, complex scenarios, and delimiter edge cases (`02` / `03` / `06` were widened in 2026-11; old saved replies stay on disk but manifest as `not-covered` until re-collected) |
+| `07-rare-formats` | Residual rare constructs (`cases`, `aligned`, `\boxed`, `<details>`, table alignment/pipes, long URL, currency beside math) not moved into `02`–`06` |
+| `08-casual-prose` | Informal tutor reply with undelimited plain-text math (see issue #272); no grid collected in this PR |
+
+Re-collect stale or missing cells with `npm run harness -- --dry-run --max-tokens=2048` first, then a paid run for the models/prompts you need. `coverage.json` records `promptHashes` for the current files; only replies whose `promptHash` (or `promptText`) matches count as collected for the gate.
+
+`07-rare-formats.md` still draws out footnotes, task lists, mermaid, chemistry `\ce{}`, and overflow stress in one response. Prompts `02`, `03`, and `06` now overlap part of that set so day-to-day collection exercises the same renderer paths earlier in the suite.
 
 `LatexRenderer` renders KaTeX through `safeRenderKatex` without importing `katex/contrib/mhchem`. `\ce{}` is therefore not a supported command. The harness still asserts that `\ce{}` renders without a KaTeX error, so the gap stays visible. Do not treat a prompt 07 failure on chemistry as a reason to change the renderer in the same change that only widens the harness.
 

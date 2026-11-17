@@ -40,3 +40,26 @@ def calc(x):
 
 ## Raw Dollar Signs
 The shell variable $HOME is set. Price: $99.99.
+
+## Display math in the middle of a sentence
+The circle identity $$x^2 + y^2 = r^2$$ holds for every point on the circle, and the mass-energy relation \[E = mc^2\] is often quoted in the same way.
+
+## Wide table
+| c1 | c2 | c3 | c4 | c5 | c6 | c7 | c8 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+
+## Mermaid and chemistry
+```mermaid
+graph TD
+  A[Start] --> B[End]
+```
+
+KaTeX on this site does not load the mhchem extension, so this must still be attempted: $\ce{H2O}$ and $\ce{SO4^{2-}}$.
+
+## Emoji, RTL, CJK, and overflow
+Status emoji: ✅ and 🧪.
+Arabic: مرحبا بالعالم
+Chinese: 你好世界
+Japanese: こんにちは
+Unbroken token: UNBROKENxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

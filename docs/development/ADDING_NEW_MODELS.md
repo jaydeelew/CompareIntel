@@ -1,6 +1,6 @@
 # Adding New Models
 
-Text models cannot be added to CompareIntel unless the rendering harness has a saved reply for all six prompts and none of those cells are `fail` or `incomplete`. `not-covered` is allowed: it means the model omitted a feature the prompt asked for, and the manifest records that. Image-generation models are excluded.
+Text models cannot be added to CompareIntel unless the rendering harness has a saved reply for all eight prompts (matching the current `prompts/*.md` SHA-256) and none of those cells are `fail` or `incomplete`. `not-covered` is allowed: it means the model omitted a feature the prompt asked for, and the manifest records that. Image-generation models are excluded.
 
 The gate reads `backend/data/models_registry.json` and `rendering-harness/coverage.json`. A model is image-only when its registry `category` is exactly `"Image"`. Every other category is text-capable. See `rendering-harness/README.md` for the same rule.
 
@@ -14,7 +14,7 @@ For a text model the handler:
 
 1. Builds the registry row in memory. It does **not** write `models_registry.json` yet.
 2. Runs `python scripts/setup_model_renderer.py <model_id> --defer-coverage`.
-3. That script calls OpenRouter with the six files in `rendering-harness/prompts` (the same prompts the harness scores). It pattern-analyzes the replies, writes `frontend/src/config/model_renderer_configs.json` when that model has no row yet, and writes harness-format JSON under `rendering-harness/runs/admin-<timestamp>/`.
+3. That script calls OpenRouter with the eight files in `rendering-harness/prompts` (the same prompts the harness scores). It pattern-analyzes the replies, writes `frontend/src/config/model_renderer_configs.json` when that model has no row yet, and writes harness-format JSON under `rendering-harness/runs/admin-<timestamp>/`.
 4. It then runs the offline render (`npm run harness -- --render-only`) when `npm` and `rendering-harness/node_modules` are available.
 5. On success the handler saves the registry and regenerates `rendering-harness/coverage.json`.
 6. The stream event `harness` and the final success message include the harness result. The models tab shows that message.

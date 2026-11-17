@@ -62,9 +62,18 @@ export const EXPECTED_BY_PROMPT_NAME: Record<string, ExpectedFeatures> = {
   '02-markdown-formatting': {
     tables: true,
     nestedLists: true,
+    footnotes: true,
+    taskLists: true,
+    strikethrough: true,
+    autolinks: true,
+    bareUrls: true,
+    breakHtml: true,
+    supHtml: true,
+    nestedBlockquote: true,
   },
   '03-code-blocks': {
     codeBlocks: true,
+    longCodeLine: true,
   },
   '04-mixed-markdown-latex': {
     displayMath: true,
@@ -81,8 +90,21 @@ export const EXPECTED_BY_PROMPT_NAME: Record<string, ExpectedFeatures> = {
   },
   '06-edge-cases-boundaries': {
     displayMath: true,
+    inlineMath: true,
     currency: true,
     codeBlocks: true,
+    tables: true,
+    nestedLists: true,
+    wideTable: true,
+    mermaid: true,
+    chemistry: true,
+    emoji: true,
+    rtl: true,
+    cjk: true,
+    longUnbroken: true,
+  },
+  '08-casual-prose': {
+    currency: true,
   },
   '07-rare-formats': {
     displayMath: true,

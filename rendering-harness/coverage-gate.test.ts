@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url'
 import { expect, test } from '@playwright/test'
 import {
   buildCoverage,
+  COLLECTION_OPTIONAL_PROMPTS,
+  PROMPTS,
   collectCommand,
   evaluateCoverage,
   formatGateFailure,
@@ -49,6 +51,7 @@ test('fake registry model with no fixtures fails and names the collect command',
     version: 1 as const,
     imageOnlyRule: 'test',
     prompts: [],
+    promptHashes: {},
     excludedImageModels: ['test/painter'],
     allowlist: [],
     models: {},
@@ -89,6 +92,8 @@ test('a fail cell fails the gate', () => {
     '04-mixed-markdown-latex',
     '05-complex-scenarios',
     '06-edge-cases-boundaries',
+    '07-rare-formats',
+    '08-casual-prose',
   ]
   const row: CoverageManifest['models'][string] = {}
   for (const promptName of prompts) {
@@ -101,6 +106,7 @@ test('a fail cell fails the gate', () => {
     version: 1 as const,
     imageOnlyRule: 'test',
     prompts,
+    promptHashes: {},
     excludedImageModels: [],
     allowlist: [],
     models: { 'test/bad-render': row },
@@ -109,7 +115,7 @@ test('a fail cell fails the gate', () => {
       textModels: 1,
       imageModels: 0,
       allowlisted: 0,
-      cells: 6,
+      cells: 8,
       pass: 5,
       notCovered: 0,
       fail: 1,
@@ -138,6 +144,7 @@ test('the current repo coverage gate passes', () => {
     'tencent/hy4-flash',
   ])
   expect(manifest.allowlist.every(entry => entry.reason.trim().length > 0)).toBe(true)
+  expect(manifest.promptHashes['08-casual-prose']).toBeTruthy()
   expect(manifest.excludedImageModels.length).toBeGreaterThan(0)
   expect(manifest.excludedImageModels.every(id => !manifest.models[id])).toBe(true)
   const registry = JSON.parse(
@@ -156,9 +163,11 @@ test('the current repo coverage gate passes', () => {
   const allow = new Set(manifest.allowlist.map(entry => entry.modelId))
   for (const [modelId, row] of Object.entries(manifest.models)) {
     if (allow.has(modelId)) continue
-    for (const cell of Object.values(row)) {
-      expect(cell.replyPath, modelId).toBeTruthy()
-      expect(['pass', 'not-covered', 'source-issue'], modelId).toContain(cell.status)
+    for (const [promptName, cell] of Object.entries(row)) {
+      expect(['pass', 'not-covered', 'source-issue', 'incomplete'], modelId).toContain(cell.status)
+      if (COLLECTION_OPTIONAL_PROMPTS.has(promptName as (typeof PROMPTS)[number])) continue
+      if (cell.status === 'not-covered' && cell.replyPath) continue
+      expect(cell.replyPath, `${modelId} ${promptName}`).toBeTruthy()
     }
   }
   expect(manifest.totals.textModels).toBe(Object.keys(manifest.models).length)

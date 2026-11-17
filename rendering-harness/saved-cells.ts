@@ -2,7 +2,8 @@
  * Unique saved harness replies. One cell per model and prompt. A complete
  * later attempt, including a file under runs/<batch>/reruns/, replaces a
  * truncated or empty original. That is the same rule as uniqueCoverageRecords
- * and the batch rollups. Saved replies cover 83 text models x 6 prompts
+ * and the batch rollups. Saved replies cover the original 83 text models x 6
+ * prompt grid on disk; coverage.json tracks the eight current prompts.
  * = 498, including 24 replies for the text models removed on 2026-11-16
  * (claude-fable-5, claude-fable-5.1, gpt-5.6-luna, and gpt-5.6-sol).
  * Pre-rename replies for tencent/hy4-preview and
