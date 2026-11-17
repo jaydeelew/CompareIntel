@@ -77,7 +77,7 @@ test.describe('Welcome modal (prerendered build)', () => {
     await expect(backdrop(page)).toHaveCount(1)
   })
 
-  test('"Skip for Now" closes the modal and it stays closed', async ({ page }) => {
+  test('"Skip for Now" closes the modal and it stays closed until reload', async ({ page }) => {
     await openHomeAndWaitForLiveModal(page)
 
     await page.getByRole('button', { name: 'Skip for Now' }).click()
@@ -91,30 +91,23 @@ test.describe('Welcome modal (prerendered build)', () => {
     await page.waitForTimeout(3000)
     await expect(backdrop(page)).toHaveCount(0)
 
-    // Same session (sessionStorage survives reload): still hidden.
+    // Full page load shows the modal again when "Don't show again" was not checked.
     await page.reload()
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1500)
-    await expect(backdrop(page)).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Skip for Now' }).last()).toBeVisible()
+    await expect(backdrop(page)).toHaveCount(1)
   })
 
-  test('"Skip for Now" without "Don\'t show again" shows the modal again next session', async ({
-    browser,
+  test('"Skip for Now" without "Don\'t show again" shows the modal again on reload', async ({
+    page,
   }) => {
-    const first = await browser.newContext()
-    const page = await first.newPage()
     await openHomeAndWaitForLiveModal(page)
     await page.getByRole('button', { name: 'Skip for Now' }).click()
     await expect(backdrop(page)).toHaveCount(0)
-    const storage = await first.storageState()
-    await first.close()
 
-    // New tab/session with the same localStorage but fresh sessionStorage.
-    const second = await browser.newContext({ storageState: storage })
-    const page2 = await second.newPage()
-    await openHomeAndWaitForLiveModal(page2)
-    await expect(backdrop(page2)).toHaveCount(1)
-    await second.close()
+    await page.reload()
+    await page.waitForLoadState('networkidle')
+    await expect(backdrop(page)).toHaveCount(1)
   })
 
   test('"Don\'t show again" + "Skip for Now" keeps the modal hidden on later visits', async ({
