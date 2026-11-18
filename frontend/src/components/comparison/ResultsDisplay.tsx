@@ -161,6 +161,8 @@ export interface ResultsDisplayProps {
   capabilitySwipeHintNonce?: number
   /** True while a comparison is in flight (drives model-tab auto-focus). */
   isComparisonLoading?: boolean
+  /** Web search was enabled for the active comparison session. */
+  webSearchEnabled?: boolean
 }
 
 type TabChangeSource = 'swipe-touch' | 'tab-click' | 'programmatic'
@@ -192,6 +194,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   tutorialSwipeHintNonce = 0,
   capabilitySwipeHintNonce = 0,
   isComparisonLoading = false,
+  webSearchEnabled = false,
 }) => {
   const visibleConversations = useMemo(
     () => conversations.filter(conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)),
@@ -727,6 +730,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                     activeConversation.modelId,
                     streamAnswerStartedByModel
                   )}
+                  webSearchEnabled={webSearchEnabled}
                 />
               </div>
             ) : null}
@@ -768,6 +772,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   conversation.modelId,
                   streamAnswerStartedByModel
                 )}
+                webSearchEnabled={webSearchEnabled}
               />
             )
           })}

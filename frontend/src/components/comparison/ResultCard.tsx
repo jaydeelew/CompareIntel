@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { Suspense, lazy, useState } from 'react'
 
 import { useResponsive } from '../../hooks'
 import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types'
@@ -15,7 +15,12 @@ export interface Model {
   description?: string
   /** When true, show image-generation loading affordance until URLs arrive */
   supports_image_generation?: boolean
+  supports_web_search?: boolean
 }
+
+const LazyLinkPreviewCards = lazy(() =>
+  import('./LinkPreviewCards').then(module => ({ default: module.LinkPreviewCards }))
+)
 
 export interface ResultCardProps {
   modelId: string
@@ -43,6 +48,8 @@ export interface ResultCardProps {
   streamingReasoning?: string
   /** True once visible answer tokens have arrived for this model in the current stream. */
   streamAnswerStarted?: boolean
+  /** Session had web search enabled for this comparison. */
+  webSearchEnabled?: boolean
 }
 
 // Single model result card with formatted/raw toggle
@@ -67,6 +74,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   isTutorialActive = false,
   streamingReasoning = '',
   streamAnswerStarted = false,
+  webSearchEnabled = false,
 }) => {
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const lastAssistantIndex = safeMessages.reduce(
@@ -98,6 +106,15 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   const combinedClassName = ['result-card', 'conversation-card', breakoutClassName, className]
     .filter(Boolean)
     .join(' ')
+
+  const latestAssistantContent =
+    lastAssistantIndex >= 0 ? safeMessages[lastAssistantIndex]?.content || '' : ''
+  const showLinkPreviews =
+    webSearchEnabled &&
+    Boolean(model?.supports_web_search) &&
+    !isProcessing &&
+    latestAssistantContent.trim().length > 0 &&
+    !hasError
 
   return (
     <div className={combinedClassName} style={style}>
@@ -324,6 +341,15 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           )
         })}
       </div>
+      {showLinkPreviews && (
+        <Suspense fallback={null}>
+          <LazyLinkPreviewCards
+            answerText={latestAssistantContent}
+            enabled={showLinkPreviews}
+            defer={isProcessing}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }
