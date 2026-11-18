@@ -166,6 +166,7 @@ function checkBundleSize() {
     'TutorialManager',
     'TutorialOverlay',
     'TermsOfService',
+    'LinkPreviewCards',
     'model_renderer_configs',
     'sentry.', // e.g. sentry.BRnHB_4e.js alongside vendor-sentry split
   ];

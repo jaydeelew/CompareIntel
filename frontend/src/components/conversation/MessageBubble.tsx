@@ -22,7 +22,8 @@ const loadLatexRenderer = () =>
 
 // The renderer (and KaTeX) sits past the app-main gzip budget. Fetch it after
 // first paint so formatted replies do not parse it on the critical path.
-if (typeof window !== 'undefined') {
+// Skip module-level preload under Vitest — async import after env teardown fails the suite.
+if (typeof window !== 'undefined' && !import.meta.env.VITEST) {
   const preloadLatexRenderer = () => {
     void loadLatexRenderer()
   }
