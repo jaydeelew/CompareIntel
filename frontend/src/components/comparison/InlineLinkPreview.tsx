@@ -24,6 +24,21 @@ function priceLine(data: LinkPreviewData): string | null {
   return currency ? `${currency} ${amount}` : amount
 }
 
+function faviconForUrl(pageUrl: string): string {
+  try {
+    const host = new URL(pageUrl).hostname
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32`
+  } catch {
+    return ''
+  }
+}
+
+/** Prefer contain + light pad for likely logos / small OG assets. */
+function shouldContainImage(imageUrl: string, title: string): boolean {
+  const hay = `${imageUrl} ${title}`.toLowerCase()
+  return /logo|icon|favicon|opengraph-icon|sprite|badge/.test(hay)
+}
+
 export interface InlineLinkPreviewProps {
   url: string
   defer?: boolean
@@ -91,6 +106,8 @@ export const InlineLinkPreview: React.FC<InlineLinkPreviewProps> = ({ url, defer
   const title = meta.title?.trim() || siteLabel(meta, url)
   const site = siteLabel(meta, url)
   const price = priceLine(meta)
+  const favicon = faviconForUrl(url)
+  const containImage = shouldContainImage(meta.image ?? '', title)
 
   return (
     <a
@@ -102,7 +119,7 @@ export const InlineLinkPreview: React.FC<InlineLinkPreviewProps> = ({ url, defer
     >
       <div className="link-preview-card__image-wrap">
         <img
-          className="link-preview-card__image"
+          className={`link-preview-card__image${containImage ? ' link-preview-card__image--contain' : ''}`}
           src={imageSrc}
           alt=""
           loading="lazy"
@@ -112,7 +129,23 @@ export const InlineLinkPreview: React.FC<InlineLinkPreviewProps> = ({ url, defer
       </div>
       <div className="link-preview-card__body">
         <span className="link-preview-card__title">{title}</span>
-        <span className="link-preview-card__site">{site}</span>
+        <span className="link-preview-card__site-row">
+          {favicon ? (
+            <img
+              className="link-preview-card__favicon"
+              src={favicon}
+              alt=""
+              width={14}
+              height={14}
+              loading="lazy"
+              decoding="async"
+              onError={e => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          ) : null}
+          <span className="link-preview-card__site">{site}</span>
+        </span>
         {price && (
           <span className="link-preview-card__price">
             {price}

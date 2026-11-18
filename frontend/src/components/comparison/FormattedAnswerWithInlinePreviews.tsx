@@ -77,11 +77,13 @@ export const FormattedAnswerWithInlinePreviews: React.FC<
           <LatexView className="formatted-answer-block__md" modelId={modelId}>
             {block.text}
           </LatexView>
-          {enabled &&
-            !defer &&
-            block.previewUrls.map(url => (
-              <InlineLinkPreview key={`${index}-${url}`} url={url} defer={defer} />
-            ))}
+          {enabled && !defer && block.previewUrls.length > 0 && (
+            <div className="formatted-answer-block__previews" data-testid="link-preview-block-row">
+              {block.previewUrls.map(url => (
+                <InlineLinkPreview key={`${index}-${url}`} url={url} defer={defer} />
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>
