@@ -21,14 +21,17 @@ const WEB_SEARCH_MODEL = {
   is_thinking_model: false,
 }
 
-const ANSWER_WITH_LINK =
-  'Here is a product: https://shop.example.com/widget — see [details](https://shop.example.com/widget).'
+const ANSWER_WITH_LINKS = [
+  'Python: https://shop.example.com/python',
+  '',
+  'Also: https://shop.example.com/widget',
+].join('\n')
 
 function streamWithLink(models: string[]): string {
   const events: object[] = []
   for (const model of models) {
     events.push({ model, type: 'start' })
-    events.push({ model, type: 'chunk', content: ANSWER_WITH_LINK })
+    events.push({ model, type: 'chunk', content: ANSWER_WITH_LINKS })
     events.push({ model, type: 'done', error: false })
   }
   events.push({
@@ -59,7 +62,7 @@ async function ensureFirstProviderExpanded(page: Page): Promise<void> {
 }
 
 test.describe('Link preview cards', () => {
-  test('shows preview row after stream when web search enabled', async ({ page }, testInfo) => {
+  test('shows inline preview after link block when web search enabled', async ({ page }, testInfo) => {
     await page.route('**/api/auth/me', async route => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: 'null' })
     })
@@ -94,6 +97,26 @@ test.describe('Link preview cards', () => {
     })
 
     await page.route('**/api/link-preview?**', async route => {
+      const reqUrl = new URL(route.request().url())
+      const target = reqUrl.searchParams.get('url') ?? ''
+      if (target.includes('no-preview')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            title: 'Plain',
+            site_name: 'example.com',
+            image: null,
+            description: null,
+            price: null,
+            currency: null,
+            fetched_at: '2026-01-01T00:00:00Z',
+            url: target,
+            error: 'preview_unavailable',
+          }),
+        })
+        return
+      }
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -105,7 +128,7 @@ test.describe('Link preview cards', () => {
           price: '19.99',
           currency: 'USD',
           fetched_at: '2026-01-01T00:00:00Z',
-          url: 'https://shop.example.com/widget',
+          url: target,
         }),
       })
     })
@@ -128,7 +151,6 @@ test.describe('Link preview cards', () => {
     await page.locator('.loading-message').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
     await page.getByTestId('comparison-input-textarea').fill('Find a widget')
-
     await ensureFirstProviderExpanded(page)
 
     const modelCheckbox = page.getByTestId(`model-checkbox-${MODEL_ID}`)
@@ -150,7 +172,19 @@ test.describe('Link preview cards', () => {
 
     await submitAndAwaitCompareStream(page)
 
-    await expect(page.getByTestId('link-preview-row')).toBeVisible({ timeout: 20_000 })
-    await expect(page.getByText('Example Widget')).toBeVisible()
+    const messageContent = page.locator('.conversation-content .message-content').last()
+    await expect(messageContent.getByTestId('formatted-answer-with-previews')).toBeVisible({
+      timeout: 20_000,
+    })
+    await expect(messageContent.getByTestId('link-preview-card-inline')).toHaveCount(2, {
+      timeout: 30_000,
+    })
+    await expect(page.getByTestId('link-preview-row')).toHaveCount(0)
+    await expect(messageContent.getByTestId('link-preview-card-inline').first()).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(messageContent.getByText('Example Widget').first()).toBeVisible({
+      timeout: 10_000,
+    })
   })
 })

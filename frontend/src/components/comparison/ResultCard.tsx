@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState } from 'react'
+import React, { useState } from 'react'
 
 import { useResponsive } from '../../hooks'
 import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types'
@@ -17,10 +17,6 @@ export interface Model {
   supports_image_generation?: boolean
   supports_web_search?: boolean
 }
-
-const LazyLinkPreviewCards = lazy(() =>
-  import('./LinkPreviewCards').then(module => ({ default: module.LinkPreviewCards }))
-)
 
 export interface ResultCardProps {
   modelId: string
@@ -332,6 +328,10 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 modelId={modelId}
                 modelName={model?.name}
                 pendingGeneratedImage={pendingGeneratedImage}
+                linkPreviewsEnabled={Boolean(
+                  showLinkPreviews && isLatestAssistant && activeTab === RESULT_TAB.FORMATTED
+                )}
+                deferLinkPreviews={isProcessing}
                 onCopyMessage={
                   onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
                 }
@@ -341,15 +341,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           )
         })}
       </div>
-      {showLinkPreviews && (
-        <Suspense fallback={null}>
-          <LazyLinkPreviewCards
-            answerText={latestAssistantContent}
-            enabled={showLinkPreviews}
-            defer={isProcessing}
-          />
-        </Suspense>
-      )}
     </div>
   )
 }

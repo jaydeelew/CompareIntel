@@ -132,6 +132,9 @@ export interface MessageBubbleProps {
    * (Once URLs exist, {@link GeneratedImageSlot} covers decode/network loading.)
    */
   pendingGeneratedImage?: boolean
+  /** Web-search inline link preview cards (formatted tab, assistant only). */
+  linkPreviewsEnabled?: boolean
+  deferLinkPreviews?: boolean
 }
 
 // Displays a single message in a conversation with formatted/raw rendering
@@ -148,11 +151,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onCopyMessage,
   copyButtonDisabled = false,
   pendingGeneratedImage = false,
+  linkPreviewsEnabled = false,
+  deferLinkPreviews = false,
 }) => {
   const [failedImageIndices, setFailedImageIndices] = useState<Set<number>>(new Set())
   const [LatexView, setLatexView] = useState<LatexRendererComponent | null>(
     () => loadedLatexRenderer
   )
+  const [FormattedWithPreviews, setFormattedWithPreviews] =
+    useState<React.ComponentType<import('../comparison/FormattedAnswerWithInlinePreviews').FormattedAnswerWithInlinePreviewsProps> | null>(
+      null
+    )
 
   useEffect(() => {
     if (LatexView) return
@@ -164,6 +173,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       cancelled = true
     }
   }, [LatexView])
+
+  useEffect(() => {
+    if (!linkPreviewsEnabled || type !== 'assistant') return
+    let cancelled = false
+    void import('../comparison/FormattedAnswerWithInlinePreviews').then(mod => {
+      if (!cancelled) setFormattedWithPreviews(() => mod.FormattedAnswerWithInlinePreviews)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [linkPreviewsEnabled, type])
 
   const handleImageError = (index: number) => {
     setFailedImageIndices(prev => new Set(prev).add(index))
@@ -337,7 +357,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
         {safeContent &&
           (activeTab === RESULT_TAB.FORMATTED ? (
-            LatexView ? (
+            linkPreviewsEnabled && type === 'assistant' && FormattedWithPreviews ? (
+              <FormattedWithPreviews
+                content={safeContent}
+                modelId={modelId}
+                enabled={linkPreviewsEnabled}
+                defer={deferLinkPreviews}
+              />
+            ) : LatexView ? (
               <LatexView className="result-output" modelId={modelId}>
                 {safeContent}
               </LatexView>
