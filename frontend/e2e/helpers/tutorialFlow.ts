@@ -252,6 +252,39 @@ export async function expectTutorialTargetProviderInViewport(
     .toBe(true)
 }
 
+export async function expectTutorialCutoutHasBlueFrame(
+  page: Page,
+  timeout = 20_000
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        return page.evaluate(() => {
+          const cutouts = document.querySelectorAll(
+            '.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout'
+          )
+          return Array.from(cutouts).some(el => {
+            const cutout = el as HTMLElement
+            const sources = [cutout.style.boxShadow, window.getComputedStyle(cutout).boxShadow]
+              .filter(Boolean)
+              .join(' ')
+            if (!sources || sources === 'none') return false
+            if (sources.includes('inset')) return true
+            const hasDimHole = sources.includes('9999px')
+            const hasAccent =
+              sources.includes('var(--accent-color)') ||
+              /14,\s*165,\s*233|14\s+165\s+233|rgb\(14,\s*165,\s*233\)|6,\s*182,\s*212/.test(
+                sources
+              )
+            return hasDimHole && hasAccent
+          })
+        })
+      },
+      { timeout, message: 'tutorial cutout should show inset blue accent frame' }
+    )
+    .toBe(true)
+}
+
 export async function expectTutorialHighlightCoversProviderSection(
   page: Page,
   providerName: string
@@ -282,7 +315,18 @@ export async function expectTutorialHighlightCoversProviderSection(
             const cutoutRect = cutout.getBoundingClientRect()
             const heightOk = cutoutRect.height >= providerRect.height * 0.82
             const topOk = Math.abs(cutoutRect.top - providerRect.top) < 12
-            return heightOk && topOk
+            const shadowSources = [
+              cutout.style.boxShadow,
+              window.getComputedStyle(cutout).boxShadow,
+            ]
+              .filter(Boolean)
+              .join(' ')
+            const frameOk =
+              shadowSources.includes('inset') ||
+              (shadowSources.includes('9999px') &&
+                (shadowSources.includes('var(--accent-color)') ||
+                  /14,\s*165,\s*233|6,\s*182,\s*212/.test(shadowSources)))
+            return heightOk && topOk && frameOk
           }
 
           return highlighted && headerRect.height > 0 && providerRect.height > headerRect.height + 8
@@ -408,6 +452,9 @@ export async function expectTutorialEnterPromptStep(
       { timeout: 15_000 }
     )
     .toBeGreaterThanOrEqual(2)
+
+  const frameTimeout = testInfo && isMobileE2eProject(testInfo.project.name) ? 45_000 : 20_000
+  await expectTutorialCutoutHasBlueFrame(page, frameTimeout)
 }
 
 export async function expectTutorialStepTitle(

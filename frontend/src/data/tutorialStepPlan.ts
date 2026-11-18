@@ -148,6 +148,29 @@ export function isProviderPickerTutorialStep(step: TutorialStep | null | undefin
   )
 }
 
+/**
+ * Backdrop cutouts that use an inset accent ring plus page dim (not dim-only).
+ * Provider-picker steps rely on this frame because element highlights suppress the outer ring.
+ */
+export function tutorialStepUsesFramedCutoutShadow(
+  step: TutorialStep | null | undefined,
+  options?: { loadingOrStreaming?: boolean }
+): boolean {
+  if (!step) return false
+  if (options?.loadingOrStreaming) return true
+  if (isProviderPickerTutorialStep(step)) return true
+  return (
+    step === 'enter-prompt' ||
+    step === 'enter-prompt-2' ||
+    step === 'submit-comparison' ||
+    step === 'submit-comparison-2' ||
+    step === 'follow-up' ||
+    step === 'view-follow-up-results' ||
+    step === 'history-dropdown' ||
+    step === 'save-selection'
+  )
+}
+
 export function isSingleProviderSpotlightStep(step: TutorialStep | null | undefined): boolean {
   return (
     isExpandProviderTutorialStep(step) ||
