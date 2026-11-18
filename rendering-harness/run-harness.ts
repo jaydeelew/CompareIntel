@@ -37,6 +37,7 @@ import { pageStateReady } from './page-state.js';
 import { capturePhoneAndDark, openThemedPage, DARK_VIEW, PHONE_VIEW } from './captures.js';
 import type { LayoutIssue } from './layout-checks.js';
 import { buildSyntheticUndelimitedCells, SYNTHETIC_UNDELIMITED_PROMPT } from './synthetic-cells.js';
+import { findToolLeakFormats } from './tool-leak.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -94,6 +95,7 @@ interface TestResult {
   sourceFile?: string;
   phoneLayout?: LayoutIssue[];
   darkLayout?: LayoutIssue[];
+  toolLeakFormats?: string[];
 }
 
 interface HarnessConfig {
@@ -1396,6 +1398,12 @@ async function main() {
           
           const totalTokens = (usage?.prompt_tokens || 0) + (usage?.completion_tokens || 0);
           console.log(`    ✓ Got response (${totalTokens} tokens, $${cost.toFixed(4)})`);
+          const toolLeakFormats = findToolLeakFormats(response);
+          if (toolLeakFormats.length > 0) {
+            console.error(
+              `    ✗ Leaked tool-call markup (${toolLeakFormats.join(', ')}) in ${model.id} / ${promptName}`
+            );
+          }
           
           // Save raw response
           const rawPath = path.join(outputDir, `${model.id.replace(/\//g, '_')}_${promptName}.json`);
@@ -1408,6 +1416,7 @@ async function main() {
             usage,
             cost,
             timestamp: new Date().toISOString(),
+            ...(toolLeakFormats.length > 0 ? { toolLeakFormats } : {}),
           }, null, 2));
           
           // Render screenshot and analyze coverage
@@ -1452,6 +1461,7 @@ async function main() {
             featureCoverage: coverage,
             validation,
             validationStatus: validation.status,
+            ...(toolLeakFormats.length > 0 ? { toolLeakFormats } : {}),
           });
           
         } catch (error) {

@@ -227,6 +227,14 @@ Check pricing freshness:
 npm run harness -- --dry-run  # Shows current pricing
 ```
 
+## Tool-call markup
+
+The six rendering prompts are math and markdown. `openRouterTransport` sends the user message only, with no tools, so a model that prints DeepSeek DSML, Qwen `<tool_call>`, Llama `<|python_tag|>`, Mistral `[TOOL_CALLS]`, or similar native tool syntax never does that here. That is why the rendering suite did not catch DeepSeek V4.1 Flash returning DSML as the answer when web search was on.
+
+`tool-leak.ts` scans every saved reply, and a live harness run logs the same formats if a future response contains them. It does not add a seventh prompt: `loadPrompts` loads every file under `prompts/`, and the coverage gate is the fixed set of six.
+
+A separate one-shot check lives at `backend/scripts/sweep_web_search_leaks.py`. It is not part of CI. It sends one short web-search prompt, with the app's `search_web` and `fetch_url` tools, to each registry model that has `supports_web_search`, and stops before estimated spend would pass $3. The same completion is scored raw and after the leaked-markup parser. `python sweep_web_search_leaks.py --dry-run` prints the catalog estimate and does not call OpenRouter.
+
 ## Known Limitations
 
 - **Currency detection**: Simple text search (may over-report if math contains `$\d+`)
