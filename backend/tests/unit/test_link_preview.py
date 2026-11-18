@@ -84,7 +84,9 @@ class TestMetadataParsing:
         <meta name="og:title" content="MDN Example" />
         </head></html>
         """
-        data = parse_link_preview_metadata(html, "https://developer.mozilla.org/en-US/docs/Web/HTML")
+        data = parse_link_preview_metadata(
+            html, "https://developer.mozilla.org/en-US/docs/Web/HTML"
+        )
         assert data["title"] == "MDN Example"
         assert data["image"] == "https://developer.mozilla.org/static/preview.png"
 
