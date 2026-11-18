@@ -46,6 +46,30 @@ function registryAtRef(ref: string): Registry {
   return JSON.parse(proc.stdout) as Registry
 }
 
+function runUndelimitedProseVitestGate(): void {
+  const vitestProc = spawnSync(
+    'npm',
+    [
+      'run',
+      'test',
+      '--',
+      '--run',
+      'src/utils/__tests__/undelimitedProseLatex.test.tsx',
+      'src/utils/__tests__/undelimitedProseLatex.unit.test.ts',
+    ],
+    { cwd: path.join(repoRoot, 'frontend'), encoding: 'utf8', timeout: 10 * 60 * 1000 }
+  )
+  if (vitestProc.status !== 0) {
+    fail(
+      [
+        'Undelimited prose LaTeX synthetic gate failed (vitest).',
+        vitestProc.stdout?.slice(-2000) ?? '',
+        vitestProc.stderr?.slice(-2000) ?? '',
+      ].join('\n')
+    )
+  }
+}
+
 function renderNewModels(modelIds: string[], manifestModels: ReturnType<typeof buildCoverage>['models']): string[] {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-coverage-'))
   const errors: string[] = []
@@ -129,6 +153,7 @@ try {
     fail(`Coverage gate could not read the base registry at ${baseRef}: ${error}`)
   }
   console.log(`Coverage gate passed (static). Base registry ${baseRef} is unavailable; new-model render skipped.`)
+  runUndelimitedProseVitestGate()
   process.exit(0)
 }
 
@@ -140,6 +165,7 @@ if (fresh.length === 0) {
       `${built.totals.pass} pass, ${built.totals.notCovered} not-covered, ` +
       `${built.totals.imageModels} image-only excluded. No new text models versus ${baseRef}.`
   )
+  runUndelimitedProseVitestGate()
   process.exit(0)
 }
 
@@ -147,3 +173,4 @@ console.log(`Rendering saved replies for text models new versus ${baseRef}: ${fr
 const renderErrors = renderNewModels(fresh, built.models)
 if (renderErrors.length > 0) fail(renderErrors.join('\n'))
 console.log(`Coverage gate passed, including offline render of ${fresh.join(', ')}.`)
+runUndelimitedProseVitestGate()

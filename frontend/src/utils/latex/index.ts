@@ -2,6 +2,11 @@ export { safeRenderKatex, looksMathematical, convertSquareRoots, looksProse } fr
 export { cleanMalformedContent } from './cleanup'
 export { fixLatexIssues, wrapBareLatexBlocks, normalizeUnicodeMath } from './fixSyntax'
 export { convertImplicitMath } from './implicitMath'
+export {
+  findVisibleRawLatexCommands,
+  scanUndelimitedLatexEnd,
+  wrapUndelimitedLatexInProse,
+} from './undelimitedProseLatex'
 export { processMarkdownLists, convertListPlaceholdersToHTML } from './lists'
 export { renderCodeBlock } from './codeBlocks'
 export {

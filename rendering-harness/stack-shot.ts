@@ -14,6 +14,7 @@ export async function stackBeforeAfter(
     afterPng: string
     beforeLabel: string
     afterLabel: string
+    sourceExcerpt?: string
     outputPath: string
   }
 ): Promise<void> {
@@ -34,9 +35,25 @@ export async function stackBeforeAfter(
       letter-spacing: -0.03em;
     }
     img { display: block; width: auto; max-width: 960px; height: auto; background: #fff; }
+    pre.source {
+      width: 912px;
+      margin: 0 24px 24px;
+      padding: 20px 18px;
+      background: #1c1c1e;
+      border-radius: 14px;
+      font: 500 22px/1.45 ui-monospace, monospace;
+      color: #e5e5ea;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
   </style>
 </head>
 <body>
+  ${
+    opts.sourceExcerpt
+      ? `<pre class="source">${escapeHtml(opts.sourceExcerpt)}</pre>`
+      : ''
+  }
   <figure>
     <figcaption>${escapeHtml(opts.beforeLabel)}</figcaption>
     <img alt="${escapeHtml(opts.beforeLabel)}" src="data:image/png;base64,${before}" />

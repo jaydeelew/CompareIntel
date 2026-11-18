@@ -71,9 +71,23 @@ export async function renderOnPage(
 
 export async function shootContainer(page: Page, outputPath: string): Promise<void> {
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
-  const element = await page.$('[data-render-container]')
-  if (!element) throw new Error('Render container missing for screenshot')
-  await element.screenshot({ path: outputPath })
+  const clip = await page.evaluate(() => {
+    const root = document.querySelector('[data-render-container]') as HTMLElement | null
+    if (!root) return null
+    const card = (root.querySelector('.result-card') as HTMLElement | null) ?? root
+    const rect = card.getBoundingClientRect()
+    const pad = 4
+    const width = Math.ceil(Math.max(rect.width, card.scrollWidth) + pad * 2)
+    const height = Math.ceil(Math.max(rect.height, card.scrollHeight) + pad * 2)
+    return {
+      x: Math.max(0, Math.floor(rect.x - pad)),
+      y: Math.max(0, Math.floor(rect.y - pad)),
+      width,
+      height,
+    }
+  })
+  if (!clip) throw new Error('Render container missing for screenshot')
+  await page.screenshot({ path: outputPath, clip })
 }
 
 export async function readRenderedHtml(page: Page): Promise<string> {
