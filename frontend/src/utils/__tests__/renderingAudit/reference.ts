@@ -321,10 +321,7 @@ function registerTexMath(md: MarkdownItInstance): void {
       if (close === pos + 2 || hasUnescapedDollar(inner)) return false
       if (!silent) {
         if (crossesListItem(full) || isEllipsisExample(full)) pushText(leaveExample(full))
-        else
-          pushHtml(
-            renderKatex(inner, true, { gfmTableCell: isOffsetInGfmTableCell(src, pos) })
-          )
+        else pushHtml(renderKatex(inner, true, { gfmTableCell: isOffsetInGfmTableCell(src, pos) }))
       }
       state.pos = close + 2
       return true
@@ -337,10 +334,7 @@ function registerTexMath(md: MarkdownItInstance): void {
       const full = src.slice(pos, close + 2)
       if (!silent) {
         if (crossesListItem(full) || isEllipsisExample(full)) pushText(leaveExample(full))
-        else
-          pushHtml(
-            renderKatex(inner, true, { gfmTableCell: isOffsetInGfmTableCell(src, pos) })
-          )
+        else pushHtml(renderKatex(inner, true, { gfmTableCell: isOffsetInGfmTableCell(src, pos) }))
       }
       state.pos = close + 2
       return true
@@ -353,10 +347,7 @@ function registerTexMath(md: MarkdownItInstance): void {
       const full = src.slice(pos, close + 2)
       if (!silent) {
         if (isEllipsisExample(full)) pushText(leaveExample(full))
-        else
-          pushHtml(
-            renderKatex(inner, false, { gfmTableCell: isOffsetInGfmTableCell(src, pos) })
-          )
+        else pushHtml(renderKatex(inner, false, { gfmTableCell: isOffsetInGfmTableCell(src, pos) }))
       }
       state.pos = close + 2
       return true
