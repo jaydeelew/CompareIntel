@@ -116,6 +116,15 @@ test.describe('Link preview real image evidence', () => {
     await submitAndAwaitCompareStream(page)
     await expect(page.getByTestId('link-preview-row')).toBeVisible({ timeout: 30000 })
     await expect(page.locator('.link-preview-card__image')).toHaveCount(3, { timeout: 60000 })
+    await page.waitForFunction(
+      () => {
+        const imgs = Array.from(
+          document.querySelectorAll<HTMLImageElement>('.link-preview-card__image')
+        )
+        return imgs.length >= 3 && imgs.every(img => img.naturalWidth > 0)
+      },
+      { timeout: 60000 }
+    )
     await page.screenshot({
       path: '/opt/cursor/artifacts/link-preview-real-desktop.png',
       fullPage: false,
@@ -140,6 +149,15 @@ test.describe('Link preview real image evidence', () => {
     }
     await submitAndAwaitCompareStream(page)
     await expect(page.locator('.link-preview-card__image')).toHaveCount(3, { timeout: 60000 })
+    await page.waitForFunction(
+      () => {
+        const imgs = Array.from(
+          document.querySelectorAll<HTMLImageElement>('.link-preview-card__image')
+        )
+        return imgs.length >= 3 && imgs.every(img => img.naturalWidth > 0)
+      },
+      { timeout: 60000 }
+    )
     const row = page.getByTestId('link-preview-row')
     await row.scrollIntoViewIfNeeded()
     await page.screenshot({
