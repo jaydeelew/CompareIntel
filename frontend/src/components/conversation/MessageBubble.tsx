@@ -158,10 +158,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [LatexView, setLatexView] = useState<LatexRendererComponent | null>(
     () => loadedLatexRenderer
   )
-  const [FormattedWithPreviews, setFormattedWithPreviews] =
-    useState<React.ComponentType<import('../comparison/FormattedAnswerWithInlinePreviews').FormattedAnswerWithInlinePreviewsProps> | null>(
-      null
-    )
+  const [FormattedWithPreviews, setFormattedWithPreviews] = useState<React.ComponentType<
+    import('../comparison/FormattedAnswerWithInlinePreviews').FormattedAnswerWithInlinePreviewsProps
+  > | null>(null)
 
   useEffect(() => {
     if (LatexView) return
