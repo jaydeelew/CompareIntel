@@ -8,6 +8,7 @@ import {
   isPrimaryExpandProviderStep,
   resolveStarterModelEntries,
   resolveTutorialStepConfig,
+  tutorialStepUsesFramedCutoutShadow,
   tutorialUsesSplitModelSteps,
 } from '../tutorialStepPlan'
 
@@ -37,6 +38,16 @@ const REGISTRY: ModelsByProvider = {
 }
 
 describe('tutorialStepPlan', () => {
+  it('enables framed cutout shadow on every provider-picker and composer step', () => {
+    expect(tutorialStepUsesFramedCutoutShadow('select-starter-model-1')).toBe(true)
+    expect(tutorialStepUsesFramedCutoutShadow('expand-starter-provider-2')).toBe(true)
+    expect(tutorialStepUsesFramedCutoutShadow('select-starter-model-2')).toBe(true)
+    expect(tutorialStepUsesFramedCutoutShadow('select-models')).toBe(true)
+    expect(tutorialStepUsesFramedCutoutShadow('enter-prompt')).toBe(true)
+    expect(tutorialStepUsesFramedCutoutShadow('history-dropdown')).toBe(true)
+    expect(tutorialStepUsesFramedCutoutShadow(null)).toBe(false)
+  })
+
   it('classifies provider step handoffs for smooth overlay transitions', () => {
     expect(isPrimaryExpandProviderStep('expand-provider')).toBe(true)
     expect(isPrimaryExpandProviderStep('expand-starter-provider-2')).toBe(false)

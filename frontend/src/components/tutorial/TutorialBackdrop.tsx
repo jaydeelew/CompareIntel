@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { isProviderPickerTutorialStep } from '../../data/tutorialStepPlan'
 import type { TutorialStep } from '../../hooks/useTutorial'
 
 export interface RectCutout {
@@ -263,12 +264,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
 
   if (targetCutout && !shouldExcludeTextarea && !shouldExcludeDropdown && !useRoundedCutout) {
     const usesInsetBlueRing =
-      step === 'expand-provider' ||
-      step === 'expand-starter-provider-2' ||
-      step === 'select-models' ||
-      step === 'select-starter-model-1' ||
-      step === 'select-starter-model-2' ||
-      step === 'view-follow-up-results'
+      isProviderPickerTutorialStep(step) || step === 'view-follow-up-results'
     return (
       <div
         className="tutorial-backdrop-cutout"

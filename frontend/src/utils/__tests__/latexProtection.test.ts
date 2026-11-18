@@ -253,6 +253,24 @@ describe('GFM table-cell pipe escapes (math)', () => {
   })
 })
 
+describe('inline code in GFM table cells', () => {
+  const table = (row: string) => `| A | B |\n| --- | --- |\n${row}`
+
+  it('extracts a span whose only pipes are escaped \\|', () => {
+    const { text, spans } = extractInlineCode(
+      table('| Norm / Abs | `\\|x\\| \\le 1 \\implies \\lvert x \\rvert \\le 1` |')
+    )
+    expect(spans).toEqual(['\\|x\\| \\le 1 \\implies \\lvert x \\rvert \\le 1'])
+    expect(text).not.toContain('\\le')
+  })
+
+  it('leaves a span with an unescaped pipe so the row can still split', () => {
+    const { text, spans } = extractInlineCode(table('| a | `foo | bar` |'))
+    expect(spans).toEqual([])
+    expect(text).toContain('`foo | bar`')
+  })
+})
+
 describe('GFM table-cell code pipes', () => {
   it('unescapes \\| inside <code> in table cells only', () => {
     const html =

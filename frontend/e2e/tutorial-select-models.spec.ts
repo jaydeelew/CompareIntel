@@ -10,6 +10,7 @@ import { dismissMobileBlockers } from './helpers/modelCheckbox'
 import {
   expandTutorialProvider,
   expectSplitOrCombinedModelStep,
+  expectTutorialCutoutHasBlueFrame,
   expectTutorialEnterPromptStep,
   expectTutorialHighlightCoversProviderSection,
   expectTutorialTooltipDoesNotOverlapCheckbox,
@@ -84,6 +85,7 @@ test.describe('Tutorial model selection steps', () => {
       const p0 = MOCK_MODELS_RESPONSE.models.find(m => m.id === first)!.provider
       const p1 = MOCK_MODELS_RESPONSE.models.find(m => m.id === second)!.provider
       await expectTutorialTooltipStaysVisible(page, 2000)
+      await expectTutorialCutoutHasBlueFrame(page)
       await expectTutorialHighlightCoversProviderSection(page, p0)
       await expectTutorialTooltipDoesNotOverlapCheckbox(page, first)
 
@@ -93,6 +95,7 @@ test.describe('Tutorial model selection steps', () => {
       await expandTutorialProvider(page, p1, testInfo)
       await expect(page.getByTestId(`model-checkbox-${second}`)).toBeVisible({ timeout: 15000 })
       await expectTutorialTooltipStaysVisible(page, 2000)
+      await expectTutorialCutoutHasBlueFrame(page)
       await expectTutorialHighlightCoversProviderSection(page, p1)
       await expectTutorialTooltipDoesNotOverlapCheckbox(page, second)
       await selectTutorialModelCheckbox(page, second, p1, testInfo, { requireMinSelected: 2 })
