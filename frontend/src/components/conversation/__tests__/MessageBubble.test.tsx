@@ -112,9 +112,10 @@ describe('MessageBubble', () => {
         />
       )
       await waitFor(() => {
-        const outputs = container.querySelectorAll('.result-output')
-        expect(outputs.length).toBeGreaterThan(0)
+        expect(container.querySelector('.latex-content')).toBeInTheDocument()
       })
+      expect(container.querySelector('[aria-busy="true"]')).not.toBeInTheDocument()
+      expect(container.querySelector('.latex-content strong')?.textContent).toBe('bold')
     })
 
     it('should render formatted view when activeTab is FORMATTED', async () => {
@@ -128,8 +129,9 @@ describe('MessageBubble', () => {
         />
       )
       await waitFor(() => {
-        expect(container.querySelector('.result-output')).toBeInTheDocument()
+        expect(container.querySelector('.latex-content')).toBeInTheDocument()
       })
+      expect(container.querySelector('.latex-content')?.textContent).toContain('Test content')
     })
 
     it('should render raw view when activeTab is RAW', () => {

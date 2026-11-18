@@ -400,6 +400,20 @@ The formula $A = \\pi r^2$ stays outside the table.
     expect(visibleText(cell!)).toContain('| conflicts')
   })
 
+  it('leaves undelimited \\le inside a table-cell code span as source', () => {
+    const el = renderReply(
+      '| Expression | Markdown-Safe LaTeX |\n| :--- | :--- |\n| Norm / Abs | `\\|x\\| \\le 1 \\implies \\lvert x \\rvert \\le 1` |\n',
+      'google/gemini-3.8-flash'
+    )
+    const cell = Array.from(el.querySelectorAll('td')).find(td =>
+      (td.textContent ?? '').includes('\\implies')
+    )
+    const code = cell?.querySelector('code')?.textContent ?? ''
+    expect(code).toBe('|x| \\le 1 \\implies \\lvert x \\rvert \\le 1')
+    expect(code).not.toContain('≤')
+    expect(cell?.querySelector('.katex')).toBeNull()
+  })
+
   it('keeps U+2014 em dashes in table-adjacent prose (not ASCII hyphen)', () => {
     const el = renderReply(
       'and \\frac with a multi-character numerator — all inside table cells',

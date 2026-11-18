@@ -1,9 +1,37 @@
-import React, { useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { RESULT_TAB, type ResultTab } from '../../types'
 import { formatTime, getSafeId } from '../../utils'
-import LatexRenderer from '../LatexRenderer'
 import { StyledTooltip } from '../shared'
+
+interface LazyLatexRendererProps {
+  children: string
+  className?: string
+  modelId?: string
+}
+
+type LatexRendererComponent = React.ComponentType<LazyLatexRendererProps>
+
+let loadedLatexRenderer: LatexRendererComponent | null = null
+
+const loadLatexRenderer = () =>
+  import('../LatexRenderer').then(module => {
+    loadedLatexRenderer = module.default
+    return module.default
+  })
+
+// The renderer (and KaTeX) sits past the app-main gzip budget. Fetch it after
+// first paint so formatted replies do not parse it on the critical path.
+if (typeof window !== 'undefined') {
+  const preloadLatexRenderer = () => {
+    void loadLatexRenderer()
+  }
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(preloadLatexRenderer, { timeout: 4000 })
+  } else {
+    window.setTimeout(preloadLatexRenderer, 1500)
+  }
+}
 
 const BRAND_LOGO_SRC = '/brand/logo.svg'
 
@@ -121,6 +149,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   pendingGeneratedImage = false,
 }) => {
   const [failedImageIndices, setFailedImageIndices] = useState<Set<number>>(new Set())
+  const [LatexView, setLatexView] = useState<LatexRendererComponent | null>(
+    () => loadedLatexRenderer
+  )
+
+  useEffect(() => {
+    if (LatexView) return
+    let cancelled = false
+    void loadLatexRenderer().then(Renderer => {
+      if (!cancelled) setLatexView(() => Renderer)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [LatexView])
 
   const handleImageError = (index: number) => {
     setFailedImageIndices(prev => new Set(prev).add(index))
@@ -294,9 +336,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
         {safeContent &&
           (activeTab === RESULT_TAB.FORMATTED ? (
-            <LatexRenderer className="result-output" modelId={modelId}>
-              {safeContent}
-            </LatexRenderer>
+            LatexView ? (
+              <LatexView className="result-output" modelId={modelId}>
+                {safeContent}
+              </LatexView>
+            ) : (
+              <div className="result-output" aria-busy="true">
+                {safeContent}
+              </div>
+            )
           ) : (
             /* Raw text for immediate streaming display */
             <pre className="result-output raw-output">{safeContent}</pre>

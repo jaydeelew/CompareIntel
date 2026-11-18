@@ -248,6 +248,14 @@ function pushInlineCodeSpan(spans: string[], content: string): string {
   return `${INLINE_CODE_OPEN}${spans.length - 1}${INLINE_CODE_CLOSE}`
 }
 
+/** A `|` that {@link gfmSplitRow} treats as a cell break. `\|` stays in the cell. */
+function hasUnescapedPipe(content: string): boolean {
+  for (let i = 0; i < content.length; i++) {
+    if (content.charCodeAt(i) === 124 && content[i - 1] !== '\\') return true
+  }
+  return false
+}
+
 /**
  * CommonMark spec 0.31 §6.1 pairing on one inline context: a backtick
  * string of length n closes at the next backtick string of equal length.
@@ -292,11 +300,12 @@ function extractInlineCodeLine(line: string, spans: string[], keepTablePipes: bo
       continue
     }
     const content = line.slice(contentStart, found)
-    // On a GFM table row, markdown-it splits on `|` before it pairs backticks,
-    // so a pipe inside a span is a cell break. Leave those spans in place.
-    // Everywhere else the span is code: extracting it keeps `$…$` and `\|`
-    // inside it from being read as math or a prose escape.
-    if (keepTablePipes && content.includes('|')) {
+    // GFM splits a row on `|` before inline code is parsed, so an unescaped
+    // pipe inside backticks is a cell break and the span must stay in the
+    // line. An escaped `\|` is not a cell break (spec example 200). Extract
+    // that span: leaving it in the line lets the undelimited-prose pass turn
+    // `\le` inside the code into math (gemini-3.8-flash 05, Norm / Abs).
+    if (keepTablePipes && hasUnescapedPipe(content)) {
       out += line.slice(i, found + n)
       i = found + n
       continue
