@@ -1,12 +1,17 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
+import { dismissTutorialOverlay } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
+import { dismissMobileBlockers, toggleModelCheckbox } from './helpers/modelCheckbox'
+
+const MODEL_ID = 'openai/gpt-4o-mini'
 
 const WEB_SEARCH_MODEL = {
-  id: 'openai/gpt-4o-mini',
+  id: MODEL_ID,
   name: 'GPT-4o Mini',
   provider: 'OpenAI',
   tier_access: 'unregistered',
+  available: true,
   supports_temperature: true,
   supports_vision: false,
   supports_image_generation: false,
@@ -38,8 +43,23 @@ function streamWithLink(models: string[]): string {
   return events.map(e => `data: ${JSON.stringify(e)}\n\n`).join('')
 }
 
+async function ensureFirstProviderExpanded(page: Page): Promise<void> {
+  const headers = page.locator('.provider-header, button[class*="provider-header"]')
+  if ((await headers.count()) === 0) return
+  const first = headers.first()
+  if ((await first.getAttribute('aria-expanded')) !== 'true') {
+    await first.scrollIntoViewIfNeeded().catch(() => {})
+    try {
+      await first.click({ timeout: 5000 })
+    } catch {
+      await first.click({ timeout: 5000, force: true })
+    }
+    await page.waitForTimeout(500)
+  }
+}
+
 test.describe('Link preview cards', () => {
-  test('shows preview row after stream when web search enabled', async ({ page }) => {
+  test('shows preview row after stream when web search enabled', async ({ page }, testInfo) => {
     await page.route('**/api/auth/me', async route => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: 'null' })
     })
@@ -59,14 +79,13 @@ test.describe('Link preview cards', () => {
           models: [WEB_SEARCH_MODEL],
           models_by_provider: { OpenAI: [WEB_SEARCH_MODEL] },
           user_tier: 'unregistered',
+          is_trial_active: false,
         }),
       })
     })
 
     await page.route('**/api/compare-stream', async route => {
-      const models = (route.request().postDataJSON() as { models?: string[] })?.models ?? [
-        'openai/gpt-4o-mini',
-      ]
+      const models = (route.request().postDataJSON() as { models?: string[] })?.models ?? [MODEL_ID]
       await route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
@@ -103,15 +122,29 @@ test.describe('Link preview cards', () => {
     })
 
     await page.goto('/')
+    await dismissTutorialOverlay(page)
+    await dismissMobileBlockers(page)
 
-    await page.locator('textarea').first().fill('Find a widget')
-    await page.locator('input.model-checkbox').first().check()
+    await page.locator('.loading-message').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+    await page.getByTestId('comparison-input-textarea').fill('Find a widget')
+
+    await ensureFirstProviderExpanded(page)
+
+    const modelCheckbox = page.getByTestId(`model-checkbox-${MODEL_ID}`)
+    await expect(modelCheckbox).toBeVisible({ timeout: 15000 })
+    await toggleModelCheckbox(modelCheckbox, testInfo.project.name)
 
     const webSearchButton = page.locator('button.web-search-button').first()
     await expect(webSearchButton).toHaveAttribute('aria-disabled', 'false', { timeout: 15_000 })
-    await webSearchButton.click()
+    await webSearchButton.scrollIntoViewIfNeeded().catch(() => {})
+    try {
+      await webSearchButton.tap({ timeout: 3000 })
+    } catch {
+      await webSearchButton.click()
+    }
     const confirmTooltip = page.getByTestId('action-tooltip-modal-confirm')
-    if (await confirmTooltip.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await confirmTooltip.isVisible({ timeout: 2500 }).catch(() => false)) {
       await confirmTooltip.click()
     }
 
