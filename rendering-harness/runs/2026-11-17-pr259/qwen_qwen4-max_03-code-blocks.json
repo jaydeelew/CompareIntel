@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen4-max",
+  "modelName": "Qwen4 Max",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n",
+  "response": "## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\nOutput:\n\n```text\nSolutions: x = 3.0, x = 2.0\n```\n\nNote: `discriminant**0.5` yields a complex-valued result in Python 3 when the discriminant is negative (e.g. `(-4)**0.5` → `(1.2246467991473532e-16+2j)`), so the function still returns roots — just complex ones. For explicit handling, use `cmath.sqrt(discriminant)`.\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\nAn iterative version avoids the exponential call tree:\n\n```javascript\nconst fibonacci = (n) => {\n  let [a, b] = [0, 1];\n  for (let i = 0; i < n; i++) [a, b] = [b, a + b];\n  return a;\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nA few more cases that often trip up renderers:\n\n- Underscores in identifiers: `some_long_variable_name`, `__init__`, `MAX_SIZE`\n- Dollar signs: `$price`, `$100`, `${total}`, `$$hash`\n- Asterisks: `a*b*c`, `**kwargs`, `2**10`\n- Mixed delimiters: `f(x) = x^2 + a_1*x + a_0`\n- Backslash-heavy strings: `C:\\Users\\name`, `\\frac{a}{b}`, `\\n`\n\nAll of the above should appear verbatim inside monospace, with no italic emphasis, no superscripts, and no math typesetting.",
+  "usage": {
+    "prompt_tokens": 270,
+    "completion_tokens": 683,
+    "total_tokens": 953,
+    "cost": 0.003304575,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.003304575,
+      "upstream_inference_prompt_cost": 0.00038475,
+      "upstream_inference_completions_cost": 0.002919825
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 92,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.003304575,
+  "actualCost": 0.003304575,
+  "timestamp": "2026-11-17T19:23:30.650Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

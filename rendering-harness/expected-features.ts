@@ -103,6 +103,12 @@ export const EXPECTED_BY_PROMPT_NAME: Record<string, ExpectedFeatures> = {
   '08-casual-prose': {
     currency: true,
   },
+  '07-undelimited-prose-latex': {
+    inlineMath: true,
+    currency: true,
+    codeBlocks: true,
+    noKatexErrors: true,
+  },
   '07-rare-formats': {
     displayMath: true,
     inlineMath: true,

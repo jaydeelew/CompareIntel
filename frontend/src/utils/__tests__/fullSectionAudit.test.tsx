@@ -14,6 +14,7 @@ import { initializeRegistry } from '../../config/loadModelConfigs'
 import {
   BUG_CASES,
   compareSignatures,
+  filterProseLatexEnhancementDiffs,
   loadBugSection,
   REPO_ROOT,
   renderReferenceHtml,
@@ -52,7 +53,11 @@ describe('full-section CommonMark+KaTeX audit', () => {
     const ref = signatureFromHtml(refHtml)
     const el = renderLatex(body, bug.modelId)
     const actual = signatureFromElement(el)
-    const result = compareSignatures(ref, actual)
+    const result = {
+      ...compareSignatures(ref, actual),
+      diffs: filterProseLatexEnhancementDiffs(compareSignatures(ref, actual).diffs, body, actual),
+    }
+    result.pass = result.diffs.length === 0
     const sectionDir = path.join(REPO_ROOT, 'rendering-harness/full-section-audit/sections')
     fs.mkdirSync(sectionDir, { recursive: true })
     fs.writeFileSync(path.join(sectionDir, `${bug.id}.md`), body)

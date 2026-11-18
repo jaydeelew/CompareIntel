@@ -8,6 +8,7 @@ import {
 import { dismissMobileBlockers, isMobileE2eProject } from './helpers/modelCheckbox'
 import {
   expandTutorialProvider,
+  expectTutorialBackdropContinuous,
   expectTutorialTargetProviderInViewport,
   expectTutorialTooltipStaysVisible,
   selectTutorialModelCheckbox,
@@ -69,6 +70,7 @@ test.describe('Tutorial provider scroll (desktop ~1024px)', () => {
 
     await expandTutorialProvider(page, firstProvider, testInfo)
     await selectTutorialModelCheckbox(page, firstId!, firstProvider, testInfo)
+    await expectTutorialBackdropContinuous(page)
 
     await expect(tutorialTooltip(page)).toContainText(`Expand ${secondProvider}`, {
       timeout: 20000,

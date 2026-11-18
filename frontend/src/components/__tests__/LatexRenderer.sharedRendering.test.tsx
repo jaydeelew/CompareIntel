@@ -361,6 +361,32 @@ The formula $A = \\pi r^2$ stays outside the table.
     expect(texSources(el).some(t => t.includes('\\pi r^2'))).toBe(true)
   })
 
+  it('renders escaped \\| in table math as absolute value |x|, not norm', () => {
+    const el = renderReply(
+      '| Concept | Formula | Value | Notes |\n|---------|---------|-------|-------|\n| Absolute | $f(x) = \\|x\\|$ | $5$ | Escaped pipes `\\|` inside table math |\n',
+      'google/gemini-4-carbon'
+    )
+    const absKatex = Array.from(el.querySelectorAll('td .katex')).find(k =>
+      (k.querySelector('annotation')?.textContent ?? '').includes('f(x)')
+    )
+    expect(absKatex?.querySelector('.katex-mathml')?.textContent ?? '').not.toMatch(/∥/)
+    expect(absKatex?.querySelector('annotation')?.textContent?.replace(/\s+/g, '')).toBe('f(x)=|x|')
+    const notes = Array.from(el.querySelectorAll('td')).find(td =>
+      (td.textContent ?? '').includes('Escaped pipes')
+    )
+    expect(notes?.querySelector('code')?.textContent).toBe('|')
+  })
+
+  it('keeps \\| outside tables as KaTeX norm', () => {
+    const el = renderReply(
+      'Vector norm: $\\|x\\|_2$ equals the Euclidean length.',
+      'qwen/qwen4-max'
+    )
+    const katex = el.querySelector('.katex')
+    expect(katex?.querySelector('.katex-mathml')?.textContent ?? '').toMatch(/∥/)
+    expect(katex?.querySelector('annotation')?.textContent ?? '').toMatch(/\\?\|x\\?\|/)
+  })
+
   it('unescapes \\| inside table-cell code (GFM example 200)', () => {
     const el = renderReply(
       '| Feature | Challenge | Solution |\n|---------|-----------|----------|\n| Tables with math | `\\|` conflicts, complex fractions | Escape pipes |\n',
@@ -584,7 +610,7 @@ describe("bug 21: padded `$ f'(x) $` is inline math, not leftover dollars", () =
 })
 
 describe('bug 20: list-prefixed \\] is two CommonMark list items, not recovered math', () => {
-  it('does not treat - \\[ ... - \\] as one display span or wrap a following bare \\frac', () => {
+  it('keeps two list items but renders undelimited sqrt and frac in prose', () => {
     const el = renderReply(
       '- \\[\nc = \\sqrt{3^2 + 4^2} = 5\n- \\]\n\nBare fraction after the block:\n\n\\frac{1}{2}\n',
       'microsoft/phi-4'
@@ -592,15 +618,13 @@ describe('bug 20: list-prefixed \\] is two CommonMark list items, not recovered 
     expectNoKatexErrors(el)
     expect(el.querySelectorAll('li').length).toBe(2)
     const first = el.querySelector('li')
-    expect(first?.textContent ?? '').toContain('c = \\sqrt{3^2 + 4^2} = 5')
-    expect(first?.textContent ?? '').toContain('^2')
-    expect(first?.textContent ?? '').not.toContain('²')
+    expect(texSources(first ?? el)).toEqual(expect.arrayContaining(['\\sqrt{3^2 + 4^2}']))
+    expect(visibleText(first ?? el)).not.toMatch(/\\sqrt/)
     expect(visibleText(el)).toContain('[')
     expect(visibleText(el)).toContain(']')
-    expect(visibleText(el)).toContain('\\frac{1}{2}')
-    expect(texSources(el).some(t => t.includes('\\frac{1}{2}'))).toBe(false)
+    expect(visibleText(el)).not.toContain('\\frac{1}{2}')
+    expect(texSources(el).some(t => t.includes('\\frac{1}{2}'))).toBe(true)
     expect(texSources(el).some(t => /=\s*5\s*-/.test(t))).toBe(false)
-    expect(texSources(el).some(t => t.includes('\\sqrt'))).toBe(false)
   })
 
   it('still renders a real Phi-4 05 list item whose closer is indented \\]', () => {

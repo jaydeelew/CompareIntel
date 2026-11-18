@@ -38,6 +38,7 @@ import {
 import { pageStateReady } from './page-state.js';
 import { capturePhoneAndDark, openThemedPage, DARK_VIEW, PHONE_VIEW } from './captures.js';
 import type { LayoutIssue } from './layout-checks.js';
+import { buildSyntheticUndelimitedCells, SYNTHETIC_UNDELIMITED_PROMPT } from './synthetic-cells.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -493,7 +494,11 @@ function escapeHtml(text: string): string {
 /**
  * Render-only mode: re-screenshot existing results without calling API
  */
-async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void> {
+async function renderOnlyMode(
+  runDir: string,
+  mergeInto?: string,
+  includeSyntheticProse = false
+): Promise<void> {
   console.log(`\n=== Render-Only Mode ===`);
   console.log(`Run directory: ${runDir}\n`);
   
@@ -719,6 +724,29 @@ async function renderOnlyMode(runDir: string, mergeInto?: string): Promise<void>
           screenshotRelpath,
           sourceFile: jsonFile,
         });
+      }
+    }
+
+    if (includeSyntheticProse) {
+      const syntheticDir = path.join(fullPath, 'synthetic-undelimited-prose-latex');
+      await fs.mkdir(syntheticDir, { recursive: true });
+      console.log(`\nRendering ${buildSyntheticUndelimitedCells().length} synthetic undelimited-prose cells...`);
+      for (const data of buildSyntheticUndelimitedCells()) {
+        const jsonFile = `${data.modelId.replace(/\//g, '_')}_${SYNTHETIC_UNDELIMITED_PROMPT}.json`;
+        const jsonPath = path.join(syntheticDir, jsonFile);
+        await fs.writeFile(jsonPath, JSON.stringify(data, null, 2));
+        const screenshotPath = path.join(syntheticDir, jsonFile.replace('.json', '.png'));
+        try {
+          const { renderedHTML } = await renderResponse(page, data.modelId, data.response, screenshotPath);
+          const validation = validateRenderedHTML(renderedHTML, getExpectedFeatures(SYNTHETIC_UNDELIMITED_PROMPT), data.response);
+          const status = overallStatus({ validation, truncated: false, emptyVisible: false });
+          if (status === 'fail') {
+            const raw = validation.assertions.find(a => a.message.includes('raw TeX outside code'))
+            console.log(`  ✗ ${data.modelId} synthetic: ${raw?.actual ?? status}`)
+          }
+        } catch (error) {
+          console.log(`  ✗ ${data.modelId} synthetic render error: ${error}`)
+        }
       }
     }
   } finally {
@@ -1132,6 +1160,9 @@ async function main() {
   const maxTokensArg = args.find(arg => arg.startsWith('--max-tokens='));
   const renderDirArg = args.find(arg => arg.startsWith('--render-dir='));
   const mergeIntoArg = args.find(arg => arg.startsWith('--merge-into='));
+  const includeSyntheticProse =
+    args.includes('--include-synthetic-prose-latex') ||
+    process.env.INCLUDE_SYNTHETIC_PROSE_LATEX === '1';
   const promptsArg = args.find(arg => arg.startsWith('--prompts='));
   const promptFilter = promptsArg
     ? promptsArg.split('=').slice(1).join('=').split(',').map(name => name.trim()).filter(Boolean)
@@ -1151,7 +1182,11 @@ async function main() {
       process.exit(1);
     }
     
-    await renderOnlyMode(renderDir, mergeIntoArg ? mergeIntoArg.split('=')[1] : undefined);
+    await renderOnlyMode(
+      renderDir,
+      mergeIntoArg ? mergeIntoArg.split('=')[1] : undefined,
+      includeSyntheticProse
+    );
     return;
   }
   

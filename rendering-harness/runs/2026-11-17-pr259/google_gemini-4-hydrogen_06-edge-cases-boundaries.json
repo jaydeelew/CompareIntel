@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-4-hydrogen",
+  "modelName": "Gemini 4 Hydrogen",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n",
+  "response": "Here is a response covering each of the requested delimiter variants, nested structures, code blocks, currency edge cases, tables, and raw dollar signs:\n\n## Delimiter Variants\n1. Double dollar display:\n$$x^2 + y^2 = r^2$$\n2. Bracket display:\n\\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n5. Inline math with adjacent punctuation: ($y = mx + b$), and $\\alpha + \\beta = \\gamma$.\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x \\, dx = \\frac{1}{2}$$\n     And it evaluates to $0.5$ in decimal form.\n   - Another nested block using brackets:\n     \\[\n     \\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}\n     \\]\n     Followed by continuation text in the same list item.\n   - Third item\n\n> **Blockquote with math:**\n> Inline $f(x) = x^2$ and display:\n> $$g(x) = \\sqrt{x + 1}$$\n\n## Code with Math-like Syntax\nInline code should also remain literal: `$HOME`, `price = $50`, and `\\(x = 5\\)`.\n\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nlatex_str = r\"$$\\int_0^1 x dx$$\"\nresult = a**2 + b**2\n\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store and saved $15.25\n- Mixed currency and math on one line: A widget costs $12 when $x = 3$ and costs $20 when $x = 5$.\n\n## Tables with Math\n| Variable | Formula | Value | Currency Comparison |\n|----------|---------|-------|---------------------|\n| Area | $A = \\pi r^2$ | $78.54$ | $78.54 |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ | $523.60 |\n| Identity | \\(\\sin^2\\theta + \\cos^2\\theta = 1\\) | $1$ | \\$1.00 |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set, and $PATH contains binaries. Price: $99.99. A trailing dollar sign $ or standalone $ shouldn't trigger math mode.",
+  "usage": {
+    "prompt_tokens": 384,
+    "completion_tokens": 1054,
+    "total_tokens": 1438,
+    "cost": 0.008481,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.008481,
+      "upstream_inference_prompt_cost": 0.000576,
+      "upstream_inference_completions_cost": 0.007905
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 396,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.008481,
+  "actualCost": 0.008481,
+  "timestamp": "2026-11-17T19:22:51.735Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

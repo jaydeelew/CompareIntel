@@ -122,6 +122,23 @@ export function isExpandProviderTutorialStep(step: TutorialStep | null | undefin
   return step === 'expand-provider' || step === 'expand-starter-provider-2'
 }
 
+/** First expand only — needs hero lock, centering, and deferred tooltip reveal. */
+export function isPrimaryExpandProviderStep(step: TutorialStep | null | undefined): boolean {
+  return step === 'expand-provider'
+}
+
+export function isAdjacentProviderPickerTransition(
+  from: TutorialStep | null | undefined,
+  to: TutorialStep | null | undefined
+): boolean {
+  return (
+    from != null &&
+    to != null &&
+    isProviderPickerTutorialStep(from) &&
+    isProviderPickerTutorialStep(to)
+  )
+}
+
 export function isProviderPickerTutorialStep(step: TutorialStep | null | undefined): boolean {
   return (
     isExpandProviderTutorialStep(step) ||

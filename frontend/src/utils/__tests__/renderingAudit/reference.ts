@@ -33,8 +33,15 @@ export function normalizeComparableTex(value: string): string {
   return tex.replace(/\s+/g, ' ').trim()
 }
 
-function renderKatex(tex: string, displayMode: boolean): string {
-  const source = tex.split(LITERAL).join('\\$').trim()
+function renderKatex(
+  tex: string,
+  displayMode: boolean,
+  options?: { gfmTableCell?: boolean }
+): string {
+  let source = tex.split(LITERAL).join('\\$').trim()
+  if (options?.gfmTableCell) {
+    source = source.replace(/\\\|/g, '|')
+  }
   try {
     return katex.renderToString(source, {
       displayMode,
@@ -45,6 +52,107 @@ function renderKatex(tex: string, displayMode: boolean): string {
   } catch {
     return `<span class="katex-error">${source}</span>`
   }
+}
+
+function gfmSplitRow(row: string): string[] {
+  const result: string[] = []
+  let pos = 0
+  let lastPos = 0
+  let current = ''
+  while (pos < row.length) {
+    const ch = row.charCodeAt(pos)
+    if (ch === 124 && row[pos - 1] !== '\\') {
+      result.push(current + row.substring(lastPos, pos))
+      current = ''
+      lastPos = pos + 1
+    }
+    pos += 1
+  }
+  result.push(current + row.substring(lastPos))
+  if (result.length && result[0] === '') result.shift()
+  if (result.length && result[result.length - 1] === '') result.pop()
+  return result.map(cell => cell.trim())
+}
+
+function gfmSeparatorCount(line: string): number | null {
+  const t = line.trim()
+  if (!t || /[^|\-:\s]/.test(t)) return null
+  const parts = t.split('|')
+  let count = 0
+  for (let i = 0; i < parts.length; i++) {
+    const cell = parts[i].trim()
+    if (!cell) {
+      if (i === 0 || i === parts.length - 1) continue
+      return null
+    }
+    if (!/^:?-+:?$/.test(cell)) return null
+    count += 1
+  }
+  return count > 0 ? count : null
+}
+
+function isGfmRowTerminator(line: string): boolean {
+  const t = line.trim()
+  if (/^#{1,6}(?:\s|$)/.test(t)) return true
+  if (/^```/.test(t) || /^~~~/.test(t)) return true
+  if (/^[ \t]{0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/.test(line)) return true
+  if (/^[-*•][ \t]+\S/.test(t) || /^\d+[.)][ \t]+\S/.test(t)) return true
+  if (/^>/.test(t)) return true
+  if (/^<hr\b/i.test(t)) return true
+  return false
+}
+
+function gfmTableSpan(lines: string[], start: number): number | null {
+  if (start + 1 >= lines.length) return null
+  if (!lines[start].includes('|') || isGfmRowTerminator(lines[start])) return null
+  const cols = gfmSeparatorCount(lines[start + 1])
+  if (cols === null || gfmSplitRow(lines[start]).length !== cols) return null
+  let end = start + 2
+  let autocompleted = 0
+  while (end < lines.length && lines[end].trim() !== '' && !isGfmRowTerminator(lines[end])) {
+    autocompleted += cols - gfmSplitRow(lines[end]).length
+    if (autocompleted > 65536) break
+    end += 1
+  }
+  return end
+}
+
+function lineInGfmTable(lines: string[], lineIndex: number): boolean {
+  for (let i = 0; i < lines.length; i++) {
+    const end = gfmTableSpan(lines, i)
+    if (end === null) continue
+    if (lineIndex >= i && lineIndex < end) return true
+    i = end - 1
+  }
+  return false
+}
+
+function isOffsetInGfmTableCell(text: string, offset: number): boolean {
+  if (offset < 0 || offset > text.length) return false
+  const lineStart = text.lastIndexOf('\n', offset - 1) + 1
+  const lineEndIdx = text.indexOf('\n', offset)
+  const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx
+  const line = text.slice(lineStart, lineEnd)
+  const relOffset = offset - lineStart
+  if (!line.includes('|')) return false
+
+  const lineIndex = text.slice(0, lineStart).split('\n').length - 1
+  const lines = text.split('\n')
+  if (!lineInGfmTable(lines, lineIndex)) return false
+
+  const delimiterPositions: number[] = []
+  let pos = 0
+  while (pos < line.length) {
+    if (line.charCodeAt(pos) === 124 && line[pos - 1] !== '\\') delimiterPositions.push(pos)
+    pos += 1
+  }
+  if (delimiterPositions.length < 2) return false
+  for (let i = 0; i < delimiterPositions.length - 1; i++) {
+    const start = delimiterPositions[i] + 1
+    const end = delimiterPositions[i + 1]
+    if (relOffset >= start && relOffset < end) return true
+  }
+  return false
 }
 
 function exampleInner(full: string): string {
@@ -213,7 +321,10 @@ function registerTexMath(md: MarkdownItInstance): void {
       if (close === pos + 2 || hasUnescapedDollar(inner)) return false
       if (!silent) {
         if (crossesListItem(full) || isEllipsisExample(full)) pushText(leaveExample(full))
-        else pushHtml(renderKatex(inner, true))
+        else
+          pushHtml(
+            renderKatex(inner, true, { gfmTableCell: isOffsetInGfmTableCell(src, pos) })
+          )
       }
       state.pos = close + 2
       return true
@@ -226,7 +337,10 @@ function registerTexMath(md: MarkdownItInstance): void {
       const full = src.slice(pos, close + 2)
       if (!silent) {
         if (crossesListItem(full) || isEllipsisExample(full)) pushText(leaveExample(full))
-        else pushHtml(renderKatex(inner, true))
+        else
+          pushHtml(
+            renderKatex(inner, true, { gfmTableCell: isOffsetInGfmTableCell(src, pos) })
+          )
       }
       state.pos = close + 2
       return true
@@ -239,7 +353,10 @@ function registerTexMath(md: MarkdownItInstance): void {
       const full = src.slice(pos, close + 2)
       if (!silent) {
         if (isEllipsisExample(full)) pushText(leaveExample(full))
-        else pushHtml(renderKatex(inner, false))
+        else
+          pushHtml(
+            renderKatex(inner, false, { gfmTableCell: isOffsetInGfmTableCell(src, pos) })
+          )
       }
       state.pos = close + 2
       return true
@@ -278,7 +395,10 @@ function registerTexMath(md: MarkdownItInstance): void {
         full.includes('\n') &&
         /\\begin\{(?:cases|align\*?|pmatrix|bmatrix|matrix|array)\}/.test(inner)
       if (full.includes('\n') && !isMultilineEnv) return false
-      if (!silent) pushHtml(renderKatex(inner, isMultilineEnv))
+      if (!silent)
+        pushHtml(
+          renderKatex(inner, isMultilineEnv, { gfmTableCell: isOffsetInGfmTableCell(src, pos) })
+        )
       state.pos = close + 1
       return true
     }

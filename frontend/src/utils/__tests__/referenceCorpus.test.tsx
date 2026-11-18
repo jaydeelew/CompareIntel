@@ -21,8 +21,10 @@ import {
   signatureFromElement,
   signatureFromHtml,
   compareSignatures,
+  filterProseLatexEnhancementDiffs,
   type Diff,
 } from './renderingAudit'
+import { proseLatexEnhancementFields } from './renderingAudit/proseLatexEnhancement'
 import { REFERENCE_ALLOWLIST, allowlistKey } from './renderingAudit/referenceAllowlist'
 
 const SHARDS = 4
@@ -213,14 +215,17 @@ describe('saved replies match the markdown-it + KaTeX reference', () => {
             )
             continue
           }
-          const diffs = compareSignatures(
-            signatureFromHtml(renderReferenceHtml(cell.markdown)),
-            signatureFromElement(root)
-          ).diffs
+          const actualSig = signatureFromElement(root)
+          const diffs = filterProseLatexEnhancementDiffs(
+            compareSignatures(signatureFromHtml(renderReferenceHtml(cell.markdown)), actualSig)
+              .diffs,
+            cell.markdown,
+            actualSig
+          )
           const fields = diffs.map(diff => diff.field).sort()
           const entry = ALLOWED.get(allowlistKey(cell.modelId, cell.promptName))
           if (fields.length === 0) {
-            if (entry) {
+            if (entry && proseLatexEnhancementFields(cell.markdown).size === 0) {
               failures.push(
                 `${cell.modelId} · ${cell.promptName}\nstale allowlist entry: this cell matches the reference (${entry.reason})\nraw source section:\n${cell.markdown}`
               )
@@ -233,11 +238,16 @@ describe('saved replies match the markdown-it + KaTeX reference', () => {
             failures.push(failureMessage(cell.modelId, cell.promptName, diffs, cell.markdown))
             continue
           }
-          if (entry.fields.join('\0') !== fields.join('\0')) {
+          const permitted = new Set([
+            ...entry.fields,
+            ...proseLatexEnhancementFields(cell.markdown),
+          ])
+          const unexpected = fields.filter(field => !permitted.has(field))
+          if (unexpected.length > 0) {
             failures.push(
               [
                 `${cell.modelId} · ${cell.promptName}`,
-                `allowlist permits [${entry.fields.join(', ')}] but the cell differs in [${fields.join(', ')}]`,
+                `allowlist permits [${[...permitted].sort().join(', ')}] but the cell differs in [${fields.join(', ')}] (unexpected: ${unexpected.join(', ')})`,
                 `reason on the entry: ${entry.reason}`,
                 describeDiff(
                   cell.markdown,

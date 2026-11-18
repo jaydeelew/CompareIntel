@@ -4,6 +4,8 @@ import type { ModelsByProvider } from '../../types'
 import {
   buildTutorialRuntimeStepSequence,
   buildTutorialVisibleStepOrder,
+  isAdjacentProviderPickerTransition,
+  isPrimaryExpandProviderStep,
   resolveStarterModelEntries,
   resolveTutorialStepConfig,
   tutorialUsesSplitModelSteps,
@@ -35,6 +37,15 @@ const REGISTRY: ModelsByProvider = {
 }
 
 describe('tutorialStepPlan', () => {
+  it('classifies provider step handoffs for smooth overlay transitions', () => {
+    expect(isPrimaryExpandProviderStep('expand-provider')).toBe(true)
+    expect(isPrimaryExpandProviderStep('expand-starter-provider-2')).toBe(false)
+    expect(
+      isAdjacentProviderPickerTransition('select-starter-model-1', 'expand-starter-provider-2')
+    ).toBe(true)
+    expect(isAdjacentProviderPickerTransition('select-starter-model-1', 'enter-prompt')).toBe(false)
+  })
+
   it('uses split provider steps when starter models span providers', () => {
     expect(tutorialUsesSplitModelSteps(REGISTRY)).toBe(true)
     const runtime = buildTutorialRuntimeStepSequence(true)

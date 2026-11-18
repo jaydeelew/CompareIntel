@@ -137,9 +137,6 @@ test('the current repo coverage gate passes', () => {
   const onDisk = fs.readFileSync(path.join(harnessRoot, 'coverage.json'), 'utf8')
   expect(onDisk).toBe(stableManifest(manifest))
   expect(manifest.allowlist.map(entry => entry.modelId)).toEqual([
-    'anthropic/claude-fable-5.2',
-    'google/gemini-4-carbon',
-    'google/gemini-4-hydrogen',
     'qwen/qwen4-max',
     'tencent/hy4-flash',
   ])

@@ -8,8 +8,8 @@
  * (claude-fable-5, claude-fable-5.1, gpt-5.6-luna, and gpt-5.6-sol).
  * Pre-rename replies for tencent/hy4-preview and
  * deepseek/deepseek-v4.1-flash stay beside the renamed copies, so the unique
- * saved set is 510. Five text models added the same day are coverage-allowlisted
- * and have no saved replies yet.
+ * saved set is 540 after #259 replies landed in runs/2026-11-17-pr259 (30 cells
+ * for claude-fable-5.2, gemini-4 carbon/hydrogen, qwen4-max, and hy4-flash).
  */
 
 import fs from 'fs/promises'

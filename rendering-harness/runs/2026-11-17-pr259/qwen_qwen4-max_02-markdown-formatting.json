@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen4-max",
+  "modelName": "Qwen4 Max",
+  "promptName": "02-markdown-formatting",
+  "promptText": "# Test Prompt: Markdown Formatting\n\nGenerate a response with these markdown elements:\n\n## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n",
+  "response": "## Headers\n### This is H3\n#### This is H4\n\n## Text formatting\n**Bold text** and *italic text* and ***bold italic***\n\nAdditional inline styles: `inline code`, ~~strikethrough~~, and a [link](https://example.com).\n\n## Lists\nNested unordered list:\n- Level 1 item A\n  - Level 2 item A1\n  - Level 2 item A2\n    - Level 3 item A2a\n- Level 1 item B\n\nNested ordered list:\n1. First item\n   1. Nested first\n   2. Nested second\n2. Second item\n3. Third item\n\nTask list variant:\n- [x] Completed task\n- [ ] Pending task\n\n## Tables\n| Model | Context | Price |\n|-------|---------|-------|\n| GPT-4 | 128k | $0.03 |\n| Claude | 200k | $0.02 |\n\nWith alignment control:\n\n| Left | Center | Right |\n|:-----|:------:|------:|\n| a | b | 1.00 |\n| longer text | mid | 25.50 |\n\n## Blockquotes\n> This is a blockquote\n> with multiple lines\n>\n> > And a nested blockquote inside it.\n\n## Code\n```python\ndef greet(name: str) -> str:\n    return f\"Hello, {name}!\"\n```\n\n---\n\nThat covers headers, emphasis, nested lists, tables, blockquotes, code, and a horizontal rule. Let me know if you'd like any element rendered differently or tested in combination.",
+  "usage": {
+    "prompt_tokens": 226,
+    "completion_tokens": 432,
+    "total_tokens": 658,
+    "cost": 0.00216885,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00216885,
+      "upstream_inference_prompt_cost": 0.00032205,
+      "upstream_inference_completions_cost": 0.0018468
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 66,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00216885,
+  "actualCost": 0.00216885,
+  "timestamp": "2026-11-17T19:23:19.882Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

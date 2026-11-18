@@ -2,7 +2,9 @@ import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from
 import { createPortal } from 'react-dom'
 
 import {
+  isAdjacentProviderPickerTransition,
   isExpandProviderTutorialStep,
+  isPrimaryExpandProviderStep,
   isProviderPickerTutorialStep,
   isSelectModelTutorialStep,
   resolveTutorialStepConfig,
@@ -212,9 +214,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       previousStepRef.current = step
 
       if (prevStep !== null) {
-        isStepTransitioningRef.current = true
-        setIsStepTransitioning(true)
-        setIsTargetOffScreen(null)
+        const providerHandoff = isAdjacentProviderPickerTransition(prevStep, step)
+        if (!providerHandoff) {
+          isStepTransitioningRef.current = true
+          setIsStepTransitioning(true)
+          setIsTargetOffScreen(null)
+        }
       }
     }
   }, [step])
@@ -334,7 +339,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               setIsVisible(true)
             }
           })
-        } else if (isExpandProviderTutorialStep(step)) {
+        } else if (isPrimaryExpandProviderStep(step)) {
           setIsVisible(false)
         } else if (isSelectModelTutorialStep(step)) {
           setIsVisible(true)
@@ -798,7 +803,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         // For enter-prompt steps, scroll to the top of the page initially
         // The tooltip appears above the textarea, and the user should see the top of the page
         root.scrollToTop(0, 'smooth')
-      } else if (isSelectModelTutorialStep(currentStep)) {
+      } else if (
+        isSelectModelTutorialStep(currentStep) ||
+        currentStep === 'expand-starter-provider-2'
+      ) {
         scrollTutorialProvidersIntoView(
           tutorialProviderNamesRef.current,
           currentStep as TutorialProviderLayoutStep
@@ -977,7 +985,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   }, [targetElement, step, calculatePositions, tooltipEstimatedHeight])
 
   useEffect(() => {
-    if (!step || !isSelectModelTutorialStep(step)) return
+    if (!step || (!isSelectModelTutorialStep(step) && step !== 'expand-starter-provider-2')) {
+      return
+    }
 
     setIsVisible(true)
 
@@ -1070,6 +1080,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     return () => {
+      const nextStep = stepRef.current
+      if (nextStep && isProviderPickerTutorialStep(nextStep)) {
+        return
+      }
       getHeroComposerForDropdownSteps()?.classList.remove('tutorial-dropdown-container-active')
       providerHighlights.forEach(el => {
         el.classList.remove('mobile-tutorial-highlight')
@@ -1254,16 +1268,31 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
   }, [step, isLoading, streamAnswerStarted, followUpSubmitStarted])
 
-  if (!step || !isVisible || !portalRoot) {
+  if (
+    !step ||
+    !portalRoot ||
+    !(isVisible || isStepTransitioning || isProviderPickerTutorialStep(step))
+  ) {
     return null
   }
 
-  const config = resolveTutorialStepConfig(step, tutorialStarterEntries, tutorialSplitModelSteps)
-  const { stepIndex, totalSteps } = getTutorialVisibleStepProgress(step, tutorialVisibleStepOrder)
+  const activeStep = step
+
+  const fadeDuringTransition = isStepTransitioning && !isProviderPickerTutorialStep(activeStep)
+
+  const config = resolveTutorialStepConfig(
+    activeStep,
+    tutorialStarterEntries,
+    tutorialSplitModelSteps
+  )
+  const { stepIndex, totalSteps } = getTutorialVisibleStepProgress(
+    activeStep,
+    tutorialVisibleStepOrder
+  )
   const progressDotIndex = (() => {
-    const i = tutorialVisibleStepOrder.indexOf(step)
+    const i = tutorialVisibleStepOrder.indexOf(activeStep)
     if (i >= 0) return i
-    if (step === 'enter-prompt-2' || step === 'submit-comparison-2') {
+    if (activeStep === 'enter-prompt-2' || activeStep === 'submit-comparison-2') {
       return tutorialVisibleStepOrder.indexOf('follow-up')
     }
     return 0
@@ -1436,7 +1465,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       {showBackdrop &&
         (isLoadingStreamingPhase && cutoutStyle ? (
           <div
-            className={`mobile-tutorial-backdrop-cutout${isStepTransitioning ? ' mobile-tutorial-backdrop-cutout--transitioning' : ''}`}
+            className={`mobile-tutorial-backdrop-cutout${fadeDuringTransition ? ' mobile-tutorial-backdrop-cutout--transitioning' : ''}`}
             style={cutoutStyle}
           />
         ) : !isLoadingStreamingPhase ? (
@@ -1518,7 +1547,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             </>
           ) : cutoutStyle ? (
             <div
-              className={`mobile-tutorial-backdrop-cutout${isStepTransitioning ? ' mobile-tutorial-backdrop-cutout--transitioning' : ''}`}
+              className={`mobile-tutorial-backdrop-cutout${fadeDuringTransition ? ' mobile-tutorial-backdrop-cutout--transitioning' : ''}`}
               style={cutoutStyle}
             />
           ) : (
@@ -1546,10 +1575,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       )}
 
       {/* Tooltip - hidden during loading/streaming phase on submit steps */}
-      {!shouldShowScrollIndicator && !isLoadingStreamingPhase && tooltipPosition && (
+      {!shouldShowScrollIndicator && !isLoadingStreamingPhase && isVisible && tooltipPosition && (
         <div
           ref={overlayRef}
-          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${isStepTransitioning ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
+          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
           style={
             tooltipPosition.useFullscreen
               ? undefined

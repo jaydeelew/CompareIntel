@@ -6,6 +6,9 @@
 
 import { JSDOM } from 'jsdom'
 import {
+  findVisibleRawLatexCommands,
+} from '../frontend/src/utils/latex/undelimitedProseLatex.ts'
+import {
   normalizeComparableTex,
   renderReferenceHtml,
 } from '../frontend/src/utils/__tests__/renderingAudit/reference.ts'
@@ -138,12 +141,7 @@ function visibleRawTexMarkers(text: string): string[] {
     .replace(/\(\\\(\s*\\\)\)/g, '')
     .replace(/\\\[\s*(?:\.{2,}|…)\s*\\\]/g, '')
     .replace(/\\\(\s*(?:\.{2,}|…)\s*\\\)/g, '')
-  const found: string[] = []
-  if (cleaned.includes('\\(')) found.push('\\(')
-  if (cleaned.includes('\\[')) found.push('\\[')
-  if (cleaned.includes('\\begin{')) found.push('\\begin{')
-  if (cleaned.includes('\\frac')) found.push('\\frac')
-  return found
+  return findVisibleRawLatexCommands(cleaned)
 }
 
 /** Visible leftover `\[` (e.g. `\\[6pt]` collapsed to a fake display open). */
@@ -486,18 +484,13 @@ export function validateRenderedHTML(
     const beginOnlyUnmatched =
       rawMarkers.includes('\\begin{') && envs.matched.length === 0 && envs.unmatchedOpens.length > 0
     const failingMarkers = rawMarkers.filter(marker => marker !== '\\begin{' || !beginOnlyUnmatched)
-    // A visible command is renderer loss when a reference TeX source is missing
-    // (the 18 paren-command cells) or when a delimiter itself leaked. A `\frac`
-    // that the reference never rendered — a pipe-split table cell markdown-it
-    // drops, or a bare fraction PR 216 leaves literal — is not a new failure.
-    const leakedDelimiter = failingMarkers.some(marker => marker !== '\\frac')
-    if (failingMarkers.length > 0 && (missingTex.length > 0 || leakedDelimiter)) {
+    if (failingMarkers.length > 0) {
       assertions.push({
         pass: false,
         status: 'fail',
-        expected: 'no literal \\(, \\[, \\begin{, or \\frac outside code',
+        expected: 'no undelimited LaTeX commands outside code',
         actual: `visible ${failingMarkers.join(', ')}`,
-        message: `Rendered DOM lost it: visible raw TeX outside code (${failingMarkers.join(', ')})`,
+        message: `Rendered DOM still has raw TeX outside code (${failingMarkers.join(', ')})`,
       })
     }
   }
