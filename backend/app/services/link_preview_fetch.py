@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 import httpx
 
@@ -16,9 +17,10 @@ from ..utils.ssrf import (
 logger = logging.getLogger(__name__)
 
 MAX_REDIRECTS = 5
-FETCH_TIMEOUT_SECONDS = 3.0
-MAX_HTML_BYTES = 1_048_576
+FETCH_TIMEOUT_SECONDS = 10.0
+MAX_HTML_BYTES = 524_288
 MAX_IMAGE_BYTES = 2_097_152
+_HEAD_CLOSE_RE = re.compile(rb"</head>", re.I)
 
 
 class LinkPreviewFetchError(Exception):
@@ -31,6 +33,7 @@ async def _request(
     url: str,
     *,
     max_bytes: int,
+    stop_after_head: bool = False,
 ) -> tuple[bytes, str, str | None]:
     """
     Perform one HTTP request with byte cap.
@@ -54,6 +57,8 @@ async def _request(
         body = bytearray()
         async for chunk in response.aiter_bytes():
             body.extend(chunk)
+            if stop_after_head and len(body) >= 4096 and _HEAD_CLOSE_RE.search(body):
+                break
             if len(body) > max_bytes:
                 raise LinkPreviewFetchError("Response exceeds size limit")
         content_type = response.headers.get("content-type")
@@ -75,11 +80,15 @@ async def fetch_html_for_preview(url: str) -> tuple[str, str]:
     Returns: (html_text, final_url)
     """
     current = url.strip()
-    async with httpx.AsyncClient(timeout=FETCH_TIMEOUT_SECONDS, cookies=False) as client:
+    async with httpx.AsyncClient(timeout=FETCH_TIMEOUT_SECONDS) as client:
         for _ in range(MAX_REDIRECTS + 1):
             try:
                 body, final_url, _ctype = await _request(
-                    client, "GET", current, max_bytes=MAX_HTML_BYTES
+                    client,
+                    "GET",
+                    current,
+                    max_bytes=MAX_HTML_BYTES,
+                    stop_after_head=True,
                 )
                 charset = "utf-8"
                 return body.decode(charset, errors="replace"), final_url
@@ -97,7 +106,7 @@ async def fetch_html_for_preview(url: str) -> tuple[str, str]:
 async def fetch_image_bytes(url: str) -> tuple[bytes, str | None]:
     """Fetch image bytes through the same SSRF protections."""
     current = url.strip()
-    async with httpx.AsyncClient(timeout=FETCH_TIMEOUT_SECONDS, cookies=False) as client:
+    async with httpx.AsyncClient(timeout=FETCH_TIMEOUT_SECONDS) as client:
         for _ in range(MAX_REDIRECTS + 1):
             try:
                 body, _final, content_type = await _request(

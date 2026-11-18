@@ -50,8 +50,10 @@ const LinkPreviewCardsInner: React.FC<LinkPreviewCardsProps> = ({
 
   const [previews, setPreviews] = useState<LinkPreviewData[]>([])
   const [failed, setFailed] = useState<Set<string>>(() => new Set())
+  const [brokenImages, setBrokenImages] = useState<Set<string>>(() => new Set())
 
   useEffect(() => {
+    setBrokenImages(new Set())
     if (!urls.length) {
       setPreviews([])
       return undefined
@@ -115,6 +117,7 @@ const LinkPreviewCardsInner: React.FC<LinkPreviewCardsProps> = ({
         const site = siteLabel(card, href)
         const price = priceLine(card)
         const imageSrc = card.image ? linkPreviewImageSrc(card.image) : null
+        const showImage = Boolean(imageSrc) && !brokenImages.has(href)
         return (
           <a
             key={href}
@@ -125,14 +128,15 @@ const LinkPreviewCardsInner: React.FC<LinkPreviewCardsProps> = ({
             data-testid="link-preview-card"
           >
             <div className="link-preview-card__image-wrap">
-              {imageSrc ? (
+              {showImage ? (
                 <img
                   className="link-preview-card__image"
-                  src={imageSrc}
+                  src={imageSrc!}
                   alt=""
                   loading="lazy"
                   referrerPolicy="no-referrer"
                   decoding="async"
+                  onError={() => setBrokenImages(prev => new Set(prev).add(href))}
                 />
               ) : (
                 <Globe className="link-preview-card__image--placeholder" aria-hidden />

@@ -13,6 +13,7 @@ from app.services.link_preview_cache import (
     negative_preview_payload,
     set_cached_preview,
 )
+from app.services.link_preview_fetch import fetch_html_for_preview
 from app.services.link_preview_metadata import parse_link_preview_metadata
 from app.utils.ssrf import (
     SSRFError,
@@ -76,6 +77,40 @@ class TestMetadataParsing:
         assert data["currency"] == "USD"
         assert data["fetched_at"]
 
+    def test_parses_og_image_on_name_attribute(self) -> None:
+        html = """
+        <html><head>
+        <meta name="og:image" content="/static/preview.png" />
+        <meta name="og:title" content="MDN Example" />
+        </head></html>
+        """
+        data = parse_link_preview_metadata(html, "https://developer.mozilla.org/en-US/docs/Web/HTML")
+        assert data["title"] == "MDN Example"
+        assert data["image"] == "https://developer.mozilla.org/static/preview.png"
+
+    def test_resolves_relative_json_ld_image_object(self) -> None:
+        html = """
+        <html><head>
+        <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"Product","name":"Trail Bottle",
+         "image":{"@type":"ImageObject","contentUrl":"//cdn.shop.example/assets/bottle.webp"},
+         "offers":{"@type":"Offer","price":"24.00","priceCurrency":"USD"}}
+        </script>
+        </head></html>
+        """
+        data = parse_link_preview_metadata(html, "https://shop.example.com/p/trail-bottle")
+        assert data["image"] == "https://cdn.shop.example/assets/bottle.webp"
+        assert data["price"] == "24.00"
+
+    def test_prefers_og_image_secure_url_and_unescapes_ampersands(self) -> None:
+        html = """
+        <html><head>
+        <meta property="og:image:secure_url" content="https://cdn.example.com/a.jpg?v=1&amp;w=2" />
+        </head></html>
+        """
+        data = parse_link_preview_metadata(html, "https://example.com/product")
+        assert data["image"] == "https://cdn.example.com/a.jpg?v=1&w=2"
+
 
 class TestLinkPreviewCache:
     def test_round_trip_cache(self) -> None:
@@ -114,3 +149,11 @@ async def test_link_preview_route_uses_cache() -> None:
     ):
         result = await link_preview(request=request, url=url, user=None)
     assert result["title"] == "Cached"
+
+
+@pytest.mark.asyncio
+async def test_fetch_html_for_preview_allows_httpx_client() -> None:
+    """Regression: AsyncClient(cookies=False) broke all outbound fetches on httpx 0.28+."""
+    html, final_url = await fetch_html_for_preview("https://example.com")
+    assert "example" in final_url
+    assert "<html" in html.lower() or "<title" in html.lower()
