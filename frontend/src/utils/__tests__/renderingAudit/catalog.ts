@@ -317,4 +317,21 @@ export const BUG_CASES: BugCase[] = [
     startRe: 'Math Delimiters',
     stopRe: 'Nested Structures',
   },
+  {
+    bug: 30,
+    id: '30-table-math-pipe-escape',
+    title: 'GFM \\| in table-cell math is absolute value, not norm',
+    modelId: 'google/gemini-4-carbon',
+    promptName: '06-edge-cases-boundaries',
+    inlineContent: `## Tables with Math
+
+| Concept | Formula | Value | Notes |
+|---------|---------|-------|-------|
+| Area | $A = \\pi r^2$ | $78.54$ | — |
+| Absolute | $f(x) = \\|x\\|$ | $5$ | Escaped pipes \`\\|\` inside table math |
+
+Outside the table, $\\|x\\|_2$ stays a norm.`,
+    startRe: '^## Tables with Math',
+    stopRe: 'Outside the table',
+  },
 ]

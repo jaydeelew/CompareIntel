@@ -47,6 +47,9 @@ export {
   gfmTableSpan,
   restoreInlineCode,
   renderInlineCodeSpan,
+  mapGfmTableRowCells,
+  isOffsetInGfmTableCell,
+  unescapeGfmPipesInTableMathLatex,
   unescapeGfmTableCellCodePipes,
   unescapeMarkdownEscapesOutsideKatex,
 } from './protection'

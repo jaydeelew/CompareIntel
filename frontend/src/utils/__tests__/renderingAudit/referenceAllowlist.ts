@@ -57,34 +57,6 @@ export const REFERENCE_ALLOWLIST: ReferenceAllowlistEntry[] = [
       'A `$$` matrix is an ATX heading and literal text in the reference. We render that display math, so the heading, the leftover `$$`, and the list text that still contains the source all differ.',
   },
   {
-    modelId: 'google/gemini-3.6-flash',
-    promptName: '04-mixed-markdown-latex',
-    fields: ['tableCells', 'texSources', 'visibleText'],
-    reason:
-      'KaTeX keeps the double-bar command as ∥. The reference runs the same TeX through markdown escaping first, so the bar collapses to a single | (∣).',
-  },
-  {
-    modelId: 'google/gemini-3.8-flash',
-    promptName: '05-complex-scenarios',
-    fields: ['tableCells', 'texSources', 'visibleText'],
-    reason:
-      'KaTeX keeps the double-bar command as ∥. The reference runs the same TeX through markdown escaping first, so the bar collapses to a single | (∣).',
-  },
-  {
-    modelId: 'google/gemini-4-argon',
-    promptName: '05-complex-scenarios',
-    fields: ['tableCells', 'texSources', 'visibleText'],
-    reason:
-      'KaTeX keeps the double-bar command as ∥. The reference runs the same TeX through markdown escaping first, so the bar collapses to a single | (∣). The strikethrough around that formula is a real `<del>`.',
-  },
-  {
-    modelId: 'google/gemini-4-argon',
-    promptName: '06-edge-cases-boundaries',
-    fields: ['tableCells', 'texSources', 'visibleText'],
-    reason:
-      'KaTeX keeps the double-bar command as ∥ in the absolute-value cell. The reference collapses that bar to a single | (∣).',
-  },
-  {
     modelId: 'meta-llama/llama-3.3-70b-instruct',
     promptName: '06-edge-cases-boundaries',
     fields: [
