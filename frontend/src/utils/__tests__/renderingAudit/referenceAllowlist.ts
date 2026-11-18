@@ -43,13 +43,6 @@ export const REFERENCE_ALLOWLIST: ReferenceAllowlistEntry[] = [
       'GFM task lists. We render `[x]`/`[ ]` as checkboxes and drop the markers; markdown-it leaves `[x]` and `[ ]` in the item text.',
   },
   {
-    modelId: 'google/gemini-3.8-flash',
-    promptName: '05-complex-scenarios',
-    fields: ['codeSpans', 'inlineMathCount', 'tableCells', 'texSources', 'visibleText'],
-    reason:
-      'Edge Case A table: the Markdown-Safe LaTeX column is a code span with TeX command names (`\\le`), while the Output column is rendered KaTeX after GFM `\\|` unescape (#276), so visible text and code-span signatures differ on operator glyphs even though the formulas match.',
-  },
-  {
     modelId: 'deepseek/deepseek-v3.2',
     promptName: '04-mixed-markdown-latex',
     fields: [
