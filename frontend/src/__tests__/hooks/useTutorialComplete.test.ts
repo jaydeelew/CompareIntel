@@ -455,6 +455,52 @@ describe('useTutorialComplete', () => {
       expect(result.current.tutorialHasCompletedComparison).toBe(true)
     })
 
+    it('should mark the submit step complete when a reply is visible while loading', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: defaultConfig,
+      })
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('submit-comparison')
+      })
+
+      rerender({
+        ...defaultConfig,
+        isLoading: true,
+        conversations: [
+          {
+            modelId: 'm1',
+            messages: [
+              { type: 'user', role: 'user', content: 'hi' },
+              { type: 'assistant', role: 'assistant', content: 'answer' },
+            ],
+          },
+        ] as ModelConversation[],
+      })
+
+      expect(result.current.tutorialHasCompletedComparison).toBe(true)
+      expect(result.current.followUpSubmitStarted).toBe(false)
+    })
+
+    it('should not treat the first comparison loading tail as a follow-up submit', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: { ...defaultConfig, isLoading: true },
+      })
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('follow-up')
+      })
+
+      expect(result.current.followUpSubmitStarted).toBe(false)
+
+      rerender({ ...defaultConfig, isLoading: false })
+      rerender({ ...defaultConfig, isLoading: true })
+
+      expect(result.current.followUpSubmitStarted).toBe(true)
+    })
+
     it('should set tutorialHasCompletedComparison on follow-up step after second assistant round', () => {
       const { result, rerender } = renderHook(props => useTutorialComplete(props), {
         initialProps: defaultConfig,

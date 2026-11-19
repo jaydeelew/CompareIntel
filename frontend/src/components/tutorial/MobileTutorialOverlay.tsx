@@ -927,7 +927,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     revealDeadline = window.setTimeout(() => {
       revealDeadline = null
       revealSettledStep()
-    }, 700)
+    }, 280)
 
     if (alreadySettled) {
       // A remount during the fade used to leave the hide class on. WebKit then

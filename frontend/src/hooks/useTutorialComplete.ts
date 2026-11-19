@@ -124,10 +124,19 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   const followUpSubmitInitiatedRef = useRef(false)
 
   const [followUpSubmitStarted, setFollowUpSubmitStarted] = useState(false)
+  /** True after follow-up has been seen while idle, so the first comparison's loading tail is not a new submit. */
+  const followUpSawIdleRef = useRef(false)
   useEffect(() => {
     if (tutorialState.currentStep !== 'follow-up') {
       setFollowUpSubmitStarted(false)
-    } else if (isLoading) {
+      followUpSawIdleRef.current = false
+      return
+    }
+    if (!isLoading) {
+      followUpSawIdleRef.current = true
+      return
+    }
+    if (followUpSawIdleRef.current) {
       setFollowUpSubmitStarted(true)
     }
   }, [tutorialState.currentStep, isLoading])
@@ -261,14 +270,23 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   useEffect(() => {
     if (tutorialState.currentStep !== 'follow-up') {
       followUpSubmitInitiatedRef.current = false
-    } else if (isLoading) {
+    } else if (isLoading && followUpSawIdleRef.current) {
       followUpSubmitInitiatedRef.current = true
     }
   }, [tutorialState.currentStep, isLoading])
 
   // Track comparison completion for tutorial (initial compare, optional 2nd-round step, or step 5 follow-up)
   useEffect(() => {
-    if (isLoading) return
+    const submitReplyIsVisible =
+      tutorialState.currentStep === 'submit-comparison' &&
+      conversations.some(conv =>
+        conv.messages.some(
+          msg => msg.type === 'assistant' && !!msg.content && msg.content.trim().length > 0
+        )
+      )
+    // Safari can keep isLoading true after the result card is already on screen.
+    // Waiting for the flag kept the next tooltip hidden for the whole sample.
+    if (isLoading && !submitReplyIsVisible) return
 
     const hasSecondRoundAssistantContent =
       conversations.length > 0 &&
