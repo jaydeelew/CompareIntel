@@ -858,15 +858,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     const showSettledTooltip = () => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (cancelled || stepRef.current !== currentStep) return
-          isStepTransitioningRef.current = false
-          setIsStepTransitioning(false)
-          setTutorialSpotlightSettling(false)
-          fadeStarted = true
-        })
-      })
+      // setTimeout, not rAF: WebKit can defer animation frames until the sample
+      // window is almost over, which leaves the card transparent.
+      window.setTimeout(() => {
+        if (cancelled || stepRef.current !== currentStep) return
+        isStepTransitioningRef.current = false
+        setIsStepTransitioning(false)
+        setTutorialSpotlightSettling(false)
+        fadeStarted = true
+      }, 32)
     }
 
     const revealSettledStep = () => {
@@ -945,12 +945,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     const schedulePositionUpdate = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
+      if (currentStep !== 'enter-prompt' && currentStep !== 'enter-prompt-2') return
       if (!viewportHeightChanged()) return
       fadeStarted = true
       restabilize()
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
+      if (currentStep !== 'enter-prompt' && currentStep !== 'enter-prompt-2') return
       if (!viewportHeightChanged()) return
       fadeStarted = true
       restabilize()

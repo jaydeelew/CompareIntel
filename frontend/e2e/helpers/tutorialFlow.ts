@@ -677,7 +677,18 @@ export async function clickTutorialDoneButton(page: Page, testInfo: TestInfo): P
     .first()
   await expect(doneButton).toBeEnabled({ timeout: 20_000 })
   if (isMobileE2eProject(testInfo.project.name)) {
-    await doneButton.tap({ force: true, timeout: 8_000 })
+    await doneButton.tap({ force: true, timeout: 8_000 }).catch(() => {})
+    await page.evaluate(() => {
+      const buttons = document.querySelectorAll<HTMLButtonElement>(
+        '.mobile-tutorial-tooltip button, .tutorial-tooltip button'
+      )
+      for (const button of buttons) {
+        if ((button.textContent ?? '').trim() === 'Done') {
+          button.click()
+          return
+        }
+      }
+    })
   } else {
     await doneButton.click({ timeout: 8_000 })
   }

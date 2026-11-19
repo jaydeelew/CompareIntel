@@ -815,16 +815,14 @@ export function useTutorialOverlay(
     }
 
     const showSettledTooltip = () => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (cancelled || stepRef.current !== step) return
-          placedAnchorRef.current = readAnchor()
-          setPositionStabilized(true)
-          setSpotlightSettling(false)
-          setTutorialSpotlightSettling(false)
-          fadeStarted = true
-        })
-      })
+      window.setTimeout(() => {
+        if (cancelled || stepRef.current !== step) return
+        placedAnchorRef.current = readAnchor()
+        setPositionStabilized(true)
+        setSpotlightSettling(false)
+        setTutorialSpotlightSettling(false)
+        fadeStarted = true
+      }, 32)
     }
 
     const scrollRoot = getTutorialScrollRoot()
