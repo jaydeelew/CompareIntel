@@ -23,7 +23,7 @@ import {
 import { isErrorMessage, showNotification } from '../utils/error'
 import logger from '../utils/logger'
 import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
-import { followUpModelIds } from '../utils/retiredConversationModels'
+import { followUpModelIds, storedModelDisplayName } from '../utils/retiredConversationModels'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 
 function extractTextComposerAdvancedFromLoaded(data: {
@@ -235,6 +235,10 @@ export function useConversationManager(options: UseConversationManagerOptions) {
             if (msg.images !== undefined && msg.images !== null) {
               storedMessage.images = msg.images
             }
+            const savedName = (msg as { model_name?: string | null }).model_name
+            if (typeof savedName === 'string' && savedName.trim()) {
+              storedMessage.model_name = savedName
+            }
             return storedMessage
           }),
         }
@@ -399,10 +403,19 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           })
         })
 
-        const loadedConversations: ModelConversation[] = modelsUsed.map((modelId: string) => ({
-          modelId: createModelId(modelId),
-          messages: messagesByModel[modelId] || [],
-        }))
+        const nameSource = conversationData as {
+          model_names?: Record<string, string> | null
+          modelNames?: Record<string, string> | null
+          messages?: StoredMessage[]
+        }
+        const loadedConversations: ModelConversation[] = modelsUsed.map((modelId: string) => {
+          const storedName = storedModelDisplayName(modelId, nameSource)
+          return {
+            modelId: createModelId(modelId),
+            messages: messagesByModel[modelId] || [],
+            ...(storedName ? { modelName: storedName } : {}),
+          }
+        })
 
         const loadedModelErrors: { [key: string]: boolean } = {}
         modelsUsed.forEach((modelId: string) => {

@@ -338,17 +338,18 @@
   height: auto;
 }
 
-/* One row with action icons: ellipsis when name is long (full name appears in tab strip above). */
+/* Narrow tabbed cards wrap the name so a Retired badge does not squeeze it to a few letters. */
 .results-section-tabbed .result-header h3 {
   flex: 1 1 auto;
   min-width: 0;
   max-width: none;
-  margin-right: 0.5rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-right: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  overflow-wrap: anywhere;
   display: block;
-  line-height: 1.35;
+  line-height: 1.25;
 }
 
 .results-section-tabbed .header-buttons-container {
@@ -743,14 +744,32 @@
   margin-right: 0;
 }
 
+.results-section-tabbed .result-header-title-group {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
 .results-section-tabbed .result-header-title-group > .result-card-title-tooltip {
-  flex: 1 1 auto;
-  max-width: none;
+  flex: 0 1 auto;
+  width: 100%;
+  max-width: 100%;
   margin-right: 0;
+  overflow: visible;
 }
 
 .results-section-tabbed .result-header-title-group > .result-card-title-tooltip > h3 {
   margin-right: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.results-section-tabbed .result-card-retired {
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+  padding: 0.05rem 0.28rem;
 }
 
 .result-card-retired,

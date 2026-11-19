@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest'
 import type { ModelsByProvider } from '../../types'
 import {
   followUpModelIds,
+  humanizeModelId,
   modelDisplayLabel,
   partitionConversationModels,
   retiredFollowUpNotice,
+  storedModelDisplayName,
 } from '../retiredConversationModels'
 
 const LIVE = 'openai/gpt-4o-mini'
@@ -71,8 +73,33 @@ describe('modelDisplayLabel', () => {
     expect(modelDisplayLabel(LIVE, catalog.OpenAI)).toBe(LIVE_NAME)
   })
 
-  it('falls back to the id when the name is unknown', () => {
-    expect(modelDisplayLabel(REMOVED, catalog.OpenAI)).toBe(REMOVED)
+  it('humanizes a removed id, keeping the version number', () => {
+    expect(humanizeModelId(REMOVED)).toBe('Mistral Medium 3.1')
+    expect(modelDisplayLabel(REMOVED, catalog.OpenAI)).toBe('Mistral Medium 3.1')
+    expect(modelDisplayLabel('retired/other-model', catalog.OpenAI)).toBe('Other Model')
+  })
+
+  it('prefers a display name stored with the conversation or a message', () => {
+    expect(modelDisplayLabel(REMOVED, catalog.OpenAI, 'Mistral Medium')).toBe('Mistral Medium')
+    expect(
+      storedModelDisplayName(REMOVED, {
+        model_names: { [REMOVED]: 'Saved Mistral' },
+      })
+    ).toBe('Saved Mistral')
+    expect(
+      storedModelDisplayName(REMOVED, {
+        messages: [
+          { model_id: LIVE, model_name: 'GPT-4o mini' },
+          { model_id: REMOVED, model_name: 'From the message' },
+        ],
+      })
+    ).toBe('From the message')
+    expect(storedModelDisplayName(REMOVED, { model_names: { [REMOVED]: REMOVED } })).toBeNull()
+  })
+
+  it('keeps the raw id until the catalog has loaded', () => {
+    expect(modelDisplayLabel(REMOVED, null)).toBe(REMOVED)
+    expect(modelDisplayLabel(REMOVED, [])).toBe(REMOVED)
   })
 })
 

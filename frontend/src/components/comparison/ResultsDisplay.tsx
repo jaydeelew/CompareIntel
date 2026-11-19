@@ -219,11 +219,19 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     [retiredPartition.removed]
   )
 
+  const labelForModel = (modelId: string, storedName?: string | null) =>
+    modelDisplayLabel(modelId, allModels.length > 0 ? allModels : null, storedName)
+
   const retiredNotice = useMemo(() => {
     if (!retiredPartition.catalogReady || retiredPartition.removed.length === 0) return null
-    const labels = retiredPartition.removed.map(modelId => modelDisplayLabel(modelId, allModels))
+    const labels = retiredPartition.removed.map(modelId => {
+      const storedName = conversations.find(
+        conversation => String(conversation.modelId) === modelId
+      )?.modelName
+      return modelDisplayLabel(modelId, allModels, storedName)
+    })
     return retiredFollowUpNotice(labels, retiredPartition.available.length)
-  }, [allModels, retiredPartition])
+  }, [allModels, conversations, retiredPartition])
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const [layoutContentWidth, setLayoutContentWidth] = useState(0)
@@ -649,6 +657,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           >
             {visibleConversations.map((conversation, index) => {
               const model = allModels.find(m => m.id === conversation.modelId)
+              const retired = retiredModelIds.has(String(conversation.modelId))
+              const tabLabel =
+                model?.name || labelForModel(conversation.modelId, conversation.modelName)
               const isActive = index === activeTabIndex
               const latestMsg = conversation.messages[conversation.messages.length - 1]
               const hasError =
@@ -666,15 +677,13 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   }}
                   className={`results-tab-button ${isActive ? 'active' : ''}`}
                   onClick={() => goToModelTab(index, 'tab-click')}
-                  aria-label={`View results for ${model?.name || conversation.modelId}`}
+                  aria-label={`View results for ${tabLabel}`}
                   aria-selected={isActive}
                   aria-busy={showStreamingIndicator}
                   role="tab"
                 >
-                  <span className="results-tab-name">{model?.name || conversation.modelId}</span>
-                  {retiredModelIds.has(String(conversation.modelId)) && (
-                    <span className="results-tab-retired">Retired</span>
-                  )}
+                  <span className="results-tab-name">{tabLabel}</span>
+                  {retired && <span className="results-tab-retired">Retired</span>}
                   {showStreamingIndicator && (
                     <span
                       className="results-tab-streaming-spinner"
@@ -741,6 +750,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 <ResultCard
                   modelId={activeConversation.modelId}
                   model={activeModel}
+                  displayName={labelForModel(
+                    activeConversation.modelId,
+                    activeConversation.modelName
+                  )}
                   messages={activeConversation.messages}
                   activeTab={activeTab}
                   isError={isError}
@@ -784,6 +797,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 key={conversation.modelId}
                 modelId={conversation.modelId}
                 model={model}
+                displayName={labelForModel(conversation.modelId, conversation.modelName)}
                 messages={conversation.messages}
                 activeTab={activeTab}
                 isError={isError}

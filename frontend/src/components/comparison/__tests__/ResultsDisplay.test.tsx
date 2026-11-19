@@ -98,7 +98,33 @@ describe('ResultsDisplay', () => {
       [live, removed].sort()
     )
     expect(screen.getByTestId('retired-models-notice')).toHaveTextContent(
-      'retired/not-in-lineup is no longer available, so follow-ups will go to the remaining models.'
+      'Not In Lineup is no longer available, so follow-ups will go to the remaining models.'
+    )
+  })
+
+  it('uses a display name stored on the conversation instead of humanizing the id', () => {
+    const removed = createModelId('mistralai/mistral-medium-3.1')
+    render(
+      <ResultsDisplay
+        conversations={[
+          {
+            ...createMockModelConversation({ modelId: removed }),
+            modelName: 'Saved Mistral Name',
+          },
+        ]}
+        closedCards={new Set()}
+        allModels={[{ id: createModelId('openai/gpt-4o-mini'), name: 'GPT-4o mini' }]}
+        activeResultTabs={{}}
+        onCloseCard={vi.fn()}
+        onSwitchTab={vi.fn()}
+        onBreakout={vi.fn()}
+        onHideOthers={vi.fn()}
+        onCopyMessage={vi.fn()}
+      />
+    )
+
+    expect(screen.getByTestId('retired-models-notice')).toHaveTextContent(
+      'Saved Mistral Name is no longer available. Start a new comparison to continue.'
     )
   })
 
@@ -120,7 +146,7 @@ describe('ResultsDisplay', () => {
 
     expect(screen.getByTestId('result-card')).toHaveAttribute('data-model-id', removed)
     expect(screen.getByTestId('retired-models-notice')).toHaveTextContent(
-      'retired/not-in-lineup is no longer available. Start a new comparison to continue.'
+      'Not In Lineup is no longer available. Start a new comparison to continue.'
     )
   })
 

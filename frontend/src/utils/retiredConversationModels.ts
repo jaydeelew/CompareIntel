@@ -71,15 +71,77 @@ export function partitionConversationModels(
   return partitionAgainstKnownModels(modelIds, knownModelsFromCatalog(modelsByProvider))
 }
 
-/** Catalog display name when the id is still listed, otherwise the id itself. */
+/**
+ * Readable label for an id that is no longer in the catalog.
+ * Drops the provider prefix and title-cases the slug, leaving version numbers as written.
+ * `mistralai/mistral-medium-3.1` becomes `Mistral Medium 3.1`.
+ */
+export function humanizeModelId(modelId: string): string {
+  const raw = String(modelId).trim()
+  const slug = raw.split('/').filter(Boolean).pop() || raw
+  const words = slug.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!words) return raw
+  return words.replace(/\b[a-z]/g, letter => letter.toUpperCase())
+}
+
+function trimmedName(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed || null
+}
+
+export interface StoredModelNameSource {
+  model_names?: Readonly<Record<string, unknown>> | null
+  modelNames?: Readonly<Record<string, unknown>> | null
+  messages?: ReadonlyArray<{
+    model_id?: unknown
+    model_name?: unknown
+    modelName?: unknown
+  }> | null
+}
+
+/**
+ * Display name saved with the conversation or one of its messages, when present.
+ * A value that is only the raw id is not a display name.
+ */
+export function storedModelDisplayName(
+  modelId: string,
+  source: StoredModelNameSource | null | undefined
+): string | null {
+  if (!source) return null
+  const key = String(modelId)
+  for (const map of [source.model_names, source.modelNames]) {
+    const stored = trimmedName(map?.[key])
+    if (stored && stored !== key) return stored
+  }
+  const messages = source.messages
+  if (!messages) return null
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index]
+    if (!message || String(message.model_id ?? '') !== key) continue
+    const stored = trimmedName(message.model_name) ?? trimmedName(message.modelName)
+    if (stored && stored !== key) return stored
+  }
+  return null
+}
+
+/**
+ * Catalog name when the id is still listed. Otherwise a name stored with the
+ * conversation, then a humanized id. An empty catalog is not ready, so the raw
+ * id is kept until names can be resolved.
+ */
 export function modelDisplayLabel(
   modelId: string,
-  knownModels: readonly KnownCatalogModel[] | null | undefined
+  knownModels: readonly KnownCatalogModel[] | null | undefined,
+  storedName?: string | null
 ): string {
   const key = String(modelId)
-  const match = knownModels?.find(model => String(model.id) === key)
-  const name = match?.name?.trim()
-  return name || key
+  const stored = trimmedName(storedName)
+  const usableStored = stored && stored !== key ? stored : null
+  if (!knownModels || knownModels.length === 0) return usableStored || key
+  const catalogName = knownModels.find(model => String(model.id) === key)?.name?.trim()
+  if (catalogName) return catalogName
+  return usableStored || humanizeModelId(key)
 }
 
 function formatNameList(names: string[]): string {

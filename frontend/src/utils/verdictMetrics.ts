@@ -8,6 +8,7 @@ import type { PerModelUsage } from '../types/comparison'
 import type { ModelConversation } from '../types/conversation'
 
 import { isErrorMessage } from './error'
+import { modelDisplayLabel } from './retiredConversationModels'
 
 export interface VerdictModelRow {
   modelId: string
@@ -106,11 +107,9 @@ export function collectVerdictModelRows(
           ? assistant.latency_ms
           : latencyMsBetween(user?.timestamp, assistant?.timestamp)
 
-      const model = allModels.find(item => String(item.id) === String(conversation.modelId))
-
       return {
         modelId: conversation.modelId,
-        modelName: model?.name || conversation.modelId,
+        modelName: modelDisplayLabel(conversation.modelId, allModels, conversation.modelName),
         content,
         costUsd,
         latencyMs,

@@ -68,6 +68,10 @@ describe('ResultCard', () => {
           retired
         />
       )
+      expect(screen.getByRole('heading', { name: 'Mistral Medium 3.1' })).toBeInTheDocument()
+      expect(
+        screen.queryByRole('heading', { name: 'mistralai/mistral-medium-3.1' })
+      ).not.toBeInTheDocument()
       expect(screen.getByText('Retired')).toBeInTheDocument()
       expect(await screen.findByText(/hi there/i, {}, { timeout: 15_000 })).toBeInTheDocument()
     })
