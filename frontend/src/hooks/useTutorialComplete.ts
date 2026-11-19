@@ -291,9 +291,17 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     const hasSecondRoundAssistantContent =
       conversations.length > 0 &&
       conversations.some(conv => {
+        const userMessages = conv.messages.filter(msg => msg.type === 'user')
         const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
         const last = assistantMessages[assistantMessages.length - 1]
-        return assistantMessages.length >= 2 && !!last?.content && last.content.trim().length > 0
+        // A second assistant node without a second prompt is still the first
+        // comparison. Mobile Safari has painted that shape and skipped follow-up.
+        return (
+          userMessages.length >= 2 &&
+          assistantMessages.length >= 2 &&
+          !!last?.content &&
+          last.content.trim().length > 0
+        )
       })
 
     const step = tutorialState.currentStep

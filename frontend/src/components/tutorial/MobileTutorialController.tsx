@@ -282,11 +282,18 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
 
   // The follow-up reply is on screen before Safari clears isLoading. The review
   // card has to fade in during that tail, not after the stream flag drops.
+  // The first comparison can paint two assistant nodes in one card on Mobile
+  // Safari. Advancing then skips the follow-up step, so the next transition
+  // never hides the spotlight. Wait until this step has seen a submit, and
+  // until the same card has a second user message.
   useEffect(() => {
     if (tutorialState.currentStep !== 'follow-up') return
     if (tutorialState.completedSteps.has('follow-up')) return
+    if (!followUpSubmitStarted) return
     const secondRoundIsVisible = () =>
       Array.from(document.querySelectorAll('.result-card.conversation-card')).some(card => {
+        const prompts = card.querySelectorAll('.conversation-message.user')
+        if (prompts.length < 2) return false
         const replies = card.querySelectorAll('.conversation-message.assistant')
         if (replies.length < 2) return false
         return (replies[replies.length - 1]?.textContent ?? '').trim().length > 0
@@ -301,7 +308,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       completeStep('follow-up')
     }, 100)
     return () => window.clearInterval(id)
-  }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep])
+  }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep, followUpSubmitStarted])
 
   const handleComplete = () => {
     if (!tutorialState.currentStep) return
