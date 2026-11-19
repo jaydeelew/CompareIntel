@@ -4,6 +4,16 @@ const BLOCKQUOTE_CLOSE = '\uE011'
 const BLOCKQUOTE_STYLE =
   'margin: 0.75em 0; padding: 0.25em 1em; border-left: 4px solid rgba(127, 127, 127, 0.45); color: inherit;'
 
+/** Strip one blockquote prefix; `> >` must become `>`, not ` >` (CommonMark nested quotes). */
+function stripOneBlockquoteLevel(line: string): string {
+  const m = line.match(/^([ \t]{0,3})>([\s\S]*)$/)
+  if (!m) return line
+  let rest = m[2]
+  if (rest.startsWith(' ')) rest = rest.slice(1)
+  else if (rest.startsWith('\t')) rest = rest.slice(1)
+  return m[1] + rest
+}
+
 /**
  * Strip `> ` markers from runs of quoted lines and wrap each run in marker tokens. The
  * inner lines then flow through list/markdown processing like any other content, and
@@ -12,11 +22,7 @@ const BLOCKQUOTE_STYLE =
 export function markBlockquotes(text: string): string {
   return text.replace(/(?:^[ \t]{0,3}>[^\n]*(?:\n|$))+/gm, block => {
     const hasTrailingNewline = block.endsWith('\n')
-    const inner = block
-      .replace(/\n$/, '')
-      .split('\n')
-      .map(line => line.replace(/^[ \t]{0,3}> ?/, ''))
-      .join('\n')
+    const inner = block.replace(/\n$/, '').split('\n').map(stripOneBlockquoteLevel).join('\n')
     // One marker per level so `> > nested` stays a blockquote inside the outer one.
     const nested = markBlockquotes(inner)
     // Keep the quote's indent so a `>` under a list item stays inside that item.
