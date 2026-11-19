@@ -17,8 +17,9 @@ describe('independent reference', () => {
     expect(src).not.toMatch(/from ['"]\.\.\/\.\.\/utils\/latex/)
     expect(src).not.toMatch(/from ['"][^'"]*LatexRenderer['"]/)
     expect(src).not.toMatch(
-      /from ['"][^'"]*(?:protection|codeBlockPreservation|mathRenderer|lists)['"]/
+      /from ['"][^'"]*(?:protection|codeBlockPreservation|mathRenderer)['"]/
     )
+    expect(src).not.toMatch(/from ['"]\.\.\/\.\.\/utils\/latex\/lists['"]/)
     expect(src).not.toMatch(/function extractInlineCode/)
     expect(src).not.toMatch(/tablesToPlaceholders/)
     expect(src).not.toMatch(/gfm_table/)
@@ -78,6 +79,21 @@ describe('independent reference', () => {
     expect(sig.texSources.some(t => /a\^2/.test(t))).toBe(true)
     expect(sig.texSources.some(t => t.includes('e.g'))).toBe(false)
     expect(sig.visibleText).toContain('$...$')
+  })
+
+  it('renders CommonMark autolinks and GFM footnotes like the product', () => {
+    const section = [
+      'Autolink: <https://example.com/lab-autolink>',
+      'citation[^rare].',
+      '',
+      '[^rare]: Measured at standard pressure.',
+    ].join('\n')
+    const html = renderReferenceHtml(section)
+    const sig = signatureFromHtml(html)
+    expect(sig.linkHrefs).toContain('https://example.com/lab-autolink')
+    expect(sig.linkHrefs.some(h => h.startsWith('#fn-'))).toBe(true)
+    expect(sig.visibleText).toContain('Measured at standard pressure')
+    expect(html).not.toContain('<https://')
   })
 
   it('does not swallow a code span when a prose $ comes first', () => {

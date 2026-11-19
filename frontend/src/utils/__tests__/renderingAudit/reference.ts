@@ -8,15 +8,27 @@
  *   - leftover mid-line `$$` does not pair with the next opener
  *   - a mid-line opener with a fence closer (`The formula is $$\nE\n$$`) is math
  *   - `($$)` / `($)` / `(\[ \])` / `(\( \))` are labels, not math
- * Structure (lists, emphasis, backtick pairing, GFM tables, backslash escapes)
- * comes from markdown-it's built-in rules (html/typographer off). TeX is an
- * inline rule registered before markdown-it's escape so `\,` / `\(` stay TeX
- * while a leading backtick still wins as a code span.
+ * Structure (lists, emphasis, backtick pairing, GFM tables, task lists, GFM
+ * footnotes, CommonMark autolinks, safe inline HTML, backslash escapes) comes
+ * from markdown-it plus plugins. TeX is an inline rule registered before
+ * markdown-it's escape so `\,` / `\(` stay TeX while a leading backtick still
+ * wins as a code span. Math in table rows is shielded before table parsing so
+ * `|` inside `$...$` does not split cells.
  */
 import katex from 'katex'
 import MarkdownIt from 'markdown-it'
+import footnote from 'markdown-it-footnote'
+import taskLists from 'markdown-it-task-lists'
+
 const LITERAL = '\uE000'
 const FENCE_PH = (i: number) => `%%F${i}%%`
+const TABLE_MATH_PH = (i: number) => `\uE002M${i}\uE002`
+
+const SAFE_HTML_TAGS = new Set(['br', 'sup', 'sub', 'details', 'summary', 'p', 'div', 'span'])
+
+function escapeHtmlAttr(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
 
 /**
  * Annotation text compared across the reference and the product renderer.
@@ -179,6 +191,88 @@ function isCurrencyLikeSpan(segment: string, open: number, close: number): boole
 
 type MarkdownItInstance = InstanceType<typeof MarkdownIt>
 
+interface ShieldedMath {
+  text: string
+  vault: Map<string, { body: string; display: boolean }>
+}
+
+function stripUnsafeHtmlTags(text: string): string {
+  const parts = text.split(/(`[^`\n]+`)/g)
+  return parts
+    .map((part, index) => {
+      if (index % 2 === 1) return part
+      return part.replace(/<\/?([a-zA-Z][\w-]*)\b[^>]*>/g, (match, tag: string) => {
+        if (/^<\/?(?:https?:|mailto:)/i.test(match)) return match
+        const name = tag.toLowerCase()
+        if (SAFE_HTML_TAGS.has(name) || name === 'dir') return match
+        return match.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      })
+    })
+    .join('')
+}
+
+function shieldMathInTableRows(text: string): ShieldedMath {
+  const vault = new Map<string, { body: string; display: boolean }>()
+  let idx = 0
+  const stash = (full: string, body: string, display: boolean) => {
+    const ph = TABLE_MATH_PH(idx++)
+    vault.set(ph, { body, display })
+    return ph
+  }
+
+  const needsTableShield = (body: string) => /(?<!\\)\|/.test(body) || body.includes('\\|')
+
+  const shieldSegment = (line: string): string => {
+    let out = line
+    const maybe = (full: string, body: string, display: boolean) =>
+      needsTableShield(body) ? stash(full, body, display) : full
+    out = out.replace(/\$\$([\s\S]+?)\$\$/g, (full, body) => maybe(full, body, true))
+    out = out.replace(/\\\[([\s\S]+?)\\\]/g, (full, body) => maybe(full, body, true))
+    out = out.replace(/\\\(([\s\S]+?)\\\)/g, (full, body) => maybe(full, body, false))
+    out = out.replace(/(?<!\\)\$([^$\n]+?)(?<!\\)\$/g, (full, body) => {
+      if (isCurrencyLikeSpan(full, 0, full.length - 1)) return full
+      return maybe(full, body, false)
+    })
+    return out
+  }
+
+  const lines = text.split('\n')
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*\|/.test(lines[i])) lines[i] = shieldSegment(lines[i])
+  }
+  return { text: lines.join('\n'), vault }
+}
+
+function restoreShieldedTableMath(html: string, vault: Map<string, { body: string; display: boolean }>): string {
+  let out = html
+  for (const [ph, { body, display }] of vault.entries()) {
+    const rendered = renderKatex(body.replace(/\\\|/g, '|'), display)
+    out = out.split(ph).join(rendered)
+  }
+  return out
+}
+
+function configureFootnoteRenderers(md: MarkdownItInstance): void {
+  md.renderer.rules.footnote_ref = (tokens, idx) => {
+    const { id, label } = tokens[idx].meta as { id: number; label: string }
+    const n = id + 1
+    const safe = escapeHtmlAttr(label)
+    return `<sup class="footnote-ref"><a href="#fn-${safe}" id="fnref-${safe}">${n}</a></sup>`
+  }
+  md.renderer.rules.footnote_block_open = () => '<section class="footnotes"><ol>\n'
+  md.renderer.rules.footnote_block_close = () => '</ol></section>\n'
+  md.renderer.rules.footnote_open = (tokens, idx) => {
+    const label = (tokens[idx].meta as { label: string }).label
+    return `<li id="fn-${escapeHtmlAttr(label)}" class="footnote-def">`
+  }
+  md.renderer.rules.footnote_close = () => '</li>\n'
+  md.renderer.rules.footnote_anchor = (tokens, idx) => {
+    const label = (tokens[idx].meta as { label: string }).label
+    const safe = escapeHtmlAttr(label)
+    return ` <a href="#fnref-${safe}" class="footnote-backref" aria-label="Back to reference">↩</a>`
+  }
+}
+
 /**
  * Consume TeX before markdown-it's escape rule so `\,` / `\\` stay TeX, while
  * backticks still win at a leading `` ` `` (code spans are not math).
@@ -287,15 +381,24 @@ function registerTexMath(md: MarkdownItInstance): void {
   })
 }
 
-const md = new MarkdownIt({ html: false, linkify: false, breaks: false, typographer: false })
+const md = new MarkdownIt({ html: true, linkify: false, breaks: false, typographer: false })
+md.use(footnote)
+md.use(taskLists, { enabled: true, label: true, labelAfter: false })
+configureFootnoteRenderers(md)
 registerTexMath(md)
 
 export function renderReferenceHtml(markdown: string): string {
+  if (!markdown.trim()) return ''
+
   const { text: fenced, fences } = extractFences(markdown)
   let text = protectParenthesizedLabels(fenced)
   text = literalizeLeftoverDollars(text)
+  text = stripUnsafeHtmlTags(text)
+  const shielded = shieldMathInTableRows(text)
+  text = shielded.text
 
   let html = md.render(text)
+  html = restoreShieldedTableMath(html, shielded.vault)
 
   const fenceHtml = (i: string) => {
     const block = fences[Number(i)]

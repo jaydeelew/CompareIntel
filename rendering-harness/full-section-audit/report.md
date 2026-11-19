@@ -30,3 +30,6 @@
 | 27 | 27-indented-align | pass | pass | none (markdown-it + KaTeX signatures match) |
 | 28 | 28-row-skip | pass | pass | none (markdown-it + KaTeX signatures match) |
 | 29 | 29-empty-delimiter-labels | pass | pass | none (markdown-it + KaTeX signatures match) |
+| 30 | 30-table-math-pipe-escape | pass | n/a | none (markdown-it + KaTeX signatures match) |
+| 31 | 31-autolinks | pass | n/a | none (markdown-it + KaTeX signatures match) |
+| 32 | 32-footnotes | pass | n/a | none (markdown-it + KaTeX signatures match) |

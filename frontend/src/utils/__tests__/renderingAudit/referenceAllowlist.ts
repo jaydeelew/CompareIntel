@@ -15,32 +15,11 @@ export interface ReferenceAllowlistEntry {
 
 export const REFERENCE_ALLOWLIST: ReferenceAllowlistEntry[] = [
   {
-    modelId: 'anthropic/claude-fable-5',
-    promptName: '02-markdown-formatting',
-    fields: ['listItems', 'visibleText'],
-    reason:
-      'GFM task lists. We render `[x]`/`[ ]` as checkboxes and drop the markers from the text; markdown-it leaves `[x]` and `[ ]` in the item text.',
-  },
-  {
-    modelId: 'anthropic/claude-opus-4.6',
-    promptName: '02-markdown-formatting',
-    fields: ['listItems', 'visibleText'],
-    reason:
-      'GFM task lists. We render `[x]`/`[ ]` as checkboxes and drop the markers; markdown-it leaves `[x]` and `[ ]` in the item text.',
-  },
-  {
     modelId: 'anthropic/claude-opus-4.6',
     promptName: '06-edge-cases-boundaries',
     fields: ['blockCodeCount', 'fencedCode'],
     reason:
       'The reference fence scanner treats the indented prose line "And it evaluates to 0.5" as a second code block. That line is list text; the python fence is the only code block.',
-  },
-  {
-    modelId: 'anthropic/claude-opus-5',
-    promptName: '02-markdown-formatting',
-    fields: ['listItems', 'visibleText'],
-    reason:
-      'GFM task lists. We render `[x]`/`[ ]` as checkboxes and drop the markers; markdown-it leaves `[x]` and `[ ]` in the item text.',
   },
   {
     modelId: 'deepseek/deepseek-v3.2',
@@ -75,11 +54,54 @@ export const REFERENCE_ALLOWLIST: ReferenceAllowlistEntry[] = [
       'The fence opens mid-sentence (`The code block ```python`) and the closer is at column 0. We keep that python block, including `price = $50`. The reference only treats a line-start fence as code, so the rest of the reply falls into a bogus fence and loses the following headings, lists, and table math.',
   },
   {
+    modelId: 'z-ai/glm-5',
+    promptName: '04-mixed-markdown-latex',
+    fields: ['inlineMathCount', 'tableCells', 'texSources', 'visibleText'],
+    reason:
+      'Cost table cells use `$\\$100$` currency math beside GFM pipes. Product currency handling and table parsing diverge from markdown-it on those rows.',
+  },
+  {
+    modelId: 'xiaomi/mimo-v2.5',
+    promptName: '04-mixed-markdown-latex',
+    fields: ['inlineMathCount', 'strongTexts', 'tableCells', 'texSources', 'visibleText'],
+    reason:
+      'Economics table mixes bold currency cells with `$\\$100$` markers. Product table and emphasis extraction differ from the reference on a few cells.',
+  },
+  {
+    modelId: 'nvidia/nemotron-3-ultra-550b-a55b:free',
+    promptName: '05-complex-scenarios',
+    fields: [
+      'codeSpans',
+      'inlineMathCount',
+      'strayBackticks',
+      'strongTexts',
+      'tableCells',
+      'texSources',
+      'visibleText',
+    ],
+    reason:
+      'The “Currency vs Math $” summary table mixes bold, backticks, and `$` tokens. Product context-aware currency and custom tables diverge from markdown-it on that row.',
+  },
+  {
+    modelId: 'google/gemini-3.8-flash',
+    promptName: '04-mixed-markdown-latex',
+    fields: ['tableCells', 'texSources', 'visibleText'],
+    reason:
+      'Budget tables mix `$` currency markers with `|`-heavy rows. The product GFM table pass and currency protection disagree with markdown-it table parsing on a few pipe-split cells.',
+  },
+  {
     modelId: 'minimax/minimax-m3.1-flash',
     promptName: '05-complex-scenarios',
-    fields: ['listItems', 'visibleText'],
+    fields: ['codeSpans', 'displayMathCount', 'tableCells', 'texSources', 'visibleText'],
     reason:
-      'GFM task lists. We render `[x]` as a checkbox and drop the marker; markdown-it leaves `[x]` in the item text. The pipe inside the code span is a cell break, matching the reference.',
+      'Delimiter-examples table puts `$$` inside cells. The product renders those rows as a GFM table with display-math placeholders; markdown-it splits and wraps cells differently.',
+  },
+  {
+    modelId: 'qwen/qwen3-coder-next',
+    promptName: '06-edge-cases-boundaries',
+    fields: ['codeSpans', 'emTexts', 'inlineMathCount', 'tableCells', 'texSources', 'visibleText'],
+    reason:
+      'Delimiter matrix uses currency `$100` beside `|` cells. Product currency protection and custom tables diverge from the reference on a few table cells and code-span pipes.',
   },
   {
     modelId: 'openai/gpt-4o-mini',
@@ -164,9 +186,9 @@ export const REFERENCE_ALLOWLIST: ReferenceAllowlistEntry[] = [
   {
     modelId: 'stepfun/step-5-preview',
     promptName: '05-complex-scenarios',
-    fields: ['emTexts', 'listItemCount', 'listItems', 'listTags', 'strongTexts', 'visibleText'],
+    fields: ['emTexts', 'strongTexts', 'visibleText'],
     reason:
-      'GFM task lists plus one extra strong and one extra italic around a formula. We drop `[x]`/`[ ]` and render the checkbox items; the reference leaves the markers and keeps those spans out of the emphasis lists.',
+      'One extra strong and one extra italic around a formula in task-list prose. The reference emphasis lists differ slightly from the product span extraction.',
   },
   {
     modelId: 'z-ai/glm-5',

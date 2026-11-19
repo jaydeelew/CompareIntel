@@ -334,4 +334,28 @@ Outside the table, $\\|x\\|_2$ stays a norm.`,
     startRe: '^## Tables with Math',
     stopRe: 'Outside the table',
   },
+  {
+    bug: 31,
+    id: '31-autolinks',
+    title: 'CommonMark autolinks render as anchors',
+    modelId: '__default__',
+    promptName: '02-markdown-formatting',
+    inlineContent: `## Nested blockquote, autolink, bare URL, and a footnote
+
+Autolink: <https://example.com/lab-autolink>
+`,
+    startRe: '^## Nested blockquote',
+  },
+  {
+    bug: 32,
+    id: '32-footnotes',
+    title: 'GFM footnotes render refs and a footnotes section',
+    modelId: '__default__',
+    promptName: '07-rare-formats',
+    inlineContent: `The boiling point needs a citation[^rare].
+
+[^rare]: Measured at standard pressure, 100 degrees Celsius.
+`,
+    startRe: '.',
+  },
 ]
