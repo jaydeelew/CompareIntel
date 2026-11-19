@@ -799,6 +799,15 @@ export function useTutorialOverlay(
 
     let fadeStarted = false
     let corrections = 0
+    let lastViewportHeight = window.innerHeight
+
+    const viewportHeightChanged = () => {
+      const height = window.visualViewport?.height ?? window.innerHeight
+      if (Math.abs(height - lastViewportHeight) < 40) return false
+      lastViewportHeight = height
+      corrections = 0
+      return true
+    }
 
     const showSettledTooltip = () => {
       requestAnimationFrame(() => {
@@ -902,21 +911,23 @@ export function useTutorialOverlay(
 
     const handleScroll = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
+      const keyboard = viewportHeightChanged()
       // Before the fade, a trailing scroll event can still correct the hidden tooltip.
       // After the fade, never slide it: hide, wait, and measure once.
       if (!fadeStarted) {
         updatePosition()
         return
       }
-      if (anchorMoved()) restabilize()
+      if (keyboard || anchorMoved()) restabilize()
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
+      const keyboard = viewportHeightChanged()
       if (!fadeStarted) {
         updatePosition()
         return
       }
-      if (anchorMoved()) restabilize()
+      if (keyboard || anchorMoved()) restabilize()
     }
 
     window.addEventListener('scroll', handleScroll, true)

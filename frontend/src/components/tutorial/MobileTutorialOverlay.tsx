@@ -834,7 +834,16 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     let fadeStarted = false
     let corrections = 0
+    let lastViewportHeight = window.innerHeight
     let placedAnchor: { top: number; left: number } | null = null
+
+    const viewportHeightChanged = () => {
+      const height = window.visualViewport?.height ?? window.innerHeight
+      if (Math.abs(height - lastViewportHeight) < 40) return false
+      lastViewportHeight = height
+      corrections = 0
+      return true
+    }
 
     const showSettledTooltip = () => {
       requestAnimationFrame(() => {
@@ -928,13 +937,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     const schedulePositionUpdate = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
+      const keyboard = viewportHeightChanged()
       if (!fadeStarted) return
-      if (anchorMoved()) restabilize()
+      if (keyboard || anchorMoved()) restabilize()
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
+      const keyboard = viewportHeightChanged()
       if (!fadeStarted) return
-      if (anchorMoved()) restabilize()
+      if (keyboard || anchorMoved()) restabilize()
     }
 
     window.addEventListener('scroll', schedulePositionUpdate, true)
