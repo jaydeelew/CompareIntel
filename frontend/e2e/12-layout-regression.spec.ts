@@ -126,7 +126,10 @@ function measureDefaultSelectionToolbarLayout(): DefaultSelectionToolbarLayout {
       endRange.setEnd(textNode, text.length)
       const endRect = endRange.getBoundingClientRect()
       if (upload) {
-        visibleTrailingInkGap = upload.getBoundingClientRect().left - endRect.right
+        const uploadLeft = upload.getBoundingClientRect().left
+        // Range ignores overflow:hidden in some engines; clamp to the laid-out label box.
+        const inkTrailEnd = Math.min(endRect.right, labelRect.right)
+        visibleTrailingInkGap = uploadLeft - inkTrailEnd
       }
     }
 
