@@ -23,6 +23,7 @@ import {
 import { isErrorMessage, showNotification } from '../utils/error'
 import logger from '../utils/logger'
 import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
+import { followUpModelIds } from '../utils/retiredConversationModels'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 
 function extractTextComposerAdvancedFromLoaded(data: {
@@ -444,8 +445,9 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         setModelErrors(loadedModelErrors)
 
         setConversations(loadedConversations)
-        setSelectedModels([...modelsUsed])
-        setOriginalSelectedModels([...modelsUsed])
+        const followUpModels = followUpModelIds(modelsUsed, modelsByProvider)
+        setSelectedModels(followUpModels)
+        setOriginalSelectedModels(followUpModels)
         const textAdvanced = extractTextComposerAdvancedFromLoaded(conversationData)
         const imageAdvanced = extractImageComposerAdvancedFromLoaded(conversationData)
         const targetMode = inferModelModeForLoadedModels([...modelsUsed], modelsByProvider, {

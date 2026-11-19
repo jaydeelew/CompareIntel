@@ -70,6 +70,58 @@ describe('ResultsDisplay', () => {
     const cards = screen.getAllByTestId('result-card')
     expect(cards).toHaveLength(2)
     expect(cards.map(c => c.getAttribute('data-model-id')).sort()).toEqual([claude, gpt].sort())
+    expect(screen.queryByTestId('retired-models-notice')).not.toBeInTheDocument()
+  })
+
+  it('keeps a removed model visible and says follow-ups skip it', () => {
+    const live = createModelId('openai/gpt-4o-mini')
+    const removed = createModelId('retired/not-in-lineup')
+    render(
+      <ResultsDisplay
+        conversations={[
+          createMockModelConversation({ modelId: live }),
+          createMockModelConversation({ modelId: removed }),
+        ]}
+        closedCards={new Set()}
+        allModels={[{ id: live, name: 'GPT-4o mini' }]}
+        activeResultTabs={{}}
+        onCloseCard={vi.fn()}
+        onSwitchTab={vi.fn()}
+        onBreakout={vi.fn()}
+        onHideOthers={vi.fn()}
+        onCopyMessage={vi.fn()}
+      />
+    )
+
+    const cards = screen.getAllByTestId('result-card')
+    expect(cards.map(card => card.getAttribute('data-model-id')).sort()).toEqual(
+      [live, removed].sort()
+    )
+    expect(screen.getByTestId('retired-models-notice')).toHaveTextContent(
+      'retired/not-in-lineup is no longer available, so follow-ups will go to the remaining models.'
+    )
+  })
+
+  it('tells the user to start a new comparison when every model was removed', () => {
+    const removed = createModelId('retired/not-in-lineup')
+    render(
+      <ResultsDisplay
+        conversations={[createMockModelConversation({ modelId: removed })]}
+        closedCards={new Set()}
+        allModels={[{ id: createModelId('openai/gpt-4o-mini'), name: 'GPT-4o mini' }]}
+        activeResultTabs={{}}
+        onCloseCard={vi.fn()}
+        onSwitchTab={vi.fn()}
+        onBreakout={vi.fn()}
+        onHideOthers={vi.fn()}
+        onCopyMessage={vi.fn()}
+      />
+    )
+
+    expect(screen.getByTestId('result-card')).toHaveAttribute('data-model-id', removed)
+    expect(screen.getByTestId('retired-models-notice')).toHaveTextContent(
+      'retired/not-in-lineup is no longer available. Start a new comparison to continue.'
+    )
   })
 
   it('shows metadata summary when metadata and processingTime are provided', () => {

@@ -46,6 +46,8 @@ export interface ResultCardProps {
   streamAnswerStarted?: boolean
   /** Session had web search enabled for this comparison. */
   webSearchEnabled?: boolean
+  /** Model is no longer in the catalog. Past messages stay readable. */
+  retired?: boolean
 }
 
 // Single model result card with formatted/raw toggle
@@ -71,6 +73,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   streamingReasoning = '',
   streamAnswerStarted = false,
   webSearchEnabled = false,
+  retired = false,
 }) => {
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const lastAssistantIndex = safeMessages.reduce(
@@ -116,13 +119,20 @@ export const ResultCard: React.FC<ResultCardProps> = ({
     <div className={combinedClassName} style={style}>
       <div className="result-header">
         <div className="result-header-top">
-          <StyledTooltip
-            usePortal
-            text={model?.name || modelId}
-            className="result-card-title-tooltip"
-          >
-            <h3>{model?.name || modelId}</h3>
-          </StyledTooltip>
+          <div className="result-header-title-group">
+            <StyledTooltip
+              usePortal
+              text={model?.name || modelId}
+              className="result-card-title-tooltip"
+            >
+              <h3>{model?.name || modelId}</h3>
+            </StyledTooltip>
+            {retired && (
+              <span className="result-card-retired" title="No longer available">
+                Retired
+              </span>
+            )}
+          </div>
           <div className="header-buttons-container">
             {onScreenshot && (
               <StyledTooltip usePortal text="Copy formatted chat history">
@@ -232,7 +242,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 </button>
               </StyledTooltip>
             )}
-            {showBreakoutButton && onBreakout && !isError && (
+            {showBreakoutButton && onBreakout && !isError && !retired && (
               <StyledTooltip usePortal text="Continue with this model only">
                 <button
                   type="button"

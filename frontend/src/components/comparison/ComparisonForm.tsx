@@ -71,6 +71,8 @@ interface ComparisonFormProps {
   onNewComparison: () => void
   renderUsagePreview: () => React.ReactNode
   selectedModels: string[]
+  /** When true, this conversation has no models left to continue. */
+  followUpUnavailable?: boolean
   modelsByProvider: ModelsByProvider
   onAccurateTokenCountChange?: (totalInputTokens: number | null) => void
   creditsRemaining: number
@@ -117,6 +119,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     onNewComparison,
     renderUsagePreview,
     selectedModels,
+    followUpUnavailable = false,
     modelsByProvider,
     onAccurateTokenCountChange,
     creditsRemaining,
@@ -672,6 +675,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const hardSubmitDisabled =
       isLoading ||
+      followUpUnavailable ||
       creditsRemaining <= 0 ||
       !input.trim() ||
       selectedModels.length === 0 ||
@@ -694,8 +698,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       : webSearchEnabled
         ? 'Web search enabled'
         : 'Enable web search'
-    const submitButtonAriaLabel =
-      creditsRemaining <= 0
+    const submitButtonAriaLabel = followUpUnavailable
+      ? 'Start a new comparison to continue'
+      : creditsRemaining <= 0
         ? 'You have run out of credits'
         : !input.trim() || selectedModels.length === 0
           ? submitIncompleteComposerTooltip(input.trim().length > 0, selectedModels.length > 0)
@@ -728,6 +733,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             value={input}
             onChange={mirror ? undefined : e => setInput(e.target.value)}
             readOnly={mirror}
+            disabled={!mirror && followUpUnavailable}
             tabIndex={mirror ? -1 : undefined}
             onKeyDown={
               mirror
@@ -752,12 +758,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             onDrop={mirror ? undefined : handleDrop}
             onPaste={undefined}
             placeholder={
-              isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
+              followUpUnavailable
+                ? 'Start a new comparison to continue'
+                : isFollowUpMode
+                  ? 'Continue your conversation here'
+                  : 'Enter your input here...'
             }
             aria-label={
-              isFollowUpMode
-                ? 'Continue your conversation'
-                : 'Enter your prompt to compare AI models'
+              followUpUnavailable
+                ? 'Start a new comparison to continue'
+                : isFollowUpMode
+                  ? 'Continue your conversation'
+                  : 'Enter your prompt to compare AI models'
             }
             className={`hero-input-textarea ${isDraggingOver && !mirror ? 'drag-over' : ''}`}
             rows={1}

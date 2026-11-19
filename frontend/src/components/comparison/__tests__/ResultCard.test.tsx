@@ -60,6 +60,18 @@ describe('ResultCard', () => {
       expect(screen.getByText(/success/i)).toBeInTheDocument()
     })
 
+    it('marks a removed model as retired without hiding its messages', async () => {
+      render(
+        <ResultCard
+          modelId={createModelId('mistralai/mistral-medium-3.1')}
+          messages={mockMessages}
+          retired
+        />
+      )
+      expect(screen.getByText('Retired')).toBeInTheDocument()
+      expect(await screen.findByText(/hi there/i, {}, { timeout: 15_000 })).toBeInTheDocument()
+    })
+
     it('should display error status when isError is true', () => {
       render(
         <ResultCard

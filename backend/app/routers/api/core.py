@@ -366,6 +366,22 @@ async def compare_stream(
     if not req.models:
         raise HTTPException(status_code=400, detail="At least one model must be selected")
 
+    # Drop ids missing from the active registry (retired, renamed, or unknown).
+    # If a hard-coded omit_retired_model_ids lands in this same spot, chain it
+    # first and keep this empty-list 400.
+    from ...llm.registry import omit_unregistered_model_ids
+
+    active_models = omit_unregistered_model_ids(req.models)
+    if len(active_models) != len(req.models):
+        dropped = [model_id for model_id in req.models if model_id not in active_models]
+        logger.info("Dropped model ids that are not in the active registry: %s", dropped)
+        req.models = active_models
+    if not req.models:
+        raise HTTPException(
+            status_code=400,
+            detail="The selected models are no longer available. Choose another model and try again.",
+        )
+
     from ... import model_runner as mr
     from ...model_runner import get_model_supports_image_generation
 

@@ -9,6 +9,11 @@ import { useResponsive } from '../../hooks'
 import { RESULT_TAB, createModelId } from '../../types'
 import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
 import { isErrorMessage } from '../../utils/error'
+import {
+  modelDisplayLabel,
+  partitionAgainstKnownModels,
+  retiredFollowUpNotice,
+} from '../../utils/retiredConversationModels'
 
 import { ResultCard, type Model } from './ResultCard'
 
@@ -200,6 +205,25 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     () => conversations.filter(conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)),
     [conversations, closedCards]
   )
+
+  const retiredPartition = useMemo(() => {
+    const knownModels = allModels.length > 0 ? allModels : null
+    return partitionAgainstKnownModels(
+      conversations.map(conversation => String(conversation.modelId)),
+      knownModels
+    )
+  }, [allModels, conversations])
+
+  const retiredModelIds = useMemo(
+    () => new Set(retiredPartition.removed),
+    [retiredPartition.removed]
+  )
+
+  const retiredNotice = useMemo(() => {
+    if (!retiredPartition.catalogReady || retiredPartition.removed.length === 0) return null
+    const labels = retiredPartition.removed.map(modelId => modelDisplayLabel(modelId, allModels))
+    return retiredFollowUpNotice(labels, retiredPartition.available.length)
+  }, [allModels, retiredPartition])
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const [layoutContentWidth, setLayoutContentWidth] = useState(0)
@@ -605,6 +629,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     <section ref={sectionRef} className={sectionSurfaceClass}>
       {metadataSection}
 
+      {retiredNotice && (
+        <p className="retired-models-notice" role="status" data-testid="retired-models-notice">
+          {retiredNotice}
+        </p>
+      )}
+
       {useTabbedMultiModelResults ? (
         <div className="results-tabs-container" ref={mobileTabsAttentionScrollRef}>
           <div
@@ -642,6 +672,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   role="tab"
                 >
                   <span className="results-tab-name">{model?.name || conversation.modelId}</span>
+                  {retiredModelIds.has(String(conversation.modelId)) && (
+                    <span className="results-tab-retired">Retired</span>
+                  )}
                   {showStreamingIndicator && (
                     <span
                       className="results-tab-streaming-spinner"
@@ -731,6 +764,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                     streamAnswerStartedByModel
                   )}
                   webSearchEnabled={webSearchEnabled}
+                  retired={retiredModelIds.has(String(activeConversation.modelId))}
                 />
               </div>
             ) : null}
@@ -773,6 +807,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   streamAnswerStartedByModel
                 )}
                 webSearchEnabled={webSearchEnabled}
+                retired={retiredModelIds.has(String(conversation.modelId))}
               />
             )
           })}
