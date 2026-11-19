@@ -5,7 +5,7 @@
  * A model is image-only, and excluded from the harness, when `category` is
  * exactly `"Image"`. Every other category (Language, Code, Reasoning,
  * Multimodal, Language/Reasoning, and any future non-Image value) is
- * text-capable and must have a saved reply for each of the six prompts.
+ * text-capable and must have a saved reply for each of the eight prompts.
  * `supports_image_generation` is recorded by admin add alongside category,
  * but the gate does not read it: `run-harness.ts` already skips
  * `category === "Image"`, and that is the field stored on every registry row.
@@ -27,21 +27,26 @@
  */
 import fs from 'fs'
 import path from 'path'
+import {
+  loadPromptCatalog,
+  promptHashesRecord,
+  replyMatchesCurrentPrompt,
+  type PromptSpec,
+} from './prompt-catalog.js'
 import { isIncompleteReply } from './overall-status.js'
-
-export const PROMPTS = [
-  '01-math-basics',
-  '02-markdown-formatting',
-  '03-code-blocks',
-  '04-mixed-markdown-latex',
-  '05-complex-scenarios',
-  '06-edge-cases-boundaries',
-] as const
-
-export type PromptName = (typeof PROMPTS)[number]
+export {
+  COLLECTION_OPTIONAL_PROMPTS,
+  PROMPTS,
+  type PromptName,
+} from './prompts-constants.js'
+import {
+  COLLECTION_OPTIONAL_PROMPTS,
+  PROMPTS,
+  type PromptName,
+} from './prompts-constants.js'
 
 export const IMAGE_ONLY_RULE =
-  'A registry model is image-only, and excluded from this manifest, when its category field is exactly "Image". Every other category is text-capable and needs a saved reply for each of the six rendering-harness prompts. supports_image_generation is not consulted. output_modalities is not a registry field; admin add copies an image output modality into category "Image".'
+  'A registry model is image-only, and excluded from this manifest, when its category field is exactly "Image". Every other category is text-capable and needs a saved reply for each of the eight rendering-harness prompts. supports_image_generation is not consulted. output_modalities is not a registry field; admin add copies an image output modality into category "Image".'
 
 export const CONCLUSIVE_STATUSES = ['pass', 'not-covered', 'fail', 'source-issue'] as const
 export type CellStatus = (typeof CONCLUSIVE_STATUSES)[number] | 'incomplete'
@@ -86,6 +91,8 @@ export interface CoverageManifest {
   version: 1
   imageOnlyRule: string
   prompts: string[]
+  /** SHA-256 of each current `prompts/<name>.md` body. */
+  promptHashes: Record<string, string>
   excludedImageModels: string[]
   allowlist: AllowEntry[]
   models: Record<string, Record<string, PromptCell>>
@@ -166,7 +173,7 @@ export function formatGateFailure(result: GateResult): string {
   const lines: string[] = []
   if (result.missingModels.length > 0) {
     lines.push(
-      'Text-capable registry models lack saved harness replies for all six prompts:'
+      'Text-capable registry models lack saved harness replies for all eight prompts:'
     )
     for (const model of result.missingModels) {
       lines.push(`- ${model.modelId}: ${model.detail}`)
@@ -396,6 +403,29 @@ function statusFor(candidate: Candidate): CellStatus {
   return 'incomplete'
 }
 
+function cellForPrompt(
+  promptName: PromptName,
+  candidate: Candidate | undefined,
+  catalog: Map<PromptName, PromptSpec>
+): PromptCell {
+  if (!candidate) {
+    return { status: 'not-covered', replyPath: null }
+  }
+  let data: Record<string, unknown>
+  try {
+    data = readJson(candidate.absPath) as Record<string, unknown>
+  } catch {
+    return { status: 'incomplete', replyPath: candidate.relPath }
+  }
+  if (!candidate.complete) {
+    return { status: 'incomplete', replyPath: candidate.relPath }
+  }
+  if (!replyMatchesCurrentPrompt(promptName, data, catalog)) {
+    return { status: 'not-covered', replyPath: candidate.relPath }
+  }
+  return { status: statusFor(candidate), replyPath: candidate.relPath }
+}
+
 export function buildCoverage(harnessRoot: string): CoverageManifest {
   const registryPath = path.join(harnessRoot, '../backend/data/models_registry.json')
   const registry = readJson(registryPath) as Registry
@@ -404,6 +434,7 @@ export function buildCoverage(harnessRoot: string): CoverageManifest {
 
 export function buildCoverageFrom(harnessRoot: string, registry: Registry): CoverageManifest {
   const runsDir = path.join(harnessRoot, 'runs')
+  const promptCatalog = loadPromptCatalog(harnessRoot)
   const allowlist = loadAllowlist(harnessRoot)
   const models = listRegistryModels(registry)
   const imageModels = models.filter(isImageOnlyModel).map(model => model.id).sort()
@@ -473,9 +504,7 @@ export function buildCoverageFrom(harnessRoot: string, registry: Registry): Cove
     const prompts: Record<string, PromptCell> = {}
     for (const promptName of PROMPTS) {
       const candidate = byKey.get(`${model.id}::${promptName}`)
-      const cell: PromptCell = candidate
-        ? { status: statusFor(candidate), replyPath: candidate.relPath }
-        : { status: 'incomplete', replyPath: null }
+      const cell = cellForPrompt(promptName, candidate, promptCatalog)
       prompts[promptName] = cell
       totals.cells += 1
       if (!cell.replyPath) totals.missing += 1
@@ -492,6 +521,7 @@ export function buildCoverageFrom(harnessRoot: string, registry: Registry): Cove
     version: 1,
     imageOnlyRule: IMAGE_ONLY_RULE,
     prompts: [...PROMPTS],
+    promptHashes: promptHashesRecord(promptCatalog),
     excludedImageModels: imageModels,
     allowlist,
     models: manifestModels,
@@ -534,7 +564,19 @@ export function evaluateCoverage(opts: {
     const missingPrompts: string[] = []
     for (const promptName of PROMPTS) {
       const cell = row[promptName]
-      if (!cell || !cell.replyPath || !fs.existsSync(path.join(opts.harnessRoot, cell.replyPath))) {
+      if (!cell) {
+        missingPrompts.push(promptName)
+        continue
+      }
+      if (cell.status === 'not-covered') {
+        if (COLLECTION_OPTIONAL_PROMPTS.has(promptName)) continue
+        if (cell.replyPath && fs.existsSync(path.join(opts.harnessRoot, cell.replyPath))) {
+          continue
+        }
+        missingPrompts.push(promptName)
+        continue
+      }
+      if (!cell.replyPath || !fs.existsSync(path.join(opts.harnessRoot, cell.replyPath))) {
         missingPrompts.push(promptName)
         continue
       }

@@ -33,3 +33,26 @@ Nested ordered list:
 ## Blockquotes
 > This is a blockquote
 > with multiple lines
+
+## Strikethrough, task list, and an image
+The previous label was ~~obsolete~~ and should not be used.
+- [x] Calibrated the scale
+- [ ] Recheck the blank
+Here is a diagram: ![triangle sketch](https://example.com/triangle.png)
+
+## Nested blockquote, autolink, bare URL, and a footnote
+> Outer note from the lab.
+>
+> > Inner note with a nested list:
+> > - nested aliquot
+> > - nested blank
+
+Autolink: <https://example.com/lab-autolink>
+Bare URL: https://example.com/lab-bare-url/with/a/long/path
+The method needs a citation[^fmt2].
+
+[^fmt2]: Recorded in the lab notebook, page 12.
+
+## Inline HTML
+First line.<br>Second line after an explicit break.
+The ion is written Na<sup>+</sup> in running text.

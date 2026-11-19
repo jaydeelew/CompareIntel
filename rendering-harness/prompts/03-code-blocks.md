@@ -27,3 +27,14 @@ console.log(fibonacci(10)); // 55
 
 ## Inline code with math-like content
 The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.
+
+## Shell code
+```bash
+echo "price=$50"
+python -c "import math; print(math.sqrt(3))"
+```
+
+## Long code line
+```text
+LONGCODELINE = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
