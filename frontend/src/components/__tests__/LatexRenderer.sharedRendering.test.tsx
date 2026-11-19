@@ -1006,6 +1006,13 @@ describe('renderer bug 4: underscore emphasis and backslash escapes', () => {
     expect(text).toContain('escape as file_name_here.')
     expect(el.querySelectorAll('em').length).toBe(0)
   })
+
+  it('does not duplicate ASCII subscripts beside KaTeX for $x_1 + x_2$', () => {
+    const el = renderReply('Math subscript $x_1 + x_2$ stays in KaTeX.', 'qwen/qwen4-max')
+    const text = visibleText(el).replace(/\u200b/g, '')
+    expect(text).toBe('Math subscript x1+x2 stays in KaTeX.')
+    expect(texSources(el)).toEqual(['x_1 + x_2'])
+  })
 })
 
 describe('full fixture sections for bugs 01–29', () => {
