@@ -921,7 +921,9 @@ export function useTutorialOverlay(
         updatePosition()
         return
       }
-      if (keyboard || anchorMoved()) restabilize()
+      // Scroll after the fade must not hide or slide the tooltip. A keyboard
+      // height change is the one case that measures again.
+      if (keyboard) restabilize()
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
@@ -930,7 +932,7 @@ export function useTutorialOverlay(
         updatePosition()
         return
       }
-      if (keyboard || anchorMoved()) restabilize()
+      if (keyboard) restabilize()
     }
 
     window.addEventListener('scroll', handleScroll, true)

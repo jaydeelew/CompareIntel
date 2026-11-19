@@ -827,15 +827,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    const readAnchor = () => {
-      const rect = targetEl.getBoundingClientRect()
-      return { top: rect.top, left: rect.left }
-    }
-
     let fadeStarted = false
     let corrections = 0
     let lastViewportHeight = window.innerHeight
-    let placedAnchor: { top: number; left: number } | null = null
 
     const viewportHeightChanged = () => {
       const height = window.visualViewport?.height ?? window.innerHeight
@@ -849,7 +843,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (cancelled || stepRef.current !== currentStep) return
-          placedAnchor = readAnchor()
           isStepTransitioningRef.current = false
           setIsStepTransitioning(false)
           setTutorialSpotlightSettling(false)
@@ -878,14 +871,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         if (cancelled || stepRef.current !== currentStep) return
         revealSettledStep()
       })
-    }
-
-    const anchorMoved = () => {
-      if (!placedAnchor) return false
-      const next = readAnchor()
-      return (
-        Math.abs(next.top - placedAnchor.top) >= 4 || Math.abs(next.left - placedAnchor.left) >= 4
-      )
     }
 
     const waitForFollowUpFloat = () =>
@@ -944,13 +929,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
       const keyboard = viewportHeightChanged()
       if (!fadeStarted) return
-      if (keyboard || anchorMoved()) restabilize()
+      if (keyboard) restabilize()
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
       const keyboard = viewportHeightChanged()
       if (!fadeStarted) return
-      if (keyboard || anchorMoved()) restabilize()
+      if (keyboard) restabilize()
     }
 
     window.addEventListener('scroll', schedulePositionUpdate, true)
