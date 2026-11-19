@@ -898,8 +898,8 @@
         "replyPath": null
       },
       "08-casual-prose": {
-        "status": "not-covered",
-        "replyPath": null
+        "status": "pass",
+        "replyPath": "runs/2026-11-18-pr274/google_gemini-4-hydrogen_08-casual-prose.json"
       }
     },
     "google/gemma-3-27b-it": {
