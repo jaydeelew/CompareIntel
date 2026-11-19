@@ -484,6 +484,17 @@ def get_openrouter_models_json_path() -> Path:
     return _OPENROUTER_MODELS_PATH
 
 
+# Upstream returns 400 invalid_model ("Invalid model: mistral-medium-2508") for this id.
+RETIRED_MODEL_IDS = frozenset({"mistralai/mistral-medium-3.1"})
+
+
+def omit_retired_model_ids(model_ids: list[str]) -> list[str]:
+    """Drop retired ids so a saved selection cannot be sent to OpenRouter."""
+    if not model_ids or not RETIRED_MODEL_IDS.intersection(model_ids):
+        return model_ids
+    return [model_id for model_id in model_ids if model_id not in RETIRED_MODEL_IDS]
+
+
 def get_registry_model_ids(registry: dict[str, Any] | None = None) -> set[str]:
     """Return all model ids listed in models_registry.json."""
     data = registry if registry is not None else load_registry()

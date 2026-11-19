@@ -10,6 +10,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { useSavedSelectionsComplete } from '../../hooks/useSavedSelectionsComplete'
 import type { ModelsByProvider } from '../../types/models'
+import { showNotification } from '../../utils'
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -568,6 +569,30 @@ describe('useSavedSelectionsComplete', () => {
 
       // Should only include model-1 (available) not unavailable-model
       expect(mockSetSelectedModels).toHaveBeenCalledWith(['model-1'])
+    })
+
+    it('drops retired mistral-medium-3.1 instead of selecting it', () => {
+      const { result } = renderHook(() =>
+        useSavedSelectionsComplete(defaultConfig, defaultCallbacks)
+      )
+
+      act(() => {
+        result.current.saveSelection('Legacy Mistral', ['model-1', 'mistralai/mistral-medium-3.1'])
+      })
+
+      const selectionId = result.current.savedSelections[0].id
+
+      act(() => {
+        result.current.handleLoadSelection(selectionId)
+      })
+
+      expect(mockSetSelectedModels).toHaveBeenCalledWith(['model-1'])
+      const selected = mockSetSelectedModels.mock.calls.at(-1)?.[0] as string[]
+      expect(selected).not.toContain('mistralai/mistral-medium-3.1')
+      expect(showNotification).toHaveBeenCalledWith(
+        'Some models were removed (not available or tier limit exceeded)',
+        'success'
+      )
     })
   })
 

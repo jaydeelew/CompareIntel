@@ -105,4 +105,17 @@ describe('perModeModelSelection utilities', () => {
 
     expect(result).toEqual(['openai/gpt-text'])
   })
+
+  it('drops a retired model id that is no longer in the catalog', () => {
+    const result = sanitizeModeSelection({
+      modelIds: ['openai/gpt-text', 'mistralai/mistral-medium-3.1'],
+      modelMode: 'text',
+      modelsByProvider: mockCatalog(),
+      isAuthenticated: false,
+      user: null,
+      maxModelsLimit: 9,
+    })
+
+    expect(result).toEqual(['openai/gpt-text'])
+  })
 })
