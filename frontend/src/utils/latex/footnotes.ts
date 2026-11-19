@@ -2,10 +2,17 @@ const FOOTNOTE_DEF_RE = /^[ \t]{0,3}\[\^([^\]]+)\]:\s*(.+)$/gm
 const FOOTNOTE_REF_RE = /\[\^([^\]]+)\]/g
 
 function escapeHtmlAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }
 
-export function extractFootnoteDefinitions(text: string): { text: string; defs: Map<string, string> } {
+export function extractFootnoteDefinitions(text: string): {
+  text: string
+  defs: Map<string, string>
+} {
   const defs = new Map<string, string>()
   const stripped = text.replace(FOOTNOTE_DEF_RE, (_, rawId: string, body: string) => {
     defs.set(rawId.toLowerCase(), body.trim())

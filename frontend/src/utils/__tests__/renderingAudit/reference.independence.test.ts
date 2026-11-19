@@ -16,9 +16,7 @@ describe('independent reference', () => {
     expect(src).not.toMatch(/from ['"]\.\.\/\.\.\/components\//)
     expect(src).not.toMatch(/from ['"]\.\.\/\.\.\/utils\/latex/)
     expect(src).not.toMatch(/from ['"][^'"]*LatexRenderer['"]/)
-    expect(src).not.toMatch(
-      /from ['"][^'"]*(?:protection|codeBlockPreservation|mathRenderer)['"]/
-    )
+    expect(src).not.toMatch(/from ['"][^'"]*(?:protection|codeBlockPreservation|mathRenderer)['"]/)
     expect(src).not.toMatch(/from ['"]\.\.\/\.\.\/utils\/latex\/lists['"]/)
     expect(src).not.toMatch(/function extractInlineCode/)
     expect(src).not.toMatch(/tablesToPlaceholders/)

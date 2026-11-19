@@ -27,7 +27,11 @@ const TABLE_MATH_PH = (i: number) => `\uE002M${i}\uE002`
 const SAFE_HTML_TAGS = new Set(['br', 'sup', 'sub', 'details', 'summary', 'p', 'div', 'span'])
 
 function escapeHtmlAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }
 
 /**
@@ -243,7 +247,10 @@ function shieldMathInTableRows(text: string): ShieldedMath {
   return { text: lines.join('\n'), vault }
 }
 
-function restoreShieldedTableMath(html: string, vault: Map<string, { body: string; display: boolean }>): string {
+function restoreShieldedTableMath(
+  html: string,
+  vault: Map<string, { body: string; display: boolean }>
+): string {
   let out = html
   for (const [ph, { body, display }] of vault.entries()) {
     const rendered = renderKatex(body.replace(/\\\|/g, '|'), display)

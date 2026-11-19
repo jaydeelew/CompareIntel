@@ -3,7 +3,11 @@ const URI_AUTOLINK_RE = /<((?:https?:\/\/|mailto:)[^>\s]+)>/gi
 const EMAIL_AUTOLINK_RE = /<([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>/g
 
 function escapeHtmlAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }
 
 function renderAutolinkAnchor(url: string, label?: string): string {
