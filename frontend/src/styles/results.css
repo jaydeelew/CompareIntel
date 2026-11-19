@@ -3767,10 +3767,16 @@ button.nav-button-primary {
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.125rem;
+  gap: 0.3125rem;
   flex: 1 1 0;
   min-width: 0;
   max-width: 100%;
+}
+
+.saved-selections-bookmark-cluster > .tooltip:not(.default-selection-name-tooltip) {
+  flex: 0 0 auto;
+  width: auto;
+  justify-content: flex-start;
 }
 
 /* StyledTooltip on the label sits in the cluster — override global .tooltip centering */
@@ -3846,6 +3852,29 @@ button.nav-button-primary {
 .saved-selections-button.active svg {
   fill: currentColor;
   fill-opacity: 0.1;
+}
+
+/* Composer toolbar: optical ~3–4px between bookmark glyph and selection name (see ink tests) */
+.composer-toolbar .saved-selections-bookmark-cluster .saved-selections-button {
+  width: 18px;
+  min-width: 18px;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+}
+
+.composer-toolbar .saved-selections-bookmark-cluster .saved-selections-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  right: -6px;
+}
+
+.composer-toolbar .saved-selections-bookmark-cluster .saved-selections-button svg {
+  display: block;
+  margin-right: -4px;
 }
 
 /* Saved selections dropdown - renders in slot below toolbar, extends composer */

@@ -13,7 +13,10 @@ describe('saved selections composer toolbar layout CSS', () => {
     expect(resultsCss).toMatch(
       /\.saved-selections-bookmark-cluster\s*\{[^}]*display:\s*inline-flex/
     )
-    expect(resultsCss).toMatch(/\.saved-selections-bookmark-cluster\s*\{[^}]*gap:\s*0\.125rem/)
+    expect(resultsCss).toMatch(/\.saved-selections-bookmark-cluster\s*\{[^}]*gap:\s*0\.3125rem/)
+    expect(resultsCss).toMatch(
+      /\.composer-toolbar \.saved-selections-bookmark-cluster \.saved-selections-button\s*\{[^}]*width:\s*18px/
+    )
     expect(resultsCss).toMatch(
       /\.saved-selections-bookmark-cluster\s*\{[^}]*justify-content:\s*flex-start/
     )
