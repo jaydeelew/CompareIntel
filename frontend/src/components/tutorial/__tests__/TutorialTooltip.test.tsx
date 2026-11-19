@@ -201,7 +201,7 @@ describe('TutorialTooltip', () => {
     expect(button).toBeDisabled()
   })
 
-  it('does not animate top or left — only opacity and transform ease the step in', () => {
+  it('does not animate top or left — opacity eases the step in', () => {
     const { container } = render(<TutorialTooltip {...defaultProps} positionStabilized settling />)
     const tooltip = container.querySelector('.tutorial-tooltip') as HTMLElement
     expect(tooltip.style.transition).toBe('')

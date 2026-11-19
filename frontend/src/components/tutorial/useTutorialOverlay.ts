@@ -108,6 +108,8 @@ export function useTutorialOverlay(
   /** True only after this step's single scroll and viewport settle have been measured. */
   const spotlightSettledRef = useRef(false)
   const settledStepRef = useRef<TutorialStep | null>(null)
+  /** Target rect captured when the fade-in starts. Later drift hides the tooltip before a remeasure. */
+  const placedAnchorRef = useRef<{ top: number; left: number } | null>(null)
   const [spotlightSettling, setSpotlightSettling] = useState(true)
   /** After follow-up → view-follow-up-results, skip immediate tooltip show so step 5 vanishes first. */
   const suppressReviewTooltipRevealRef = useRef(false)
@@ -279,10 +281,10 @@ export function useTutorialOverlay(
     setEffectivePosition(null)
   }, [step])
 
-  // After the tooltip renders, clamp it fully into the viewport (regardless of content height/transform).
-  // This is a final safety net for production timing/layout differences.
+  // Clamp only while the tooltip is still hidden. Measuring the box after the fade
+  // starts writes a new top/left while it is already opaque.
   useLayoutEffect(() => {
-    if (!isVisible) return
+    if (!isVisible || !spotlightSettling) return
     const el = overlayRef.current
     if (!el) return
 
@@ -311,7 +313,7 @@ export function useTutorialOverlay(
     } else {
       tooltipClampAttemptsRef.current = 0
     }
-  }, [isVisible, step, overlayPosition.top, overlayPosition.left])
+  }, [isVisible, step, overlayPosition.top, overlayPosition.left, spotlightSettling])
 
   useLayoutEffect(() => {
     if (isPrimaryExpandProviderStep(step) && prevStepForExpandProviderRef.current !== step) {
@@ -773,6 +775,20 @@ export function useTutorialOverlay(
       return null
     }
 
+    const readAnchor = (): { top: number; left: number } | null => {
+      const el = layoutTarget()
+      if (!el) return null
+      const rect = layoutRectForStep() ?? el.getBoundingClientRect()
+      return { top: rect.top, left: rect.left }
+    }
+
+    const anchorMoved = () => {
+      const next = readAnchor()
+      const prev = placedAnchorRef.current
+      if (!next || !prev) return false
+      return Math.abs(next.top - prev.top) >= 4 || Math.abs(next.left - prev.left) >= 4
+    }
+
     const updatePosition = () => {
       const el = layoutTarget()
       if (!el) return
@@ -780,6 +796,22 @@ export function useTutorialOverlay(
       const { top, left, effectivePosition: effPos } = computeTooltipPosition(rect, step, config)
       setEffectivePosition(effPos)
       setOverlayPosition({ top, left })
+    }
+
+    let fadeStarted = false
+    let corrections = 0
+
+    const showSettledTooltip = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (cancelled || stepRef.current !== step) return
+          placedAnchorRef.current = readAnchor()
+          setPositionStabilized(true)
+          setSpotlightSettling(false)
+          setTutorialSpotlightSettling(false)
+          fadeStarted = true
+        })
+      })
     }
 
     const scrollRoot = getTutorialScrollRoot()
@@ -812,14 +844,21 @@ export function useTutorialOverlay(
       freezeScrollOnCleanup = false
       setIsVisible(true)
       window.dispatchEvent(new Event(TUTORIAL_SPOTLIGHT_SETTLED_EVENT))
-      // Paint the hidden tooltip at its final coordinates, then fade/transform in.
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (cancelled || stepRef.current !== step) return
-          setPositionStabilized(true)
-          setSpotlightSettling(false)
-          setTutorialSpotlightSettling(false)
-        })
+      // Paint the hidden tooltip at its final coordinates, then fade opacity in.
+      showSettledTooltip()
+    }
+
+    const restabilize = () => {
+      if (!fadeStarted || corrections >= 2 || cancelled || stepRef.current !== step) return
+      corrections += 1
+      fadeStarted = false
+      setSpotlightSettling(true)
+      setTutorialSpotlightSettling(true)
+      setPositionStabilized(false)
+      void waitForTutorialLayoutSettle({ timeoutMs: 600, quietMs: 80 }).then(() => {
+        if (cancelled || stepRef.current !== step) return
+        updatePosition()
+        showSettledTooltip()
       })
     }
 
@@ -838,8 +877,15 @@ export function useTutorialOverlay(
     const alreadySettled = spotlightSettledRef.current && settledStepRef.current === step
     if (alreadySettled) {
       freezeScrollOnCleanup = false
-      updatePosition()
-      window.dispatchEvent(new Event(TUTORIAL_SPOTLIGHT_SETTLED_EVENT))
+      if (anchorMoved()) {
+        setSpotlightSettling(true)
+        setTutorialSpotlightSettling(true)
+        setPositionStabilized(false)
+        updatePosition()
+        showSettledTooltip()
+      } else {
+        fadeStarted = true
+      }
     } else {
       scrollDelayTimer = setTimeout(() => {
         scrollDelayTimer = null
@@ -857,15 +903,24 @@ export function useTutorialOverlay(
 
     const handleScroll = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
-      updatePosition()
+      // Before the fade, a trailing scroll event can still correct the hidden tooltip.
+      // After the fade, never slide it: hide, wait, and measure once.
+      if (!fadeStarted) {
+        updatePosition()
+        return
+      }
+      if (anchorMoved()) restabilize()
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
       const token = ++viewportToken.current
       void waitForTutorialLayoutSettle({ timeoutMs: 700, quietMs: 90 }).then(() => {
         if (cancelled || token !== viewportToken.current || stepRef.current !== step) return
-        updatePosition()
-        window.dispatchEvent(new Event(TUTORIAL_SPOTLIGHT_SETTLED_EVENT))
+        if (!fadeStarted) {
+          updatePosition()
+          return
+        }
+        if (anchorMoved()) restabilize()
       })
     }
 
@@ -1216,11 +1271,9 @@ export function useTutorialOverlay(
           const cutout = computeTextareaCutout(composerElement)
           setTextareaCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
         }
-        // Set target element only when needed; avoid re-triggering scroll during the initial phase
+        // Replacing the target after the fade restarts placement and slides the tooltip.
         const currentTarget = targetElementRef.current
-        if (!currentTarget) {
-          setTargetElement(composerElement)
-        } else if (initialScrollCompleteRef.current && currentTarget !== composerElement) {
+        if (!currentTarget && !spotlightSettledRef.current) {
           setTargetElement(composerElement)
         }
       }
@@ -1274,9 +1327,7 @@ export function useTutorialOverlay(
           setTextareaCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
         }
         const currentTarget = targetElementRef.current
-        if (!currentTarget) {
-          setTargetElement(composerElement)
-        } else if (initialScrollCompleteRef.current && currentTarget !== composerElement) {
+        if (!currentTarget && !spotlightSettledRef.current) {
           setTargetElement(composerElement)
         }
       }
@@ -1381,9 +1432,11 @@ export function useTutorialOverlay(
             resultsSection.style.pointerEvents = 'auto'
             resultsSection.style.position = 'relative'
           }
-          setTargetElement(resultsSection)
-          if (!suppressReviewTooltipRevealRef.current) {
-            setIsVisible(true)
+          if (!spotlightSettledRef.current) {
+            setTargetElement(resultsSection)
+            if (!suppressReviewTooltipRevealRef.current) {
+              setIsVisible(true)
+            }
           }
         }
         return
@@ -1450,7 +1503,7 @@ export function useTutorialOverlay(
         const submitButton = document.querySelector(
           '[data-testid="comparison-submit-button"]'
         ) as HTMLElement
-        if (submitButton) {
+        if (submitButton && !spotlightSettledRef.current) {
           setTargetElement(submitButton)
           setIsVisible(true)
         }
@@ -1693,9 +1746,11 @@ export function useTutorialOverlay(
         if (!historyToggleButton.classList.contains('tutorial-highlight')) {
           historyToggleButton.classList.add('tutorial-highlight')
         }
-        // Ensure visibility and target when interval finds element (main findElement may have failed)
-        setTargetElement(historyToggleButton)
-        setIsVisible(true)
+        // A later target swap recenters the tooltip after the fade has started.
+        if (!spotlightSettledRef.current) {
+          setTargetElement(historyToggleButton)
+          setIsVisible(true)
+        }
       }
 
       // Cutout expands to include dropdown when open (composer + dropdown union)
@@ -1774,9 +1829,10 @@ export function useTutorialOverlay(
         if (!savedSelectionsButton.classList.contains('tutorial-highlight')) {
           savedSelectionsButton.classList.add('tutorial-highlight')
         }
-        // Ensure visibility and target when interval finds element (main findElement may have failed)
-        setTargetElement(savedSelectionsButton)
-        setIsVisible(true)
+        if (!spotlightSettledRef.current) {
+          setTargetElement(savedSelectionsButton)
+          setIsVisible(true)
+        }
       }
 
       // Cutout expands to include dropdown when open (composer + dropdown union).

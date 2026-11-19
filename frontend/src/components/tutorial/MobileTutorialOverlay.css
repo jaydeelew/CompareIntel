@@ -179,10 +179,8 @@
   max-width: 300px;
   pointer-events: auto;
   overflow: visible;
-  /* Top/left are set once per step. Only opacity and a short translate ease in. */
-  transition:
-    opacity 200ms ease,
-    transform 200ms ease;
+  /* Top/left are set once per step. The visible fade is opacity only. */
+  transition: opacity 200ms ease;
 }
 
 /* Hide tooltip during automatic step transitions to prevent jitter while page scrolls.
@@ -190,9 +188,12 @@
    on .mobile-tutorial-tooltip handles the smooth fade-in when the class is removed. */
 .mobile-tutorial-tooltip--transitioning {
   opacity: 0 !important;
-  transform: translateY(8px) !important;
   pointer-events: none !important;
   transition: none !important;
+}
+
+.mobile-tutorial-tooltip--transitioning .mobile-tutorial-close-button {
+  pointer-events: auto !important;
 }
 
 @keyframes tutorial-frame-in {

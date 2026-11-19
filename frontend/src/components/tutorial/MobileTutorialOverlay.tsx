@@ -728,11 +728,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const onAnimationEnd = (e: AnimationEvent) => {
       if (e.animationName !== 'composer-float-in' && e.animationName !== 'composer-float-in-moz')
         return
+      if (spotlightSettledRef.current) return
       calculatePositions()
     }
 
     targetElement.addEventListener('animationend', onAnimationEnd)
-    const fallback = window.setTimeout(() => calculatePositions(), 450)
+    const fallback = window.setTimeout(() => {
+      if (spotlightSettledRef.current) return
+      calculatePositions()
+    }, 450)
 
     return () => {
       targetElement.removeEventListener('animationend', onAnimationEnd)
@@ -823,20 +827,56 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
+    const readAnchor = () => {
+      const rect = targetEl.getBoundingClientRect()
+      return { top: rect.top, left: rect.left }
+    }
+
+    let fadeStarted = false
+    let corrections = 0
+    let placedAnchor: { top: number; left: number } | null = null
+
+    const showSettledTooltip = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (cancelled || stepRef.current !== currentStep) return
+          placedAnchor = readAnchor()
+          isStepTransitioningRef.current = false
+          setIsStepTransitioning(false)
+          setTutorialSpotlightSettling(false)
+          fadeStarted = true
+        })
+      })
+    }
+
     const revealSettledStep = () => {
       if (cancelled || stepRef.current !== currentStep) return
       calculatePositions()
       setIsVisible(true)
       spotlightSettledRef.current = true
       settledStepRef.current = currentStep
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (cancelled || stepRef.current !== currentStep) return
-          isStepTransitioningRef.current = false
-          setIsStepTransitioning(false)
-          setTutorialSpotlightSettling(false)
-        })
+      showSettledTooltip()
+    }
+
+    const restabilize = () => {
+      if (!fadeStarted || corrections >= 2 || cancelled || stepRef.current !== currentStep) return
+      corrections += 1
+      fadeStarted = false
+      isStepTransitioningRef.current = true
+      setIsStepTransitioning(true)
+      setTutorialSpotlightSettling(true)
+      void waitForTutorialLayoutSettle({ timeoutMs: 600, quietMs: 80 }).then(() => {
+        if (cancelled || stepRef.current !== currentStep) return
+        revealSettledStep()
       })
+    }
+
+    const anchorMoved = () => {
+      if (!placedAnchor) return false
+      const next = readAnchor()
+      return (
+        Math.abs(next.top - placedAnchor.top) >= 4 || Math.abs(next.left - placedAnchor.left) >= 4
+      )
     }
 
     const waitForFollowUpFloat = () =>
@@ -867,7 +907,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
 
     if (alreadySettled) {
-      calculatePositions()
+      fadeStarted = true
     } else {
       scrollDelayTimer = window.setTimeout(
         () => {
@@ -886,22 +926,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       )
     }
 
-    let positionRaf = 0
     let viewportToken = 0
     const schedulePositionUpdate = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
-      if (positionRaf) cancelAnimationFrame(positionRaf)
-      positionRaf = requestAnimationFrame(() => {
-        positionRaf = 0
-        if (spotlightSettledRef.current && stepRef.current === currentStep) calculatePositions()
-      })
+      if (!fadeStarted) return
+      if (anchorMoved()) restabilize()
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
       const token = ++viewportToken
       void waitForTutorialLayoutSettle({ timeoutMs: 700, quietMs: 90 }).then(() => {
         if (cancelled || token !== viewportToken || stepRef.current !== currentStep) return
-        calculatePositions()
+        if (!fadeStarted) return
+        if (anchorMoved()) restabilize()
       })
     }
 
@@ -915,14 +952,17 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       cancelled = true
       viewportToken += 1
       if (scrollDelayTimer !== null) window.clearTimeout(scrollDelayTimer)
-      if (positionRaf) cancelAnimationFrame(positionRaf)
       window.removeEventListener('scroll', schedulePositionUpdate, true)
       window.removeEventListener('resize', schedulePositionUpdate)
       appScrollHost?.removeEventListener('scroll', schedulePositionUpdate)
       window.visualViewport?.removeEventListener('resize', onViewport)
       if (!spotlightSettledRef.current) {
-        const root = getTutorialScrollRoot()
-        root.scrollToTop(root.getScrollTop(), 'auto')
+        try {
+          const root = getTutorialScrollRoot()
+          root.scrollToTop(root.getScrollTop(), 'auto')
+        } catch {
+          // jsdom does not implement Element.scrollTo.
+        }
       }
     }
   }, [targetElement, step, calculatePositions, tooltipEstimatedHeight])

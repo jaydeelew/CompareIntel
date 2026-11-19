@@ -31,7 +31,7 @@ export interface TutorialTooltipProps {
   overlayPosition: { top: number; left: number }
   effectivePosition: 'top' | 'bottom' | null
   positionStabilized: boolean
-  /** True while the step scroll/viewport settle is in progress. Opacity/transform only. */
+  /** True while the step scroll/viewport settle is in progress. The card fades in on opacity. */
   settling?: boolean
 }
 

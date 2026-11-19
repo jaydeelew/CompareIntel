@@ -300,7 +300,8 @@ body:has(.tutorial-backdrop) .hero-section {
   }
 }
 
-/* Tooltip bubble. Move with top/left instantly; only opacity and transform ease in. */
+/* Tooltip bubble. top/left and the placement transform are set while hidden.
+   The visible fade is opacity only, so the box does not travel after it appears. */
 .tutorial-tooltip {
   position: fixed;
   z-index: 10000;
@@ -309,9 +310,7 @@ body:has(.tutorial-backdrop) .hero-section {
   min-width: 230px;
   transform: translate(-50%, 0);
   pointer-events: auto;
-  transition:
-    opacity 200ms ease,
-    transform 200ms ease;
+  transition: opacity 200ms ease;
 }
 
 .tutorial-tooltip--settling {
@@ -320,12 +319,9 @@ body:has(.tutorial-backdrop) .hero-section {
   transition: none !important;
 }
 
-.tutorial-tooltip-top.tutorial-tooltip--settling {
-  transform: translate(-50%, calc(-100% + 10px)) !important;
-}
-
-.tutorial-tooltip-bottom.tutorial-tooltip--settling {
-  transform: translate(-50%, 10px) !important;
+/* Skip stays clickable while the card is hidden for the scroll. */
+.tutorial-tooltip--settling .tutorial-close-button {
+  pointer-events: auto !important;
 }
 
 .tutorial-backdrop-cutout {
