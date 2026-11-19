@@ -756,7 +756,6 @@ export function useTutorialOverlay(
     let scrollDelayTimer: ReturnType<typeof setTimeout> | null = null
     let cancelled = false
     let freezeScrollOnCleanup = true
-    const viewportToken = { current: 0 }
 
     const layoutTarget = (): HTMLElement | null => {
       if (step === 'follow-up') {
@@ -849,7 +848,7 @@ export function useTutorialOverlay(
     }
 
     const restabilize = () => {
-      if (!fadeStarted || corrections >= 2 || cancelled || stepRef.current !== step) return
+      if (!fadeStarted || corrections >= 1 || cancelled || stepRef.current !== step) return
       corrections += 1
       fadeStarted = false
       setSpotlightSettling(true)
@@ -913,15 +912,11 @@ export function useTutorialOverlay(
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
-      const token = ++viewportToken.current
-      void waitForTutorialLayoutSettle({ timeoutMs: 700, quietMs: 90 }).then(() => {
-        if (cancelled || token !== viewportToken.current || stepRef.current !== step) return
-        if (!fadeStarted) {
-          updatePosition()
-          return
-        }
-        if (anchorMoved()) restabilize()
-      })
+      if (!fadeStarted) {
+        updatePosition()
+        return
+      }
+      if (anchorMoved()) restabilize()
     }
 
     window.addEventListener('scroll', handleScroll, true)
@@ -932,7 +927,6 @@ export function useTutorialOverlay(
 
     return () => {
       cancelled = true
-      viewportToken.current += 1
       window.removeEventListener('scroll', handleScroll, true)
       window.removeEventListener('resize', handleScroll)
       appScrollHost?.removeEventListener('scroll', handleScroll)

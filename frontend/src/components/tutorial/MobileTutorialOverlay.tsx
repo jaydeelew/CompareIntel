@@ -859,7 +859,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     const restabilize = () => {
-      if (!fadeStarted || corrections >= 2 || cancelled || stepRef.current !== currentStep) return
+      if (!fadeStarted || corrections >= 1 || cancelled || stepRef.current !== currentStep) return
       corrections += 1
       fadeStarted = false
       isStepTransitioningRef.current = true
@@ -926,7 +926,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       )
     }
 
-    let viewportToken = 0
     const schedulePositionUpdate = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
       if (!fadeStarted) return
@@ -934,12 +933,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
-      const token = ++viewportToken
-      void waitForTutorialLayoutSettle({ timeoutMs: 700, quietMs: 90 }).then(() => {
-        if (cancelled || token !== viewportToken || stepRef.current !== currentStep) return
-        if (!fadeStarted) return
-        if (anchorMoved()) restabilize()
-      })
+      if (!fadeStarted) return
+      if (anchorMoved()) restabilize()
     }
 
     window.addEventListener('scroll', schedulePositionUpdate, true)
@@ -950,7 +945,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     return () => {
       cancelled = true
-      viewportToken += 1
       if (scrollDelayTimer !== null) window.clearTimeout(scrollDelayTimer)
       window.removeEventListener('scroll', schedulePositionUpdate, true)
       window.removeEventListener('resize', schedulePositionUpdate)

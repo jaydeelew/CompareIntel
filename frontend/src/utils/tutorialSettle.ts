@@ -59,7 +59,7 @@ function readScrollTop(target: EventTarget): number {
 }
 
 /**
- * Resolves when scrolling, visualViewport, font loading, and layout size have been quiet.
+ * Resolves when scrolling, visualViewport, and font loading have been quiet.
  * `scrollend` arms the same quiet period; a timeout resolves if the event never fires.
  * Call this after starting the single programmatic scroll.
  */
@@ -76,14 +76,12 @@ export function waitForTutorialLayoutSettle(options?: {
     let finished = false
     let quietTimer: ReturnType<typeof setTimeout> | null = null
     let hardTimer: ReturnType<typeof setTimeout> | null = null
-    let resizeObserver: ResizeObserver | null = null
     let lastScroll = readScrollTop(scrollTarget)
     let lastViewport = readViewportSignature()
 
     const cleanup = () => {
       if (quietTimer) clearTimeout(quietTimer)
       if (hardTimer) clearTimeout(hardTimer)
-      resizeObserver?.disconnect()
       scrollTarget.removeEventListener('scroll', onActivity)
       scrollTarget.removeEventListener('scrollend', onActivity)
       window.removeEventListener('scroll', onActivity)
@@ -117,8 +115,15 @@ export function waitForTutorialLayoutSettle(options?: {
     }
 
     const onActivity = () => {
-      lastScroll = readScrollTop(scrollTarget)
-      lastViewport = readViewportSignature()
+      const scrollNow = readScrollTop(scrollTarget)
+      const viewportNow = readViewportSignature()
+      const scrollChanged = Math.abs(scrollNow - lastScroll) >= 1
+      const viewportChanged = viewportNow !== lastViewport
+      lastScroll = scrollNow
+      lastViewport = viewportNow
+      // Safari emits visualViewport and scroll events that do not move the page.
+      // Resetting the quiet period on those events holds the tooltip hidden until timeout.
+      if (!scrollChanged && !viewportChanged) return
       armQuiet()
     }
 
@@ -129,24 +134,6 @@ export function waitForTutorialLayoutSettle(options?: {
     }
     window.visualViewport?.addEventListener('resize', onActivity)
     window.visualViewport?.addEventListener('scroll', onActivity)
-
-    if (typeof ResizeObserver !== 'undefined') {
-      let lastBox = ''
-      resizeObserver = new ResizeObserver(entries => {
-        const box = entries
-          .map(
-            entry =>
-              `${Math.round(entry.contentRect.width)}x${Math.round(entry.contentRect.height)}`
-          )
-          .join('|')
-        if (box === lastBox) return
-        lastBox = box
-        onActivity()
-      })
-      resizeObserver.observe(document.documentElement)
-      const app = document.querySelector('.app')
-      if (app) resizeObserver.observe(app)
-    }
 
     hardTimer = setTimeout(finish, timeoutMs)
     const fontsReady = document.fonts?.ready
