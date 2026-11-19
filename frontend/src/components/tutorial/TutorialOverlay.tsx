@@ -47,6 +47,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     portalRoot,
     effectivePosition,
     positionStabilized,
+    spotlightSettling,
     dropdownCutout,
     buttonCutout,
     loadingStreamingCutout,
@@ -81,6 +82,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     <>
       <TutorialBackdrop
         step={step}
+        suppressCutout={spotlightSettling}
         isLoadingStreamingPhase={isLoadingStreamingPhase}
         loadingStreamingCutout={loadingStreamingCutout}
         useRoundedCutout={useRoundedCutout}
@@ -111,6 +113,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             overlayPosition={overlayPosition}
             effectivePosition={effectivePosition}
             positionStabilized={positionStabilized}
+            settling={spotlightSettling}
           />
         )}
     </>

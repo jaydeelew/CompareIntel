@@ -201,6 +201,14 @@ describe('TutorialTooltip', () => {
     expect(button).toBeDisabled()
   })
 
+  it('does not animate top or left — only opacity and transform ease the step in', () => {
+    const { container } = render(<TutorialTooltip {...defaultProps} positionStabilized settling />)
+    const tooltip = container.querySelector('.tutorial-tooltip') as HTMLElement
+    expect(tooltip.style.transition).toBe('')
+    expect(tooltip).toHaveClass('tutorial-tooltip--settling')
+    expect(tooltip.getAttribute('data-position-stabilized')).toBe('true')
+  })
+
   it('should apply position class from effectivePosition when step has dynamic position', () => {
     const { container } = render(<TutorialTooltip {...defaultProps} effectivePosition="bottom" />)
     const tooltip = container.querySelector('.tutorial-tooltip')

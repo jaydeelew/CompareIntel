@@ -300,7 +300,7 @@ body:has(.tutorial-backdrop) .hero-section {
   }
 }
 
-/* Tooltip bubble */
+/* Tooltip bubble. Move with top/left instantly; only opacity and transform ease in. */
 .tutorial-tooltip {
   position: fixed;
   z-index: 10000;
@@ -309,6 +309,56 @@ body:has(.tutorial-backdrop) .hero-section {
   min-width: 230px;
   transform: translate(-50%, 0);
   pointer-events: auto;
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+
+.tutorial-tooltip--settling {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+.tutorial-tooltip-top.tutorial-tooltip--settling {
+  transform: translate(-50%, calc(-100% + 10px)) !important;
+}
+
+.tutorial-tooltip-bottom.tutorial-tooltip--settling {
+  transform: translate(-50%, 10px) !important;
+}
+
+.tutorial-backdrop-cutout {
+  transition: opacity 200ms ease;
+}
+
+@keyframes tutorial-frame-in {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tutorial-backdrop-cutout--enter {
+  animation: tutorial-frame-in 200ms ease;
+}
+
+/* While a step is settling, element rings stay off so they do not travel with the scroll. */
+html.tutorial-spotlight-settling .tutorial-highlight,
+html.tutorial-spotlight-settling .mobile-tutorial-highlight {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-tooltip,
+  .tutorial-backdrop-cutout,
+  .tutorial-backdrop-cutout--enter {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 .tutorial-tooltip-top {

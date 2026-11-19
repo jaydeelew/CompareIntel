@@ -31,6 +31,8 @@ export interface TutorialTooltipProps {
   overlayPosition: { top: number; left: number }
   effectivePosition: 'top' | 'bottom' | null
   positionStabilized: boolean
+  /** True while the step scroll/viewport settle is in progress. Opacity/transform only. */
+  settling?: boolean
 }
 
 export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
@@ -47,25 +49,22 @@ export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
   overlayPosition,
   effectivePosition,
   positionStabilized,
+  settling = false,
 }) => {
   const positionClass =
     STEPS_WITH_DYNAMIC_POSITION.includes(step) && effectivePosition
       ? effectivePosition
       : config.position
 
-  const shouldAnimate = positionStabilized && STEPS_WITH_DYNAMIC_POSITION.includes(step)
-
   return (
     <div
       ref={overlayRef}
-      className={`tutorial-tooltip tutorial-tooltip-${positionClass}`}
+      className={`tutorial-tooltip tutorial-tooltip-${positionClass}${settling ? ' tutorial-tooltip--settling' : ''}`}
+      data-position-stabilized={positionStabilized ? 'true' : 'false'}
       style={{
         top: `${overlayPosition.top}px`,
         left: `${overlayPosition.left}px`,
         zIndex: 10000,
-        // Animate vertical placement only — animating `left` while layout/scroll nudges the target
-        // causes visible horizontal jiggle (notably step 2 after step 1).
-        transition: shouldAnimate ? 'top 0.3s ease-in-out' : 'none',
       }}
     >
       <div className="tutorial-tooltip-content">
