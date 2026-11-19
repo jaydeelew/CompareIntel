@@ -48,6 +48,8 @@ export interface ComparisonPageContentProps {
   onNewComparison: () => void
   renderUsagePreview: () => ReactNode
   selectedModels: string[]
+  /** Follow-up cannot be sent because every model in the conversation has left the lineup. */
+  followUpUnavailable?: boolean
   modelsByProvider: ModelsByProvider
   onAccurateTokenCountChange?: (totalInputTokens: number | null) => void
   creditsRemaining: number
@@ -124,6 +126,7 @@ export function ComparisonPageContent({
   onNewComparison,
   renderUsagePreview,
   selectedModels,
+  followUpUnavailable = false,
   modelsByProvider,
   onAccurateTokenCountChange,
   creditsRemaining,
@@ -223,6 +226,7 @@ export function ComparisonPageContent({
             onNewComparison={onNewComparison}
             renderUsagePreview={renderUsagePreview}
             selectedModels={selectedModels}
+            followUpUnavailable={followUpUnavailable}
             modelsByProvider={modelsByProvider}
             onAccurateTokenCountChange={onAccurateTokenCountChange}
             creditsRemaining={creditsRemaining}

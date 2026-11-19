@@ -6,6 +6,7 @@ import type {
   ConversationMessage,
   ConversationSummary,
   ModelConversation,
+  ModelsByProvider,
   StoredMessage,
   TextComposerAdvancedSettings,
   ImageComposerAdvancedSettings,
@@ -13,6 +14,7 @@ import type {
 import { createModelId, createMessageId } from '../types'
 import { showNotification } from '../utils'
 import logger from '../utils/logger'
+import { followUpModelIds } from '../utils/retiredConversationModels'
 
 type BreakoutPhase = 'idle' | 'fading-out' | 'hidden' | 'fading-in'
 
@@ -25,6 +27,8 @@ interface UseBreakoutConversationConfig {
   isAuthenticated: boolean
   currentVisibleComparisonId: string | number | null
   allModels: Model[]
+  /** Full catalog. Display-filtered `allModels` is not used for retirement checks. */
+  modelsByProvider: ModelsByProvider
   textareaRef: React.RefObject<HTMLTextAreaElement>
 }
 
@@ -69,7 +73,8 @@ export function useBreakoutConversation(
   config: UseBreakoutConversationConfig,
   callbacks: UseBreakoutConversationCallbacks
 ) {
-  const { isAuthenticated, currentVisibleComparisonId, allModels, textareaRef } = config
+  const { isAuthenticated, currentVisibleComparisonId, allModels, modelsByProvider, textareaRef } =
+    config
   const {
     loadHistoryFromAPI,
     loadConversationFromLocalStorage,
@@ -177,8 +182,9 @@ export function useBreakoutConversation(
         }
 
         setConversations([breakoutModelConversation])
-        setSelectedModels([modelId])
-        setOriginalSelectedModels([modelId])
+        const followUpModels = followUpModelIds([modelId], modelsByProvider)
+        setSelectedModels(followUpModels)
+        setOriginalSelectedModels(followUpModels)
         setClosedCards(new Set())
         setIsFollowUpMode(true)
         setCurrentVisibleComparisonId(breakoutConversationId)
@@ -194,12 +200,14 @@ export function useBreakoutConversation(
         setTimeout(() => textareaRef.current?.focus(), 350)
 
         const model = allModels.find(m => m.id === modelId)
-        const notification = showNotification(
-          `Broke out conversation with ${model?.name || modelId}. You can now continue the conversation with this model only.`,
-          'success'
-        )
-        notification.clearAutoRemove()
-        setTimeout(() => notification(), 5000)
+        if (followUpModels.length > 0) {
+          const notification = showNotification(
+            `Broke out conversation with ${model?.name || modelId}. You can now continue the conversation with this model only.`,
+            'success'
+          )
+          notification.clearAutoRemove()
+          setTimeout(() => notification(), 5000)
+        }
 
         setTutorialHasBreakout(true)
       } catch (err) {
@@ -212,6 +220,7 @@ export function useBreakoutConversation(
       isAuthenticated,
       currentVisibleComparisonId,
       allModels,
+      modelsByProvider,
       textareaRef,
       loadHistoryFromAPI,
       loadConversationFromLocalStorage,
