@@ -484,17 +484,6 @@ def get_openrouter_models_json_path() -> Path:
     return _OPENROUTER_MODELS_PATH
 
 
-# Upstream returns 400 invalid_model ("Invalid model: mistral-medium-2508") for this id.
-RETIRED_MODEL_IDS = frozenset({"mistralai/mistral-medium-3.1"})
-
-
-def omit_retired_model_ids(model_ids: list[str]) -> list[str]:
-    """Drop retired ids so a saved selection cannot be sent to OpenRouter."""
-    if not model_ids or not RETIRED_MODEL_IDS.intersection(model_ids):
-        return model_ids
-    return [model_id for model_id in model_ids if model_id not in RETIRED_MODEL_IDS]
-
-
 def get_registry_model_ids(registry: dict[str, Any] | None = None) -> set[str]:
     """Return all model ids listed in models_registry.json."""
     data = registry if registry is not None else load_registry()
@@ -506,6 +495,33 @@ def get_registry_model_ids(registry: dict[str, Any] | None = None) -> set[str]:
             if isinstance(m, dict) and (mid := m.get("id")):
                 ids.add(str(mid))
     return ids
+
+
+def _active_registry_model_ids() -> set[str]:
+    """Ids in the in-memory lineup (updated by ``reload_registry``)."""
+    ids: set[str] = set()
+    for models in MODELS_BY_PROVIDER.values():
+        if not isinstance(models, list):
+            continue
+        for model in models:
+            if isinstance(model, dict) and (mid := model.get("id")):
+                ids.add(str(mid))
+    return ids
+
+
+def omit_unregistered_model_ids(model_ids: list[str]) -> list[str]:
+    """Drop ids that are not in the active registry.
+
+    A saved comparison can name a model that has since left the lineup for any
+    reason. Those ids are removed before tier checks and before OpenRouter.
+    Returns the same list object when every id is still registered.
+    """
+    if not model_ids:
+        return model_ids
+    registered = _active_registry_model_ids()
+    if all(model_id in registered for model_id in model_ids):
+        return model_ids
+    return [model_id for model_id in model_ids if model_id in registered]
 
 
 def _load_openrouter_snapshot_file() -> dict[str, Any]:

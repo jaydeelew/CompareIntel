@@ -17,7 +17,6 @@ from ...credit_manager import (
 )
 from ...database import get_db
 from ...dependencies import get_current_user
-from ...llm.registry import omit_retired_model_ids
 from ...model_runner import (
     estimate_token_count,
     get_min_max_input_tokens,
@@ -367,10 +366,13 @@ async def compare_stream(
     if not req.models:
         raise HTTPException(status_code=400, detail="At least one model must be selected")
 
-    active_models = omit_retired_model_ids(req.models)
+    # Drop ids missing from the active registry (retired, renamed, or unknown).
+    from ...llm.registry import omit_unregistered_model_ids
+
+    active_models = omit_unregistered_model_ids(req.models)
     if len(active_models) != len(req.models):
         dropped = [model_id for model_id in req.models if model_id not in active_models]
-        logger.info("Dropped retired model ids from comparison request: %s", dropped)
+        logger.info("Dropped model ids that are not in the active registry: %s", dropped)
         req.models = active_models
     if not req.models:
         raise HTTPException(
