@@ -59,6 +59,7 @@ type DefaultSelectionToolbarLayout = {
   boxGap: number
   selectionEndToUploadGap: number
   bookmarkLayoutWidth: number
+  labelOffsetFromClusterLeft: number
 }
 
 function measureDefaultSelectionToolbarLayout(): DefaultSelectionToolbarLayout {
@@ -80,6 +81,7 @@ function measureDefaultSelectionToolbarLayout(): DefaultSelectionToolbarLayout {
       boxGap: -1,
       selectionEndToUploadGap: -1,
       bookmarkLayoutWidth: -1,
+      labelOffsetFromClusterLeft: -1,
     }
   }
 
@@ -95,12 +97,18 @@ function measureDefaultSelectionToolbarLayout(): DefaultSelectionToolbarLayout {
   let boxGap = -1
   let selectionEndToUploadGap = -1
   let bookmarkLayoutWidth = -1
+  let labelOffsetFromClusterLeft = -1
 
   if (bookmark && label) {
+    const cluster = document.querySelector('.saved-selections-bookmark-cluster')
     const svg = bookmark.querySelector('svg')
     const textNode = label.firstChild
+    const labelRect = label.getBoundingClientRect()
     bookmarkLayoutWidth = bookmark.getBoundingClientRect().width
-    boxGap = label.getBoundingClientRect().left - bookmark.getBoundingClientRect().right
+    boxGap = labelRect.left - bookmark.getBoundingClientRect().right
+    if (cluster) {
+      labelOffsetFromClusterLeft = labelRect.left - cluster.getBoundingClientRect().left
+    }
 
     if (svg && textNode?.nodeType === Node.TEXT_NODE && textNode.textContent) {
       const startRange = document.createRange()
@@ -108,15 +116,11 @@ function measureDefaultSelectionToolbarLayout(): DefaultSelectionToolbarLayout {
       startRange.setEnd(textNode, 1)
       const startRect = startRange.getBoundingClientRect()
       visibleInkGap = startRect.left - svg.getBoundingClientRect().right
+    }
 
-      const endRange = document.createRange()
-      const len = textNode.textContent.length
-      endRange.setStart(textNode, len)
-      endRange.setEnd(textNode, len)
-      const endRect = endRange.getBoundingClientRect()
-      if (upload) {
-        selectionEndToUploadGap = upload.getBoundingClientRect().left - endRect.right
-      }
+    if (upload) {
+      // Use the laid-out label box (respects ellipsis), not full string ink extent.
+      selectionEndToUploadGap = upload.getBoundingClientRect().left - labelRect.right
     }
   }
 
@@ -128,6 +132,7 @@ function measureDefaultSelectionToolbarLayout(): DefaultSelectionToolbarLayout {
     boxGap,
     selectionEndToUploadGap,
     bookmarkLayoutWidth,
+    labelOffsetFromClusterLeft,
   }
 }
 
@@ -843,12 +848,19 @@ test.describe('Layout Regression Tests', () => {
           layout.boxGap,
           `flex box gap between bookmark column and label at ${width}px`
         ).toBeGreaterThanOrEqual(0)
+        expect(layout.boxGap).toBeLessThanOrEqual(8)
         expect(layout.bookmarkLayoutWidth).toBeGreaterThanOrEqual(16)
         expect(layout.bookmarkLayoutWidth).toBeLessThanOrEqual(22)
         expect(
+          layout.labelOffsetFromClusterLeft,
+          `label should stay at the left of the bookmark cluster at ${width}px`
+        ).toBeGreaterThanOrEqual(14)
+        expect(layout.labelOffsetFromClusterLeft).toBeLessThanOrEqual(28)
+        expect(
           layout.selectionEndToUploadGap,
-          `trailing space after selection name before upload at ${width}px`
-        ).toBeGreaterThan(layout.visibleInkGap)
+          `visible label end to upload should leave space at ${width}px`
+        ).toBeGreaterThanOrEqual(6)
+        expect(layout.selectionEndToUploadGap).toBeGreaterThan(layout.visibleInkGap)
       })
     }
   })
