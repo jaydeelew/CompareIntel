@@ -126,17 +126,22 @@ test.describe('Smoke Tests @smoke', () => {
     await expect(compareButton).toBeAttached({ timeout: 10000 })
 
     // Check if models section is visible (it should be)
-    const modelsSection = page.locator('.models-section, [data-testid="models-section"], .model-selection').first()
+    const modelsSection = page
+      .locator('.models-section, [data-testid="models-section"], .model-selection')
+      .first()
     await expect(modelsSection).toBeVisible({ timeout: 15000 })
 
     // Try to find model checkboxes (but don't fail if they're slow to load)
     const checkboxes = page.locator('[data-testid^="model-checkbox-"], input[type="checkbox"]')
-    const hasCheckboxes = await checkboxes.first().isVisible({ timeout: 5000 }).catch(() => false)
+    const hasCheckboxes = await checkboxes
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false)
 
     // If checkboxes are available, try to select one and submit
     if (hasCheckboxes) {
       const count = await checkboxes.count()
-      
+
       // Try to find and check an enabled checkbox
       for (let i = 0; i < Math.min(count, 5); i++) {
         const checkbox = checkboxes.nth(i)
@@ -151,13 +156,14 @@ test.describe('Smoke Tests @smoke', () => {
       const isEnabled = await compareButton.isEnabled({ timeout: 3000 }).catch(() => false)
       if (isEnabled) {
         // Set up response waiter before clicking
-        const responsePromise = page.waitForResponse(
-          response => response.url().includes('/api/compare-stream'),
-          { timeout: 30000 }
-        ).catch(() => null)
+        const responsePromise = page
+          .waitForResponse(response => response.url().includes('/api/compare-stream'), {
+            timeout: 30000,
+          })
+          .catch(() => null)
 
         await compareButton.click().catch(() => {})
-        
+
         // Wait for response if it happens
         const response = await responsePromise
         if (response) {
@@ -205,6 +211,10 @@ test.describe('Smoke Tests @smoke', () => {
     // Fill signup form
     await page.locator('input[type="email"]').first().fill(testEmail)
     await page.locator('input[type="password"]').first().fill(testPassword)
+    const confirmPassword = page.locator('#register-confirm-password')
+    if (await confirmPassword.isVisible().catch(() => false)) {
+      await confirmPassword.fill(testPassword)
+    }
 
     // Submit signup
     const submitButton = page.locator('button[type="submit"]').first()
@@ -213,7 +223,11 @@ test.describe('Smoke Tests @smoke', () => {
     // Wait for either success (modal closes) or error message
     await Promise.race([
       authModal.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {}),
-      page.locator('.error-message, .alert-error').first().waitFor({ timeout: 15000 }).catch(() => {}),
+      page
+        .locator('.error-message, .alert-error')
+        .first()
+        .waitFor({ timeout: 15000 })
+        .catch(() => {}),
     ])
 
     // Check if we're logged in (user menu appears) or if there was an error
@@ -240,7 +254,11 @@ test.describe('Smoke Tests @smoke', () => {
 
         // Wait for login to complete
         await Promise.race([
-          page.locator('.auth-modal, [role="dialog"]').first().waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {}),
+          page
+            .locator('.auth-modal, [role="dialog"]')
+            .first()
+            .waitFor({ state: 'hidden', timeout: 15000 })
+            .catch(() => {}),
           userMenu.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {}),
         ])
       }

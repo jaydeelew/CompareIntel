@@ -179,17 +179,27 @@
   max-width: 300px;
   pointer-events: auto;
   overflow: visible;
-  /* Top/left are set once per step. The visible fade is opacity only. */
-  transition: opacity 200ms ease;
+  /* Top/left are set once per step. The visible fade is opacity only, and it
+     starts when this element paints. A timer was clamped on Mobile Safari, so
+     the card was still transparent at the end of the sample window. */
+  animation: mobile-tutorial-tooltip-in 200ms ease;
+}
+
+@keyframes mobile-tutorial-tooltip-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Hide tooltip during automatic step transitions to prevent jitter while page scrolls.
-   transition: none makes the disappearance instant; the base 0.3s transition
-   on .mobile-tutorial-tooltip handles the smooth fade-in when the class is removed. */
+   Removing the class lets the fade-in animation run. No timer is involved. */
 .mobile-tutorial-tooltip--transitioning {
   opacity: 0 !important;
   pointer-events: none !important;
-  transition: none !important;
+  animation: none !important;
 }
 
 .mobile-tutorial-tooltip--transitioning .mobile-tutorial-close-button,

@@ -23,7 +23,6 @@ import {
 } from '../../utils/tutorialPositioning'
 import {
   focusTutorialPromptTextarea,
-  prefersReducedTutorialMotion,
   setTutorialSpotlightSettling,
   waitForTutorialLayoutSettle,
 } from '../../utils/tutorialSettle'
@@ -137,11 +136,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const isStepTransitioningRef = useRef(false)
   const spotlightSettledRef = useRef(false)
   const settledStepRef = useRef<TutorialStep | null>(null)
-  // Armed once per step. Target remounts must not push the fade past the sample window.
-  const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const revealArmedForRef = useRef<TutorialStep | null>(null)
-  const forceRevealRef = useRef<(() => void) | null>(null)
-  const overlayMountedRef = useRef(true)
   const prevIsLoadingRef = useRef(isLoading)
   const dropdownWasOpenedRef = useRef<boolean>(false)
   // Refs do not re-render. Done stays disabled until this state flips.
@@ -158,7 +152,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Render the tutorial UI in a portal attached to <body> so `position: fixed` is truly viewport-fixed.
   // This avoids cases where an ancestor has `contain/transform` which can break fixed positioning or clip the tooltip.
   useEffect(() => {
-    overlayMountedRef.current = true
     if (typeof document === 'undefined') return
 
     const existing = document.getElementById('mobile-tutorial-portal-root') as HTMLElement | null
@@ -173,12 +166,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     return () => {
-      overlayMountedRef.current = false
-      revealArmedForRef.current = null
-      if (revealTimerRef.current !== null) {
-        window.clearTimeout(revealTimerRef.current)
-        revealTimerRef.current = null
-      }
       if (el?.parentNode) el.parentNode.removeChild(el)
       // Restore composer and all elements when tutorial completes (unmount)
       getHeroComposerForDropdownSteps()?.classList.remove('tutorial-dropdown-container-active')
@@ -774,8 +761,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const alreadySettled = spotlightSettledRef.current && settledStepRef.current === currentStep
 
     let cancelled = false
-    let scrollDelayTimer: ReturnType<typeof setTimeout> | null = null
-    const behavior: ScrollBehavior = prefersReducedTutorialMotion() ? 'auto' : 'smooth'
+    // Instant scroll. A smooth scroll plus a timer to fade in is clamped to about
+    // a second on Mobile Safari during the test wait, so the card stays transparent
+    // until the sample window is almost over.
+    const behavior: ScrollBehavior = 'auto'
 
     const scrollByDelta = (delta: number, scrollBehavior: ScrollBehavior = behavior) => {
       if (Math.abs(delta) < 1) return
@@ -871,16 +860,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     const showSettledTooltip = () => {
-      // setTimeout, not rAF: WebKit can defer animation frames until the sample
-      // window is almost over, which leaves the card transparent.
-      window.setTimeout(() => {
-        if (cancelled || stepRef.current !== currentStep) return
-        isStepTransitioningRef.current = false
-        setIsStepTransitioning(false)
-        setTutorialSpotlightSettling(false)
-        fadeStarted = true
-        fadeAt = performance.now()
-      }, 32)
+      if (stepRef.current !== currentStep) return
+      isStepTransitioningRef.current = false
+      setIsStepTransitioning(false)
+      setTutorialSpotlightSettling(false)
+      fadeStarted = true
+      fadeAt = performance.now()
     }
 
     const revealSettledStep = () => {
@@ -891,32 +876,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       spotlightSettledRef.current = true
       settledStepRef.current = currentStep
       showSettledTooltip()
-    }
-
-    forceRevealRef.current = () => {
-      if (!overlayMountedRef.current || stepRef.current !== currentStep) return
-      if (spotlightSettledRef.current && settledStepRef.current === currentStep) return
-      calculatePositions()
-      setIsVisible(true)
-      spotlightSettledRef.current = true
-      settledStepRef.current = currentStep
-      window.setTimeout(() => {
-        if (!overlayMountedRef.current || stepRef.current !== currentStep) return
-        isStepTransitioningRef.current = false
-        setIsStepTransitioning(false)
-        setTutorialSpotlightSettling(false)
-        fadeStarted = true
-        fadeAt = performance.now()
-      }, 32)
-    }
-
-    if (revealArmedForRef.current !== currentStep) {
-      revealArmedForRef.current = currentStep
-      if (revealTimerRef.current !== null) window.clearTimeout(revealTimerRef.current)
-      revealTimerRef.current = window.setTimeout(() => {
-        revealTimerRef.current = null
-        forceRevealRef.current?.()
-      }, 280)
     }
 
     const restabilize = () => {
@@ -932,33 +891,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
     }
 
-    const waitForFollowUpFloat = () =>
-      new Promise<void>(resolve => {
-        if (currentStep !== 'follow-up') {
-          resolve()
-          return
-        }
-        let settled = false
-        const finish = () => {
-          if (settled) return
-          settled = true
-          targetEl.removeEventListener('animationend', onEnd)
-          window.clearTimeout(timer)
-          resolve()
-        }
-        const onEnd = (event: AnimationEvent) => {
-          if (
-            event.animationName !== 'composer-float-in' &&
-            event.animationName !== 'composer-float-in-moz'
-          ) {
-            return
-          }
-          finish()
-        }
-        const timer = window.setTimeout(finish, 450)
-        targetEl.addEventListener('animationend', onEnd)
-      })
-
     if (alreadySettled) {
       // A remount during the fade used to leave the hide class on. WebKit then
       // ignores clicks on the card, so "Done with input" never advances the step.
@@ -967,22 +899,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       setIsStepTransitioning(false)
       setTutorialSpotlightSettling(false)
     } else {
-      scrollDelayTimer = window.setTimeout(
-        () => {
-          scrollDelayTimer = null
-          void (async () => {
-            if (cancelled || stepRef.current !== currentStep) return
-            if (spotlightSettledRef.current && settledStepRef.current === currentStep) return
-            scrollTargetIntoView()
-            if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
-            await waitForTutorialLayoutSettle()
-            await waitForFollowUpFloat()
-            if (cancelled || stepRef.current !== currentStep) return
-            revealSettledStep()
-          })()
-        },
-        currentStep === 'follow-up' ? 0 : 100
-      )
+      scrollTargetIntoView()
+      if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
+      revealSettledStep()
     }
 
     const keyboardSettled = () => fadeStarted && performance.now() - fadeAt >= 600
@@ -1011,7 +930,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     return () => {
       cancelled = true
-      if (scrollDelayTimer !== null) window.clearTimeout(scrollDelayTimer)
       window.removeEventListener('scroll', schedulePositionUpdate, true)
       window.removeEventListener('resize', schedulePositionUpdate)
       appScrollHost?.removeEventListener('scroll', schedulePositionUpdate)
@@ -1623,6 +1541,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       {/* Tooltip - hidden during loading/streaming phase on submit steps */}
       {!shouldShowScrollIndicator && !isLoadingStreamingPhase && isVisible && tooltipPosition && (
         <div
+          key={step}
           ref={overlayRef}
           className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
           style={
