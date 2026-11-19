@@ -64,6 +64,10 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
 }) => {
   const [tutorialSessionKey, setTutorialSessionKey] = useState(0)
   const previousStepRef = useRef<TutorialStep | null>(null)
+  // Entering the first select step clears a preselected starter set in the parent effect.
+  // That clear is not visible until the next render, so the selection still looks chosen
+  // on entry. Completing here would skip the step before the user picks a model.
+  const selectionClearedOnStepRef = useRef(false)
 
   useEffect(() => {
     const currentStep = tutorialState.currentStep
@@ -115,9 +119,19 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     // on touch/WebKit cannot mark secondModelSelected in previousState before we enter step 2.
     const completed = tutorialState.completedSteps
 
+    if (currentStep !== 'select-starter-model-1' && currentStep !== 'select-models') {
+      selectionClearedOnStepRef.current = false
+    } else if (
+      (currentStep === 'select-starter-model-1' && !firstModelSelected) ||
+      (currentStep === 'select-models' && !bothModelsSelected)
+    ) {
+      selectionClearedOnStepRef.current = true
+    }
+
     if (
       currentStep === 'select-starter-model-1' &&
       firstModelSelected &&
+      selectionClearedOnStepRef.current &&
       !completed.has('select-starter-model-1')
     ) {
       completeStep('select-starter-model-1')
@@ -134,7 +148,12 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onModelsSelected?.()
     }
 
-    if (currentStep === 'select-models' && bothModelsSelected && !completed.has('select-models')) {
+    if (
+      currentStep === 'select-models' &&
+      bothModelsSelected &&
+      selectionClearedOnStepRef.current &&
+      !completed.has('select-models')
+    ) {
       completeStep('select-models')
       onModelsSelected?.()
     }

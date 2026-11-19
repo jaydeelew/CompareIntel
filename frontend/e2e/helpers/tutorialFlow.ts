@@ -118,8 +118,15 @@ export async function selectTutorialModelCheckbox(
     await page.waitForTimeout(600)
     const label = page.locator(`label:has([data-testid="model-checkbox-${modelId}"])`).first()
     await label.tap({ force: true, timeout: 10_000 }).catch(() => {})
-    await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
-    if (!(await isModelCheckedInDom(page, modelId))) {
+    const headerText = await readTutorialHeaderText(page)
+    const advanced = splitFlowAdvancedPastFirstModel(
+      headerText,
+      await readTutorialCurrentStep(page)
+    )
+    if (!(await isModelCheckedInDom(page, modelId)) && !advanced) {
+      await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
+    }
+    if (!(await isModelCheckedInDom(page, modelId)) && !advanced) {
       await clickModelInDom(page, modelId)
     }
   } else {
