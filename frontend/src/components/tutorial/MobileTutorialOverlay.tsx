@@ -32,7 +32,7 @@ import {
   getHeroComposerForDropdownSteps,
   getHeroMirrorComposerIfPresent,
   getHistoryInlineListForTutorial,
-  getHistoryToggleButtonForTutorial,
+  getBelowResultsHistoryToggleButton,
   getSavedSelectionsButtonForTutorial,
   getSavedSelectionsDropdownForTutorial,
 } from './tutorialUtils'
@@ -308,7 +308,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       } else if (step === 'follow-up') {
         element = getComposerElement()
       } else if (step === 'history-dropdown') {
-        element = getHistoryToggleButtonForTutorial()
+        // The hero mirror button is inert after a comparison. The clickable one
+        // is the composer under the results.
+        element = getBelowResultsHistoryToggleButton()
       } else if (step === 'save-selection') {
         element = getSavedSelectionsButtonForTutorial()
       } else {
@@ -1321,9 +1323,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const isFollowUpPostSubmit = step === 'follow-up' && followUpSubmitStarted
   const isLoadingStreamingPhase = Boolean(
     loadingStreamingRect &&
-    ((isSubmitStep && isLoading) ||
-      (step === 'view-follow-up-results' && isLoading) ||
-      (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)))
+    ((isSubmitStep && isLoading) || (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)))
   )
 
   // Render scroll indicator if target is off-screen

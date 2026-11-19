@@ -280,6 +280,27 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     return () => window.clearInterval(id)
   }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep])
 
+  // The follow-up reply is on screen before Safari clears isLoading. The review
+  // card has to fade in during that tail, not after the stream flag drops.
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'follow-up') return
+    if (tutorialState.completedSteps.has('follow-up')) return
+    const secondRoundIsVisible = () =>
+      Array.from(document.querySelectorAll('.result-card.conversation-card')).some(
+        card => card.querySelectorAll('.conversation-message.user').length >= 2
+      )
+    if (secondRoundIsVisible()) {
+      completeStep('follow-up')
+      return
+    }
+    const id = window.setInterval(() => {
+      if (!secondRoundIsVisible()) return
+      window.clearInterval(id)
+      completeStep('follow-up')
+    }, 100)
+    return () => window.clearInterval(id)
+  }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep])
+
   const handleComplete = () => {
     if (!tutorialState.currentStep) return
 
