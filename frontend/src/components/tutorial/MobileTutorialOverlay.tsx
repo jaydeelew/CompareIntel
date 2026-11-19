@@ -137,6 +137,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const isStepTransitioningRef = useRef(false)
   const spotlightSettledRef = useRef(false)
   const settledStepRef = useRef<TutorialStep | null>(null)
+  // Armed once per step. Target remounts must not push the fade past the sample window.
+  const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const revealArmedForRef = useRef<TutorialStep | null>(null)
+  const forceRevealRef = useRef<(() => void) | null>(null)
+  const overlayMountedRef = useRef(true)
   const prevIsLoadingRef = useRef(isLoading)
   const dropdownWasOpenedRef = useRef<boolean>(false)
   // Refs do not re-render. Done stays disabled until this state flips.
@@ -153,6 +158,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Render the tutorial UI in a portal attached to <body> so `position: fixed` is truly viewport-fixed.
   // This avoids cases where an ancestor has `contain/transform` which can break fixed positioning or clip the tooltip.
   useEffect(() => {
+    overlayMountedRef.current = true
     if (typeof document === 'undefined') return
 
     const existing = document.getElementById('mobile-tutorial-portal-root') as HTMLElement | null
@@ -167,6 +173,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     return () => {
+      overlayMountedRef.current = false
+      revealArmedForRef.current = null
+      if (revealTimerRef.current !== null) {
+        window.clearTimeout(revealTimerRef.current)
+        revealTimerRef.current = null
+      }
       if (el?.parentNode) el.parentNode.removeChild(el)
       // Restore composer and all elements when tutorial completes (unmount)
       getHeroComposerForDropdownSteps()?.classList.remove('tutorial-dropdown-container-active')
@@ -763,7 +775,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     let cancelled = false
     let scrollDelayTimer: ReturnType<typeof setTimeout> | null = null
-    let revealDeadline: ReturnType<typeof setTimeout> | null = null
     const behavior: ScrollBehavior = prefersReducedTutorialMotion() ? 'auto' : 'smooth'
 
     const scrollByDelta = (delta: number, scrollBehavior: ScrollBehavior = behavior) => {
@@ -882,6 +893,32 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       showSettledTooltip()
     }
 
+    forceRevealRef.current = () => {
+      if (!overlayMountedRef.current || stepRef.current !== currentStep) return
+      if (spotlightSettledRef.current && settledStepRef.current === currentStep) return
+      calculatePositions()
+      setIsVisible(true)
+      spotlightSettledRef.current = true
+      settledStepRef.current = currentStep
+      window.setTimeout(() => {
+        if (!overlayMountedRef.current || stepRef.current !== currentStep) return
+        isStepTransitioningRef.current = false
+        setIsStepTransitioning(false)
+        setTutorialSpotlightSettling(false)
+        fadeStarted = true
+        fadeAt = performance.now()
+      }, 32)
+    }
+
+    if (revealArmedForRef.current !== currentStep) {
+      revealArmedForRef.current = currentStep
+      if (revealTimerRef.current !== null) window.clearTimeout(revealTimerRef.current)
+      revealTimerRef.current = window.setTimeout(() => {
+        revealTimerRef.current = null
+        forceRevealRef.current?.()
+      }, 280)
+    }
+
     const restabilize = () => {
       if (!fadeStarted || corrections >= 1 || cancelled || stepRef.current !== currentStep) return
       corrections += 1
@@ -922,13 +959,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         targetEl.addEventListener('animationend', onEnd)
       })
 
-    // A stream can keep scroll events alive for the whole hard timeout. Reveal
-    // anyway so the card is opaque well before the transition sample ends.
-    revealDeadline = window.setTimeout(() => {
-      revealDeadline = null
-      revealSettledStep()
-    }, 280)
-
     if (alreadySettled) {
       // A remount during the fade used to leave the hide class on. WebKit then
       // ignores clicks on the card, so "Done with input" never advances the step.
@@ -942,6 +972,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           scrollDelayTimer = null
           void (async () => {
             if (cancelled || stepRef.current !== currentStep) return
+            if (spotlightSettledRef.current && settledStepRef.current === currentStep) return
             scrollTargetIntoView()
             if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
             await waitForTutorialLayoutSettle()
@@ -981,7 +1012,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     return () => {
       cancelled = true
       if (scrollDelayTimer !== null) window.clearTimeout(scrollDelayTimer)
-      if (revealDeadline !== null) window.clearTimeout(revealDeadline)
       window.removeEventListener('scroll', schedulePositionUpdate, true)
       window.removeEventListener('resize', schedulePositionUpdate)
       appScrollHost?.removeEventListener('scroll', schedulePositionUpdate)

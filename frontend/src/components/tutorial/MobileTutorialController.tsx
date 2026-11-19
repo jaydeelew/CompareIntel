@@ -255,6 +255,31 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     }
   }
 
+  // The result card is on screen before Safari clears isLoading. Advance then,
+  // so the next tooltip fades in during the transition instead of after it.
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'submit-comparison') return
+    if (tutorialState.completedSteps.has('submit-comparison')) return
+    const replyIsVisible = () => {
+      const card = document.querySelector(
+        '.result-card.conversation-card, .results-section [data-testid^="result-card-"]'
+      )
+      if (!card) return false
+      const rect = card.getBoundingClientRect()
+      return rect.width > 0 && rect.height > 0
+    }
+    if (replyIsVisible()) {
+      completeStep('submit-comparison')
+      return
+    }
+    const id = window.setInterval(() => {
+      if (!replyIsVisible()) return
+      window.clearInterval(id)
+      completeStep('submit-comparison')
+    }, 100)
+    return () => window.clearInterval(id)
+  }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep])
+
   const handleComplete = () => {
     if (!tutorialState.currentStep) return
 
