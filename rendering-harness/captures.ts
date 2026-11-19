@@ -69,6 +69,18 @@ export async function renderOnPage(
   if (failed) throw new Error(`Render readiness failed: ${failed}`)
 }
 
+/** Full viewport width at the page’s CSS width (e.g. 960×DPR2 → 1920px raster). */
+export async function shootViewportWidth(page: Page, cssWidth: number, outputPath: string): Promise<void> {
+  await fs.mkdir(path.dirname(outputPath), { recursive: true })
+  const height = await page.evaluate(() =>
+    Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, 1)
+  )
+  await page.screenshot({
+    path: outputPath,
+    clip: { x: 0, y: 0, width: cssWidth, height: Math.min(height, 16_000) },
+  })
+}
+
 export async function shootContainer(page: Page, outputPath: string): Promise<void> {
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
   const clip = await page.evaluate(() => {

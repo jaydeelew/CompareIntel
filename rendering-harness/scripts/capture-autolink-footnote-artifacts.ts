@@ -8,7 +8,13 @@ import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { chromium } from 'playwright'
-import { EVIDENCE_VIEW, PHONE_VIEW, openThemedPage, renderOnPage, shootContainer } from '../captures.js'
+import {
+  EVIDENCE_VIEW,
+  PHONE_VIEW,
+  openThemedPage,
+  renderOnPage,
+  shootViewportWidth,
+} from '../captures.js'
 import { launchVite, type ViteProcess } from '../launch-vite.js'
 import { stackPhoneBeforeAfter } from '../phone-stack-shot.js'
 import { stackBeforeAfter } from '../stack-shot.js'
@@ -27,14 +33,22 @@ Bare URL: https://example.com/lab-bare-url/with/path
 The method needs a citation[^fmt2].
 
 [^fmt2]: Recorded in the lab notebook, page 12.`,
-    excerpt: 'Autolink: <https://example.com/lab-autolink>',
+    excerpt: `## Nested blockquote, autolink, bare URL, and a footnote
+
+Autolink: <https://example.com/lab-autolink>
+Bare URL: https://example.com/lab-bare-url/with/path
+The method needs a citation[^fmt2].
+
+[^fmt2]: Recorded in the lab notebook, page 12.`,
   },
   {
     slug: 'footnote-07-rare',
     markdown: `The boiling point needs a citation[^rare].
 
 [^rare]: Measured at standard pressure, 100 degrees Celsius.`,
-    excerpt: 'The boiling point needs a citation[^rare].',
+    excerpt: `The boiling point needs a citation[^rare].
+
+[^rare]: Measured at standard pressure, 100 degrees Celsius.`,
   },
 ] as const
 
@@ -71,7 +85,7 @@ async function shoot(vite: ViteProcess, view: typeof PHONE_VIEW, outputPath: str
   try {
     const page = await openThemedPage(browser, vite.port, 'light', view)
     await renderOnPage(page, MODEL, markdown, label)
-    await shootContainer(page, outputPath)
+    await shootViewportWidth(page, view.width, outputPath)
   } finally {
     await browser.close()
   }
@@ -114,16 +128,16 @@ async function capturePair(
         beforePng: path.join(work, 'before-960.png'),
         afterPng: path.join(work, 'after-960.png'),
         outputPath: wideOut,
-        beforeLabel: `BEFORE (master ${base.sha.slice(0, 7)})`,
-        afterLabel: `AFTER (${headSha.slice(0, 7)})`,
+        beforeLabel: `BEFORE (master ${base.sha.slice(0, 7)}) · 960 CSS px · DPR 2`,
+        afterLabel: `AFTER (${headSha.slice(0, 7)}) · 960 CSS px · DPR 2`,
         sourceExcerpt: section.excerpt,
       })
       await stackPhoneBeforeAfter(phonePage, {
         beforePng: path.join(work, 'before-phone.png'),
         afterPng: path.join(work, 'after-phone.png'),
         outputPath: phoneOut,
-        beforeLabel: `BEFORE (master ${base.sha.slice(0, 7)})`,
-        afterLabel: `AFTER (${headSha.slice(0, 7)})`,
+        beforeLabel: `BEFORE (master ${base.sha.slice(0, 7)}) · 390 CSS px · DPR 3`,
+        afterLabel: `AFTER (${headSha.slice(0, 7)}) · 390 CSS px · DPR 3`,
         sourceExcerpt: section.excerpt,
       })
       console.log(wideOut)
