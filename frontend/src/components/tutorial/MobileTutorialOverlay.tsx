@@ -23,6 +23,7 @@ import {
 } from '../../utils/tutorialPositioning'
 import {
   focusTutorialPromptTextarea,
+  prefersReducedTutorialMotion,
   setTutorialSpotlightSettling,
   waitForTutorialLayoutSettle,
 } from '../../utils/tutorialSettle'
@@ -865,9 +866,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (stepRef.current !== currentStep) return
       isStepTransitioningRef.current = false
       setIsStepTransitioning(false)
-      setTutorialSpotlightSettling(false)
       fadeStarted = true
       fadeAt = performance.now()
+      if (prefersReducedTutorialMotion()) setTutorialSpotlightSettling(false)
     }
 
     const revealSettledStep = () => {
@@ -890,16 +891,18 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       void waitForTutorialLayoutSettle({ timeoutMs: 600, quietMs: 80 }).then(() => {
         if (cancelled || stepRef.current !== currentStep) return
         revealSettledStep()
+        setTutorialSpotlightSettling(false)
       })
     }
 
     if (alreadySettled) {
       // A remount during the fade used to leave the hide class on. WebKit then
       // ignores clicks on the card, so "Done with input" never advances the step.
+      // The document settling class stays until the fade animation ends so a
+      // one-frame hide is still sampled.
       fadeStarted = true
       isStepTransitioningRef.current = false
       setIsStepTransitioning(false)
-      setTutorialSpotlightSettling(false)
     } else {
       scrollTargetIntoView()
       if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
@@ -1544,6 +1547,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           key={step}
           ref={overlayRef}
           className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
+          onAnimationEnd={event => {
+            if (event.animationName !== 'mobile-tutorial-tooltip-in') return
+            setTutorialSpotlightSettling(false)
+          }}
           style={
             tooltipPosition.useFullscreen
               ? undefined

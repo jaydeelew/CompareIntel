@@ -286,9 +286,11 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     if (tutorialState.currentStep !== 'follow-up') return
     if (tutorialState.completedSteps.has('follow-up')) return
     const secondRoundIsVisible = () =>
-      Array.from(document.querySelectorAll('.result-card.conversation-card')).some(
-        card => card.querySelectorAll('.conversation-message.user').length >= 2
-      )
+      Array.from(document.querySelectorAll('.result-card.conversation-card')).some(card => {
+        const replies = card.querySelectorAll('.conversation-message.assistant')
+        if (replies.length < 2) return false
+        return (replies[replies.length - 1]?.textContent ?? '').trim().length > 0
+      })
     if (secondRoundIsVisible()) {
       completeStep('follow-up')
       return
