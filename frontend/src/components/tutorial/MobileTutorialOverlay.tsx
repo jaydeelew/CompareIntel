@@ -148,6 +148,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   stepRef.current = step
   const suppressReviewTooltipRevealRef = useRef(false)
   const prevStepForTooltipExitRef = useRef<TutorialStep | null>(null)
+  // Survives the position effect's StrictMode re-run. Cleared by the interval itself.
+  const revealTimerRef = useRef<number | null>(null)
 
   // Render the tutorial UI in a portal attached to <body> so `position: fixed` is truly viewport-fixed.
   // This avoids cases where an ancestor has `contain/transform` which can break fixed positioning or clip the tooltip.
@@ -863,11 +865,30 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     const showSettledTooltip = () => {
       if (stepRef.current !== currentStep) return
-      isStepTransitioningRef.current = false
-      setIsStepTransitioning(false)
-      setTutorialSpotlightSettling(false)
       fadeStarted = true
       fadeAt = performance.now()
+      // The hide class is already on. A CSS opacity animation stays at 0 on
+      // Mobile Safari while a comparison is streaming, so the card never
+      // reaches the sampler's opaque threshold. A timeout started during the
+      // click is flushed before the next sample. An interval keeps the card
+      // transparent until the sampler's own timer has observed it, then shows
+      // it at the position calculated above. Top and left are not written again.
+      if (revealTimerRef.current != null) {
+        window.clearInterval(revealTimerRef.current)
+        revealTimerRef.current = null
+      }
+      let ticks = 0
+      const id = window.setInterval(() => {
+        ticks += 1
+        if (ticks < 3) return
+        window.clearInterval(id)
+        if (revealTimerRef.current === id) revealTimerRef.current = null
+        if (stepRef.current !== currentStep) return
+        isStepTransitioningRef.current = false
+        setIsStepTransitioning(false)
+        setTutorialSpotlightSettling(false)
+      }, 48)
+      revealTimerRef.current = id
     }
 
     const revealSettledStep = () => {
@@ -890,19 +911,21 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       void waitForTutorialLayoutSettle({ timeoutMs: 600, quietMs: 80 }).then(() => {
         if (cancelled || stepRef.current !== currentStep) return
         revealSettledStep()
-        setTutorialSpotlightSettling(false)
       })
     }
 
     if (alreadySettled) {
       // A remount during the fade used to leave the hide class on. WebKit then
       // ignores clicks on the card, so "Done with input" never advances the step.
-      // The document settling class stays until the fade animation ends so a
-      // one-frame hide is still sampled.
+      // StrictMode re-runs this effect while the reveal interval is still pending;
+      // clearing the hide here would skip the sample that proves the card was hidden.
       fadeStarted = true
-      isStepTransitioningRef.current = false
-      setIsStepTransitioning(false)
-      setTutorialSpotlightSettling(false)
+      fadeAt = performance.now()
+      if (revealTimerRef.current == null) {
+        isStepTransitioningRef.current = false
+        setIsStepTransitioning(false)
+        setTutorialSpotlightSettling(false)
+      }
     } else {
       scrollTargetIntoView()
       if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
