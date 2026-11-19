@@ -281,10 +281,10 @@ export function useTutorialOverlay(
     setEffectivePosition(null)
   }, [step])
 
-  // Clamp only while the tooltip is still hidden. Measuring the box after the fade
-  // starts writes a new top/left while it is already opaque.
+  // Pull the card into the viewport. This runs while it is hidden and again if a
+  // late height change leaves the transformed box outside the screen.
   useLayoutEffect(() => {
-    if (!isVisible || !spotlightSettling) return
+    if (!isVisible) return
     const el = overlayRef.current
     if (!el) return
 
