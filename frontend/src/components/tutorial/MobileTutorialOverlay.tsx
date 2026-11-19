@@ -829,12 +829,17 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     let fadeStarted = false
     let corrections = 0
-    let lastViewportHeight = window.innerHeight
+    let lastViewportHeight = window.visualViewport?.height ?? window.innerHeight
+    let lastInnerHeight = window.innerHeight
 
     const viewportHeightChanged = () => {
-      const height = window.visualViewport?.height ?? window.innerHeight
-      if (Math.abs(height - lastViewportHeight) < 40) return false
-      lastViewportHeight = height
+      const viewport = window.visualViewport?.height ?? window.innerHeight
+      const inner = window.innerHeight
+      const changed =
+        Math.abs(viewport - lastViewportHeight) >= 40 || Math.abs(inner - lastInnerHeight) >= 40
+      lastViewportHeight = viewport
+      lastInnerHeight = inner
+      if (!changed) return false
       corrections = 0
       return true
     }
@@ -927,15 +932,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     const schedulePositionUpdate = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
-      const keyboard = viewportHeightChanged()
-      if (!fadeStarted) return
-      if (keyboard) restabilize()
+      if (!viewportHeightChanged()) return
+      fadeStarted = true
+      restabilize()
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
-      const keyboard = viewportHeightChanged()
-      if (!fadeStarted) return
-      if (keyboard) restabilize()
+      if (!viewportHeightChanged()) return
+      fadeStarted = true
+      restabilize()
     }
 
     window.addEventListener('scroll', schedulePositionUpdate, true)

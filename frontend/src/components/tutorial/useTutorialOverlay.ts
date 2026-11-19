@@ -799,12 +799,17 @@ export function useTutorialOverlay(
 
     let fadeStarted = false
     let corrections = 0
-    let lastViewportHeight = window.innerHeight
+    let lastViewportHeight = window.visualViewport?.height ?? window.innerHeight
+    let lastInnerHeight = window.innerHeight
 
     const viewportHeightChanged = () => {
-      const height = window.visualViewport?.height ?? window.innerHeight
-      if (Math.abs(height - lastViewportHeight) < 40) return false
-      lastViewportHeight = height
+      const viewport = window.visualViewport?.height ?? window.innerHeight
+      const inner = window.innerHeight
+      const changed =
+        Math.abs(viewport - lastViewportHeight) >= 40 || Math.abs(inner - lastInnerHeight) >= 40
+      lastViewportHeight = viewport
+      lastInnerHeight = inner
+      if (!changed) return false
       corrections = 0
       return true
     }
