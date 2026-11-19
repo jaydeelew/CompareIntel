@@ -50,6 +50,87 @@ interface Viewport {
   height: number
 }
 
+/** First-letter ink edge vs bookmark SVG stroke edge (not layout box gap). */
+type DefaultSelectionToolbarLayout = {
+  ok: boolean
+  insetRight: number
+  actionsGap: string
+  visibleInkGap: number
+  boxGap: number
+  selectionEndToUploadGap: number
+  bookmarkLayoutWidth: number
+}
+
+function measureDefaultSelectionToolbarLayout(): DefaultSelectionToolbarLayout {
+  const composer = document.querySelector('.hero-section .composer')
+  const submit = document.querySelector('[data-testid="comparison-submit-button"]')
+  const bookmark = document.querySelector('.saved-selections-button')
+  const label = document.querySelector('.default-selection-name')
+  const actions = document.querySelector('.composer-toolbar .textarea-actions')
+  const upload =
+    document.querySelector('[data-testid="file-upload-button"]') ||
+    document.querySelector('.textarea-actions .textarea-icon-button')
+
+  if (!composer || !submit) {
+    return {
+      ok: false,
+      insetRight: -1,
+      actionsGap: '',
+      visibleInkGap: -1,
+      boxGap: -1,
+      selectionEndToUploadGap: -1,
+      bookmarkLayoutWidth: -1,
+    }
+  }
+
+  const cr = composer.getBoundingClientRect()
+  const sr = submit.getBoundingClientRect()
+  const ok =
+    sr.right <= cr.right + 0.5 &&
+    sr.left >= cr.left - 0.5 &&
+    sr.width >= 30 &&
+    sr.height >= 30
+
+  let visibleInkGap = -1
+  let boxGap = -1
+  let selectionEndToUploadGap = -1
+  let bookmarkLayoutWidth = -1
+
+  if (bookmark && label) {
+    const svg = bookmark.querySelector('svg')
+    const textNode = label.firstChild
+    bookmarkLayoutWidth = bookmark.getBoundingClientRect().width
+    boxGap = label.getBoundingClientRect().left - bookmark.getBoundingClientRect().right
+
+    if (svg && textNode?.nodeType === Node.TEXT_NODE && textNode.textContent) {
+      const startRange = document.createRange()
+      startRange.setStart(textNode, 0)
+      startRange.setEnd(textNode, 1)
+      const startRect = startRange.getBoundingClientRect()
+      visibleInkGap = startRect.left - svg.getBoundingClientRect().right
+
+      const endRange = document.createRange()
+      const len = textNode.textContent.length
+      endRange.setStart(textNode, len)
+      endRange.setEnd(textNode, len)
+      const endRect = endRange.getBoundingClientRect()
+      if (upload) {
+        selectionEndToUploadGap = upload.getBoundingClientRect().left - endRect.right
+      }
+    }
+  }
+
+  return {
+    ok,
+    insetRight: cr.right - sr.right,
+    actionsGap: actions ? getComputedStyle(actions).gap : '',
+    visibleInkGap,
+    boxGap,
+    selectionEndToUploadGap,
+    bookmarkLayoutWidth,
+  }
+}
+
 /**
  * Wait for fonts to load and layout to settle before measuring.
  * This ensures stable, deterministic measurements.
@@ -746,33 +827,7 @@ test.describe('Layout Regression Tests', () => {
         await textarea.fill('what is the quadratic formula?')
         await waitForStableLayout(page)
 
-        const layout = await page.evaluate(() => {
-          const composer = document.querySelector('.hero-section .composer')
-          const submit = document.querySelector('[data-testid="comparison-submit-button"]')
-          const bookmark = document.querySelector('.saved-selections-button')
-          const label = document.querySelector('.default-selection-name')
-          if (!composer || !submit) {
-            return { ok: false, insetRight: -1, actionsGap: '', bookmarkLabelGap: -1 }
-          }
-          const cr = composer.getBoundingClientRect()
-          const sr = submit.getBoundingClientRect()
-          const actions = document.querySelector('.composer-toolbar .textarea-actions')
-          const bookmarkLabelGap =
-            bookmark && label
-              ? label.getBoundingClientRect().left - bookmark.getBoundingClientRect().right
-              : -1
-          const ok =
-            sr.right <= cr.right + 0.5 &&
-            sr.left >= cr.left - 0.5 &&
-            sr.width >= 30 &&
-            sr.height >= 30
-          return {
-            ok,
-            insetRight: cr.right - sr.right,
-            actionsGap: actions ? getComputedStyle(actions).gap : '',
-            bookmarkLabelGap,
-          }
-        })
+        const layout = await page.evaluate(measureDefaultSelectionToolbarLayout)
 
         expect(
           layout.ok,
@@ -780,10 +835,20 @@ test.describe('Layout Regression Tests', () => {
         ).toBe(true)
         expect(layout.insetRight).toBeGreaterThanOrEqual(2)
         expect(
-          layout.bookmarkLabelGap,
-          `default selection label should sit tight against bookmark at ${width}px`
-        ).toBeLessThanOrEqual(3)
-        expect(layout.bookmarkLabelGap).toBeGreaterThanOrEqual(0)
+          layout.visibleInkGap,
+          `visible ink from bookmark glyph to first label letter at ${width}px`
+        ).toBeGreaterThanOrEqual(1)
+        expect(layout.visibleInkGap).toBeLessThanOrEqual(5)
+        expect(
+          layout.boxGap,
+          `flex box gap between bookmark column and label at ${width}px`
+        ).toBeGreaterThanOrEqual(0)
+        expect(layout.bookmarkLayoutWidth).toBeGreaterThanOrEqual(16)
+        expect(layout.bookmarkLayoutWidth).toBeLessThanOrEqual(22)
+        expect(
+          layout.selectionEndToUploadGap,
+          `trailing space after selection name before upload at ${width}px`
+        ).toBeGreaterThan(layout.visibleInkGap)
       })
     }
   })
