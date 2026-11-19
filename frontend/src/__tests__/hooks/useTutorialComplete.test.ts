@@ -540,6 +540,48 @@ describe('useTutorialComplete', () => {
       expect(result.current.tutorialHasCompletedComparison).toBe(true)
     })
 
+    it('should ignore extra assistant nodes from the first comparison', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: defaultConfig,
+      })
+      const firstRound = [
+        {
+          modelId: 'm1',
+          messages: [
+            { type: 'user', role: 'user', content: 'hi' },
+            { type: 'user', role: 'user', content: 'hi again' },
+            { type: 'assistant', role: 'assistant', content: 'first' },
+            { type: 'assistant', role: 'assistant', content: 'also first' },
+          ],
+        },
+      ] as ModelConversation[]
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('follow-up')
+      })
+      rerender({
+        ...defaultConfig,
+        isFollowUpMode: true,
+        isLoading: false,
+        conversations: firstRound,
+      })
+      rerender({
+        ...defaultConfig,
+        isFollowUpMode: true,
+        isLoading: true,
+        conversations: firstRound,
+      })
+      rerender({
+        ...defaultConfig,
+        isFollowUpMode: true,
+        isLoading: false,
+        conversations: firstRound,
+      })
+
+      expect(result.current.tutorialHasCompletedComparison).toBe(false)
+    })
+
     it('should reset tutorialHasCompletedComparison when entering follow-up so step 5 can detect a new comparison', () => {
       const { result, rerender } = renderHook(props => useTutorialComplete(props), {
         initialProps: defaultConfig,

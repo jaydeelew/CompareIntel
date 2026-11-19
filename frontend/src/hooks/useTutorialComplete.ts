@@ -126,20 +126,29 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   const [followUpSubmitStarted, setFollowUpSubmitStarted] = useState(false)
   /** True after follow-up has been seen while idle, so the first comparison's loading tail is not a new submit. */
   const followUpSawIdleRef = useRef(false)
+  /** User prompts already on screen while follow-up is idle. A later round has to add one. */
+  const followUpUserBaselineRef = useRef<number | null>(null)
   useEffect(() => {
     if (tutorialState.currentStep !== 'follow-up') {
       setFollowUpSubmitStarted(false)
       followUpSawIdleRef.current = false
+      followUpUserBaselineRef.current = null
       return
     }
     if (!isLoading) {
       followUpSawIdleRef.current = true
+      if (!followUpSubmitStarted) {
+        const counts = conversations.map(
+          conv => conv.messages.filter(msg => msg.type === 'user').length
+        )
+        if (counts.length > 0) followUpUserBaselineRef.current = Math.max(...counts)
+      }
       return
     }
     if (followUpSawIdleRef.current) {
       setFollowUpSubmitStarted(true)
     }
-  }, [tutorialState.currentStep, isLoading])
+  }, [tutorialState.currentStep, isLoading, followUpSubmitStarted, conversations])
 
   // Tutorial Actions
 
@@ -314,7 +323,19 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
         setTutorialHasCompletedComparison(true)
       }
     } else if (step === 'follow-up' && isFollowUpMode) {
-      if (hasSecondRoundAssistantContent && followUpSubmitInitiatedRef.current) {
+      const baseline = followUpUserBaselineRef.current ?? 0
+      const hasNewFollowUpRound = conversations.some(conv => {
+        const userMessages = conv.messages.filter(msg => msg.type === 'user')
+        const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
+        const last = assistantMessages[assistantMessages.length - 1]
+        return (
+          userMessages.length > baseline &&
+          assistantMessages.length >= 2 &&
+          !!last?.content &&
+          last.content.trim().length > 0
+        )
+      })
+      if (hasNewFollowUpRound && followUpSubmitInitiatedRef.current) {
         setTutorialHasCompletedComparison(true)
       }
     }

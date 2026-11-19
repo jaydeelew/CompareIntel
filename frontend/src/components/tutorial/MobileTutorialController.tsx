@@ -282,22 +282,42 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
 
   // The follow-up reply is on screen before Safari clears isLoading. The review
   // card has to fade in during that tail, not after the stream flag drops.
-  // The first comparison can paint two assistant nodes in one card on Mobile
-  // Safari. Advancing then skips the follow-up step, so the next transition
-  // never hides the spotlight. Wait until this step has seen a submit, and
-  // until the same card has a second user message.
+  // Snapshot how many prompts are already in the card while this step is idle.
+  // The first comparison can paint extra assistant nodes; those must not count
+  // as the follow-up round or the review card appears before the user submits.
+  const followUpUserBaselineRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'follow-up' || followUpSubmitStarted || isLoading) {
+      if (tutorialState.currentStep !== 'follow-up') followUpUserBaselineRef.current = null
+      return
+    }
+    const capture = () => {
+      const counts = Array.from(document.querySelectorAll('.result-card.conversation-card')).map(
+        card => card.querySelectorAll('.conversation-message.user').length
+      )
+      if (counts.length === 0) return
+      followUpUserBaselineRef.current = Math.max(...counts)
+    }
+    capture()
+    const id = window.setInterval(capture, 100)
+    return () => window.clearInterval(id)
+  }, [tutorialState.currentStep, followUpSubmitStarted, isLoading])
+
   useEffect(() => {
     if (tutorialState.currentStep !== 'follow-up') return
     if (tutorialState.completedSteps.has('follow-up')) return
     if (!followUpSubmitStarted) return
-    const secondRoundIsVisible = () =>
-      Array.from(document.querySelectorAll('.result-card.conversation-card')).some(card => {
+    const secondRoundIsVisible = () => {
+      const baseline = followUpUserBaselineRef.current
+      if (baseline == null) return false
+      return Array.from(document.querySelectorAll('.result-card.conversation-card')).some(card => {
         const prompts = card.querySelectorAll('.conversation-message.user')
-        if (prompts.length < 2) return false
+        if (prompts.length <= baseline) return false
         const replies = card.querySelectorAll('.conversation-message.assistant')
         if (replies.length < 2) return false
         return (replies[replies.length - 1]?.textContent ?? '').trim().length > 0
       })
+    }
     if (secondRoundIsVisible()) {
       completeStep('follow-up')
       return
