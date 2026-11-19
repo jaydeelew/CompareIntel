@@ -898,8 +898,8 @@
         "replyPath": null
       },
       "08-casual-prose": {
-        "status": "incomplete",
-        "replyPath": "runs/2026-11-18-pr274/google_gemini-4-hydrogen_08-casual-prose.json"
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemma-3-27b-it": {
@@ -2916,10 +2916,10 @@
     "allowlisted": 2,
     "cells": 672,
     "pass": 241,
-    "notCovered": 427,
+    "notCovered": 428,
     "fail": 0,
-    "incomplete": 4,
+    "incomplete": 3,
     "sourceIssue": 0,
-    "missing": 167
+    "missing": 168
   }
 }
