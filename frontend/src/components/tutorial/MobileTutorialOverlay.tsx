@@ -320,11 +320,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         setTargetElement(element)
         if (step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current) {
           suppressReviewTooltipRevealRef.current = false
-          requestAnimationFrame(() => {
-            if (stepRef.current === 'view-follow-up-results') {
-              setIsVisible(true)
-            }
-          })
+          setIsVisible(true)
         } else if (isPrimaryExpandProviderStep(step)) {
           setIsVisible(false)
         } else if (isSelectModelTutorialStep(step)) {
@@ -769,10 +765,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let scrollDelayTimer: ReturnType<typeof setTimeout> | null = null
     const behavior: ScrollBehavior = prefersReducedTutorialMotion() ? 'auto' : 'smooth'
 
-    const scrollByDelta = (delta: number) => {
+    const scrollByDelta = (delta: number, scrollBehavior: ScrollBehavior = behavior) => {
       if (Math.abs(delta) < 1) return
       const root = getTutorialScrollRoot()
-      root.scrollToTop(Math.max(0, root.getScrollTop() + delta), behavior)
+      root.scrollToTop(Math.max(0, root.getScrollTop() + delta), scrollBehavior)
     }
 
     function scrollTargetIntoView() {
@@ -825,7 +821,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         const totalTooltipHeight = tooltipEstimatedHeight + tooltipSpacing
         const topMargin = 80
         const tooltipTop = rect.top - totalTooltipHeight
-        if (tooltipTop < topMargin) {
+        if (rect.bottom < 0 || rect.top > viewportHeight) {
+          // WebKit drops smooth scrolls that start outside the click gesture, which
+          // left the history control off-screen and swapped the Done card for the hint.
+          scrollByDelta(rect.top - (topMargin + totalTooltipHeight), 'auto')
+        } else if (tooltipTop < topMargin) {
           const scrollAdjustment = rect.top - (topMargin + totalTooltipHeight)
           if (scrollAdjustment < 0) scrollByDelta(scrollAdjustment)
         } else if (rect.top < topMargin + totalTooltipHeight) {
@@ -1368,9 +1368,16 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // 1. Target is actually off-screen
   // 2. NOT during loading/streaming phase
   // 3. NOT during automatic step transition (to avoid flashing during smooth scroll between steps)
-  const promptStepKeepsTooltip = step === 'enter-prompt' || step === 'enter-prompt-2'
+  // These steps advance only through the card's button. Replacing the card with the
+  // off-screen hint removes Done, so the step can never finish.
+  const stepKeepsTooltip =
+    step === 'enter-prompt' ||
+    step === 'enter-prompt-2' ||
+    step === 'view-follow-up-results' ||
+    step === 'history-dropdown' ||
+    step === 'save-selection'
   const shouldShowScrollIndicator =
-    isTargetOffScreen && !isLoadingStreamingPhase && !isStepTransitioning && !promptStepKeepsTooltip
+    isTargetOffScreen && !isLoadingStreamingPhase && !isStepTransitioning && !stepKeepsTooltip
 
   // Calculate cutout for backdrop
   // Always show backdrop on mobile; use cutout to keep the target visible
