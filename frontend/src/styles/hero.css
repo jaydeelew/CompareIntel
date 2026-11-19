@@ -2349,7 +2349,8 @@ video.capability-tile-image-lightbox-img {
 }
 
 .composer-toolbar .textarea-actions {
-  margin-left: 0;
+  /* Push upload/mic/web/submit to the right edge; saved-selection cluster stays left. */
+  margin-left: auto;
 }
 
 /* Token usage indicator */

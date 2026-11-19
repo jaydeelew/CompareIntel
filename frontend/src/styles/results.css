@@ -3762,34 +3762,31 @@ button.nav-button-primary {
   overflow: hidden;
 }
 
-.saved-selections-container:has(.default-selection-name)::after {
-  content: '';
-  flex: 1 0 auto;
-  min-width: 0.75rem;
-}
-
 /* Icon + active saved-selection name read as one toolbar control */
 .saved-selections-bookmark-cluster {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.125rem;
-  flex: 0 1 auto;
+  flex: 1 1 0;
   min-width: 0;
   max-width: 100%;
 }
 
-/* StyledTooltip wrapper around default selection label — preserve cluster flex/ellipsis */
-.saved-selections-bookmark-cluster .default-selection-name-tooltip {
-  flex: 1 1 auto;
+/* StyledTooltip on the label sits in the cluster — override global .tooltip centering */
+.saved-selections-bookmark-cluster > .tooltip.default-selection-name-tooltip {
+  flex: 1 1 0;
   min-width: 0;
   max-width: 100%;
+  width: auto;
   justify-content: flex-start;
 }
 
 .saved-selections-bookmark-cluster .default-selection-name-tooltip .default-selection-name {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
+  text-align: left;
 }
 
 /* Default selection name display */
@@ -3799,7 +3796,7 @@ button.nav-button-primary {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   cursor: default;
   transition: color 0.2s ease;
