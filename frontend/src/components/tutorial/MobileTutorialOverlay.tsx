@@ -23,7 +23,6 @@ import {
 } from '../../utils/tutorialPositioning'
 import {
   focusTutorialPromptTextarea,
-  prefersReducedTutorialMotion,
   setTutorialSpotlightSettling,
   waitForTutorialLayoutSettle,
 } from '../../utils/tutorialSettle'
@@ -866,9 +865,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (stepRef.current !== currentStep) return
       isStepTransitioningRef.current = false
       setIsStepTransitioning(false)
+      setTutorialSpotlightSettling(false)
       fadeStarted = true
       fadeAt = performance.now()
-      if (prefersReducedTutorialMotion()) setTutorialSpotlightSettling(false)
     }
 
     const revealSettledStep = () => {
@@ -903,6 +902,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       fadeStarted = true
       isStepTransitioningRef.current = false
       setIsStepTransitioning(false)
+      setTutorialSpotlightSettling(false)
     } else {
       scrollTargetIntoView()
       if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
@@ -1547,10 +1547,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           key={step}
           ref={overlayRef}
           className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
-          onAnimationEnd={event => {
-            if (event.animationName !== 'mobile-tutorial-tooltip-in') return
-            setTutorialSpotlightSettling(false)
-          }}
           style={
             tooltipPosition.useFullscreen
               ? undefined

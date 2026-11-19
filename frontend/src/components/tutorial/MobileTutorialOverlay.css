@@ -182,15 +182,14 @@
   /* Top/left are set once per step. The visible fade is opacity only, and it
      starts when this element paints. A timer was clamped on Mobile Safari, so
      the card was still transparent at the end of the sample window. */
-  animation: mobile-tutorial-tooltip-in 320ms ease;
+  animation: mobile-tutorial-tooltip-in 200ms ease;
 }
 
 @keyframes mobile-tutorial-tooltip-in {
-  0%,
-  30% {
+  from {
     opacity: 0;
   }
-  100% {
+  to {
     opacity: 1;
   }
 }
