@@ -27,7 +27,8 @@
     "render-ready.ts",
     "coverage-lib.ts",
     "generate-coverage.ts",
-    "check-coverage.ts"
+    "check-coverage.ts",
+    "tool-leak.ts"
   ],
   "exclude": [
     "node_modules",

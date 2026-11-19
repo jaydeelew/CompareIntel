@@ -20,6 +20,7 @@ from ..utils.error_handling import (
     classify_api_error,
     format_streaming_error_message,
 )
+from .leaked_tool_markup import LeakStreamFilter, apply_leaked_tool_calls
 from .registry import (
     client,
     client_with_tool_headers,
@@ -326,6 +327,45 @@ def _build_user_message_content(
         return result
 
 
+class _ModelTextTap:
+    """One completion's text. Strips leaked tool markup before it is shown."""
+
+    def __init__(self, enabled: bool) -> None:
+        self.enabled = enabled
+        self.filter = LeakStreamFilter() if enabled else None
+        self.raw = ""
+
+    def delta(self, chunk: str) -> str:
+        if not chunk:
+            return ""
+        if self.filter is None:
+            self.raw += chunk
+            return chunk
+        return self.filter.push(chunk)
+
+    def message(self, content: str | None) -> str:
+        if not content:
+            return ""
+        raw = self.filter.raw if self.filter is not None else self.raw
+        if content.startswith(raw) or not raw:
+            new = content[len(raw) :]
+        elif len(content) > len(raw):
+            new = content[len(raw) :]
+        else:
+            return ""
+        return self.delta(new)
+
+    def finish(self) -> str:
+        if self.filter is None:
+            return ""
+        return self.filter.finish()
+
+    def parse(self) -> Any:
+        if self.filter is None:
+            return None
+        return self.filter.parse()
+
+
 def call_openrouter_streaming(
     prompt: str,
     model_id: str,
@@ -429,7 +469,7 @@ def call_openrouter_streaming(
             current_date_str = current_datetime.strftime("%A, %B %d, %Y")
             current_time_str = current_datetime.strftime("%I:%M %p %Z")
             system_content += f"\n\nCurrent date and time: {current_date_str} at {current_time_str}. When referring to 'today' or 'now', use this date and time."
-            system_content += "\n\nYou have access to web search tools. For questions about current information (weather, news, events, prices, scores, etc.), use the search_web tool. If search results need more detail, use fetch_url to get full webpage content.\n\nIMPORTANT RULES:\n1. Use search_web for any time-sensitive questions. Do not guess or make up current information.\n2. After getting search results or webpage content, ALWAYS provide a complete answer. Never stop mid-response.\n3. Keep your response natural and user-friendly. Don't mention technical details about how you searched."
+            system_content += "\n\nYou have access to web search tools. For questions about current information (weather, news, events, prices, scores, etc.), use the search_web tool. If search results need more detail, use fetch_url to get full webpage content.\n\nIMPORTANT RULES:\n1. Use search_web for any time-sensitive questions. Do not guess or make up current information.\n2. After getting search results or webpage content, ALWAYS provide a complete answer. Never stop mid-response.\n3. Keep your response natural and user-friendly. Don't mention technical details about how you searched.\n4. Invoke tools only through the tool interface. Never print tool-call markup, DSML, or function-call syntax as the answer."
 
         messages.append(
             {
@@ -509,6 +549,8 @@ def call_openrouter_streaming(
     # Track retry count for max_tokens reduction on 402 errors
     retry_count = 0
     max_retries = 1  # Only retry once with reduced max_tokens
+    # One extra completion when a model prints tool markup and no answer.
+    leak_recovery_used = False
 
     while retry_count <= max_retries:
         try:
@@ -611,6 +653,24 @@ def call_openrouter_streaming(
             )  # Deduplicate image URLs (some models return same URL in multiple chunks)
             tool_calls_accumulated = {}  # Dict to accumulate tool calls by index
             tool_call_ids_seen = set()  # Track tool call IDs to prevent duplicates across indices
+            text_tap = _ModelTextTap(enabled=tools is not None)
+
+            def take_visible(visible: str, where: str) -> str | None:
+                """Append shown text. Return a warning yield when repetition should stop the stream."""
+                nonlocal full_answer_content, repetition_detected, finish_reason
+                if not visible:
+                    return None
+                full_answer_content += visible
+                if len(full_answer_content) > 500 and detect_repetition(full_answer_content):
+                    logger.warning(
+                        f"Model {model_id} detected repetition in {where}. "
+                        f"Stopping stream early to prevent looping."
+                    )
+                    repetition_detected = True
+                    finish_reason = "length"
+                    return "\n\n⚠️ Response stopped - detected repetitive content."
+                return None
+
             all_tool_call_ids_ever_seen = (
                 set()
             )  # Track ALL tool call IDs across entire conversation (never reset)
@@ -717,73 +777,26 @@ def call_openrouter_streaming(
                                     yield {"type": "image", "url": url}
 
                     if hasattr(delta, "content") and delta.content:
-                        content_chunk = delta.content
-                        full_answer_content += content_chunk
-
-                        # Check for repetition in streaming content
-                        # Only check if we have enough content (avoid false positives early)
-                        if len(full_answer_content) > 500:
-                            if detect_repetition(full_answer_content):
-                                logger.warning(
-                                    f"Model {model_id} detected repetition in streaming response. "
-                                    f"Stopping stream early to prevent looping."
-                                )
-                                yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                repetition_detected = True  # Mark that repetition was detected
-                                finish_reason = (
-                                    "length"  # Mark as length-limited to prevent further processing
-                                )
-                                break
-
-                        yield content_chunk
+                        visible = text_tap.delta(delta.content)
+                        warning = take_visible(visible, "streaming response")
+                        if warning:
+                            yield warning
+                            break
+                        if visible:
+                            yield visible
 
                     # Also check message.content in final chunk (some models like GPT-5 return content here)
                     # This handles cases where content is only in the final chunk's message object
                     if hasattr(chunk.choices[0], "message") and chunk.choices[0].message:
                         message = chunk.choices[0].message
                         if hasattr(message, "content") and message.content:
-                            message_content = message.content
-                            if message_content and len(message_content) > len(full_answer_content):
-                                # Extract only the new part that hasn't been yielded yet
-                                new_content = message_content[len(full_answer_content) :]
-                                if new_content:
-                                    content_chunk = new_content
-                                    full_answer_content += content_chunk
-
-                                    # Check for repetition
-                                    if len(full_answer_content) > 500:
-                                        if detect_repetition(full_answer_content):
-                                            logger.warning(
-                                                f"Model {model_id} detected repetition in streaming response. "
-                                                f"Stopping stream early to prevent looping."
-                                            )
-                                            yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                            repetition_detected = True
-                                            finish_reason = "length"
-                                            break
-
-                                    yield content_chunk
-                            elif message_content and not full_answer_content:
-                                # If we haven't yielded any content yet, yield the entire message content
-                                # This handles cases where GPT-5 models return all content in the final chunk
-                                content_chunk = message_content
-                                full_answer_content += content_chunk
-
-                                # Check for repetition
-                                if len(full_answer_content) > 500:
-                                    if detect_repetition(full_answer_content):
-                                        logger.warning(
-                                            f"Model {model_id} detected repetition in streaming response. "
-                                            f"Stopping stream early to prevent looping."
-                                        )
-                                        yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                        repetition_detected = (
-                                            True  # Mark that repetition was detected
-                                        )
-                                        finish_reason = "length"
-                                        break
-
-                                yield content_chunk
+                            visible = text_tap.message(message.content)
+                            warning = take_visible(visible, "streaming response")
+                            if warning:
+                                yield warning
+                                break
+                            if visible:
+                                yield visible
 
                         # Also check message.images in final chunk (Gemini/OpenRouter may return images here)
                         # Deduplicate against delta.images we may have already yielded
@@ -892,6 +905,30 @@ def call_openrouter_streaming(
                 # Check response object itself for reasoning_details (may be set after streaming)
                 if hasattr(response, "reasoning_details") and response.reasoning_details:
                     reasoning_details = response.reasoning_details
+
+            tail = text_tap.finish()
+            warning = take_visible(tail, "streaming response")
+            if warning:
+                yield warning
+            elif tail:
+                yield tail
+
+            if tools and not repetition_detected:
+                action = apply_leaked_tool_calls(
+                    text_tap.parse(),
+                    model_id=model_id,
+                    tool_calls_accumulated=tool_calls_accumulated,
+                    seen_ids=all_tool_call_ids_ever_seen,
+                    visible_text=full_answer_content,
+                    allow_retry=True,
+                    recovery_used=leak_recovery_used,
+                    messages=messages,
+                )
+                leak_recovery_used = action.recovery_used
+                if action.added:
+                    finish_reason = "tool_calls"
+                if action.retry:
+                    continue
 
             # Handle tool calls after streaming completes.
             # Some models (e.g. Gemini 2.0 Flash) make aggressive tool calls that can exhaust
@@ -2207,6 +2244,7 @@ def call_openrouter_streaming(
                     reasoning_details_continue = None  # Track reasoning details in continuation
 
                     # Stream the continuation response
+                    text_tap = _ModelTextTap(enabled=tools is not None)
                     for chunk in response_continue:
                         last_chunk = chunk  # Store last chunk for usage data
                         if chunk.choices and len(chunk.choices) > 0:
@@ -2284,76 +2322,28 @@ def call_openrouter_streaming(
                             # Yield content chunks
                             # Check delta.content first (standard streaming)
                             if hasattr(delta, "content") and delta.content:
-                                content_chunk = delta.content
-                                full_answer_content += content_chunk
-
-                                # Check for repetition in continuation streaming
-                                if len(full_answer_content) > 500:
-                                    if detect_repetition(full_answer_content):
-                                        logger.warning(
-                                            f"Model {model_id} detected repetition in continuation streaming response. "
-                                            f"Stopping stream early to prevent looping."
-                                        )
-                                        yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                        repetition_detected = (
-                                            True  # Mark that repetition was detected
-                                        )
-                                        finish_reason = "length"
-                                        break
-
-                                yield content_chunk
+                                visible = text_tap.delta(delta.content)
+                                warning = take_visible(visible, "continuation streaming response")
+                                if warning:
+                                    yield warning
+                                    break
+                                if visible:
+                                    yield visible
 
                             # Also check message.content in final chunk (some models like GPT-5 return content here)
                             # This handles cases where content is only in the final chunk's message object
                             if hasattr(chunk.choices[0], "message") and chunk.choices[0].message:
                                 message = chunk.choices[0].message
                                 if hasattr(message, "content") and message.content:
-                                    # Only yield if we haven't already yielded this content via delta
-                                    # Check if this is new content by comparing with what we've accumulated
-                                    message_content = message.content
-                                    if message_content and len(message_content) > len(
-                                        full_answer_content
-                                    ):
-                                        # Extract only the new part that hasn't been yielded yet
-                                        new_content = message_content[len(full_answer_content) :]
-                                        if new_content:
-                                            content_chunk = new_content
-                                            full_answer_content += content_chunk
-
-                                            # Check for repetition
-                                            if len(full_answer_content) > 500:
-                                                if detect_repetition(full_answer_content):
-                                                    logger.warning(
-                                                        f"Model {model_id} detected repetition in continuation streaming response. "
-                                                        f"Stopping stream early to prevent looping."
-                                                    )
-                                                    yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                                    repetition_detected = True
-                                                    finish_reason = "length"
-                                                    break
-
-                                            yield content_chunk
-                                    elif message_content and not full_answer_content:
-                                        # If we haven't yielded any content yet, yield the entire message content
-                                        # This handles cases where GPT-5 models return all content in the final chunk
-                                        content_chunk = message_content
-                                        full_answer_content += content_chunk
-
-                                        # Check for repetition
-                                        if len(full_answer_content) > 500:
-                                            if detect_repetition(full_answer_content):
-                                                logger.warning(
-                                                    f"Model {model_id} detected repetition in continuation streaming response. "
-                                                    f"Stopping stream early to prevent looping."
-                                                )
-                                                yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                                repetition_detected = (
-                                                    True  # Mark that repetition was detected
-                                                )
-                                                finish_reason = "length"
-                                                break
-
-                                        yield content_chunk
+                                    visible = text_tap.message(message.content)
+                                    warning = take_visible(
+                                        visible, "continuation streaming response"
+                                    )
+                                    if warning:
+                                        yield warning
+                                        break
+                                    if visible:
+                                        yield visible
 
                                 # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
                                 # This handles cases where tool_calls are only in the final chunk's message object
@@ -2439,6 +2429,27 @@ def call_openrouter_streaming(
                     if reasoning_details_continue is not None:
                         reasoning_details = reasoning_details_continue
 
+                    tail = text_tap.finish()
+                    warning = take_visible(tail, "continuation streaming response")
+                    if warning:
+                        yield warning
+                    elif tail:
+                        yield tail
+                    if tools and not repetition_detected:
+                        action = apply_leaked_tool_calls(
+                            text_tap.parse(),
+                            model_id=model_id,
+                            tool_calls_accumulated=tool_calls_accumulated,
+                            seen_ids=all_tool_call_ids_ever_seen,
+                            visible_text=full_answer_content,
+                            allow_retry=False,
+                            recovery_used=leak_recovery_used,
+                            messages=messages,
+                        )
+                        leak_recovery_used = action.recovery_used
+                        if action.added:
+                            finish_reason = "tool_calls"
+
                     # Break if no more tool calls needed
                     if finish_reason != "tool_calls" or not tool_calls_accumulated:
                         break
@@ -2497,6 +2508,7 @@ def call_openrouter_streaming(
                     final_response = _cl.chat.completions.create(**final_params)
 
                     # Stream the final response
+                    text_tap = _ModelTextTap(enabled=tools is not None)
                     for chunk in final_response:
                         last_chunk = chunk
                         if chunk.choices and len(chunk.choices) > 0:
@@ -2507,70 +2519,25 @@ def call_openrouter_streaming(
                                 yield rp_final
 
                             if hasattr(delta, "content") and delta.content:
-                                content_chunk = delta.content
-                                full_answer_content += content_chunk
-
-                                # Check for repetition
-                                if len(full_answer_content) > 500:
-                                    if detect_repetition(full_answer_content):
-                                        logger.warning(
-                                            f"Model {model_id} detected repetition in final completion response. "
-                                            f"Stopping stream early to prevent looping."
-                                        )
-                                        yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                        repetition_detected = (
-                                            True  # Mark that repetition was detected
-                                        )
-                                        finish_reason = "length"
-                                        break
-
-                                yield content_chunk
+                                visible = text_tap.delta(delta.content)
+                                warning = take_visible(visible, "final completion response")
+                                if warning:
+                                    yield warning
+                                    break
+                                if visible:
+                                    yield visible
 
                             # Also check message.content in final chunk
                             if hasattr(chunk.choices[0], "message") and chunk.choices[0].message:
                                 message = chunk.choices[0].message
                                 if hasattr(message, "content") and message.content:
-                                    message_content = message.content
-                                    if message_content and len(message_content) > len(
-                                        full_answer_content
-                                    ):
-                                        new_content = message_content[len(full_answer_content) :]
-                                        if new_content:
-                                            full_answer_content += new_content
-
-                                            # Check for repetition
-                                            if len(full_answer_content) > 500:
-                                                if detect_repetition(full_answer_content):
-                                                    logger.warning(
-                                                        f"Model {model_id} detected repetition in final completion response. "
-                                                        f"Stopping stream early to prevent looping."
-                                                    )
-                                                    yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                                    repetition_detected = (
-                                                        True  # Mark that repetition was detected
-                                                    )
-                                                    finish_reason = "length"
-                                                    break
-
-                                            yield new_content
-                                    elif message_content and not full_answer_content:
-                                        full_answer_content += message_content
-
-                                        # Check for repetition
-                                        if len(full_answer_content) > 500:
-                                            if detect_repetition(full_answer_content):
-                                                logger.warning(
-                                                    f"Model {model_id} detected repetition in final completion response. "
-                                                    f"Stopping stream early to prevent looping."
-                                                )
-                                                yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                                repetition_detected = (
-                                                    True  # Mark that repetition was detected
-                                                )
-                                                finish_reason = "length"
-                                                break
-
-                                        yield message_content
+                                    visible = text_tap.message(message.content)
+                                    warning = take_visible(visible, "final completion response")
+                                    if warning:
+                                        yield warning
+                                        break
+                                    if visible:
+                                        yield visible
 
                             if chunk.choices[0].finish_reason:
                                 finish_reason = chunk.choices[0].finish_reason
@@ -2579,6 +2546,12 @@ def call_openrouter_streaming(
                             merged = token_usage_from_openrouter_usage(chunk.usage)
                             if merged:
                                 usage_data = merged
+                    tail = text_tap.finish()
+                    warning = take_visible(tail, "final completion response")
+                    if warning:
+                        yield warning
+                    elif tail:
+                        yield tail
                 except Exception as final_error:
                     logger.error(
                         f"Error in final completion call for model {model_id}: {final_error}"
@@ -2677,6 +2650,7 @@ def call_openrouter_streaming(
                                 )
 
                                 # Stream the completion response
+                                text_tap = _ModelTextTap(enabled=tools is not None)
                                 for chunk in completion_response:
                                     last_chunk = chunk
                                     if chunk.choices and len(chunk.choices) > 0:
@@ -2687,24 +2661,15 @@ def call_openrouter_streaming(
                                             yield rp_inc
 
                                         if hasattr(delta, "content") and delta.content:
-                                            content_chunk = delta.content
-                                            full_answer_content += content_chunk
-
-                                            # Check for repetition
-                                            if len(full_answer_content) > 500:
-                                                if detect_repetition(full_answer_content):
-                                                    logger.warning(
-                                                        f"Model {model_id} detected repetition in incomplete response completion. "
-                                                        f"Stopping stream early to prevent looping."
-                                                    )
-                                                    yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                                    repetition_detected = (
-                                                        True  # Mark that repetition was detected
-                                                    )
-                                                    finish_reason = "length"
-                                                    break
-
-                                            yield content_chunk
+                                            visible = text_tap.delta(delta.content)
+                                            warning = take_visible(
+                                                visible, "incomplete response completion"
+                                            )
+                                            if warning:
+                                                yield warning
+                                                break
+                                            if visible:
+                                                yield visible
 
                                         # Also check message.content in final chunk
                                         if (
@@ -2713,47 +2678,15 @@ def call_openrouter_streaming(
                                         ):
                                             message = chunk.choices[0].message
                                             if hasattr(message, "content") and message.content:
-                                                message_content = message.content
-                                                if message_content and len(message_content) > len(
-                                                    full_answer_content
-                                                ):
-                                                    new_content = message_content[
-                                                        len(full_answer_content) :
-                                                    ]
-                                                    if new_content:
-                                                        full_answer_content += new_content
-
-                                                        # Check for repetition
-                                                        if len(full_answer_content) > 500:
-                                                            if detect_repetition(
-                                                                full_answer_content
-                                                            ):
-                                                                logger.warning(
-                                                                    f"Model {model_id} detected repetition in incomplete response completion. "
-                                                                    f"Stopping stream early to prevent looping."
-                                                                )
-                                                                yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                                                repetition_detected = True  # Mark that repetition was detected
-                                                                finish_reason = "length"
-                                                                break
-
-                                                        yield new_content
-                                                elif message_content and not full_answer_content:
-                                                    full_answer_content += message_content
-
-                                                    # Check for repetition
-                                                    if len(full_answer_content) > 500:
-                                                        if detect_repetition(full_answer_content):
-                                                            logger.warning(
-                                                                f"Model {model_id} detected repetition in incomplete response completion. "
-                                                                f"Stopping stream early to prevent looping."
-                                                            )
-                                                            yield "\n\n⚠️ Response stopped - detected repetitive content."
-                                                            repetition_detected = True  # Mark that repetition was detected
-                                                            finish_reason = "length"
-                                                            break
-
-                                                    yield message_content
+                                                visible = text_tap.message(message.content)
+                                                warning = take_visible(
+                                                    visible, "incomplete response completion"
+                                                )
+                                                if warning:
+                                                    yield warning
+                                                    break
+                                                if visible:
+                                                    yield visible
 
                                         if chunk.choices[0].finish_reason:
                                             finish_reason = chunk.choices[0].finish_reason
@@ -2762,6 +2695,12 @@ def call_openrouter_streaming(
                                         merged = token_usage_from_openrouter_usage(chunk.usage)
                                         if merged:
                                             usage_data = merged
+                                tail = text_tap.finish()
+                                warning = take_visible(tail, "incomplete response completion")
+                                if warning:
+                                    yield warning
+                                elif tail:
+                                    yield tail
                             except Exception as completion_error:
                                 logger.error(
                                     f"Error in incomplete response completion call for model {model_id}: {completion_error}"
