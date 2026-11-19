@@ -763,6 +763,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     let cancelled = false
     let scrollDelayTimer: ReturnType<typeof setTimeout> | null = null
+    let revealDeadline: ReturnType<typeof setTimeout> | null = null
     const behavior: ScrollBehavior = prefersReducedTutorialMotion() ? 'auto' : 'smooth'
 
     const scrollByDelta = (delta: number, scrollBehavior: ScrollBehavior = behavior) => {
@@ -873,6 +874,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     const revealSettledStep = () => {
       if (cancelled || stepRef.current !== currentStep) return
+      if (spotlightSettledRef.current && settledStepRef.current === currentStep) return
       calculatePositions()
       setIsVisible(true)
       spotlightSettledRef.current = true
@@ -919,6 +921,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         const timer = window.setTimeout(finish, 450)
         targetEl.addEventListener('animationend', onEnd)
       })
+
+    // A stream can keep scroll events alive for the whole hard timeout. Reveal
+    // anyway so the card is opaque well before the transition sample ends.
+    revealDeadline = window.setTimeout(() => {
+      revealDeadline = null
+      revealSettledStep()
+    }, 700)
 
     if (alreadySettled) {
       // A remount during the fade used to leave the hide class on. WebKit then
@@ -972,6 +981,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     return () => {
       cancelled = true
       if (scrollDelayTimer !== null) window.clearTimeout(scrollDelayTimer)
+      if (revealDeadline !== null) window.clearTimeout(revealDeadline)
       window.removeEventListener('scroll', schedulePositionUpdate, true)
       window.removeEventListener('resize', schedulePositionUpdate)
       appScrollHost?.removeEventListener('scroll', schedulePositionUpdate)
