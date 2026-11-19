@@ -113,7 +113,7 @@ async function watchTransition(
   action: () => Promise<void>
 ): Promise<TransitionReport> {
   await page.evaluate(() => {
-    const w = window as Window & { __ttSamples?: TooltipSample[]; __ttRaf?: number }
+    const w = window as Window & { __ttSamples?: TooltipSample[]; __ttTimer?: number }
     w.__ttSamples = []
     const tick = () => {
       const tip = document.querySelector(
@@ -129,20 +129,22 @@ async function watchTransition(
         settling: document.documentElement.classList.contains('tutorial-spotlight-settling'),
         scroll: Math.round((document.querySelector('.app') as HTMLElement | null)?.scrollTop ?? 0),
       })
-      // A 10s actionability wait is ~600 frames. Stopping at 480 kept only the
-      // frames from before the step change, so the hide was never recorded.
-      if ((w.__ttSamples?.length ?? 0) >= 2400) return
-      w.__ttRaf = requestAnimationFrame(tick)
+      // WebKit throttles requestAnimationFrame while Playwright is waiting, so a
+      // settled tooltip was sampled once. A timer still runs during that wait.
+      if ((w.__ttSamples?.length ?? 0) >= 2400 && w.__ttTimer) {
+        window.clearInterval(w.__ttTimer)
+      }
     }
     tick()
+    w.__ttTimer = window.setInterval(tick, 32)
   })
 
   await action()
   await page.waitForTimeout(1200)
 
   const samples = await page.evaluate(() => {
-    const w = window as Window & { __ttSamples?: TooltipSample[]; __ttRaf?: number }
-    if (w.__ttRaf) cancelAnimationFrame(w.__ttRaf)
+    const w = window as Window & { __ttSamples?: TooltipSample[]; __ttTimer?: number }
+    if (w.__ttTimer) window.clearInterval(w.__ttTimer)
     return w.__ttSamples ?? []
   })
 
