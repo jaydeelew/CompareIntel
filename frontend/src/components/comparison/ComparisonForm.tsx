@@ -46,6 +46,37 @@ function submitIncompleteComposerTooltip(hasPrompt: boolean, hasModels: boolean)
   return 'Before submitting, enter your input'
 }
 
+function WebSearchGlobeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ width: '20px', height: '20px', display: 'block' }}
+      data-testid="web-search-globe-icon"
+      aria-hidden
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <path
+        d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function dataTransferHasFiles(dt: DataTransfer | null): boolean {
   if (!dt?.types) return false
   return Array.from(dt.types as unknown as string[]).includes('Files')
@@ -173,6 +204,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       prefersFinePointerHover,
       useModalForTooltips,
     } = useResponsive()
+    /** Native disabled breaks portal tooltips and washes out the globe; follow-up uses aria-only lock on desktop. */
+    const webSearchButtonNativeDisabled =
+      !isTouchDevice && webSearchControlDisabled && !webSearchLocked
+    const webSearchButtonClassName = [
+      'textarea-icon-button',
+      'web-search-button',
+      webSearchEnabled ? 'active' : '',
+      webSearchLocked ? 'web-search-locked' : '',
+      webSearchControlDisabled && isTouchDevice ? 'touch-disabled' : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
     const isMobileOrTablet = isMobileLayout || isTabletLayout
     /** Touch-first toolbar (tap modals, no hover tooltips). False when viewport is wide or when user has a mouse on a narrow viewport. */
     const useTouchFirstComposerChrome = isMobileOrTablet && !prefersFinePointerHover
@@ -1029,33 +1072,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     }
                   }
                 }}
-                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${webSearchControlDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
-                disabled={!isTouchDevice && webSearchControlDisabled}
+                className={webSearchButtonClassName}
+                disabled={webSearchButtonNativeDisabled}
                 aria-label={webSearchButtonAriaLabel}
                 aria-disabled={webSearchControlDisabled}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ width: '20px', height: '20px' }}
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                  <path
-                    d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <WebSearchGlobeIcon />
               </button>
             ) : showComposerStyledTooltips ? (
               <StyledTooltip usePortal text={webSearchTooltipText}>
@@ -1067,33 +1089,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       handleDisabledButtonTap('websearch')
                     else if (!webSearchControlDisabled) setWebSearchEnabled(!webSearchEnabled)
                   }}
-                  className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${webSearchControlDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
-                  disabled={!isTouchDevice && webSearchControlDisabled}
+                  className={webSearchButtonClassName}
+                  disabled={webSearchButtonNativeDisabled}
                   aria-label={webSearchButtonAriaLabel}
                   aria-disabled={webSearchControlDisabled}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{ width: '20px', height: '20px' }}
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                    <path
-                      d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <WebSearchGlobeIcon />
                 </button>
               </StyledTooltip>
             ) : (
@@ -1105,33 +1106,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     handleDisabledButtonTap('websearch')
                   else if (!webSearchControlDisabled) setWebSearchEnabled(!webSearchEnabled)
                 }}
-                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${webSearchControlDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
-                disabled={!isTouchDevice && webSearchControlDisabled}
+                className={webSearchButtonClassName}
+                disabled={webSearchButtonNativeDisabled}
                 aria-label={webSearchButtonAriaLabel}
                 aria-disabled={webSearchControlDisabled}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ width: '20px', height: '20px' }}
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                  <path
-                    d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <WebSearchGlobeIcon />
               </button>
             )}
 

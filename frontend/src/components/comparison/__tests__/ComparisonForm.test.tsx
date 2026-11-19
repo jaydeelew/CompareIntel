@@ -193,7 +193,10 @@ describe('ComparisonForm', () => {
 
     const webSearchButton = screen.getByTestId('web-search-button')
     expect(webSearchButton).toHaveClass('active')
-    expect(webSearchButton).toBeDisabled()
+    expect(webSearchButton).toHaveClass('web-search-locked')
+    expect(webSearchButton).not.toBeDisabled()
+    expect(webSearchButton).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByTestId('web-search-globe-icon')).toBeInTheDocument()
     expect(webSearchButton).toHaveAttribute(
       'aria-label',
       'Web search enabled (fixed for this conversation)'
