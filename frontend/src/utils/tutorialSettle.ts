@@ -39,10 +39,28 @@ export function tutorialBoxesNearlyEqual(
   )
 }
 
-function readViewportSignature(): string {
+interface ViewportSnapshot {
+  height: number
+  offsetTop: number
+  width: number
+}
+
+function readViewportSnapshot(): ViewportSnapshot | null {
   const vv = window.visualViewport
-  if (!vv) return 'none'
-  return `${Math.round(vv.height)}:${Math.round(vv.offsetTop)}:${Math.round(vv.width)}`
+  if (!vv) return null
+  return { height: vv.height, offsetTop: vv.offsetTop, width: vv.width }
+}
+
+function viewportMoved(previous: ViewportSnapshot | null, next: ViewportSnapshot | null): boolean {
+  if (previous == null || next == null) return previous !== next
+  // iOS reports 1px visualViewport jitter while the page is still. That used to
+  // reset the quiet period until the hard timeout, so the fade started as the
+  // sample window ended.
+  return (
+    Math.abs(next.height - previous.height) >= 8 ||
+    Math.abs(next.offsetTop - previous.offsetTop) >= 8 ||
+    Math.abs(next.width - previous.width) >= 8
+  )
 }
 
 function tutorialScrollTarget(): EventTarget {
@@ -77,7 +95,7 @@ export function waitForTutorialLayoutSettle(options?: {
     let quietTimer: ReturnType<typeof setTimeout> | null = null
     let hardTimer: ReturnType<typeof setTimeout> | null = null
     let lastScroll = readScrollTop(scrollTarget)
-    let lastViewport = readViewportSignature()
+    let lastViewport = readViewportSnapshot()
 
     const cleanup = () => {
       if (quietTimer) clearTimeout(quietTimer)
@@ -101,9 +119,9 @@ export function waitForTutorialLayoutSettle(options?: {
       if (quietTimer) clearTimeout(quietTimer)
       quietTimer = setTimeout(() => {
         const scrollNow = readScrollTop(scrollTarget)
-        const viewportNow = readViewportSignature()
-        const scrollQuiet = Math.abs(scrollNow - lastScroll) < 1
-        const viewportQuiet = viewportNow === lastViewport
+        const viewportNow = readViewportSnapshot()
+        const scrollQuiet = Math.abs(scrollNow - lastScroll) < 4
+        const viewportQuiet = !viewportMoved(lastViewport, viewportNow)
         if (scrollQuiet && viewportQuiet) {
           finish()
           return
@@ -116,9 +134,9 @@ export function waitForTutorialLayoutSettle(options?: {
 
     const onActivity = () => {
       const scrollNow = readScrollTop(scrollTarget)
-      const viewportNow = readViewportSignature()
-      const scrollChanged = Math.abs(scrollNow - lastScroll) >= 1
-      const viewportChanged = viewportNow !== lastViewport
+      const viewportNow = readViewportSnapshot()
+      const scrollChanged = Math.abs(scrollNow - lastScroll) >= 4
+      const viewportChanged = viewportMoved(lastViewport, viewportNow)
       lastScroll = scrollNow
       lastViewport = viewportNow
       // Safari emits visualViewport and scroll events that do not move the page.

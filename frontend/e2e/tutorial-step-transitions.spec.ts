@@ -129,7 +129,9 @@ async function watchTransition(
         settling: document.documentElement.classList.contains('tutorial-spotlight-settling'),
         scroll: Math.round((document.querySelector('.app') as HTMLElement | null)?.scrollTop ?? 0),
       })
-      if ((w.__ttSamples?.length ?? 0) >= 480) return
+      // A 10s actionability wait is ~600 frames. Stopping at 480 kept only the
+      // frames from before the step change, so the hide was never recorded.
+      if ((w.__ttSamples?.length ?? 0) >= 2400) return
       w.__ttRaf = requestAnimationFrame(tick)
     }
     tick()

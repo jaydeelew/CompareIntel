@@ -841,6 +841,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     let fadeStarted = false
+    let fadeAt = 0
     let corrections = 0
     let lastViewportHeight = window.visualViewport?.height ?? window.innerHeight
     let lastInnerHeight = window.innerHeight
@@ -866,6 +867,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         setIsStepTransitioning(false)
         setTutorialSpotlightSettling(false)
         fadeStarted = true
+        fadeAt = performance.now()
       }, 32)
     }
 
@@ -943,9 +945,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       )
     }
 
+    const keyboardSettled = () => fadeStarted && performance.now() - fadeAt >= 600
     const schedulePositionUpdate = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
       if (currentStep !== 'enter-prompt' && currentStep !== 'enter-prompt-2') return
+      if (!keyboardSettled()) return
       if (!viewportHeightChanged()) return
       fadeStarted = true
       restabilize()
@@ -953,6 +957,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
       if (currentStep !== 'enter-prompt' && currentStep !== 'enter-prompt-2') return
+      if (!keyboardSettled()) return
       if (!viewportHeightChanged()) return
       fadeStarted = true
       restabilize()

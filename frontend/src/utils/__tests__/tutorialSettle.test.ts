@@ -67,6 +67,32 @@ describe('tutorialSettle', () => {
     expect(resolved).toBe(true)
   })
 
+  it('resolves through 1px visualViewport jitter', async () => {
+    const listeners = new Map<string, Set<() => void>>()
+    const viewport = {
+      height: 800,
+      offsetTop: 0,
+      width: 400,
+      addEventListener: (type: string, fn: () => void) => {
+        const set = listeners.get(type) ?? new Set()
+        set.add(fn)
+        listeners.set(type, set)
+      },
+      removeEventListener: (type: string, fn: () => void) => {
+        listeners.get(type)?.delete(fn)
+      },
+    }
+    vi.stubGlobal('visualViewport', viewport)
+
+    const start = performance.now()
+    const pending = waitForTutorialLayoutSettle({ timeoutMs: 500, quietMs: 40 })
+    await new Promise(r => setTimeout(r, 15))
+    viewport.offsetTop = 1
+    listeners.get('scroll')?.forEach(fn => fn())
+    await pending
+    expect(performance.now() - start).toBeLessThan(200)
+  })
+
   it('reads prefers-reduced-motion', () => {
     vi.spyOn(window, 'matchMedia').mockImplementation(
       query =>
