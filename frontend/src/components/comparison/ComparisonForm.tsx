@@ -46,14 +46,14 @@ function submitIncompleteComposerTooltip(hasPrompt: boolean, hasModels: boolean)
   return 'Before submitting, enter your input'
 }
 
-function WebSearchGlobeIcon() {
+function WebSearchGlobeIcon({ includeTestId = true }: { includeTestId?: boolean }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       style={{ width: '20px', height: '20px', display: 'block' }}
-      data-testid="web-search-globe-icon"
+      data-testid={includeTestId ? 'web-search-globe-icon' : undefined}
       aria-hidden
     >
       <circle
@@ -1058,7 +1058,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             {useTouchFirstComposerChrome ? (
               <button
                 type="button"
-                data-testid="web-search-button"
+                data-testid={mirror ? undefined : 'web-search-button'}
                 onClick={() => {
                   if (webSearchControlDisabled && isTouchDevice) {
                     handleDisabledButtonTap('websearch')
@@ -1077,13 +1077,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 aria-label={webSearchButtonAriaLabel}
                 aria-disabled={webSearchControlDisabled}
               >
-                <WebSearchGlobeIcon />
+                <WebSearchGlobeIcon includeTestId={!mirror} />
               </button>
             ) : showComposerStyledTooltips ? (
               <StyledTooltip usePortal text={webSearchTooltipText}>
                 <button
                   type="button"
-                  data-testid="web-search-button"
+                  data-testid={mirror ? undefined : 'web-search-button'}
                   onClick={() => {
                     if (webSearchControlDisabled && isTouchDevice)
                       handleDisabledButtonTap('websearch')
@@ -1094,13 +1094,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   aria-label={webSearchButtonAriaLabel}
                   aria-disabled={webSearchControlDisabled}
                 >
-                  <WebSearchGlobeIcon />
+                  <WebSearchGlobeIcon includeTestId={!mirror} />
                 </button>
               </StyledTooltip>
             ) : (
               <button
                 type="button"
-                data-testid="web-search-button"
+                data-testid={mirror ? undefined : 'web-search-button'}
                 onClick={() => {
                   if (webSearchControlDisabled && isTouchDevice)
                     handleDisabledButtonTap('websearch')
@@ -1111,7 +1111,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 aria-label={webSearchButtonAriaLabel}
                 aria-disabled={webSearchControlDisabled}
               >
-                <WebSearchGlobeIcon />
+                <WebSearchGlobeIcon includeTestId={!mirror} />
               </button>
             )}
 

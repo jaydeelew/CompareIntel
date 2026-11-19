@@ -15,7 +15,11 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   testDir: './e2e',
   /* Prerendered-build specs run via playwright.prerender.config.ts */
-  testIgnore: ['prerendered/**'],
+  testIgnore: [
+    'prerendered/**',
+    /** Agent/manual visual captures — not a CI gate */
+    '**/capture-followup-websearch-screenshots.spec.ts',
+  ],
 
   /* Global setup runs once before all tests */
   globalSetup: './e2e/global-setup.ts',

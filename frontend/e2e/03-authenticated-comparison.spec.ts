@@ -210,7 +210,9 @@ test.describe('Authenticated User Comparison Flow', () => {
       await expect(inputField).toBeVisible({ timeout: 10000 })
 
       await test.step('Web search toggle is locked in follow-up mode', async () => {
-        const webSearchButton = authenticatedPage.getByTestId('web-search-button')
+        const webSearchButton = authenticatedPage
+          .locator('.composer-toolbar')
+          .getByTestId('web-search-button')
         await expect(webSearchButton).toBeVisible({ timeout: 10000 })
         await expect(webSearchButton).toHaveClass(/web-search-locked/)
         await expect(webSearchButton).toHaveAttribute('aria-disabled', 'true')

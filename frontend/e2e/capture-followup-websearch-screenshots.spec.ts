@@ -1,5 +1,6 @@
 /**
  * Visual capture for follow-up web search lock evidence (manual/agent run, not CI).
+ * Excluded via playwright.config.ts testIgnore — run locally with preview + backend up.
  */
 import { expect, test } from './fixtures'
 
