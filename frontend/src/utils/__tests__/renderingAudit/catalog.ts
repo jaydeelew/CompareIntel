@@ -343,6 +343,7 @@ Outside the table, $\\|x\\|_2$ stays a norm.`,
     inlineContent: `## Nested blockquote, autolink, bare URL, and a footnote
 
 Autolink: <https://example.com/lab-autolink>
+Bare URL: https://example.com/lab-bare-url/with/a/long/path
 `,
     startRe: '^## Nested blockquote',
   },

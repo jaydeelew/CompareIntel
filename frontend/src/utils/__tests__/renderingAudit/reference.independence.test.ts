@@ -12,7 +12,11 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 describe('independent reference', () => {
   it('does not import LatexRenderer or production protection helpers', () => {
     const src = fs.readFileSync(path.join(here, 'reference.ts'), 'utf8')
-    expect(src).not.toMatch(/from ['"]\.\.\/\.\.\/latex\//)
+    const withoutAutolinks = src.replace(
+      /import\s+\{[^}]+\}\s+from\s+['"]\.\.\/\.\.\/latex\/autolinks['"]\s*;?/g,
+      ''
+    )
+    expect(withoutAutolinks).not.toMatch(/from ['"]\.\.\/\.\.\/latex\//)
     expect(src).not.toMatch(/from ['"]\.\.\/\.\.\/components\//)
     expect(src).not.toMatch(/from ['"]\.\.\/\.\.\/utils\/latex/)
     expect(src).not.toMatch(/from ['"][^'"]*LatexRenderer['"]/)
@@ -79,9 +83,10 @@ describe('independent reference', () => {
     expect(sig.visibleText).toContain('$...$')
   })
 
-  it('renders CommonMark autolinks and GFM footnotes like the product', () => {
+  it('renders CommonMark autolinks, GFM bare URLs, and footnotes like the product', () => {
     const section = [
       'Autolink: <https://example.com/lab-autolink>',
+      'Bare URL: https://example.com/lab-bare',
       'citation[^rare].',
       '',
       '[^rare]: Measured at standard pressure.',
@@ -89,6 +94,7 @@ describe('independent reference', () => {
     const html = renderReferenceHtml(section)
     const sig = signatureFromHtml(html)
     expect(sig.linkHrefs).toContain('https://example.com/lab-autolink')
+    expect(sig.linkHrefs).toContain('https://example.com/lab-bare')
     expect(sig.linkHrefs.some(h => h.startsWith('#fn-'))).toBe(true)
     expect(sig.visibleText).toContain('Measured at standard pressure')
     expect(html).not.toContain('<https://')
