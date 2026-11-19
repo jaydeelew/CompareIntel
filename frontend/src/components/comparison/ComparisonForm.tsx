@@ -160,6 +160,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       })
     }, [selectedModels, modelsByProvider])
     const canEnableWebSearch = selectedModelsWithWebSearch.length > 0
+    const webSearchLocked = isFollowUpMode
+    const webSearchControlDisabled = webSearchLocked || !canEnableWebSearch || isLoading
+    const webSearchFollowUpTooltip =
+      'Web search is fixed for this conversation. Start over to change it.'
 
     const {
       isTouchDevice,
@@ -292,7 +296,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           case 'web-search':
             return {
               title: 'Web Search',
-              message: !canEnableWebSearch ? 'Select a web-enabled model' : 'Web search enabled',
+              message: webSearchLocked
+                ? webSearchFollowUpTooltip
+                : !canEnableWebSearch
+                  ? 'Select a web-enabled model'
+                  : 'Web search enabled',
             }
           case 'submit':
             return {
@@ -320,6 +328,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [
         isSpeechListening,
         canEnableWebSearch,
+        webSearchLocked,
+        webSearchFollowUpTooltip,
         creditsRemaining,
         imageGenerationSubmitBlocked,
         imageGenerationNoSharedImageOptions,
@@ -342,8 +352,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             else startSpeechListening()
             break
           case 'web-search':
-            // Mobile opens this modal only when turning web search on (off is a direct tap).
-            setWebSearchEnabled(true)
+            if (!webSearchLocked) setWebSearchEnabled(true)
             break
           case 'submit':
             if (isFollowUpMode) onContinueConversation()
@@ -356,6 +365,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         stopSpeechListening,
         startSpeechListening,
         setWebSearchEnabled,
+        webSearchLocked,
         isFollowUpMode,
         onContinueConversation,
         onSubmitClick,
@@ -367,7 +377,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         if (!isTouchDevice) return
         let message = ''
         if (button === 'websearch') {
-          if (!canEnableWebSearch) {
+          if (webSearchLocked) {
+            message = webSearchFollowUpTooltip
+          } else if (!canEnableWebSearch) {
             message =
               'Web search requires at least one model that supports web search. Select a model with the 🌐 icon in the model selection area to enable this feature.'
           } else if (isLoading) {
@@ -401,6 +413,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [
         isTouchDevice,
         canEnableWebSearch,
+        webSearchLocked,
+        webSearchFollowUpTooltip,
         isLoading,
         creditsRemaining,
         isFollowUpMode,
@@ -689,11 +703,22 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const submitProgressOutline = input.trim().length > 0 || selectedModels.length > 0
 
     const voiceButtonAriaLabel = isSpeechListening ? 'Stop recording' : 'Start voice input'
-    const webSearchButtonAriaLabel = !canEnableWebSearch
-      ? 'Select a web-enabled model'
-      : webSearchEnabled
-        ? 'Web search enabled'
-        : 'Enable web search'
+    const webSearchButtonAriaLabel = webSearchLocked
+      ? webSearchEnabled
+        ? 'Web search enabled (fixed for this conversation)'
+        : 'Web search off (fixed for this conversation)'
+      : !canEnableWebSearch
+        ? 'Select a web-enabled model'
+        : webSearchEnabled
+          ? 'Web search enabled'
+          : 'Enable web search'
+    const webSearchTooltipText = webSearchLocked
+      ? webSearchFollowUpTooltip
+      : !canEnableWebSearch
+        ? 'Select a web-enabled model'
+        : webSearchEnabled
+          ? 'Web search enabled'
+          : 'Enable web search'
     const submitButtonAriaLabel =
       creditsRemaining <= 0
         ? 'You have run out of credits'
@@ -990,28 +1015,24 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             {useTouchFirstComposerChrome ? (
               <button
                 type="button"
+                data-testid="web-search-button"
                 onClick={() => {
-                  const isDisabled = !canEnableWebSearch || isLoading
-                  if (isDisabled && isTouchDevice) {
+                  if (webSearchControlDisabled && isTouchDevice) {
                     handleDisabledButtonTap('websearch')
-                  } else if (!isDisabled) {
+                  } else if (!webSearchControlDisabled) {
                     if (webSearchEnabled) {
-                      // Disabling: no modal, toggle directly
                       setWebSearchEnabled(false)
+                    } else if (getTooltipModalSuppressed('web-search')) {
+                      setWebSearchEnabled(true)
                     } else {
-                      // Enabling: show modal with "Web search enabled" if not suppressed
-                      if (getTooltipModalSuppressed('web-search')) {
-                        setWebSearchEnabled(true)
-                      } else {
-                        setTooltipModalButton('web-search')
-                      }
+                      setTooltipModalButton('web-search')
                     }
                   }
                 }}
-                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
-                disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${webSearchControlDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
+                disabled={!isTouchDevice && webSearchControlDisabled}
                 aria-label={webSearchButtonAriaLabel}
-                aria-disabled={!canEnableWebSearch || isLoading}
+                aria-disabled={webSearchControlDisabled}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -1037,27 +1058,19 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 </svg>
               </button>
             ) : showComposerStyledTooltips ? (
-              <StyledTooltip
-                usePortal
-                text={
-                  !canEnableWebSearch
-                    ? 'Select a web-enabled model'
-                    : webSearchEnabled
-                      ? 'Web search enabled'
-                      : 'Enable web search'
-                }
-              >
+              <StyledTooltip usePortal text={webSearchTooltipText}>
                 <button
                   type="button"
+                  data-testid="web-search-button"
                   onClick={() => {
-                    const isDisabled = !canEnableWebSearch || isLoading
-                    if (isDisabled && isTouchDevice) handleDisabledButtonTap('websearch')
-                    else if (!isDisabled) setWebSearchEnabled(!webSearchEnabled)
+                    if (webSearchControlDisabled && isTouchDevice)
+                      handleDisabledButtonTap('websearch')
+                    else if (!webSearchControlDisabled) setWebSearchEnabled(!webSearchEnabled)
                   }}
-                  className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
-                  disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                  className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${webSearchControlDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
+                  disabled={!isTouchDevice && webSearchControlDisabled}
                   aria-label={webSearchButtonAriaLabel}
-                  aria-disabled={!canEnableWebSearch || isLoading}
+                  aria-disabled={webSearchControlDisabled}
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -1086,15 +1099,16 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             ) : (
               <button
                 type="button"
+                data-testid="web-search-button"
                 onClick={() => {
-                  const isDisabled = !canEnableWebSearch || isLoading
-                  if (isDisabled && isTouchDevice) handleDisabledButtonTap('websearch')
-                  else if (!isDisabled) setWebSearchEnabled(!webSearchEnabled)
+                  if (webSearchControlDisabled && isTouchDevice)
+                    handleDisabledButtonTap('websearch')
+                  else if (!webSearchControlDisabled) setWebSearchEnabled(!webSearchEnabled)
                 }}
-                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
-                disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${webSearchControlDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
+                disabled={!isTouchDevice && webSearchControlDisabled}
                 aria-label={webSearchButtonAriaLabel}
-                aria-disabled={!canEnableWebSearch || isLoading}
+                aria-disabled={webSearchControlDisabled}
               >
                 <svg
                   viewBox="0 0 24 24"

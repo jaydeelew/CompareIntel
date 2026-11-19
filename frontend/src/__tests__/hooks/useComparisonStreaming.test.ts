@@ -48,6 +48,7 @@ function baseConfig(): UseComparisonStreamingConfig {
       attachedFiles: [],
       accurateInputTokens: null,
       webSearchEnabled: false,
+      conversationWebSearchEnabled: null,
       userLocation: null,
       temperature: 0.7,
       topP: 1,

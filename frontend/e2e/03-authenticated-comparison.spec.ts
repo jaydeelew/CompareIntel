@@ -209,6 +209,13 @@ test.describe('Authenticated User Comparison Flow', () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
       await expect(inputField).toBeVisible({ timeout: 10000 })
 
+      await test.step('Web search toggle is locked in follow-up mode', async () => {
+        const webSearchButton = authenticatedPage.getByTestId('web-search-button')
+        await expect(webSearchButton).toBeVisible({ timeout: 10000 })
+        await expect(webSearchButton).toBeDisabled()
+        await expect(webSearchButton).toHaveAttribute('aria-disabled', 'true')
+      })
+
       // Wait for any loading to complete before proceeding
       // Check for loading indicators and wait for them to disappear
       if (!authenticatedPage.isClosed()) {

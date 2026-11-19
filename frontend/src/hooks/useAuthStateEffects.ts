@@ -37,6 +37,7 @@ interface UseAuthStateEffectsCallbacks {
   setAnonymousCreditsRemaining: (credits: number | null) => void
   setCurrentAbortController: (controller: AbortController | null) => void
   setWebSearchEnabled: (enabled: boolean) => void
+  setConversationWebSearchEnabled: (enabled: boolean | null) => void
   setTemperature: (temp: number) => void
   setTopP: (v: number) => void
   setMaxTokens: (v: number | null) => void
@@ -75,6 +76,7 @@ export function useAuthStateEffects(
     setAnonymousCreditsRemaining,
     setCurrentAbortController,
     setWebSearchEnabled,
+    setConversationWebSearchEnabled,
     setTemperature,
     setTopP,
     setMaxTokens,
@@ -126,6 +128,13 @@ export function useAuthStateEffects(
         setResponse(savedState.response as CompareResponse | null)
         setIsFollowUpMode(savedState.isFollowUpMode || false)
         setWebSearchEnabled(savedState.webSearchEnabled || false)
+        if (savedState.conversationWebSearchEnabled != null) {
+          setConversationWebSearchEnabled(savedState.conversationWebSearchEnabled)
+        } else if (savedState.isFollowUpMode) {
+          setConversationWebSearchEnabled(savedState.webSearchEnabled || false)
+        } else {
+          setConversationWebSearchEnabled(null)
+        }
         if (savedState.temperature != null) {
           setTemperature(Math.max(0, Math.min(2, savedState.temperature)))
         }

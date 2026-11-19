@@ -172,6 +172,36 @@ describe('ComparisonForm', () => {
     expect(onSubmitClick).not.toHaveBeenCalled()
   })
 
+  it('disables web search toggle in follow-up mode but keeps on/off styling', () => {
+    const onWebSearchEnabledChange = vi.fn()
+    renderComparisonForm({
+      isFollowUpMode: true,
+      webSearchEnabled: true,
+      onWebSearchEnabledChange,
+      modelsByProvider: {
+        OpenAI: [
+          {
+            id: 'openai/gpt-4',
+            name: 'GPT-4',
+            provider: 'OpenAI',
+            supports_web_search: true,
+          },
+        ],
+      },
+      selectedModels: [createModelId('openai/gpt-4')],
+    })
+
+    const webSearchButton = screen.getByTestId('web-search-button')
+    expect(webSearchButton).toHaveClass('active')
+    expect(webSearchButton).toBeDisabled()
+    expect(webSearchButton).toHaveAttribute(
+      'aria-label',
+      'Web search enabled (fixed for this conversation)'
+    )
+    fireEvent.click(webSearchButton)
+    expect(onWebSearchEnabledChange).not.toHaveBeenCalled()
+  })
+
   it('keeps the pre-Voice dictation mic and does not show a Voice mode toggle', () => {
     speechStub.isSupported = true
     speechStub.browserSupport = 'native'

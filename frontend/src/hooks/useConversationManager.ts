@@ -44,6 +44,19 @@ function extractTextComposerAdvancedFromLoaded(data: {
   }
 }
 
+function extractWebSearchFromLoaded(data: {
+  composer_web_search_enabled?: boolean | null
+  webSearchEnabled?: boolean
+}): boolean | undefined {
+  if (data.composer_web_search_enabled != null) {
+    return Boolean(data.composer_web_search_enabled)
+  }
+  if (data.webSearchEnabled != null) {
+    return data.webSearchEnabled
+  }
+  return undefined
+}
+
 function extractImageComposerAdvancedFromLoaded(data: {
   imageComposerAdvanced?: ImageComposerAdvancedSettings
   composer_aspect_ratio?: string | null
@@ -92,6 +105,8 @@ interface UseConversationManagerOptions {
   setAspectRatio: (v: string) => void
   setImageSize: (v: string) => void
   setAttachedFiles: React.Dispatch<React.SetStateAction<(AttachedFile | StoredAttachedFile)[]>>
+  setWebSearchEnabled: (enabled: boolean) => void
+  setConversationWebSearchEnabled: (enabled: boolean | null) => void
 }
 
 export function useConversationManager(options: UseConversationManagerOptions) {
@@ -127,6 +142,8 @@ export function useConversationManager(options: UseConversationManagerOptions) {
     setAspectRatio,
     setImageSize,
     setAttachedFiles,
+    setWebSearchEnabled,
+    setConversationWebSearchEnabled,
   } = options
 
   const loadConversationFromLocalStorage = useCallback(
@@ -191,6 +208,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       composer_max_tokens?: number | null
       composer_aspect_ratio?: string | null
       composer_image_size?: string | null
+      composer_web_search_enabled?: boolean | null
     } | null> => {
       if (!isAuthenticated) return null
 
@@ -208,6 +226,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           composer_max_tokens: data.composer_max_tokens,
           composer_aspect_ratio: data.composer_aspect_ratio,
           composer_image_size: data.composer_image_size,
+          composer_web_search_enabled: data.composer_web_search_enabled,
           messages: data.messages.map(msg => {
             const storedMessage: StoredMessage = {
               role: msg.role,
@@ -268,6 +287,8 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           composer_max_tokens?: number | null
           composer_aspect_ratio?: string | null
           composer_image_size?: string | null
+          composer_web_search_enabled?: boolean | null
+          webSearchEnabled?: boolean
           imageComposerAdvanced?: ImageComposerAdvancedSettings
         } | null = null
 
@@ -467,6 +488,13 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           setAspectRatio(imageAdvanced.aspectRatio)
           setImageSize(imageAdvanced.imageSize)
         }
+        const restoredWebSearch = extractWebSearchFromLoaded(conversationData)
+        if (restoredWebSearch != null) {
+          setConversationWebSearchEnabled(restoredWebSearch)
+          setWebSearchEnabled(restoredWebSearch)
+        } else {
+          setConversationWebSearchEnabled(null)
+        }
         setInput('')
         setAttachedFiles(storedRecordsToAttachedFiles(conversationData.file_contents))
         setIsFollowUpMode(loadedConversations.some(conv => conv.messages.length > 0))
@@ -505,6 +533,8 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       setMaxTokens,
       setAspectRatio,
       setImageSize,
+      setWebSearchEnabled,
+      setConversationWebSearchEnabled,
       setAlreadyBrokenOutModels,
       setClosedCards,
       setConversations,
