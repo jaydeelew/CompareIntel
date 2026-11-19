@@ -3264,6 +3264,7 @@ export function MainPage() {
             tutorialSwipeHintNonce,
             capabilitySwipeHintNonce,
             onOpenHelpMeChoose: openHelpMeChoose,
+            webSearchEnabled,
           }}
         />
 
