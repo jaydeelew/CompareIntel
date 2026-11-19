@@ -74,7 +74,14 @@ function HarnessApp() {
         window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()));
       });
 
+    const promoteHarnessImages = (root: Element) => {
+      root.querySelectorAll('img').forEach(img => {
+        if (img.loading === 'lazy') img.loading = 'eager';
+      });
+    };
+
     const domReady = (container: Element) => {
+      promoteHarnessImages(container);
       const text = (container.textContent || '').replace(/\s+/g, ' ').trim();
       if (!text) return false;
       if (container.querySelectorAll('.katex-html[style*="visibility: hidden"]').length > 0) return false;
@@ -120,6 +127,7 @@ function HarnessApp() {
     container.removeAttribute('data-render-complete');
 
     const observer = new MutationObserver(() => {
+      promoteHarnessImages(container);
       container.querySelectorAll('img').forEach(img => {
         if (!img.complete) {
           img.addEventListener('load', finishIfReady, { once: true });
