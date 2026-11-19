@@ -103,6 +103,7 @@ import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
 import { isModelIdSelectableForUser } from '../utils/modelTierAccess'
 import { splitModelIdsByMode } from '../utils/perModeModelSelection'
 import { filterKnownModelIds, parseModelsQueryParam } from '../utils/preselectModelsFromQuery'
+import { partitionConversationModels } from '../utils/retiredConversationModels'
 import {
   saveSessionState,
   onSaveStateEvent,
@@ -588,6 +589,38 @@ export function MainPage() {
     () => Object.values(modelsByProvider).flat(),
     [modelsByProvider]
   )
+
+  // Follow-ups never target a model that has left the catalog. History load and
+  // breakout set this directly; this effect also covers a catalog that arrives
+  // later and any restore path that copied stored ids into the selection.
+  useEffect(() => {
+    if (!isFollowUpMode) return
+    const selectedPartition = partitionConversationModels(selectedModels, modelsByProvider)
+    const originalPartition = partitionConversationModels(originalSelectedModels, modelsByProvider)
+    if (!selectedPartition.catalogReady) return
+    if (selectedPartition.removed.length > 0) {
+      setSelectedModels(selectedPartition.available)
+    }
+    if (originalPartition.removed.length > 0) {
+      setOriginalSelectedModels(originalPartition.available)
+    }
+  }, [
+    isFollowUpMode,
+    modelsByProvider,
+    originalSelectedModels,
+    selectedModels,
+    setOriginalSelectedModels,
+    setSelectedModels,
+  ])
+
+  const followUpUnavailable = useMemo(() => {
+    if (!isFollowUpMode || conversations.length === 0) return false
+    const partition = partitionConversationModels(
+      conversations.map(conversation => String(conversation.modelId)),
+      modelsByProvider
+    )
+    return partition.catalogReady && partition.available.length === 0
+  }, [conversations, isFollowUpMode, modelsByProvider])
 
   const carouselProviders = useMemo(
     () =>
@@ -1448,6 +1481,7 @@ export function MainPage() {
       isAuthenticated,
       currentVisibleComparisonId,
       allModels,
+      modelsByProvider,
       textareaRef,
     },
     {
@@ -3059,6 +3093,7 @@ export function MainPage() {
           onNewComparison={handleNewComparison}
           renderUsagePreview={renderUsagePreview}
           selectedModels={selectedModels}
+          followUpUnavailable={followUpUnavailable}
           modelsByProvider={displayModelsByProvider}
           onAccurateTokenCountChange={setAccurateInputTokens}
           creditsRemaining={creditsRemaining}

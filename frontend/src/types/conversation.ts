@@ -63,6 +63,8 @@ export interface StoredMessage {
   created_at: string
   /** Optional model ID that generated this message (for assistant messages) */
   model_id?: ModelId
+  /** Display name saved with this message, when the client stored one */
+  model_name?: string | null
   /** Optional unique identifier */
   id?: MessageId | ConversationId
   /** Input tokens for user messages (from API) */
@@ -83,6 +85,11 @@ export interface ModelConversation {
   modelId: ModelId
   /** Messages in this conversation */
   messages: ConversationMessage[]
+  /**
+   * Display name saved with the conversation, when the catalog no longer lists this model.
+   * Absent for live models and for history saved before names were stored.
+   */
+  modelName?: string
 }
 
 /**
