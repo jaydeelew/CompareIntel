@@ -1,6 +1,6 @@
 /**
  * Before/after autolink + GFM footnote fixes (bugs 31–32).
- * Phone 390×DPR3 and wide 960×DPR2 stacked; full section + raw source excerpt.
+ * Phone 390 CSS px DPR 3; wide 960 CSS px DPR 2 — content-trimmed shots, stacked.
  */
 import { execFileSync } from 'child_process'
 import fs from 'fs'
@@ -13,7 +13,7 @@ import {
   PHONE_VIEW,
   openThemedPage,
   renderOnPage,
-  shootViewportWidth,
+  shootContainer,
 } from '../captures.js'
 import { launchVite, type ViteProcess } from '../launch-vite.js'
 import { stackPhoneBeforeAfter } from '../phone-stack-shot.js'
@@ -80,12 +80,18 @@ function cleanup(dir: string) {
   }
 }
 
-async function shoot(vite: ViteProcess, view: typeof PHONE_VIEW, outputPath: string, markdown: string, label: string) {
+async function shoot(
+  vite: ViteProcess,
+  view: { width: number; height: number; deviceScaleFactor: number },
+  outputPath: string,
+  markdown: string,
+  label: string
+) {
   const browser = await chromium.launch()
   try {
     const page = await openThemedPage(browser, vite.port, 'light', view)
     await renderOnPage(page, MODEL, markdown, label)
-    await shootViewportWidth(page, view.width, outputPath)
+    await shootContainer(page, outputPath)
   } finally {
     await browser.close()
   }
@@ -120,24 +126,33 @@ async function capturePair(
     }
     const browser = await chromium.launch()
     try {
-      const widePage = await browser.newPage()
-      const phonePage = await browser.newPage()
-      const wideOut = path.join(outDir, `${section.slug}-960-before-after.png`)
-      const phoneOut = path.join(outDir, `${section.slug}-390-before-after.png`)
-      await stackBeforeAfter(widePage, {
-        beforePng: path.join(work, 'before-960.png'),
-        afterPng: path.join(work, 'after-960.png'),
-        outputPath: wideOut,
-        beforeLabel: `BEFORE (master ${base.sha.slice(0, 7)}) · 960 CSS px · DPR 2`,
-        afterLabel: `AFTER (${headSha.slice(0, 7)}) · 960 CSS px · DPR 2`,
-        sourceExcerpt: section.excerpt,
+      const phoneContext = await browser.newContext({
+        viewport: { width: PHONE_VIEW.width, height: PHONE_VIEW.height },
+        deviceScaleFactor: PHONE_VIEW.deviceScaleFactor,
       })
+      const phonePage = await phoneContext.newPage()
+      const phoneOut = path.join(outDir, `${section.slug}-390-before-after.png`)
       await stackPhoneBeforeAfter(phonePage, {
         beforePng: path.join(work, 'before-phone.png'),
         afterPng: path.join(work, 'after-phone.png'),
         outputPath: phoneOut,
         beforeLabel: `BEFORE (master ${base.sha.slice(0, 7)}) · 390 CSS px · DPR 3`,
         afterLabel: `AFTER (${headSha.slice(0, 7)}) · 390 CSS px · DPR 3`,
+        sourceExcerpt: section.excerpt,
+      })
+
+      const wideContext = await browser.newContext({
+        viewport: { width: EVIDENCE_VIEW.width, height: EVIDENCE_VIEW.height },
+        deviceScaleFactor: EVIDENCE_VIEW.deviceScaleFactor,
+      })
+      const widePage = await wideContext.newPage()
+      const wideOut = path.join(outDir, `${section.slug}-960-before-after.png`)
+      await stackBeforeAfter(widePage, {
+        beforePng: path.join(work, 'before-960.png'),
+        afterPng: path.join(work, 'after-960.png'),
+        outputPath: wideOut,
+        beforeLabel: `BEFORE (master ${base.sha.slice(0, 7)}) · 960 CSS px · DPR 2`,
+        afterLabel: `AFTER (${headSha.slice(0, 7)}) · 960 CSS px · DPR 2`,
         sourceExcerpt: section.excerpt,
       })
       console.log(wideOut)

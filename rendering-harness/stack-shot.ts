@@ -70,11 +70,7 @@ export async function stackBeforeAfter(
     const images = Array.from(document.images)
     return images.length === 2 && images.every(image => image.complete && image.naturalWidth > 0)
   }`)
-  const height = await page.evaluate(() => document.documentElement.scrollHeight)
-  await page.screenshot({
-    path: opts.outputPath,
-    clip: { x: 0, y: 0, width: EVIDENCE_VIEW.width, height },
-  })
+  await page.screenshot({ path: opts.outputPath, fullPage: true })
 }
 
 function escapeHtml(text: string): string {

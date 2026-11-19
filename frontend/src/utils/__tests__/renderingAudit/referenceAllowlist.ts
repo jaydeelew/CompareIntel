@@ -58,14 +58,14 @@ export const REFERENCE_ALLOWLIST: ReferenceAllowlistEntry[] = [
     promptName: '04-mixed-markdown-latex',
     fields: ['inlineMathCount', 'tableCells', 'texSources', 'visibleText'],
     reason:
-      'Cost table cells use `$\\$100$` currency math beside GFM pipes. Product currency handling and table parsing diverge from markdown-it on those rows.',
+      'Cost table cells use `$\\$100$` currency math beside GFM pipes. Product currency handling and table parsing diverge from markdown-it on those rows. Tracked in #293.',
   },
   {
     modelId: 'xiaomi/mimo-v2.5',
     promptName: '04-mixed-markdown-latex',
     fields: ['inlineMathCount', 'strongTexts', 'tableCells', 'texSources', 'visibleText'],
     reason:
-      'Economics table mixes bold currency cells with `$\\$100$` markers. Product table and emphasis extraction differ from the reference on a few cells.',
+      'Economics table mixes bold currency cells with `$\\$100$` markers. Product table and emphasis extraction differ from the reference on a few cells. Tracked in #293.',
   },
   {
     modelId: 'nvidia/nemotron-3-ultra-550b-a55b:free',
@@ -80,28 +80,28 @@ export const REFERENCE_ALLOWLIST: ReferenceAllowlistEntry[] = [
       'visibleText',
     ],
     reason:
-      'The “Currency vs Math $” summary table mixes bold, backticks, and `$` tokens. Product context-aware currency and custom tables diverge from markdown-it on that row.',
+      'The “Currency vs Math $” summary table mixes bold, backticks, and `$` tokens. Product context-aware currency and custom tables diverge from markdown-it on that row. Tracked in #293.',
   },
   {
     modelId: 'google/gemini-3.8-flash',
     promptName: '04-mixed-markdown-latex',
     fields: ['tableCells', 'texSources', 'visibleText'],
     reason:
-      'Budget tables mix `$` currency markers with `|`-heavy rows. The product GFM table pass and currency protection disagree with markdown-it table parsing on a few pipe-split cells.',
+      'Budget tables mix `$` currency markers with `|`-heavy rows. The product GFM table pass and currency protection disagree with markdown-it table parsing on a few pipe-split cells. Tracked in #293.',
   },
   {
     modelId: 'minimax/minimax-m3.1-flash',
     promptName: '05-complex-scenarios',
     fields: ['codeSpans', 'displayMathCount', 'tableCells', 'texSources', 'visibleText'],
     reason:
-      'Delimiter-examples table puts `$$` inside cells. The product renders those rows as a GFM table with display-math placeholders; markdown-it splits and wraps cells differently.',
+      'Delimiter-examples table puts `$$` inside cells. The product renders those rows as a GFM table with display-math placeholders; markdown-it splits and wraps cells differently. Tracked in #293.',
   },
   {
     modelId: 'qwen/qwen3-coder-next',
     promptName: '06-edge-cases-boundaries',
     fields: ['codeSpans', 'emTexts', 'inlineMathCount', 'tableCells', 'texSources', 'visibleText'],
     reason:
-      'Delimiter matrix uses currency `$100` beside `|` cells. Product currency protection and custom tables diverge from the reference on a few table cells and code-span pipes.',
+      'Delimiter matrix uses currency `$100` beside `|` cells. Product currency protection and custom tables diverge from the reference on a few table cells and code-span pipes. Tracked in #293.',
   },
   {
     modelId: 'openai/gpt-4o-mini',
