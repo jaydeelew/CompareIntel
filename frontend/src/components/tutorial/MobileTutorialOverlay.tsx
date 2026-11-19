@@ -248,6 +248,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     prevIsLoadingRef.current = isLoading
   }, [isLoading, step])
 
+  // A short viewport (mobile keyboard) can mark the prompt off-screen and unmount the
+  // card. When the window grows back, put the card back so Done stays available.
+  useEffect(() => {
+    const onResize = () => {
+      const current = stepRef.current
+      if (current !== 'enter-prompt' && current !== 'enter-prompt-2') return
+      setIsTargetOffScreen(null)
+      setIsVisible(true)
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   // Find target element for current step
   useEffect(() => {
     if (!step) {
@@ -1353,8 +1366,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // 1. Target is actually off-screen
   // 2. NOT during loading/streaming phase
   // 3. NOT during automatic step transition (to avoid flashing during smooth scroll between steps)
+  const promptStepKeepsTooltip = step === 'enter-prompt' || step === 'enter-prompt-2'
   const shouldShowScrollIndicator =
-    isTargetOffScreen && !isLoadingStreamingPhase && !isStepTransitioning
+    isTargetOffScreen && !isLoadingStreamingPhase && !isStepTransitioning && !promptStepKeepsTooltip
 
   // Calculate cutout for backdrop
   // Always show backdrop on mobile; use cutout to keep the target visible
