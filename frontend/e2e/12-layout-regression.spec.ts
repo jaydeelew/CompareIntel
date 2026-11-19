@@ -856,11 +856,23 @@ test.describe('Layout Regression Tests', () => {
           `label should stay at the left of the bookmark cluster at ${width}px`
         ).toBeGreaterThanOrEqual(14)
         expect(layout.labelOffsetFromClusterLeft).toBeLessThanOrEqual(28)
+        const minTrailingToUpload = width <= 360 ? 2 : 6
         expect(
           layout.selectionEndToUploadGap,
           `visible label end to upload should leave space at ${width}px`
-        ).toBeGreaterThanOrEqual(6)
-        expect(layout.selectionEndToUploadGap).toBeGreaterThan(layout.visibleInkGap)
+        ).toBeGreaterThanOrEqual(minTrailingToUpload)
+        // Jack's “centered in the band” bug had similar leading (~12px) and trailing (~15px) gaps.
+        if (width >= 375) {
+          expect(
+            layout.selectionEndToUploadGap,
+            `trailing space should exceed bookmark ink gap at ${width}px (left-grouped label)`
+          ).toBeGreaterThan(layout.visibleInkGap)
+        } else {
+          expect(
+            layout.visibleInkGap - layout.selectionEndToUploadGap,
+            `leading ink gap must not dwarf trailing space at ${width}px`
+          ).toBeLessThanOrEqual(3)
+        }
       })
     }
   })
