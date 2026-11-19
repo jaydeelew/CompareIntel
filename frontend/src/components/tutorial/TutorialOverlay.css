@@ -320,7 +320,8 @@ body:has(.tutorial-backdrop) .hero-section {
 }
 
 /* Skip stays clickable while the card is hidden for the scroll. */
-.tutorial-tooltip--settling .tutorial-close-button {
+.tutorial-tooltip--settling .tutorial-close-button,
+.tutorial-tooltip--settling .tutorial-tooltip-actions button {
   pointer-events: auto !important;
 }
 

@@ -192,7 +192,8 @@
   transition: none !important;
 }
 
-.mobile-tutorial-tooltip--transitioning .mobile-tutorial-close-button {
+.mobile-tutorial-tooltip--transitioning .mobile-tutorial-close-button,
+.mobile-tutorial-tooltip--transitioning .mobile-tutorial-button {
   pointer-events: auto !important;
 }
 

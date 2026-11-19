@@ -893,6 +893,9 @@ export function useTutorialOverlay(
         showSettledTooltip()
       } else {
         fadeStarted = true
+        setPositionStabilized(true)
+        setSpotlightSettling(false)
+        setTutorialSpotlightSettling(false)
       }
     } else {
       scrollDelayTimer = setTimeout(() => {

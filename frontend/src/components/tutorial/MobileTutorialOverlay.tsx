@@ -916,7 +916,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
 
     if (alreadySettled) {
+      // A remount during the fade used to leave the hide class on. WebKit then
+      // ignores clicks on the card, so "Done with input" never advances the step.
       fadeStarted = true
+      isStepTransitioningRef.current = false
+      setIsStepTransitioning(false)
+      setTutorialSpotlightSettling(false)
     } else {
       scrollDelayTimer = window.setTimeout(
         () => {
