@@ -1,12 +1,24 @@
 {
   "entries": [
     {
+      "modelId": "anthropic/claude-fable-5.2",
+      "reason": "Eight replies collected 2026-11-18 on the 8-prompt baseline. 02 fails the DOM check (autolink <https://...> not linked); 06 fails mermaid-fence and RTL assertions; 07-rare-formats hit the 2048-token cap (finish_reason=length). Open renderer gaps, tracked in the PR274 8-prompt re-collection report."
+    },
+    {
+      "modelId": "google/gemini-4-carbon",
+      "reason": "Eight replies collected 2026-11-18. 02, 06 and 07 fail renderer DOM assertions (autolinks, mermaid fence, RTL, footnotes, nested fences, bare URLs); 04 has an unescaped-pipe table cell; 05 has clipped KaTeX in a table at 960px; 08-casual-prose produced no visible text (reasoning-only, hit the 2048 cap). Open renderer gaps, not collection gaps."
+    },
+    {
+      "modelId": "google/gemini-4-hydrogen",
+      "reason": "Eight replies collected 2026-11-18. 02, 06 and 07 fail renderer DOM assertions (autolinks, mermaid fence, RTL, footnotes, nested fences, bare URLs); 05 hit the 2048 cap; 08 swallows text around a $3 poster price. Open renderer gaps."
+    },
+    {
       "modelId": "qwen/qwen4-max",
-      "reason": "Six replies were collected on 2026-11-17, but 05-complex-scenarios and 06-edge-cases-boundaries were truncated at the harness completion cap of 2048 tokens (finish_reason=length). Not comprehensive coverage yet."
+      "reason": "Eight replies collected 2026-11-18. 02, 06 and 07 fail renderer DOM assertions; 05-complex-scenarios hit the 2048 cap and shows escaped underscores (file\\_name) wrongly. Open renderer gaps."
     },
     {
       "modelId": "tencent/hy4-flash",
-      "reason": "Six replies were collected on 2026-11-17, but 05-complex-scenarios was truncated at the harness completion cap of 2048 tokens (finish_reason=length). Not comprehensive coverage yet."
+      "reason": "Eight replies collected 2026-11-18. 02 and 07 fail renderer DOM assertions; 06-edge-cases-boundaries and 08-casual-prose produced no visible text (reasoning-only, hit the 2048 cap). Open renderer gaps."
     }
   ]
 }

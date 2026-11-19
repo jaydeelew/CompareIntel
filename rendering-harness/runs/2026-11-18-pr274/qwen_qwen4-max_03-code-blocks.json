@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen4-max",
+  "modelName": "Qwen4 Max",
+  "promptName": "03-code-blocks",
+  "promptText": "# Test Prompt: Code Blocks\n\nGenerate a response with fenced code blocks:\n\n## Python code\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\n## JavaScript code\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\n## Inline code with math-like content\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\n## Shell code\n```bash\necho \"price=$50\"\npython -c \"import math; print(math.sqrt(3))\"\n```\n\n## Long code line\n```text\nLONGCODELINE = \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n```",
+  "response": "## Python code\n\n```python\ndef quadratic_formula(a, b, c):\n    discriminant = b**2 - 4*a*c\n    x1 = (-b + discriminant**0.5) / (2*a)\n    x2 = (-b - discriminant**0.5) / (2*a)\n    return x1, x2\n\n# Example: solve x^2 - 5x + 6 = 0\nresult = quadratic_formula(1, -5, 6)\nprint(f\"Solutions: x = {result[0]}, x = {result[1]}\")\n```\n\nOutput: `Solutions: x = 3.0, x = 2.0`\n\nNote that `b**2` uses Python's exponent operator, and `discriminant**0.5` computes the square root. For negative discriminants this returns complex-valued results only if you switch to `cmath.sqrt`; with plain floats it raises a `ValueError` on the fractional power of a negative number.\n\n## JavaScript code\n\n```javascript\nconst fibonacci = (n) => {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n};\n\nconsole.log(fibonacci(10)); // 55\n```\n\nThis naive recursion is O(2^n). An iterative version is O(n):\n\n```javascript\nconst fibIter = (n) => {\n  let [a, b] = [0, 1];\n  for (let i = 0; i < n; i++) [a, b] = [b, a + b];\n  return a;\n};\n```\n\n## Inline code with math-like content\n\nThe variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.\n\nA few more cases that often trip up renderers: `f(x) = x_1 + x_2`, `$HOME`, `a*b*c`, `\\frac{1}{2}`, and `$$total$$`. All of these stay literal inside backticks — no superscripts, no subscripts, no LaTeX.\n\n## Shell code\n\n```bash\necho \"price=$50\"\npython -c \"import math; print(math.sqrt(3))\"\n```\n\nCareful: in real bash, `\"$50\"` expands `$5` (an empty positional parameter) followed by `0`, printing `price=0`. Use single quotes or escape the dollar sign:\n\n```bash\necho 'price=$50'\necho \"price=\\$50\"\n```\n\nThe second line prints `1.7320508075688772`.\n\n## Long code line\n\n```text\nLONGCODELINE = \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n```\n\nThis line should either scroll horizontally within the block or wrap, depending on the renderer's CSS (`overflow-x: auto` vs. `white-space: pre-wrap`) — it should not stretch the page layout.",
+  "usage": {
+    "prompt_tokens": 333,
+    "completion_tokens": 729,
+    "total_tokens": 1062,
+    "cost": 0.003591,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.003591,
+      "upstream_inference_prompt_cost": 0.000474525,
+      "upstream_inference_completions_cost": 0.003116475
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 62,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.003591,
+  "actualCost": 0.003591,
+  "timestamp": "2026-11-19T02:06:55.784Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

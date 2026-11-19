@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-4-carbon",
+  "modelName": "Gemini 4 Carbon",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "Here is a comprehensive response designed to test mixed Markdown formatting, inline and display LaTeX, tables, code blocks, and currency edge cases.\n\n---\n\n# Advanced Mathematical Formatting & Edge Cases\n\n## Problem Statement\n**Exercise 2**: Consider the Gaussian-like function $g(x) = e^{-x^2}$ and the quadratic function from *Exercise 1*, $f(x) = (x + 1)^2$. Evaluate the following:\n\n1. The *first derivative* $g'(x)$ using the **chain rule**.\n2. The **definite improper integral** $\\int_{-\\infty}^{\\infty} g(x) \\, dx$.\n3. The composition $(g \\circ f)(x)$.\n\n### Solution\nApplying the chain rule, the derivative is:\n$$g'(x) = \\frac{d}{dx}\\left(e^{-x^2}\\right) = -2x e^{-x^2}$$\n\nThe famous Gaussian integral evaluates to the square root of $\\pi$:\n$$\\int_{-\\infty}^{\\infty} e^{-x^2} \\, dx = \\sqrt{\\pi} \\approx 1.77245$$\n\nFinally, substituting $f(x)$ into $g(x)$ yields:\n$$(g \\circ f)(x) = e^{-(x+1)^2} = e^{-(x^2 + 2x + 1)}$$\n\n---\n\n## Linear Algebra & Eigenvalues\n building upon the $2 \\times 2$ matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$, we can find its eigenvalues $\\lambda$ by solving the characteristic equation $\\det(A - \\lambda I) = 0$:\n\n* **Characteristic Polynomial**:\n  * Expanded form: $\\lambda^2 - \\text{tr}(A)\\lambda + \\det(A) = 0$\n  * In terms of matrix elements: $\\lambda^2 - (a+d)\\lambda + (ad - bc) = 0$\n* **Eigenvalue Formula**:\n  $$\\lambda_{1,2} = \\frac{\\text{tr}(A) \\pm \\sqrt{\\text{tr}(A)^2 - 4\\det(A)}}{2}$$\n\n### Reference Table: Common Operations\n| Operation | Notation | Formula / Definition | Complexity |\n| :--- | :---: | :--- | :---: |\n| **Dot Product** | $\\mathbf{u} \\cdot \\mathbf{v}$ | $\\sum_{i=1}^n u_i v_i$ | $\\mathcal{O}(n)$ |\n| **Frobenius Norm** | $\\|A\\|_F$ | $\\sqrt{\\sum_{i=1}^m \\sum_{j=1}^n |a_{ij}|^2}$ | $\\mathcal{O}(mn)$ |\n| **Matrix Multiplication** | $C = AB$ | $c_{ij} = \\sum_{k=1}^n a_{ik}b_{kj}$ | $\\mathcal{O}(n^3)$ |\n\n---\n\n## Real World Context: Economics & Finance\n> **Note**: Given the revenue function $R(q) = 25q - 0.5q^2$ and the linear cost function $C(q) = 100 + 5q$, we can determine the profit function $\\Pi(q) = R(q) - C(q)$.\n\n* **Fixed vs. Marginal Values**: If fixed setup costs are \\$100 and raw materials cost \\$5 per unit, producing $q = 20$ units results in a total cost of \\$200. \n* **Profit Optimization**: To maximize profit, we set the marginal profit $\\Pi'(q) = 0$:\n  $$\\Pi(q) = -0.5q^2 + 20q - 100 \\implies \\Pi'(q) = -q + 20 = 0$$\n  At $q^* = 20$ units, the maximum profit is $\\Pi(20) = -0.5(400) + 20(20) - 100 =$ **\\$100**.\n\n---\n\n## Code vs. Math Escaping\nBelow is a Python snippet verifying the calculation above (testing that `$` inside code blocks is not parsed as LaTeX):\n\n```python\ndef calculate_profit(q: int) -> str:\n    # Cost: $100 fixed + $5/unit; Revenue: 25q - 0.5q^2\n    cost = 100 + 5 * q\n    revenue = 25 * q - 0.5 * (q ** 2)\n    profit = revenue - cost\n    return f\"At q={q}, Cost=${cost:.2f} and Profit=${profit:.2f}\"\n\nprint(calculate_profit(20))  # Output: At q=20, Cost=$200.00 and Profit=$100.00\n```",
+  "usage": {
+    "prompt_tokens": 350,
+    "completion_tokens": 1661,
+    "total_tokens": 2011,
+    "cost": 0.01731,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01731,
+      "upstream_inference_prompt_cost": 0.0007,
+      "upstream_inference_completions_cost": 0.01661
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 579,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.01731,
+  "actualCost": 0.01731,
+  "timestamp": "2026-11-19T02:01:56.776Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

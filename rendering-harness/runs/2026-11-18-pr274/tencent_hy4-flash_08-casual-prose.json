@@ -1,0 +1,36 @@
+{
+  "modelId": "tencent/hy4-flash",
+  "modelName": "Hy4 Flash",
+  "promptName": "08-casual-prose",
+  "promptText": "# Test Prompt: Casual Plain-Text Math\n\nA student texted you: why is tan(60°) equal to the square root of 3, and why is sin(60°) that same square root over 2? They also asked about a unit cube (the face diagonal and the space diagonal) and about an equilateral triangle with side length 2, whose height they think is the square root of 3.\n\nReply like a helpful tutor in an informal chat. Use ordinary sentences only. Do not use markdown, LaTeX dollar signs, backslash-paren delimiters, or any other special formatting — type the math the way you would in a plain text message. Please include the height, the two diagonals, tan(60°), and sin(60°) in those sentences.\n\nAlong the way, mention that a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping, and that the same square-root value is what Python prints for math.sqrt(3).",
+  "response": "",
+  "usage": {
+    "prompt_tokens": 225,
+    "completion_tokens": 2048,
+    "total_tokens": 2273,
+    "cost": 0.000295619,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000295619,
+      "upstream_inference_prompt_cost": 0.000007875,
+      "upstream_inference_completions_cost": 0.000287744
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 2048,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.000295619,
+  "actualCost": 0.000295619,
+  "timestamp": "2026-11-19T02:10:38.910Z",
+  "finishReason": "length",
+  "nativeFinishReason": "length",
+  "error": null
+}
