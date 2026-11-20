@@ -43,6 +43,12 @@ export function cleanMalformedContent(
       const hasMany = (pattern: RegExp, threshold: number) =>
         (match.match(pattern) || []).length > threshold
       if (hasMany(/\d/g, 10) && hasMany(/,/g, 5) && hasMany(/[a-zA-Z]/g, 5)) {
+        // Casual prose (08-casual-prose) mentions many numbers and commas too.
+        const proseWords = match.match(/\b[A-Za-z]{3,}\b/g) ?? []
+        const wordGaps = match.match(/\s+/g) ?? []
+        if (proseWords.length >= 6 || wordGaps.length >= 10) {
+          return match
+        }
         return ''
       }
       return match
