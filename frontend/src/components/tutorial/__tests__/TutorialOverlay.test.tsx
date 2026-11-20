@@ -8,7 +8,7 @@
  * and other e2e specs that use dismissTutorialOverlay.
  */
 
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
@@ -42,22 +42,34 @@ function stubRafForTutorialTests() {
   }
 }
 
-/** jsdom often does not advance scrollY on scrollTo; keep scroll position in sync for tutorial code. */
+/** jsdom logs "Not implemented: window.scrollTo" and does not advance scroll offsets. */
 function stubScrollToForTutorialTests() {
   let y = 0
-  const spy = vi.spyOn(window, 'scrollTo').mockImplementation((...args: unknown[]) => {
-    const a0 = args[0]
-    if (typeof a0 === 'number') {
-      y = (args[1] as number) ?? 0
-    } else if (a0 && typeof a0 === 'object' && 'top' in (a0 as object)) {
-      y = Math.max(0, Number((a0 as { top?: number }).top ?? 0))
-    }
+  const applyWindow = (top: number) => {
+    y = Math.max(0, top)
     Object.defineProperty(window, 'scrollY', { value: y, configurable: true })
     Object.defineProperty(window, 'pageYOffset', { value: y, configurable: true })
-    window.dispatchEvent(new Event('scroll'))
+  }
+  const windowSpy = vi.spyOn(window, 'scrollTo').mockImplementation((...args: unknown[]) => {
+    const a0 = args[0]
+    if (typeof a0 === 'number') {
+      applyWindow((args[1] as number) ?? 0)
+    } else if (a0 && typeof a0 === 'object' && 'top' in (a0 as object)) {
+      applyWindow(Number((a0 as { top?: number }).top ?? 0))
+    }
   })
+  const originalElementScroll = HTMLElement.prototype.scrollTo
+  HTMLElement.prototype.scrollTo = function scrollToStub(this: HTMLElement, ...args: unknown[]) {
+    const a0 = args[0]
+    if (typeof a0 === 'number') {
+      this.scrollTop = (args[1] as number) ?? 0
+    } else if (a0 && typeof a0 === 'object' && 'top' in (a0 as object)) {
+      this.scrollTop = Number((a0 as { top?: number }).top ?? this.scrollTop)
+    }
+  } as typeof HTMLElement.prototype.scrollTo
   return () => {
-    spy.mockRestore()
+    windowSpy.mockRestore()
+    HTMLElement.prototype.scrollTo = originalElementScroll
     Object.defineProperty(window, 'scrollY', { value: 0, configurable: true })
     Object.defineProperty(window, 'pageYOffset', { value: 0, configurable: true })
   }
@@ -117,6 +129,7 @@ describe('TutorialOverlay', () => {
   })
 
   afterEach(() => {
+    cleanup()
     document.querySelectorAll('[data-tutorial-test-stub]').forEach(n => n.remove())
     restoreScrollTo?.()
     restoreRaf?.()

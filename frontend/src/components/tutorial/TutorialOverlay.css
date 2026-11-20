@@ -300,7 +300,8 @@ body:has(.tutorial-backdrop) .hero-section {
   }
 }
 
-/* Tooltip bubble */
+/* Tooltip bubble. top/left and the placement transform are set while hidden.
+   The visible fade is opacity only, so the box does not travel after it appears. */
 .tutorial-tooltip {
   position: fixed;
   z-index: 10000;
@@ -309,6 +310,52 @@ body:has(.tutorial-backdrop) .hero-section {
   min-width: 230px;
   transform: translate(-50%, 0);
   pointer-events: auto;
+  transition: opacity 200ms ease;
+}
+
+.tutorial-tooltip--settling {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+/* Skip stays clickable while the card is hidden for the scroll. */
+.tutorial-tooltip--settling .tutorial-close-button,
+.tutorial-tooltip--settling .tutorial-tooltip-actions button {
+  pointer-events: auto !important;
+}
+
+.tutorial-backdrop-cutout {
+  transition: opacity 200ms ease;
+}
+
+@keyframes tutorial-frame-in {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tutorial-backdrop-cutout--enter {
+  animation: tutorial-frame-in 200ms ease;
+}
+
+/* While a step is settling, element rings stay off so they do not travel with the scroll. */
+html.tutorial-spotlight-settling .tutorial-highlight,
+html.tutorial-spotlight-settling .mobile-tutorial-highlight {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-tooltip,
+  .tutorial-backdrop-cutout,
+  .tutorial-backdrop-cutout--enter {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 .tutorial-tooltip-top {

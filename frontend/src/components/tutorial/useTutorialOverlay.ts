@@ -30,6 +30,14 @@ import {
   getTutorialScrollRoot,
   type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
+import {
+  focusTutorialPromptTextarea,
+  prefersReducedTutorialMotion,
+  setTutorialSpotlightSettling,
+  TUTORIAL_SPOTLIGHT_SETTLED_EVENT,
+  tutorialBoxesNearlyEqual,
+  waitForTutorialLayoutSettle,
+} from '../../utils/tutorialSettle'
 
 import {
   getBelowResultsHistoryToggleButton,
@@ -97,6 +105,12 @@ export function useTutorialOverlay(
   const hasAttemptedElementFindRef = useRef<boolean>(false)
   const tooltipClampAttemptsRef = useRef<number>(0)
   const initialScrollCompleteRef = useRef<boolean>(false)
+  /** True only after this step's single scroll and viewport settle have been measured. */
+  const spotlightSettledRef = useRef(false)
+  const settledStepRef = useRef<TutorialStep | null>(null)
+  /** Target rect captured when the fade-in starts. Later drift hides the tooltip before a remeasure. */
+  const placedAnchorRef = useRef<{ top: number; left: number } | null>(null)
+  const [spotlightSettling, setSpotlightSettling] = useState(true)
   /** After follow-up → view-follow-up-results, skip immediate tooltip show so step 5 vanishes first. */
   const suppressReviewTooltipRevealRef = useRef(false)
   const prevStepForTooltipExitRef = useRef<TutorialStep | null>(null)
@@ -164,6 +178,23 @@ export function useTutorialOverlay(
     if (step === 'save-selection') {
       setSaveSelectionDropdownOpened(false)
     }
+  }, [step])
+
+  // Hide tooltip and highlight before paint on every step change so the new
+  // copy never appears at the previous step's coordinates.
+  useLayoutEffect(() => {
+    if (!step) {
+      spotlightSettledRef.current = false
+      settledStepRef.current = null
+      setSpotlightSettling(false)
+      setTutorialSpotlightSettling(false)
+      return
+    }
+    if (settledStepRef.current === step && spotlightSettledRef.current) return
+    spotlightSettledRef.current = false
+    setSpotlightSettling(true)
+    setTutorialSpotlightSettling(true)
+    setPositionStabilized(false)
   }, [step])
 
   // Hide the follow-up (step 5) tooltip before paint when advancing to the review step (6),
@@ -250,8 +281,8 @@ export function useTutorialOverlay(
     setEffectivePosition(null)
   }, [step])
 
-  // After the tooltip renders, clamp it fully into the viewport (regardless of content height/transform).
-  // This is a final safety net for production timing/layout differences.
+  // Pull the card into the viewport. This runs while it is hidden and again if a
+  // late height change leaves the transformed box outside the screen.
   useLayoutEffect(() => {
     if (!isVisible) return
     const el = overlayRef.current
@@ -282,7 +313,7 @@ export function useTutorialOverlay(
     } else {
       tooltipClampAttemptsRef.current = 0
     }
-  }, [isVisible, step, overlayPosition.top, overlayPosition.left])
+  }, [isVisible, step, overlayPosition.top, overlayPosition.left, spotlightSettling])
 
   useLayoutEffect(() => {
     if (isPrimaryExpandProviderStep(step) && prevStepForExpandProviderRef.current !== step) {
@@ -722,13 +753,9 @@ export function useTutorialOverlay(
     }
 
     const config = TUTORIAL_STEPS_CONFIG[step]
-    const isDropdownStep = step === 'history-dropdown' || step === 'save-selection'
-    let scrollCheckFrame: number | null = null
-    let postScrollTimers: number[] = []
     let scrollDelayTimer: ReturnType<typeof setTimeout> | null = null
-    let scrollAnimFrame: number | null = null // Track custom rAF scroll animation
-    let scrollCompletionResolver: (() => void) | null = null
-    const isScrollingRef = { current: false } // Track if we're in the middle of programmatic scroll
+    let cancelled = false
+    let freezeScrollOnCleanup = true
 
     const layoutTarget = (): HTMLElement | null => {
       if (step === 'follow-up') {
@@ -747,6 +774,20 @@ export function useTutorialOverlay(
       return null
     }
 
+    const readAnchor = (): { top: number; left: number } | null => {
+      const el = layoutTarget()
+      if (!el) return null
+      const rect = layoutRectForStep() ?? el.getBoundingClientRect()
+      return { top: rect.top, left: rect.left }
+    }
+
+    const anchorMoved = () => {
+      const next = readAnchor()
+      const prev = placedAnchorRef.current
+      if (!next || !prev) return false
+      return Math.abs(next.top - prev.top) >= 4 || Math.abs(next.left - prev.left) >= 4
+    }
+
     const updatePosition = () => {
       const el = layoutTarget()
       if (!el) return
@@ -756,133 +797,82 @@ export function useTutorialOverlay(
       setOverlayPosition({ top, left })
     }
 
-    // Provider steps: skip a pre-scroll updatePosition so we never commit tooltip coords from a
-    // pre-centered layout (avoids a flash of tooltip at the bottom while Google is off-center).
-    if (!isProviderPickerTutorialStep(step)) {
-      updatePosition()
+    let fadeStarted = false
+    let corrections = 0
+    let lastViewportHeight = window.visualViewport?.height ?? window.innerHeight
+    let lastInnerHeight = window.innerHeight
+
+    const viewportHeightChanged = () => {
+      const viewport = window.visualViewport?.height ?? window.innerHeight
+      const inner = window.innerHeight
+      const changed =
+        Math.abs(viewport - lastViewportHeight) >= 40 || Math.abs(inner - lastInnerHeight) >= 40
+      lastViewportHeight = viewport
+      lastInnerHeight = inner
+      if (!changed) return false
+      corrections = 0
+      return true
     }
 
-    const scrollToElement = () => {
+    const showSettledTooltip = () => {
+      window.setTimeout(() => {
+        if (cancelled || stepRef.current !== step) return
+        placedAnchorRef.current = readAnchor()
+        setPositionStabilized(true)
+        setSpotlightSettling(false)
+        setTutorialSpotlightSettling(false)
+        fadeStarted = true
+      }, 32)
+    }
+
+    const scrollRoot = getTutorialScrollRoot()
+    const behavior: ScrollBehavior = prefersReducedTutorialMotion() ? 'auto' : 'smooth'
+
+    const scrollOnce = () => {
       const el = layoutTarget()
       if (!el) return
-
-      const root = getTutorialScrollRoot()
-      const scrollTarget = getScrollTargetForStep(step, el, layoutRectForStep())
-
-      if (
-        step === 'enter-prompt' ||
-        step === 'enter-prompt-2' ||
-        step === 'follow-up' ||
-        isReviewStepFromFollowUp
-      ) {
-        // Custom smooth scroll on the real scroll root (`.app` or window)
-        const startScrollY = root.getScrollTop()
-        const targetScrollY = scrollTarget
-        const distance = targetScrollY - startScrollY
-
-        isScrollingRef.current = true
-
-        const duration =
-          step === 'follow-up'
-            ? Math.min(1400, Math.max(900, Math.abs(distance) * 0.65))
-            : isReviewStepFromFollowUp
-              ? 600
-              : 900
-        const startTime = performance.now()
-
-        const easeInOutCubic = (t: number): number => {
-          return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-        }
-
-        const animateScroll = (currentTime: number) => {
-          const elapsed = currentTime - startTime
-          const progress = Math.min(elapsed / duration, 1)
-          const easeProgress = easeInOutCubic(progress)
-
-          const currentScrollY = startScrollY + distance * easeProgress
-          root.scrollToTop(currentScrollY, 'auto')
-
-          if (progress < 1) {
-            scrollAnimFrame = requestAnimationFrame(animateScroll)
-          } else {
-            scrollAnimFrame = null
-            setTimeout(() => {
-              isScrollingRef.current = false
-              if (scrollCompletionResolver) {
-                scrollCompletionResolver()
-                scrollCompletionResolver = null
-              }
-            }, 100)
-          }
-        }
-
-        scrollAnimFrame = requestAnimationFrame(animateScroll)
-      } else if (isProviderPickerTutorialStep(step)) {
-        // Center the full provider card (step 1); step 2 aligns expanded card top to viewport middle
-        // so the tooltip above stays visible (tall expanded layout otherwise crowds it).
+      if (isProviderPickerTutorialStep(step)) {
         scrollTutorialProvidersIntoView(
           tutorialProviderNamesRef.current,
           step as TutorialProviderLayoutStep
         )
-      } else {
-        root.scrollToTop(scrollTarget, 'smooth')
+        return
       }
+      const scrollTarget = getScrollTargetForStep(step, el, layoutRectForStep())
+      if (Math.abs(scrollTarget - scrollRoot.getScrollTop()) < 2) return
+      scrollRoot.scrollToTop(scrollTarget, behavior)
     }
 
-    // Determine if we need to delay tooltip reveal until scroll completes
-    const rect = layoutTarget()!.getBoundingClientRect()
-    const isTargetOffscreen = rect.bottom < 0 || rect.top > window.innerHeight
-    const isEnterPromptStep = step === 'enter-prompt' || step === 'enter-prompt-2'
-    const isFollowUpStep = step === 'follow-up'
-    const isReviewStepFromFollowUp =
-      step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current
-    const isProviderStep = isProviderPickerTutorialStep(step)
-    // Delay reveal for dropdown steps when target is offscreen, or for steps that smooth-scroll
-    // to the composer before showing the tooltip, or for step 6 when transitioning from step 5.
-    // Provider steps: scroll to vertical center first, then show the tooltip above (no tracking).
-    const shouldDelayReveal =
-      (isDropdownStep && isTargetOffscreen) ||
-      isEnterPromptStep ||
-      isFollowUpStep ||
-      isReviewStepFromFollowUp ||
-      isProviderStep
-
-    if (shouldDelayReveal) {
-      setIsVisible(false)
-    }
-
-    const waitForScrollStop = (onStop: () => void) => {
-      const scrollRoot = getTutorialScrollRoot()
-      const getCompositeScroll = () => scrollRoot.getScrollTop()
-      let lastScroll = getCompositeScroll()
-      let stableFrames = 0
-      const check = () => {
-        const current = getCompositeScroll()
-        if (Math.abs(current - lastScroll) < 1) {
-          stableFrames += 1
-        } else {
-          stableFrames = 0
-          lastScroll = current
-        }
-
-        if (stableFrames >= 6) {
-          onStop()
-          return
-        }
-
-        scrollCheckFrame = window.requestAnimationFrame(check)
+    const revealSettledStep = () => {
+      if (cancelled || stepRef.current !== step) return
+      if (isPrimaryExpandProviderStep(step)) {
+        setExpandProviderEffectsReady(true)
       }
-
-      scrollCheckFrame = window.requestAnimationFrame(check)
+      updatePosition()
+      initialScrollCompleteRef.current = true
+      spotlightSettledRef.current = true
+      settledStepRef.current = step
+      freezeScrollOnCleanup = false
+      setIsVisible(true)
+      window.dispatchEvent(new Event(TUTORIAL_SPOTLIGHT_SETTLED_EVENT))
+      // Paint the hidden tooltip at its final coordinates, then fade opacity in.
+      showSettledTooltip()
     }
 
-    const waitForProgrammaticScrollCompletion = () =>
-      new Promise<void>(resolve => {
-        scrollCompletionResolver = resolve
+    const restabilize = () => {
+      if (!fadeStarted || corrections >= 1 || cancelled || stepRef.current !== step) return
+      corrections += 1
+      fadeStarted = false
+      setSpotlightSettling(true)
+      setTutorialSpotlightSettling(true)
+      setPositionStabilized(false)
+      void waitForTutorialLayoutSettle({ timeoutMs: 600, quietMs: 80 }).then(() => {
+        if (cancelled || stepRef.current !== step) return
+        updatePosition()
+        showSettledTooltip()
       })
+    }
 
-    // Step 1: scroll immediately so the first paint with the overlay never shows Google at the rim.
-    // Other steps: small delay so hero lock / layout can settle before scroll.
     const scrollDelay = isExpandProviderTutorialStep(step)
       ? step === 'expand-provider'
         ? 0
@@ -892,211 +882,82 @@ export function useTutorialOverlay(
         : step === 'follow-up'
           ? 220
           : 100
-    scrollDelayTimer = setTimeout(() => {
-      scrollDelayTimer = null
-      const shouldSkipScroll =
-        (step === 'enter-prompt' ||
-          step === 'enter-prompt-2' ||
-          step === 'follow-up' ||
-          isReviewStepFromFollowUp) &&
-        initialScrollCompleteRef.current
 
-      const isCustomScrollStep =
-        step === 'enter-prompt' ||
-        step === 'enter-prompt-2' ||
-        step === 'follow-up' ||
-        isReviewStepFromFollowUp
-      const isProviderSnapScrollStep = isProviderPickerTutorialStep(step)
-      const waitForScroll =
-        shouldDelayReveal && !shouldSkipScroll
-          ? isCustomScrollStep
-            ? waitForProgrammaticScrollCompletion()
-            : isProviderSnapScrollStep
-              ? new Promise<void>(resolve => {
-                  const snapScroll = () =>
-                    scrollTutorialProvidersIntoView(
-                      tutorialProviderNamesRef.current,
-                      step as TutorialProviderLayoutStep
-                    )
-                  snapScroll()
-                  requestAnimationFrame(() => {
-                    snapScroll()
-                    waitForScrollStop(() => {
-                      snapScroll()
-                      updatePosition()
-                      requestAnimationFrame(() => {
-                        updatePosition()
-                        resolve()
-                      })
-                    })
-                  })
-                })
-              : new Promise<void>(resolve => waitForScrollStop(resolve))
-          : null
-
-      if (shouldSkipScroll) {
+    // Target identity can change after the step has settled (composer remount).
+    // Measure once; do not scroll or restart the fade.
+    const alreadySettled = spotlightSettledRef.current && settledStepRef.current === step
+    if (alreadySettled) {
+      freezeScrollOnCleanup = false
+      if (anchorMoved()) {
+        setSpotlightSettling(true)
+        setTutorialSpotlightSettling(true)
+        setPositionStabilized(false)
         updatePosition()
-        setIsVisible(true)
-        initialScrollCompleteRef.current = true
+        showSettledTooltip()
+      } else {
+        fadeStarted = true
         setPositionStabilized(true)
-        return
+        setSpotlightSettling(false)
+        setTutorialSpotlightSettling(false)
       }
-
-      if (isCustomScrollStep) {
-        const r = getTutorialScrollRoot()
-        r.scrollToTop(r.getScrollTop(), 'auto')
-      }
-
-      scrollToElement()
-
-      if (shouldDelayReveal && waitForScroll) {
-        waitForScroll.then(() => {
-          if (stepRef.current !== step) return
-
-          if (isPrimaryExpandProviderStep(step)) {
-            setExpandProviderEffectsReady(true)
-            // Phase 1 – let highlight/cutout effects mount after expandProviderEffectsReady.
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                if (!isPrimaryExpandProviderStep(stepRef.current)) return
-                scrollTutorialProvidersIntoView(
-                  tutorialProviderNamesRef.current,
-                  stepRef.current as TutorialProviderLayoutStep
-                )
-                // Phase 2 – compute the final tooltip position (batched into next render).
-                updatePosition()
-                initialScrollCompleteRef.current = true
-                // Phase 3 – the position state commits on the next render.  Reveal the
-                // tooltip one frame later so it paints at the final coords, not the default.
-                requestAnimationFrame(() => {
-                  if (!isPrimaryExpandProviderStep(stepRef.current)) return
-                  setIsVisible(true)
-                  // Phase 4 – enable CSS transitions only after the clamp layoutEffect
-                  // has had a chance to adjust the just-revealed tooltip.  Without this
-                  // delay the clamp adjustment is *animated* and the user sees the tooltip
-                  // slide from its unclamped position.
-                  requestAnimationFrame(() => {
-                    if (!isPrimaryExpandProviderStep(stepRef.current)) return
-                    setPositionStabilized(true)
-                  })
-                })
-              })
-            })
-            return
+    } else {
+      scrollDelayTimer = setTimeout(() => {
+        scrollDelayTimer = null
+        void (async () => {
+          if (cancelled || stepRef.current !== step) return
+          scrollOnce()
+          if (step === 'enter-prompt' || step === 'enter-prompt-2') {
+            focusTutorialPromptTextarea()
           }
-
-          updatePosition()
-          initialScrollCompleteRef.current = true
-
-          if (isReviewStepFromFollowUp) {
-            // For step 5→6 transition, keep tooltip hidden while position settles,
-            // then reveal once at the final position for a clean appearance.
-            suppressReviewTooltipRevealRef.current = false
-            const t1 = window.setTimeout(() => {
-              if (stepRef.current !== step) return
-              updatePosition()
-            }, 100)
-            const t2 = window.setTimeout(() => {
-              if (stepRef.current !== step) return
-              updatePosition()
-              setIsVisible(true)
-              setPositionStabilized(true)
-            }, 250)
-            postScrollTimers = [t1, t2]
-          } else {
-            setIsVisible(true)
-            let selectModelsRecenterTimers: number[] = []
-            if (isSelectModelTutorialStep(step) || isExpandProviderTutorialStep(step)) {
-              const recenterProviderStep = () => {
-                const current = stepRef.current
-                if (!current) return
-                if (!isSelectModelTutorialStep(current) && !isExpandProviderTutorialStep(current)) {
-                  return
-                }
-                scrollTutorialProvidersIntoView(
-                  tutorialProviderNamesRef.current,
-                  current as TutorialProviderLayoutStep
-                )
-                updatePosition()
-              }
-              selectModelsRecenterTimers = [
-                window.setTimeout(recenterProviderStep, 200),
-                window.setTimeout(recenterProviderStep, 500),
-                window.setTimeout(recenterProviderStep, 900),
-              ]
-            }
-            // Layout can continue to shift (CSS transitions, expanding/collapsing sections)
-            // after scroll stops, so re-run positioning a few times to stay aligned.
-            const t1 = window.setTimeout(() => {
-              if (stepRef.current !== step) return
-              updatePosition()
-            }, 150)
-            const t2 = window.setTimeout(() => {
-              if (stepRef.current !== step) return
-              updatePosition()
-            }, 350)
-            const t3 = window.setTimeout(() => {
-              if (stepRef.current !== step) return
-              updatePosition()
-            }, 700)
-            // Enable CSS transitions only after all post-scroll position adjustments
-            // are done. This prevents the tooltip from visibly animating between
-            // intermediate positions during initial placement.
-            const t4 = window.setTimeout(() => {
-              if (stepRef.current !== step) return
-              setPositionStabilized(true)
-            }, 800)
-            postScrollTimers = [...selectModelsRecenterTimers, t1, t2, t3, t4]
-          }
-        })
-      } else if (!shouldDelayReveal) {
-        // For steps without delay, mark scroll complete after initial scroll animation
-        setTimeout(() => {
-          initialScrollCompleteRef.current = true
-          setPositionStabilized(true)
-        }, 150)
-      }
-    }, scrollDelay)
-
-    // Update position on scroll/resize
-    // For step 3 (enter-prompt), prevent updatePosition from running during programmatic scroll
-    // to avoid triggering additional scroll adjustments
-    const handleScroll = () => {
-      if (
-        (step === 'enter-prompt' ||
-          step === 'enter-prompt-2' ||
-          step === 'follow-up' ||
-          isReviewStepFromFollowUp) &&
-        isScrollingRef.current
-      ) {
-        return
-      }
-      if (isProviderPickerTutorialStep(step) && !initialScrollCompleteRef.current) {
-        return
-      }
-      updatePosition()
+          await waitForTutorialLayoutSettle()
+          revealSettledStep()
+        })()
+      }, scrollDelay)
     }
+
+    const handleScroll = () => {
+      if (!spotlightSettledRef.current || settledStepRef.current !== step) return
+      const keyboard = viewportHeightChanged()
+      // Before the fade, a trailing scroll event can still correct the hidden tooltip.
+      // After the fade, never slide it: hide, wait, and measure once.
+      if (!fadeStarted) {
+        updatePosition()
+        return
+      }
+      // Scroll after the fade must not hide or slide the tooltip. A keyboard
+      // height change is the one case that measures again.
+      if (keyboard) restabilize()
+    }
+    const onViewport = () => {
+      if (!spotlightSettledRef.current || settledStepRef.current !== step) return
+      const keyboard = viewportHeightChanged()
+      if (!fadeStarted) {
+        updatePosition()
+        return
+      }
+      if (keyboard) restabilize()
+    }
+
     window.addEventListener('scroll', handleScroll, true)
-    window.addEventListener('resize', updatePosition)
+    window.addEventListener('resize', handleScroll)
+    const appScrollHost = document.querySelector('.app')
+    appScrollHost?.addEventListener('scroll', handleScroll)
+    window.visualViewport?.addEventListener('resize', onViewport)
 
     return () => {
+      cancelled = true
       window.removeEventListener('scroll', handleScroll, true)
-      window.removeEventListener('resize', updatePosition)
-      // Cancel any pending scroll delay timeout — this prevents a stale scroll from
-      // firing when the effect re-runs (e.g. targetElement changes after step change).
-      if (scrollDelayTimer !== null) {
-        clearTimeout(scrollDelayTimer)
+      window.removeEventListener('resize', handleScroll)
+      appScrollHost?.removeEventListener('scroll', handleScroll)
+      window.visualViewport?.removeEventListener('resize', onViewport)
+      if (scrollDelayTimer !== null) clearTimeout(scrollDelayTimer)
+      if (freezeScrollOnCleanup) {
+        try {
+          scrollRoot.scrollToTop(scrollRoot.getScrollTop(), 'auto')
+        } catch {
+          // jsdom does not implement Element.scrollTo.
+        }
       }
-      // Cancel any in-progress custom rAF scroll animation
-      if (scrollAnimFrame !== null) {
-        cancelAnimationFrame(scrollAnimFrame)
-      }
-      scrollCompletionResolver = null
-      if (scrollCheckFrame !== null) {
-        window.cancelAnimationFrame(scrollCheckFrame)
-      }
-      postScrollTimers.forEach(t => window.clearTimeout(t))
-      isScrollingRef.current = false
     }
   }, [targetElement, step])
 
@@ -1360,60 +1221,40 @@ export function useTutorialOverlay(
     }
   }, [step, expandProviderEffectsReady, tutorialProviderNames])
 
-  // Separate effect to continuously maintain highlight for select-models step
-  // Uses simple interval instead of MutationObserver to avoid performance issues
-  // ALSO ensures visibility, targetElement, and position are set (fixes production timing issues)
+  // Re-apply provider highlight if the DOM drops the class. Position is owned by the
+  // step-settle scroll effect so this interval cannot slide the tooltip.
   useEffect(() => {
     if (!step || (!isSelectModelTutorialStep(step) && step !== 'expand-starter-provider-2')) {
       return
     }
 
-    // FORCE visibility immediately on mount to ensure tooltip appears
-    setIsVisible(true)
-
-    const ensureHighlightVisibilityAndPosition = () => {
+    const ensureHighlight = () => {
       const layout = getTutorialProviderStepLayout(
         step as TutorialProviderLayoutStep,
         tutorialProviderNamesRef.current
       )
-      const { highlights, layoutRect } = layout
-      if (highlights.length > 0 && layoutRect) {
-        highlights.forEach(providerEl => {
-          if (!providerEl.classList.contains('tutorial-highlight')) {
-            providerEl.classList.add('tutorial-highlight')
-            providerEl.style.pointerEvents = 'auto'
-            providerEl.style.position = 'relative'
-          }
-        })
-        setTargetElement(highlights[0])
-        setHighlightedElements(highlights)
-        setIsVisible(true)
-
-        const stepConfig = resolveTutorialStepConfig(
-          step,
-          tutorialStarterEntries,
-          tutorialSplitModelSteps
-        )
-        const {
-          top,
-          left,
-          effectivePosition: effPos,
-        } = computeTooltipPosition(layoutRect, step, stepConfig)
-        setEffectivePosition(effPos)
-        setOverlayPosition({ top, left })
-      } else {
-        setIsVisible(true)
-        setOverlayPosition({ top: 300, left: window.innerWidth / 2 })
-      }
+      const { highlights } = layout
+      if (highlights.length === 0) return
+      highlights.forEach(providerEl => {
+        if (!providerEl.classList.contains('tutorial-highlight')) {
+          providerEl.classList.add('tutorial-highlight')
+          providerEl.style.pointerEvents = 'auto'
+          providerEl.style.position = 'relative'
+        }
+      })
+      setTargetElement(prev => (prev === highlights[0] ? prev : highlights[0]))
+      setHighlightedElements(prev =>
+        prev.length === highlights.length && prev.every((el, i) => el === highlights[i])
+          ? prev
+          : highlights
+      )
     }
 
-    // Check immediately
-    ensureHighlightVisibilityAndPosition()
+    ensureHighlight()
 
-    const detachScrollResize = attachScrollResizeRaf(ensureHighlightVisibilityAndPosition)
+    const detachScrollResize = attachScrollResizeRaf(ensureHighlight)
 
-    // Check periodically to maintain highlight, visibility, and position
-    const interval = setInterval(ensureHighlightVisibilityAndPosition, 100)
+    const interval = setInterval(ensureHighlight, 250)
 
     return () => {
       detachScrollResize()
@@ -1424,7 +1265,7 @@ export function useTutorialOverlay(
         providerEl.style.position = ''
       })
     }
-  }, [step, tutorialProviderNames, tutorialStarterEntries, tutorialSplitModelSteps])
+  }, [step, tutorialProviderNames])
 
   // Separate effect to continuously maintain highlight and cutout for enter-prompt step
   // Respects the initial scroll phase - only updates position after main effect completes scroll
@@ -1439,43 +1280,32 @@ export function useTutorialOverlay(
         composerElement.style.pointerEvents = 'auto'
         composerElement.style.position = 'relative'
         composerElement.classList.add('tutorial-textarea-active')
-        const cutout = computeTextareaCutout(composerElement)
-        setTextareaCutout(cutout)
-        // Set target element only when needed; avoid re-triggering scroll during the initial phase
-        const currentTarget = targetElementRef.current
-        if (!currentTarget) {
-          setTargetElement(composerElement)
-        } else if (initialScrollCompleteRef.current && currentTarget !== composerElement) {
-          setTargetElement(composerElement)
+        if (spotlightSettledRef.current) {
+          const cutout = computeTextareaCutout(composerElement)
+          setTextareaCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
         }
-
-        // Only update position AFTER initial scroll is complete to avoid jarring movement
-        if (initialScrollCompleteRef.current) {
-          const rect = composerElement.getBoundingClientRect()
-          const cfg = TUTORIAL_STEPS_CONFIG['enter-prompt']
-          const {
-            top,
-            left,
-            effectivePosition: effPos,
-          } = computeTooltipPosition(rect, 'enter-prompt', cfg)
-          setEffectivePosition(effPos)
-          setOverlayPosition({ top, left })
+        // Replacing the target after the fade restarts placement and slides the tooltip.
+        const currentTarget = targetElementRef.current
+        if (!currentTarget && !spotlightSettledRef.current) {
+          setTargetElement(composerElement)
         }
       }
     }
 
     // Run immediately to set up highlight and cutout
     ensureHighlightAndCutout()
+    window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, ensureHighlightAndCutout)
 
     const detachScrollResize = attachScrollResizeRaf(ensureHighlightAndCutout)
 
     // Also run after a brief delay to handle any cleanup that might run after this effect
     const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
 
-    // Check periodically to maintain highlight, cutout, and position (only after scroll complete)
+    // Check periodically to maintain highlight and cutout (position is owned by step settle)
     const interval = setInterval(ensureHighlightAndCutout, 100)
 
     return () => {
+      window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, ensureHighlightAndCutout)
       detachScrollResize()
       clearTimeout(initialTimeout)
       clearInterval(interval)
@@ -1505,38 +1335,30 @@ export function useTutorialOverlay(
         composerElement.style.pointerEvents = 'auto'
         composerElement.style.position = 'relative'
         composerElement.classList.add('tutorial-textarea-active')
-        const cutout = computeTextareaCutout(composerElement)
-        setTextareaCutout(cutout)
-        // Set target element if not set
-        setTargetElement(composerElement)
-
-        // Only update position AFTER initial scroll is complete to avoid jarring movement
-        if (initialScrollCompleteRef.current) {
-          const rect = composerElement.getBoundingClientRect()
-          const cfg = TUTORIAL_STEPS_CONFIG['enter-prompt-2']
-          const {
-            top,
-            left,
-            effectivePosition: effPos,
-          } = computeTooltipPosition(rect, 'enter-prompt-2', cfg)
-          setEffectivePosition(effPos)
-          setOverlayPosition({ top, left })
+        if (spotlightSettledRef.current) {
+          const cutout = computeTextareaCutout(composerElement)
+          setTextareaCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
+        }
+        const currentTarget = targetElementRef.current
+        if (!currentTarget && !spotlightSettledRef.current) {
+          setTargetElement(composerElement)
         }
       }
     }
 
     // Run immediately to set up highlight and cutout
     ensureHighlightAndCutout()
+    window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, ensureHighlightAndCutout)
 
     const detachScrollResize = attachScrollResizeRaf(ensureHighlightAndCutout)
 
     // Also run after a brief delay to handle any cleanup that might run after this effect
     const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
 
-    // Check periodically to maintain highlight, cutout, and position (only after scroll complete)
     const interval = setInterval(ensureHighlightAndCutout, 100)
 
     return () => {
+      window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, ensureHighlightAndCutout)
       detachScrollResize()
       clearTimeout(initialTimeout)
       clearInterval(interval)
@@ -1605,22 +1427,8 @@ export function useTutorialOverlay(
             mirrorComposer.classList.add('tutorial-highlight')
             mirrorComposer.style.position = 'relative'
           }
-          // Backdrop holes (results + composer rings): updated atomically by follow-up backdrop sync effect.
+          // Backdrop holes and tooltip position are owned by the settle scroll effect.
           // Do not call setTargetElement(composer) here — remounts retriggered the scroll effect.
-          if (initialScrollCompleteRef.current) {
-            setIsVisible(true)
-            const el = getComposerElement()
-            if (el) {
-              const rect = el.getBoundingClientRect()
-              const {
-                top,
-                left,
-                effectivePosition: effPos,
-              } = computeTooltipPosition(rect, 'follow-up', TUTORIAL_STEPS_CONFIG['follow-up'])
-              setEffectivePosition(effPos)
-              setOverlayPosition({ top, left })
-            }
-          }
         }
         return
       }
@@ -1637,9 +1445,11 @@ export function useTutorialOverlay(
             resultsSection.style.pointerEvents = 'auto'
             resultsSection.style.position = 'relative'
           }
-          setTargetElement(resultsSection)
-          if (!suppressReviewTooltipRevealRef.current) {
-            setIsVisible(true)
+          if (!spotlightSettledRef.current) {
+            setTargetElement(resultsSection)
+            if (!suppressReviewTooltipRevealRef.current) {
+              setIsVisible(true)
+            }
           }
         }
         return
@@ -1706,7 +1516,7 @@ export function useTutorialOverlay(
         const submitButton = document.querySelector(
           '[data-testid="comparison-submit-button"]'
         ) as HTMLElement
-        if (submitButton) {
+        if (submitButton && !spotlightSettledRef.current) {
           setTargetElement(submitButton)
           setIsVisible(true)
         }
@@ -1949,9 +1759,11 @@ export function useTutorialOverlay(
         if (!historyToggleButton.classList.contains('tutorial-highlight')) {
           historyToggleButton.classList.add('tutorial-highlight')
         }
-        // Ensure visibility and target when interval finds element (main findElement may have failed)
-        setTargetElement(historyToggleButton)
-        setIsVisible(true)
+        // A later target swap recenters the tooltip after the fade has started.
+        if (!spotlightSettledRef.current) {
+          setTargetElement(historyToggleButton)
+          setIsVisible(true)
+        }
       }
 
       // Cutout expands to include dropdown when open (composer + dropdown union)
@@ -2030,9 +1842,10 @@ export function useTutorialOverlay(
         if (!savedSelectionsButton.classList.contains('tutorial-highlight')) {
           savedSelectionsButton.classList.add('tutorial-highlight')
         }
-        // Ensure visibility and target when interval finds element (main findElement may have failed)
-        setTargetElement(savedSelectionsButton)
-        setIsVisible(true)
+        if (!spotlightSettledRef.current) {
+          setTargetElement(savedSelectionsButton)
+          setIsVisible(true)
+        }
       }
 
       // Cutout expands to include dropdown when open (composer + dropdown union).
@@ -2107,17 +1920,20 @@ export function useTutorialOverlay(
     if (!shouldExcludeTextarea) return
 
     const updateTextareaCutout = () => {
+      if (!spotlightSettledRef.current) return
       const composerElement = getComposerElement()
       const cutout = composerElement ? computeTextareaCutout(composerElement) : null
-      setTextareaCutout(cutout)
+      setTextareaCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
     }
 
     updateTextareaCutout()
+    window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTextareaCutout)
 
     const detachScrollResize = attachScrollResizeRaf(updateTextareaCutout)
     const interval = setInterval(updateTextareaCutout, 100)
 
     return () => {
+      window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTextareaCutout)
       detachScrollResize()
       clearInterval(interval)
     }
@@ -2131,6 +1947,7 @@ export function useTutorialOverlay(
     if (!shouldExcludeDropdown) return
 
     const updateDropdownCutout = () => {
+      if (!spotlightSettledRef.current) return
       const composer = getHeroComposerForDropdownSteps()
       if (!composer) return
 
@@ -2139,15 +1956,17 @@ export function useTutorialOverlay(
           ? getHistoryInlineListForTutorial()
           : getSavedSelectionsDropdownForTutorial()
       const cutout = computeDropdownCutout(composer, dropdown)
-      setDropdownCutout(cutout)
+      setDropdownCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
     }
 
     updateDropdownCutout()
+    window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateDropdownCutout)
 
     const detachScrollResize = attachScrollResizeRaf(updateDropdownCutout)
     const interval = setInterval(updateDropdownCutout, 100)
 
     return () => {
+      window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateDropdownCutout)
       detachScrollResize()
       clearInterval(interval)
     }
@@ -2161,6 +1980,7 @@ export function useTutorialOverlay(
     if (step !== 'follow-up') return
 
     const syncFollowUpBackdropCutouts = () => {
+      if (!spotlightSettledRef.current) return
       if (stepRef.current !== 'follow-up') return
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
       const composerElement = getComposerElement()
@@ -2178,15 +1998,19 @@ export function useTutorialOverlay(
           }
         : null
 
-      setTargetCutout(targetCut)
-      setTextareaCutout(composerCutRect)
+      setTargetCutout(prev => (tutorialBoxesNearlyEqual(prev, targetCut) ? prev : targetCut))
+      setTextareaCutout(prev =>
+        tutorialBoxesNearlyEqual(prev, composerCutRect) ? prev : composerCutRect
+      )
     }
 
     syncFollowUpBackdropCutouts()
+    window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, syncFollowUpBackdropCutouts)
     const detachScrollResize = attachScrollResizeRaf(syncFollowUpBackdropCutouts)
     const interval = setInterval(syncFollowUpBackdropCutouts, 100)
 
     return () => {
+      window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, syncFollowUpBackdropCutouts)
       detachScrollResize()
       clearInterval(interval)
     }
@@ -2214,6 +2038,7 @@ export function useTutorialOverlay(
     }
 
     const updateTargetCutout = () => {
+      if (!spotlightSettledRef.current) return
       let elementsToUse: HTMLElement[] = []
       if (isSubmitStep) {
         const composerElement = getComposerElement()
@@ -2238,15 +2063,17 @@ export function useTutorialOverlay(
               ? 20 /* --radius-xl (12px) + 8 */
               : 12
       const cutout = computeTargetCutout(elementsToUse, padding, borderRadius)
-      setTargetCutout(cutout)
+      setTargetCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
     }
 
     updateTargetCutout()
+    window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTargetCutout)
 
     const detachScrollResize = attachScrollResizeRaf(updateTargetCutout)
     const interval = setInterval(updateTargetCutout, 100)
 
     return () => {
+      window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTargetCutout)
       detachScrollResize()
       clearInterval(interval)
     }
@@ -2290,6 +2117,7 @@ export function useTutorialOverlay(
     portalRoot,
     effectivePosition,
     positionStabilized,
+    spotlightSettling,
     textareaCutout,
     dropdownCutout,
     buttonCutout,

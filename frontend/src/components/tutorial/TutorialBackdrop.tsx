@@ -23,6 +23,8 @@ export interface ButtonCutout {
 
 export interface TutorialBackdropProps {
   step: TutorialStep | null
+  /** Full dim only — the framed hole is measured after scroll settles, then faded in. */
+  suppressCutout?: boolean
   isLoadingStreamingPhase: boolean
   loadingStreamingCutout: RectCutout | null
   useRoundedCutout: boolean
@@ -51,6 +53,7 @@ function handleBackdropClick(e: React.MouseEvent, className: string) {
 
 export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
   step,
+  suppressCutout = false,
   isLoadingStreamingPhase,
   loadingStreamingCutout,
   useRoundedCutout,
@@ -61,10 +64,14 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
   targetCutout,
   buttonCutout,
 }) => {
+  if (suppressCutout) {
+    return <div className="tutorial-backdrop" />
+  }
+
   if (isLoadingStreamingPhase && loadingStreamingCutout) {
     return (
       <div
-        className="tutorial-backdrop-cutout"
+        className="tutorial-backdrop-cutout tutorial-backdrop-cutout--enter"
         style={{
           position: CUTOUT_POSITION,
           top: `${loadingStreamingCutout.top}px`,
@@ -84,7 +91,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
   if (useRoundedCutout && textareaCutoutToUse) {
     return (
       <div
-        className="tutorial-backdrop-cutout"
+        className="tutorial-backdrop-cutout tutorial-backdrop-cutout--enter"
         style={{
           position: CUTOUT_POSITION,
           top: `${textareaCutoutToUse.top}px`,
@@ -143,7 +150,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     const isDropdownTutorialStep = step === 'history-dropdown' || step === 'save-selection'
     return (
       <div
-        className="tutorial-backdrop-cutout"
+        className="tutorial-backdrop-cutout tutorial-backdrop-cutout--enter"
         style={{
           position: CUTOUT_POSITION,
           top: `${dropdownCutout.top}px`,
@@ -227,7 +234,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           <rect width={vw} height={vh} fill="rgba(0, 0, 0, 0.6)" mask={`url(#${maskId})`} />
         </svg>
         <div
-          className="tutorial-backdrop-cutout tutorial-backdrop-follow-up-results-ring"
+          className="tutorial-backdrop-cutout tutorial-backdrop-cutout--enter tutorial-backdrop-follow-up-results-ring"
           style={{
             position: CUTOUT_POSITION,
             top: `${results.top}px`,
@@ -243,7 +250,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           onClick={e => handleBackdropClick(e, 'tutorial-backdrop-cutout')}
         />
         <div
-          className="tutorial-backdrop-cutout tutorial-backdrop-follow-up-composer-ring"
+          className="tutorial-backdrop-cutout tutorial-backdrop-cutout--enter tutorial-backdrop-follow-up-composer-ring"
           style={{
             position: CUTOUT_POSITION,
             top: `${composer.top}px`,
@@ -267,7 +274,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
       isProviderPickerTutorialStep(step) || step === 'view-follow-up-results'
     return (
       <div
-        className="tutorial-backdrop-cutout"
+        className="tutorial-backdrop-cutout tutorial-backdrop-cutout--enter"
         style={{
           position: CUTOUT_POSITION,
           top: `${targetCutout.top}px`,

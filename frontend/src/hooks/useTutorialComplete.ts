@@ -124,13 +124,36 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   const followUpSubmitInitiatedRef = useRef(false)
 
   const [followUpSubmitStarted, setFollowUpSubmitStarted] = useState(false)
+  /** True after follow-up has been seen while idle, so the first comparison's loading tail is not a new submit. */
+  const followUpSawIdleRef = useRef(false)
+  /** User prompts already on screen while follow-up is idle. A later round has to add one. */
+  const followUpUserBaselineRef = useRef<number | null>(null)
   useEffect(() => {
     if (tutorialState.currentStep !== 'follow-up') {
       setFollowUpSubmitStarted(false)
-    } else if (isLoading) {
+      followUpSawIdleRef.current = false
+      followUpUserBaselineRef.current = null
+      return
+    }
+    if (!isLoading) {
+      followUpSawIdleRef.current = true
+      if (!followUpSubmitStarted) {
+        const counts = conversations.map(
+          conv => conv.messages.filter(msg => msg.type === 'user').length
+        )
+        const measured = counts.filter(count => count > 0)
+        // An empty card is not a baseline. Treating 0 as "no prompts yet" made the
+        // first comparison's own prompt look like a new follow-up round.
+        if (measured.length > 0) followUpUserBaselineRef.current = Math.max(...measured)
+      }
+      return
+    }
+    // Don't arm a submit until the first round's prompt has actually been counted.
+    // Mobile Safari reaches follow-up while the first stream is still finishing.
+    if (followUpSawIdleRef.current && followUpUserBaselineRef.current != null) {
       setFollowUpSubmitStarted(true)
     }
-  }, [tutorialState.currentStep, isLoading])
+  }, [tutorialState.currentStep, isLoading, followUpSubmitStarted, conversations])
 
   // Tutorial Actions
 
@@ -261,21 +284,38 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   useEffect(() => {
     if (tutorialState.currentStep !== 'follow-up') {
       followUpSubmitInitiatedRef.current = false
-    } else if (isLoading) {
+    } else if (isLoading && followUpSawIdleRef.current && followUpUserBaselineRef.current != null) {
       followUpSubmitInitiatedRef.current = true
     }
   }, [tutorialState.currentStep, isLoading])
 
   // Track comparison completion for tutorial (initial compare, optional 2nd-round step, or step 5 follow-up)
   useEffect(() => {
-    if (isLoading) return
+    const submitReplyIsVisible =
+      tutorialState.currentStep === 'submit-comparison' &&
+      conversations.some(conv =>
+        conv.messages.some(
+          msg => msg.type === 'assistant' && !!msg.content && msg.content.trim().length > 0
+        )
+      )
+    // Safari can keep isLoading true after the result card is already on screen.
+    // Waiting for the flag kept the next tooltip hidden for the whole sample.
+    if (isLoading && !submitReplyIsVisible) return
 
     const hasSecondRoundAssistantContent =
       conversations.length > 0 &&
       conversations.some(conv => {
+        const userMessages = conv.messages.filter(msg => msg.type === 'user')
         const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
         const last = assistantMessages[assistantMessages.length - 1]
-        return assistantMessages.length >= 2 && !!last?.content && last.content.trim().length > 0
+        // A second assistant node without a second prompt is still the first
+        // comparison. Mobile Safari has painted that shape and skipped follow-up.
+        return (
+          userMessages.length >= 2 &&
+          assistantMessages.length >= 2 &&
+          !!last?.content &&
+          last.content.trim().length > 0
+        )
       })
 
     const step = tutorialState.currentStep
@@ -288,7 +328,21 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
         setTutorialHasCompletedComparison(true)
       }
     } else if (step === 'follow-up' && isFollowUpMode) {
-      if (hasSecondRoundAssistantContent && followUpSubmitInitiatedRef.current) {
+      const baseline = followUpUserBaselineRef.current
+      const hasNewFollowUpRound =
+        baseline != null &&
+        conversations.some(conv => {
+          const userMessages = conv.messages.filter(msg => msg.type === 'user')
+          const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
+          const last = assistantMessages[assistantMessages.length - 1]
+          return (
+            userMessages.length > baseline &&
+            assistantMessages.length >= 2 &&
+            !!last?.content &&
+            last.content.trim().length > 0
+          )
+        })
+      if (hasNewFollowUpRound && followUpSubmitInitiatedRef.current) {
         setTutorialHasCompletedComparison(true)
       }
     }

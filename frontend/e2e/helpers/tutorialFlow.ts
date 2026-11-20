@@ -9,7 +9,9 @@ async function dismissBlockingModals(page: Page): Promise<void> {
   if (await overlay.isVisible({ timeout: 500 }).catch(() => false)) {
     const close = overlay.getByRole('button', { name: 'Close' })
     if (await close.isVisible().catch(() => false)) {
-      await close.tap().catch(() => close.click())
+      await close
+        .tap({ timeout: 2_000 })
+        .catch(() => close.click({ timeout: 2_000 }).catch(() => {}))
     } else {
       await page.keyboard.press('Escape')
     }
@@ -116,8 +118,15 @@ export async function selectTutorialModelCheckbox(
     await page.waitForTimeout(600)
     const label = page.locator(`label:has([data-testid="model-checkbox-${modelId}"])`).first()
     await label.tap({ force: true, timeout: 10_000 }).catch(() => {})
-    await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
-    if (!(await isModelCheckedInDom(page, modelId))) {
+    const headerText = await readTutorialHeaderText(page)
+    const advanced = splitFlowAdvancedPastFirstModel(
+      headerText,
+      await readTutorialCurrentStep(page)
+    )
+    if (!(await isModelCheckedInDom(page, modelId)) && !advanced) {
+      await toggleModelCheckbox(checkbox, testInfo.project.name).catch(() => {})
+    }
+    if (!(await isModelCheckedInDom(page, modelId)) && !advanced) {
       await clickModelInDom(page, modelId)
     }
   } else {
@@ -485,6 +494,20 @@ export async function expectTutorialStepTitle(
 
 /** DOM click on the tutorial-highlighted submit (Firefox/WebKit pointer clicks can miss overlays). */
 async function clickTutorialCompareSubmitButton(page: Page, testInfo: TestInfo): Promise<void> {
+  // The mobile submit control scales forever, so Playwright stability checks and
+  // in-page scrollIntoView never settle. A forced click still fires the handler.
+  if (isMobileE2eProject(testInfo.project.name)) {
+    await page.evaluate(() => {
+      const buttons = Array.from(
+        document.querySelectorAll<HTMLButtonElement>('[data-testid="comparison-submit-button"]')
+      )
+      const button =
+        buttons.find(candidate => candidate.classList.contains('mobile-tutorial-highlight')) ??
+        buttons[buttons.length - 1]
+      button?.click()
+    })
+    return
+  }
   const clicked = await page.evaluate(() => {
     const buttons = Array.from(
       document.querySelectorAll<HTMLButtonElement>('[data-testid="comparison-submit-button"]')
@@ -536,18 +559,22 @@ export async function runTutorialComparison(
     const textarea = page.getByTestId('comparison-input-textarea').filter({ visible: true }).first()
     const current = await textarea.inputValue().catch(() => '')
     if (current !== promptText) {
-      await textarea.fill(promptText)
+      await textarea.fill(promptText, { timeout: 8_000 })
       await textarea.blur()
     }
   }
   const doneSelecting = page.getByRole('button', { name: 'Done selecting models' })
   if (await doneSelecting.isVisible().catch(() => false)) {
-    await doneSelecting.tap({ force: true }).catch(() => doneSelecting.click())
+    await doneSelecting
+      .tap({ force: true, timeout: 8_000 })
+      .catch(() => doneSelecting.click({ timeout: 8_000 }))
     await expect(doneSelecting).toBeHidden({ timeout: 15_000 })
   }
   const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()
   await expect(submit).toBeEnabled({ timeout: 20_000 })
-  await submit.scrollIntoViewIfNeeded().catch(() => {})
+  // The submit control pulses (transform) for the whole step, so it never counts as
+  // "stable". A default timeout of 0 would wait until the test deadline.
+  await submit.scrollIntoViewIfNeeded({ timeout: 2_000 }).catch(() => {})
   const matchesStream = (res: Response) =>
     res.url().includes('compare-stream') && res.request().method() === 'POST'
 
@@ -657,9 +684,20 @@ export async function clickTutorialDoneButton(page: Page, testInfo: TestInfo): P
     .first()
   await expect(doneButton).toBeEnabled({ timeout: 20_000 })
   if (isMobileE2eProject(testInfo.project.name)) {
-    await doneButton.tap({ force: true })
+    await doneButton.tap({ force: true, timeout: 8_000 }).catch(() => {})
+    await page.evaluate(() => {
+      const buttons = document.querySelectorAll<HTMLButtonElement>(
+        '.mobile-tutorial-tooltip button, .tutorial-tooltip button'
+      )
+      for (const button of buttons) {
+        if ((button.textContent ?? '').trim() === 'Done') {
+          button.click()
+          return
+        }
+      }
+    })
   } else {
-    await doneButton.click()
+    await doneButton.click({ timeout: 8_000 })
   }
 }
 

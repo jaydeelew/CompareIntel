@@ -64,6 +64,10 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
 }) => {
   const [tutorialSessionKey, setTutorialSessionKey] = useState(0)
   const previousStepRef = useRef<TutorialStep | null>(null)
+  // Entering the first select step clears a preselected starter set in the parent effect.
+  // That clear is not visible until the next render, so the selection still looks chosen
+  // on entry. Completing here would skip the step before the user picks a model.
+  const selectionClearedOnStepRef = useRef(false)
 
   useEffect(() => {
     const currentStep = tutorialState.currentStep
@@ -115,9 +119,19 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     // on touch/WebKit cannot mark secondModelSelected in previousState before we enter step 2.
     const completed = tutorialState.completedSteps
 
+    if (currentStep !== 'select-starter-model-1' && currentStep !== 'select-models') {
+      selectionClearedOnStepRef.current = false
+    } else if (
+      (currentStep === 'select-starter-model-1' && !firstModelSelected) ||
+      (currentStep === 'select-models' && !bothModelsSelected)
+    ) {
+      selectionClearedOnStepRef.current = true
+    }
+
     if (
       currentStep === 'select-starter-model-1' &&
       firstModelSelected &&
+      selectionClearedOnStepRef.current &&
       !completed.has('select-starter-model-1')
     ) {
       completeStep('select-starter-model-1')
@@ -134,7 +148,12 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onModelsSelected?.()
     }
 
-    if (currentStep === 'select-models' && bothModelsSelected && !completed.has('select-models')) {
+    if (
+      currentStep === 'select-models' &&
+      bothModelsSelected &&
+      selectionClearedOnStepRef.current &&
+      !completed.has('select-models')
+    ) {
       completeStep('select-models')
       onModelsSelected?.()
     }
@@ -148,8 +167,14 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onComparisonComplete?.()
     }
 
+    // The first comparison sets hasCompletedComparison in the same commit the
+    // result-card poll moves us onto follow-up. This effect runs before the
+    // parent resets that flag, so an ungated rising edge skips the follow-up
+    // step and the review card is already showing when the next transition
+    // is sampled. A real follow-up has started a new request first.
     if (
       currentStep === 'follow-up' &&
+      followUpSubmitStarted &&
       hasCompletedComparison &&
       !previousStateRef.current.hasCompletedComparison
     ) {
@@ -188,6 +213,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     bothModelsSelected,
     hasPromptText,
     hasCompletedComparison,
+    followUpSubmitStarted,
     isFollowUpMode,
     showHistoryDropdown,
     completeStep,
@@ -235,6 +261,82 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
         return false
     }
   }
+
+  // The result card is on screen before Safari clears isLoading. Advance then,
+  // so the next tooltip fades in during the transition instead of after it.
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'submit-comparison') return
+    if (tutorialState.completedSteps.has('submit-comparison')) return
+    const replyIsVisible = () => {
+      const card = document.querySelector(
+        '.result-card.conversation-card, .results-section [data-testid^="result-card-"]'
+      )
+      if (!card) return false
+      const rect = card.getBoundingClientRect()
+      return rect.width > 0 && rect.height > 0
+    }
+    if (replyIsVisible()) {
+      completeStep('submit-comparison')
+      return
+    }
+    const id = window.setInterval(() => {
+      if (!replyIsVisible()) return
+      window.clearInterval(id)
+      completeStep('submit-comparison')
+    }, 100)
+    return () => window.clearInterval(id)
+  }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep])
+
+  // The follow-up reply is on screen before Safari clears isLoading. The review
+  // card has to fade in during that tail, not after the stream flag drops.
+  // Snapshot how many prompts are already in the card while this step is idle.
+  // The first comparison can paint extra assistant nodes; those must not count
+  // as the follow-up round or the review card appears before the user submits.
+  const followUpUserBaselineRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'follow-up' || followUpSubmitStarted || isLoading) {
+      if (tutorialState.currentStep !== 'follow-up') followUpUserBaselineRef.current = null
+      return
+    }
+    const capture = () => {
+      const counts = Array.from(document.querySelectorAll('.result-card.conversation-card')).map(
+        card => card.querySelectorAll('.conversation-message.user').length
+      )
+      const measured = counts.filter(count => count > 0)
+      if (measured.length === 0) return
+      followUpUserBaselineRef.current = Math.max(...measured)
+    }
+    capture()
+    const id = window.setInterval(capture, 100)
+    return () => window.clearInterval(id)
+  }, [tutorialState.currentStep, followUpSubmitStarted, isLoading])
+
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'follow-up') return
+    if (tutorialState.completedSteps.has('follow-up')) return
+    if (!followUpSubmitStarted) return
+    const secondRoundIsVisible = () => {
+      const baseline = followUpUserBaselineRef.current
+      if (baseline == null) return false
+      return Array.from(document.querySelectorAll('.result-card.conversation-card')).some(card => {
+        const prompts = card.querySelectorAll('.conversation-message.user')
+        if (prompts.length <= baseline) return false
+        const replies = card.querySelectorAll('.conversation-message.assistant')
+        if (replies.length < 2) return false
+        return (replies[replies.length - 1]?.textContent ?? '').trim().length > 0
+      })
+    }
+    if (secondRoundIsVisible()) {
+      completeStep('follow-up')
+      return
+    }
+    const id = window.setInterval(() => {
+      if (!secondRoundIsVisible()) return
+      window.clearInterval(id)
+      completeStep('follow-up')
+    }, 100)
+    return () => window.clearInterval(id)
+  }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep, followUpSubmitStarted])
 
   const handleComplete = () => {
     if (!tutorialState.currentStep) return

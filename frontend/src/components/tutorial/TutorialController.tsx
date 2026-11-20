@@ -88,6 +88,10 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   // Track tutorial session to force remount of TutorialOverlay when tutorial restarts
   const [tutorialSessionKey, setTutorialSessionKey] = useState(0)
   const previousStepRef = useRef<TutorialStep | null>(null)
+  // Entering the first select step clears a preselected starter set in the parent effect.
+  // That clear is not visible until the next render, so the selection still looks chosen
+  // on entry. Completing here would skip the step before the user picks a model.
+  const selectionClearedOnStepRef = useRef(false)
 
   // Increment session key when tutorial restarts (step goes to first step from any other state)
   // This handles both:
@@ -147,9 +151,19 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
 
     const completed = tutorialState.completedSteps
 
+    if (currentStep !== 'select-starter-model-1' && currentStep !== 'select-models') {
+      selectionClearedOnStepRef.current = false
+    } else if (
+      (currentStep === 'select-starter-model-1' && !firstModelSelected) ||
+      (currentStep === 'select-models' && !bothModelsSelected)
+    ) {
+      selectionClearedOnStepRef.current = true
+    }
+
     if (
       currentStep === 'select-starter-model-1' &&
       firstModelSelected &&
+      selectionClearedOnStepRef.current &&
       !completed.has('select-starter-model-1')
     ) {
       completeStep('select-starter-model-1')
@@ -166,7 +180,12 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       onModelsSelected?.()
     }
 
-    if (currentStep === 'select-models' && bothModelsSelected && !completed.has('select-models')) {
+    if (
+      currentStep === 'select-models' &&
+      bothModelsSelected &&
+      selectionClearedOnStepRef.current &&
+      !completed.has('select-models')
+    ) {
       completeStep('select-models')
       onModelsSelected?.()
     }
@@ -184,9 +203,11 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       onComparisonComplete?.()
     }
 
-    // Follow-up (step 5): advance when the follow-up round finishes (same pattern as mobile).
+    // Same gate as mobile: the first comparison's completion flag is still true
+    // on the render that lands on follow-up. Wait until this step's own submit.
     if (
       currentStep === 'follow-up' &&
+      followUpSubmitStarted &&
       hasCompletedComparison &&
       !previousStateRef.current.hasCompletedComparison
     ) {
@@ -240,6 +261,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
     bothModelsSelected,
     hasPromptText,
     hasCompletedComparison,
+    followUpSubmitStarted,
     isFollowUpMode,
     hasBreakoutConversation,
     showHistoryDropdown,
@@ -300,6 +322,31 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   }
 
   // Handle manual completion via button click
+  // The result card is on screen before Safari clears isLoading. Advance then,
+  // so the next tooltip fades in during the transition instead of after it.
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'submit-comparison') return
+    if (tutorialState.completedSteps.has('submit-comparison')) return
+    const replyIsVisible = () => {
+      const card = document.querySelector(
+        '.result-card.conversation-card, .results-section [data-testid^="result-card-"]'
+      )
+      if (!card) return false
+      const rect = card.getBoundingClientRect()
+      return rect.width > 0 && rect.height > 0
+    }
+    if (replyIsVisible()) {
+      completeStep('submit-comparison')
+      return
+    }
+    const id = window.setInterval(() => {
+      if (!replyIsVisible()) return
+      window.clearInterval(id)
+      completeStep('submit-comparison')
+    }, 100)
+    return () => window.clearInterval(id)
+  }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep])
+
   const handleComplete = () => {
     if (!tutorialState.currentStep) return
 
