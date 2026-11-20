@@ -14,10 +14,11 @@
   /* Allow clicks to pass through to highlighted elements */
 }
 
-/* Cutout backdrop using box-shadow technique — absolute positioning so cutout
-   scrolls with the page content and doesn't lag behind during fast scrolling. */
+/* Cutout uses the same viewport coordinates as the fixed tooltip. Page content
+   scrolls inside `.app`, so `window` scroll stays 0 and absolute positioning
+   does not follow the highlight. */
 .mobile-tutorial-backdrop-cutout {
-  position: absolute;
+  position: fixed;
   border-radius: 12px;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
   z-index: 9998;

@@ -157,10 +157,47 @@ export function waitForTutorialLayoutSettle(options?: {
     const fontsReady = document.fonts?.ready
     if (fontsReady) {
       void fontsReady.then(() => {
-        if (!finished) onActivity()
+        if (!finished) armQuiet()
       })
     }
     armQuiet()
+  })
+}
+
+/**
+ * Resolves once `read` stays still. Font swaps and the hero lock move targets
+ * without a scroll event, which left the frozen tooltip short of the frame.
+ */
+export function waitForRectStable(
+  read: () => { top: number; height: number } | null,
+  options?: { timeoutMs?: number; quietMs?: number }
+): Promise<void> {
+  const timeoutMs = options?.timeoutMs ?? 500
+  const quietMs = options?.quietMs ?? 100
+  return new Promise(resolve => {
+    const start = performance.now()
+    let last = read()
+    let stableSince = performance.now()
+    const tick = () => {
+      const next = read()
+      const moved =
+        last == null ||
+        next == null ||
+        Math.abs(next.top - last.top) > 1 ||
+        Math.abs(next.height - last.height) > 1
+      last = next
+      if (moved) stableSince = performance.now()
+      if (next && performance.now() - stableSince >= quietMs) {
+        resolve()
+        return
+      }
+      if (performance.now() - start >= timeoutMs) {
+        resolve()
+        return
+      }
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
   })
 }
 

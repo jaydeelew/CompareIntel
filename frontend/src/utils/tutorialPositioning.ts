@@ -1,11 +1,9 @@
 import { getComposerCutoutRects, getComposerElement } from '../components/tutorial/tutorialUtils'
-import {
-  isExpandProviderTutorialStep,
-  isSelectModelTutorialStep,
-  isSingleProviderSpotlightStep,
-} from '../data/tutorialStepPlan'
+import { isSingleProviderSpotlightStep } from '../data/tutorialStepPlan'
 import type { StepConfig } from '../data/tutorialSteps'
 import type { TutorialStep } from '../hooks/useTutorial'
+
+import { waitForRectStable } from './tutorialSettle'
 
 export type TutorialProviderLayoutStep = Extract<
   TutorialStep,
@@ -104,46 +102,40 @@ export function computeTargetCutout(
   }
 }
 
-const TOOLTIP_OFFSET = 16
-/** Step 1: distance from highlighted row top to tooltip anchor — tight to cyan ring without covering the arrow. */
-const EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX = 22
 const TOOLTIP_HEIGHT_SMALL = 160
 const TOOLTIP_HEIGHT_LARGE = 210
 const MARGIN = 12
-const TOP_MARGIN = 80
-const BOTTOM_MARGIN = 40
+/** Blue frame sits this far outside the highlighted element on both overlays. */
+export const TUTORIAL_FRAME_OUTSET_PX = 8
+export const DESKTOP_TUTORIAL_ARROW_PX = 8
+export const MOBILE_TUTORIAL_ARROW_PX = 10
 
 /**
  * Main page content scrolls in `.app` (see base.css); `window` scroll is often 0.
  * Tutorial scroll and document-Y cutout math must use this root.
  */
+function tutorialPageScroller(): HTMLElement {
+  const app = document.querySelector('.app') as HTMLElement | null
+  if (app && app.scrollHeight > app.clientHeight + 1) return app
+  return (document.scrollingElement as HTMLElement | null) ?? document.documentElement
+}
+
 export function getTutorialScrollRoot(): {
   getScrollTop: () => number
   scrollToTop: (top: number, behavior?: ScrollBehavior) => void
 } {
-  const app = document.querySelector('.app') as HTMLElement | null
-  if (app && app.scrollHeight > app.clientHeight + 1) {
-    return {
-      getScrollTop: () => app.scrollTop,
-      scrollToTop: (top, behavior = 'auto') => {
-        app.scrollTo({ top, left: 0, behavior })
-      },
-    }
-  }
+  const scroller = tutorialPageScroller()
   return {
-    getScrollTop: () => window.scrollY || document.documentElement.scrollTop,
+    getScrollTop: () => scroller.scrollTop,
     scrollToTop: (top, behavior = 'auto') => {
-      window.scrollTo({ top, left: 0, behavior })
+      scroller.scrollTo({ top, left: 0, behavior })
     },
   }
 }
 
 export function getTutorialScrollMax(): number {
-  const app = document.querySelector('.app') as HTMLElement | null
-  if (app && app.scrollHeight > app.clientHeight + 1) {
-    return Math.max(0, app.scrollHeight - app.clientHeight)
-  }
-  return Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+  const scroller = tutorialPageScroller()
+  return Math.max(0, scroller.scrollHeight - scroller.clientHeight)
 }
 
 /** Scroll an element using the real page scroll root (`.app`), not `scrollIntoView` (window quirks). */
@@ -159,7 +151,198 @@ export function scrollTutorialElementToViewportY(
   root.scrollToTop(nextTop, 'auto')
 }
 
+/**
+ * Center a highlight in the viewport. A target taller than the screen pins its top
+ * just inside the viewport so the framed area still starts on screen.
+ * Instant scroll: the tooltip stays hidden until this finishes, and a smooth scroll
+ * plus the fade timer is clamped on Mobile Safari.
+ */
+export function scrollTutorialRectToCenter(rect: { top: number; height: number }): void {
+  const root = getTutorialScrollRoot()
+  const viewH = window.innerHeight
+  const y0 = root.getScrollTop()
+  const maxScroll = getTutorialScrollMax()
+  const margin = 16
+  const desiredTop =
+    rect.height >= viewH - margin * 2 ? margin : Math.max(margin, (viewH - rect.height) / 2)
+  const nextTop = Math.max(0, Math.min(y0 + rect.top - desiredTop, maxScroll))
+  if (Math.abs(nextTop - y0) < 1) return
+  root.scrollToTop(nextTop, 'auto')
+}
+
+export interface TooltipBoxPlacement {
+  /** Viewport Y of the tooltip box's top edge. */
+  top: number
+  /** `down` when the tooltip sits above the frame (arrow points at the frame). */
+  arrowDirection: 'up' | 'down'
+}
+
+/**
+ * Place the tooltip so its arrow tip meets the framed highlight.
+ * The frame edges already include the cutout outset. No viewport clamp: clamping
+ * is what left the card on a screen edge while the arrow pointed at nothing.
+ */
+export function placeTooltipBoxAgainstFrame(args: {
+  frameTop: number
+  frameBottom: number
+  tooltipHeight: number
+  arrowSize: number
+  viewportHeight: number
+  padding?: number
+  preferred: 'above' | 'below'
+}): TooltipBoxPlacement {
+  const padding = args.padding ?? MARGIN
+  const need = args.tooltipHeight + args.arrowSize
+  const roomAbove = args.frameTop - padding
+  const roomBelow = args.viewportHeight - padding - args.frameBottom
+  const aboveFits = roomAbove >= need
+  const belowFits = roomBelow >= need
+  let above = args.preferred === 'above'
+  if (above && !aboveFits && belowFits) above = false
+  else if (!above && !belowFits && aboveFits) above = true
+  else if (!aboveFits && !belowFits) above = roomAbove >= roomBelow
+
+  if (above) {
+    return {
+      top: args.frameTop - args.tooltipHeight - args.arrowSize,
+      arrowDirection: 'down',
+    }
+  }
+  return {
+    top: args.frameBottom + args.arrowSize,
+    arrowDirection: 'up',
+  }
+}
+
+/**
+ * Scroll delta that gives the preferred side enough room for the tooltip.
+ * Zero when either side already fits — placement will use that side.
+ * Positive delta scrolls content up (the frame moves up).
+ */
+export function scrollDeltaToFitTooltip(args: {
+  frameTop: number
+  frameBottom: number
+  tooltipHeight: number
+  arrowSize: number
+  viewportHeight: number
+  padding?: number
+  preferred: 'above' | 'below'
+}): number {
+  const padding = args.padding ?? MARGIN
+  const need = args.tooltipHeight + args.arrowSize + padding
+  const roomAbove = args.frameTop
+  const roomBelow = args.viewportHeight - args.frameBottom
+  const aboveFits = roomAbove >= need
+  const belowFits = roomBelow >= need
+  if (aboveFits || belowFits) return 0
+  if (roomAbove >= roomBelow) return -(need - roomAbove)
+  return need - roomBelow
+}
+
+function unionViewportRects(rects: DOMRect[]): DOMRect | null {
+  const visible = rects.filter(rect => rect.width > 1 && rect.height > 1)
+  if (visible.length === 0) return null
+  const top = Math.min(...visible.map(rect => rect.top))
+  const left = Math.min(...visible.map(rect => rect.left))
+  const right = Math.max(...visible.map(rect => rect.right))
+  const bottom = Math.max(...visible.map(rect => rect.bottom))
+  return new DOMRect(left, top, right - left, bottom - top)
+}
+
+/**
+ * The element box the blue frame is drawn around. Tooltip placement and scroll
+ * centering both use this so the arrow meets the highlight the user sees.
+ */
+export function readTutorialSpotlightRect(
+  step: TutorialStep,
+  providerNames: readonly string[]
+): DOMRect | null {
+  if (
+    step === 'expand-provider' ||
+    step === 'expand-starter-provider-2' ||
+    step === 'select-models' ||
+    step === 'select-starter-model-1' ||
+    step === 'select-starter-model-2'
+  ) {
+    return getTutorialProviderStepLayout(scrollLayoutForTutorialStep(step), providerNames)
+      .layoutRect
+  }
+
+  if (
+    step === 'enter-prompt' ||
+    step === 'enter-prompt-2' ||
+    step === 'submit-comparison' ||
+    step === 'submit-comparison-2' ||
+    step === 'follow-up' ||
+    step === 'history-dropdown' ||
+    step === 'save-selection'
+  ) {
+    const composer =
+      step === 'follow-up'
+        ? ((document.querySelector(
+            '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+          ) as HTMLElement | null) ?? getComposerElement())
+        : getComposerElement()
+    if (!composer) return null
+    if (step === 'follow-up') return composer.getBoundingClientRect()
+    const parts = getComposerCutoutRects(composer)
+    if (step === 'history-dropdown') {
+      const panel = composer.querySelector('.history-inline-list')
+      if (panel) parts.push(panel.getBoundingClientRect())
+    }
+    if (step === 'save-selection') {
+      const panel = composer.querySelector('.saved-selections-dropdown')
+      if (panel) parts.push(panel.getBoundingClientRect())
+    }
+    return unionViewportRects(parts)
+  }
+
+  if (step === 'view-follow-up-results') {
+    const section = document.querySelector('.results-section') as HTMLElement | null
+    return section?.getBoundingClientRect() ?? null
+  }
+
+  return null
+}
+
 const AFTER_RESULTS_COMPOSER_SLOT = '[data-after-results-composer-slot]'
+const PORTALED_FOLLOW_UP_COMPOSER = `${AFTER_RESULTS_COMPOSER_SLOT} .composer:not(.composer-placeholder)`
+
+/** Interactive follow-up composer, once it has portaled below the results. */
+export function readPortaledFollowUpComposerRect(): DOMRect | null {
+  const el = document.querySelector(PORTALED_FOLLOW_UP_COMPOSER) as HTMLElement | null
+  if (!el) return null
+  const rect = el.getBoundingClientRect()
+  if (rect.width < 2 || rect.height < 2) return null
+  return rect
+}
+
+/**
+ * Wait until the below-results composer exists, then center it.
+ * The first comparison can finish the tutorial step while the composer is still
+ * in the hero; it portals down when loading ends. Measuring before that portal
+ * freezes the tooltip on the hero and leaves the highlight below the fold.
+ */
+export async function seatPortaledFollowUpComposer(isCancelled: () => boolean): Promise<boolean> {
+  const deadline = performance.now() + 700
+  while (performance.now() < deadline) {
+    if (isCancelled()) return false
+    const rect = readPortaledFollowUpComposerRect()
+    if (rect) {
+      scrollTutorialRectToCenter(rect)
+      await waitForRectStable(readPortaledFollowUpComposerRect, { timeoutMs: 280, quietMs: 80 })
+      if (isCancelled()) return false
+      const next = readPortaledFollowUpComposerRect()
+      if (next) scrollTutorialRectToCenter(next)
+      await waitForRectStable(readPortaledFollowUpComposerRect, { timeoutMs: 200, quietMs: 60 })
+      return !isCancelled() && readPortaledFollowUpComposerRect() != null
+    }
+    await new Promise<void>(resolve => {
+      requestAnimationFrame(() => resolve())
+    })
+  }
+  return false
+}
 const COMPARISON_TEXTAREA = '[data-testid="comparison-input-textarea"]'
 
 function hasBlockingOverlayForComposerFocus(): boolean {
@@ -293,99 +476,14 @@ export function scrollLayoutForTutorialStep(step: TutorialStep | null): Tutorial
   return 'expand-provider'
 }
 
-/**
- * Scrolls tutorial provider block(s) into view for the tooltip.
- * - Step 1: vertically center the first tutorial provider card.
- * - Step 2: vertically center the union of all tutorial provider cards (both model rows visible).
- */
+/** Centers the framed provider card for the current tutorial step. */
 export function scrollTutorialProvidersIntoView(
   providerNames: readonly string[],
   providerStep: TutorialProviderLayoutStep = 'expand-provider'
 ): void {
-  const dropdowns = getTutorialProviderDropdowns(providerNames)
-  const primary = dropdowns[0]
-  const modelsSection = document.querySelector('.models-section') as HTMLElement | null
-  if (modelsSection) {
-    scrollTutorialElementToViewportY(modelsSection, 96)
-  }
   const { layoutRect } = getTutorialProviderStepLayout(providerStep, providerNames)
   if (!layoutRect) return
-  const root = getTutorialScrollRoot()
-  const y0 = root.getScrollTop()
-  let nextTop: number
-  const viewH = window.innerHeight
-  if (providerStep === 'select-starter-model-1' || providerStep === 'select-starter-model-2') {
-    const primary = dropdowns[0]
-    const fullRect = primary?.getBoundingClientRect() ?? layoutRect
-    const tooltipReserve = getEstimatedTooltipHeight() + TOOLTIP_OFFSET + 48
-    const checkbox = primary?.querySelector(
-      '.provider-models [data-testid^="model-checkbox-"]'
-    ) as HTMLElement | null
-    const maxProviderInView = viewH - tooltipReserve - 24
-    if (fullRect.height > maxProviderInView && checkbox) {
-      const cbRect = checkbox.getBoundingClientRect()
-      const footerPad = 72
-      let scrollDelta = 0
-      if (cbRect.bottom > viewH - footerPad) {
-        scrollDelta = cbRect.bottom - (viewH - footerPad)
-      } else if (cbRect.top < tooltipReserve) {
-        scrollDelta = cbRect.top - tooltipReserve
-      }
-      if (scrollDelta !== 0) {
-        nextTop = Math.max(0, y0 + scrollDelta)
-      } else {
-        nextTop = Math.max(0, y0 + fullRect.top - tooltipReserve)
-      }
-    } else {
-      nextTop = Math.max(0, y0 + fullRect.top - tooltipReserve)
-    }
-  } else if (providerStep === 'expand-provider' || providerStep === 'expand-starter-provider-2') {
-    const primary = dropdowns[0]
-    const header = primary?.querySelector('.provider-header') as HTMLElement | null
-    const anchorRect = header?.getBoundingClientRect() ?? layoutRect
-    const tooltipReserve =
-      getEstimatedTooltipHeight() + TOOLTIP_OFFSET + EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX
-    nextTop = Math.max(0, y0 + anchorRect.top - tooltipReserve)
-  } else if (providerStep === 'select-models') {
-    const margin = 80
-    if (layoutRect.height > viewH - margin * 2) {
-      nextTop = y0 + layoutRect.top - margin
-    } else {
-      const centeredTop = (viewH - layoutRect.height) / 2
-      nextTop = y0 + layoutRect.top - centeredTop
-    }
-  } else {
-    const centeredTop = viewH / 2 - layoutRect.height / 2
-    nextTop = y0 + layoutRect.top - centeredTop
-  }
-  nextTop = Math.max(0, nextTop)
-  const maxScroll = getTutorialScrollMax()
-  nextTop = Math.min(nextTop, maxScroll)
-  root.scrollToTop(nextTop, 'auto')
-
-  if (
-    primary &&
-    (providerStep === 'expand-provider' ||
-      providerStep === 'expand-starter-provider-2' ||
-      providerStep === 'select-starter-model-1' ||
-      providerStep === 'select-starter-model-2')
-  ) {
-    const header = primary.querySelector('.provider-header') as HTMLElement | null
-    const headerRect = header?.getBoundingClientRect()
-    const tooltipReserve =
-      getEstimatedTooltipHeight() +
-      TOOLTIP_OFFSET +
-      (providerStep === 'expand-provider' || providerStep === 'expand-starter-provider-2'
-        ? EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX
-        : 48)
-    if (headerRect && (headerRect.top < tooltipReserve || headerRect.bottom > viewH - 40)) {
-      const y1 = root.getScrollTop()
-      root.scrollToTop(
-        Math.max(0, Math.min(y1 + headerRect.top - tooltipReserve, maxScroll)),
-        'auto'
-      )
-    }
-  }
+  scrollTutorialRectToCenter(layoutRect)
 }
 
 /** @deprecated Use getProviderDropdownByName or getTutorialProviderStepLayout */
@@ -406,314 +504,51 @@ function getEstimatedTooltipHeight(): number {
 
 export function computeTooltipPosition(
   rect: DOMRect,
-  step: TutorialStep,
+  _step: TutorialStep,
   config: StepConfig
 ): { top: number; left: number; effectivePosition: 'top' | 'bottom' } {
-  const offset = TOOLTIP_OFFSET
-  const viewportHeight = window.innerHeight
+  // Desktop `top` is the edge that faces the target (translate -100% when above).
+  // The 8px arrow extends past that edge, and the blue frame is 8px outside the element.
+  const frameTop = rect.top - TUTORIAL_FRAME_OUTSET_PX
+  const frameBottom = rect.bottom + TUTORIAL_FRAME_OUTSET_PX
   const estimatedTooltipHeight = getEstimatedTooltipHeight()
-  const minSpaceNeeded = estimatedTooltipHeight + offset + 40
-
-  const isEnterPromptStep =
-    (step === 'enter-prompt' || step === 'enter-prompt-2') && config.position === 'bottom'
-
-  const targetInView = rect.bottom > MARGIN && rect.top < viewportHeight - MARGIN
-  if (!targetInView && (isExpandProviderTutorialStep(step) || isSelectModelTutorialStep(step))) {
-    const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+  const placed = placeTooltipBoxAgainstFrame({
+    frameTop,
+    frameBottom,
+    tooltipHeight: estimatedTooltipHeight,
+    arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+    viewportHeight: window.innerHeight,
+    preferred: config.position === 'bottom' ? 'below' : 'above',
+  })
+  const centerX = rect.left + rect.width / 2
+  const left = Math.max(180, Math.min(centerX, window.innerWidth - 180))
+  if (placed.arrowDirection === 'down') {
     return {
-      top: MARGIN + estimatedTooltipHeight,
+      top: frameTop - DESKTOP_TUTORIAL_ARROW_PX,
       left,
       effectivePosition: 'top',
     }
-  }
-
-  if (isSelectModelTutorialStep(step)) {
-    const selectGap = 18
-    const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
-    const spaceAbove = rect.top - MARGIN
-    const spaceBelow = viewportHeight - MARGIN - rect.bottom
-    const needAbove = estimatedTooltipHeight + selectGap
-    const needBelow = estimatedTooltipHeight + selectGap
-
-    if (spaceAbove >= needAbove) {
-      let top = rect.top - selectGap
-      const tooltipTopEdge = top - estimatedTooltipHeight
-      if (tooltipTopEdge < MARGIN) {
-        top = MARGIN + estimatedTooltipHeight
-      }
-      return { top, left, effectivePosition: 'top' }
-    }
-    if (spaceBelow >= needBelow) {
-      const top = Math.min(
-        rect.bottom + selectGap,
-        viewportHeight - estimatedTooltipHeight - MARGIN
-      )
-      return { top, left, effectivePosition: 'bottom' }
-    }
-    if (spaceBelow >= spaceAbove) {
-      const top = Math.min(
-        rect.bottom + selectGap,
-        viewportHeight - estimatedTooltipHeight - MARGIN
-      )
-      return { top, left, effectivePosition: 'bottom' }
-    }
-    let top = rect.top - selectGap
-    top = Math.max(MARGIN + estimatedTooltipHeight, top)
-    return { top, left, effectivePosition: 'top' }
-  }
-
-  const isTopSteps =
-    (step === 'expand-provider' ||
-      step === 'expand-starter-provider-2' ||
-      step === 'select-models' ||
-      step === 'select-starter-model-1' ||
-      step === 'select-starter-model-2' ||
-      step === 'history-dropdown' ||
-      step === 'save-selection') &&
-    config.position === 'top'
-
-  // Step 6: tooltip below the results section initially — prefer bottom, fall back to top
-  if (step === 'view-follow-up-results' && config.position === 'top') {
-    const reviewGap = 18
-    const left = rect.left + rect.width / 2
-    const clampedLeft = Math.max(200, Math.min(left, window.innerWidth - 200))
-    const spaceAbove = rect.top
-    const spaceBelow = viewportHeight - rect.bottom
-    const minAbove = estimatedTooltipHeight + reviewGap + 40
-    const minBelow = estimatedTooltipHeight + offset + MARGIN
-
-    if (spaceBelow >= minBelow) {
-      return {
-        top: rect.bottom + offset,
-        left: clampedLeft,
-        effectivePosition: 'bottom',
-      }
-    }
-
-    if (spaceAbove >= minAbove) {
-      let top = rect.top - reviewGap
-      const tooltipTopEdge = top - estimatedTooltipHeight
-      if (tooltipTopEdge < MARGIN) {
-        top = MARGIN + estimatedTooltipHeight
-      }
-      return { top, left: clampedLeft, effectivePosition: 'top' }
-    }
-
-    // Not enough room fully above or below — pick the side with more space,
-    // but never let the tooltip sit over the vertical center of the section.
-    if (spaceBelow >= spaceAbove) {
-      const top = Math.max(rect.bottom + offset, viewportHeight - estimatedTooltipHeight - MARGIN)
-      return { top, left: clampedLeft, effectivePosition: 'bottom' }
-    }
-    const top = Math.max(MARGIN + estimatedTooltipHeight, rect.top - reviewGap)
-    return { top, left: clampedLeft, effectivePosition: 'top' }
-  }
-
-  // Step 5: tooltip above the composer — leave enough clearance so the down-arrow reads between
-  // the tooltip and the composer (not sandwiched on the highlight rings).
-  if (step === 'follow-up' && config.position === 'top') {
-    const followUpGap = 18
-    const left = rect.left + rect.width / 2
-    const spaceAbove = rect.top
-    const minSpaceNeeded = estimatedTooltipHeight + followUpGap + 40
-    const hasEnoughSpaceAbove = spaceAbove >= minSpaceNeeded
-    let top: number
-    if (hasEnoughSpaceAbove) {
-      top = rect.top - followUpGap
-      const tooltipTopEdge = top - estimatedTooltipHeight
-      if (tooltipTopEdge < MARGIN) {
-        top = MARGIN + estimatedTooltipHeight
-      }
-      return {
-        top,
-        left: Math.max(200, Math.min(left, window.innerWidth - 200)),
-        effectivePosition: 'top',
-      }
-    }
-    top = rect.bottom + offset
-    top = Math.min(top, viewportHeight - estimatedTooltipHeight - MARGIN)
-    return {
-      top,
-      left: Math.max(200, Math.min(left, window.innerWidth - 200)),
-      effectivePosition: 'bottom',
-    }
-  }
-
-  if (isEnterPromptStep) {
-    const viewportMid = viewportHeight / 2
-    const composerMidY = rect.top + rect.height / 2
-    /** Composer center in upper half → prefer tooltip below (arrow up toward composer); lower half → above. */
-    const preferTooltipBelowComposer = composerMidY < viewportMid
-    const enterPromptGap = 18
-    const spaceAbove = rect.top
-    const spaceBelow = viewportHeight - rect.bottom
-    const needBelow = estimatedTooltipHeight + offset + MARGIN
-    const needAbove = estimatedTooltipHeight + enterPromptGap + MARGIN
-
-    let useBottom: boolean
-    if (preferTooltipBelowComposer) {
-      useBottom =
-        spaceBelow >= needBelow ? true : spaceAbove >= needAbove ? false : spaceBelow >= spaceAbove
-    } else {
-      useBottom =
-        spaceAbove >= needAbove ? false : spaceBelow >= needBelow ? true : spaceBelow >= spaceAbove
-    }
-
-    const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
-
-    if (useBottom) {
-      let top = rect.bottom + offset
-      top = Math.min(top, viewportHeight - estimatedTooltipHeight - MARGIN)
-      return { top, left, effectivePosition: 'bottom' }
-    }
-
-    let top = rect.top - enterPromptGap
-    const tooltipTopEdge = top - estimatedTooltipHeight
-    if (tooltipTopEdge < MARGIN) {
-      top = MARGIN + estimatedTooltipHeight
-    }
-    return { top, left, effectivePosition: 'top' }
-  }
-
-  if (isTopSteps) {
-    const spaceAbove = rect.top
-    const spaceBelow = viewportHeight - rect.bottom
-    const hasEnoughSpaceAbove = spaceAbove >= minSpaceNeeded
-    const hasEnoughSpaceBelow = spaceBelow >= minSpaceNeeded
-    /** Step 1: default tooltip above the header (arrow down); if anchor sits in upper half of viewport use below (arrow up). */
-    const viewportMid = viewportHeight / 2
-    const anchorMidY = rect.top + rect.height / 2
-
-    let shouldUseBottom: boolean
-    if (step === 'expand-provider' || step === 'expand-starter-provider-2') {
-      const preferBelowBecauseUpperHalf = anchorMidY < viewportMid
-      const gapAboveNeeded = EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX
-      const needAboveForTop = estimatedTooltipHeight + gapAboveNeeded + MARGIN
-      const needBelow = estimatedTooltipHeight + offset + MARGIN
-
-      if (preferBelowBecauseUpperHalf) {
-        shouldUseBottom =
-          spaceBelow >= needBelow ? true : spaceAbove >= needAboveForTop ? false : true
-      } else {
-        shouldUseBottom =
-          spaceAbove >= needAboveForTop
-            ? false
-            : spaceBelow >= needBelow
-              ? true
-              : spaceBelow >= spaceAbove
-      }
-    } else {
-      shouldUseBottom = hasEnoughSpaceAbove
-        ? false
-        : hasEnoughSpaceBelow
-          ? true
-          : spaceBelow > spaceAbove
-    }
-
-    let top: number
-    // Same horizontal anchor for step 1 and 2 (Google column center) so the tooltip does not
-    // jump or fight other effects when advancing expand-provider → select-models.
-    const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
-    if (shouldUseBottom) {
-      top = rect.bottom + offset
-      top = Math.min(top, viewportHeight - estimatedTooltipHeight - MARGIN)
-      return {
-        top,
-        left,
-        effectivePosition: 'bottom',
-      }
-    }
-    const topPlacementGap =
-      step === 'expand-provider' || step === 'expand-starter-provider-2'
-        ? EXPAND_PROVIDER_TOOLTIP_TOP_GAP_PX
-        : offset
-    top = rect.top - topPlacementGap
-    const tooltipTopEdge = top - estimatedTooltipHeight
-    if (tooltipTopEdge < MARGIN) {
-      top = MARGIN + estimatedTooltipHeight
-    }
-    return {
-      top,
-      left,
-      effectivePosition: 'top',
-    }
-  }
-
-  let top = 0
-  const left = rect.left + rect.width / 2
-  switch (config.position) {
-    case 'bottom':
-      top = rect.bottom + offset
-      break
-    case 'top':
-      top = rect.top - offset
-      break
-    case 'left':
-      return {
-        top: rect.top + rect.height / 2,
-        left: rect.left - offset,
-        effectivePosition: 'top',
-      }
-    case 'right':
-      return {
-        top: rect.top + rect.height / 2,
-        left: rect.right + offset,
-        effectivePosition: 'top',
-      }
   }
   return {
-    top,
+    top: frameBottom + DESKTOP_TUTORIAL_ARROW_PX,
     left,
-    effectivePosition: config.position as 'top' | 'bottom',
+    effectivePosition: 'bottom',
   }
 }
 
 export function getScrollTargetForStep(
-  step: TutorialStep,
+  _step: TutorialStep,
   targetElement: HTMLElement,
   layoutRect?: DOMRect | null
 ): number {
   const rect = layoutRect ?? targetElement.getBoundingClientRect()
   const y0 = getTutorialScrollRoot().getScrollTop()
-  const estimatedTooltipHeight = 210
-  const tooltipOffset = 16
-
-  // Provider steps: scroll before tooltip (see useTutorialOverlay).
-  if (step === 'expand-provider' || step === 'expand-starter-provider-2') {
-    const reserve = estimatedTooltipHeight + tooltipOffset + 40
-    return Math.max(0, y0 + rect.top - reserve)
-  }
-  if (step === 'select-models') {
-    const margin = 80
-    const viewH = window.innerHeight
-    if (rect.height > viewH - margin * 2) {
-      return Math.max(0, y0 + rect.top - margin)
-    }
-    const centeredTop = (viewH - rect.height) / 2
-    return Math.max(0, y0 + rect.top - centeredTop)
-  }
-  if (step === 'select-starter-model-1' || step === 'select-starter-model-2') {
-    const margin = 80
-    const desiredViewportTop = margin
-    return Math.max(0, y0 + rect.top - desiredViewportTop)
-  }
-  if (step === 'follow-up') {
-    const desiredElementTopInViewport = TOP_MARGIN + tooltipOffset + estimatedTooltipHeight
-    return Math.max(0, y0 + rect.top - desiredElementTopInViewport)
-  }
-  if (step === 'view-follow-up-results') {
-    const desiredElementBottomInViewport =
-      window.innerHeight - BOTTOM_MARGIN - tooltipOffset - estimatedTooltipHeight
-    return Math.max(0, y0 + rect.bottom - desiredElementBottomInViewport)
-  }
-  if (step === 'enter-prompt' || step === 'enter-prompt-2') {
-    const desiredComposerBottomInViewport =
-      window.innerHeight - BOTTOM_MARGIN - tooltipOffset - estimatedTooltipHeight
-    return Math.max(0, y0 + rect.bottom - desiredComposerBottomInViewport)
-  }
-  const elementCenter = y0 + rect.top + rect.height / 2
-  const viewportCenter = window.innerHeight / 2
-  return Math.max(0, elementCenter - viewportCenter)
+  const viewH = window.innerHeight
+  const margin = 16
+  const desiredTop =
+    rect.height >= viewH - margin * 2 ? margin : Math.max(margin, (viewH - rect.height) / 2)
+  const maxScroll = getTutorialScrollMax()
+  return Math.max(0, Math.min(y0 + rect.top - desiredTop, maxScroll))
 }
 
 export function findTargetForStep(
