@@ -1,4 +1,4 @@
-import { replaceExactlyTwoStrong, replaceSingleStarEm } from './emphasis'
+import { replaceExactlyTwoStrong, replaceSingleStarEm, replaceSingleUnderscoreEm } from './emphasis'
 import { convertImplicitMath } from './implicitMath'
 
 const BULLET_ITEM_RE = /^([ \t]*)[-*•][ \t]+\S/
@@ -282,7 +282,7 @@ export function processMarkdownLists(text: string): string {
       return `<strong>${content}</strong>`
     })
     processedContent = replaceSingleStarEm(processedContent)
-    processedContent = processedContent.replace(/(?<!_)_((?:(?!_)[^\n])+?)_(?!_)/g, '<em>$1</em>')
+    processedContent = replaceSingleUnderscoreEm(processedContent)
 
     mathPlaceholders.forEach((original, placeholder) => {
       processedContent = processedContent.replaceAll(placeholder, original)

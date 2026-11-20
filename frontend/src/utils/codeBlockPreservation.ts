@@ -51,6 +51,14 @@ function isFenceOpenerPrefix(prefix: string): boolean {
   return /\S/.test(prefix)
 }
 
+function isBlockquoteOnlyPrefix(prefix: string): boolean {
+  return /^[ \t]{0,3}(?:>[ \t]*)+$/.test(prefix)
+}
+
+function stripBlockquoteLinePrefix(line: string): string {
+  return line.replace(/^[ \t]{0,3}(?:>[ \t]*)*/, '')
+}
+
 function extractFencedCodeBlocks(
   text: string,
   blocks: CodeBlock[],
@@ -66,9 +74,68 @@ function extractFencedCodeBlocks(
       break
     }
     const prefix = linePrefix(text, tick)
-    if (!isFenceOpenerPrefix(prefix)) {
+    const blockquoteFence = isBlockquoteOnlyPrefix(prefix)
+    if (!isFenceOpenerPrefix(prefix) && !blockquoteFence) {
       out += text.slice(cursor, tick + 3)
       cursor = tick + 3
+      continue
+    }
+    if (blockquoteFence) {
+      const lineStart = text.lastIndexOf('\n', tick - 1) + 1
+      const lineEndIdx = text.indexOf('\n', tick)
+      const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx
+      const rawLine = text.slice(lineStart, lineEnd)
+      const workLine = stripBlockquoteLinePrefix(rawLine)
+      const relTick = workLine.indexOf('```')
+      const openerLine = relTick === -1 ? '' : workLine.slice(relTick)
+      const lineOpener = /^```([a-zA-Z0-9+#-]*)[ \t]*$/.exec(openerLine)
+      if (!lineOpener) {
+        out += text.slice(cursor, tick + 3)
+        cursor = tick + 3
+        continue
+      }
+      const lang = (lineOpener[1] || '').trim()
+      const contentLines: string[] = []
+      let scan = lineEnd < text.length ? lineEnd + 1 : text.length
+      let closeEnd = -1
+      while (scan < text.length) {
+        const ls = scan
+        const leIdx = text.indexOf('\n', scan)
+        const le = leIdx === -1 ? text.length : leIdx
+        const raw = text.slice(ls, le)
+        const stripped = stripBlockquoteLinePrefix(raw)
+        if (/^[ \t]{0,3}```[ \t]*$/.test(stripped)) {
+          closeEnd = leIdx === -1 ? text.length : le + 1
+          break
+        }
+        if (raw.trim() === '' && !/^[ \t]{0,3}>/.test(raw)) {
+          break
+        }
+        if (raw.trim() !== '' && !/^[ \t]{0,3}>/.test(raw)) {
+          break
+        }
+        contentLines.push(stripped)
+        scan = leIdx === -1 ? text.length : le + 1
+      }
+      if (closeEnd === -1) {
+        out += text.slice(cursor, tick + 3)
+        cursor = tick + 3
+        continue
+      }
+      const placeholder = nextPlaceholder()
+      const block: CodeBlock = {
+        id: `block-${blocks.length}`,
+        language: lang,
+        content: contentLines.join('\n').replace(/^\n+|\n+$/g, ''),
+        startIndex: lineStart,
+        endIndex: closeEnd,
+        placeholder,
+      }
+      blocks.push(block)
+      placeholderMap.set(placeholder, block)
+      // Keep the blockquote marker prefix so markBlockquotes stays one contiguous run.
+      out += text.slice(cursor, lineStart) + prefix + placeholder
+      cursor = closeEnd
       continue
     }
     // Line-start fences keep PR 216's "rest of the line is the info string"
@@ -138,7 +205,7 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
   // - prose after the opener (`Use ``` for fences`)
   // - a 4-space indent (that closer cannot be a 0–3 space fence, so treating
   //   it as an opener swallows the next real fence and the math after it)
-  // - a blockquote marker alone (`> ```python`), whose closer is `> ``` `
+  // Blockquote-prefixed fences (`> ```python`, `> > ```js`) strip `> ` per line.
   processed = extractFencedCodeBlocks(processed, blocks, placeholderMap, () => {
     const placeholder = `__CODE_BLOCK_${blockCounter}__`
     blockCounter++
