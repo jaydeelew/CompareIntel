@@ -69,6 +69,7 @@ export interface ResultsAreaProps {
   capabilitySwipeHintNonce?: number
   /** Open Help Me Choose, optionally scrolled to a category */
   onOpenHelpMeChoose?: (options?: { scrollToCategoryId?: string }) => void
+  webSearchEnabled?: boolean
 }
 
 export function ResultsArea({
@@ -115,6 +116,7 @@ export function ResultsArea({
   tutorialSwipeHintNonce = 0,
   capabilitySwipeHintNonce = 0,
   onOpenHelpMeChoose,
+  webSearchEnabled = false,
 }: ResultsAreaProps) {
   return (
     <ErrorBoundary>
@@ -174,6 +176,7 @@ export function ResultsArea({
             }
             tutorialSwipeHintNonce={tutorialSwipeHintNonce}
             capabilitySwipeHintNonce={capabilitySwipeHintNonce}
+            webSearchEnabled={webSearchEnabled}
           />
         </div>
       </section>

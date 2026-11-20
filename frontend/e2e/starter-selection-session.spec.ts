@@ -1,7 +1,38 @@
+import type { Page } from '@playwright/test'
+
 import { resolveStarterSelectionModelIds } from '../src/utils/starterSelectionModels'
 
 import { test, expect, dismissTutorialOverlay } from './fixtures'
 import { dismissMobileBlockers } from './helpers/modelCheckbox'
+
+/** Footer About avoids header links hidden when the nav shell is folded (common on Firefox CI). */
+async function navigateToAboutViaFooter(page: Page): Promise<void> {
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  await dismissTutorialOverlay(page)
+  const aboutLink = page.getByLabel('Footer navigation').getByRole('link', {
+    name: 'About',
+    exact: true,
+  })
+  await expect(aboutLink).toBeVisible({ timeout: 10000 })
+  try {
+    await aboutLink.click({ timeout: 15000 })
+  } catch {
+    await dismissTutorialOverlay(page)
+    await aboutLink.click({ force: true, timeout: 15000 })
+  }
+  await expect(page).toHaveURL(/\/about/, { timeout: 20000 })
+}
+
+async function navigateHomeViaBreadcrumb(page: Page): Promise<void> {
+  const homeLink = page.getByLabel('Breadcrumb').getByRole('link', { name: 'Home', exact: true })
+  await expect(homeLink).toBeVisible({ timeout: 10000 })
+  try {
+    await homeLink.click({ timeout: 15000 })
+  } catch {
+    await homeLink.click({ force: true, timeout: 15000 })
+  }
+  await expect(page).toHaveURL(/\/$/, { timeout: 20000 })
+}
 
 const mockModel = (
   id: string,
@@ -124,10 +155,8 @@ test.describe('Starter Selection session behavior', () => {
       .poll(async () => countCheckedModels(page), { timeout: 10000 })
       .toBe(1)
 
-    await page.getByRole('link', { name: 'About' }).first().click()
-    await expect(page).toHaveURL(/\/about/)
-    await page.getByRole('link', { name: 'Home', exact: true }).first().click()
-    await expect(page).toHaveURL(/\/$/)
+    await navigateToAboutViaFooter(page)
+    await navigateHomeViaBreadcrumb(page)
     await dismissTutorialOverlay(page)
 
     const firstAfterNav = await starterCheckbox(page, starterToClear)

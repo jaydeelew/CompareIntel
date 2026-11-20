@@ -497,6 +497,36 @@ def get_registry_model_ids(registry: dict[str, Any] | None = None) -> set[str]:
     return ids
 
 
+def _active_registry_model_ids() -> set[str]:
+    """Ids in the in-memory lineup (updated by ``reload_registry``)."""
+    ids: set[str] = set()
+    for models in MODELS_BY_PROVIDER.values():
+        if not isinstance(models, list):
+            continue
+        for model in models:
+            if isinstance(model, dict) and (mid := model.get("id")):
+                ids.add(str(mid))
+    return ids
+
+
+def omit_unregistered_model_ids(model_ids: list[str]) -> list[str]:
+    """Drop ids that are not in the active registry.
+
+    A saved comparison can name a model that has since left the lineup for any
+    reason. Those ids are removed before tier checks and before OpenRouter.
+    Returns the same list object when every id is still registered.
+
+    A hard-coded retired-id helper (``omit_retired_model_ids``) can sit in
+    front of this one. Chain them and keep a single empty-list 400.
+    """
+    if not model_ids:
+        return model_ids
+    registered = _active_registry_model_ids()
+    if all(model_id in registered for model_id in model_ids):
+        return model_ids
+    return [model_id for model_id in model_ids if model_id in registered]
+
+
 def _load_openrouter_snapshot_file() -> dict[str, Any]:
     if not _OPENROUTER_MODELS_PATH.is_file():
         return {"data": []}

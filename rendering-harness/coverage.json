@@ -1,14 +1,26 @@
 {
   "version": 1,
-  "imageOnlyRule": "A registry model is image-only, and excluded from this manifest, when its category field is exactly \"Image\". Every other category is text-capable and needs a saved reply for each of the six rendering-harness prompts. supports_image_generation is not consulted. output_modalities is not a registry field; admin add copies an image output modality into category \"Image\".",
+  "imageOnlyRule": "A registry model is image-only, and excluded from this manifest, when its category field is exactly \"Image\". Every other category is text-capable and needs a saved reply for each of the eight rendering-harness prompts. supports_image_generation is not consulted. output_modalities is not a registry field; admin add copies an image output modality into category \"Image\".",
   "prompts": [
     "01-math-basics",
     "02-markdown-formatting",
     "03-code-blocks",
     "04-mixed-markdown-latex",
     "05-complex-scenarios",
-    "06-edge-cases-boundaries"
+    "06-edge-cases-boundaries",
+    "07-rare-formats",
+    "08-casual-prose"
   ],
+  "promptHashes": {
+    "01-math-basics": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+    "02-markdown-formatting": "107ef5643c7f57c93dd34e188e838bf94bb5c33e349bae7282407dec89103be3",
+    "03-code-blocks": "1d59f473a47cb1e5e98a2c105cc3fb5d7c796c4a36a315cd2e14e8b6ed127bd9",
+    "04-mixed-markdown-latex": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f",
+    "05-complex-scenarios": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+    "06-edge-cases-boundaries": "793a5dd9a30fb17fe13b09f39f43d2198f351f72457e090655f5a3b2f728820e",
+    "07-rare-formats": "d7b7632006a95f12287a8c5f1c36bec81d43b187521ba14877b29149d4234921",
+    "08-casual-prose": "b6442d36056a7839c38ef4b020072810e495a3da44cbb9b6e24c973a042bbbbd"
+  },
   "excludedImageModels": [
     "black-forest-labs/flux-3-image",
     "black-forest-labs/flux.2-flex",
@@ -46,11 +58,11 @@
         "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -62,8 +74,16 @@
         "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/anthropic_claude-fable-5.2_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "anthropic/claude-haiku-4.5": {
@@ -72,11 +92,11 @@
         "replyPath": "runs/2026-11-08-08/anthropic_claude-haiku-4.5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/anthropic_claude-haiku-4.5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/anthropic_claude-haiku-4.5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -88,8 +108,16 @@
         "replyPath": "runs/2026-11-08-08/anthropic_claude-haiku-4.5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/anthropic_claude-haiku-4.5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "anthropic/claude-haiku-5.5": {
@@ -98,11 +126,11 @@
         "replyPath": "runs/2026-11-08-01/anthropic_claude-haiku-5.5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/anthropic_claude-haiku-5.5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/anthropic_claude-haiku-5.5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -114,8 +142,16 @@
         "replyPath": "runs/2026-11-08-01/reruns/anthropic_claude-haiku-5.5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/reruns/anthropic_claude-haiku-5.5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "anthropic/claude-opus-4.6": {
@@ -124,11 +160,11 @@
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.6_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.6_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.6_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -140,8 +176,16 @@
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.6_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.6_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "anthropic/claude-opus-4.7": {
@@ -150,11 +194,11 @@
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.7_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.7_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.7_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -166,8 +210,16 @@
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.7_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.7_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "anthropic/claude-opus-4.8": {
@@ -176,11 +228,11 @@
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.8_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.8_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.8_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -192,8 +244,16 @@
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.8_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-18/anthropic_claude-opus-4.8_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "anthropic/claude-opus-5": {
@@ -202,11 +262,11 @@
         "replyPath": "runs/2026-11-08-19/anthropic_claude-opus-5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-19/anthropic_claude-opus-5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-19/anthropic_claude-opus-5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -218,8 +278,16 @@
         "replyPath": "runs/2026-11-08-19/anthropic_claude-opus-5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-19/anthropic_claude-opus-5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "anthropic/claude-opus-5.5": {
@@ -228,11 +296,11 @@
         "replyPath": "runs/2026-11-08-17/anthropic_claude-opus-5.5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/anthropic_claude-opus-5.5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/anthropic_claude-opus-5.5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -244,8 +312,16 @@
         "replyPath": "runs/2026-11-08-17/anthropic_claude-opus-5.5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/anthropic_claude-opus-5.5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "anthropic/claude-sonnet-4.6": {
@@ -254,11 +330,11 @@
         "replyPath": "runs/2026-11-08-21/anthropic_claude-sonnet-4.6_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/anthropic_claude-sonnet-4.6_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/anthropic_claude-sonnet-4.6_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -270,8 +346,16 @@
         "replyPath": "runs/2026-11-08-21/anthropic_claude-sonnet-4.6_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/anthropic_claude-sonnet-4.6_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "anthropic/claude-sonnet-5.5": {
@@ -280,11 +364,11 @@
         "replyPath": "runs/2026-11-08-12/anthropic_claude-sonnet-5.5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/anthropic_claude-sonnet-5.5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/anthropic_claude-sonnet-5.5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -296,8 +380,16 @@
         "replyPath": "runs/2026-11-08-12/anthropic_claude-sonnet-5.5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/anthropic_claude-sonnet-5.5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "cohere/command-a": {
@@ -306,11 +398,11 @@
         "replyPath": "runs/2026-11-08-09/cohere_command-a_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/cohere_command-a_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/cohere_command-a_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -322,8 +414,16 @@
         "replyPath": "runs/2026-11-08-09/cohere_command-a_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/cohere_command-a_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "deepseek/deepseek-v3.2": {
@@ -332,11 +432,11 @@
         "replyPath": "runs/2026-11-08-04/deepseek_deepseek-v3.2_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/deepseek_deepseek-v3.2_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/deepseek_deepseek-v3.2_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -348,8 +448,16 @@
         "replyPath": "runs/2026-11-08-04/deepseek_deepseek-v3.2_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/deepseek_deepseek-v3.2_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "deepseek/deepseek-v4-flash": {
@@ -358,11 +466,11 @@
         "replyPath": "runs/2026-11-08-02/reruns/deepseek_deepseek-v4-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/deepseek_deepseek-v4-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/deepseek_deepseek-v4-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -374,8 +482,16 @@
         "replyPath": "runs/2026-11-08-02/deepseek_deepseek-v4-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/deepseek_deepseek-v4-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "deepseek/deepseek-v4-pro": {
@@ -384,11 +500,11 @@
         "replyPath": "runs/2026-11-08-21/deepseek_deepseek-v4-pro_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/deepseek_deepseek-v4-pro_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/deepseek_deepseek-v4-pro_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -400,8 +516,16 @@
         "replyPath": "runs/2026-11-08-21/deepseek_deepseek-v4-pro_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/deepseek_deepseek-v4-pro_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "deepseek/deepseek-v4.1-flash-1017": {
@@ -410,11 +534,11 @@
         "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -426,8 +550,16 @@
         "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-10-registry-rename/deepseek_deepseek-v4.1-flash-1017_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-2.5-flash": {
@@ -436,11 +568,11 @@
         "replyPath": "runs/2026-11-08-21/google_gemini-2.5-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/google_gemini-2.5-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/google_gemini-2.5-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -452,8 +584,16 @@
         "replyPath": "runs/2026-11-08-21/google_gemini-2.5-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/google_gemini-2.5-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-2.5-pro": {
@@ -462,11 +602,11 @@
         "replyPath": "runs/2026-11-08-15/google_gemini-2.5-pro_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/google_gemini-2.5-pro_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/google_gemini-2.5-pro_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -478,8 +618,16 @@
         "replyPath": "runs/2026-11-08-15/google_gemini-2.5-pro_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/google_gemini-2.5-pro_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-3-flash-preview": {
@@ -488,11 +636,11 @@
         "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -504,8 +652,16 @@
         "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-3.1-flash-lite-preview": {
@@ -514,11 +670,11 @@
         "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -530,8 +686,16 @@
         "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-3.1-pro-preview": {
@@ -540,11 +704,11 @@
         "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -556,8 +720,16 @@
         "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-3.6-flash": {
@@ -566,11 +738,11 @@
         "replyPath": "runs/2026-11-08-14/google_gemini-3.6-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/google_gemini-3.6-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/google_gemini-3.6-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -582,8 +754,16 @@
         "replyPath": "runs/2026-11-08-14/google_gemini-3.6-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/google_gemini-3.6-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-3.8-flash": {
@@ -592,11 +772,11 @@
         "replyPath": "runs/2026-11-08-14/google_gemini-3.8-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/google_gemini-3.8-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/google_gemini-3.8-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -608,8 +788,16 @@
         "replyPath": "runs/2026-11-08-14/google_gemini-3.8-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/google_gemini-3.8-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-4-argon": {
@@ -618,11 +806,11 @@
         "replyPath": "runs/2026-11-08-16/google_gemini-4-argon_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/google_gemini-4-argon_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/google_gemini-4-argon_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -634,8 +822,16 @@
         "replyPath": "runs/2026-11-08-16/google_gemini-4-argon_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/google_gemini-4-argon_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-4-carbon": {
@@ -644,11 +840,11 @@
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -660,8 +856,16 @@
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-carbon_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemini-4-hydrogen": {
@@ -670,11 +874,11 @@
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -686,8 +890,16 @@
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/google_gemini-4-hydrogen_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemma-3-27b-it": {
@@ -696,11 +908,11 @@
         "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -712,8 +924,16 @@
         "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemma-4-26b-a4b-it": {
@@ -722,11 +942,11 @@
         "replyPath": "runs/2026-11-08-05/google_gemma-4-26b-a4b-it_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/google_gemma-4-26b-a4b-it_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/google_gemma-4-26b-a4b-it_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -738,8 +958,16 @@
         "replyPath": "runs/2026-11-08-05/google_gemma-4-26b-a4b-it_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/google_gemma-4-26b-a4b-it_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "google/gemma-4-31b-it": {
@@ -748,11 +976,11 @@
         "replyPath": "runs/2026-11-08-06/google_gemma-4-31b-it_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-06/google_gemma-4-31b-it_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-06/google_gemma-4-31b-it_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -764,8 +992,16 @@
         "replyPath": "runs/2026-11-08-06/google_gemma-4-31b-it_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-06/google_gemma-4-31b-it_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "meta-llama/llama-3.3-70b-instruct": {
@@ -774,7 +1010,7 @@
         "replyPath": "runs/2026-11-08-04/meta-llama_llama-3.3-70b-instruct_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/meta-llama_llama-3.3-70b-instruct_02-markdown-formatting.json"
       },
       "03-code-blocks": {
@@ -790,8 +1026,16 @@
         "replyPath": "runs/2026-11-08-04/meta-llama_llama-3.3-70b-instruct_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/meta-llama_llama-3.3-70b-instruct_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "meta-llama/llama-4-maverick": {
@@ -800,11 +1044,11 @@
         "replyPath": "runs/2026-11-08-05/meta-llama_llama-4-maverick_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/meta-llama_llama-4-maverick_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/meta-llama_llama-4-maverick_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -816,8 +1060,16 @@
         "replyPath": "runs/2026-11-08-05/meta-llama_llama-4-maverick_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/meta-llama_llama-4-maverick_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "meta-llama/llama-4-scout": {
@@ -826,11 +1078,11 @@
         "replyPath": "runs/2026-11-08-02/meta-llama_llama-4-scout_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/meta-llama_llama-4-scout_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/meta-llama_llama-4-scout_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -842,8 +1094,16 @@
         "replyPath": "runs/2026-11-08-02/meta-llama_llama-4-scout_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/meta-llama_llama-4-scout_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "meta/muse-spark-1.3": {
@@ -852,11 +1112,11 @@
         "replyPath": "runs/2026-11-08-12/meta_muse-spark-1.3_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/meta_muse-spark-1.3_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/meta_muse-spark-1.3_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -868,8 +1128,16 @@
         "replyPath": "runs/2026-11-08-12/meta_muse-spark-1.3_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/meta_muse-spark-1.3_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "microsoft/phi-4": {
@@ -878,11 +1146,11 @@
         "replyPath": "runs/2026-11-08-03/microsoft_phi-4_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/microsoft_phi-4_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/microsoft_phi-4_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -894,8 +1162,16 @@
         "replyPath": "runs/2026-11-08-03/microsoft_phi-4_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/microsoft_phi-4_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "minimax/minimax-m2.5": {
@@ -904,11 +1180,11 @@
         "replyPath": "runs/2026-11-08-03/minimax_minimax-m2.5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/minimax_minimax-m2.5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/minimax_minimax-m2.5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -920,8 +1196,16 @@
         "replyPath": "runs/2026-11-08-03/minimax_minimax-m2.5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/minimax_minimax-m2.5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "minimax/minimax-m3.1-flash": {
@@ -930,11 +1214,11 @@
         "replyPath": "runs/2026-11-08-05/minimax_minimax-m3.1-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/minimax_minimax-m3.1-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/minimax_minimax-m3.1-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -946,8 +1230,16 @@
         "replyPath": "runs/2026-11-08-05/minimax_minimax-m3.1-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/minimax_minimax-m3.1-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "mistralai/codestral-2508": {
@@ -956,11 +1248,11 @@
         "replyPath": "runs/2026-11-08-04/mistralai_codestral-2508_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/mistralai_codestral-2508_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/mistralai_codestral-2508_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -972,8 +1264,16 @@
         "replyPath": "runs/2026-11-08-04/mistralai_codestral-2508_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/mistralai_codestral-2508_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "mistralai/mistral-large-4-0": {
@@ -982,11 +1282,11 @@
         "replyPath": "runs/2026-11-08-10/mistralai_mistral-large-4-0_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/mistralai_mistral-large-4-0_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/mistralai_mistral-large-4-0_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -998,8 +1298,16 @@
         "replyPath": "runs/2026-11-08-10/mistralai_mistral-large-4-0_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/mistralai_mistral-large-4-0_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "mistralai/mistral-medium-3.1": {
@@ -1008,11 +1316,11 @@
         "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1024,8 +1332,16 @@
         "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "mistralai/mistral-small-3.2-24b-instruct": {
@@ -1034,11 +1350,11 @@
         "replyPath": "runs/2026-11-08-01/mistralai_mistral-small-3.2-24b-instruct_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/mistralai_mistral-small-3.2-24b-instruct_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/mistralai_mistral-small-3.2-24b-instruct_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1050,8 +1366,16 @@
         "replyPath": "runs/2026-11-08-01/reruns/mistralai_mistral-small-3.2-24b-instruct_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/mistralai_mistral-small-3.2-24b-instruct_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "moonshotai/kimi-k2.6": {
@@ -1060,11 +1384,11 @@
         "replyPath": "runs/2026-11-08-09/moonshotai_kimi-k2.6_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/moonshotai_kimi-k2.6_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/moonshotai_kimi-k2.6_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1076,8 +1400,16 @@
         "replyPath": "runs/2026-11-08-09/moonshotai_kimi-k2.6_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/moonshotai_kimi-k2.6_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "moonshotai/kimi-k3": {
@@ -1086,11 +1418,11 @@
         "replyPath": "runs/2026-11-08-17/moonshotai_kimi-k3_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/moonshotai_kimi-k3_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/moonshotai_kimi-k3_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1102,8 +1434,16 @@
         "replyPath": "runs/2026-11-08-17/moonshotai_kimi-k3_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/moonshotai_kimi-k3_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "moonshotai/kimi-k3.1-pro": {
@@ -1112,11 +1452,11 @@
         "replyPath": "runs/2026-11-08-16/moonshotai_kimi-k3.1-pro_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/moonshotai_kimi-k3.1-pro_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/moonshotai_kimi-k3.1-pro_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1128,8 +1468,16 @@
         "replyPath": "runs/2026-11-08-16/moonshotai_kimi-k3.1-pro_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/moonshotai_kimi-k3.1-pro_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "nvidia/nemotron-3-ultra-550b-a55b:free": {
@@ -1138,11 +1486,11 @@
         "replyPath": "runs/2026-11-08-10/nvidia_nemotron-3-ultra-550b-a55b:free_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/nvidia_nemotron-3-ultra-550b-a55b:free_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/nvidia_nemotron-3-ultra-550b-a55b:free_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1154,8 +1502,16 @@
         "replyPath": "runs/2026-11-08-10/nvidia_nemotron-3-ultra-550b-a55b:free_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/nvidia_nemotron-3-ultra-550b-a55b:free_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-4o-mini": {
@@ -1164,11 +1520,11 @@
         "replyPath": "runs/2026-11-08-21/openai_gpt-4o-mini_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/openai_gpt-4o-mini_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/openai_gpt-4o-mini_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1180,8 +1536,16 @@
         "replyPath": "runs/2026-11-08-21/openai_gpt-4o-mini_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21/openai_gpt-4o-mini_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5": {
@@ -1190,11 +1554,11 @@
         "replyPath": "runs/2026-11-08-12/openai_gpt-5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/openai_gpt-5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/openai_gpt-5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1206,8 +1570,16 @@
         "replyPath": "runs/2026-11-08-12/openai_gpt-5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/openai_gpt-5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5-mini": {
@@ -1216,11 +1588,11 @@
         "replyPath": "runs/2026-11-08-08/openai_gpt-5-mini_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/openai_gpt-5-mini_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/openai_gpt-5-mini_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1232,8 +1604,16 @@
         "replyPath": "runs/2026-11-08-08/openai_gpt-5-mini_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/openai_gpt-5-mini_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5-nano": {
@@ -1242,11 +1622,11 @@
         "replyPath": "runs/2026-11-08-02/reruns/openai_gpt-5-nano_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/reruns/openai_gpt-5-nano_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/reruns/openai_gpt-5-nano_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1258,8 +1638,16 @@
         "replyPath": "runs/2026-11-08-02/reruns/openai_gpt-5-nano_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/reruns/openai_gpt-5-nano_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5.1-codex-max": {
@@ -1268,11 +1656,11 @@
         "replyPath": "runs/2026-11-08-15/openai_gpt-5.1-codex-max_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/openai_gpt-5.1-codex-max_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/openai_gpt-5.1-codex-max_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1284,8 +1672,16 @@
         "replyPath": "runs/2026-11-08-15/openai_gpt-5.1-codex-max_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/openai_gpt-5.1-codex-max_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5.1-codex-mini": {
@@ -1294,11 +1690,11 @@
         "replyPath": "runs/2026-11-08-11/openai_gpt-5.1-codex-mini_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-11/openai_gpt-5.1-codex-mini_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-11/openai_gpt-5.1-codex-mini_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1310,8 +1706,16 @@
         "replyPath": "runs/2026-11-08-11/openai_gpt-5.1-codex-mini_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-11/openai_gpt-5.1-codex-mini_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5.2": {
@@ -1320,11 +1724,11 @@
         "replyPath": "runs/2026-11-08-16/openai_gpt-5.2_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/openai_gpt-5.2_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/openai_gpt-5.2_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1336,8 +1740,16 @@
         "replyPath": "runs/2026-11-08-16/openai_gpt-5.2_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/openai_gpt-5.2_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5.2-pro": {
@@ -1346,11 +1758,11 @@
         "replyPath": "runs/2026-11-08-20b/openai_gpt-5.2-pro_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-20b/openai_gpt-5.2-pro_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-20b/openai_gpt-5.2-pro_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1362,8 +1774,16 @@
         "replyPath": "runs/2026-11-08-20b/openai_gpt-5.2-pro_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-20b/openai_gpt-5.2-pro_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5.3-codex": {
@@ -1372,11 +1792,11 @@
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.3-codex_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.3-codex_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.3-codex_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1388,8 +1808,16 @@
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.3-codex_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.3-codex_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5.4": {
@@ -1398,11 +1826,11 @@
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.4_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.4_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.4_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1414,8 +1842,16 @@
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.4_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-17/openai_gpt-5.4_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5.4-pro": {
@@ -1424,11 +1860,11 @@
         "replyPath": "runs/2026-11-08-20c/openai_gpt-5.4-pro_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-20c/openai_gpt-5.4-pro_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-20c/openai_gpt-5.4-pro_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1440,8 +1876,16 @@
         "replyPath": "runs/2026-11-08-20c/openai_gpt-5.4-pro_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-20c/openai_gpt-5.4-pro_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-5.5": {
@@ -1450,11 +1894,11 @@
         "replyPath": "runs/2026-11-08-19/openai_gpt-5.5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-19/openai_gpt-5.5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-19/openai_gpt-5.5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1466,8 +1910,16 @@
         "replyPath": "runs/2026-11-08-19/openai_gpt-5.5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-19/openai_gpt-5.5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-6-astra": {
@@ -1476,11 +1928,11 @@
         "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1492,8 +1944,16 @@
         "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-6-luna": {
@@ -1502,11 +1962,11 @@
         "replyPath": "runs/2026-11-08-13/openai_gpt-6-luna_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-13/openai_gpt-6-luna_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-13/openai_gpt-6-luna_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1518,8 +1978,16 @@
         "replyPath": "runs/2026-11-08-13/openai_gpt-6-luna_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-13/openai_gpt-6-luna_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-6.1-sol": {
@@ -1528,11 +1996,11 @@
         "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1544,8 +2012,16 @@
         "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-6.1-terra": {
@@ -1554,11 +2030,11 @@
         "replyPath": "runs/2026-11-08-14/openai_gpt-6.1-terra_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/openai_gpt-6.1-terra_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/openai_gpt-6.1-terra_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1570,8 +2046,16 @@
         "replyPath": "runs/2026-11-08-14/openai_gpt-6.1-terra_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/openai_gpt-6.1-terra_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/gpt-oss-120b": {
@@ -1580,11 +2064,11 @@
         "replyPath": "runs/2026-11-08-07/openai_gpt-oss-120b_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/openai_gpt-oss-120b_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/openai_gpt-oss-120b_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1596,8 +2080,16 @@
         "replyPath": "runs/2026-11-08-07/openai_gpt-oss-120b_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/openai_gpt-oss-120b_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "openai/o3": {
@@ -1606,11 +2098,11 @@
         "replyPath": "runs/2026-11-08-15/openai_o3_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/openai_o3_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/openai_o3_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1622,8 +2114,16 @@
         "replyPath": "runs/2026-11-08-15/openai_o3_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/openai_o3_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "qwen/qwen3-30b-a3b-instruct-2507": {
@@ -1632,11 +2132,11 @@
         "replyPath": "runs/2026-11-08-04/qwen_qwen3-30b-a3b-instruct-2507_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/qwen_qwen3-30b-a3b-instruct-2507_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/qwen_qwen3-30b-a3b-instruct-2507_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1648,8 +2148,16 @@
         "replyPath": "runs/2026-11-08-04/reruns/qwen_qwen3-30b-a3b-instruct-2507_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-04/qwen_qwen3-30b-a3b-instruct-2507_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "qwen/qwen3-coder": {
@@ -1658,11 +2166,11 @@
         "replyPath": "runs/2026-11-08-07/qwen_qwen3-coder_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/qwen_qwen3-coder_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/qwen_qwen3-coder_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1674,8 +2182,16 @@
         "replyPath": "runs/2026-11-08-07/qwen_qwen3-coder_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/qwen_qwen3-coder_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "qwen/qwen3-coder-flash": {
@@ -1684,11 +2200,11 @@
         "replyPath": "runs/2026-11-08-01/qwen_qwen3-coder-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/qwen_qwen3-coder-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/qwen_qwen3-coder-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1700,8 +2216,16 @@
         "replyPath": "runs/2026-11-08-01/qwen_qwen3-coder-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-01/qwen_qwen3-coder-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "qwen/qwen3-coder-next": {
@@ -1710,11 +2234,11 @@
         "replyPath": "runs/2026-11-08-06/qwen_qwen3-coder-next_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-06/qwen_qwen3-coder-next_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-06/qwen_qwen3-coder-next_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1726,8 +2250,16 @@
         "replyPath": "runs/2026-11-08-06/qwen_qwen3-coder-next_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-06/qwen_qwen3-coder-next_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "qwen/qwen3-next-80b-a3b-instruct": {
@@ -1736,11 +2268,11 @@
         "replyPath": "runs/2026-11-08-05/qwen_qwen3-next-80b-a3b-instruct_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/qwen_qwen3-next-80b-a3b-instruct_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/qwen_qwen3-next-80b-a3b-instruct_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1752,8 +2284,16 @@
         "replyPath": "runs/2026-11-08-05/qwen_qwen3-next-80b-a3b-instruct_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-05/qwen_qwen3-next-80b-a3b-instruct_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "qwen/qwen3.5-397b-a17b": {
@@ -1762,11 +2302,11 @@
         "replyPath": "runs/2026-11-08-08/qwen_qwen3.5-397b-a17b_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/qwen_qwen3.5-397b-a17b_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/qwen_qwen3.5-397b-a17b_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1778,8 +2318,16 @@
         "replyPath": "runs/2026-11-08-08/qwen_qwen3.5-397b-a17b_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/qwen_qwen3.5-397b-a17b_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "qwen/qwen3.8-max-0902": {
@@ -1788,11 +2336,11 @@
         "replyPath": "runs/2026-11-08-12/qwen_qwen3.8-max-0902_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/qwen_qwen3.8-max-0902_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/qwen_qwen3.8-max-0902_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1804,8 +2352,16 @@
         "replyPath": "runs/2026-11-08-12/qwen_qwen3.8-max-0902_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-12/qwen_qwen3.8-max-0902_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "qwen/qwen4-max": {
@@ -1814,11 +2370,11 @@
         "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1832,6 +2388,14 @@
       "06-edge-cases-boundaries": {
         "status": "incomplete",
         "replyPath": "runs/2026-11-17-pr259/qwen_qwen4-max_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "stepfun/step-5-preview": {
@@ -1840,11 +2404,11 @@
         "replyPath": "runs/2026-11-08-10/stepfun_step-5-preview_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/stepfun_step-5-preview_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/stepfun_step-5-preview_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1856,8 +2420,16 @@
         "replyPath": "runs/2026-11-08-10/stepfun_step-5-preview_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/stepfun_step-5-preview_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "tencent/hy4": {
@@ -1866,11 +2438,11 @@
         "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1882,8 +2454,16 @@
         "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-10-registry-rename/tencent_hy4_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "tencent/hy4-flash": {
@@ -1892,11 +2472,11 @@
         "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1908,8 +2488,16 @@
         "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-17-pr259/tencent_hy4-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "x-ai/grok-4.20": {
@@ -1918,11 +2506,11 @@
         "replyPath": "runs/2026-11-08-13/x-ai_grok-4.20_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-13/x-ai_grok-4.20_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-13/x-ai_grok-4.20_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1934,8 +2522,16 @@
         "replyPath": "runs/2026-11-08-13/x-ai_grok-4.20_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-13/x-ai_grok-4.20_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "x-ai/grok-4.3": {
@@ -1944,11 +2540,11 @@
         "replyPath": "runs/2026-11-08-09/x-ai_grok-4.3_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/x-ai_grok-4.3_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21-incomplete/x-ai_grok-4.3_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1960,8 +2556,16 @@
         "replyPath": "runs/2026-11-08-21-incomplete/x-ai_grok-4.3_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-21-incomplete/x-ai_grok-4.3_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "x-ai/grok-4.5": {
@@ -1970,11 +2574,11 @@
         "replyPath": "runs/2026-11-08-14/x-ai_grok-4.5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/x-ai_grok-4.5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/x-ai_grok-4.5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -1986,8 +2590,16 @@
         "replyPath": "runs/2026-11-08-14/x-ai_grok-4.5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/x-ai_grok-4.5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "x-ai/grok-4.7": {
@@ -1996,11 +2608,11 @@
         "replyPath": "runs/2026-11-08-15/x-ai_grok-4.7_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/x-ai_grok-4.7_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/x-ai_grok-4.7_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -2012,8 +2624,16 @@
         "replyPath": "runs/2026-11-08-15/x-ai_grok-4.7_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-15/x-ai_grok-4.7_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "xiaomi/mimo-v2.5": {
@@ -2022,11 +2642,11 @@
         "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -2038,8 +2658,16 @@
         "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "xiaomi/mimo-v2.5-pro": {
@@ -2048,11 +2676,11 @@
         "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -2064,8 +2692,16 @@
         "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "xiaomi/mimo-v2.6-flash": {
@@ -2074,11 +2710,11 @@
         "replyPath": "runs/2026-11-08-03/xiaomi_mimo-v2.6-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/xiaomi_mimo-v2.6-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/xiaomi_mimo-v2.6-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -2090,8 +2726,16 @@
         "replyPath": "runs/2026-11-08-03/xiaomi_mimo-v2.6-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/xiaomi_mimo-v2.6-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "z-ai/glm-5": {
@@ -2100,11 +2744,11 @@
         "replyPath": "runs/2026-11-08-07/reruns/z-ai_glm-5_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/z-ai_glm-5_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/z-ai_glm-5_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -2116,8 +2760,16 @@
         "replyPath": "runs/2026-11-08-07/reruns/z-ai_glm-5_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-07/reruns/z-ai_glm-5_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "z-ai/glm-5-turbo": {
@@ -2126,11 +2778,11 @@
         "replyPath": "runs/2026-11-08-08/z-ai_glm-5-turbo_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/z-ai_glm-5-turbo_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/z-ai_glm-5-turbo_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -2142,8 +2794,16 @@
         "replyPath": "runs/2026-11-08-08/z-ai_glm-5-turbo_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-08/z-ai_glm-5-turbo_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "z-ai/glm-5.2": {
@@ -2152,11 +2812,11 @@
         "replyPath": "runs/2026-11-08-11/reruns/z-ai_glm-5.2_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-11/z-ai_glm-5.2_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-11/z-ai_glm-5.2_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -2168,8 +2828,16 @@
         "replyPath": "runs/2026-11-08-11/z-ai_glm-5.2_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-11/z-ai_glm-5.2_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "z-ai/glm-5.3": {
@@ -2178,11 +2846,11 @@
         "replyPath": "runs/2026-11-08-13/z-ai_glm-5.3_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-13/z-ai_glm-5.3_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-13/z-ai_glm-5.3_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -2194,8 +2862,16 @@
         "replyPath": "runs/2026-11-08-13/z-ai_glm-5.3_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-13/z-ai_glm-5.3_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     },
     "z-ai/glm-5.3-flash": {
@@ -2204,11 +2880,11 @@
         "replyPath": "runs/2026-11-08-02/z-ai_glm-5.3-flash_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/z-ai_glm-5.3-flash_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/z-ai_glm-5.3-flash_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
@@ -2220,8 +2896,16 @@
         "replyPath": "runs/2026-11-08-02/reruns/z-ai_glm-5.3-flash_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "pass",
+        "status": "not-covered",
         "replyPath": "runs/2026-11-08-02/z-ai_glm-5.3-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
       }
     }
   },
@@ -2230,12 +2914,12 @@
     "textModels": 84,
     "imageModels": 18,
     "allowlisted": 2,
-    "cells": 504,
-    "pass": 491,
-    "notCovered": 10,
+    "cells": 672,
+    "pass": 241,
+    "notCovered": 428,
     "fail": 0,
     "incomplete": 3,
     "sourceIssue": 0,
-    "missing": 0
+    "missing": 168
   }
 }

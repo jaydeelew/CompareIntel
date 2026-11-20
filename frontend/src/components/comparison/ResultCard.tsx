@@ -4,6 +4,7 @@ import { useResponsive } from '../../hooks'
 import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types'
 import { getSafeId } from '../../utils'
 import { isErrorMessage } from '../../utils/error'
+import { humanizeModelId } from '../../utils/retiredConversationModels'
 import { MessageBubble } from '../conversation/MessageBubble'
 import { StyledTooltip } from '../shared'
 
@@ -15,11 +16,14 @@ export interface Model {
   description?: string
   /** When true, show image-generation loading affordance until URLs arrive */
   supports_image_generation?: boolean
+  supports_web_search?: boolean
 }
 
 export interface ResultCardProps {
   modelId: string
   model?: Model
+  /** Resolved label (catalog name, stored name, or humanized id). */
+  displayName?: string
   messages: ConversationMessage[]
   activeTab?: ResultTab
   isError?: boolean
@@ -43,12 +47,17 @@ export interface ResultCardProps {
   streamingReasoning?: string
   /** True once visible answer tokens have arrived for this model in the current stream. */
   streamAnswerStarted?: boolean
+  /** Session had web search enabled for this comparison. */
+  webSearchEnabled?: boolean
+  /** Model is no longer in the catalog. Past messages stay readable. */
+  retired?: boolean
 }
 
 // Single model result card with formatted/raw toggle
 export const ResultCard: React.FC<ResultCardProps> = ({
   modelId,
   model,
+  displayName,
   messages,
   activeTab = RESULT_TAB.FORMATTED,
   isError = false,
@@ -67,6 +76,8 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   isTutorialActive = false,
   streamingReasoning = '',
   streamAnswerStarted = false,
+  webSearchEnabled = false,
+  retired = false,
 }) => {
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const lastAssistantIndex = safeMessages.reduce(
@@ -95,21 +106,36 @@ export const ResultCard: React.FC<ResultCardProps> = ({
     }
   }
 
+  const visibleName =
+    displayName?.trim() || model?.name || (retired ? humanizeModelId(modelId) : modelId)
+
   const combinedClassName = ['result-card', 'conversation-card', breakoutClassName, className]
     .filter(Boolean)
     .join(' ')
+
+  const latestAssistantContent =
+    lastAssistantIndex >= 0 ? safeMessages[lastAssistantIndex]?.content || '' : ''
+  const showLinkPreviews =
+    webSearchEnabled &&
+    Boolean(model?.supports_web_search) &&
+    !isProcessing &&
+    latestAssistantContent.trim().length > 0 &&
+    !hasError
 
   return (
     <div className={combinedClassName} style={style}>
       <div className="result-header">
         <div className="result-header-top">
-          <StyledTooltip
-            usePortal
-            text={model?.name || modelId}
-            className="result-card-title-tooltip"
-          >
-            <h3>{model?.name || modelId}</h3>
-          </StyledTooltip>
+          <div className="result-header-title-group">
+            <StyledTooltip usePortal text={visibleName} className="result-card-title-tooltip">
+              <h3>{visibleName}</h3>
+            </StyledTooltip>
+            {retired && (
+              <span className="result-card-retired" title="No longer available">
+                Retired
+              </span>
+            )}
+          </div>
           <div className="header-buttons-container">
             {onScreenshot && (
               <StyledTooltip usePortal text="Copy formatted chat history">
@@ -120,7 +146,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                     onScreenshot(modelId)
                     e.currentTarget.blur()
                   }}
-                  aria-label={`Copy formatted chat history for ${model?.name || modelId}`}
+                  aria-label={`Copy formatted chat history for ${visibleName}`}
                 >
                   <svg
                     width="16"
@@ -145,7 +171,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                   className="copy-response-btn"
                   disabled={isTutorialActive}
                   onClick={() => onCopyResponse(modelId)}
-                  aria-label={`Copy raw chat history from ${model?.name || modelId}`}
+                  aria-label={`Copy raw chat history from ${visibleName}`}
                 >
                   <svg
                     width="16"
@@ -169,7 +195,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                   className="hide-others-btn"
                   disabled={isTutorialActive}
                   onClick={() => onHideOthers(modelId)}
-                  aria-label={`Hide all other results except ${model?.name || modelId}`}
+                  aria-label={`Hide all other results except ${visibleName}`}
                 >
                   <svg
                     width="16"
@@ -201,7 +227,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                     e.preventDefault()
                     if (!isTutorialActive) onClose(modelId)
                   }}
-                  aria-label={`Hide result for ${model?.name || modelId}`}
+                  aria-label={`Hide result for ${visibleName}`}
                 >
                   <svg
                     width="16"
@@ -219,7 +245,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 </button>
               </StyledTooltip>
             )}
-            {showBreakoutButton && onBreakout && !isError && (
+            {showBreakoutButton && onBreakout && !isError && !retired && (
               <StyledTooltip usePortal text="Continue with this model only">
                 <button
                   type="button"
@@ -236,7 +262,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                     e.preventDefault()
                     if (!isTutorialActive) onBreakout(modelId)
                   }}
-                  aria-label={`Break out conversation with ${model?.name || modelId}`}
+                  aria-label={`Break out conversation with ${visibleName}`}
                 >
                   <svg
                     width="16"
@@ -315,6 +341,10 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 modelId={modelId}
                 modelName={model?.name}
                 pendingGeneratedImage={pendingGeneratedImage}
+                linkPreviewsEnabled={Boolean(
+                  showLinkPreviews && isLatestAssistant && activeTab === RESULT_TAB.FORMATTED
+                )}
+                deferLinkPreviews={isProcessing}
                 onCopyMessage={
                   onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
                 }

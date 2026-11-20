@@ -9,6 +9,11 @@ import { useResponsive } from '../../hooks'
 import { RESULT_TAB, createModelId } from '../../types'
 import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
 import { isErrorMessage } from '../../utils/error'
+import {
+  modelDisplayLabel,
+  partitionAgainstKnownModels,
+  retiredFollowUpNotice,
+} from '../../utils/retiredConversationModels'
 
 import { ResultCard, type Model } from './ResultCard'
 
@@ -161,6 +166,8 @@ export interface ResultsDisplayProps {
   capabilitySwipeHintNonce?: number
   /** True while a comparison is in flight (drives model-tab auto-focus). */
   isComparisonLoading?: boolean
+  /** Web search was enabled for the active comparison session. */
+  webSearchEnabled?: boolean
 }
 
 type TabChangeSource = 'swipe-touch' | 'tab-click' | 'programmatic'
@@ -192,11 +199,39 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   tutorialSwipeHintNonce = 0,
   capabilitySwipeHintNonce = 0,
   isComparisonLoading = false,
+  webSearchEnabled = false,
 }) => {
   const visibleConversations = useMemo(
     () => conversations.filter(conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)),
     [conversations, closedCards]
   )
+
+  const retiredPartition = useMemo(() => {
+    const knownModels = allModels.length > 0 ? allModels : null
+    return partitionAgainstKnownModels(
+      conversations.map(conversation => String(conversation.modelId)),
+      knownModels
+    )
+  }, [allModels, conversations])
+
+  const retiredModelIds = useMemo(
+    () => new Set(retiredPartition.removed),
+    [retiredPartition.removed]
+  )
+
+  const labelForModel = (modelId: string, storedName?: string | null) =>
+    modelDisplayLabel(modelId, allModels.length > 0 ? allModels : null, storedName)
+
+  const retiredNotice = useMemo(() => {
+    if (!retiredPartition.catalogReady || retiredPartition.removed.length === 0) return null
+    const labels = retiredPartition.removed.map(modelId => {
+      const storedName = conversations.find(
+        conversation => String(conversation.modelId) === modelId
+      )?.modelName
+      return modelDisplayLabel(modelId, allModels, storedName)
+    })
+    return retiredFollowUpNotice(labels, retiredPartition.available.length)
+  }, [allModels, conversations, retiredPartition])
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const [layoutContentWidth, setLayoutContentWidth] = useState(0)
@@ -602,6 +637,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     <section ref={sectionRef} className={sectionSurfaceClass}>
       {metadataSection}
 
+      {retiredNotice && (
+        <p className="retired-models-notice" role="status" data-testid="retired-models-notice">
+          {retiredNotice}
+        </p>
+      )}
+
       {useTabbedMultiModelResults ? (
         <div className="results-tabs-container" ref={mobileTabsAttentionScrollRef}>
           <div
@@ -616,6 +657,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           >
             {visibleConversations.map((conversation, index) => {
               const model = allModels.find(m => m.id === conversation.modelId)
+              const retired = retiredModelIds.has(String(conversation.modelId))
+              const tabLabel =
+                model?.name || labelForModel(conversation.modelId, conversation.modelName)
               const isActive = index === activeTabIndex
               const latestMsg = conversation.messages[conversation.messages.length - 1]
               const hasError =
@@ -633,12 +677,13 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   }}
                   className={`results-tab-button ${isActive ? 'active' : ''}`}
                   onClick={() => goToModelTab(index, 'tab-click')}
-                  aria-label={`View results for ${model?.name || conversation.modelId}`}
+                  aria-label={`View results for ${tabLabel}`}
                   aria-selected={isActive}
                   aria-busy={showStreamingIndicator}
                   role="tab"
                 >
-                  <span className="results-tab-name">{model?.name || conversation.modelId}</span>
+                  <span className="results-tab-name">{tabLabel}</span>
+                  {retired && <span className="results-tab-retired">Retired</span>}
                   {showStreamingIndicator && (
                     <span
                       className="results-tab-streaming-spinner"
@@ -705,6 +750,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 <ResultCard
                   modelId={activeConversation.modelId}
                   model={activeModel}
+                  displayName={labelForModel(
+                    activeConversation.modelId,
+                    activeConversation.modelName
+                  )}
                   messages={activeConversation.messages}
                   activeTab={activeTab}
                   isError={isError}
@@ -727,6 +776,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                     activeConversation.modelId,
                     streamAnswerStartedByModel
                   )}
+                  webSearchEnabled={webSearchEnabled}
+                  retired={retiredModelIds.has(String(activeConversation.modelId))}
                 />
               </div>
             ) : null}
@@ -746,6 +797,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 key={conversation.modelId}
                 modelId={conversation.modelId}
                 model={model}
+                displayName={labelForModel(conversation.modelId, conversation.modelName)}
                 messages={conversation.messages}
                 activeTab={activeTab}
                 isError={isError}
@@ -768,6 +820,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   conversation.modelId,
                   streamAnswerStartedByModel
                 )}
+                webSearchEnabled={webSearchEnabled}
+                retired={retiredModelIds.has(String(conversation.modelId))}
               />
             )
           })}

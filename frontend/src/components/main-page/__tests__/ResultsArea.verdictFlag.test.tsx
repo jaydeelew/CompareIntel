@@ -9,6 +9,10 @@ vi.mock('../../../config/featureFlags', () => ({
   isVerdictPanelEnabled: vi.fn(),
 }))
 
+vi.mock('../../comparison/ResultsDisplay', () => ({
+  ResultsDisplay: () => <div data-testid="results-display-stub" />,
+}))
+
 const baseProps: ResultsAreaProps = {
   conversations: [
     {

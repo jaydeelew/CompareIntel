@@ -59,7 +59,8 @@ export interface UseConversationHistoryReturn {
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
     textComposerAdvanced?: TextComposerAdvancedSettings,
-    imageComposerAdvanced?: ImageComposerAdvancedSettings
+    imageComposerAdvanced?: ImageComposerAdvancedSettings,
+    composerWebSearchEnabled?: boolean
   ) => Promise<string>
   deleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => Promise<void>
   loadConversationFromAPI: (conversationId: ConversationId) => Promise<ModelConversation[] | null>
@@ -129,7 +130,8 @@ export function useConversationHistory({
       parentConversationId?: string | null,
       breakoutModelId?: string | null,
       textComposerAdvanced?: TextComposerAdvancedSettings,
-      imageComposerAdvanced?: ImageComposerAdvancedSettings
+      imageComposerAdvanced?: ImageComposerAdvancedSettings,
+      composerWebSearchEnabled?: boolean
     ): Promise<string> => {
       try {
         const history = loadHistoryFromLocalStorage()
@@ -344,6 +346,13 @@ export function useConversationHistory({
           storedImageAdvanced = existingData.imageComposerAdvanced as ImageComposerAdvancedSettings
         }
 
+        let storedWebSearch: boolean | undefined
+        if (composerWebSearchEnabled !== undefined) {
+          storedWebSearch = composerWebSearchEnabled
+        } else if (isUpdate && existingData?.webSearchEnabled != null) {
+          storedWebSearch = Boolean(existingData.webSearchEnabled)
+        }
+
         const externalizedFileContents = await externalizeImageAttachmentsForStorage(
           conversationId,
           fileContents || []
@@ -362,6 +371,7 @@ export function useConversationHistory({
             file_contents: externalizedFileContents,
             ...(storedTextAdvanced != null ? { textComposerAdvanced: storedTextAdvanced } : {}),
             ...(storedImageAdvanced != null ? { imageComposerAdvanced: storedImageAdvanced } : {}),
+            ...(storedWebSearch != null ? { webSearchEnabled: storedWebSearch } : {}),
           })
         )
 
@@ -425,6 +435,7 @@ export function useConversationHistory({
               composer_max_tokens: item.composer_max_tokens ?? undefined,
               composer_aspect_ratio: item.composer_aspect_ratio ?? undefined,
               composer_image_size: item.composer_image_size ?? undefined,
+              composer_web_search_enabled: item.composer_web_search_enabled ?? undefined,
             }
             return summary
           })
@@ -659,6 +670,7 @@ export function useConversationHistory({
                 composer_max_tokens: item.composer_max_tokens ?? undefined,
                 composer_aspect_ratio: item.composer_aspect_ratio ?? undefined,
                 composer_image_size: item.composer_image_size ?? undefined,
+                composer_web_search_enabled: item.composer_web_search_enabled ?? undefined,
               }
               return summary
             })

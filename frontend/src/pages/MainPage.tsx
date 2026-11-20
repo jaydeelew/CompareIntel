@@ -103,6 +103,7 @@ import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
 import { isModelIdSelectableForUser } from '../utils/modelTierAccess'
 import { splitModelIdsByMode } from '../utils/perModeModelSelection'
 import { filterKnownModelIds, parseModelsQueryParam } from '../utils/preselectModelsFromQuery'
+import { partitionConversationModels } from '../utils/retiredConversationModels'
 import {
   saveSessionState,
   onSaveStateEvent,
@@ -152,6 +153,9 @@ export function MainPage() {
   const [accurateInputTokens, setAccurateInputTokens] = useState<number | null>(null)
   const [attachedFiles, setAttachedFiles] = useState<(AttachedFile | StoredAttachedFile)[]>([])
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+  const [conversationWebSearchEnabled, setConversationWebSearchEnabled] = useState<boolean | null>(
+    null
+  )
   const [temperature, setTemperature] = useState(0.7) // 0.0-2.0, controls response randomness
   const [topP, setTopP] = useState(1) // 0.0-1.0, nucleus sampling
   const [maxTokens, setMaxTokens] = useState<number | null>(null) // cap on output length
@@ -243,6 +247,20 @@ export function MainPage() {
     () => Object.values(streamAnswerStartedByModel).some(Boolean),
     [streamAnswerStartedByModel]
   )
+
+  const effectiveWebSearchEnabled = useMemo(
+    () =>
+      isFollowUpMode && conversationWebSearchEnabled !== null
+        ? conversationWebSearchEnabled
+        : webSearchEnabled,
+    [isFollowUpMode, conversationWebSearchEnabled, webSearchEnabled]
+  )
+
+  useEffect(() => {
+    if (isFollowUpMode && conversationWebSearchEnabled === null) {
+      setConversationWebSearchEnabled(webSearchEnabled)
+    }
+  }, [isFollowUpMode, conversationWebSearchEnabled, webSearchEnabled])
 
   const setInputRef = useRef(setInput)
   setInputRef.current = setInput
@@ -571,6 +589,38 @@ export function MainPage() {
     () => Object.values(modelsByProvider).flat(),
     [modelsByProvider]
   )
+
+  // Follow-ups never target a model that has left the catalog. History load and
+  // breakout set this directly; this effect also covers a catalog that arrives
+  // later and any restore path that copied stored ids into the selection.
+  useEffect(() => {
+    if (!isFollowUpMode) return
+    const selectedPartition = partitionConversationModels(selectedModels, modelsByProvider)
+    const originalPartition = partitionConversationModels(originalSelectedModels, modelsByProvider)
+    if (!selectedPartition.catalogReady) return
+    if (selectedPartition.removed.length > 0) {
+      setSelectedModels(selectedPartition.available)
+    }
+    if (originalPartition.removed.length > 0) {
+      setOriginalSelectedModels(originalPartition.available)
+    }
+  }, [
+    isFollowUpMode,
+    modelsByProvider,
+    originalSelectedModels,
+    selectedModels,
+    setOriginalSelectedModels,
+    setSelectedModels,
+  ])
+
+  const followUpUnavailable = useMemo(() => {
+    if (!isFollowUpMode || conversations.length === 0) return false
+    const partition = partitionConversationModels(
+      conversations.map(conversation => String(conversation.modelId)),
+      modelsByProvider
+    )
+    return partition.catalogReady && partition.available.length === 0
+  }, [conversations, isFollowUpMode, modelsByProvider])
 
   const carouselProviders = useMemo(
     () =>
@@ -1431,6 +1481,7 @@ export function MainPage() {
       isAuthenticated,
       currentVisibleComparisonId,
       allModels,
+      modelsByProvider,
       textareaRef,
     },
     {
@@ -1486,6 +1537,8 @@ export function MainPage() {
       setAspectRatio,
       setImageSize,
       setAttachedFiles,
+      setWebSearchEnabled,
+      setConversationWebSearchEnabled,
     })
 
   // Anonymous credits reset listener
@@ -1732,7 +1785,8 @@ export function MainPage() {
       saveSessionState({
         input,
         isFollowUpMode,
-        webSearchEnabled,
+        webSearchEnabled: effectiveWebSearchEnabled,
+        conversationWebSearchEnabled,
         temperature,
         topP,
         maxTokens,
@@ -1750,7 +1804,8 @@ export function MainPage() {
     user,
     input,
     isFollowUpMode,
-    webSearchEnabled,
+    effectiveWebSearchEnabled,
+    conversationWebSearchEnabled,
     temperature,
     topP,
     maxTokens,
@@ -2103,6 +2158,7 @@ export function MainPage() {
       setAnonymousCreditsRemaining,
       setCurrentAbortController,
       setWebSearchEnabled,
+      setConversationWebSearchEnabled,
       setTemperature,
       setTopP,
       setMaxTokens,
@@ -2353,6 +2409,7 @@ export function MainPage() {
     setCurrentVisibleComparisonId(null)
     setModelErrors({})
     setAttachedFiles([])
+    setConversationWebSearchEnabled(null)
 
     window.scrollTo(0, 0)
     const scrollEl = document.scrollingElement ?? document.documentElement
@@ -2396,7 +2453,8 @@ export function MainPage() {
         input,
         attachedFiles,
         accurateInputTokens,
-        webSearchEnabled,
+        webSearchEnabled: effectiveWebSearchEnabled,
+        conversationWebSearchEnabled,
         userLocation,
         temperature,
         topP,
@@ -2445,7 +2503,8 @@ export function MainPage() {
       input,
       attachedFiles,
       accurateInputTokens,
-      webSearchEnabled,
+      effectiveWebSearchEnabled,
+      conversationWebSearchEnabled,
       userLocation,
       temperature,
       topP,
@@ -2662,6 +2721,10 @@ export function MainPage() {
       setCreditWarningType(warningType)
 
       return
+    }
+
+    if (!isFollowUpMode) {
+      setConversationWebSearchEnabled(webSearchEnabled)
     }
 
     submitComparison()
@@ -3030,6 +3093,7 @@ export function MainPage() {
           onNewComparison={handleNewComparison}
           renderUsagePreview={renderUsagePreview}
           selectedModels={selectedModels}
+          followUpUnavailable={followUpUnavailable}
           modelsByProvider={displayModelsByProvider}
           onAccurateTokenCountChange={setAccurateInputTokens}
           creditsRemaining={creditsRemaining}
@@ -3051,8 +3115,8 @@ export function MainPage() {
             onExpandFiles: expandFiles,
             onRemoveAttachedImages,
           }}
-          webSearchEnabled={webSearchEnabled}
-          onWebSearchEnabledChange={setWebSearchEnabled}
+          webSearchEnabled={effectiveWebSearchEnabled}
+          onWebSearchEnabledChange={isFollowUpMode ? undefined : setWebSearchEnabled}
           tutorialStep={tutorialState.currentStep}
           tutorialIsActive={tutorialState.isActive}
           modelsSectionRef={modelsSectionRef}
@@ -3264,6 +3328,7 @@ export function MainPage() {
             tutorialSwipeHintNonce,
             capabilitySwipeHintNonce,
             onOpenHelpMeChoose: openHelpMeChoose,
+            webSearchEnabled,
           }}
         />
 

@@ -1,7 +1,7 @@
 """Write rendering-harness replies and describe admin add-model harness failures.
 
 Image generation models never reach this module. Text models are collected with
-the six files in rendering-harness/prompts so a later PR satisfies the coverage
+the eight files in rendering-harness/prompts so a later PR satisfies the coverage
 gate without a second paid call.
 """
 
@@ -23,6 +23,8 @@ PROMPT_ORDER = (
     "04-mixed-markdown-latex",
     "05-complex-scenarios",
     "06-edge-cases-boundaries",
+    "07-rare-formats",
+    "08-casual-prose",
 )
 ALLOWED_RENDER_STATUSES = {"pass", "not-covered", "source-issue"}
 INCOMPLETE_FINISH_REASONS = {"length", "max_tokens", "max_output_tokens"}
@@ -57,11 +59,7 @@ def runs_root() -> Path:
 
 
 def load_harness_prompts() -> list[dict[str, str]]:
-    """Return the six coverage-gate prompts in filename order.
-
-    Extra prompt files, such as ``07-rare-formats.md``, may sit beside them.
-    New-model collection and the coverage gate use only ``PROMPT_ORDER``.
-    """
+    """Return the eight coverage-gate prompts in filename order."""
     by_name = {path.stem: path.read_text(encoding="utf-8") for path in prompts_dir().glob("*.md")}
     missing = [name for name in PROMPT_ORDER if name not in by_name]
     if missing:
