@@ -22,7 +22,9 @@ import {
   placeTooltipBoxAgainstFrame,
   readTutorialSpotlightRect,
   scrollDeltaToFitTooltip,
+  scrollFollowUpHighlightIntoView,
   scrollTutorialRectToCenter,
+  seatPortaledFollowUpComposer,
   TUTORIAL_FRAME_OUTSET_PX,
   type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
@@ -546,6 +548,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     // Place against the framed highlight, not a stale header or a clamped screen edge.
+    // Follow-up keeps the card below the composer. A short estimate lets the real
+    // card flip upward and cover the responses the step is asking the user to read.
+    if (step === 'follow-up' && !spotlightSettledRef.current) {
+      scrollFollowUpHighlightIntoView({
+        tooltipHeight: Math.max(tooltipHeight, 300),
+        arrowSize,
+        preferred: 'below',
+      })
+    }
     const spotlight = readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
     const frameSource = spotlight ?? placementRect
     if (spotlight) {
@@ -563,6 +574,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       viewportHeight,
       padding,
       preferred: preferredPosition === 'bottom' ? 'below' : 'above',
+      lockSide: step === 'follow-up',
     })
 
     const tooltipTop = placed.top
@@ -768,16 +780,39 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     const scrollAndReveal = async () => {
+      if (currentStep === 'follow-up') {
+        const placement = {
+          tooltipHeight: Math.max(tooltipEstimatedHeight, 300),
+          arrowSize: MOBILE_TUTORIAL_ARROW_PX,
+          preferred: 'below' as const,
+        }
+        await seatPortaledFollowUpComposer(
+          () => cancelled || stepRef.current !== currentStep,
+          placement
+        )
+        if (cancelled || stepRef.current !== currentStep) return
+        await waitForComposerFloat()
+        if (cancelled || stepRef.current !== currentStep) return
+        scrollFollowUpHighlightIntoView({
+          ...placement,
+          tooltipHeight: Math.max(
+            overlayRef.current?.getBoundingClientRect().height || 0,
+            tooltipEstimatedHeight,
+            300
+          ),
+        })
+        await waitForRectStable(liveSpotlight, { timeoutMs: 200, quietMs: 48 })
+        if (cancelled || stepRef.current !== currentStep) return
+        if (!liveSpotlight()) return
+        revealSettledStep()
+        return
+      }
       let rect = liveSpotlight()
       if (!rect || rect.width < 2 || rect.height < 2) return
       scrollTutorialRectToCenter(rect)
       if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
       await waitForTutorialLayoutSettle({ timeoutMs: 240, quietMs: 48 })
       if (cancelled || stepRef.current !== currentStep) return
-      if (currentStep === 'follow-up') {
-        await waitForComposerFloat()
-        if (cancelled || stepRef.current !== currentStep) return
-      }
       await waitForRectStable(liveSpotlight, { timeoutMs: 200, quietMs: 48 })
       if (cancelled || stepRef.current !== currentStep) return
       rect = liveSpotlight()

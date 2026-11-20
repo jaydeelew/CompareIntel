@@ -30,6 +30,7 @@ import {
   DESKTOP_TUTORIAL_ARROW_PX,
   readTutorialSpotlightRect,
   scrollDeltaToFitTooltip,
+  scrollFollowUpHighlightIntoView,
   scrollTutorialRectToCenter,
   seatPortaledFollowUpComposer,
   TUTORIAL_FRAME_OUTSET_PX,
@@ -898,7 +899,12 @@ export function useTutorialOverlay(
           if (cancelled || stepRef.current !== step) return
           if (step === 'follow-up') {
             const seated = await seatPortaledFollowUpComposer(
-              () => cancelled || stepRef.current !== step
+              () => cancelled || stepRef.current !== step,
+              {
+                tooltipHeight: window.innerHeight < 700 ? 160 : 210,
+                arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+                preferred: config.position === 'bottom' ? 'below' : 'above',
+              }
             )
             if (cancelled || stepRef.current !== step) return
             if (seated) {
@@ -1009,6 +1015,15 @@ export function useTutorialOverlay(
 
     const readLayout = () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
 
+    const followUpResultsOffScreen = () => {
+      if (step !== 'follow-up') return false
+      const results = document.querySelector('.results-section')?.getBoundingClientRect()
+      if (!results || results.height < 2) return false
+      const visible = Math.min(results.bottom, window.innerHeight) - Math.max(results.top, 0)
+      const short = results.height < window.innerHeight * 0.7
+      return visible < 120 || (short && results.top < -16)
+    }
+
     const arrowMissesSpotlight = (rect: DOMRect) => {
       const offScreen = rect.bottom < 24 || rect.top > window.innerHeight - 24
       const arrow = document.querySelector('.tutorial-arrow') as HTMLElement | null
@@ -1027,7 +1042,8 @@ export function useTutorialOverlay(
       const tip = document.querySelector('.tutorial-tooltip') as HTMLElement | null
       if (!tip || !(Number(getComputedStyle(tip).opacity) > 0.9)) return
       const rect = readLayout()
-      if (!rect || !arrowMissesSpotlight(rect)) return
+      const resultsOffScreen = followUpResultsOffScreen()
+      if (!rect || (!arrowMissesSpotlight(rect) && !resultsOffScreen)) return
       running = true
       tries += 1
       setSpotlightSettling(true)
@@ -1039,25 +1055,35 @@ export function useTutorialOverlay(
           if (cancelled || stepRef.current !== step) return
           const settled = readLayout()
           if (!settled) return
-          scrollTutorialRectToCenter(settled)
-          await waitForRectStable(readLayout, { timeoutMs: 240, quietMs: 60 })
-          if (cancelled || stepRef.current !== step) return
-          const centered = readLayout()
-          if (!centered) return
-          const fit = scrollDeltaToFitTooltip({
-            frameTop: centered.top - TUTORIAL_FRAME_OUTSET_PX,
-            frameBottom: centered.bottom + TUTORIAL_FRAME_OUTSET_PX,
-            tooltipHeight: window.innerHeight < 700 ? 160 : 210,
-            arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
-            viewportHeight: window.innerHeight,
-            preferred: TUTORIAL_STEPS_CONFIG[step].position === 'bottom' ? 'below' : 'above',
-          })
-          if (Math.abs(fit) > 2) {
-            const root = getTutorialScrollRoot()
-            root.scrollToTop(
-              Math.max(0, Math.min(root.getScrollTop() + fit, getTutorialScrollMax())),
-              'auto'
-            )
+          const preferred = TUTORIAL_STEPS_CONFIG[step].position === 'bottom' ? 'below' : 'above'
+          const tooltipHeight = window.innerHeight < 700 ? 160 : 210
+          if (step === 'follow-up') {
+            scrollFollowUpHighlightIntoView({
+              tooltipHeight,
+              arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+              preferred,
+            })
+          } else {
+            scrollTutorialRectToCenter(settled)
+            await waitForRectStable(readLayout, { timeoutMs: 240, quietMs: 60 })
+            if (cancelled || stepRef.current !== step) return
+            const centered = readLayout()
+            if (!centered) return
+            const fit = scrollDeltaToFitTooltip({
+              frameTop: centered.top - TUTORIAL_FRAME_OUTSET_PX,
+              frameBottom: centered.bottom + TUTORIAL_FRAME_OUTSET_PX,
+              tooltipHeight,
+              arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+              viewportHeight: window.innerHeight,
+              preferred,
+            })
+            if (Math.abs(fit) > 2) {
+              const root = getTutorialScrollRoot()
+              root.scrollToTop(
+                Math.max(0, Math.min(root.getScrollTop() + fit, getTutorialScrollMax())),
+                'auto'
+              )
+            }
           }
           await waitForRectStable(readLayout, { timeoutMs: 400, quietMs: 80 })
           if (cancelled || stepRef.current !== step) return
