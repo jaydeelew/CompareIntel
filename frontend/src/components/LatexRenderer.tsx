@@ -69,11 +69,13 @@ import {
   unescapeGfmTableCellCodePipes,
   unescapeMarkdownEscapesOutsideKatex,
 } from '../utils/latex'
+import { replaceAutolinksOutsideCode } from '../utils/latex/autolinks'
 import {
   replaceExactlyTwoStrong,
   replaceSingleStarEm,
   replaceSingleUnderscoreEm,
 } from '../utils/latex/emphasis'
+import { extractFootnoteDefinitions, renderFootnotes } from '../utils/latex/footnotes'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
 
 function padGfmRow(cells: string[], columns: number): string[] {
@@ -189,7 +191,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
    * Stage 7: Process markdown formatting
    * Uses model-specific markdown processing rules
    */
-  const processMarkdown = (text: string): string => {
+  const processMarkdown = (text: string, footnoteDefs: Map<string, string>): string => {
     const markdownRules = config.markdownProcessing || {}
     let processed = text
 
@@ -357,7 +359,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // with no trailing newline (MiMo 05/06: `## Scenario 3` / `## Raw Dollar Signs`
       // stuck to `</div>` and showed a leftover #).
       processed = processed.replace(
-        /(<\/(?:table|div|blockquote|pre)[^>]*>)(\s*)(#{1,6}\s+)/gi,
+        /(<\/(?:table|div|blockquote|pre|section)[^>]*>)(\s*)(#{1,6}\s+)/gi,
         '$1\n\n$3'
       )
       // Replace any header markers that are preceded by non-whitespace (except at start of string)
@@ -400,9 +402,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       '<del class="markdown-strikethrough">$1</del>'
     )
 
-    // Reference-style links
+    // Reference-style link definitions (not GFM footnotes `[^id]:`)
     const referenceMap: { [key: string]: string } = {}
-    processed = processed.replace(/^\[([^\]]+)\]:\s*(.+)$/gm, (_, ref, url) => {
+    processed = processed.replace(/^\[(?!\^)([^\]]+)\]:\s*(.+)$/gm, (_, ref, url) => {
       referenceMap[ref.toLowerCase()] = url.trim()
       return ''
     })
@@ -442,6 +444,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
           return match
         })
       }
+
+      processed = replaceAutolinksOutsideCode(processed)
     }
 
     // Images - with lazy loading and optimization
@@ -498,7 +502,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         /(?<!!)\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g,
         renderMarkdownLink
       )
+      processed = replaceAutolinksOutsideCode(processed)
     }
+    const footnotePass = renderFootnotes(processed, footnoteDefs)
+    processed = footnotePass.text
     // Same restore window: `**$x = 0$**` in OL continuations (Gemini 04) stayed
     // as leftover asterisks around restored KaTeX.
     if (markdownRules.processBoldItalic !== false) {
@@ -531,6 +538,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     processed = processed.replace(/\(MDPH\d+\)/g, '')
     processed = processed.replace(/\{MDPH\d+\}/g, '')
     processed = processed.replace(/(?<!⟨⟨)MDPH\d+(?!⟩⟩)/g, '')
+
+    if (footnotePass.footnotesHtml) {
+      processed = `${processed}\n\n${footnotePass.footnotesHtml}`
+    }
 
     return processed
   }
@@ -735,6 +746,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         const inlineCodeExtraction = extractInlineCode(processed)
         processed = inlineCodeExtraction.text
 
+        const footnoteExtraction = extractFootnoteDefinitions(processed)
+        processed = footnoteExtraction.text
+
         // Stage 0.2: An escaped \$ is always a literal dollar sign, even inside $$...$$
         processed = protectEscapedDollars(processed)
 
@@ -854,7 +868,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         processed = preserveMathLineBreaks(processed)
 
         // Stage 7: Process markdown formatting (using model-specific rules)
-        processed = processMarkdown(processed)
+        processed = processMarkdown(processed, footnoteExtraction.defs)
 
         // Stage 7.5: Remove any MDPH placeholders that survived markdown processing
         // This is critical because placeholders might be inside HTML tags from markdown formatting

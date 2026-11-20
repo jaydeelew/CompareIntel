@@ -28,7 +28,8 @@
     "coverage-lib.ts",
     "generate-coverage.ts",
     "check-coverage.ts",
-    "tool-leak.ts"
+    "tool-leak.ts",
+    "../frontend/src/types/markdown-it-plugins.d.ts"
   ],
   "exclude": [
     "node_modules",

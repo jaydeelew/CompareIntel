@@ -87,6 +87,11 @@ export async function shootContainer(page: Page, outputPath: string): Promise<vo
     }
   })
   if (!clip) throw new Error('Render container missing for screenshot')
+  const viewport = page.viewportSize()
+  const needH = Math.min(clip.y + clip.height + 8, 16_000)
+  if (viewport && needH > viewport.height) {
+    await page.setViewportSize({ width: viewport.width, height: needH })
+  }
   await page.screenshot({ path: outputPath, clip })
 }
 

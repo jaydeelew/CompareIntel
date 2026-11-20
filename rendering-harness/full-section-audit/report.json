@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-17T21:21:46.181Z",
+  "generatedAt": "2026-11-19T03:39:01.343Z",
   "standard": "whole affected section vs CommonMark/GFM + KaTeX",
   "reports": [
     {
@@ -421,6 +421,48 @@
       "visualPass": true,
       "screenshot": "screenshots/29-empty-delimiter-labels.png",
       "sourceExcerpt": "sections/29-empty-delimiter-labels.md"
+    },
+    {
+      "bug": 30,
+      "id": "30-table-math-pipe-escape",
+      "title": "GFM \\| in table-cell math is absolute value, not norm",
+      "modelId": "google/gemini-4-carbon",
+      "promptName": "06-edge-cases-boundaries",
+      "verdict": "pass",
+      "diffs": [],
+      "sectionChars": 255,
+      "usedFullDocumentFallback": true,
+      "visualPass": null,
+      "screenshot": "screenshots/30-table-math-pipe-escape.png",
+      "sourceExcerpt": "sections/30-table-math-pipe-escape.md"
+    },
+    {
+      "bug": 31,
+      "id": "31-autolinks",
+      "title": "CommonMark autolinks render as anchors",
+      "modelId": "__default__",
+      "promptName": "02-markdown-formatting",
+      "verdict": "pass",
+      "diffs": [],
+      "sectionChars": 103,
+      "usedFullDocumentFallback": true,
+      "visualPass": null,
+      "screenshot": "screenshots/31-autolinks.png",
+      "sourceExcerpt": "sections/31-autolinks.md"
+    },
+    {
+      "bug": 32,
+      "id": "32-footnotes",
+      "title": "GFM footnotes render refs and a footnotes section",
+      "modelId": "__default__",
+      "promptName": "07-rare-formats",
+      "verdict": "pass",
+      "diffs": [],
+      "sectionChars": 105,
+      "usedFullDocumentFallback": false,
+      "visualPass": null,
+      "screenshot": "screenshots/32-footnotes.png",
+      "sourceExcerpt": "sections/32-footnotes.md"
     }
   ]
 }
