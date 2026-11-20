@@ -45,7 +45,7 @@ class TestProviderNameResolution:
 
     def test_resolve_provider_maps_mistralai_slug_to_mistral_bucket(self):
         models_by_provider = {
-            "Mistral": [{"id": "mistralai/mistral-medium-3.1", "name": "Mistral Medium 3.1"}],
+            "Mistral": [{"id": "mistralai/mistral-large-4-0", "name": "Mistral Large 4"}],
         }
         assert _display_provider_from_openrouter_slug("mistralai") == "Mistral"
         assert (

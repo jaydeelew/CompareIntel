@@ -367,8 +367,6 @@ async def compare_stream(
         raise HTTPException(status_code=400, detail="At least one model must be selected")
 
     # Drop ids missing from the active registry (retired, renamed, or unknown).
-    # If a hard-coded omit_retired_model_ids lands in this same spot, chain it
-    # first and keep this empty-list 400.
     from ...llm.registry import omit_unregistered_model_ids
 
     active_models = omit_unregistered_model_ids(req.models)

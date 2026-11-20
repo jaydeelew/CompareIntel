@@ -197,7 +197,6 @@ def _get_huggingface_model_name(model_id: str) -> str | None:
         "meta-llama/llama-4-scout": "meta-llama/Llama-4-Scout-17B-Instruct",
         "meta-llama/llama-4-maverick": "meta-llama/Llama-4-Maverick-17B-Instruct",
         "mistralai/mistral-small-3.2-24b-instruct": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
-        "mistralai/mistral-medium-3.1": "mistralai/Mistral-Medium-3.1",
         "mistralai/codestral-2508": "mistralai/Codestral-2508",
         "deepseek/deepseek-v3.2": "deepseek-ai/DeepSeek-V3.2",
         "deepseek/deepseek-v4-flash": "deepseek-ai/DeepSeek-V4-Flash",

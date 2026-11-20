@@ -1322,40 +1322,6 @@
         "replyPath": null
       }
     },
-    "mistralai/mistral-medium-3.1": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-06/mistralai_mistral-medium-3.1_06-edge-cases-boundaries.json"
-      },
-      "07-rare-formats": {
-        "status": "not-covered",
-        "replyPath": null
-      },
-      "08-casual-prose": {
-        "status": "not-covered",
-        "replyPath": null
-      }
-    },
     "mistralai/mistral-small-3.2-24b-instruct": {
       "01-math-basics": {
         "status": "pass",
@@ -2922,16 +2888,16 @@
     }
   },
   "totals": {
-    "registryModels": 102,
-    "textModels": 84,
+    "registryModels": 101,
+    "textModels": 83,
     "imageModels": 18,
     "allowlisted": 5,
-    "cells": 672,
-    "pass": 250,
-    "notCovered": 405,
+    "cells": 664,
+    "pass": 247,
+    "notCovered": 400,
     "fail": 13,
     "incomplete": 4,
     "sourceIssue": 0,
-    "missing": 158
+    "missing": 156
   }
 }
