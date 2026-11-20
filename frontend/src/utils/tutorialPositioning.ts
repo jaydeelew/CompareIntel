@@ -158,14 +158,13 @@ export function scrollTutorialElementToViewportY(
  * plus the fade timer is clamped on Mobile Safari.
  */
 /**
- * How far to scroll so step 7 keeps the results and the follow-up composer together.
- * The tooltip sits against the composer (below on mobile, above on desktop). When the
- * pair fits, it is centered in the space left beside the tooltip. When it does not,
- * the composer stays against the tooltip and the results fill the rest of the viewport.
- * Positive means scroll content up.
+ * How far to scroll the below-results composer on step 7.
+ * Mobile (tooltip below) only moves when the composer does not have room under it,
+ * which is what kept that composer and the results on screen before the transition work.
+ * Desktop parks the composer just under the tooltip. Positive scrolls content up.
+ * The hero composer is not a target: passing its box scrolls the results off the bottom.
  */
 export function followUpScrollDelta(args: {
-  blockTop: number
   composerTop: number
   composerBottom: number
   viewportHeight: number
@@ -175,24 +174,16 @@ export function followUpScrollDelta(args: {
   padding?: number
 }): number {
   const padding = args.padding ?? 12
-  const need = args.tooltipHeight + args.arrowSize + padding
-  const blockHeight = args.composerBottom - args.blockTop
-  const viewH = args.viewportHeight
-  let desiredBlockTop: number
+  const gap = 8
   if (args.preferred === 'below') {
-    if (blockHeight + need <= viewH - padding) {
-      const available = viewH - need
-      desiredBlockTop = Math.max(padding, (available - blockHeight) / 2)
-    } else {
-      desiredBlockTop = viewH - need - (args.composerBottom - args.blockTop)
-    }
-  } else if (blockHeight + need <= viewH - padding) {
-    const available = viewH - need
-    desiredBlockTop = need + Math.max(0, (available - blockHeight) / 2)
-  } else {
-    desiredBlockTop = need - (args.composerTop - args.blockTop)
+    const needBelow = args.tooltipHeight + args.arrowSize + gap + padding
+    const spaceBelow = args.viewportHeight - args.composerBottom
+    if (spaceBelow < needBelow) return needBelow - spaceBelow
+    if (args.composerTop < padding) return args.composerTop - padding
+    return 0
   }
-  return args.blockTop - desiredBlockTop
+  // Desktop, pre-transition: TOP_MARGIN 80 + tooltip offset 16 + estimated tooltip 210.
+  return args.composerTop - 306
 }
 
 export function scrollTutorialRectToCenter(rect: { top: number; height: number }): void {
@@ -319,14 +310,16 @@ export function readTutorialSpotlightRect(
     step === 'history-dropdown' ||
     step === 'save-selection'
   ) {
-    const composer =
-      step === 'follow-up'
-        ? ((document.querySelector(
-            '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
-          ) as HTMLElement | null) ?? getComposerElement())
-        : getComposerElement()
+    if (step === 'follow-up') {
+      const portaled = document.querySelector(
+        '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+      ) as HTMLElement | null
+      if (!portaled) return null
+      const portaledRect = portaled.getBoundingClientRect()
+      return portaledRect.width > 1 && portaledRect.height > 1 ? portaledRect : null
+    }
+    const composer = getComposerElement()
     if (!composer) return null
-    if (step === 'follow-up') return composer.getBoundingClientRect()
     const parts = getComposerCutoutRects(composer)
     if (step === 'history-dropdown') {
       const panel = composer.querySelector('.history-inline-list')
@@ -365,29 +358,11 @@ export interface FollowUpScrollOptions {
   preferred: 'above' | 'below'
 }
 
-/** Results section plus the composer the follow-up tooltip points at. */
-export function readFollowUpLayout(): { results: DOMRect | null; composer: DOMRect | null } {
-  const resultsEl = document.querySelector('.results-section') as HTMLElement | null
-  const resultsRect = resultsEl?.getBoundingClientRect() ?? null
-  const composer =
-    readPortaledFollowUpComposerRect() ??
-    (() => {
-      const fallback = getComposerElement()?.getBoundingClientRect() ?? null
-      return fallback && fallback.width > 1 && fallback.height > 1 ? fallback : null
-    })()
-  return {
-    results: resultsRect && resultsRect.height > 1 ? resultsRect : null,
-    composer,
-  }
-}
-
-/** Scroll step 7 so the results stay on screen with the composer against the tooltip. */
+/** Scroll the below-results composer into place. Does nothing while it is still in the hero. */
 export function scrollFollowUpHighlightIntoView(options: FollowUpScrollOptions): void {
-  const { results, composer } = readFollowUpLayout()
+  const composer = readPortaledFollowUpComposerRect()
   if (!composer) return
-  const blockTop = Math.min(results?.top ?? composer.top, composer.top)
   const delta = followUpScrollDelta({
-    blockTop,
     composerTop: composer.top,
     composerBottom: composer.bottom,
     viewportHeight: window.innerHeight,
@@ -402,16 +377,15 @@ export function scrollFollowUpHighlightIntoView(options: FollowUpScrollOptions):
 }
 
 /**
- * Wait until the below-results composer exists, then seat the results with it.
- * The first comparison can finish the tutorial step while the composer is still
- * in the hero; it portals down when loading ends. Centering that composer alone
- * scrolls the results section off the top of the screen.
+ * Wait until the composer under the results exists, then scroll it the way step 7
+ * did before the transition work. The step can start while that composer is still
+ * in the hero; it portals down when loading ends.
  */
 export async function seatPortaledFollowUpComposer(
   isCancelled: () => boolean,
   placement: FollowUpScrollOptions
 ): Promise<boolean> {
-  const deadline = performance.now() + 700
+  const deadline = performance.now() + 12000
   while (performance.now() < deadline) {
     if (isCancelled()) return false
     if (readPortaledFollowUpComposerRect()) {
