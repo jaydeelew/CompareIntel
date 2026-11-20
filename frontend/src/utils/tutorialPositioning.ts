@@ -157,6 +157,44 @@ export function scrollTutorialElementToViewportY(
  * Instant scroll: the tooltip stays hidden until this finishes, and a smooth scroll
  * plus the fade timer is clamped on Mobile Safari.
  */
+/**
+ * How far to scroll so step 7 keeps the results and the follow-up composer together.
+ * The tooltip sits against the composer (below on mobile, above on desktop). When the
+ * pair fits, it is centered in the space left beside the tooltip. When it does not,
+ * the composer stays against the tooltip and the results fill the rest of the viewport.
+ * Positive means scroll content up.
+ */
+export function followUpScrollDelta(args: {
+  blockTop: number
+  composerTop: number
+  composerBottom: number
+  viewportHeight: number
+  tooltipHeight: number
+  arrowSize: number
+  preferred: 'above' | 'below'
+  padding?: number
+}): number {
+  const padding = args.padding ?? 12
+  const need = args.tooltipHeight + args.arrowSize + padding
+  const blockHeight = args.composerBottom - args.blockTop
+  const viewH = args.viewportHeight
+  let desiredBlockTop: number
+  if (args.preferred === 'below') {
+    if (blockHeight + need <= viewH - padding) {
+      const available = viewH - need
+      desiredBlockTop = Math.max(padding, (available - blockHeight) / 2)
+    } else {
+      desiredBlockTop = viewH - need - (args.composerBottom - args.blockTop)
+    }
+  } else if (blockHeight + need <= viewH - padding) {
+    const available = viewH - need
+    desiredBlockTop = need + Math.max(0, (available - blockHeight) / 2)
+  } else {
+    desiredBlockTop = need - (args.composerTop - args.blockTop)
+  }
+  return args.blockTop - desiredBlockTop
+}
+
 export function scrollTutorialRectToCenter(rect: { top: number; height: number }): void {
   const root = getTutorialScrollRoot()
   const viewH = window.innerHeight
@@ -190,6 +228,8 @@ export function placeTooltipBoxAgainstFrame(args: {
   viewportHeight: number
   padding?: number
   preferred: 'above' | 'below'
+  /** Keep the requested side. Follow-up uses this so the card does not flip onto the results. */
+  lockSide?: boolean
 }): TooltipBoxPlacement {
   const padding = args.padding ?? MARGIN
   const need = args.tooltipHeight + args.arrowSize
@@ -198,9 +238,11 @@ export function placeTooltipBoxAgainstFrame(args: {
   const aboveFits = roomAbove >= need
   const belowFits = roomBelow >= need
   let above = args.preferred === 'above'
-  if (above && !aboveFits && belowFits) above = false
-  else if (!above && !belowFits && aboveFits) above = true
-  else if (!aboveFits && !belowFits) above = roomAbove >= roomBelow
+  if (!args.lockSide) {
+    if (above && !aboveFits && belowFits) above = false
+    else if (!above && !belowFits && aboveFits) above = true
+    else if (!aboveFits && !belowFits) above = roomAbove >= roomBelow
+  }
 
   if (above) {
     return {
@@ -317,28 +359,71 @@ export function readPortaledFollowUpComposerRect(): DOMRect | null {
   return rect
 }
 
+export interface FollowUpScrollOptions {
+  tooltipHeight: number
+  arrowSize: number
+  preferred: 'above' | 'below'
+}
+
+/** Results section plus the composer the follow-up tooltip points at. */
+export function readFollowUpLayout(): { results: DOMRect | null; composer: DOMRect | null } {
+  const resultsEl = document.querySelector('.results-section') as HTMLElement | null
+  const resultsRect = resultsEl?.getBoundingClientRect() ?? null
+  const composer =
+    readPortaledFollowUpComposerRect() ??
+    (() => {
+      const fallback = getComposerElement()?.getBoundingClientRect() ?? null
+      return fallback && fallback.width > 1 && fallback.height > 1 ? fallback : null
+    })()
+  return {
+    results: resultsRect && resultsRect.height > 1 ? resultsRect : null,
+    composer,
+  }
+}
+
+/** Scroll step 7 so the results stay on screen with the composer against the tooltip. */
+export function scrollFollowUpHighlightIntoView(options: FollowUpScrollOptions): void {
+  const { results, composer } = readFollowUpLayout()
+  if (!composer) return
+  const blockTop = Math.min(results?.top ?? composer.top, composer.top)
+  const delta = followUpScrollDelta({
+    blockTop,
+    composerTop: composer.top,
+    composerBottom: composer.bottom,
+    viewportHeight: window.innerHeight,
+    tooltipHeight: options.tooltipHeight,
+    arrowSize: options.arrowSize,
+    preferred: options.preferred,
+  })
+  if (Math.abs(delta) < 1) return
+  const root = getTutorialScrollRoot()
+  const maxScroll = getTutorialScrollMax()
+  root.scrollToTop(Math.max(0, Math.min(root.getScrollTop() + delta, maxScroll)), 'auto')
+}
+
 /**
- * Wait until the below-results composer exists, then center it.
+ * Wait until the below-results composer exists, then seat the results with it.
  * The first comparison can finish the tutorial step while the composer is still
- * in the hero; it portals down when loading ends. Measuring before that portal
- * freezes the tooltip on the hero and leaves the highlight below the fold.
+ * in the hero; it portals down when loading ends. Centering that composer alone
+ * scrolls the results section off the top of the screen.
  */
-export async function seatPortaledFollowUpComposer(isCancelled: () => boolean): Promise<boolean> {
+export async function seatPortaledFollowUpComposer(
+  isCancelled: () => boolean,
+  placement: FollowUpScrollOptions
+): Promise<boolean> {
   const deadline = performance.now() + 700
   while (performance.now() < deadline) {
     if (isCancelled()) return false
-    const rect = readPortaledFollowUpComposerRect()
-    if (rect) {
-      scrollTutorialRectToCenter(rect)
-      await waitForRectStable(readPortaledFollowUpComposerRect, { timeoutMs: 280, quietMs: 80 })
+    if (readPortaledFollowUpComposerRect()) {
+      scrollFollowUpHighlightIntoView(placement)
+      await waitForRectStable(readPortaledFollowUpComposerRect, { timeoutMs: 200, quietMs: 48 })
       if (isCancelled()) return false
-      const next = readPortaledFollowUpComposerRect()
-      if (next) scrollTutorialRectToCenter(next)
-      await waitForRectStable(readPortaledFollowUpComposerRect, { timeoutMs: 200, quietMs: 60 })
+      scrollFollowUpHighlightIntoView(placement)
+      await waitForRectStable(readPortaledFollowUpComposerRect, { timeoutMs: 160, quietMs: 32 })
       return !isCancelled() && readPortaledFollowUpComposerRect() != null
     }
     await new Promise<void>(resolve => {
-      requestAnimationFrame(() => resolve())
+      window.setTimeout(resolve, 32)
     })
   }
   return false

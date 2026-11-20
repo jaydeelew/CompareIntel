@@ -123,10 +123,28 @@ async function readPlacement(page: Page): Promise<PlacementReport> {
     const centered = tall || centerOffset < 80 || !canScrollCloser
     const onScreen = closest.bottom > 8 && closest.top < vh - 8
     const arrowTouches = arrowGap <= 6
-    const ok = onScreen && centered && arrowTouches
+    const followUp = (title ?? '').includes('Continue the Conversation')
+    let resultsCovered = true
+    if (followUp) {
+      const results = document.querySelector('.results-section')?.getBoundingClientRect()
+      if (!results || results.height < 2) {
+        resultsCovered = false
+      } else {
+        const visible = Math.min(results.bottom, vh) - Math.max(results.top, 0)
+        const short = results.height < vh * 0.7
+        const covered = cutouts.some(cutout => {
+          const overlap =
+            Math.min(cutout.bottom, results.bottom) - Math.max(cutout.top, results.top)
+          return overlap > 40 && Math.abs(cutout.left - results.left) < 48
+        })
+        resultsCovered = visible >= 160 && covered && (!short || results.top >= -16)
+      }
+    }
+    const centeredOk = followUp ? resultsCovered : centered
+    const ok = onScreen && centeredOk && arrowTouches && resultsCovered
     const reason = ok
       ? 'ok'
-      : `onScreen=${onScreen} centered=${centered} arrowGap=${Math.round(arrowGap)} centerOffset=${Math.round(centerOffset)} scroll=${Math.round(scrollTop)}/${Math.round(maxScroll)}`
+      : `onScreen=${onScreen} centered=${centered} arrowGap=${Math.round(arrowGap)} centerOffset=${Math.round(centerOffset)} results=${resultsCovered} scroll=${Math.round(scrollTop)}/${Math.round(maxScroll)}`
     return { ok, reason, arrowGap, centerOffset, title }
   })
 }
