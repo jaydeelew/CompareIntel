@@ -23,6 +23,7 @@ import {
 import { isErrorMessage, showNotification } from '../utils/error'
 import logger from '../utils/logger'
 import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
+import { followUpModelIds, storedModelDisplayName } from '../utils/retiredConversationModels'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 
 function extractTextComposerAdvancedFromLoaded(data: {
@@ -42,6 +43,19 @@ function extractTextComposerAdvancedFromLoaded(data: {
     topP: data.composer_top_p ?? 1,
     maxTokens: data.composer_max_tokens ?? null,
   }
+}
+
+function extractWebSearchFromLoaded(data: {
+  composer_web_search_enabled?: boolean | null
+  webSearchEnabled?: boolean
+}): boolean | undefined {
+  if (data.composer_web_search_enabled != null) {
+    return Boolean(data.composer_web_search_enabled)
+  }
+  if (data.webSearchEnabled != null) {
+    return data.webSearchEnabled
+  }
+  return undefined
 }
 
 function extractImageComposerAdvancedFromLoaded(data: {
@@ -92,6 +106,8 @@ interface UseConversationManagerOptions {
   setAspectRatio: (v: string) => void
   setImageSize: (v: string) => void
   setAttachedFiles: React.Dispatch<React.SetStateAction<(AttachedFile | StoredAttachedFile)[]>>
+  setWebSearchEnabled: (enabled: boolean) => void
+  setConversationWebSearchEnabled: (enabled: boolean | null) => void
 }
 
 export function useConversationManager(options: UseConversationManagerOptions) {
@@ -127,6 +143,8 @@ export function useConversationManager(options: UseConversationManagerOptions) {
     setAspectRatio,
     setImageSize,
     setAttachedFiles,
+    setWebSearchEnabled,
+    setConversationWebSearchEnabled,
   } = options
 
   const loadConversationFromLocalStorage = useCallback(
@@ -191,6 +209,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       composer_max_tokens?: number | null
       composer_aspect_ratio?: string | null
       composer_image_size?: string | null
+      composer_web_search_enabled?: boolean | null
     } | null> => {
       if (!isAuthenticated) return null
 
@@ -208,6 +227,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           composer_max_tokens: data.composer_max_tokens,
           composer_aspect_ratio: data.composer_aspect_ratio,
           composer_image_size: data.composer_image_size,
+          composer_web_search_enabled: data.composer_web_search_enabled,
           messages: data.messages.map(msg => {
             const storedMessage: StoredMessage = {
               role: msg.role,
@@ -233,6 +253,10 @@ export function useConversationManager(options: UseConversationManagerOptions) {
             }
             if (msg.images !== undefined && msg.images !== null) {
               storedMessage.images = msg.images
+            }
+            const savedName = (msg as { model_name?: string | null }).model_name
+            if (typeof savedName === 'string' && savedName.trim()) {
+              storedMessage.model_name = savedName
             }
             return storedMessage
           }),
@@ -268,6 +292,8 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           composer_max_tokens?: number | null
           composer_aspect_ratio?: string | null
           composer_image_size?: string | null
+          composer_web_search_enabled?: boolean | null
+          webSearchEnabled?: boolean
           imageComposerAdvanced?: ImageComposerAdvancedSettings
         } | null = null
 
@@ -398,10 +424,19 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           })
         })
 
-        const loadedConversations: ModelConversation[] = modelsUsed.map((modelId: string) => ({
-          modelId: createModelId(modelId),
-          messages: messagesByModel[modelId] || [],
-        }))
+        const nameSource = conversationData as {
+          model_names?: Record<string, string> | null
+          modelNames?: Record<string, string> | null
+          messages?: StoredMessage[]
+        }
+        const loadedConversations: ModelConversation[] = modelsUsed.map((modelId: string) => {
+          const storedName = storedModelDisplayName(modelId, nameSource)
+          return {
+            modelId: createModelId(modelId),
+            messages: messagesByModel[modelId] || [],
+            ...(storedName ? { modelName: storedName } : {}),
+          }
+        })
 
         const loadedModelErrors: { [key: string]: boolean } = {}
         modelsUsed.forEach((modelId: string) => {
@@ -444,8 +479,9 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         setModelErrors(loadedModelErrors)
 
         setConversations(loadedConversations)
-        setSelectedModels([...modelsUsed])
-        setOriginalSelectedModels([...modelsUsed])
+        const followUpModels = followUpModelIds(modelsUsed, modelsByProvider)
+        setSelectedModels(followUpModels)
+        setOriginalSelectedModels(followUpModels)
         const textAdvanced = extractTextComposerAdvancedFromLoaded(conversationData)
         const imageAdvanced = extractImageComposerAdvancedFromLoaded(conversationData)
         const targetMode = inferModelModeForLoadedModels([...modelsUsed], modelsByProvider, {
@@ -466,6 +502,13 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         if (targetMode === 'image' && imageAdvanced) {
           setAspectRatio(imageAdvanced.aspectRatio)
           setImageSize(imageAdvanced.imageSize)
+        }
+        const restoredWebSearch = extractWebSearchFromLoaded(conversationData)
+        if (restoredWebSearch != null) {
+          setConversationWebSearchEnabled(restoredWebSearch)
+          setWebSearchEnabled(restoredWebSearch)
+        } else {
+          setConversationWebSearchEnabled(null)
         }
         setInput('')
         setAttachedFiles(storedRecordsToAttachedFiles(conversationData.file_contents))
@@ -505,6 +548,8 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       setMaxTokens,
       setAspectRatio,
       setImageSize,
+      setWebSearchEnabled,
+      setConversationWebSearchEnabled,
       setAlreadyBrokenOutModels,
       setClosedCards,
       setConversations,
