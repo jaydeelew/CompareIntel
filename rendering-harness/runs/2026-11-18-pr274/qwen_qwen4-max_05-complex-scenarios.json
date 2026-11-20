@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen4-max",
+  "modelName": "Qwen4 Max",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "# Rendering Stress Test: Math, Tables, Code, and Currency\n\nBelow each scenario is reproduced, verified, and then pushed past its breaking point.\n\n---\n\n## Scenario 1: Math in Lists with Formatting\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n3. **Bold math** and *italic math* nest correctly: **$\\alpha + \\beta = \\gamma$**, *$\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1$*\n4. Display math inside a list item requires indentation matching the list marker:\n\n   $$\n   c = \\sqrt{a^2 + b^2}\n   $$\n\n   Continuation paragraph, still inside item 4.\n\n**Edge cases added:**\n\n- Subscripts vs. italics: $x_1 + x_2 = x_3$ renders as math, while `file_name_here` in inline code stays literal. Outside code, an unescaped file_name_here may italicize — escape as file\\_name\\_here.\n- Asterisk collision: $a \\ast b$ (math) vs. *emphasis* (Markdown). Prefer `\\cdot` or `\\times`: $a \\cdot b$, $a \\times b$.\n- A lone `-` list item containing only `$x$` must not be confused with a delimiter run.\n\n---\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n| Integral | $\\int_0^\\infty e^{-x^2}\\,dx$ | $\\frac{\\sqrt{\\pi}}{2}$ |\n| Absolute value | $\\lvert x \\rvert$ | $\\sqrt{x^2}$ |\n| Set / conditional | $\\{x \\mid x > 0\\}$ | domain |\n| Norm | $\\lVert \\mathbf{v} \\rVert_2$ | $\\sqrt{\\sum_i v_i^2}$ |\n| Binomial | $\\binom{n}{k}$ | $\\frac{n!}{k!(n-k)!}$ |\n\n**The pipe trap.** A raw `|` inside `$...$` terminates the cell:\n\n```markdown\n| Bad  | $|x|$            |   ← breaks: cell splits at the pipes\n| Good | $\\lvert x \\rvert$ |   ← renders correctly\n| Also | $\\|x\\|$           |   ← escaped-pipe variant\n```\n\n**Other table constraints:**\n\n- Display math (`$$...$$`) cannot span rows; keep everything inline.\n- A multi-line `aligned` environment needs `\\\\`, which some parsers eat as a Markdown escape. Safer: split into two columns or use a fenced block.\n- Alignment markers `:---:` in the separator row are unrelated to math delimiters and must survive untouched.\n\n---\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius. For $r = 5$:\n\n$$\nA = \\pi \\cdot 5^2 = 25\\pi \\approx 78.53981633974483\n$$\n\n**Nothing inside a fence may be interpreted as math or Markdown:**\n\n```bash\n# These dollar signs are shell variables, NOT LaTeX\necho $HOME and ${PATH}\nprice=1200\necho \"Total: $price\"\nawk '{print $1 + $2}' file.txt\n```\n\n```latex\n% Even LaTeX source stays verbatim\n\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n$$ \\int_0^1 x\\,dx $$\n```\n\nInline code is equally inert: `$HOME`, `$.ajax()`, `re.match(r\"\\$[\\d,]+\")`, and `$x^2$` all render literally.\n\nFence-in-fence edge case — a triple-backtick block containing triple backticks must use a longer outer fence:\n\n````markdown\n```python\nprint(\"$not math$\")\n```\n````\n\n---\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x\\,dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n**Rule-vs-content ambiguity:**\n\n| Input | Interpretation |\n|-------|----------------|\n| `---` on its own line, blank line above | horizontal rule |\n| `---` directly under text | setext H2 heading |\n| `***` on its own line | horizontal rule (not bold-italic) |\n| `- - -` | horizontal rule |\n| `$---$` | math: three minus signs |\n| `___` | horizontal rule (not emphasis) |\n\nA thematic break must never be produced by `---` appearing inside `$...$` or inside a fence.\n\n---\n\n## Scenario 5: Multiple Dollar Signs — The Critical Case\n\n**Correctly escaped (literal currency):**\n\nPrices: Computer costs \\$1,200, monitor \\$300, keyboard \\$50, mouse \\$25. Total: \\$1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n**Why escaping matters.** The raw input\n\n```text\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n```\n\ncontains five `$` characters. A greedy inline-math",
+  "usage": {
+    "prompt_tokens": 468,
+    "completion_tokens": 2048,
+    "total_tokens": 2516,
+    "cost": 0.0094221,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0094221,
+      "upstream_inference_prompt_cost": 0.0006669,
+      "upstream_inference_completions_cost": 0.0087552
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 610,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0094221,
+  "actualCost": 0.0094221,
+  "timestamp": "2026-11-19T02:08:14.840Z",
+  "finishReason": "length",
+  "nativeFinishReason": "length",
+  "error": null
+}

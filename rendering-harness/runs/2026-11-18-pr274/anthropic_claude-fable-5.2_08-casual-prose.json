@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-fable-5.2",
+  "modelName": "Claude Fable 5.2",
+  "promptName": "08-casual-prose",
+  "promptText": "# Test Prompt: Casual Plain-Text Math\n\nA student texted you: why is tan(60°) equal to the square root of 3, and why is sin(60°) that same square root over 2? They also asked about a unit cube (the face diagonal and the space diagonal) and about an equilateral triangle with side length 2, whose height they think is the square root of 3.\n\nReply like a helpful tutor in an informal chat. Use ordinary sentences only. Do not use markdown, LaTeX dollar signs, backslash-paren delimiters, or any other special formatting — type the math the way you would in a plain text message. Please include the height, the two diagonals, tan(60°), and sin(60°) in those sentences.\n\nAlong the way, mention that a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping, and that the same square-root value is what Python prints for math.sqrt(3).",
+  "response": "Hey! Good news: your guess about the triangle is right, and it actually explains everything else.\n\nStart with the equilateral triangle with side length 2. Draw the height straight down from the top corner to the middle of the base. That splits it into two identical right triangles. Each one has a hypotenuse of 2 (the original side), a short leg of 1 (half the base), and the height as the other leg. By Pythagoras, 1 squared plus height squared equals 2 squared, so height squared is 4 minus 1, which is 3. So the height is sqrt(3), just like you thought.\n\nEach of those right triangles is a 30-60-90 triangle, because the angles in an equilateral triangle are all 60°, and the height cuts the top one in half to make 30°. Now look at the 60° angle at the bottom corner. The side opposite it is the height, sqrt(3), the side next to it is 1, and the hypotenuse is 2.\n\nTangent is opposite over adjacent, so tan(60°) = sqrt(3) / 1 = sqrt(3). Sine is opposite over hypotenuse, so sin(60°) = sqrt(3) / 2. That's all there is to it: both values come straight from the side lengths of that one triangle.\n\nNow the unit cube, where every edge is 1. The face diagonal goes across one square face, so it's the hypotenuse of a right triangle with legs 1 and 1. That gives sqrt(1 + 1) = sqrt(2), about 1.414. The space diagonal goes from one corner through the inside of the cube to the opposite corner. It's the hypotenuse of a right triangle whose legs are a face diagonal, sqrt(2), and a vertical edge, 1. So its length squared is 2 + 1 = 3, and the space diagonal is sqrt(3). It's the same number again.\n\nIf you want to see the decimal, Python prints 1.7320508075688772 for math.sqrt(3). So the triangle's height, the cube's space diagonal, and tan(60°) are all about 1.732, and sin(60°) is half of that, about 0.866.\n\nBy the way, if you want the 30-60-90 triangle on your wall, a poster of it costs $3 plus $1.50 shipping, so $4.50 total. Honestly though, if you can sketch that equilateral triangle cut in half, you'll never need to memorize these values again.",
+  "usage": {
+    "prompt_tokens": 301,
+    "completion_tokens": 1298,
+    "total_tokens": 1599,
+    "cost": 0.054328,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.054328,
+      "upstream_inference_prompt_cost": 0.002408,
+      "upstream_inference_completions_cost": 0.05192
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 523,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.054328,
+  "actualCost": 0.054328,
+  "timestamp": "2026-11-19T02:00:35.198Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}
