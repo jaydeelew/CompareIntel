@@ -698,6 +698,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let fadeStarted = false
     let fadeAt = 0
     let corrections = 0
+    let measureTimer: number | null = null
     let lastViewportHeight = window.visualViewport?.height ?? window.innerHeight
     let lastInnerHeight = window.innerHeight
 
@@ -746,18 +747,24 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (spotlightSettledRef.current && settledStepRef.current === currentStep) return
       // Lay the hidden card out, then measure its real height so the arrow tip
       // meets the frame. Top and left are not written after the fade starts.
+      // A double rAF never ran on Mobile Safari while Playwright was waiting,
+      // so the card stayed transparent until the sample window ended.
       calculatePositions()
       setIsVisible(true)
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (cancelled || stepRef.current !== currentStep) return
-          if (spotlightSettledRef.current && settledStepRef.current === currentStep) return
-          calculatePositions()
-          spotlightSettledRef.current = true
-          settledStepRef.current = currentStep
-          showSettledTooltip()
-        })
-      })
+      if (measureTimer != null) window.clearInterval(measureTimer)
+      let ticks = 0
+      measureTimer = window.setInterval(() => {
+        ticks += 1
+        if (ticks < 2) return
+        if (measureTimer != null) window.clearInterval(measureTimer)
+        measureTimer = null
+        if (cancelled || stepRef.current !== currentStep) return
+        if (spotlightSettledRef.current && settledStepRef.current === currentStep) return
+        calculatePositions()
+        spotlightSettledRef.current = true
+        settledStepRef.current = currentStep
+        showSettledTooltip()
+      }, 32)
     }
 
     const scrollAndReveal = async () => {
@@ -765,13 +772,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (!rect || rect.width < 2 || rect.height < 2) return
       scrollTutorialRectToCenter(rect)
       if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
-      await waitForTutorialLayoutSettle({ timeoutMs: 400, quietMs: 80 })
+      await waitForTutorialLayoutSettle({ timeoutMs: 240, quietMs: 48 })
       if (cancelled || stepRef.current !== currentStep) return
       if (currentStep === 'follow-up') {
         await waitForComposerFloat()
         if (cancelled || stepRef.current !== currentStep) return
       }
-      await waitForRectStable(liveSpotlight, { timeoutMs: 400, quietMs: 80 })
+      await waitForRectStable(liveSpotlight, { timeoutMs: 200, quietMs: 48 })
       if (cancelled || stepRef.current !== currentStep) return
       rect = liveSpotlight()
       if (!rect) return
@@ -779,8 +786,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const mid = rect.top + rect.height / 2
       if (rect.height <= viewH * 0.65 && Math.abs(mid - viewH / 2) > 36) {
         scrollTutorialRectToCenter(rect)
-        await waitForTutorialLayoutSettle({ timeoutMs: 280, quietMs: 60 })
-        await waitForRectStable(liveSpotlight, { timeoutMs: 280, quietMs: 80 })
+        await waitForTutorialLayoutSettle({ timeoutMs: 120, quietMs: 32 })
+        await waitForRectStable(liveSpotlight, { timeoutMs: 120, quietMs: 32 })
         if (cancelled || stepRef.current !== currentStep) return
         rect = liveSpotlight()
         if (!rect) return
@@ -797,7 +804,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
       if (Math.abs(nudge) > 2) {
         scrollByDelta(nudge)
-        await waitForTutorialLayoutSettle({ timeoutMs: 280, quietMs: 60 })
+        await waitForTutorialLayoutSettle({ timeoutMs: 80, quietMs: 32 })
         if (cancelled || stepRef.current !== currentStep) return
       }
       revealSettledStep()
@@ -858,6 +865,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     return () => {
       cancelled = true
+      if (measureTimer != null) window.clearInterval(measureTimer)
       window.removeEventListener('scroll', schedulePositionUpdate, true)
       window.removeEventListener('resize', schedulePositionUpdate)
       appScrollHost?.removeEventListener('scroll', schedulePositionUpdate)

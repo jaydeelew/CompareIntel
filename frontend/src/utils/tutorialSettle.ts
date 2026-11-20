@@ -178,7 +178,10 @@ export function waitForRectStable(
     const start = performance.now()
     let last = read()
     let stableSince = performance.now()
-    const tick = () => {
+    // WebKit throttles requestAnimationFrame while Playwright is waiting, so a
+    // rAF loop never reached the timeout and the tooltip stayed hidden for the
+    // whole sample window. An interval still runs during that wait.
+    const timer = window.setInterval(() => {
       const next = read()
       const moved =
         last == null ||
@@ -187,17 +190,13 @@ export function waitForRectStable(
         Math.abs(next.height - last.height) > 1
       last = next
       if (moved) stableSince = performance.now()
-      if (next && performance.now() - stableSince >= quietMs) {
+      const quiet = next != null && performance.now() - stableSince >= quietMs
+      const timedOut = performance.now() - start >= timeoutMs
+      if (quiet || timedOut) {
+        window.clearInterval(timer)
         resolve()
-        return
       }
-      if (performance.now() - start >= timeoutMs) {
-        resolve()
-        return
-      }
-      requestAnimationFrame(tick)
-    }
-    requestAnimationFrame(tick)
+    }, 32)
   })
 }
 
