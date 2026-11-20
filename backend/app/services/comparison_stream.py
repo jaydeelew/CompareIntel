@@ -81,6 +81,19 @@ async def generate_stream(ctx: StreamContext) -> Any:
     from ..model_runner import count_conversation_tokens
 
     req = ctx.req
+    is_follow_up_request = bool(req.conversation_history and len(req.conversation_history) > 0)
+    if is_follow_up_request and ctx.user_id and req.conversation_id:
+        locked_conv = (
+            ctx.db.query(Conversation)
+            .filter(
+                Conversation.id == req.conversation_id,
+                Conversation.user_id == ctx.user_id,
+            )
+            .first()
+        )
+        if locked_conv is not None and locked_conv.composer_web_search_enabled is not None:
+            req.enable_web_search = bool(locked_conv.composer_web_search_enabled)
+
     credits_remaining = ctx.credits_remaining_ref
     model_stats = ctx.model_stats
     model_inactivity_timeout = settings.model_inactivity_timeout
@@ -892,6 +905,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             models_used=json.dumps(req.models),
                             file_contents=file_contents_json,
                             client_source=(req.client_source or "web"),
+                            composer_web_search_enabled=req.enable_web_search,
                         )
                         conv_db.add(conversation)
                         conv_db.flush()

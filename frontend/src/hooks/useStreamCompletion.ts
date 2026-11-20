@@ -36,6 +36,8 @@ export interface UseStreamCompletionConfig {
   maxTokens: number | null
   aspectRatio: string
   imageSize: string
+  conversationWebSearchEnabled: boolean | null
+  webSearchEnabled: boolean
   suppressResultsAutoScroll?: boolean
 }
 
@@ -59,7 +61,8 @@ export interface UseStreamCompletionCallbacks {
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
     textComposerAdvanced?: import('../types').TextComposerAdvancedSettings,
-    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings
+    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings,
+    composerWebSearchEnabled?: boolean
   ) => Promise<string | null>
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
@@ -86,6 +89,8 @@ export function useStreamCompletion(
     maxTokens,
     aspectRatio,
     imageSize,
+    conversationWebSearchEnabled,
+    webSearchEnabled,
     suppressResultsAutoScroll = false,
   } = config
 
@@ -126,6 +131,7 @@ export function useStreamCompletion(
       const textComposerSnapshot =
         modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
       const imageComposerSnapshot = modelMode === 'image' ? { aspectRatio, imageSize } : undefined
+      const composerWebSearchSnapshot = conversationWebSearchEnabled ?? webSearchEnabled
 
       if (streamError) {
         const errorModelErrors: { [key: string]: boolean } = { ...localModelErrors }
@@ -339,7 +345,8 @@ export function useStreamCompletion(
                       undefined,
                       undefined,
                       textComposerSnapshot,
-                      imageComposerSnapshot
+                      imageComposerSnapshot,
+                      composerWebSearchSnapshot
                     )
                     if (savedId) setCurrentVisibleComparisonId(savedId)
                   })()
@@ -393,7 +400,8 @@ export function useStreamCompletion(
                       undefined,
                       undefined,
                       textComposerSnapshot,
-                      imageComposerSnapshot
+                      imageComposerSnapshot,
+                      composerWebSearchSnapshot
                     )
                     if (savedId) setCurrentVisibleComparisonId(savedId)
                   })()
@@ -545,6 +553,8 @@ export function useStreamCompletion(
       maxTokens,
       aspectRatio,
       imageSize,
+      conversationWebSearchEnabled,
+      webSearchEnabled,
       setError,
       setModelErrors,
       setActiveResultTabs,
