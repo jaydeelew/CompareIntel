@@ -126,19 +126,26 @@ async function readPlacement(page: Page): Promise<PlacementReport> {
     const followUp = (title ?? '').includes('Continue the Conversation')
     let resultsCovered = true
     if (followUp) {
-      const results = document.querySelector('.results-section')?.getBoundingClientRect()
-      if (!results || results.height < 2) {
-        resultsCovered = false
-      } else {
-        const visible = Math.min(results.bottom, vh) - Math.max(results.top, 0)
-        const short = results.height < vh * 0.7
-        const covered = cutouts.some(cutout => {
+      const composer = document
+        .querySelector('[data-after-results-composer-slot] .composer:not(.composer-placeholder)')
+        ?.getBoundingClientRect()
+      const composerInView = Boolean(
+        composer && composer.height > 20 && composer.top < vh - 24 && composer.bottom > 24
+      )
+      const cardInView = Array.from(document.querySelectorAll('.result-card')).some(card => {
+        const rect = card.getBoundingClientRect()
+        const visible = Math.min(rect.bottom, vh) - Math.max(rect.top, 0)
+        return rect.width > 20 && visible >= 40
+      })
+      const composerFramed = Boolean(
+        composer &&
+        cutouts.some(cutout => {
           const overlap =
-            Math.min(cutout.bottom, results.bottom) - Math.max(cutout.top, results.top)
-          return overlap > 40 && Math.abs(cutout.left - results.left) < 48
+            Math.min(cutout.bottom, composer.bottom) - Math.max(cutout.top, composer.top)
+          return overlap > 20
         })
-        resultsCovered = visible >= 160 && covered && (!short || results.top >= -16)
-      }
+      )
+      resultsCovered = composerInView && cardInView && composerFramed
     }
     const centeredOk = followUp ? resultsCovered : centered
     const ok = onScreen && centeredOk && arrowTouches && resultsCovered
@@ -171,9 +178,9 @@ test('tutorial highlight stays centered and the arrow touches it', async ({ page
     project !== 'chromium' && project !== 'Mobile Safari - iPhone 12' && !mobileChromium,
     'desktop, Mobile Safari, and opted-in mobile Chromium'
   )
-  if (isMobileE2eProject(project)) {
-    await page.setViewportSize({ width: 390, height: 844 })
-  } else {
+  if (project === 'Mobile Chrome - Pixel 5') {
+    await page.setViewportSize({ width: 393, height: 851 })
+  } else if (!isMobileE2eProject(project)) {
     await page.setViewportSize({ width: 1440, height: 900 })
   }
 

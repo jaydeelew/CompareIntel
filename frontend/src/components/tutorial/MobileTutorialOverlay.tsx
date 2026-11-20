@@ -38,7 +38,6 @@ import {
 import {
   getComposerElement,
   getHeroComposerForDropdownSteps,
-  getHeroMirrorComposerIfPresent,
   getHistoryInlineListForTutorial,
   getBelowResultsHistoryToggleButton,
   getSavedSelectionsButtonForTutorial,
@@ -316,7 +315,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           (document.querySelector(config.targetSelector) as HTMLElement) ||
           (document.querySelector('.results-section') as HTMLElement)
       } else if (step === 'follow-up') {
-        element = getComposerElement()
+        // The hero composer sits above the model list. Step 7 targets the composer
+        // that portals under the results, so the cards and that composer share the screen.
+        element = document.querySelector(
+          '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+        ) as HTMLElement | null
       } else if (step === 'history-dropdown') {
         // The hero mirror button is inert after a comparison. The clickable one
         // is the composer under the results.
@@ -348,13 +351,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     if (!findElement()) {
       let attempts = 0
-      const maxAttempts = 15
+      const maxAttempts = step === 'follow-up' ? 120 : 15
+      const attemptDelay = step === 'follow-up' ? 100 : 300
       const tryFind = () => {
         attempts++
         if (findElement()) return
         if (attempts < maxAttempts) {
-          setTimeout(tryFind, 300)
-        } else {
+          setTimeout(tryFind, attemptDelay)
+        } else if (stepRef.current !== 'follow-up') {
           suppressReviewTooltipRevealRef.current = false
           setIsVisible(true) // Show tooltip anyway
         }
@@ -552,7 +556,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // card flip upward and cover the responses the step is asking the user to read.
     if (step === 'follow-up' && !spotlightSettledRef.current) {
       scrollFollowUpHighlightIntoView({
-        tooltipHeight: Math.max(tooltipHeight, 300),
+        tooltipHeight: tooltipHeight > 1 ? tooltipHeight : tooltipEstimatedHeight,
         arrowSize,
         preferred: 'below',
       })
@@ -782,7 +786,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const scrollAndReveal = async () => {
       if (currentStep === 'follow-up') {
         const placement = {
-          tooltipHeight: Math.max(tooltipEstimatedHeight, 300),
+          tooltipHeight: tooltipEstimatedHeight,
           arrowSize: MOBILE_TUTORIAL_ARROW_PX,
           preferred: 'below' as const,
         }
@@ -797,8 +801,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           ...placement,
           tooltipHeight: Math.max(
             overlayRef.current?.getBoundingClientRect().height || 0,
-            tooltipEstimatedHeight,
-            300
+            tooltipEstimatedHeight
           ),
         })
         await waitForRectStable(liveSpotlight, { timeoutMs: 200, quietMs: 48 })
@@ -993,12 +996,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const composer = getComposerElement()
       if (composer) {
         composer.classList.add('mobile-tutorial-highlight')
-      }
-      if (step === 'follow-up') {
-        const mirror = getHeroMirrorComposerIfPresent()
-        if (mirror && mirror !== composer) {
-          mirror.classList.add('mobile-tutorial-highlight')
-        }
       }
     }
 

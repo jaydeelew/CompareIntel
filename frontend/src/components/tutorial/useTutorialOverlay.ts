@@ -653,10 +653,13 @@ export function useTutorialOverlay(
           setHighlightedElements([])
         }
       } else if (step === 'follow-up') {
-        // Backdrop cutout: results + composer; tooltip target remains the follow-up composer
+        // Backdrop cutout: results + the composer under them. The hero composer is above
+        // the model list; framing it pushes the result cards off the bottom of the screen.
         const resultsSection = document.querySelector('.results-section') as HTMLElement
         setHighlightedElements(resultsSection ? [resultsSection] : [])
-        element = getComposerElement()
+        element = document.querySelector(
+          '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+        ) as HTMLElement | null
       } else {
         // Use default selector for other steps
         element = document.querySelector(config.targetSelector) as HTMLElement
@@ -696,8 +699,8 @@ export function useTutorialOverlay(
       // If not found, wait a bit and try again (for dynamically rendered elements)
       // Try multiple times with increasing delays
       let attempts = 0
-      const maxAttempts = 20
-      const attemptDelay = 300
+      const maxAttempts = step === 'follow-up' ? 40 : 20
+      const attemptDelay = step === 'follow-up' ? 100 : 300
 
       const tryFind = () => {
         attempts++
@@ -715,8 +718,8 @@ export function useTutorialOverlay(
           const fallbackElement = document.querySelector(config.targetSelector) as HTMLElement
           if (fallbackElement) {
             setTargetElement(fallbackElement)
-            setIsVisible(true)
-          } else {
+            if (stepRef.current !== 'follow-up') setIsVisible(true)
+          } else if (stepRef.current !== 'follow-up') {
             if (isProviderPickerTutorialStep(step)) {
               const layout = getTutorialProviderStepLayout(
                 step as TutorialProviderLayoutStep,
@@ -907,10 +910,8 @@ export function useTutorialOverlay(
               }
             )
             if (cancelled || stepRef.current !== step) return
-            if (seated) {
-              revealSettledStep()
-              return
-            }
+            if (seated) revealSettledStep()
+            return
           }
           scrollOnce()
           if (step === 'enter-prompt' || step === 'enter-prompt-2') {
@@ -1015,13 +1016,21 @@ export function useTutorialOverlay(
 
     const readLayout = () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
 
-    const followUpResultsOffScreen = () => {
+    const followUpPairOffScreen = () => {
       if (step !== 'follow-up') return false
-      const results = document.querySelector('.results-section')?.getBoundingClientRect()
-      if (!results || results.height < 2) return false
-      const visible = Math.min(results.bottom, window.innerHeight) - Math.max(results.top, 0)
-      const short = results.height < window.innerHeight * 0.7
-      return visible < 120 || (short && results.top < -16)
+      const composer = document
+        .querySelector('[data-after-results-composer-slot] .composer:not(.composer-placeholder)')
+        ?.getBoundingClientRect()
+      const vh = window.innerHeight
+      const composerInView = Boolean(
+        composer && composer.height > 20 && composer.top < vh - 24 && composer.bottom > 24
+      )
+      const cardInView = Array.from(document.querySelectorAll('.result-card')).some(card => {
+        const rect = card.getBoundingClientRect()
+        const visible = Math.min(rect.bottom, vh) - Math.max(rect.top, 0)
+        return rect.width > 20 && visible >= 40
+      })
+      return !composerInView || !cardInView
     }
 
     const arrowMissesSpotlight = (rect: DOMRect) => {
@@ -1042,8 +1051,8 @@ export function useTutorialOverlay(
       const tip = document.querySelector('.tutorial-tooltip') as HTMLElement | null
       if (!tip || !(Number(getComputedStyle(tip).opacity) > 0.9)) return
       const rect = readLayout()
-      const resultsOffScreen = followUpResultsOffScreen()
-      if (!rect || (!arrowMissesSpotlight(rect) && !resultsOffScreen)) return
+      const pairOffScreen = followUpPairOffScreen()
+      if (!rect || (!arrowMissesSpotlight(rect) && !pairOffScreen)) return
       running = true
       tries += 1
       setSpotlightSettling(true)
