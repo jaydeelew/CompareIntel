@@ -21,10 +21,18 @@ const RENAMED_IDS = ['deepseek/deepseek-v4.1-flash-1017', 'tencent/hy4']
 
 test('unique coverage uses the complete rerun, not the empty original', async () => {
   const cells = await loadUniqueSavedCells()
-  // 528 saved text-model cells for current registry models (including 24 for
+  // 538 saved text-model cells for current registry models (including 24 for
   // models removed on 2026-11-16), plus 12 pre-rename replies that #231 left in place.
-  expect(cells).toHaveLength(540)
-  expect(cells.filter(cell => cell.emptyVisible || cell.error)).toEqual([])
+  // runs/2026-11-18-pr274 re-collected the five #259 models on all eight prompts.
+  expect(cells).toHaveLength(550)
+  // Two 2026-11-18 replies are reasoning-only (finish_reason=length, no visible text). A third
+  // (hy4-flash 06) is empty too, but the complete 2026-11-17 reply for that cell stays in the unique set.
+  expect(
+    cells.filter(cell => cell.emptyVisible || cell.error).map(cell => `${cell.modelId}:${cell.promptName}`).sort()
+  ).toEqual([
+    'google/gemini-4-carbon:08-casual-prose',
+    'tencent/hy4-flash:08-casual-prose',
+  ])
   const retired = cells.filter(cell => RETIRED_IDS.includes(cell.modelId))
   expect(retired).toHaveLength(12)
   expect(retired.every(cell => cell.response.trim().length > 0)).toBe(true)

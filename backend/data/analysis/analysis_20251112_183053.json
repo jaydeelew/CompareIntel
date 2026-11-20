@@ -1032,54 +1032,6 @@
       },
       "needs_manual_review": true
     },
-    "mistralai/mistral-medium-3.1": {
-      "model_id": "mistralai/mistral-medium-3.1",
-      "successful_responses": 13,
-      "delimiters": {
-        "display": [
-          "bracket",
-          "double-dollar"
-        ],
-        "inline": [
-          "paren",
-          "single-dollar"
-        ]
-      },
-      "markdown_elements": {
-        "bold": true,
-        "headers": true,
-        "lists": true,
-        "horizontal_rules": true,
-        "tables": true,
-        "italic": true,
-        "code_blocks": true,
-        "inline_code": true,
-        "links": true,
-        "blockquotes": true
-      },
-      "issues": [
-        "escaped_dollar_signs"
-      ],
-      "code_block_analysis": {
-        "total_blocks": 16,
-        "languages_found": [
-          "bash",
-          "cpp",
-          "go",
-          "java",
-          "javascript",
-          "latex",
-          "markdown",
-          "python",
-          "r",
-          "ruby"
-        ],
-        "contains_math_like_content": true,
-        "contains_dollar_signs": true,
-        "contains_latex_commands": true
-      },
-      "needs_manual_review": true
-    },
     "mistralai/mistral-small-3.2-24b-instruct": {
       "model_id": "mistralai/mistral-small-3.2-24b-instruct",
       "successful_responses": 13,

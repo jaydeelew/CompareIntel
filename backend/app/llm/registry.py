@@ -515,9 +515,6 @@ def omit_unregistered_model_ids(model_ids: list[str]) -> list[str]:
     A saved comparison can name a model that has since left the lineup for any
     reason. Those ids are removed before tier checks and before OpenRouter.
     Returns the same list object when every id is still registered.
-
-    A hard-coded retired-id helper (``omit_retired_model_ids``) can sit in
-    front of this one. Chain them and keep a single empty-list 400.
     """
     if not model_ids:
         return model_ids

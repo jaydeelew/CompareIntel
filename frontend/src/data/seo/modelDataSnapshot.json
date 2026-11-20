@@ -1247,39 +1247,6 @@
       "in_openrouter": true
     },
 {
-      "id": "mistralai/mistral-medium-3.1",
-      "slug": "mistral-medium-3-1",
-      "name": "Mistral Medium 3.1",
-      "provider": "Mistral",
-      "category": "Language",
-      "description_registry": "An enterprise-grade model delivering frontier-level capabilities at significantly reduced operational cost.",
-      "description_openrouter": "Mistral Medium 3.1 is an updated version of Mistral Medium 3, which is a high-performance enterprise-grade language model designed to deliver frontier-level capabilities at significantly reduced operational cost. It balances...",
-      "knowledge_cutoff": "October 2024",
-      "supports_web_search": true,
-      "supports_vision": true,
-      "supports_image_generation": null,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 131072,
-      "max_completion_tokens": 104857,
-      "input_modalities": [
-        "text",
-        "image",
-        "file"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 0.39999999999999997,
-      "price_output_usd_per_mtok": 2.0,
-      "price_per_image_usd": null,
-      "openrouter_created": "2025-08-13",
-      "openrouter_url": "https://openrouter.ai/mistralai/mistral-medium-3.1",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-{
       "id": "mistralai/mistral-small-3.2-24b-instruct",
       "slug": "mistral-small-3-2-24b-instruct",
       "name": "Mistral Small 3.2 24B",

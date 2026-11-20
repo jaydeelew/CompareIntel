@@ -1,0 +1,36 @@
+{
+  "modelId": "qwen/qwen4-max",
+  "modelName": "Qwen4 Max",
+  "promptName": "08-casual-prose",
+  "promptText": "# Test Prompt: Casual Plain-Text Math\n\nA student texted you: why is tan(60°) equal to the square root of 3, and why is sin(60°) that same square root over 2? They also asked about a unit cube (the face diagonal and the space diagonal) and about an equilateral triangle with side length 2, whose height they think is the square root of 3.\n\nReply like a helpful tutor in an informal chat. Use ordinary sentences only. Do not use markdown, LaTeX dollar signs, backslash-paren delimiters, or any other special formatting — type the math the way you would in a plain text message. Please include the height, the two diagonals, tan(60°), and sin(60°) in those sentences.\n\nAlong the way, mention that a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping, and that the same square-root value is what Python prints for math.sqrt(3).",
+  "response": "Hey, good questions, and they all tie together nicely, so let me start with your triangle.\n\nYou've got an equilateral triangle with every side equal to 2. Drop a line straight down from the top corner to the middle of the base. That cuts the base into two pieces of length 1, and it makes a right angle. Now look at just one of the halves: it's a right triangle with hypotenuse 2, short leg 1, and the height as the unknown leg. Pythagoras says height squared plus 1 squared equals 2 squared, so height squared is 4 minus 1, which is 3, and the height is sqrt(3). So yeah, your guess was right, the height is sqrt(3), roughly 1.732.\n\nHere's the fun part: that half triangle has angles of 30, 60, and 90 degrees, since the top corner of the equilateral triangle was 60 and you sliced it in half to get 30. So the 60 degree angle sits at the base corner, and relative to it the opposite side is the height sqrt(3), the adjacent side is 1, and the hypotenuse is 2. That means sin(60°) is opposite over hypotenuse, which is sqrt(3)/2, about 0.866. And tan(60°) is opposite over adjacent, which is sqrt(3) over 1, so just sqrt(3), about 1.732. Same number as the height, and that's not a coincidence, it's because the adjacent side happens to be exactly 1. If you'd used a triangle with side 1 instead, the height would be sqrt(3)/2 and tan(60°) would still come out to sqrt(3), because tangent is a ratio and scaling everything doesn't change it.\n\nNow the unit cube, where every edge is 1. For the face diagonal, stay on one square face: two edges of length 1 make a right angle, so the diagonal is sqrt(1 + 1) = sqrt(2), about 1.414. For the space diagonal, going from one corner through the middle of the cube to the opposite corner, you can use that face diagonal as one leg and a vertical edge of length 1 as the other leg, and they're perpendicular. So the space diagonal is sqrt(2 + 1) = sqrt(3), about 1.732. Cute, right? The cube's space diagonal is the exact same value as your triangle's height, both sqrt(3), just arriving there from a totally different setup.\n\nIf you want to sanity check the number, in Python you'd import math and then math.sqrt(3) prints 1.7320508075688772. That's the same sqrt(3) showing up in the height, in tan(60°), and in the space diagonal, and sqrt(3)/2 is just half of it for sin(60°).\n\nOh, and about that 30-60-90 triangle poster you mentioned, it's $3 for the poster plus $1.50 shipping, so $4.50 all in. Honestly you could just sketch the half of your equilateral triangle on a sticky note and label the sides 1, sqrt(3), and 2, and you'd have the same thing for free. But if you want it on your wall, go for it.",
+  "usage": {
+    "prompt_tokens": 239,
+    "completion_tokens": 1207,
+    "total_tokens": 1446,
+    "cost": 0.0055005,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0055005,
+      "upstream_inference_prompt_cost": 0.000340575,
+      "upstream_inference_completions_cost": 0.005159925
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 449,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0055005,
+  "actualCost": 0.0055005,
+  "timestamp": "2026-11-19T02:09:25.162Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}
