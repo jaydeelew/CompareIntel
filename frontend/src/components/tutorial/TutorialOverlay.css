@@ -23,7 +23,15 @@ body:has(.tutorial-backdrop) .hero-section:has(.saved-selections-dropdown),
   padding-bottom: 8rem !important;
 }
 
-/* Force hero expansion during dropdown steps (desktop tutorial) */
+/* Force hero expansion during steps that show the composer.
+   The lock above uses :not(:has(dropdown)) plus contain:size, which collapses the
+   hero to an empty box whenever .tutorial-backdrop is mounted. That selector is
+   more specific than .tutorial-dropdown-hero-active, so follow-up measured the
+   composer while the hero was collapsed and then painted it 600px lower. */
+body:has(.tutorial-backdrop)
+  .hero-section.tutorial-dropdown-hero-active:not(:has(.history-inline-list)):not(
+    :has(.saved-selections-dropdown)
+  ),
 body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
 .hero-section.tutorial-dropdown-hero-active {
   height: auto !important;

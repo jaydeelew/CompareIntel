@@ -23,19 +23,24 @@ import {
   computeDropdownCutout,
   computeTargetCutout,
   computeTooltipPosition,
-  getScrollTargetForStep,
   getTutorialProviderDropdowns,
   getTutorialProviderStepLayout,
-  scrollTutorialProvidersIntoView,
+  getTutorialScrollMax,
   getTutorialScrollRoot,
+  DESKTOP_TUTORIAL_ARROW_PX,
+  readTutorialSpotlightRect,
+  scrollDeltaToFitTooltip,
+  scrollTutorialRectToCenter,
+  seatPortaledFollowUpComposer,
+  TUTORIAL_FRAME_OUTSET_PX,
   type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
 import {
   focusTutorialPromptTextarea,
-  prefersReducedTutorialMotion,
   setTutorialSpotlightSettling,
   TUTORIAL_SPOTLIGHT_SETTLED_EVENT,
   tutorialBoxesNearlyEqual,
+  waitForRectStable,
   waitForTutorialLayoutSettle,
 } from '../../utils/tutorialSettle'
 
@@ -764,15 +769,8 @@ export function useTutorialOverlay(
       return targetElement
     }
 
-    const layoutRectForStep = (): DOMRect | null => {
-      if (isProviderPickerTutorialStep(step)) {
-        return getTutorialProviderStepLayout(
-          step as TutorialProviderLayoutStep,
-          tutorialProviderNamesRef.current
-        ).layoutRect
-      }
-      return null
-    }
+    const layoutRectForStep = (): DOMRect | null =>
+      readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
 
     const readAnchor = (): { top: number; left: number } | null => {
       const el = layoutTarget()
@@ -826,21 +824,14 @@ export function useTutorialOverlay(
     }
 
     const scrollRoot = getTutorialScrollRoot()
-    const behavior: ScrollBehavior = prefersReducedTutorialMotion() ? 'auto' : 'smooth'
 
     const scrollOnce = () => {
       const el = layoutTarget()
-      if (!el) return
-      if (isProviderPickerTutorialStep(step)) {
-        scrollTutorialProvidersIntoView(
-          tutorialProviderNamesRef.current,
-          step as TutorialProviderLayoutStep
-        )
-        return
-      }
-      const scrollTarget = getScrollTargetForStep(step, el, layoutRectForStep())
-      if (Math.abs(scrollTarget - scrollRoot.getScrollTop()) < 2) return
-      scrollRoot.scrollToTop(scrollTarget, behavior)
+      const rect =
+        readTutorialSpotlightRect(step, tutorialProviderNamesRef.current) ??
+        el?.getBoundingClientRect()
+      if (!rect) return
+      scrollTutorialRectToCenter(rect)
     }
 
     const revealSettledStep = () => {
@@ -905,11 +896,56 @@ export function useTutorialOverlay(
         scrollDelayTimer = null
         void (async () => {
           if (cancelled || stepRef.current !== step) return
+          if (step === 'follow-up') {
+            const seated = await seatPortaledFollowUpComposer(
+              () => cancelled || stepRef.current !== step
+            )
+            if (cancelled || stepRef.current !== step) return
+            if (seated) {
+              revealSettledStep()
+              return
+            }
+          }
           scrollOnce()
           if (step === 'enter-prompt' || step === 'enter-prompt-2') {
             focusTutorialPromptTextarea()
           }
           await waitForTutorialLayoutSettle()
+          if (cancelled || stepRef.current !== step) return
+          await waitForRectStable(
+            () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current),
+            { timeoutMs: 400, quietMs: 80 }
+          )
+          if (cancelled || stepRef.current !== step) return
+          scrollOnce()
+          await waitForRectStable(
+            () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current),
+            { timeoutMs: 280, quietMs: 80 }
+          )
+          if (cancelled || stepRef.current !== step) return
+          const fitted = readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
+          if (fitted) {
+            const delta = scrollDeltaToFitTooltip({
+              frameTop: fitted.top - TUTORIAL_FRAME_OUTSET_PX,
+              frameBottom: fitted.bottom + TUTORIAL_FRAME_OUTSET_PX,
+              tooltipHeight: window.innerHeight < 700 ? 160 : 210,
+              arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+              viewportHeight: window.innerHeight,
+              preferred: config.position === 'bottom' ? 'below' : 'above',
+            })
+            if (Math.abs(delta) > 2) {
+              const root = getTutorialScrollRoot()
+              const maxScroll = getTutorialScrollMax()
+              root.scrollToTop(
+                Math.max(0, Math.min(root.getScrollTop() + delta, maxScroll)),
+                'auto'
+              )
+              await waitForRectStable(
+                () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current),
+                { timeoutMs: 240, quietMs: 60 }
+              )
+            }
+          }
           revealSettledStep()
         })()
       }, scrollDelay)
@@ -961,6 +997,92 @@ export function useTutorialOverlay(
     }
   }, [targetElement, step])
 
+  // Follow-up: the results block keeps growing after the first measurement, which
+  // pushes the portaled composer below the fold while the tooltip stays put.
+  // This effect is intentionally not tied to targetElement — that node is replaced
+  // when the composer portals, and restarting the scroll effect cancelled the correction.
+  useEffect(() => {
+    if (step !== 'follow-up' && step !== 'view-follow-up-results') return
+    let cancelled = false
+    let running = false
+    let tries = 0
+
+    const readLayout = () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
+
+    const arrowMissesSpotlight = (rect: DOMRect) => {
+      const offScreen = rect.bottom < 24 || rect.top > window.innerHeight - 24
+      const arrow = document.querySelector('.tutorial-arrow') as HTMLElement | null
+      if (!arrow) return true
+      const box = arrow.getBoundingClientRect()
+      const pointsDown = arrow.classList.contains('tutorial-arrow-top')
+      const tipY = pointsDown ? box.bottom : box.top
+      const edge = pointsDown
+        ? rect.top - TUTORIAL_FRAME_OUTSET_PX
+        : rect.bottom + TUTORIAL_FRAME_OUTSET_PX
+      return offScreen || Math.abs(tipY - edge) > 8
+    }
+
+    const id = window.setInterval(() => {
+      if (cancelled || running || tries >= 3 || stepRef.current !== step) return
+      const tip = document.querySelector('.tutorial-tooltip') as HTMLElement | null
+      if (!tip || !(Number(getComputedStyle(tip).opacity) > 0.9)) return
+      const rect = readLayout()
+      if (!rect || !arrowMissesSpotlight(rect)) return
+      running = true
+      tries += 1
+      setSpotlightSettling(true)
+      setTutorialSpotlightSettling(true)
+      setPositionStabilized(false)
+      void (async () => {
+        try {
+          await waitForRectStable(readLayout, { timeoutMs: 800, quietMs: 160 })
+          if (cancelled || stepRef.current !== step) return
+          const settled = readLayout()
+          if (!settled) return
+          scrollTutorialRectToCenter(settled)
+          await waitForRectStable(readLayout, { timeoutMs: 240, quietMs: 60 })
+          if (cancelled || stepRef.current !== step) return
+          const centered = readLayout()
+          if (!centered) return
+          const fit = scrollDeltaToFitTooltip({
+            frameTop: centered.top - TUTORIAL_FRAME_OUTSET_PX,
+            frameBottom: centered.bottom + TUTORIAL_FRAME_OUTSET_PX,
+            tooltipHeight: window.innerHeight < 700 ? 160 : 210,
+            arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+            viewportHeight: window.innerHeight,
+            preferred: TUTORIAL_STEPS_CONFIG[step].position === 'bottom' ? 'below' : 'above',
+          })
+          if (Math.abs(fit) > 2) {
+            const root = getTutorialScrollRoot()
+            root.scrollToTop(
+              Math.max(0, Math.min(root.getScrollTop() + fit, getTutorialScrollMax())),
+              'auto'
+            )
+          }
+          await waitForRectStable(readLayout, { timeoutMs: 400, quietMs: 80 })
+          if (cancelled || stepRef.current !== step) return
+          const finalRect = readLayout()
+          if (!finalRect) return
+          const placed = computeTooltipPosition(finalRect, step, TUTORIAL_STEPS_CONFIG[step])
+          setEffectivePosition(placed.effectivePosition)
+          setOverlayPosition({ top: placed.top, left: placed.left })
+        } finally {
+          if (!cancelled && stepRef.current === step) {
+            setPositionStabilized(true)
+            setSpotlightSettling(false)
+            setTutorialSpotlightSettling(false)
+          }
+          running = false
+        }
+      })()
+    }, 200)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [step])
+
   // Add highlight class to target element(s)
   useEffect(() => {
     if (!step) return
@@ -986,8 +1108,8 @@ export function useTutorialOverlay(
         elementsToHighlight = [composerElement]
       }
     } else if (step === 'history-dropdown') {
-      // Highlight the composer (same blue & green border as step 3)
-      const composerElement = getHeroComposerForDropdownSteps()
+      // Highlight the composer the user can see, not the inert hero mirror.
+      const composerElement = getComposerElement()
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
@@ -999,8 +1121,7 @@ export function useTutorialOverlay(
         resultsSection.style.position = ''
       }
     } else if (step === 'save-selection') {
-      // Highlight the composer (same blue & green border as step 3)
-      const composerElement = getHeroComposerForDropdownSteps()
+      const composerElement = getComposerElement()
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
@@ -1057,8 +1178,10 @@ export function useTutorialOverlay(
     let savedSelectionsDropdown: HTMLElement | null = null
     let dropdownContainer: HTMLElement | null = null
     if (step === 'history-dropdown') {
-      historyDropdown = getHistoryInlineListForTutorial()
-      dropdownContainer = getHeroComposerForDropdownSteps()
+      dropdownContainer = getComposerElement()
+      historyDropdown =
+        (dropdownContainer?.querySelector('.history-inline-list') as HTMLElement | null) ??
+        getHistoryInlineListForTutorial()
       if (dropdownContainer) {
         dropdownContainer.classList.add('tutorial-dropdown-container-active')
         if (historyDropdown) {
@@ -1069,11 +1192,11 @@ export function useTutorialOverlay(
         setDropdownCutout(historyCutout)
       }
     } else if (step === 'save-selection') {
-      const savedForCutout = getSavedSelectionsDropdownForTutorial()
-      savedSelectionsDropdown = document.querySelector(
-        '.saved-selections-dropdown'
-      ) as HTMLElement | null
-      dropdownContainer = getHeroComposerForDropdownSteps()
+      dropdownContainer = getComposerElement()
+      const savedForCutout =
+        (dropdownContainer?.querySelector('.saved-selections-dropdown') as HTMLElement | null) ??
+        getSavedSelectionsDropdownForTutorial()
+      savedSelectionsDropdown = savedForCutout
       if (dropdownContainer) {
         dropdownContainer.classList.add('tutorial-dropdown-container-active')
         if (savedSelectionsDropdown) {
@@ -1661,7 +1784,12 @@ export function useTutorialOverlay(
         const canScroll = isFollowUpStyleLoading ? loadingSectionWasSeen : true
         const shouldScrollResultsIntoView = step !== 'submit-comparison' || streamAnswerStarted
 
-        if (!hasScrolledToResults && canScroll && shouldScrollResultsIntoView) {
+        if (
+          !spotlightSettledRef.current &&
+          !hasScrolledToResults &&
+          canScroll &&
+          shouldScrollResultsIntoView
+        ) {
           hasScrolledToResults = true
           scrollToResultsRaf = requestAnimationFrame(() => {
             scrollToResultsRaf = null
@@ -1766,9 +1894,11 @@ export function useTutorialOverlay(
         }
       }
 
-      // Cutout expands to include dropdown when open (composer + dropdown union)
-      const composerElement = getHeroComposerForDropdownSteps()
-      const historyDropdown = getHistoryInlineListForTutorial()
+      // Cutout expands to include dropdown when open (visible composer + its panel).
+      const composerElement = getComposerElement()
+      const historyDropdown =
+        (composerElement?.querySelector('.history-inline-list') as HTMLElement | null) ??
+        getHistoryInlineListForTutorial()
       if (composerElement) {
         if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
           composerElement.classList.add('tutorial-dropdown-container-active')
@@ -1851,8 +1981,10 @@ export function useTutorialOverlay(
       // Cutout expands to include dropdown when open (composer + dropdown union).
       // When the panel portals only under the below-results composer, `savedSelectionsForCutout` is null
       // so the hole stays on the hero composer only (avoids a full-page union).
-      const composerElement = getHeroComposerForDropdownSteps()
-      const savedSelectionsForCutout = getSavedSelectionsDropdownForTutorial()
+      const composerElement = getComposerElement()
+      const savedSelectionsForCutout =
+        (composerElement?.querySelector('.saved-selections-dropdown') as HTMLElement | null) ??
+        getSavedSelectionsDropdownForTutorial()
       const savedDropdownAnywhere = document.querySelector(
         '.saved-selections-dropdown'
       ) as HTMLElement | null
@@ -1948,13 +2080,15 @@ export function useTutorialOverlay(
 
     const updateDropdownCutout = () => {
       if (!spotlightSettledRef.current) return
-      const composer = getHeroComposerForDropdownSteps()
+      const composer = getComposerElement()
       if (!composer) return
 
       const dropdown =
         step === 'history-dropdown'
-          ? getHistoryInlineListForTutorial()
-          : getSavedSelectionsDropdownForTutorial()
+          ? ((composer.querySelector('.history-inline-list') as HTMLElement | null) ??
+            getHistoryInlineListForTutorial())
+          : ((composer.querySelector('.saved-selections-dropdown') as HTMLElement | null) ??
+            getSavedSelectionsDropdownForTutorial())
       const cutout = computeDropdownCutout(composer, dropdown)
       setDropdownCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
     }

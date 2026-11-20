@@ -157,10 +157,46 @@ export function waitForTutorialLayoutSettle(options?: {
     const fontsReady = document.fonts?.ready
     if (fontsReady) {
       void fontsReady.then(() => {
-        if (!finished) onActivity()
+        if (!finished) armQuiet()
       })
     }
     armQuiet()
+  })
+}
+
+/**
+ * Resolves once `read` stays still. Font swaps and the hero lock move targets
+ * without a scroll event, which left the frozen tooltip short of the frame.
+ */
+export function waitForRectStable(
+  read: () => { top: number; height: number } | null,
+  options?: { timeoutMs?: number; quietMs?: number }
+): Promise<void> {
+  const timeoutMs = options?.timeoutMs ?? 500
+  const quietMs = options?.quietMs ?? 100
+  return new Promise(resolve => {
+    const start = performance.now()
+    let last = read()
+    let stableSince = performance.now()
+    // WebKit throttles requestAnimationFrame while Playwright is waiting, so a
+    // rAF loop never reached the timeout and the tooltip stayed hidden for the
+    // whole sample window. An interval still runs during that wait.
+    const timer = window.setInterval(() => {
+      const next = read()
+      const moved =
+        last == null ||
+        next == null ||
+        Math.abs(next.top - last.top) > 1 ||
+        Math.abs(next.height - last.height) > 1
+      last = next
+      if (moved) stableSince = performance.now()
+      const quiet = next != null && performance.now() - stableSince >= quietMs
+      const timedOut = performance.now() - start >= timeoutMs
+      if (quiet || timedOut) {
+        window.clearInterval(timer)
+        resolve()
+      }
+    }, 32)
   })
 }
 
