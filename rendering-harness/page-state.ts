@@ -2,7 +2,8 @@
  * Predicate passed to Playwright's page.waitForFunction.
  * It is serialized into the page, so it must not close over Node state.
  * Ready means the harness container has real text, KaTeX is done measuring,
- * and document.fonts has finished. It is not a sleep and not networkidle.
+ * images are settled (the harness forces eager loading before waiting), and
+ * document.fonts has finished. It is not a sleep and not networkidle.
  */
 export function pageStateReady(expectedGeneration?: string): boolean {
   const container = document.querySelector('[data-render-container]')
