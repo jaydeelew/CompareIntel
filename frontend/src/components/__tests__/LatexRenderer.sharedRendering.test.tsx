@@ -969,6 +969,52 @@ describe('bug 11: display math at a bullet’s indent stays inside the list', ()
   })
 })
 
+describe('renderer bug 3: fenced code inside nested blockquotes', () => {
+  it('renders js fence from 07-rare-formats nested blockquote', () => {
+    const el = renderReply(
+      [
+        '## Nested blockquote with a list and code',
+        '> Outer observation from the bench.',
+        '>',
+        '> > - nested aliquot',
+        '> > - nested blank',
+        '> >',
+        '> > ```js',
+        '> > const nested = true',
+        '> > ```',
+      ].join('\n'),
+      CLAUDE
+    )
+    expect(el.textContent).toContain('const nested = true')
+    const inner = el.querySelector('blockquote blockquote .code-block-direct code')
+    expect(inner?.textContent).toBe('const nested = true')
+    expect(visibleText(el)).not.toContain('```')
+  })
+})
+
+describe('renderer bug 4: underscore emphasis and backslash escapes', () => {
+  it('leaves intra-word and escaped underscores as literal (qwen4-max 05 edge case)', () => {
+    const el = renderReply(
+      [
+        '## Scenario 1: Math in Lists with Formatting',
+        'Outside code, an unescaped file_name_here may italicize — escape as file\\_name\\_here.',
+      ].join('\n'),
+      'qwen/qwen4-max'
+    )
+    const text = visibleText(el)
+    expect(text).toContain('unescaped file_name_here may italicize')
+    expect(text).toContain('escape as file_name_here.')
+    expect(el.querySelectorAll('em').length).toBe(0)
+  })
+
+  it('does not duplicate ASCII subscripts beside KaTeX for $x_1 + x_2$', () => {
+    const el = renderReply('Math subscript $x_1 + x_2$ stays in KaTeX.', 'qwen/qwen4-max')
+    const text = visibleText(el).replace(/\u200b/g, '')
+    expect(text).toBe('Math subscript x1+x2 stays in KaTeX.')
+    expect(texSources(el)).toEqual(['x_1 + x_2'])
+  })
+})
+
 describe('full fixture sections for bugs 01–29', () => {
   it.each(BUG_CASES.map(c => [c.id, c] as const))(
     '%s has no KaTeX errors or leaked placeholders',

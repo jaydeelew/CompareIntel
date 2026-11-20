@@ -4,7 +4,8 @@
  * Playwright passes `harnessRenderReady` to `page.waitForFunction`, which
  * serializes the function into the browser. It must not close over Node
  * imports. Success is visible text, finished KaTeX (no hidden `.katex-html`
- * still measuring), and loaded images. It is never a sleep and never
+ * still measuring), and images the harness has promoted to eager loading and
+ * waited on (complete or load/error). It is never a sleep and never
  * `networkidle`. A reply that mentions math but never produces KaTeX is still
  * ready: the assertions, not this wait, decide pass or fail.
  */

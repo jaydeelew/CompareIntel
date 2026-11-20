@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 
-import { test, expect, waitForReactHydration, waitForAuthState } from './fixtures'
+import { test, expect, waitForReactHydration } from './fixtures'
 import { clickNavSignUpButton } from './helpers/navAuth'
 
 /**
@@ -126,17 +126,22 @@ test.describe('Smoke Tests @smoke', () => {
     await expect(compareButton).toBeAttached({ timeout: 10000 })
 
     // Check if models section is visible (it should be)
-    const modelsSection = page.locator('.models-section, [data-testid="models-section"], .model-selection').first()
+    const modelsSection = page
+      .locator('.models-section, [data-testid="models-section"], .model-selection')
+      .first()
     await expect(modelsSection).toBeVisible({ timeout: 15000 })
 
     // Try to find model checkboxes (but don't fail if they're slow to load)
     const checkboxes = page.locator('[data-testid^="model-checkbox-"], input[type="checkbox"]')
-    const hasCheckboxes = await checkboxes.first().isVisible({ timeout: 5000 }).catch(() => false)
+    const hasCheckboxes = await checkboxes
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false)
 
     // If checkboxes are available, try to select one and submit
     if (hasCheckboxes) {
       const count = await checkboxes.count()
-      
+
       // Try to find and check an enabled checkbox
       for (let i = 0; i < Math.min(count, 5); i++) {
         const checkbox = checkboxes.nth(i)
@@ -151,13 +156,14 @@ test.describe('Smoke Tests @smoke', () => {
       const isEnabled = await compareButton.isEnabled({ timeout: 3000 }).catch(() => false)
       if (isEnabled) {
         // Set up response waiter before clicking
-        const responsePromise = page.waitForResponse(
-          response => response.url().includes('/api/compare-stream'),
-          { timeout: 30000 }
-        ).catch(() => null)
+        const responsePromise = page
+          .waitForResponse(response => response.url().includes('/api/compare-stream'), {
+            timeout: 30000,
+          })
+          .catch(() => null)
 
         await compareButton.click().catch(() => {})
-        
+
         // Wait for response if it happens
         const response = await responsePromise
         if (response) {
@@ -180,44 +186,45 @@ test.describe('Smoke Tests @smoke', () => {
   })
 
   test('should complete signup and login flow', async ({ page, browserName, context }) => {
-    const isFirefox = browserName === 'firefox'
-    const isWebKit = browserName === 'webkit'
-    const timeout = isFirefox || isWebKit ? 60000 : 30000
-
     // Clear authentication
     await context.clearCookies()
 
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout })
-    await waitForReactHydration(page)
-    await waitForAuthState(page)
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 15000 })
+    await waitForReactHydration(page, 8000)
 
     // Generate unique test user email
     const testEmail = `smoke-test-${Date.now()}@example.com`
     const testPassword = 'TestPassword123!'
 
     const signupButton = page.getByTestId('nav-sign-up-button')
-    await expect(signupButton).toBeVisible({ timeout: 15000 })
+    await expect(signupButton).toBeVisible({ timeout: 10000 })
     await clickNavSignUpButton(page, { browserName })
 
     const authModal = page.getByTestId('auth-modal')
-    await expect(authModal).toBeVisible()
+    await expect(authModal).toBeVisible({ timeout: 10000 })
 
-    // Fill signup form
+    await page.locator('#register-password').fill(testPassword)
+    await page.locator('#register-confirm-password').fill(testPassword)
     await page.locator('input[type="email"]').first().fill(testEmail)
-    await page.locator('input[type="password"]').first().fill(testPassword)
 
-    // Submit signup
-    const submitButton = page.locator('button[type="submit"]').first()
-    await submitButton.click()
+    await page.getByTestId('register-submit-button').click()
 
     // Wait for either success (modal closes) or error message
     await Promise.race([
-      authModal.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {}),
-      page.locator('.error-message, .alert-error').first().waitFor({ timeout: 15000 }).catch(() => {}),
+      authModal.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {}),
+      page
+        .locator('.error-message, .alert-error')
+        .first()
+        .waitFor({ timeout: 10000 })
+        .catch(() => {}),
+      page
+        .getByTestId('user-menu-button')
+        .waitFor({ state: 'visible', timeout: 10000 })
+        .catch(() => {}),
     ])
 
     // Check if we're logged in (user menu appears) or if there was an error
-    const userMenu = page.locator('[data-testid="user-menu"], .user-menu, .profile-menu').first()
+    const userMenu = page.getByTestId('user-menu-button')
     const userMenuVisible = await userMenu.isVisible().catch(() => false)
 
     // If not logged in via signup, try logging in (user might already exist from previous run)
@@ -240,8 +247,12 @@ test.describe('Smoke Tests @smoke', () => {
 
         // Wait for login to complete
         await Promise.race([
-          page.locator('.auth-modal, [role="dialog"]').first().waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {}),
-          userMenu.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {}),
+          page
+            .locator('.auth-modal, [role="dialog"]')
+            .first()
+            .waitFor({ state: 'hidden', timeout: 10000 })
+            .catch(() => {}),
+          userMenu.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {}),
         ])
       }
     }

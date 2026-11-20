@@ -46,6 +46,37 @@ function submitIncompleteComposerTooltip(hasPrompt: boolean, hasModels: boolean)
   return 'Before submitting, enter your input'
 }
 
+function WebSearchGlobeIcon({ includeTestId = true }: { includeTestId?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ width: '20px', height: '20px', display: 'block' }}
+      data-testid={includeTestId ? 'web-search-globe-icon' : undefined}
+      aria-hidden
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <path
+        d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function dataTransferHasFiles(dt: DataTransfer | null): boolean {
   if (!dt?.types) return false
   return Array.from(dt.types as unknown as string[]).includes('Files')
@@ -71,6 +102,8 @@ interface ComparisonFormProps {
   onNewComparison: () => void
   renderUsagePreview: () => React.ReactNode
   selectedModels: string[]
+  /** When true, this conversation has no models left to continue. */
+  followUpUnavailable?: boolean
   modelsByProvider: ModelsByProvider
   onAccurateTokenCountChange?: (totalInputTokens: number | null) => void
   creditsRemaining: number
@@ -117,6 +150,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     onNewComparison,
     renderUsagePreview,
     selectedModels,
+    followUpUnavailable = false,
     modelsByProvider,
     onAccurateTokenCountChange,
     creditsRemaining,
@@ -160,6 +194,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       })
     }, [selectedModels, modelsByProvider])
     const canEnableWebSearch = selectedModelsWithWebSearch.length > 0
+    const webSearchLocked = isFollowUpMode
+    const webSearchControlDisabled = webSearchLocked || !canEnableWebSearch || isLoading
+    const webSearchFollowUpTooltip =
+      'Web search is fixed for this conversation. Start over to change it.'
 
     const {
       isTouchDevice,
@@ -169,6 +207,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       prefersFinePointerHover,
       useModalForTooltips,
     } = useResponsive()
+    /** Native disabled breaks portal tooltips and washes out the globe; follow-up uses aria-only lock on desktop. */
+    const webSearchButtonNativeDisabled =
+      !isTouchDevice && webSearchControlDisabled && !webSearchLocked
+    const webSearchButtonClassName = [
+      'textarea-icon-button',
+      'web-search-button',
+      webSearchEnabled ? 'active' : '',
+      webSearchLocked ? 'web-search-locked' : '',
+      webSearchControlDisabled && isTouchDevice ? 'touch-disabled' : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
     const isMobileOrTablet = isMobileLayout || isTabletLayout
     /** Touch-first toolbar (tap modals, no hover tooltips). False when viewport is wide or when user has a mouse on a narrow viewport. */
     const useTouchFirstComposerChrome = isMobileOrTablet && !prefersFinePointerHover
@@ -292,7 +342,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           case 'web-search':
             return {
               title: 'Web Search',
-              message: !canEnableWebSearch ? 'Select a web-enabled model' : 'Web search enabled',
+              message: webSearchLocked
+                ? webSearchFollowUpTooltip
+                : !canEnableWebSearch
+                  ? 'Select a web-enabled model'
+                  : 'Web search enabled',
             }
           case 'submit':
             return {
@@ -320,6 +374,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [
         isSpeechListening,
         canEnableWebSearch,
+        webSearchLocked,
+        webSearchFollowUpTooltip,
         creditsRemaining,
         imageGenerationSubmitBlocked,
         imageGenerationNoSharedImageOptions,
@@ -342,8 +398,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             else startSpeechListening()
             break
           case 'web-search':
-            // Mobile opens this modal only when turning web search on (off is a direct tap).
-            setWebSearchEnabled(true)
+            if (!webSearchLocked) setWebSearchEnabled(true)
             break
           case 'submit':
             if (isFollowUpMode) onContinueConversation()
@@ -356,6 +411,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         stopSpeechListening,
         startSpeechListening,
         setWebSearchEnabled,
+        webSearchLocked,
         isFollowUpMode,
         onContinueConversation,
         onSubmitClick,
@@ -367,7 +423,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         if (!isTouchDevice) return
         let message = ''
         if (button === 'websearch') {
-          if (!canEnableWebSearch) {
+          if (webSearchLocked) {
+            message = webSearchFollowUpTooltip
+          } else if (!canEnableWebSearch) {
             message =
               'Web search requires at least one model that supports web search. Select a model with the 🌐 icon in the model selection area to enable this feature.'
           } else if (isLoading) {
@@ -401,6 +459,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [
         isTouchDevice,
         canEnableWebSearch,
+        webSearchLocked,
+        webSearchFollowUpTooltip,
         isLoading,
         creditsRemaining,
         isFollowUpMode,
@@ -672,6 +732,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const hardSubmitDisabled =
       isLoading ||
+      followUpUnavailable ||
       creditsRemaining <= 0 ||
       !input.trim() ||
       selectedModels.length === 0 ||
@@ -689,13 +750,25 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const submitProgressOutline = input.trim().length > 0 || selectedModels.length > 0
 
     const voiceButtonAriaLabel = isSpeechListening ? 'Stop recording' : 'Start voice input'
-    const webSearchButtonAriaLabel = !canEnableWebSearch
-      ? 'Select a web-enabled model'
-      : webSearchEnabled
-        ? 'Web search enabled'
-        : 'Enable web search'
-    const submitButtonAriaLabel =
-      creditsRemaining <= 0
+    const webSearchButtonAriaLabel = webSearchLocked
+      ? webSearchEnabled
+        ? 'Web search enabled (fixed for this conversation)'
+        : 'Web search off (fixed for this conversation)'
+      : !canEnableWebSearch
+        ? 'Select a web-enabled model'
+        : webSearchEnabled
+          ? 'Web search enabled'
+          : 'Enable web search'
+    const webSearchTooltipText = webSearchLocked
+      ? webSearchFollowUpTooltip
+      : !canEnableWebSearch
+        ? 'Select a web-enabled model'
+        : webSearchEnabled
+          ? 'Web search enabled'
+          : 'Enable web search'
+    const submitButtonAriaLabel = followUpUnavailable
+      ? 'Start a new comparison to continue'
+      : creditsRemaining <= 0
         ? 'You have run out of credits'
         : !input.trim() || selectedModels.length === 0
           ? submitIncompleteComposerTooltip(input.trim().length > 0, selectedModels.length > 0)
@@ -728,6 +801,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             value={input}
             onChange={mirror ? undefined : e => setInput(e.target.value)}
             readOnly={mirror}
+            disabled={!mirror && followUpUnavailable}
             tabIndex={mirror ? -1 : undefined}
             onKeyDown={
               mirror
@@ -752,12 +826,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             onDrop={mirror ? undefined : handleDrop}
             onPaste={undefined}
             placeholder={
-              isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
+              followUpUnavailable
+                ? 'Start a new comparison to continue'
+                : isFollowUpMode
+                  ? 'Continue your conversation here'
+                  : 'Enter your input here...'
             }
             aria-label={
-              isFollowUpMode
-                ? 'Continue your conversation'
-                : 'Enter your prompt to compare AI models'
+              followUpUnavailable
+                ? 'Start a new comparison to continue'
+                : isFollowUpMode
+                  ? 'Continue your conversation'
+                  : 'Enter your prompt to compare AI models'
             }
             className={`hero-input-textarea ${isDraggingOver && !mirror ? 'drag-over' : ''}`}
             rows={1}
@@ -990,134 +1070,60 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             {useTouchFirstComposerChrome ? (
               <button
                 type="button"
+                data-testid={mirror ? undefined : 'web-search-button'}
                 onClick={() => {
-                  const isDisabled = !canEnableWebSearch || isLoading
-                  if (isDisabled && isTouchDevice) {
+                  if (webSearchControlDisabled && isTouchDevice) {
                     handleDisabledButtonTap('websearch')
-                  } else if (!isDisabled) {
+                  } else if (!webSearchControlDisabled) {
                     if (webSearchEnabled) {
-                      // Disabling: no modal, toggle directly
                       setWebSearchEnabled(false)
+                    } else if (getTooltipModalSuppressed('web-search')) {
+                      setWebSearchEnabled(true)
                     } else {
-                      // Enabling: show modal with "Web search enabled" if not suppressed
-                      if (getTooltipModalSuppressed('web-search')) {
-                        setWebSearchEnabled(true)
-                      } else {
-                        setTooltipModalButton('web-search')
-                      }
+                      setTooltipModalButton('web-search')
                     }
                   }
                 }}
-                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
-                disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                className={webSearchButtonClassName}
+                disabled={webSearchButtonNativeDisabled}
                 aria-label={webSearchButtonAriaLabel}
-                aria-disabled={!canEnableWebSearch || isLoading}
+                aria-disabled={webSearchControlDisabled}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ width: '20px', height: '20px' }}
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                  <path
-                    d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <WebSearchGlobeIcon includeTestId={!mirror} />
               </button>
             ) : showComposerStyledTooltips ? (
-              <StyledTooltip
-                usePortal
-                text={
-                  !canEnableWebSearch
-                    ? 'Select a web-enabled model'
-                    : webSearchEnabled
-                      ? 'Web search enabled'
-                      : 'Enable web search'
-                }
-              >
+              <StyledTooltip usePortal text={webSearchTooltipText}>
                 <button
                   type="button"
+                  data-testid={mirror ? undefined : 'web-search-button'}
                   onClick={() => {
-                    const isDisabled = !canEnableWebSearch || isLoading
-                    if (isDisabled && isTouchDevice) handleDisabledButtonTap('websearch')
-                    else if (!isDisabled) setWebSearchEnabled(!webSearchEnabled)
+                    if (webSearchControlDisabled && isTouchDevice)
+                      handleDisabledButtonTap('websearch')
+                    else if (!webSearchControlDisabled) setWebSearchEnabled(!webSearchEnabled)
                   }}
-                  className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
-                  disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                  className={webSearchButtonClassName}
+                  disabled={webSearchButtonNativeDisabled}
                   aria-label={webSearchButtonAriaLabel}
-                  aria-disabled={!canEnableWebSearch || isLoading}
+                  aria-disabled={webSearchControlDisabled}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{ width: '20px', height: '20px' }}
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                    <path
-                      d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <WebSearchGlobeIcon includeTestId={!mirror} />
                 </button>
               </StyledTooltip>
             ) : (
               <button
                 type="button"
+                data-testid={mirror ? undefined : 'web-search-button'}
                 onClick={() => {
-                  const isDisabled = !canEnableWebSearch || isLoading
-                  if (isDisabled && isTouchDevice) handleDisabledButtonTap('websearch')
-                  else if (!isDisabled) setWebSearchEnabled(!webSearchEnabled)
+                  if (webSearchControlDisabled && isTouchDevice)
+                    handleDisabledButtonTap('websearch')
+                  else if (!webSearchControlDisabled) setWebSearchEnabled(!webSearchEnabled)
                 }}
-                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
-                disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                className={webSearchButtonClassName}
+                disabled={webSearchButtonNativeDisabled}
                 aria-label={webSearchButtonAriaLabel}
-                aria-disabled={!canEnableWebSearch || isLoading}
+                aria-disabled={webSearchControlDisabled}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ width: '20px', height: '20px' }}
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                  <path
-                    d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <WebSearchGlobeIcon includeTestId={!mirror} />
               </button>
             )}
 

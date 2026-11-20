@@ -103,6 +103,8 @@ export function useComparisonStreaming(
       maxTokens: inputState.maxTokens,
       aspectRatio: inputState.aspectRatio ?? '1:1',
       imageSize: inputState.imageSize ?? '1K',
+      conversationWebSearchEnabled: inputState.conversationWebSearchEnabled,
+      webSearchEnabled: inputState.webSearchEnabled,
       suppressResultsAutoScroll,
     },
     {
@@ -139,6 +141,8 @@ export function useComparisonStreaming(
       maxTokens: inputState.maxTokens,
       aspectRatio: inputState.aspectRatio ?? '1:1',
       imageSize: inputState.imageSize ?? '1K',
+      conversationWebSearchEnabled: inputState.conversationWebSearchEnabled,
+      webSearchEnabled: inputState.webSearchEnabled,
     },
     {
       setError: stateCb.setError,
@@ -164,6 +168,7 @@ export function useComparisonStreaming(
     attachedFiles,
     accurateInputTokens,
     webSearchEnabled,
+    conversationWebSearchEnabled,
     userLocation,
     temperature,
     topP,
@@ -254,6 +259,7 @@ export function useComparisonStreaming(
               modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
             const imageComposerSnapshot =
               modelMode === 'image' ? { aspectRatio, imageSize } : undefined
+            const composerWebSearchSnapshot = conversationWebSearchEnabled ?? webSearchEnabled
             void helpers.saveConversationToLocalStorage(
               inputData,
               previousModels,
@@ -264,7 +270,8 @@ export function useComparisonStreaming(
               undefined,
               undefined,
               textComposerSnapshot,
-              imageComposerSnapshot
+              imageComposerSnapshot,
+              composerWebSearchSnapshot
             )
           }
         }
