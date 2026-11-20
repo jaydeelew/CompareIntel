@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { extractCodeBlocks } from '../codeBlockPreservation'
 import {
   LITERAL_DOLLAR,
   convertListPlaceholdersToHTML,
@@ -195,6 +196,14 @@ describe('blockquotes', () => {
   it('exposes quoted list items to list processing', () => {
     const marked = markBlockquotes('> Note:\n> - one\n> - two')
     expect(processMarkdownLists(marked)).toContain('__UL_0__one__/UL__\n__UL_0__two__/UL__')
+  })
+
+  it('keeps nested blank `> >` lines so a fence stays in the inner quote', () => {
+    const extracted = extractCodeBlocks(
+      ['> > - one', '> >', '> > ```js', '> > const nested = true', '> > ```'].join('\n')
+    )
+    const marked = markBlockquotes(extracted.text)
+    expect(marked).toMatch(/\uE010[\s\S]*\uE010[\s\S]*__CODE_BLOCK_0__[\s\S]*\uE011/)
   })
 })
 

@@ -2349,7 +2349,8 @@ video.capability-tile-image-lightbox-img {
 }
 
 .composer-toolbar .textarea-actions {
-  margin-left: 0;
+  /* Push upload/mic/web/submit to the right edge; saved-selection cluster stays left. */
+  margin-left: auto;
 }
 
 /* Token usage indicator */
@@ -2951,6 +2952,62 @@ video.capability-tile-image-lightbox-img {
 .web-search-button.touch-disabled:hover svg circle,
 .web-search-button.touch-disabled:hover svg path {
   stroke: var(--text-subtle) !important;
+}
+
+/* Follow-up lock: show readable on/off globe without native :disabled opacity */
+.web-search-button.web-search-locked {
+  cursor: default;
+  opacity: 1;
+}
+
+.web-search-button.web-search-locked.active {
+  background: var(--gradient-button);
+  border-color: var(--primary-color);
+  color: #ffffff;
+  box-shadow: none;
+  filter: saturate(0.88);
+  opacity: 0.72;
+}
+
+.web-search-button.web-search-locked.active svg circle,
+.web-search-button.web-search-locked.active svg path {
+  stroke: #ffffff;
+}
+
+.web-search-button.web-search-locked:not(.active) {
+  background: var(--bg-card);
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+  box-shadow: none;
+  opacity: 0.82;
+}
+
+.web-search-button.web-search-locked:not(.active) svg circle,
+.web-search-button.web-search-locked:not(.active) svg path {
+  stroke: var(--text-muted);
+}
+
+.web-search-button.web-search-locked:hover,
+.web-search-button.web-search-locked:hover:not(:disabled),
+.web-search-button.web-search-locked.active:hover:not(:disabled),
+.web-search-button.web-search-locked:not(.active):hover:not(:disabled) {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.web-search-button.web-search-locked.active:hover:not(:disabled) {
+  background: var(--gradient-button) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+  filter: saturate(0.88);
+  opacity: 0.72;
+}
+
+.web-search-button.web-search-locked:not(.active):hover:not(:disabled) {
+  background: var(--bg-card) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-muted) !important;
+  opacity: 0.82;
 }
 
 /* Note styling */

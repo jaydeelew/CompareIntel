@@ -396,6 +396,7 @@ class ConversationSummary(BaseModel):
     composer_max_tokens: int | None = None
     composer_aspect_ratio: str | None = None
     composer_image_size: str | None = None
+    composer_web_search_enabled: bool | None = None
     client_source: str = Field(default="web")
     saved: bool = False
 
@@ -443,6 +444,7 @@ class ConversationDetail(BaseModel):
     composer_max_tokens: int | None = None
     composer_aspect_ratio: str | None = None
     composer_image_size: str | None = None
+    composer_web_search_enabled: bool | None = None
     client_source: str = Field(default="web")
     saved: bool = False
 

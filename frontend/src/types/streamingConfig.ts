@@ -51,6 +51,7 @@ export interface StreamingInputState {
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
   accurateInputTokens: number | null
   webSearchEnabled: boolean
+  conversationWebSearchEnabled: boolean | null
   userLocation: string | null
   temperature: number // 0.0-2.0, controls response randomness
   topP: number // 0.0-1.0, nucleus sampling
@@ -148,7 +149,8 @@ export interface StreamingHelperCallbacks {
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
     textComposerAdvanced?: TextComposerAdvancedSettings,
-    imageComposerAdvanced?: ImageComposerAdvancedSettings
+    imageComposerAdvanced?: ImageComposerAdvancedSettings,
+    composerWebSearchEnabled?: boolean
   ) => Promise<string | null>
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   loadHistoryFromAPI: () => Promise<void>

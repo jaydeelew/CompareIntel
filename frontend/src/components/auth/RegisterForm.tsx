@@ -491,6 +491,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               autoComplete="new-password"
               disabled={isLoading}
               minLength={8}
+              data-testid="register-confirm-password-input"
               data-lpignore="false"
               data-form-type="register"
               data-1p-ignore="false"

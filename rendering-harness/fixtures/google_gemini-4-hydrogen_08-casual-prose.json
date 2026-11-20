@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-4-hydrogen",
+  "modelName": "Gemini 4 Hydrogen",
+  "promptName": "08-casual-prose",
+  "promptText": "# Test Prompt: Casual Plain-Text Math\n\nA student texted you: why is tan(60°) equal to the square root of 3, and why is sin(60°) that same square root over 2? They also asked about a unit cube (the face diagonal and the space diagonal) and about an equilateral triangle with side length 2, whose height they think is the square root of 3.\n\nReply like a helpful tutor in an informal chat. Use ordinary sentences only. Do not use markdown, LaTeX dollar signs, backslash-paren delimiters, or any other special formatting — type the math the way you would in a plain text message. Please include the height, the two diagonals, tan(60°), and sin(60°) in those sentences.\n\nAlong the way, mention that a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping, and that the same square-root value is what Python prints for math.sqrt(3).",
+  "response": "Hey! You are totally right about the equilateral triangle. If you take an equilateral triangle with side length 2 and slice it straight down the middle, you split it into two 30-60-90 right triangles, each with a base of 1 and a hypotenuse of 2. Using the Pythagorean theorem, 1 squared plus the height squared equals 2 squared, which means the height is the square root of 3.\n\nOnce you have that 30-60-90 triangle, the trig values make total sense. Looking from the 60-degree angle, the opposite side is that height of the square root of 3, the adjacent side is 1, and the hypotenuse is 2. Since tangent is opposite over adjacent, tan(60°) is the square root of 3 over 1, which is just the square root of 3. And since sine is opposite over hypotenuse, sin(60°) is the square root of 3 over 2. By the way, if you ever want a reference on your wall, a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping.\n\nNow for the unit cube, where every edge has length 1, that same number shows up again. First, the face diagonal cuts across one square side, making a right triangle with two legs of length 1, so by the Pythagorean theorem the face diagonal is the square root of 2. Next, the space diagonal cuts straight through the middle of the cube from one corner to the opposite corner, forming a new right triangle using the face diagonal as the base and a vertical edge of 1 as the height. Squaring those legs gives 2 plus 1, which equals 3, so the space diagonal is the square root of 3 as well. That same square-root value, about 1.732, is also what Python prints for math.sqrt(3).",
+  "usage": {
+    "prompt_tokens": 244,
+    "completion_tokens": 2008,
+    "total_tokens": 2252,
+    "cost": 0.015426,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.015426,
+      "upstream_inference_prompt_cost": 0.000366,
+      "upstream_inference_completions_cost": 0.01506
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1595,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.015426,
+  "actualCost": 0.015426,
+  "timestamp": "2026-11-19T02:06:15.148Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

@@ -219,6 +219,8 @@ class Conversation(Base):
     composer_temperature = Column(Float, nullable=True)
     composer_top_p = Column(Float, nullable=True)
     composer_max_tokens = Column(Integer, nullable=True)
+    # Web search toggle at first prompt; fixed for follow-ups
+    composer_web_search_enabled = Column(Boolean, nullable=True)
 
     # Image composer Advanced (aspect ratio / image size); updated when compare-stream sends image_config
     composer_aspect_ratio = Column(String(32), nullable=True)

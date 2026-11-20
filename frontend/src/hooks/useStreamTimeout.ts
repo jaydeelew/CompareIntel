@@ -34,6 +34,8 @@ export interface UseStreamTimeoutConfig {
   maxTokens: number | null
   aspectRatio: string
   imageSize: string
+  conversationWebSearchEnabled: boolean | null
+  webSearchEnabled: boolean
 }
 
 export interface UseStreamTimeoutCallbacks {
@@ -57,7 +59,8 @@ export interface UseStreamTimeoutCallbacks {
     parentConversationId?: string | null,
     breakoutModelId?: string | null,
     textComposerAdvanced?: import('../types').TextComposerAdvancedSettings,
-    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings
+    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings,
+    composerWebSearchEnabled?: boolean
   ) => Promise<string | null>
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
@@ -83,6 +86,8 @@ export function useStreamTimeout(
     maxTokens,
     aspectRatio,
     imageSize,
+    conversationWebSearchEnabled,
+    webSearchEnabled,
   } = config
 
   const {
@@ -107,6 +112,7 @@ export function useStreamTimeout(
       const textComposerSnapshot =
         modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
       const imageComposerSnapshot = modelMode === 'image' ? { aspectRatio, imageSize } : undefined
+      const composerWebSearchSnapshot = conversationWebSearchEnabled ?? webSearchEnabled
 
       const streamingResults = streamResult?.streamingResults ?? {}
       const streamingImages = streamResult?.streamingImages ?? {}
@@ -250,7 +256,8 @@ export function useStreamTimeout(
                       undefined,
                       undefined,
                       textComposerSnapshot,
-                      imageComposerSnapshot
+                      imageComposerSnapshot,
+                      composerWebSearchSnapshot
                     )
                     if (savedId) {
                       setCurrentVisibleComparisonId(savedId)
@@ -544,6 +551,8 @@ export function useStreamTimeout(
       maxTokens,
       aspectRatio,
       imageSize,
+      conversationWebSearchEnabled,
+      webSearchEnabled,
       setError,
       setModelErrors,
       setActiveResultTabs,

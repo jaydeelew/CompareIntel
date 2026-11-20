@@ -140,7 +140,7 @@ describe('codeBlockPreservation', () => {
       expect(result.text).not.toContain('print(1)')
     })
 
-    it('does not treat a blockquote fence as a raw opener that swallows the next line', () => {
+    it('extracts a fenced block inside a blockquote', () => {
       const text = [
         '> ```python',
         '> return math.pi * r**2',
@@ -148,8 +148,21 @@ describe('codeBlockPreservation', () => {
         '> The formula is $A = \\pi r^2$',
       ].join('\n')
       const result = extractCodeBlocks(text)
-      expect(result.blocks).toHaveLength(0)
+      expect(result.blocks).toHaveLength(1)
+      expect(result.blocks[0].language).toBe('python')
+      expect(result.blocks[0].content).toBe('return math.pi * r**2')
+      expect(result.text).toContain('__CODE_BLOCK_0__')
       expect(result.text).toContain('$A = \\pi r^2$')
+      expect(result.text).not.toContain('```')
+    })
+
+    it('extracts a nested blockquote fence (CommonMark 07-rare-formats)', () => {
+      const text = ['> > ```js', '> > const nested = true', '> > ```'].join('\n')
+      const result = extractCodeBlocks(text)
+      expect(result.blocks).toHaveLength(1)
+      expect(result.blocks[0].language).toBe('js')
+      expect(result.blocks[0].content).toBe('const nested = true')
+      expect(result.text).toBe('> > __CODE_BLOCK_0__')
     })
 
     it('treats a longer line-start fence as one opener (four backticks)', () => {

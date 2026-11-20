@@ -73,7 +73,11 @@ import {
   replaceAngleBracketAutolinksOutsideCode,
   replaceBareUrlsOutsideCode,
 } from '../utils/latex/autolinks'
-import { replaceExactlyTwoStrong, replaceSingleStarEm } from '../utils/latex/emphasis'
+import {
+  replaceExactlyTwoStrong,
+  replaceSingleStarEm,
+  replaceSingleUnderscoreEm,
+} from '../utils/latex/emphasis'
 import { extractFootnoteDefinitions, renderFootnotes } from '../utils/latex/footnotes'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
 
@@ -100,7 +104,7 @@ function renderGfmCell(cell: string): string {
   })
   processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   processed = replaceSingleStarEm(processed)
-  processed = processed.replace(/(?<!_)_((?:(?!_)[^\n])+?)_(?!_)/g, '<em>$1</em>')
+  processed = replaceSingleUnderscoreEm(processed)
   for (const [ph, original] of [...cellArphMap.entries()].sort(
     (a, b) =>
       parseInt(b[0].match(/ARPH(\d+)/)?.[1] ?? '0', 10) -
@@ -297,9 +301,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // Improved regex to handle LaTeX content inside italic (e.g., *text with $math$*)
       // Use a more robust pattern that doesn't break on newlines or special characters
       processed = replaceSingleStarEm(processed)
-      // Italic: match single _ but not when part of __ (underscore-based italic)
-      // Use negative lookbehind/lookahead to avoid matching __text__ as _text_
-      processed = processed.replace(/(?<!_)_((?:(?!_)[^\n])+?)_(?!_)/g, '<em>$1</em>')
+      processed = replaceSingleUnderscoreEm(processed)
     }
 
     // Restore protected inline code spans so the dedicated pass below can render them (incl. math)
