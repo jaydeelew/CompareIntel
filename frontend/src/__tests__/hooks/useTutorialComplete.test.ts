@@ -484,8 +484,17 @@ describe('useTutorialComplete', () => {
     })
 
     it('should not treat the first comparison loading tail as a follow-up submit', () => {
+      const firstRound = [
+        {
+          modelId: 'm1',
+          messages: [
+            { type: 'user', role: 'user', content: 'hi' },
+            { type: 'assistant', role: 'assistant', content: 'first' },
+          ],
+        },
+      ] as ModelConversation[]
       const { result, rerender } = renderHook(props => useTutorialComplete(props), {
-        initialProps: { ...defaultConfig, isLoading: true },
+        initialProps: { ...defaultConfig, isLoading: true, conversations: firstRound },
       })
 
       act(() => {
@@ -495,13 +504,42 @@ describe('useTutorialComplete', () => {
 
       expect(result.current.followUpSubmitStarted).toBe(false)
 
+      rerender({ ...defaultConfig, isLoading: false, conversations: firstRound })
+      expect(result.current.followUpSubmitStarted).toBe(false)
+      expect(result.current.tutorialHasCompletedComparison).toBe(false)
+
+      rerender({ ...defaultConfig, isLoading: true, conversations: firstRound })
+
+      expect(result.current.followUpSubmitStarted).toBe(true)
+      expect(result.current.tutorialHasCompletedComparison).toBe(false)
+    })
+
+    it('should not arm a follow-up submit before the first prompt is on screen', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: { ...defaultConfig, isLoading: true },
+      })
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('follow-up')
+      })
+
       rerender({ ...defaultConfig, isLoading: false })
       rerender({ ...defaultConfig, isLoading: true })
 
-      expect(result.current.followUpSubmitStarted).toBe(true)
+      expect(result.current.followUpSubmitStarted).toBe(false)
     })
 
     it('should set tutorialHasCompletedComparison on follow-up step after second assistant round', () => {
+      const firstRound = [
+        {
+          modelId: 'm1',
+          messages: [
+            { type: 'user', role: 'user', content: 'hi' },
+            { type: 'assistant', role: 'assistant', content: 'first' },
+          ],
+        },
+      ] as ModelConversation[]
       const { result, rerender } = renderHook(props => useTutorialComplete(props), {
         initialProps: defaultConfig,
       })
@@ -511,13 +549,19 @@ describe('useTutorialComplete', () => {
         result.current.goToStep('follow-up')
       })
 
-      // A follow-up submit must have started (loading) before "second round" can count; otherwise
-      // the first comparison could already satisfy assistant length checks.
+      // Record the first comparison while this step is idle. A later loading
+      // edge is the follow-up submit; the first prompt must not count as one.
+      rerender({
+        ...defaultConfig,
+        isFollowUpMode: true,
+        isLoading: false,
+        conversations: firstRound,
+      })
       rerender({
         ...defaultConfig,
         isFollowUpMode: true,
         isLoading: true,
-        conversations: [],
+        conversations: firstRound,
       })
 
       rerender({

@@ -167,8 +167,14 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onComparisonComplete?.()
     }
 
+    // The first comparison sets hasCompletedComparison in the same commit the
+    // result-card poll moves us onto follow-up. This effect runs before the
+    // parent resets that flag, so an ungated rising edge skips the follow-up
+    // step and the review card is already showing when the next transition
+    // is sampled. A real follow-up has started a new request first.
     if (
       currentStep === 'follow-up' &&
+      followUpSubmitStarted &&
       hasCompletedComparison &&
       !previousStateRef.current.hasCompletedComparison
     ) {
@@ -207,6 +213,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     bothModelsSelected,
     hasPromptText,
     hasCompletedComparison,
+    followUpSubmitStarted,
     isFollowUpMode,
     showHistoryDropdown,
     completeStep,
@@ -295,8 +302,9 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       const counts = Array.from(document.querySelectorAll('.result-card.conversation-card')).map(
         card => card.querySelectorAll('.conversation-message.user').length
       )
-      if (counts.length === 0) return
-      followUpUserBaselineRef.current = Math.max(...counts)
+      const measured = counts.filter(count => count > 0)
+      if (measured.length === 0) return
+      followUpUserBaselineRef.current = Math.max(...measured)
     }
     capture()
     const id = window.setInterval(capture, 100)

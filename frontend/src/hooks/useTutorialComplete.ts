@@ -141,11 +141,16 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
         const counts = conversations.map(
           conv => conv.messages.filter(msg => msg.type === 'user').length
         )
-        if (counts.length > 0) followUpUserBaselineRef.current = Math.max(...counts)
+        const measured = counts.filter(count => count > 0)
+        // An empty card is not a baseline. Treating 0 as "no prompts yet" made the
+        // first comparison's own prompt look like a new follow-up round.
+        if (measured.length > 0) followUpUserBaselineRef.current = Math.max(...measured)
       }
       return
     }
-    if (followUpSawIdleRef.current) {
+    // Don't arm a submit until the first round's prompt has actually been counted.
+    // Mobile Safari reaches follow-up while the first stream is still finishing.
+    if (followUpSawIdleRef.current && followUpUserBaselineRef.current != null) {
       setFollowUpSubmitStarted(true)
     }
   }, [tutorialState.currentStep, isLoading, followUpSubmitStarted, conversations])
@@ -279,7 +284,7 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   useEffect(() => {
     if (tutorialState.currentStep !== 'follow-up') {
       followUpSubmitInitiatedRef.current = false
-    } else if (isLoading && followUpSawIdleRef.current) {
+    } else if (isLoading && followUpSawIdleRef.current && followUpUserBaselineRef.current != null) {
       followUpSubmitInitiatedRef.current = true
     }
   }, [tutorialState.currentStep, isLoading])
@@ -323,18 +328,20 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
         setTutorialHasCompletedComparison(true)
       }
     } else if (step === 'follow-up' && isFollowUpMode) {
-      const baseline = followUpUserBaselineRef.current ?? 0
-      const hasNewFollowUpRound = conversations.some(conv => {
-        const userMessages = conv.messages.filter(msg => msg.type === 'user')
-        const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
-        const last = assistantMessages[assistantMessages.length - 1]
-        return (
-          userMessages.length > baseline &&
-          assistantMessages.length >= 2 &&
-          !!last?.content &&
-          last.content.trim().length > 0
-        )
-      })
+      const baseline = followUpUserBaselineRef.current
+      const hasNewFollowUpRound =
+        baseline != null &&
+        conversations.some(conv => {
+          const userMessages = conv.messages.filter(msg => msg.type === 'user')
+          const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
+          const last = assistantMessages[assistantMessages.length - 1]
+          return (
+            userMessages.length > baseline &&
+            assistantMessages.length >= 2 &&
+            !!last?.content &&
+            last.content.trim().length > 0
+          )
+        })
       if (hasNewFollowUpRound && followUpSubmitInitiatedRef.current) {
         setTutorialHasCompletedComparison(true)
       }

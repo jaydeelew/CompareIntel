@@ -203,9 +203,11 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       onComparisonComplete?.()
     }
 
-    // Follow-up (step 5): advance when the follow-up round finishes (same pattern as mobile).
+    // Same gate as mobile: the first comparison's completion flag is still true
+    // on the render that lands on follow-up. Wait until this step's own submit.
     if (
       currentStep === 'follow-up' &&
+      followUpSubmitStarted &&
       hasCompletedComparison &&
       !previousStateRef.current.hasCompletedComparison
     ) {
@@ -259,6 +261,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
     bothModelsSelected,
     hasPromptText,
     hasCompletedComparison,
+    followUpSubmitStarted,
     isFollowUpMode,
     hasBreakoutConversation,
     showHistoryDropdown,
