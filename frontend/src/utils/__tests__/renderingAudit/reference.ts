@@ -20,6 +20,8 @@ import MarkdownIt from 'markdown-it'
 import footnote from 'markdown-it-footnote'
 import taskLists from 'markdown-it-task-lists'
 
+import { replaceAutolinksOutsideCode } from '../../latex/autolinks'
+
 const LITERAL = '\uE000'
 const FENCE_PH = (i: number) => `%%F${i}%%`
 const TABLE_MATH_PH = (i: number) => `\uE002M${i}\uE002`
@@ -388,6 +390,7 @@ function registerTexMath(md: MarkdownItInstance): void {
   })
 }
 
+/** linkify: false — bare http(s)/www parity uses markdown-it linkify-it rules via replaceAutolinksOutsideCode */
 const md = new MarkdownIt({ html: true, linkify: false, breaks: false, typographer: false })
 md.use(footnote)
 md.use(taskLists, { enabled: true, label: true, labelAfter: false })
@@ -418,5 +421,5 @@ export function renderReferenceHtml(markdown: string): string {
   html = html.replace(/%%F(\d+)%%/g, (_m, i: string) => fenceHtml(i))
   html = html.split(LITERAL).join('$')
 
-  return html
+  return replaceAutolinksOutsideCode(html)
 }

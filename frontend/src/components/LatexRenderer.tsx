@@ -69,7 +69,10 @@ import {
   unescapeGfmTableCellCodePipes,
   unescapeMarkdownEscapesOutsideKatex,
 } from '../utils/latex'
-import { replaceAutolinksOutsideCode } from '../utils/latex/autolinks'
+import {
+  replaceAngleBracketAutolinksOutsideCode,
+  replaceBareUrlsOutsideCode,
+} from '../utils/latex/autolinks'
 import {
   replaceExactlyTwoStrong,
   replaceSingleStarEm,
@@ -445,7 +448,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         })
       }
 
-      processed = replaceAutolinksOutsideCode(processed)
+      processed = replaceAngleBracketAutolinksOutsideCode(processed)
     }
 
     // Images - with lazy loading and optimization
@@ -502,7 +505,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         /(?<!!)\[([^\]]+)\]\(([^)]+)(?:\s+"([^"]*)")?\)/g,
         renderMarkdownLink
       )
-      processed = replaceAutolinksOutsideCode(processed)
+      processed = replaceAngleBracketAutolinksOutsideCode(processed)
     }
     const footnotePass = renderFootnotes(processed, footnoteDefs)
     processed = footnotePass.text
@@ -884,6 +887,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Stage 8: Convert lists to HTML
         processed = convertListsToHTML(processed)
+
+        if ((config.markdownProcessing || {}).processLinks !== false) {
+          processed = replaceBareUrlsOutsideCode(processed)
+        }
 
         // Stage 8.3: Restore display math placeholders that might be inside converted list HTML
         // This handles cases where display math placeholders were inside list items

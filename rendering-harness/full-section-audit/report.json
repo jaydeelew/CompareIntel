@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-19T03:39:01.343Z",
+  "generatedAt": "2026-11-19T05:48:13.758Z",
   "standard": "whole affected section vs CommonMark/GFM + KaTeX",
   "reports": [
     {
@@ -444,7 +444,7 @@
       "promptName": "02-markdown-formatting",
       "verdict": "pass",
       "diffs": [],
-      "sectionChars": 103,
+      "sectionChars": 163,
       "usedFullDocumentFallback": true,
       "visualPass": null,
       "screenshot": "screenshots/31-autolinks.png",
