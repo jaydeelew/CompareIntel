@@ -430,10 +430,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Vision Arena (lmarena.ai): 1202. Fetched 2026-11-16.',
       },
       {
-        modelId: 'mistralai/mistral-medium-3.1',
-        evidence: 'Vision Arena (lmarena.ai): 1172. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'google/gemma-3-27b-it',
         evidence: 'Vision Arena (lmarena.ai): 1164. Fetched 2026-11-16.',
       },
@@ -732,10 +728,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'deepseek/deepseek-v3.2',
         evidence: 'LegalBench (vals.ai): 65.96%. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'mistralai/mistral-medium-3.1',
-        evidence: 'LegalBench (vals.ai): 61.98%. Fetched 2026-11-16.',
       },
       {
         modelId: 'openai/gpt-5-nano',

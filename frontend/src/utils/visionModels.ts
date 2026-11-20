@@ -13,7 +13,6 @@ export const KNOWN_VISION_MODEL_IDS = new Set([
   'google/gemini-2.5-flash',
   'google/gemini-2.5-pro',
   'google/gemini-3-flash-preview',
-  'mistralai/mistral-medium-3.1',
 ])
 
 /**
