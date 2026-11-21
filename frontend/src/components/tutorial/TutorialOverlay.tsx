@@ -5,6 +5,7 @@ import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep } from '../../hooks/useTutorial'
 
 import { TutorialBackdrop } from './TutorialBackdrop'
+import { useTutorialInteractionLock } from './tutorialInteractionLock'
 import { TutorialTooltip } from './TutorialTooltip'
 import { useTutorialOverlay } from './useTutorialOverlay'
 import './TutorialOverlay.css'
@@ -70,6 +71,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     tutorialStarterEntries,
     tutorialSplitModelSteps
   )
+  useTutorialInteractionLock(step != null)
 
   if (!step) {
     return null
