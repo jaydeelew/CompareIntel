@@ -35,6 +35,7 @@ import {
   waitForTutorialLayoutSettle,
 } from '../../utils/tutorialSettle'
 
+import { useTutorialInteractionLock } from './tutorialInteractionLock'
 import {
   getComposerElement,
   getHeroComposerForDropdownSteps,
@@ -1225,6 +1226,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       loadingSection.style.position = ''
     }
   }, [step, isLoading, streamAnswerStarted, followUpSubmitStarted])
+
+  useTutorialInteractionLock(Boolean(step))
 
   if (
     !step ||
