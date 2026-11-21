@@ -63,26 +63,42 @@ interface HTMLElementWithTutorialProps extends HTMLElement {
 
 const SCROLL_CAPTURE_OPTS: AddEventListenerOptions = { capture: true, passive: true }
 
-/** Re-run layout reads once per frame on scroll/resize (including nested scroll containers). */
+/**
+ * Re-run layout reads on scroll and resize. rAF coalesces bursts. WebKit drops
+ * animation frames while a test is waiting, so a short timer still lands the read.
+ * Scroll is capture + passive: the page scroller is `.app`, which window listeners miss.
+ */
 function attachScrollResizeRaf(update: () => void): () => void {
   let raf: number | null = null
+  let timer: number | null = null
   const schedule = () => {
-    if (raf != null) return
-    raf = requestAnimationFrame(() => {
-      raf = null
-      update()
-    })
+    if (raf == null) {
+      raf = requestAnimationFrame(() => {
+        raf = null
+        update()
+      })
+    }
+    if (timer == null) {
+      timer = window.setTimeout(() => {
+        timer = null
+        update()
+      }, 48)
+    }
   }
   document.addEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
   window.addEventListener('resize', schedule)
-  /** Main scroll is usually `.app` (see tutorialPositioning getTutorialScrollRoot); document listeners miss it. */
   const scrollRootEl = typeof document !== 'undefined' ? document.querySelector('.app') : null
   scrollRootEl?.addEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
+  window.visualViewport?.addEventListener('scroll', schedule)
+  window.visualViewport?.addEventListener('resize', schedule)
   return () => {
     if (raf != null) cancelAnimationFrame(raf)
+    if (timer != null) window.clearTimeout(timer)
     document.removeEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
     window.removeEventListener('resize', schedule)
     scrollRootEl?.removeEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
+    window.visualViewport?.removeEventListener('scroll', schedule)
+    window.visualViewport?.removeEventListener('resize', schedule)
   }
 }
 
@@ -958,40 +974,66 @@ export function useTutorialOverlay(
       }, scrollDelay)
     }
 
+    let trackRaf = 0
+    let trackTimer: number | null = null
+    const trackTooltip = () => {
+      if (cancelled || stepRef.current !== step) return
+      if (!spotlightSettledRef.current || settledStepRef.current !== step || !fadeStarted) return
+      updatePosition()
+    }
+    const scheduleTrack = () => {
+      if (trackRaf === 0) {
+        trackRaf = requestAnimationFrame(() => {
+          trackRaf = 0
+          trackTooltip()
+        })
+      }
+      if (trackTimer == null) {
+        trackTimer = window.setTimeout(() => {
+          trackTimer = null
+          trackTooltip()
+        }, 48)
+      }
+    }
     const handleScroll = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
-      const keyboard = viewportHeightChanged()
-      // Before the fade, a trailing scroll event can still correct the hidden tooltip.
-      // After the fade, never slide it: hide, wait, and measure once.
+      // The settle scroll runs while the card is hidden. After it fades in, a
+      // user scroll must move the fixed tooltip with the target. Hiding it
+      // here is the transition flicker.
       if (!fadeStarted) {
         updatePosition()
         return
       }
-      // Scroll after the fade must not hide or slide the tooltip. A keyboard
-      // height change is the one case that measures again.
-      if (keyboard) restabilize()
+      scheduleTrack()
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
-      const keyboard = viewportHeightChanged()
       if (!fadeStarted) {
         updatePosition()
         return
       }
-      if (keyboard) restabilize()
+      if (viewportHeightChanged()) {
+        restabilize()
+        return
+      }
+      scheduleTrack()
     }
 
-    window.addEventListener('scroll', handleScroll, true)
-    window.addEventListener('resize', handleScroll)
+    window.addEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
+    window.addEventListener('resize', onViewport)
     const appScrollHost = document.querySelector('.app')
-    appScrollHost?.addEventListener('scroll', handleScroll)
+    appScrollHost?.addEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
+    window.visualViewport?.addEventListener('scroll', handleScroll)
     window.visualViewport?.addEventListener('resize', onViewport)
 
     return () => {
       cancelled = true
-      window.removeEventListener('scroll', handleScroll, true)
-      window.removeEventListener('resize', handleScroll)
-      appScrollHost?.removeEventListener('scroll', handleScroll)
+      if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
+      if (trackTimer != null) window.clearTimeout(trackTimer)
+      window.removeEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
+      window.removeEventListener('resize', onViewport)
+      appScrollHost?.removeEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
+      window.visualViewport?.removeEventListener('scroll', handleScroll)
       window.visualViewport?.removeEventListener('resize', onViewport)
       if (scrollDelayTimer !== null) clearTimeout(scrollDelayTimer)
       if (freezeScrollOnCleanup) {

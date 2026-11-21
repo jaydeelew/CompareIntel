@@ -878,36 +878,63 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     const keyboardSettled = () => fadeStarted && performance.now() - fadeAt >= 600
-    const schedulePositionUpdate = () => {
+    let trackRaf = 0
+    let trackTimer: number | null = null
+    const trackLockedHighlight = () => {
+      if (cancelled || stepRef.current !== currentStep) return
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
-      if (currentStep !== 'enter-prompt' && currentStep !== 'enter-prompt-2') return
-      if (!keyboardSettled()) return
-      if (!viewportHeightChanged()) return
-      fadeStarted = true
-      restabilize()
+      // Writes during the fade move the card while the transition sample is open.
+      if (isStepTransitioningRef.current) return
+      calculatePositions()
     }
-    const onViewport = () => {
-      if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
-      if (currentStep !== 'enter-prompt' && currentStep !== 'enter-prompt-2') return
-      if (!keyboardSettled()) return
-      if (!viewportHeightChanged()) return
-      fadeStarted = true
-      restabilize()
+    const scheduleTrack = () => {
+      if (trackRaf === 0) {
+        trackRaf = requestAnimationFrame(() => {
+          trackRaf = 0
+          trackLockedHighlight()
+        })
+      }
+      // WebKit does not run rAF while Playwright is waiting on the next sample.
+      if (trackTimer == null) {
+        trackTimer = window.setTimeout(() => {
+          trackTimer = null
+          trackLockedHighlight()
+        }, 48)
+      }
+    }
+    const onResize = () => {
+      if (
+        spotlightSettledRef.current &&
+        settledStepRef.current === currentStep &&
+        (currentStep === 'enter-prompt' || currentStep === 'enter-prompt-2') &&
+        keyboardSettled() &&
+        viewportHeightChanged()
+      ) {
+        fadeStarted = true
+        restabilize()
+        return
+      }
+      scheduleTrack()
     }
 
-    window.addEventListener('scroll', schedulePositionUpdate, true)
-    window.addEventListener('resize', schedulePositionUpdate)
+    const scrollListen: AddEventListenerOptions = { capture: true, passive: true }
+    window.addEventListener('scroll', scheduleTrack, scrollListen)
+    window.addEventListener('resize', onResize)
     const appScrollHost = document.querySelector('.app') as HTMLElement | null
-    appScrollHost?.addEventListener('scroll', schedulePositionUpdate)
-    window.visualViewport?.addEventListener('resize', onViewport)
+    appScrollHost?.addEventListener('scroll', scheduleTrack, scrollListen)
+    window.visualViewport?.addEventListener('scroll', scheduleTrack)
+    window.visualViewport?.addEventListener('resize', onResize)
 
     return () => {
       cancelled = true
       if (measureTimer != null) window.clearInterval(measureTimer)
-      window.removeEventListener('scroll', schedulePositionUpdate, true)
-      window.removeEventListener('resize', schedulePositionUpdate)
-      appScrollHost?.removeEventListener('scroll', schedulePositionUpdate)
-      window.visualViewport?.removeEventListener('resize', onViewport)
+      if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
+      if (trackTimer != null) window.clearTimeout(trackTimer)
+      window.removeEventListener('scroll', scheduleTrack, scrollListen)
+      window.removeEventListener('resize', onResize)
+      appScrollHost?.removeEventListener('scroll', scheduleTrack, scrollListen)
+      window.visualViewport?.removeEventListener('scroll', scheduleTrack)
+      window.visualViewport?.removeEventListener('resize', onResize)
       if (!spotlightSettledRef.current) {
         try {
           const root = getTutorialScrollRoot()
