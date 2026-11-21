@@ -633,6 +633,19 @@ export async function completeTutorialPromptInput(
       '.mobile-tutorial-tooltip button:has-text("Done with input"), .tutorial-tooltip button:has-text("Done with input")'
     )
     .first()
+  // WebKit can report fill() as done while the controlled textarea stays empty:
+  // the input event never reaches React, so "Done with input" stays disabled.
+  // Commit through the native setter until the button enables.
+  const commitPrompt = async () => {
+    await textarea.evaluate((el, value) => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+      setter?.call(el, value)
+      el.dispatchEvent(new Event('input', { bubbles: true }))
+    }, text)
+  }
+  if (!(await doneButton.isEnabled().catch(() => false))) {
+    await commitPrompt()
+  }
   await expect(doneButton).toBeEnabled({ timeout: 20_000 })
   await dismissBlockingModals(page)
   if (isMobileE2eProject(testInfo.project.name)) {

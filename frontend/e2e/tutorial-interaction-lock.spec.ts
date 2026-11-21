@@ -261,28 +261,31 @@ test('results and history stay scrollable during their steps', async ({ page }, 
       scroller.scrollTop += rect.top - 120
     }
   })
-  await page.waitForTimeout(300)
-  const historyHit = await page.evaluate(() => {
-    const list = (document.querySelector(
-      '[data-after-results-composer-slot] .history-inline-list'
-    ) ??
-      Array.from(document.querySelectorAll('.history-inline-list')).find(
-        el => !el.closest('.composer-hero-mirror')
-      )) as HTMLElement | null
-    if (!list) return 'missing history'
-    if (list.closest('[inert]')) return 'history is inert'
-    const rect = list.getBoundingClientRect()
-    const top = Math.max(rect.top + 8, 8)
-    const bottom = Math.min(rect.bottom - 4, window.innerHeight - 8)
-    if (bottom - top < 8) {
-      return `history off screen ${Math.round(rect.top)}..${Math.round(rect.bottom)}`
-    }
-    const hit = document.elementFromPoint(rect.left + rect.width / 2, top + 4)
-    if (!hit || hit.id === 'tutorial-interaction-shield') {
-      const clip = document.getElementById('tutorial-interaction-shield')?.style.clipPath ?? ''
-      return `shield y=${Math.round(top)} h=${Math.round(rect.height)} clip=${clip.slice(0, 220)}`
-    }
-    return 'ok'
-  })
-  expect(historyHit).toBe('ok')
+  await expect
+    .poll(async () => {
+      return page.evaluate(() => {
+        const list = (document.querySelector(
+          '[data-after-results-composer-slot] .history-inline-list'
+        ) ??
+          Array.from(document.querySelectorAll('.history-inline-list')).find(
+            el => !el.closest('.composer-hero-mirror')
+          )) as HTMLElement | null
+        if (!list) return 'missing history'
+        if (list.closest('[inert]')) return 'history is inert'
+        const rect = list.getBoundingClientRect()
+        const top = Math.max(rect.top + 8, 8)
+        const bottom = Math.min(rect.bottom - 4, window.innerHeight - 8)
+        if (bottom - top < 8) {
+          return `history off screen ${Math.round(rect.top)}..${Math.round(rect.bottom)}`
+        }
+        const hit = document.elementFromPoint(rect.left + rect.width / 2, top + 4)
+        if (!hit || hit.closest('#tutorial-interaction-shield')) {
+          const path = document.querySelector('#tutorial-interaction-shield path')
+          const d = path?.getAttribute('d') ?? ''
+          return `shield y=${Math.round(top)} h=${Math.round(rect.height)} d=${d.slice(0, 220)}`
+        }
+        return 'ok'
+      })
+    })
+    .toBe('ok')
 })

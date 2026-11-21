@@ -112,6 +112,28 @@ describe('tutorial interaction lock', () => {
     stop()
   })
 
+  it('merges a history list that only overlaps the composer hole', () => {
+    const app = document.createElement('div')
+    app.className = 'app'
+    const composer = document.createElement('div')
+    composer.className = 'composer tutorial-highlight'
+    composer.getBoundingClientRect = () => rect(200, 16, 320, 80)
+    const list = document.createElement('div')
+    list.className = 'history-inline-list tutorial-highlight'
+    list.getBoundingClientRect = () => rect(270, 16, 320, 160)
+    composer.append(list)
+    app.append(composer)
+    document.body.append(app)
+
+    const stop = syncTutorialInteractionLock()
+    const d = document
+      .getElementById('tutorial-interaction-shield')
+      ?.querySelector('path')
+      ?.getAttribute('d')
+    expect(d?.match(/M/g)?.length ?? 0).toBe(2)
+    stop()
+  })
+
   it('keeps the portaled composer live while results are highlighted', () => {
     const app = document.createElement('div')
     app.className = 'app'
