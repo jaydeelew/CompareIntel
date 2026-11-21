@@ -62,7 +62,7 @@ cryptography>=50.0.0
 pytz>=2026.6
 
 # Redis (optional, for distributed rate limiting)
-redis>=5.0.0
+redis>=8.1.0
 
 # Error monitoring
 sentry-sdk[fastapi]>=2.75.0
