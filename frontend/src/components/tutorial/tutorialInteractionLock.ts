@@ -44,15 +44,31 @@ export function syncTutorialInteractionLock(): () => void {
     const highlighted = Array.from(document.querySelectorAll(HIGHLIGHT_SELECTOR)).filter(
       el => !el.closest(PORTAL_SELECTOR)
     )
+    const allowComposer = (node: Element | null) => {
+      const composer = node?.closest('.composer')
+      if (!composer || composer.classList.contains('composer-placeholder')) return
+      if (composer.closest('.composer-hero-mirror')) return
+      if (highlighted.includes(composer)) return
+      highlighted.push(composer)
+    }
+    // A highlight on the submit button must not inert the textarea beside it.
+    // The hero mirror stays inert; the portaled composer is the one the user types in.
+    highlighted.forEach(el => allowComposer(el))
     const slot = document.querySelector(
       '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
     )
-    // The highlight class can land on the hero mirror before the portaled composer
-    // mounts. The live composer is the one the step asks the user to type in.
-    const composerHighlighted = highlighted.some(
-      el => el.classList.contains('composer') || Boolean(el.closest('.composer'))
+    const portalText =
+      document.querySelector('#tutorial-portal-root, #mobile-tutorial-portal-root')?.textContent ??
+      ''
+    const reviewStep = /Review the New Responses|Access Your History|Save Model/.test(portalText)
+    const resultsHighlighted = highlighted.some(
+      el => el.classList.contains('results-section') || el.classList.contains('loading-section')
     )
-    if (slot && composerHighlighted && !highlighted.includes(slot)) highlighted.push(slot)
+    // The follow-up composer is portaled after the results block, so a results
+    // highlight does not contain it. Keep it live until the review card is showing.
+    if (slot && resultsHighlighted && !reviewStep) allowComposer(slot)
+    const composerHighlighted = highlighted.some(el => el.classList.contains('composer'))
+    if (slot && composerHighlighted) allowComposer(slot)
     if (composerHighlighted) {
       document.querySelectorAll('.history-inline-list, .saved-selections-dropdown').forEach(el => {
         if (el.closest('.composer-hero-mirror') || highlighted.includes(el)) return
@@ -85,10 +101,17 @@ export function syncTutorialInteractionLock(): () => void {
     // The path, not the svg box, receives hits, so the even-odd holes stay open.
     el.style.pointerEvents = 'none'
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-    path.setAttribute('fill', 'transparent')
+    // WebKit does not hit-test a transparent fill, so clicks fall through to the page.
+    path.setAttribute('fill', 'rgba(0,0,0,0.02)')
     path.setAttribute('fill-rule', 'evenodd')
     path.setAttribute('pointer-events', 'fill')
     el.appendChild(path)
+    const swallow = (event: Event) => {
+      event.preventDefault()
+      event.stopPropagation()
+    }
+    el.addEventListener('pointerdown', swallow)
+    el.addEventListener('click', swallow)
     el.addEventListener(
       'wheel',
       event => {
@@ -154,21 +177,37 @@ export function syncTutorialInteractionLock(): () => void {
   }
 
   const applyInert = () => {
-    restoreInert()
     const allowed = allowedElements()
+    const desired = new Set<HTMLElement>()
     const visit = (node: Element) => {
       if (node.id === SHIELD_ID || node.closest(PORTAL_SELECTOR)) return
       if (allowed.some(target => target === node)) return
       if (!allowed.some(target => node.contains(target))) {
-        if (node instanceof HTMLElement) {
-          marked.push({ el: node, was: readInert(node) })
-          writeInert(node, true)
-        }
+        if (node instanceof HTMLElement) desired.add(node)
         return
       }
       for (const child of Array.from(node.children)) visit(child)
     }
     for (const child of Array.from(document.body.children)) visit(child)
+
+    // Leave elements that are already inert untouched. Clearing and resetting
+    // inert on every frame blurs the prompt field and drops the typed text.
+    const next: InertMark[] = []
+    for (const el of desired) {
+      const existing = marked.find(mark => mark.el === el)
+      if (existing) {
+        next.push(existing)
+        if (!readInert(el)) writeInert(el, true)
+      } else {
+        next.push({ el, was: readInert(el) })
+        writeInert(el, true)
+      }
+    }
+    for (const mark of marked) {
+      if (!desired.has(mark.el)) writeInert(mark.el, mark.was)
+    }
+    marked.length = 0
+    marked.push(...next)
   }
 
   const bindResize = () => {

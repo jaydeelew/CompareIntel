@@ -52,7 +52,7 @@ function projectAllowed(project: string): boolean {
 
 async function clickAt(page: Page, selector: string): Promise<void> {
   const locator = page.locator(selector).first()
-  await locator.evaluate(el => el.scrollIntoView({ block: 'center', inline: 'nearest' }))
+  await locator.evaluate(el => el.scrollIntoView({ block: 'nearest', inline: 'nearest' }))
   const box = await locator.boundingBox()
   expect(box).toBeTruthy()
   await page.mouse.click(box!.x + box!.width / 2, box!.y + Math.min(box!.height / 2, 24))

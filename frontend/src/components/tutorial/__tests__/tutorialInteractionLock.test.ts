@@ -63,4 +63,53 @@ describe('tutorial interaction lock', () => {
     expect(extra.inert).toBe(false)
     expect(document.getElementById('tutorial-interaction-shield')).toBeNull()
   })
+
+  it('keeps the prompt field live when the highlight is the submit button', () => {
+    const app = document.createElement('div')
+    app.className = 'app'
+    const nav = document.createElement('a')
+    nav.href = '/about'
+    nav.textContent = 'About'
+    const composer = document.createElement('div')
+    composer.className = 'composer'
+    const textarea = document.createElement('textarea')
+    const submit = document.createElement('button')
+    submit.className = 'tutorial-highlight'
+    submit.textContent = 'Submit'
+    submit.getBoundingClientRect = () => rect(200, 16, 48, 48)
+    composer.append(textarea, submit)
+    app.append(nav, composer)
+    document.body.append(app)
+
+    const stop = syncTutorialInteractionLock()
+    expect(nav.closest('[inert]')).toBe(nav)
+    expect(composer.closest('[inert]')).toBeNull()
+    expect(textarea.closest('[inert]')).toBeNull()
+    expect(submit.closest('[inert]')).toBeNull()
+    stop()
+  })
+
+  it('keeps the portaled composer live while results are highlighted', () => {
+    const app = document.createElement('div')
+    app.className = 'app'
+    const results = document.createElement('section')
+    results.className = 'results-section tutorial-highlight'
+    results.getBoundingClientRect = () => rect(80, 16, 300, 200)
+    const slot = document.createElement('div')
+    slot.setAttribute('data-after-results-composer-slot', '')
+    const composer = document.createElement('div')
+    composer.className = 'composer'
+    const textarea = document.createElement('textarea')
+    composer.append(textarea)
+    slot.append(composer)
+    const portal = document.createElement('div')
+    portal.id = 'tutorial-portal-root'
+    portal.textContent = 'Continue the Conversation'
+    app.append(results, slot)
+    document.body.append(app, portal)
+
+    const stop = syncTutorialInteractionLock()
+    expect(textarea.closest('[inert]')).toBeNull()
+    stop()
+  })
 })
