@@ -16,16 +16,19 @@ import {
 } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import {
+  deferScroll,
   getTutorialProviderStepLayout,
   getTutorialScrollRoot,
   MOBILE_TUTORIAL_ARROW_PX,
   placeTooltipBoxAgainstFrame,
+  readPortaledFollowUpComposerRect,
   readTutorialSpotlightRect,
   scrollDeltaToFitTooltip,
   scrollFollowUpHighlightIntoView,
   scrollTutorialRectToCenter,
   seatPortaledFollowUpComposer,
   TUTORIAL_FRAME_OUTSET_PX,
+  visibleViewportHeight,
   type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
 import {
@@ -1094,6 +1097,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let hasScrolledToResults = false
     let hasScrolledToLoading = false
     let loadingSectionWasSeen = false
+    const cancelDeferredScrolls: Array<() => void> = []
 
     const updateLoadingStreamingRect = () => {
       const resultsSection = document.querySelector('.results-section') as HTMLElement
@@ -1120,11 +1124,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         })
         if (isFollowUpPostSubmit && !hasScrolledToLoading) {
           hasScrolledToLoading = true
-          requestAnimationFrame(() => {
-            setTimeout(() => {
+          cancelDeferredScrolls.push(
+            deferScroll(() => {
               loadingSection.scrollIntoView({ behavior: 'auto', block: 'start' })
             }, 0)
-          })
+          )
         }
         return
       }
@@ -1134,11 +1138,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
         if (!hasScrolledToResults && canScroll) {
           hasScrolledToResults = true
-          requestAnimationFrame(() => {
-            setTimeout(() => {
+          // Cancelled on cleanup. WebKit runs this frame only after the test stops
+          // waiting, which is after step 7 has already seated the composer.
+          cancelDeferredScrolls.push(
+            deferScroll(() => {
               resultsSection.scrollIntoView({ behavior: 'auto', block: 'start' })
-            }, 100)
-          })
+            })
+          )
         }
 
         const rect = resultsSection.getBoundingClientRect()
@@ -1168,9 +1174,43 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     return () => {
       clearInterval(interval)
+      for (const cancel of cancelDeferredScrolls) cancel()
       setLoadingStreamingRect(null)
     }
   }, [step, isLoading, streamAnswerStarted, followUpSubmitStarted])
+
+  // Step 7 seats the composer, then a deferred results scroll can pin that tall
+  // section to the top and leave the field below the iPhone viewport. Pull it
+  // back until it has stayed on screen; after that a user may scroll the results.
+  useEffect(() => {
+    if (step !== 'follow-up') return
+    let stableSince = 0
+    let intervalId = 0
+    const started = performance.now()
+    const bringComposerBack = () => {
+      if (stepRef.current !== 'follow-up' || performance.now() - started > 15000) {
+        window.clearInterval(intervalId)
+        return
+      }
+      const composer = readPortaledFollowUpComposerRect()
+      const viewportHeight = visibleViewportHeight()
+      const onScreen =
+        composer != null && composer.top >= 12 && composer.bottom <= viewportHeight - 24
+      if (onScreen) {
+        if (stableSince === 0) stableSince = performance.now()
+        if (performance.now() - stableSince > 4000) window.clearInterval(intervalId)
+        return
+      }
+      stableSince = 0
+      scrollFollowUpHighlightIntoView({
+        tooltipHeight: overlayRef.current?.getBoundingClientRect().height || tooltipEstimatedHeight,
+        arrowSize: MOBILE_TUTORIAL_ARROW_PX,
+        preferred: 'below',
+      })
+    }
+    intervalId = window.setInterval(bringComposerBack, 200)
+    return () => window.clearInterval(intervalId)
+  }, [step, tooltipEstimatedHeight])
 
   useEffect(() => {
     const loadingSection = document.querySelector('.loading-section') as HTMLElement | null

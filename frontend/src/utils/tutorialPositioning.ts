@@ -358,6 +358,15 @@ export interface FollowUpScrollOptions {
   preferred: 'above' | 'below'
 }
 
+/** The height the user can actually see. On iPhone, the visual viewport is shorter than layout. */
+export function visibleViewportHeight(): number {
+  if (typeof window === 'undefined') return 0
+  const layout = window.innerHeight
+  const visual = window.visualViewport?.height
+  if (visual == null || visual <= 0) return layout
+  return Math.min(layout, visual)
+}
+
 /** Scroll the below-results composer into place. Does nothing while it is still in the hero. */
 export function scrollFollowUpHighlightIntoView(options: FollowUpScrollOptions): void {
   const composer = readPortaledFollowUpComposerRect()
@@ -365,7 +374,7 @@ export function scrollFollowUpHighlightIntoView(options: FollowUpScrollOptions):
   const delta = followUpScrollDelta({
     composerTop: composer.top,
     composerBottom: composer.bottom,
-    viewportHeight: window.innerHeight,
+    viewportHeight: visibleViewportHeight(),
     tooltipHeight: options.tooltipHeight,
     arrowSize: options.arrowSize,
     preferred: options.preferred,
@@ -374,6 +383,32 @@ export function scrollFollowUpHighlightIntoView(options: FollowUpScrollOptions):
   const root = getTutorialScrollRoot()
   const maxScroll = getTutorialScrollMax()
   root.scrollToTop(Math.max(0, Math.min(root.getScrollTop() + delta, maxScroll)), 'auto')
+}
+
+/**
+ * Scroll after the next frame. Callers must use the returned cancel.
+ * Mobile Safari does not run requestAnimationFrame while Playwright is waiting,
+ * so an uncancelled callback fires later — after the follow-up composer is seated —
+ * and `scrollIntoView` on the results pins that tall section to the top.
+ */
+export function deferScroll(scroll: () => void, delayMs = 100): () => void {
+  let timeoutId: number | null = null
+  let cancelled = false
+  const frameId = requestAnimationFrame(() => {
+    if (cancelled) return
+    timeoutId = window.setTimeout(() => {
+      timeoutId = null
+      if (!cancelled) scroll()
+    }, delayMs)
+  })
+  return () => {
+    cancelled = true
+    cancelAnimationFrame(frameId)
+    if (timeoutId != null) {
+      window.clearTimeout(timeoutId)
+      timeoutId = null
+    }
+  }
 }
 
 /**
