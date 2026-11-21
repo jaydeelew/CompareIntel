@@ -200,6 +200,100 @@ export function waitForRectStable(
   })
 }
 
+/** Cutout updaters listen for this when a target changes size without scrolling. */
+export const TUTORIAL_FRAME_RESIZED_EVENT = 'tutorial-frame-resized'
+
+const FRAME_SIZE_SELECTOR = [
+  '.composer:not(.composer-placeholder)',
+  '.composer-input-wrapper',
+  '.composer-toolbar',
+  'textarea',
+  '.history-inline-list',
+  '.saved-selections-dropdown',
+  '.results-section',
+  '.provider-dropdown',
+].join(',')
+
+/**
+ * Remeasure when a tutorial target grows or shrinks. The history list and saved
+ * selections mount after the step has settled, and a textarea or results block
+ * can change height without a scroll. rAF coalesces bursts; a 48ms timer still
+ * runs when WebKit drops animation frames during a Playwright wait.
+ */
+export function watchTutorialFrameSize(onChange: () => void): () => void {
+  if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+    return () => {}
+  }
+
+  let raf = 0
+  let timer: number | null = null
+  const schedule = () => {
+    if (raf === 0) {
+      raf = requestAnimationFrame(() => {
+        raf = 0
+        onChange()
+      })
+    }
+    if (timer == null) {
+      timer = window.setTimeout(() => {
+        timer = null
+        onChange()
+      }, 48)
+    }
+  }
+
+  const observed = new Set<Element>()
+  const lastSize = new Map<Element, string>()
+  // Dropdown toggles re-render the composer. Remeasure only when a target's
+  // box actually changes, or Firefox restarts the open animation and the list
+  // never counts as visible.
+  const noteSizeChange = () => {
+    let changed = false
+    for (const el of observed) {
+      const rect = el.getBoundingClientRect()
+      const key = `${Math.round(rect.width)}:${Math.round(rect.height)}`
+      if (lastSize.get(el) === key) continue
+      lastSize.set(el, key)
+      changed = true
+    }
+    return changed
+  }
+  const resizeObserver = new ResizeObserver(() => {
+    if (noteSizeChange()) schedule()
+  })
+
+  const bind = () => {
+    document.querySelectorAll(FRAME_SIZE_SELECTOR).forEach(el => {
+      if (observed.has(el)) return
+      observed.add(el)
+      resizeObserver.observe(el)
+    })
+  }
+
+  bind()
+  noteSizeChange()
+
+  const host = document.querySelector('.app') ?? document.body
+  const mutationObserver = new MutationObserver(records => {
+    const relevant = records.some(record => {
+      const node = record.target instanceof Element ? record.target : record.target.parentElement
+      if (!node) return false
+      return node.closest('#mobile-tutorial-portal-root, #tutorial-portal-root') == null
+    })
+    if (!relevant) return
+    bind()
+    if (noteSizeChange()) schedule()
+  })
+  mutationObserver.observe(host, { childList: true, subtree: true })
+
+  return () => {
+    if (raf !== 0) cancelAnimationFrame(raf)
+    if (timer != null) window.clearTimeout(timer)
+    resizeObserver.disconnect()
+    mutationObserver.disconnect()
+  }
+}
+
 /** Focus the prompt field on touch devices so the keyboard resize is part of the settle wait. */
 export function focusTutorialPromptTextarea(): void {
   if (typeof document === 'undefined' || typeof window.matchMedia !== 'function') return
