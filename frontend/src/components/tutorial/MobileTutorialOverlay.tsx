@@ -33,6 +33,7 @@ import {
   setTutorialSpotlightSettling,
   waitForRectStable,
   waitForTutorialLayoutSettle,
+  watchTutorialFrameSize,
 } from '../../utils/tutorialSettle'
 
 import {
@@ -924,9 +925,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     appScrollHost?.addEventListener('scroll', scheduleTrack, scrollListen)
     window.visualViewport?.addEventListener('scroll', scheduleTrack)
     window.visualViewport?.addEventListener('resize', onResize)
+    const detachFrameWatch = watchTutorialFrameSize(scheduleTrack)
 
     return () => {
       cancelled = true
+      detachFrameWatch()
       if (measureTimer != null) window.clearInterval(measureTimer)
       if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
       if (trackTimer != null) window.clearTimeout(trackTimer)

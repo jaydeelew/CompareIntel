@@ -39,10 +39,12 @@ import {
 import {
   focusTutorialPromptTextarea,
   setTutorialSpotlightSettling,
+  TUTORIAL_FRAME_RESIZED_EVENT,
   TUTORIAL_SPOTLIGHT_SETTLED_EVENT,
   tutorialBoxesNearlyEqual,
   waitForRectStable,
   waitForTutorialLayoutSettle,
+  watchTutorialFrameSize,
 } from '../../utils/tutorialSettle'
 
 import {
@@ -980,6 +982,7 @@ export function useTutorialOverlay(
       if (cancelled || stepRef.current !== step) return
       if (!spotlightSettledRef.current || settledStepRef.current !== step || !fadeStarted) return
       updatePosition()
+      window.dispatchEvent(new Event(TUTORIAL_FRAME_RESIZED_EVENT))
     }
     const scheduleTrack = () => {
       if (trackRaf === 0) {
@@ -1025,9 +1028,11 @@ export function useTutorialOverlay(
     appScrollHost?.addEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
     window.visualViewport?.addEventListener('scroll', handleScroll)
     window.visualViewport?.addEventListener('resize', onViewport)
+    const detachFrameWatch = watchTutorialFrameSize(scheduleTrack)
 
     return () => {
       cancelled = true
+      detachFrameWatch()
       if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
       if (trackTimer != null) window.clearTimeout(trackTimer)
       window.removeEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
@@ -2137,12 +2142,14 @@ export function useTutorialOverlay(
 
     updateTextareaCutout()
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTextareaCutout)
+    window.addEventListener(TUTORIAL_FRAME_RESIZED_EVENT, updateTextareaCutout)
 
     const detachScrollResize = attachScrollResizeRaf(updateTextareaCutout)
     const interval = setInterval(updateTextareaCutout, 100)
 
     return () => {
       window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTextareaCutout)
+      window.removeEventListener(TUTORIAL_FRAME_RESIZED_EVENT, updateTextareaCutout)
       detachScrollResize()
       clearInterval(interval)
     }
@@ -2172,12 +2179,14 @@ export function useTutorialOverlay(
 
     updateDropdownCutout()
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateDropdownCutout)
+    window.addEventListener(TUTORIAL_FRAME_RESIZED_EVENT, updateDropdownCutout)
 
     const detachScrollResize = attachScrollResizeRaf(updateDropdownCutout)
     const interval = setInterval(updateDropdownCutout, 100)
 
     return () => {
       window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateDropdownCutout)
+      window.removeEventListener(TUTORIAL_FRAME_RESIZED_EVENT, updateDropdownCutout)
       detachScrollResize()
       clearInterval(interval)
     }
@@ -2217,11 +2226,13 @@ export function useTutorialOverlay(
 
     syncFollowUpBackdropCutouts()
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, syncFollowUpBackdropCutouts)
+    window.addEventListener(TUTORIAL_FRAME_RESIZED_EVENT, syncFollowUpBackdropCutouts)
     const detachScrollResize = attachScrollResizeRaf(syncFollowUpBackdropCutouts)
     const interval = setInterval(syncFollowUpBackdropCutouts, 100)
 
     return () => {
       window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, syncFollowUpBackdropCutouts)
+      window.removeEventListener(TUTORIAL_FRAME_RESIZED_EVENT, syncFollowUpBackdropCutouts)
       detachScrollResize()
       clearInterval(interval)
     }
@@ -2279,12 +2290,14 @@ export function useTutorialOverlay(
 
     updateTargetCutout()
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTargetCutout)
+    window.addEventListener(TUTORIAL_FRAME_RESIZED_EVENT, updateTargetCutout)
 
     const detachScrollResize = attachScrollResizeRaf(updateTargetCutout)
     const interval = setInterval(updateTargetCutout, 100)
 
     return () => {
       window.removeEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTargetCutout)
+      window.removeEventListener(TUTORIAL_FRAME_RESIZED_EVENT, updateTargetCutout)
       detachScrollResize()
       clearInterval(interval)
     }

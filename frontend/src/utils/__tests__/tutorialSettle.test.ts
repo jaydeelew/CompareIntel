@@ -5,6 +5,7 @@ import {
   setTutorialSpotlightSettling,
   tutorialBoxesNearlyEqual,
   waitForTutorialLayoutSettle,
+  watchTutorialFrameSize,
 } from '../tutorialSettle'
 
 describe('tutorialSettle', () => {
@@ -104,5 +105,44 @@ describe('tutorialSettle', () => {
         }) as unknown as MediaQueryList
     )
     expect(prefersReducedTutorialMotion()).toBe(true)
+  })
+
+  it('remeasures when a target resizes and when a panel mounts', async () => {
+    const callbacks: ResizeObserverCallback[] = []
+    class FakeResizeObserver {
+      constructor(callback: ResizeObserverCallback) {
+        callbacks.push(callback)
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+
+    const app = document.createElement('div')
+    app.className = 'app'
+    document.body.appendChild(app)
+    const composer = document.createElement('div')
+    composer.className = 'composer'
+    app.appendChild(composer)
+
+    const onChange = vi.fn()
+    const stop = watchTutorialFrameSize(onChange)
+    composer.getBoundingClientRect = () => ({ width: 320, height: 180 }) as DOMRect
+    callbacks[0]?.([], {} as ResizeObserver)
+    await new Promise(r => setTimeout(r, 60))
+    expect(onChange).toHaveBeenCalled()
+
+    onChange.mockClear()
+    const panel = document.createElement('div')
+    panel.className = 'history-inline-list'
+    panel.getBoundingClientRect = () => ({ width: 320, height: 120 }) as DOMRect
+    composer.appendChild(panel)
+    await new Promise(r => setTimeout(r, 60))
+    expect(onChange).toHaveBeenCalled()
+
+    stop()
+    app.remove()
+    vi.unstubAllGlobals()
   })
 })
