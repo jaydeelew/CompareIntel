@@ -713,29 +713,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         composer?.addEventListener('animationend', onEnd)
       })
 
-    let fadeStarted = false
-    let fadeAt = 0
-    let corrections = 0
     let measureTimer: number | null = null
-    let lastViewportHeight = window.visualViewport?.height ?? window.innerHeight
-    let lastInnerHeight = window.innerHeight
-
-    const viewportHeightChanged = () => {
-      const viewport = window.visualViewport?.height ?? window.innerHeight
-      const inner = window.innerHeight
-      const changed =
-        Math.abs(viewport - lastViewportHeight) >= 40 || Math.abs(inner - lastInnerHeight) >= 40
-      lastViewportHeight = viewport
-      lastInnerHeight = inner
-      if (!changed) return false
-      corrections = 0
-      return true
-    }
 
     const showSettledTooltip = () => {
       if (stepRef.current !== currentStep) return
-      fadeStarted = true
-      fadeAt = performance.now()
       // The hide class is already on. A CSS opacity animation stays at 0 on
       // Mobile Safari while a comparison is streaming, so the card never
       // reaches the sampler's opaque threshold. A timeout started during the
@@ -850,36 +831,36 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       revealSettledStep()
     }
 
-    const restabilize = () => {
-      if (!fadeStarted || corrections >= 1 || cancelled || stepRef.current !== currentStep) return
-      corrections += 1
-      fadeStarted = false
-      isStepTransitioningRef.current = true
-      setIsStepTransitioning(true)
-      setTutorialSpotlightSettling(true)
-      void waitForTutorialLayoutSettle({ timeoutMs: 600, quietMs: 80 }).then(() => {
-        if (cancelled || stepRef.current !== currentStep) return
-        revealSettledStep()
-      })
-    }
-
+    // A viewport change re-renders with a new height estimate and restarts this
+    // effect, which drops the resize timer from the previous run. Measure again
+    // once the short-viewport stylesheet has resized the card.
+    let settledFollowUp: number | null = null
     if (alreadySettled) {
       // A remount during the fade used to leave the hide class on. WebKit then
       // ignores clicks on the card, so "Done with input" never advances the step.
       // StrictMode re-runs this effect while the reveal interval is still pending;
       // clearing the hide here would skip the sample that proves the card was hidden.
-      fadeStarted = true
-      fadeAt = performance.now()
       if (revealTimerRef.current == null) {
         isStepTransitioningRef.current = false
         setIsStepTransitioning(false)
         setTutorialSpotlightSettling(false)
+        calculatePositions()
+        const measureAgain = () => {
+          if (cancelled || stepRef.current !== currentStep || isStepTransitioningRef.current) return
+          calculatePositions()
+        }
+        settledFollowUp = window.setTimeout(() => {
+          measureAgain()
+          settledFollowUp = window.setTimeout(() => {
+            settledFollowUp = null
+            measureAgain()
+          }, 250)
+        }, 200)
       }
     } else {
       void scrollAndReveal()
     }
 
-    const keyboardSettled = () => fadeStarted && performance.now() - fadeAt >= 600
     let trackRaf = 0
     let trackTimer: number | null = null
     const trackLockedHighlight = () => {
@@ -904,28 +885,27 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }, 48)
       }
     }
-    const onResize = () => {
-      if (
-        spotlightSettledRef.current &&
-        settledStepRef.current === currentStep &&
-        (currentStep === 'enter-prompt' || currentStep === 'enter-prompt-2') &&
-        keyboardSettled() &&
-        viewportHeightChanged()
-      ) {
-        fadeStarted = true
-        restabilize()
-        return
-      }
+    // A keyboard or window resize after the card is showing must move the cutout
+    // and tooltip with the composer. Hiding them to remeasure left the dimmed
+    // page with no hole once the user focused the prompt. The short viewport
+    // stylesheet shrinks the card after the first resize event, so measure once
+    // more after that layout.
+    let resizeFollowUp: number | null = null
+    const onViewportResize = () => {
       scheduleTrack()
+      if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
+      resizeFollowUp = window.setTimeout(() => {
+        resizeFollowUp = null
+        scheduleTrack()
+      }, 200)
     }
-
     const scrollListen: AddEventListenerOptions = { capture: true, passive: true }
     window.addEventListener('scroll', scheduleTrack, scrollListen)
-    window.addEventListener('resize', onResize)
+    window.addEventListener('resize', onViewportResize)
     const appScrollHost = document.querySelector('.app') as HTMLElement | null
     appScrollHost?.addEventListener('scroll', scheduleTrack, scrollListen)
     window.visualViewport?.addEventListener('scroll', scheduleTrack)
-    window.visualViewport?.addEventListener('resize', onResize)
+    window.visualViewport?.addEventListener('resize', onViewportResize)
     const detachFrameWatch = watchTutorialFrameSize(scheduleTrack)
 
     return () => {
@@ -934,11 +914,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (measureTimer != null) window.clearInterval(measureTimer)
       if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
       if (trackTimer != null) window.clearTimeout(trackTimer)
+      if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
+      if (settledFollowUp != null) window.clearTimeout(settledFollowUp)
       window.removeEventListener('scroll', scheduleTrack, scrollListen)
-      window.removeEventListener('resize', onResize)
+      window.removeEventListener('resize', onViewportResize)
       appScrollHost?.removeEventListener('scroll', scheduleTrack, scrollListen)
       window.visualViewport?.removeEventListener('scroll', scheduleTrack)
-      window.visualViewport?.removeEventListener('resize', onResize)
+      window.visualViewport?.removeEventListener('resize', onViewportResize)
       if (!spotlightSettledRef.current) {
         try {
           const root = getTutorialScrollRoot()

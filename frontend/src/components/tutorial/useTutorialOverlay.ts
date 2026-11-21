@@ -818,21 +818,6 @@ export function useTutorialOverlay(
     }
 
     let fadeStarted = false
-    let corrections = 0
-    let lastViewportHeight = window.visualViewport?.height ?? window.innerHeight
-    let lastInnerHeight = window.innerHeight
-
-    const viewportHeightChanged = () => {
-      const viewport = window.visualViewport?.height ?? window.innerHeight
-      const inner = window.innerHeight
-      const changed =
-        Math.abs(viewport - lastViewportHeight) >= 40 || Math.abs(inner - lastInnerHeight) >= 40
-      lastViewportHeight = viewport
-      lastInnerHeight = inner
-      if (!changed) return false
-      corrections = 0
-      return true
-    }
 
     const showSettledTooltip = () => {
       window.setTimeout(() => {
@@ -870,20 +855,6 @@ export function useTutorialOverlay(
       window.dispatchEvent(new Event(TUTORIAL_SPOTLIGHT_SETTLED_EVENT))
       // Paint the hidden tooltip at its final coordinates, then fade opacity in.
       showSettledTooltip()
-    }
-
-    const restabilize = () => {
-      if (!fadeStarted || corrections >= 1 || cancelled || stepRef.current !== step) return
-      corrections += 1
-      fadeStarted = false
-      setSpotlightSettling(true)
-      setTutorialSpotlightSettling(true)
-      setPositionStabilized(false)
-      void waitForTutorialLayoutSettle({ timeoutMs: 600, quietMs: 80 }).then(() => {
-        if (cancelled || stepRef.current !== step) return
-        updatePosition()
-        showSettledTooltip()
-      })
     }
 
     const scrollDelay = isExpandProviderTutorialStep(step)
@@ -1011,23 +982,32 @@ export function useTutorialOverlay(
     }
     const onViewport = () => {
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
+      // The settle scroll runs while the card is hidden. After it fades in, a
+      // keyboard or window resize must move the fixed cutout and tooltip with
+      // the target. Hiding them here drops the prompt step as soon as the
+      // textarea is focused.
       if (!fadeStarted) {
         updatePosition()
         return
       }
-      if (viewportHeightChanged()) {
-        restabilize()
-        return
-      }
       scheduleTrack()
+    }
+    let resizeFollowUp: number | null = null
+    const onViewportResize = () => {
+      onViewport()
+      if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
+      resizeFollowUp = window.setTimeout(() => {
+        resizeFollowUp = null
+        onViewport()
+      }, 200)
     }
 
     window.addEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
-    window.addEventListener('resize', onViewport)
+    window.addEventListener('resize', onViewportResize)
     const appScrollHost = document.querySelector('.app')
     appScrollHost?.addEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
     window.visualViewport?.addEventListener('scroll', handleScroll)
-    window.visualViewport?.addEventListener('resize', onViewport)
+    window.visualViewport?.addEventListener('resize', onViewportResize)
     const detachFrameWatch = watchTutorialFrameSize(scheduleTrack)
 
     return () => {
@@ -1035,11 +1015,12 @@ export function useTutorialOverlay(
       detachFrameWatch()
       if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
       if (trackTimer != null) window.clearTimeout(trackTimer)
+      if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
       window.removeEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
-      window.removeEventListener('resize', onViewport)
+      window.removeEventListener('resize', onViewportResize)
       appScrollHost?.removeEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
       window.visualViewport?.removeEventListener('scroll', handleScroll)
-      window.visualViewport?.removeEventListener('resize', onViewport)
+      window.visualViewport?.removeEventListener('resize', onViewportResize)
       if (scrollDelayTimer !== null) clearTimeout(scrollDelayTimer)
       if (freezeScrollOnCleanup) {
         try {
