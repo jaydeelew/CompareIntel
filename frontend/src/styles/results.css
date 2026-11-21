@@ -3354,6 +3354,10 @@ button.nav-button-primary {
   position: relative;
   z-index: 4;
   width: 100%;
+  /* A flex parent with a definite height (the height-locked hero) shrinks this
+     panel to its 1px border on WebKit, because overflow:hidden zeroes the
+     automatic minimum size. Keep the panel at its content height. */
+  flex-shrink: 0;
   background: var(--bg-elevated);
   border-top: 1px solid var(--border-color);
   /* max-height set dynamically in JS based on tier (170px for 2 items, 255px for 3 items, 300px for scrollable) */
@@ -3366,7 +3370,11 @@ button.nav-button-primary {
 
 .history-inline-list-content {
   width: 100%;
-  height: 100%;
+  /* height:100% of a max-height-only parent is a circular percentage. WebKit
+     resolves it to 0 and the list collapses to its border. Size to the rows
+     and cap at the panel's max-height so the inner scroller still works. */
+  height: auto;
+  max-height: inherit;
   overflow-y: auto;
   overflow-x: hidden;
   /* Custom scrollbar styling to match dropdown gradient */
@@ -3410,12 +3418,10 @@ button.nav-button-primary {
 @keyframes slideDown {
   from {
     opacity: 0;
-    max-height: 0;
   }
 
   to {
     opacity: 1;
-    /* max-height is set dynamically via inline style based on tier */
   }
 }
 

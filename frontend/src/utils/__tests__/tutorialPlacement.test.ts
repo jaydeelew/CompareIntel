@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  deferScroll,
   followUpScrollDelta,
   placeTooltipBoxAgainstFrame,
   scrollDeltaToFitTooltip,
+  visibleViewportHeight,
 } from '../tutorialPositioning'
 
 describe('placeTooltipBoxAgainstFrame', () => {
@@ -93,5 +95,56 @@ describe('placeTooltipBoxAgainstFrame', () => {
         preferred: 'above',
       })
     ).toBe(0)
+  })
+})
+
+describe('visibleViewportHeight', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('uses the shorter visual viewport on a phone', () => {
+    vi.stubGlobal('innerHeight', 844)
+    vi.stubGlobal('visualViewport', { height: 664 })
+    expect(visibleViewportHeight()).toBe(664)
+  })
+
+  it('uses the layout viewport when the visual viewport is missing', () => {
+    vi.stubGlobal('innerHeight', 900)
+    vi.stubGlobal('visualViewport', undefined)
+    expect(visibleViewportHeight()).toBe(900)
+  })
+})
+
+describe('deferScroll', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('scrolls after the frame and the delay', () => {
+    vi.useFakeTimers()
+    const scroll = vi.fn()
+    deferScroll(scroll, 100)
+    vi.runAllTimers()
+    expect(scroll).toHaveBeenCalledOnce()
+  })
+
+  it('does not scroll after cancel, including a frame that was already queued', () => {
+    vi.useFakeTimers()
+    const scroll = vi.fn()
+    const cancel = deferScroll(scroll, 100)
+    cancel()
+    vi.runAllTimers()
+    expect(scroll).not.toHaveBeenCalled()
+  })
+
+  it('does not scroll when cancelled after the frame but before the delay', () => {
+    vi.useFakeTimers()
+    const scroll = vi.fn()
+    const cancel = deferScroll(scroll, 100)
+    vi.advanceTimersToNextFrame()
+    cancel()
+    vi.advanceTimersByTime(100)
+    expect(scroll).not.toHaveBeenCalled()
   })
 })
