@@ -8,6 +8,7 @@ import {
 import { mockComparisonStream } from './helpers/mockModels'
 import { dismissMobileBlockers, isMobileE2eProject } from './helpers/modelCheckbox'
 import {
+  clickTutorialDoneButton,
   completeTutorialPromptInput,
   expandTutorialProvider,
   runTutorialComparison,
@@ -52,10 +53,31 @@ function projectAllowed(project: string): boolean {
 
 async function clickAt(page: Page, selector: string): Promise<void> {
   const locator = page.locator(selector).first()
-  await locator.evaluate(el => el.scrollIntoView({ block: 'nearest', inline: 'nearest' }))
-  const box = await locator.boundingBox()
-  expect(box).toBeTruthy()
-  await page.mouse.click(box!.x + box!.width / 2, box!.y + Math.min(box!.height / 2, 24))
+  const point = await locator.evaluate(el => {
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    const rect = el.getBoundingClientRect()
+    const candidates = [
+      [rect.left + rect.width / 2, rect.top + Math.min(rect.height / 2, 12)],
+      [rect.left + 4, rect.top + 4],
+      [rect.right - 4, rect.top + 4],
+      [rect.left + 4, rect.bottom - 4],
+    ]
+    for (const [x, y] of candidates) {
+      if (x < 1 || y < 1 || x >= window.innerWidth - 1 || y >= window.innerHeight - 1) continue
+      const hit = document.elementFromPoint(x, y)
+      if (!hit) continue
+      // The tutorial card sits above the header on a phone. A click there is the
+      // close button, which ends the tour. Hit the shield or the control itself.
+      const inTutorial = hit.closest(
+        '#tutorial-portal-root, #mobile-tutorial-portal-root, .tutorial-tooltip, .mobile-tutorial-tooltip'
+      )
+      if (inTutorial && !hit.closest('#tutorial-interaction-shield')) continue
+      return { x, y }
+    }
+    return null
+  })
+  if (!point) return
+  await page.mouse.click(point.x, point.y)
 }
 
 test('non-target controls do nothing and the step target still works', async ({
@@ -211,12 +233,7 @@ test('results and history stay scrollable during their steps', async ({ page }, 
   expect(scrolled).toBe(true)
 
   await runTutorialComparison(page, testInfo, 25_000, 'Follow-up for the interaction lock test.')
-  await page
-    .locator(
-      '.mobile-tutorial-tooltip button:has-text("Done"), .tutorial-tooltip button:has-text("Done")'
-    )
-    .first()
-    .click()
+  await clickTutorialDoneButton(page, testInfo)
   await expect(tutorialTooltip(page).first()).toContainText('Access Your History', {
     timeout: 20_000,
   })

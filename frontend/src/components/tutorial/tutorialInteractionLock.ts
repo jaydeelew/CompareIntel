@@ -34,6 +34,11 @@ export function syncTutorialInteractionLock(): () => void {
   let raf = 0
   let timer: number | null = null
   let disposed = false
+  const scrollRoot = document.querySelector('.app') as HTMLElement | null
+  const previousOverflowAnchor = scrollRoot?.style.overflowAnchor ?? ''
+  // WebKit scroll anchoring jumps the page when subtrees become inert, which
+  // pulls the follow-up composer off screen and swaps the card for the scroll hint.
+  if (scrollRoot) scrollRoot.style.overflowAnchor = 'none'
 
   const restoreInert = () => {
     for (const mark of marked) writeInert(mark.el, mark.was)
@@ -287,6 +292,7 @@ export function syncTutorialInteractionLock(): () => void {
     document.querySelector('.app')?.removeEventListener('scroll', onScroll, scrollListen)
     window.visualViewport?.removeEventListener('resize', onScroll)
     restoreInert()
+    if (scrollRoot) scrollRoot.style.overflowAnchor = previousOverflowAnchor
     shield?.remove()
     shield = null
   }
