@@ -36,6 +36,7 @@ import {
   watchTutorialFrameSize,
 } from '../../utils/tutorialSettle'
 
+import { useTutorialInteractionLock } from './tutorialInteractionLock'
 import {
   getComposerElement,
   getHeroComposerForDropdownSteps,
@@ -1229,6 +1230,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
   }, [step, isLoading, streamAnswerStarted, followUpSubmitStarted])
 
+  useTutorialInteractionLock(Boolean(step))
+
   if (
     !step ||
     !portalRoot ||
@@ -1328,11 +1331,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // 1. Target is actually off-screen
   // 2. NOT during loading/streaming phase
   // 3. NOT during automatic step transition (to avoid flashing during smooth scroll between steps)
-  // These steps advance only through the card's button. Replacing the card with the
-  // off-screen hint removes Done, so the step can never finish.
+  // These steps keep the card. Replacing it with the off-screen hint removes the
+  // instructions, and follow-up then has no tooltip while the composer is still settling.
   const stepKeepsTooltip =
     step === 'enter-prompt' ||
     step === 'enter-prompt-2' ||
+    step === 'follow-up' ||
     step === 'view-follow-up-results' ||
     step === 'history-dropdown' ||
     step === 'save-selection'
