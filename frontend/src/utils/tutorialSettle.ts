@@ -243,8 +243,23 @@ export function watchTutorialFrameSize(onChange: () => void): () => void {
   }
 
   const observed = new Set<Element>()
+  const lastSize = new Map<Element, string>()
+  // Dropdown toggles re-render the composer. Remeasure only when a target's
+  // box actually changes, or Firefox restarts the open animation and the list
+  // never counts as visible.
+  const noteSizeChange = () => {
+    let changed = false
+    for (const el of observed) {
+      const rect = el.getBoundingClientRect()
+      const key = `${Math.round(rect.width)}:${Math.round(rect.height)}`
+      if (lastSize.get(el) === key) continue
+      lastSize.set(el, key)
+      changed = true
+    }
+    return changed
+  }
   const resizeObserver = new ResizeObserver(() => {
-    schedule()
+    if (noteSizeChange()) schedule()
   })
 
   const bind = () => {
@@ -256,6 +271,7 @@ export function watchTutorialFrameSize(onChange: () => void): () => void {
   }
 
   bind()
+  noteSizeChange()
 
   const host = document.querySelector('.app') ?? document.body
   const mutationObserver = new MutationObserver(records => {
@@ -266,7 +282,7 @@ export function watchTutorialFrameSize(onChange: () => void): () => void {
     })
     if (!relevant) return
     bind()
-    schedule()
+    if (noteSizeChange()) schedule()
   })
   mutationObserver.observe(host, { childList: true, subtree: true })
 

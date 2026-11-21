@@ -128,6 +128,7 @@ describe('tutorialSettle', () => {
 
     const onChange = vi.fn()
     const stop = watchTutorialFrameSize(onChange)
+    composer.getBoundingClientRect = () => ({ width: 320, height: 180 }) as DOMRect
     callbacks[0]?.([], {} as ResizeObserver)
     await new Promise(r => setTimeout(r, 60))
     expect(onChange).toHaveBeenCalled()
@@ -135,6 +136,7 @@ describe('tutorialSettle', () => {
     onChange.mockClear()
     const panel = document.createElement('div')
     panel.className = 'history-inline-list'
+    panel.getBoundingClientRect = () => ({ width: 320, height: 120 }) as DOMRect
     composer.appendChild(panel)
     await new Promise(r => setTimeout(r, 60))
     expect(onChange).toHaveBeenCalled()
