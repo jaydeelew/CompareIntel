@@ -89,6 +89,29 @@ describe('tutorial interaction lock', () => {
     stop()
   })
 
+  it('cuts one hole when the submit button is inside the composer highlight', () => {
+    const app = document.createElement('div')
+    app.className = 'app'
+    const composer = document.createElement('div')
+    composer.className = 'composer mobile-tutorial-highlight'
+    composer.getBoundingClientRect = () => rect(180, 8, 360, 120)
+    const submit = document.createElement('button')
+    submit.className = 'submit-button mobile-tutorial-highlight'
+    submit.getBoundingClientRect = () => rect(240, 300, 48, 48)
+    composer.append(submit)
+    app.append(composer)
+    document.body.append(app)
+
+    const stop = syncTutorialInteractionLock()
+    const d = document
+      .getElementById('tutorial-interaction-shield')
+      ?.querySelector('path')
+      ?.getAttribute('d')
+    const holes = d?.match(/M/g)?.length ?? 0
+    expect(holes).toBe(2)
+    stop()
+  })
+
   it('keeps the portaled composer live while results are highlighted', () => {
     const app = document.createElement('div')
     app.className = 'app'

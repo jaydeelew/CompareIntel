@@ -168,15 +168,48 @@ export function syncTutorialInteractionLock(): () => void {
     const width = window.innerWidth
     const height = window.innerHeight
     let d = `M0,0 H${width} V${height} H0 Z`
-    const holes = allowedElements()
-      .map(node => node.getBoundingClientRect())
-      .filter(rect => rect.width > 2 && rect.height > 2)
-    for (const rect of holes) {
-      const top = Math.round(rect.top - HOLE_PAD_PX)
-      const left = Math.round(rect.left - HOLE_PAD_PX)
-      const right = Math.round(rect.right + HOLE_PAD_PX)
-      const bottom = Math.round(rect.bottom + HOLE_PAD_PX)
-      d += ` M${left},${top} H${right} V${bottom} H${left} Z`
+    // Even-odd fill paints a point inside two holes. The submit button is
+    // highlighted inside the composer, so those holes overlap and the button
+    // becomes part of the shield. Merge a hole into the one that contains it.
+    const holes: { top: number; left: number; right: number; bottom: number }[] = []
+    for (const node of allowedElements()) {
+      const rect = node.getBoundingClientRect()
+      if (rect.width <= 2 || rect.height <= 2) continue
+      const next = {
+        top: Math.round(rect.top - HOLE_PAD_PX),
+        left: Math.round(rect.left - HOLE_PAD_PX),
+        right: Math.round(rect.right + HOLE_PAD_PX),
+        bottom: Math.round(rect.bottom + HOLE_PAD_PX),
+      }
+      const cx = (next.left + next.right) / 2
+      const cy = (next.top + next.bottom) / 2
+      const container = holes.find(
+        hole => cx >= hole.left && cx <= hole.right && cy >= hole.top && cy <= hole.bottom
+      )
+      if (container) {
+        container.top = Math.min(container.top, next.top)
+        container.left = Math.min(container.left, next.left)
+        container.right = Math.max(container.right, next.right)
+        container.bottom = Math.max(container.bottom, next.bottom)
+        continue
+      }
+      for (let i = holes.length - 1; i >= 0; i--) {
+        const hole = holes[i]
+        if (!hole) continue
+        const hx = (hole.left + hole.right) / 2
+        const hy = (hole.top + hole.bottom) / 2
+        if (hx >= next.left && hx <= next.right && hy >= next.top && hy <= next.bottom) {
+          next.top = Math.min(next.top, hole.top)
+          next.left = Math.min(next.left, hole.left)
+          next.right = Math.max(next.right, hole.right)
+          next.bottom = Math.max(next.bottom, hole.bottom)
+          holes.splice(i, 1)
+        }
+      }
+      holes.push(next)
+    }
+    for (const hole of holes) {
+      d += ` M${hole.left},${hole.top} H${hole.right} V${hole.bottom} H${hole.left} Z`
     }
     path.setAttribute('d', d)
   }
