@@ -10,6 +10,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 
+import { dispatchOnboardingTutorialActive } from '../constants/onboardingTutorialEvents'
 import { buildTutorialRuntimeStepSequenceSameProvider } from '../data/tutorialStepPlan'
 import type { ModelConversation } from '../types'
 
@@ -235,6 +236,19 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   }, [])
 
   // Effects (previously in useTutorialEffects)
+
+  // Keep PWA install prompt deferred while welcome modal or guided tutorial is active.
+  useEffect(() => {
+    const welcomeVisible = showWelcomeModal && !isAuthenticated
+    const active = welcomeVisible || tutorialState.isActive
+    dispatchOnboardingTutorialActive(active)
+  }, [showWelcomeModal, isAuthenticated, tutorialState.isActive])
+
+  useEffect(() => {
+    return () => {
+      dispatchOnboardingTutorialActive(false)
+    }
+  }, [])
 
   // Welcome modal logic - show for unregistered users after auth has loaded
   // Must wait for authLoading to be false to avoid flashing for logged-in users in production

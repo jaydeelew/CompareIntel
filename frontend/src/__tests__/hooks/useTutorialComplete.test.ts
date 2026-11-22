@@ -7,6 +7,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
+import { ONBOARDING_TUTORIAL_ACTIVE_ATTR } from '../../constants/onboardingTutorialEvents'
 import { useTutorialComplete, type TutorialStep } from '../../hooks/useTutorialComplete'
 import type { ModelConversation } from '../../types/conversation'
 
@@ -74,6 +75,24 @@ describe('useTutorialComplete', () => {
       expect(result.current.tutorialState.isActive).toBe(true)
       expect(result.current.tutorialState.currentStep).toBe('expand-provider')
       expect(localStorageMock.removeItem).toHaveBeenCalledWith('compareintel_tutorial_completed')
+    })
+
+    it('marks onboarding active on the document while tutorial runs', () => {
+      const { result } = renderHook(() =>
+        useTutorialComplete({ ...defaultConfig, isAuthenticated: true })
+      )
+
+      act(() => {
+        result.current.startTutorial()
+      })
+
+      expect(document.documentElement.getAttribute(ONBOARDING_TUTORIAL_ACTIVE_ATTR)).toBe('')
+
+      act(() => {
+        result.current.skipTutorial()
+      })
+
+      expect(document.documentElement.hasAttribute(ONBOARDING_TUTORIAL_ACTIVE_ATTR)).toBe(false)
     })
   })
 
