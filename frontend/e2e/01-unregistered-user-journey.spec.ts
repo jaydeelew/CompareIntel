@@ -1123,12 +1123,12 @@ test.describe('Unregistered User Journey', () => {
 
   test('Unregistered user sees clear value proposition', async ({ page }) => {
     // Check for key messaging about the platform
-    // Hero: "Built for human intelligence to judge artificial intelligence"
+    // Hero: "Where human intelligence judges artificial intelligence"
     const valueProps = [
       /compare.*models/i,
       /ai.*comparison/i,
       /side.*side/i,
-      /(built for human intelligence|judge artificial intelligence)/i,
+      /where human intelligence judges artificial intelligence/i,
     ]
 
     const pageContent = await page.textContent('body')
