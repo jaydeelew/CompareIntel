@@ -578,15 +578,10 @@ test.describe('Layout Regression Tests', () => {
           expect(heroBox, 'Hero section should have a bounding box').not.toBeNull()
 
           // Check all major hero text elements are within hero bounds
-          const textSelectors = [
-            '.hero-title',
-            '.hero-subtitle--primary',
-            '.hero-subtitle--alternate',
-          ]
+          const textSelectors = ['.hero-title', '.hero-subtitle']
 
           for (const selector of textSelectors) {
             const element = page.locator(selector).first()
-            // Element might be hidden (alternate subtitle with aria-hidden), skip if not visible
             const isVisible = await element.isVisible().catch(() => false)
             if (!isVisible) continue
 
@@ -618,19 +613,18 @@ test.describe('Layout Regression Tests', () => {
 
           // Additional check: verify subtitle vertical spacing is reasonable
           // (ensure they're not overlapping in a broken way)
-          const primarySubtitle = page.locator('.hero-subtitle--primary')
-          const primaryVisible = await primarySubtitle.isVisible().catch(() => false)
+          const heroSubtitle = page.locator('.hero-subtitle')
+          const subtitleVisible = await heroSubtitle.isVisible().catch(() => false)
 
-          if (primaryVisible) {
-            const primaryBox = await primarySubtitle.boundingBox()
+          if (subtitleVisible) {
+            const subtitleBox = await heroSubtitle.boundingBox()
             const heroTitle = page.locator('.hero-title')
             const titleBox = await heroTitle.boundingBox()
 
-            if (primaryBox && titleBox) {
-              // Primary subtitle should be below the title
+            if (subtitleBox && titleBox) {
               expect(
-                primaryBox.y,
-                `Primary subtitle should be positioned below hero title at ${vpName} (${theme})`
+                subtitleBox.y,
+                `Hero subtitle should be positioned below hero title at ${vpName} (${theme})`
               ).toBeGreaterThan(titleBox.y + titleBox.height - 10) // -10px for potential overlap
             }
           }
