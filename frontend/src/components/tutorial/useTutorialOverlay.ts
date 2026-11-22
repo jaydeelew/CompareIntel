@@ -80,7 +80,8 @@ export function useTutorialOverlay(
   tutorialProviderNames: readonly string[] = [],
   tutorialVisibleStepOrder: readonly TutorialStep[] = TUTORIAL_VISIBLE_STEP_ORDER,
   tutorialStarterEntries: readonly StarterModelEntry[] = [],
-  tutorialSplitModelSteps = false
+  tutorialSplitModelSteps = false,
+  followUpSubmitStarted = false
 ) {
   const tutorialProviderNamesRef = useRef(tutorialProviderNames)
   tutorialProviderNamesRef.current = tutorialProviderNames
@@ -104,6 +105,14 @@ export function useTutorialOverlay(
   /** Target rect captured when the fade-in starts. Later drift hides the tooltip before a remeasure. */
   const placedAnchorRef = useRef<{ top: number; left: number } | null>(null)
   const [spotlightSettling, setSpotlightSettling] = useState(true)
+  const spotlightSettlingRef = useRef(spotlightSettling)
+  spotlightSettlingRef.current = spotlightSettling
+  const isLoadingRef = useRef(isLoading)
+  isLoadingRef.current = isLoading
+  const streamAnswerStartedRef = useRef(streamAnswerStarted)
+  streamAnswerStartedRef.current = streamAnswerStarted
+  const followUpSubmitStartedRef = useRef(followUpSubmitStarted)
+  followUpSubmitStartedRef.current = followUpSubmitStarted
   /** After follow-up → view-follow-up-results, skip immediate tooltip show so step 5 vanishes first. */
   const suppressReviewTooltipRevealRef = useRef(false)
   const prevStepForTooltipExitRef = useRef<TutorialStep | null>(null)
@@ -185,6 +194,7 @@ export function useTutorialOverlay(
     }
     if (settledStepRef.current === step && spotlightSettledRef.current) return
     spotlightSettledRef.current = false
+    spotlightSettlingRef.current = true
     setSpotlightSettling(true)
     setTutorialSpotlightSettling(true)
     setPositionStabilized(false)
@@ -1582,8 +1592,10 @@ export function useTutorialOverlay(
       }
 
       if (step === 'submit-comparison') {
-        const shouldHighlightLoading = !streamAnswerStarted && loadingSection
-        const shouldHighlightResults = streamAnswerStarted && resultsSection
+        const started = streamAnswerStartedRef.current
+        const loadingNow = isLoadingRef.current
+        const shouldHighlightLoading = !started && loadingNow && loadingSection
+        const shouldHighlightResults = Boolean(resultsSection) && (started || loadingNow)
 
         if (loadingSection) {
           if (shouldHighlightLoading) {
@@ -1660,6 +1672,13 @@ export function useTutorialOverlay(
     return () => {
       detachScrollResize()
       clearInterval(interval)
+      const next = stepRef.current
+      const keepResultsFrame =
+        next === 'submit-comparison' ||
+        next === 'submit-comparison-2' ||
+        next === 'follow-up' ||
+        next === 'view-follow-up-results'
+      if (keepResultsFrame) return
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
       if (resultsSection) {
@@ -1710,83 +1729,120 @@ export function useTutorialOverlay(
     setTextareaCutout(null)
   }, [step])
 
-  // Submit steps + view-follow-up-results: dimmed backdrop with cutout over loading, then over results
+  // Submit, review, and the first follow-up settle. The follow-up step does not
+  // reveal until the composer portals, which waits for the stream to finish, so
+  // the results frame has to keep tracking that section for the whole gap.
   useEffect(() => {
-    const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
-    const isReviewAfterFollowUp = step === 'view-follow-up-results'
-    const useLoadingCutout = (isSubmitStep || isReviewAfterFollowUp) && isLoading
-
-    if (!useLoadingCutout) {
+    const watched =
+      step === 'submit-comparison' ||
+      step === 'submit-comparison-2' ||
+      step === 'view-follow-up-results' ||
+      step === 'follow-up'
+    if (!watched) {
       setLoadingStreamingCutout(null)
       return
     }
 
-    const isFollowUpStyleLoading = step === 'submit-comparison-2' || isReviewAfterFollowUp
-
-    // Track if we've already scrolled to loading/results sections for this loading phase.
     let hasScrolledToLoading = false
     let hasScrolledToResults = false
-    // For follow-up (step 7), results section already exists, so we need to wait
-    // for loading section to appear first before allowing scroll
     let loadingSectionWasSeen = false
+    let framedDuringLoad = false
+    let streamedIntoFollowUp = false
     let scrollToResultsRaf: number | null = null
     let scrollToResultsTimeout: ReturnType<typeof setTimeout> | null = null
+    let observed: Element | null = null
+    const resizeObserver = new ResizeObserver(() => updateLoadingStreamingCutout())
+
+    const publish = (
+      cutout: {
+        top: number
+        left: number
+        width: number
+        height: number
+        borderRadius: number
+      } | null
+    ) => {
+      setLoadingStreamingCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
+    }
 
     const updateLoadingStreamingCutout = () => {
-      const resultsSection = document.querySelector('.results-section') as HTMLElement
-      const loadingSection = document.querySelector('.loading-section') as HTMLElement
-
-      if (loadingSection) {
-        loadingSectionWasSeen = true
+      const current = stepRef.current
+      const loading = isLoadingRef.current
+      const started = streamAnswerStartedRef.current
+      const followUpStarted = followUpSubmitStartedRef.current
+      const settling = spotlightSettlingRef.current
+      const isSubmit = current === 'submit-comparison' || current === 'submit-comparison-2'
+      const isReview = current === 'view-follow-up-results'
+      const followUpPost = current === 'follow-up' && followUpStarted
+      if (current === 'follow-up' && !followUpStarted && loading) streamedIntoFollowUp = true
+      if (current !== 'follow-up') streamedIntoFollowUp = false
+      const holdFirstStream =
+        streamedIntoFollowUp && current === 'follow-up' && !followUpStarted && (loading || settling)
+      if (streamedIntoFollowUp && !loading && !settling) streamedIntoFollowUp = false
+      if ((isSubmit || isReview) && loading) framedDuringLoad = true
+      const active =
+        (isSubmit && (loading || started || (settling && framedDuringLoad))) ||
+        (isReview && loading) ||
+        holdFirstStream
+      if (!active) {
+        publish(null)
+        return
       }
 
-      if (isReviewAfterFollowUp && !streamAnswerStarted && loadingSection) {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement | null
+      const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
+      const watch = resultsSection ?? loadingSection
+      if (watch !== observed) {
+        if (observed) resizeObserver.unobserve(observed)
+        observed = watch
+        if (observed) resizeObserver.observe(observed)
+      }
+      if (loadingSection) loadingSectionWasSeen = true
+
+      const resultsRect = resultsSection?.getBoundingClientRect()
+      const resultsReady = Boolean(
+        resultsSection && resultsRect && resultsRect.width > 2 && resultsRect.height > 2
+      )
+
+      if (isReview && !started && loadingSection) {
         const rect = loadingSection.getBoundingClientRect()
-        const padding = 8
-        setLoadingStreamingCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
+        publish({
+          top: rect.top - 8,
+          left: rect.left - 8,
+          width: rect.width + 16,
+          height: rect.height + 16,
           borderRadius: 20,
         })
         return
       }
 
-      if (step === 'submit-comparison' && !streamAnswerStarted && loadingSection) {
+      if (current === 'submit-comparison' && !started && loadingSection && !resultsReady) {
         if (!hasScrolledToLoading) {
           hasScrolledToLoading = true
           scrollToResultsRaf = requestAnimationFrame(() => {
             scrollToResultsRaf = null
             scrollToResultsTimeout = setTimeout(() => {
               scrollToResultsTimeout = null
-              // Snap scroll — smooth scroll fights fixed cutout updates (rAF/interval) and looks janky.
               loadingSection.scrollIntoView({ behavior: 'auto', block: 'center' })
             }, 100)
           })
         }
-
         const rect = loadingSection.getBoundingClientRect()
-        const padding = 8
-        setLoadingStreamingCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
+        publish({
+          top: rect.top - 8,
+          left: rect.left - 8,
+          width: rect.width + 16,
+          height: rect.height + 16,
           borderRadius: 20,
         })
         return
       }
 
-      if (step === 'submit-comparison' && !streamAnswerStarted) {
-        setLoadingStreamingCutout(null)
-        return
-      }
-
-      if (resultsSection) {
-        const canScroll = isFollowUpStyleLoading ? loadingSectionWasSeen : true
-        const shouldScrollResultsIntoView = step !== 'submit-comparison' || streamAnswerStarted
-
+      if (resultsReady && resultsSection) {
+        const isFollowUpStyle = current === 'submit-comparison-2' || isReview || followUpPost
+        const canScroll = isFollowUpStyle ? loadingSectionWasSeen : true
+        const shouldScrollResultsIntoView =
+          !holdFirstStream && (current !== 'submit-comparison' || started)
         if (
           !spotlightSettledRef.current &&
           !hasScrolledToResults &&
@@ -1802,37 +1858,45 @@ export function useTutorialOverlay(
             }, 100)
           })
         }
-
         const cutout = computeTargetCutout([resultsSection], 8, 24)
-        setLoadingStreamingCutout(cutout)
-      } else if (loadingSection) {
+        publish(cutout)
+        resultsSection.classList.add('tutorial-highlight')
+        resultsSection.style.pointerEvents = 'auto'
+        resultsSection.style.position = 'relative'
+        return
+      }
+
+      if (loadingSection) {
         const rect = loadingSection.getBoundingClientRect()
-        const padding = 8
-        setLoadingStreamingCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
+        publish({
+          top: rect.top - 8,
+          left: rect.left - 8,
+          width: rect.width + 16,
+          height: rect.height + 16,
           borderRadius: 20,
         })
       }
     }
 
     updateLoadingStreamingCutout()
-
     const detachScrollResize = attachScrollResizeRaf(updateLoadingStreamingCutout)
-
-    // Update periodically to catch when results section appears and to keep cutout position current
     const interval = setInterval(updateLoadingStreamingCutout, 100)
 
     return () => {
       detachScrollResize()
       clearInterval(interval)
+      resizeObserver.disconnect()
       if (scrollToResultsRaf !== null) cancelAnimationFrame(scrollToResultsRaf)
       if (scrollToResultsTimeout !== null) clearTimeout(scrollToResultsTimeout)
-      setLoadingStreamingCutout(null)
+      const next = stepRef.current
+      const still =
+        next === 'submit-comparison' ||
+        next === 'submit-comparison-2' ||
+        next === 'follow-up' ||
+        next === 'view-follow-up-results'
+      if (!still) setLoadingStreamingCutout(null)
     }
-  }, [step, isLoading, streamAnswerStarted])
+  }, [step])
 
   // Pulse/highlight on the processing block before stream tokens for all submit/loading steps
   useEffect(() => {
@@ -2225,8 +2289,11 @@ export function useTutorialOverlay(
   }, [step, highlightedElements, targetElement, expandProviderEffectsReady])
 
   const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
+  // The cutout effect publishes null as soon as the streaming hold ends, including
+  // after follow-up's first settle. A later settle must not bring this phase back.
   const isLoadingStreamingPhase = Boolean(
-    (isSubmitStep || step === 'view-follow-up-results') && isLoading && loadingStreamingCutout
+    loadingStreamingCutout &&
+    (isSubmitStep || step === 'view-follow-up-results' || step === 'follow-up')
   )
   const config = step
     ? resolveTutorialStepConfig(step, tutorialStarterEntries, tutorialSplitModelSteps)

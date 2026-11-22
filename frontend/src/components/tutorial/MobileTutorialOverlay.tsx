@@ -24,6 +24,7 @@ import {
   readPortaledFollowUpComposerRect,
   readTutorialSpotlightRect,
   scrollDeltaToFitTooltip,
+  scrollBackDirectionForTarget,
   scrollFollowUpHighlightIntoView,
   scrollTutorialRectToCenter,
   seatPortaledFollowUpComposer,
@@ -143,6 +144,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isTargetOffScreen, setIsTargetOffScreen] = useState<'up' | 'down' | null>(null)
+  /** Prompt step: composer and tooltip are both fully outside the layout viewport. */
+  const [scrollBackDirection, setScrollBackDirection] = useState<'up' | 'down' | null>(null)
+  const scrollBackActiveRef = useRef(false)
+  const promptScrollBaselineRef = useRef<number | null>(null)
   const [loadingStreamingRect, setLoadingStreamingRect] = useState<TargetRect | null>(null)
   // Track when an automatic step transition is in progress to suppress scroll indicator
   const [isStepTransitioning, setIsStepTransitioning] = useState(false)
@@ -159,6 +164,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
   const stepRef = useRef<TutorialStep | null>(null)
   stepRef.current = step
+  const isLoadingRef = useRef(isLoading)
+  isLoadingRef.current = isLoading
+  const streamAnswerStartedRef = useRef(streamAnswerStarted)
+  streamAnswerStartedRef.current = streamAnswerStarted
+  const followUpSubmitStartedRef = useRef(followUpSubmitStarted)
+  followUpSubmitStartedRef.current = followUpSubmitStarted
   const suppressReviewTooltipRevealRef = useRef(false)
   const prevStepForTooltipExitRef = useRef<TutorialStep | null>(null)
   // Survives the position effect's StrictMode re-run. Cleared by the interval itself.
@@ -247,6 +258,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     isStepTransitioningRef.current = true
     setIsStepTransitioning(true)
     setIsTargetOffScreen(null)
+    scrollBackActiveRef.current = false
+    promptScrollBaselineRef.current = null
+    setScrollBackDirection(null)
     setTutorialSpotlightSettling(true)
   }, [step])
 
@@ -555,6 +569,39 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       setIsTargetOffScreen('down')
     } else {
       setIsTargetOffScreen(null)
+    }
+
+    // Step 5: the card stays while the composer is merely clipped or covered by
+    // the keyboard. The scroll-back hint appears only after a vertical scroll
+    // takes both the composer and the tooltip fully outside the layout viewport.
+    if (step === 'enter-prompt' || step === 'enter-prompt-2') {
+      const scrollTop = getTutorialScrollRoot().getScrollTop()
+      const composerOff = scrollBackDirectionForTarget(rect, null, true)
+      if (!composerOff) {
+        // Remember the last offset where the composer was still on screen,
+        // including during the settle scroll.
+        promptScrollBaselineRef.current = scrollTop
+        if (scrollBackActiveRef.current) {
+          scrollBackActiveRef.current = false
+          setScrollBackDirection(null)
+        }
+      } else {
+        const scrolledAway =
+          promptScrollBaselineRef.current != null &&
+          Math.abs(scrollTop - promptScrollBaselineRef.current) > 24
+        const nextScrollBack = scrolledAway
+          ? scrollBackDirectionForTarget(
+              rect,
+              overlayRef.current?.getBoundingClientRect() ?? null,
+              scrollBackActiveRef.current
+            )
+          : null
+        scrollBackActiveRef.current = nextScrollBack != null
+        setScrollBackDirection(prev => (prev === nextScrollBack ? prev : nextScrollBack))
+      }
+    } else if (scrollBackActiveRef.current) {
+      scrollBackActiveRef.current = false
+      setScrollBackDirection(null)
     }
 
     // Place against the framed highlight, not a stale header or a clamped screen edge.
@@ -1076,55 +1123,96 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     return () => clearInterval(interval)
   }, [step])
 
-  // Effect to handle loading/streaming cutout: submit steps, and step 5 (follow-up) after submit
-  // Phase 1: Loading / “Processing responses…” (before any stream)
-  // Phase 2: Results section (stream started or compare-only without inner loading in DOM)
+  // Loading/streaming cutout. The results frame has to survive the handoff from
+  // submit-comparison onto follow-up: that step stays in its settle until the
+  // composer portals, which is when the stream finishes. Tearing the rect down
+  // on streamAnswerStarted or the step change is the gap with no glow.
   useEffect(() => {
-    const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
-    const isReviewAfterFollowUp = step === 'view-follow-up-results'
-    const isFollowUpPostSubmit = step === 'follow-up' && followUpSubmitStarted
-    const useLoadingCutout =
-      (isSubmitStep && isLoading) ||
-      (isReviewAfterFollowUp && isLoading) ||
-      (isFollowUpPostSubmit && (isLoading || streamAnswerStarted))
-
-    if (!useLoadingCutout) {
+    const watched =
+      step === 'submit-comparison' ||
+      step === 'submit-comparison-2' ||
+      step === 'view-follow-up-results' ||
+      step === 'follow-up'
+    if (!watched) {
       setLoadingStreamingRect(null)
       return
     }
 
-    const isFollowUpStyleLoading =
-      step === 'submit-comparison-2' || isReviewAfterFollowUp || isFollowUpPostSubmit
-
     let hasScrolledToResults = false
     let hasScrolledToLoading = false
     let loadingSectionWasSeen = false
+    let framedDuringLoad = false
     const cancelDeferredScrolls: Array<() => void> = []
+    let observed: Element | null = null
+    const resizeObserver = new ResizeObserver(() => updateLoadingStreamingRect())
+
+    const publish = (rect: DOMRect) => {
+      const next: TargetRect = {
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+        centerX: rect.left + rect.width / 2,
+        centerY: rect.top + rect.height / 2,
+      }
+      setLoadingStreamingRect(prev => {
+        if (
+          prev &&
+          Math.abs(prev.top - next.top) < 1 &&
+          Math.abs(prev.left - next.left) < 1 &&
+          Math.abs(prev.width - next.width) < 1 &&
+          Math.abs(prev.height - next.height) < 1
+        ) {
+          return prev
+        }
+        return next
+      })
+    }
 
     const updateLoadingStreamingRect = () => {
-      const resultsSection = document.querySelector('.results-section') as HTMLElement
-      const loadingSection = document.querySelector('.loading-section') as HTMLElement
-
-      if (loadingSection) {
-        loadingSectionWasSeen = true
+      const current = stepRef.current
+      const loading = isLoadingRef.current
+      const started = streamAnswerStartedRef.current
+      const followUpStarted = followUpSubmitStartedRef.current
+      const transitioning = isStepTransitioningRef.current
+      const isSubmit = current === 'submit-comparison' || current === 'submit-comparison-2'
+      const isReview = current === 'view-follow-up-results'
+      const followUpPost = current === 'follow-up' && followUpStarted
+      const holdFirstStream =
+        current === 'follow-up' && !followUpStarted && (loading || transitioning)
+      if (isSubmit && loading) framedDuringLoad = true
+      const active =
+        (isSubmit && (loading || (transitioning && framedDuringLoad))) ||
+        (isReview && loading) ||
+        (followUpPost && (loading || started)) ||
+        holdFirstStream
+      if (!active) {
+        setLoadingStreamingRect(prev => (prev == null ? prev : null))
+        return
       }
 
-      // Show “Processing responses…” first (step 5 follow-up, or review step in a loading state)
-      if (
-        (isFollowUpPostSubmit || isReviewAfterFollowUp) &&
-        !streamAnswerStarted &&
-        loadingSection
-      ) {
-        const rect = loadingSection.getBoundingClientRect()
-        setLoadingStreamingRect({
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-          centerX: rect.left + rect.width / 2,
-          centerY: rect.top + rect.height / 2,
-        })
-        if (isFollowUpPostSubmit && !hasScrolledToLoading) {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement | null
+      const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
+      const watch = resultsSection ?? loadingSection
+      if (watch !== observed) {
+        if (observed) resizeObserver.unobserve(observed)
+        observed = watch
+        if (observed) resizeObserver.observe(observed)
+      }
+      if (loadingSection) loadingSectionWasSeen = true
+
+      const resultsRect = resultsSection?.getBoundingClientRect()
+      const resultsReady = Boolean(
+        resultsSection && resultsRect && resultsRect.width > 2 && resultsRect.height > 2
+      )
+
+      // Second comparison and the review step still open on the processing block.
+      if ((followUpPost || isReview) && !started && loadingSection) {
+        publish(loadingSection.getBoundingClientRect())
+        loadingSection.classList.add('mobile-tutorial-highlight')
+        loadingSection.style.pointerEvents = 'auto'
+        loadingSection.style.position = 'relative'
+        if (followUpPost && !hasScrolledToLoading) {
           hasScrolledToLoading = true
           cancelDeferredScrolls.push(
             deferScroll(() => {
@@ -1135,51 +1223,59 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         return
       }
 
-      if (resultsSection) {
-        const canScroll = isFollowUpStyleLoading ? loadingSectionWasSeen : true
-
-        if (!hasScrolledToResults && canScroll) {
+      if (resultsReady && resultsSection && resultsRect) {
+        const isFollowUpStyle = current === 'submit-comparison-2' || isReview || followUpPost
+        const canScroll = isFollowUpStyle ? loadingSectionWasSeen : true
+        // Scrolling the growing results during the first follow-up settle pins
+        // that section and leaves the composer below the iPhone viewport.
+        if (!holdFirstStream && !hasScrolledToResults && canScroll) {
           hasScrolledToResults = true
-          // Cancelled on cleanup. WebKit runs this frame only after the test stops
-          // waiting, which is after step 7 has already seated the composer.
           cancelDeferredScrolls.push(
             deferScroll(() => {
               resultsSection.scrollIntoView({ behavior: 'auto', block: 'start' })
             })
           )
         }
+        publish(resultsRect)
+        resultsSection.classList.add('mobile-tutorial-highlight')
+        resultsSection.style.pointerEvents = 'auto'
+        resultsSection.style.position = 'relative'
+        if (loadingSection && started) {
+          loadingSection.classList.remove('mobile-tutorial-highlight')
+          loadingSection.style.pointerEvents = ''
+          loadingSection.style.position = ''
+        }
+        return
+      }
 
-        const rect = resultsSection.getBoundingClientRect()
-        setLoadingStreamingRect({
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-          centerX: rect.left + rect.width / 2,
-          centerY: rect.top + rect.height / 2,
-        })
-      } else if (loadingSection) {
-        const rect = loadingSection.getBoundingClientRect()
-        setLoadingStreamingRect({
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-          centerX: rect.left + rect.width / 2,
-          centerY: rect.top + rect.height / 2,
-        })
+      if (loadingSection) {
+        publish(loadingSection.getBoundingClientRect())
+        if (!started) {
+          loadingSection.classList.add('mobile-tutorial-highlight')
+          loadingSection.style.pointerEvents = 'auto'
+          loadingSection.style.position = 'relative'
+        }
       }
     }
 
     updateLoadingStreamingRect()
-    const interval = setInterval(updateLoadingStreamingRect, 100)
+    const interval = window.setInterval(updateLoadingStreamingRect, 100)
+    const stopMotion = trackTutorialMotion(updateLoadingStreamingRect)
 
     return () => {
-      clearInterval(interval)
+      window.clearInterval(interval)
+      stopMotion()
+      resizeObserver.disconnect()
       for (const cancel of cancelDeferredScrolls) cancel()
-      setLoadingStreamingRect(null)
+      const next = stepRef.current
+      const still =
+        next === 'submit-comparison' ||
+        next === 'submit-comparison-2' ||
+        next === 'follow-up' ||
+        next === 'view-follow-up-results'
+      if (!still) setLoadingStreamingRect(null)
     }
-  }, [step, isLoading, streamAnswerStarted, followUpSubmitStarted])
+  }, [step])
 
   // Step 7 seats the composer, then a deferred results scroll can pin that tall
   // section to the top and leave the field below the iPhone viewport. Pull it
@@ -1345,9 +1441,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // This needs to be calculated before early returns so we can skip them during loading/streaming
   const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
   const isFollowUpPostSubmit = step === 'follow-up' && followUpSubmitStarted
+  // Follow-up's settle waits out the rest of the stream. Keep the results frame
+  // through that window instead of the plain transition backdrop.
+  const holdFirstComparisonFrame =
+    step === 'follow-up' && !followUpSubmitStarted && (isLoading || isStepTransitioning)
   const isLoadingStreamingPhase = Boolean(
     loadingStreamingRect &&
-    ((isSubmitStep && isLoading) || (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)))
+    ((isSubmitStep && (isLoading || isStepTransitioning)) ||
+      holdFirstComparisonFrame ||
+      (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)))
   )
 
   // Render scroll indicator if target is off-screen
@@ -1364,8 +1466,18 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     step === 'view-follow-up-results' ||
     step === 'history-dropdown' ||
     step === 'save-selection'
-  const shouldShowScrollIndicator =
-    isTargetOffScreen && !isLoadingStreamingPhase && !isStepTransitioning && !stepKeepsTooltip
+  const promptScrollBack =
+    scrollBackDirection != null &&
+    (step === 'enter-prompt' || step === 'enter-prompt-2') &&
+    !isLoadingStreamingPhase &&
+    !isStepTransitioning
+  const genericOffScreen =
+    isTargetOffScreen != null &&
+    !isLoadingStreamingPhase &&
+    !isStepTransitioning &&
+    !stepKeepsTooltip
+  const shouldShowScrollIndicator = promptScrollBack || genericOffScreen
+  const scrollHintDirection = promptScrollBack ? scrollBackDirection : isTargetOffScreen
 
   // Calculate cutout for backdrop
   // Always show backdrop on mobile; use cutout to keep the target visible
@@ -1447,13 +1559,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     <>
       {/* Backdrop: during loading/streaming, single box-shadow cutout; otherwise dual follow-up or normal */}
       {showBackdrop &&
-        (isStepTransitioning ? (
-          <div className="mobile-tutorial-backdrop" />
-        ) : isLoadingStreamingPhase && cutoutStyle ? (
+        (isLoadingStreamingPhase && cutoutStyle ? (
           <div
-            className={`mobile-tutorial-backdrop-cutout mobile-tutorial-backdrop-cutout--enter${fadeDuringTransition ? ' mobile-tutorial-backdrop-cutout--transitioning' : ''}`}
+            className="mobile-tutorial-backdrop-cutout mobile-tutorial-backdrop-cutout--enter"
             style={cutoutStyle}
           />
+        ) : isStepTransitioning ? (
+          <div className="mobile-tutorial-backdrop" />
         ) : !isLoadingStreamingPhase ? (
           useFollowUpDualCutout && followUpVResults && followUpVComposer ? (
             <>
@@ -1544,19 +1656,21 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         ))}
 
       {/* Scroll indicator - shown when target is off-screen */}
-      {shouldShowScrollIndicator && (
+      {shouldShowScrollIndicator && scrollHintDirection && (
         <div
-          className={`mobile-tutorial-scroll-indicator scroll-${isTargetOffScreen}`}
+          className={`mobile-tutorial-scroll-indicator scroll-${scrollHintDirection}`}
           onClick={() => {
-            if (targetElement) {
-              targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            }
+            const composer =
+              step === 'enter-prompt' || step === 'enter-prompt-2'
+                ? getComposerElement()
+                : targetElement
+            ;(composer ?? targetElement)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
           }}
         >
           <span className="mobile-tutorial-scroll-icon">
-            {isTargetOffScreen === 'up' ? '↑' : '↓'}
+            {scrollHintDirection === 'up' ? '↑' : '↓'}
           </span>
-          <span>Tap to scroll to next step</span>
+          <span>{promptScrollBack ? 'Scroll back to continue' : 'Tap to scroll to next step'}</span>
         </div>
       )}
 
