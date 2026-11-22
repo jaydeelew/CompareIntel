@@ -119,11 +119,23 @@ test('step 6 submit tap works while the prompt is focused', async ({ page }, tes
   await page.setViewportSize({ width: size!.width, height: Math.max(480, size!.height - 280) })
   await expect.poll(() => submitHit(page), { timeout: 5_000 }).toBe('submit')
 
+  const doneSelecting = page.getByRole('button', { name: 'Done selecting models' })
+  if (await doneSelecting.isVisible().catch(() => false)) {
+    await doneSelecting.click({ timeout: 15_000 })
+    await expect(doneSelecting).toBeHidden({ timeout: 15_000 })
+  }
+  await dismissMobileBlockers(page)
+
   const point = await submitPoint(page)
   expect(point).not.toBeNull()
+  const compareStream = page.waitForResponse(
+    res => res.url().includes('/api/compare-stream') && res.request().method() === 'POST',
+    { timeout: 45_000 }
+  )
   await page.mouse.click(point!.x, point!.y)
+  await compareStream
   await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation', {
-    timeout: 20_000,
+    timeout: 40_000,
   })
   await page.setViewportSize({ width: size!.width, height: size!.height })
   await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation')

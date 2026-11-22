@@ -11,7 +11,13 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
 import { isAnalyticsEnabled } from '../config/deployEnv'
+import {
+  ONBOARDING_TUTORIAL_ACTIVE_ATTR,
+  ONBOARDING_TUTORIAL_ACTIVE_EVENT,
+  type OnboardingTutorialActiveDetail,
+} from '../constants/onboardingTutorialEvents'
 import logger from '../utils/logger'
+import { gateInstallPromptForOnboarding } from '../utils/pwaInstallVisibility'
 
 import {
   DISMISSED_KEY,
@@ -32,6 +38,10 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
   const [showIOSInstructions, setShowIOSInstructions] = useState(false)
   const [shouldShowBanner, setShouldShowBanner] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [onboardingTutorialActive, setOnboardingTutorialActive] = useState(() => {
+    if (typeof document === 'undefined') return false
+    return document.documentElement.hasAttribute(ONBOARDING_TUTORIAL_ACTIVE_ATTR)
+  })
   const engagementTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasShownRef = useRef(false)
 
@@ -39,8 +49,16 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
 
   // Best practice: On Android, only show after beforeinstallprompt has fired
   // On iOS, beforeinstallprompt never fires, so show based on engagement only
-  const showInstallBanner =
+  const baseShowInstallBanner =
     canInstall && !isDismissed && shouldShowBanner && (deferredPrompt !== null || isIOS)
+  const showInstallBanner = gateInstallPromptForOnboarding(
+    baseShowInstallBanner,
+    onboardingTutorialActive
+  )
+  const gatedShowIOSInstructions = gateInstallPromptForOnboarding(
+    showIOSInstructions,
+    onboardingTutorialActive
+  )
 
   const checkDismissed = useCallback(() => {
     const dismissed = localStorage.getItem(DISMISSED_KEY)
@@ -77,6 +95,16 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
 
     setIsDismissed(checkDismissed())
   }, [checkDismissed])
+
+  useEffect(() => {
+    const handleOnboardingActive = (event: Event) => {
+      const detail = (event as CustomEvent<OnboardingTutorialActiveDetail>).detail
+      setOnboardingTutorialActive(Boolean(detail?.active))
+    }
+    window.addEventListener(ONBOARDING_TUTORIAL_ACTIVE_EVENT, handleOnboardingActive)
+    return () =>
+      window.removeEventListener(ONBOARDING_TUTORIAL_ACTIVE_EVENT, handleOnboardingActive)
+  }, [])
 
   // Listen for auth sign-in (meaningful engagement - clear dismissal per best practice)
   useEffect(() => {
@@ -197,7 +225,7 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
     () => ({
       canInstall,
       showInstallBanner,
-      showIOSInstructions,
+      showIOSInstructions: gatedShowIOSInstructions,
       triggerInstall,
       dismissBanner,
       closeIOSInstructions,
@@ -208,7 +236,7 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
     [
       canInstall,
       showInstallBanner,
-      showIOSInstructions,
+      gatedShowIOSInstructions,
       triggerInstall,
       dismissBanner,
       closeIOSInstructions,
