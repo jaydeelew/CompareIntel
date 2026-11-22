@@ -18,8 +18,6 @@ describe('hero subtitle CSS', () => {
   })
 
   it('keeps entrance fade on the hero subtitle', () => {
-    expect(css).toMatch(
-      /\.hero-subtitle\s*\{[^}]*animation:\s*fadeInUp 0\.8s ease-out 0\.1s both/
-    )
+    expect(css).toMatch(/\.hero-subtitle\s*\{[^}]*animation:\s*fadeInUp 0\.8s ease-out 0\.1s both/)
   })
 })
