@@ -97,6 +97,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       return
     }
     const measure = () => {
+      // Prompt steps only. History and save keep their Done button when the
+      // dropdown opens; replacing that card hid the control the tour clicks.
+      if (step !== 'enter-prompt' && step !== 'enter-prompt-2') {
+        if (scrollBackRef.current != null) setScrollBack(null)
+        return
+      }
       const scrollTop = getTutorialScrollRoot().getScrollTop()
       const target = readTutorialSpotlightRect(step, tutorialProviderNames)
       const targetOff = scrollBackDirectionForTarget(target, null, true)

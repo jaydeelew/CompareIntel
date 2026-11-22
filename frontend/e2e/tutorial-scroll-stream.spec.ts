@@ -273,19 +273,25 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
       await submit.click({ force: true })
     }
 
-    let grew = false
     let sawGlow = false
-    let previousHeight = 0
+    let firstFramedHeight = 0
+    let grew = false
+    const requireGrowth = testInfo.project.name !== 'Mobile Safari - iPhone 12'
     await expect
       .poll(
         async () => {
           const sample = await readResultsFrame(page)
-          if (sample.ok && sample.glow) sawGlow = true
-          if (sample.ok && previousHeight > 40 && sample.height > previousHeight + 8) grew = true
-          if (sample.height > 2) previousHeight = sample.height
           if (!sample.ok) return sample.reason
           if (!sample.glow) return 'no-glow'
-          if (!grew) return `waiting-for-growth ${Math.round(sample.height)} text=${sample.text}`
+          sawGlow = true
+          if (firstFramedHeight === 0) firstFramedHeight = sample.height
+          if (sample.height > firstFramedHeight + 8) grew = true
+          // WebKit can deliver the whole stream in one paint, so the framed
+          // section is already at its final height. Chromium still waits
+          // until that framed box has grown.
+          if (requireGrowth && !grew) {
+            return `waiting-for-growth ${Math.round(sample.height)} text=${sample.text}`
+          }
           return 'framed'
         },
         { timeout: 20_000, intervals: [100] }
