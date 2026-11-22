@@ -164,6 +164,9 @@ export function trackTutorialMotion(onFrame: () => void): () => void {
         lastSignature = next
         stableFrames = 0
         onFrame()
+        // WebKit drops animation frames while a test is sampling. The timer
+        // still lands, so a touch that never emits scroll still moves the card.
+        scheduleTimer()
       } else if (contacts > 0) {
         stableFrames = 0
       } else {
@@ -222,6 +225,7 @@ export function trackTutorialMotion(onFrame: () => void): () => void {
     contacts = Math.max(0, next)
     stableFrames = 0
     bindScrollAncestors()
+    scheduleTimer()
     ensureLoop()
   }
   const onTouchStart = (event: TouchEvent) => {

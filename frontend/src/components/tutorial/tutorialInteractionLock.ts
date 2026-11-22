@@ -296,11 +296,19 @@ export function syncTutorialInteractionLock(): () => void {
 
   const applyInert = () => {
     const allowed = allowedElements()
+    const focused =
+      document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+        ? document.activeElement
+        : null
     const desired = new Set<HTMLElement>()
     const visit = (node: Element) => {
       if (node.id === SHIELD_ID || node.closest(PORTAL_SELECTOR)) return
       if (allowed.some(target => target === node)) return
-      if (!allowed.some(target => node.contains(target))) {
+      const containsAllowed = allowed.some(target => node.contains(target))
+      // Setting inert on an ancestor of the focused prompt blurs it and WebKit
+      // drops the typed text. Walk past that ancestor instead.
+      const containsFocus = focused != null && focused !== node && node.contains(focused)
+      if (!containsAllowed && !containsFocus) {
         if (node instanceof HTMLElement) desired.add(node)
         return
       }
@@ -393,7 +401,12 @@ export function syncTutorialInteractionLock(): () => void {
     attributeFilter: ['data-tutorial-step'],
   })
 
-  const stopMotion = trackTutorialMotion(scheduleApply)
+  // Scrolling only moves the holes. Re-running inert on each frame blurs the
+  // prompt on WebKit and the typed text disappears before submit.
+  const stopMotion = trackTutorialMotion(() => {
+    if (disposed) return
+    updateHoles()
+  })
 
   return () => {
     disposed = true

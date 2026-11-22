@@ -741,6 +741,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         isStepTransitioningRef.current = false
         setIsStepTransitioning(false)
         setTutorialSpotlightSettling(false)
+        // A drag during the fade was ignored. Catch the target where it is now.
+        calculatePositions()
       }, 48)
       revealTimerRef.current = id
     }

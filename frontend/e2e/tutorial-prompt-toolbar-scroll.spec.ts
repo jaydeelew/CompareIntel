@@ -148,14 +148,22 @@ test('step 5 locks unused toolbar buttons and the cutout follows the composer', 
         const composer = document.querySelector(
           '.composer:not(.composer-placeholder):not(.composer-hero-mirror)'
         )
-        if (!composer) return false
-        return (
+        const tip = document.querySelector(
+          '.mobile-tutorial-tooltip, .tutorial-tooltip'
+        ) as HTMLElement | null
+        if (!composer || !tip) return 'wait'
+        const highlighted =
           composer.classList.contains('mobile-tutorial-highlight') ||
           composer.classList.contains('tutorial-highlight')
-        )
+        const hidden =
+          tip.classList.contains('mobile-tutorial-tooltip--transitioning') ||
+          tip.classList.contains('tutorial-tooltip--settling')
+        return highlighted && !hidden && Number(getComputedStyle(tip).opacity) > 0.9
+          ? 'ready'
+          : 'wait'
       })
     )
-    .toBe(true)
+    .toBe('ready')
 
   const aligned = await page.evaluate(async () => {
     const composer = document.querySelector(
@@ -173,11 +181,13 @@ test('step 5 locks unused toolbar buttons and the cutout follows the composer', 
     const scrollBefore = app?.scrollTop ?? window.scrollY
     composer.dispatchEvent(new Event('touchstart', { bubbles: true }))
     composer.style.marginTop = '-120px'
-    const deadline = performance.now() + 250
+    const deadline = performance.now() + 800
     let matched = false
+    let tooltipFollowed = false
     let cutouts: DOMRect[] = []
     let target = composer.getBoundingClientRect()
-    while (performance.now() < deadline && !matched) {
+    let tipAfter = tipBefore
+    while (performance.now() < deadline && !(matched && tooltipFollowed)) {
       await new Promise<void>(resolve => {
         requestAnimationFrame(() => resolve())
       })
@@ -196,22 +206,24 @@ test('step 5 locks unused toolbar buttons and the cutout follows the composer', 
           Math.abs(cutout.bottom - (target.bottom + outset)) <= tolerance &&
           Math.abs(cutout.right - (target.right + outset)) <= tolerance
       )
+      tipAfter = tip?.getBoundingClientRect().top ?? null
+      const composerDelta = target.top - composerBefore
+      tooltipFollowed =
+        tipBefore == null ||
+        tipAfter == null ||
+        Math.abs(composerDelta) < 40 ||
+        Math.abs(tipAfter - tipBefore) >= 12 ||
+        tipAfter < 12
     }
     const highlighted =
       composer.classList.contains('mobile-tutorial-highlight') ||
       composer.classList.contains('tutorial-highlight')
-    const composerDelta = target.top - composerBefore
-    const tipAfter = tip?.getBoundingClientRect().top
     composer.style.marginTop = ''
     composer.dispatchEvent(new Event('touchend', { bubbles: true }))
     if (!highlighted) return 'highlight dropped while the prompt was focused'
-    const tooltipFollowed =
-      tipBefore == null ||
-      tipAfter == null ||
-      Math.abs(composerDelta) < 40 ||
-      Math.abs(tipAfter - tipBefore) >= 12 ||
-      tipAfter < 12
-    if (!tooltipFollowed) return 'tooltip did not follow the composer'
+    if (!tooltipFollowed) {
+      return `tooltip did not follow the composer (${Math.round(tipBefore ?? 0)} -> ${Math.round(tipAfter ?? 0)}, composer ${Math.round(composerBefore)} -> ${Math.round(target.top)})`
+    }
     if (matched) return 'ok'
     const nearest = cutouts[0]
     return nearest
