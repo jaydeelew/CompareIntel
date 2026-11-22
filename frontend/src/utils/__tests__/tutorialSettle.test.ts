@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   prefersReducedTutorialMotion,
   setTutorialSpotlightSettling,
+  trackTutorialMotion,
   tutorialBoxesNearlyEqual,
   waitForTutorialLayoutSettle,
   watchTutorialFrameSize,
@@ -144,5 +145,62 @@ describe('tutorialSettle', () => {
     stop()
     app.remove()
     vi.unstubAllGlobals()
+  })
+
+  it('samples the target on the next frame while a touch is down', async () => {
+    const composer = document.createElement('div')
+    composer.className = 'composer'
+    let top = 40
+    composer.getBoundingClientRect = () =>
+      ({ top, left: 8, width: 300, height: 120, right: 308, bottom: top + 120 }) as DOMRect
+    document.body.append(composer)
+    let calls = 0
+    const stop = trackTutorialMotion(() => {
+      calls += 1
+    })
+    document.dispatchEvent(new Event('touchstart'))
+    top = 160
+    await new Promise<void>(resolve => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    })
+    expect(calls).toBeGreaterThan(0)
+    document.dispatchEvent(new Event('touchend'))
+    stop()
+    composer.remove()
+  })
+
+  it('follows scroll on a nested scroll ancestor and visualViewport', async () => {
+    const scroller = document.createElement('div')
+    scroller.className = 'results-section'
+    scroller.style.overflow = 'auto'
+    Object.defineProperty(scroller, 'scrollHeight', { configurable: true, value: 900 })
+    Object.defineProperty(scroller, 'clientHeight', { configurable: true, value: 200 })
+    document.body.append(scroller)
+
+    const listeners = new Map<string, EventListener>()
+    const previous = window.visualViewport
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      value: {
+        offsetTop: 0,
+        offsetLeft: 0,
+        height: 700,
+        width: 390,
+        addEventListener: (type: string, cb: EventListener) => listeners.set(type, cb),
+        removeEventListener: () => undefined,
+      },
+    })
+
+    let calls = 0
+    const stop = trackTutorialMotion(() => {
+      calls += 1
+    })
+    scroller.dispatchEvent(new Event('scroll'))
+    listeners.get('scroll')?.(new Event('scroll'))
+    await new Promise(r => setTimeout(r, 70))
+    expect(calls).toBeGreaterThan(0)
+    stop()
+    scroller.remove()
+    Object.defineProperty(window, 'visualViewport', { configurable: true, value: previous })
   })
 })
