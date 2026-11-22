@@ -1,13 +1,51 @@
 import { useEffect } from 'react'
 
 import { getTutorialScrollRoot } from '../../utils/tutorialPositioning'
+import { trackTutorialMotion } from '../../utils/tutorialSettle'
 
 const SHIELD_ID = 'tutorial-interaction-shield'
 const PORTAL_SELECTOR = '#tutorial-portal-root, #mobile-tutorial-portal-root'
 const HIGHLIGHT_SELECTOR = '.tutorial-highlight, .mobile-tutorial-highlight'
 const HOLE_PAD_PX = 8
+const MODAL_SELECTOR = [
+  '.disabled-button-info-overlay',
+  '.auth-modal-overlay',
+  '.modal-overlay',
+  '[role="dialog"]',
+].join(',')
 
 type InertMark = { el: HTMLElement; was: boolean }
+
+type ToolbarMark = {
+  el: HTMLButtonElement
+  wasInert: boolean
+  pointerEvents: string
+}
+
+function readTutorialStep(): string | null {
+  if (typeof window === 'undefined') return null
+  const fromWindow = (window as Window & { __TUTORIAL_CURRENT_STEP__?: string | null })
+    .__TUTORIAL_CURRENT_STEP__
+  if (fromWindow) return fromWindow
+  return document.documentElement.getAttribute('data-tutorial-step')
+}
+
+/** Toolbar controls the current step actually uses. Everything else in the bar stays inert. */
+function toolbarButtonKept(button: HTMLElement, step: string | null): boolean {
+  if (!step) return false
+  const submitStep =
+    step === 'submit-comparison' || step === 'submit-comparison-2' || step === 'follow-up'
+  if (
+    submitStep &&
+    (button.classList.contains('submit-button') ||
+      button.getAttribute('data-testid') === 'comparison-submit-button')
+  ) {
+    return true
+  }
+  if (step === 'history-dropdown' && button.classList.contains('history-toggle-button')) return true
+  if (step === 'save-selection' && button.classList.contains('saved-selections-button')) return true
+  return false
+}
 
 function readInert(el: HTMLElement): boolean {
   return el.inert || el.hasAttribute('inert')
@@ -27,6 +65,7 @@ function writeInert(el: HTMLElement, inert: boolean): void {
  */
 export function syncTutorialInteractionLock(): () => void {
   const marked: InertMark[] = []
+  const toolbarMarks: ToolbarMark[] = []
   let shield: SVGSVGElement | null = null
   let resizeObserver: ResizeObserver | null = null
   const observed = new Set<Element>()
@@ -80,7 +119,54 @@ export function syncTutorialInteractionLock(): () => void {
         highlighted.push(el)
       })
     }
+    // A modal opened from a hole in the shield (Add File, auth) must stay clickable.
+    document.querySelectorAll(MODAL_SELECTOR).forEach(el => {
+      if (el.closest(PORTAL_SELECTOR) || highlighted.includes(el)) return
+      highlighted.push(el)
+    })
     return highlighted
+  }
+
+  const restoreToolbar = () => {
+    for (const mark of toolbarMarks) {
+      writeInert(mark.el, mark.wasInert)
+      mark.el.style.pointerEvents = mark.pointerEvents
+      mark.el.removeAttribute('data-tutorial-toolbar-locked')
+    }
+    toolbarMarks.length = 0
+  }
+
+  const syncToolbar = () => {
+    const step = readTutorialStep()
+    const desired = new Set<HTMLButtonElement>()
+    document.querySelectorAll('.composer-toolbar button').forEach(node => {
+      if (!(node instanceof HTMLButtonElement)) return
+      if (toolbarButtonKept(node, step)) return
+      desired.add(node)
+    })
+    for (const mark of toolbarMarks) {
+      if (desired.has(mark.el)) continue
+      writeInert(mark.el, mark.wasInert)
+      mark.el.style.pointerEvents = mark.pointerEvents
+      mark.el.removeAttribute('data-tutorial-toolbar-locked')
+    }
+    const next: ToolbarMark[] = []
+    for (const button of desired) {
+      let mark = toolbarMarks.find(item => item.el === button)
+      if (!mark) {
+        mark = {
+          el: button,
+          wasInert: readInert(button),
+          pointerEvents: button.style.pointerEvents,
+        }
+      }
+      next.push(mark)
+      if (!readInert(button)) writeInert(button, true)
+      button.style.pointerEvents = 'none'
+      button.setAttribute('data-tutorial-toolbar-locked', '')
+    }
+    toolbarMarks.length = 0
+    toolbarMarks.push(...next)
   }
 
   const scrollBy = (deltaY: number) => {
@@ -210,11 +296,19 @@ export function syncTutorialInteractionLock(): () => void {
 
   const applyInert = () => {
     const allowed = allowedElements()
+    const focused =
+      document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+        ? document.activeElement
+        : null
     const desired = new Set<HTMLElement>()
     const visit = (node: Element) => {
       if (node.id === SHIELD_ID || node.closest(PORTAL_SELECTOR)) return
       if (allowed.some(target => target === node)) return
-      if (!allowed.some(target => node.contains(target))) {
+      const containsAllowed = allowed.some(target => node.contains(target))
+      // Setting inert on an ancestor of the focused prompt blurs it and WebKit
+      // drops the typed text. Walk past that ancestor instead.
+      const containsFocus = focused != null && focused !== node && node.contains(focused)
+      if (!containsAllowed && !containsFocus) {
         if (node instanceof HTMLElement) desired.add(node)
         return
       }
@@ -263,6 +357,7 @@ export function syncTutorialInteractionLock(): () => void {
   const apply = () => {
     if (disposed) return
     applyInert()
+    syncToolbar()
     updateHoles()
     bindResize()
   }
@@ -300,13 +395,18 @@ export function syncTutorialInteractionLock(): () => void {
     attributes: true,
     attributeFilter: ['class'],
   })
+  // Step changes publish data-tutorial-step on <html> before the highlight class moves.
+  mutationObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-tutorial-step'],
+  })
 
-  const onScroll = () => scheduleApply()
-  const scrollListen: AddEventListenerOptions = { capture: true, passive: true }
-  document.addEventListener('scroll', onScroll, scrollListen)
-  window.addEventListener('resize', onScroll)
-  document.querySelector('.app')?.addEventListener('scroll', onScroll, scrollListen)
-  window.visualViewport?.addEventListener('resize', onScroll)
+  // Scrolling only moves the holes. Re-running inert on each frame blurs the
+  // prompt on WebKit and the typed text disappears before submit.
+  const stopMotion = trackTutorialMotion(() => {
+    if (disposed) return
+    updateHoles()
+  })
 
   return () => {
     disposed = true
@@ -314,10 +414,8 @@ export function syncTutorialInteractionLock(): () => void {
     if (timer != null) window.clearTimeout(timer)
     mutationObserver?.disconnect()
     resizeObserver?.disconnect()
-    document.removeEventListener('scroll', onScroll, scrollListen)
-    window.removeEventListener('resize', onScroll)
-    document.querySelector('.app')?.removeEventListener('scroll', onScroll, scrollListen)
-    window.visualViewport?.removeEventListener('resize', onScroll)
+    stopMotion()
+    restoreToolbar()
     restoreInert()
     if (scrollRoot) scrollRoot.style.overflowAnchor = previousOverflowAnchor
     shield?.remove()

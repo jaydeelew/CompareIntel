@@ -95,10 +95,19 @@ export function TutorialManager({
     tutorialModelIds.length > 1 && selectedModels.includes(tutorialModelIds[1])
   const bothModelsSelected = firstModelSelected && secondModelSelected
 
+  const activeTutorialStep = tutorialState.isActive ? tutorialState.currentStep : null
+  if (typeof window !== 'undefined') {
+    const w = window as Window & { __TUTORIAL_CURRENT_STEP__?: TutorialStep | null }
+    w.__TUTORIAL_CURRENT_STEP__ = activeTutorialStep
+    if (activeTutorialStep)
+      document.documentElement.setAttribute('data-tutorial-step', activeTutorialStep)
+    else document.documentElement.removeAttribute('data-tutorial-step')
+  }
+
   useEffect(() => {
     const w = window as Window & { __TUTORIAL_CURRENT_STEP__?: TutorialStep | null }
-    w.__TUTORIAL_CURRENT_STEP__ = tutorialState.isActive ? tutorialState.currentStep : null
-  }, [tutorialState.isActive, tutorialState.currentStep])
+    w.__TUTORIAL_CURRENT_STEP__ = activeTutorialStep
+  }, [activeTutorialStep])
 
   const sharedControllerProps = {
     tutorialState,

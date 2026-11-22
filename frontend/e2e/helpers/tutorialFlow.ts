@@ -571,6 +571,22 @@ export async function runTutorialComparison(
     await expect(doneSelecting).toBeHidden({ timeout: 15_000 })
   }
   const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()
+  if (promptText && !(await submit.isEnabled().catch(() => false))) {
+    // WebKit can report fill() as done while the controlled value stays empty,
+    // which leaves Submit disabled. Commit through the native setter.
+    await page.evaluate(value => {
+      document
+        .querySelectorAll<HTMLTextAreaElement>('[data-testid="comparison-input-textarea"]')
+        .forEach(el => {
+          const setter = Object.getOwnPropertyDescriptor(
+            HTMLTextAreaElement.prototype,
+            'value'
+          )?.set
+          setter?.call(el, value)
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+        })
+    }, promptText)
+  }
   await expect(submit).toBeEnabled({ timeout: 20_000 })
   // The submit control pulses (transform) for the whole step, so it never counts as
   // "stable". A default timeout of 0 would wait until the test deadline.

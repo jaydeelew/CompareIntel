@@ -41,6 +41,7 @@ import {
   setTutorialSpotlightSettling,
   TUTORIAL_FRAME_RESIZED_EVENT,
   TUTORIAL_SPOTLIGHT_SETTLED_EVENT,
+  trackTutorialMotion,
   tutorialBoxesNearlyEqual,
   waitForRectStable,
   waitForTutorialLayoutSettle,
@@ -63,45 +64,13 @@ interface HTMLElementWithTutorialProps extends HTMLElement {
   __tutorialHeightInterval?: number
 }
 
-const SCROLL_CAPTURE_OPTS: AddEventListenerOptions = { capture: true, passive: true }
-
 /**
- * Re-run layout reads on scroll and resize. rAF coalesces bursts. WebKit drops
- * animation frames while a test is waiting, so a short timer still lands the read.
- * Scroll is capture + passive: the page scroller is `.app`, which window listeners miss.
+ * Re-run layout reads while the page scrolls, including touch and momentum.
+ * WebKit drops animation frames while a test is waiting; the tracker still
+ * lands a read on a short timer.
  */
 function attachScrollResizeRaf(update: () => void): () => void {
-  let raf: number | null = null
-  let timer: number | null = null
-  const schedule = () => {
-    if (raf == null) {
-      raf = requestAnimationFrame(() => {
-        raf = null
-        update()
-      })
-    }
-    if (timer == null) {
-      timer = window.setTimeout(() => {
-        timer = null
-        update()
-      }, 48)
-    }
-  }
-  document.addEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
-  window.addEventListener('resize', schedule)
-  const scrollRootEl = typeof document !== 'undefined' ? document.querySelector('.app') : null
-  scrollRootEl?.addEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
-  window.visualViewport?.addEventListener('scroll', schedule)
-  window.visualViewport?.addEventListener('resize', schedule)
-  return () => {
-    if (raf != null) cancelAnimationFrame(raf)
-    if (timer != null) window.clearTimeout(timer)
-    document.removeEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
-    window.removeEventListener('resize', schedule)
-    scrollRootEl?.removeEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
-    window.visualViewport?.removeEventListener('scroll', schedule)
-    window.visualViewport?.removeEventListener('resize', schedule)
-  }
+  return trackTutorialMotion(update)
 }
 
 export function useTutorialOverlay(
@@ -969,58 +938,29 @@ export function useTutorialOverlay(
         }, 48)
       }
     }
-    const handleScroll = () => {
+    const followTarget = () => {
+      if (cancelled || stepRef.current !== step) return
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
       // The settle scroll runs while the card is hidden. After it fades in, a
-      // user scroll must move the fixed tooltip with the target. Hiding it
-      // here is the transition flicker.
+      // user scroll, touch, or keyboard resize must move the fixed cutout and
+      // tooltip with the target. Hiding them here drops the prompt step as
+      // soon as the textarea is focused, and it is the transition flicker.
       if (!fadeStarted) {
         updatePosition()
         return
       }
-      scheduleTrack()
-    }
-    const onViewport = () => {
-      if (!spotlightSettledRef.current || settledStepRef.current !== step) return
-      // The settle scroll runs while the card is hidden. After it fades in, a
-      // keyboard or window resize must move the fixed cutout and tooltip with
-      // the target. Hiding them here drops the prompt step as soon as the
-      // textarea is focused.
-      if (!fadeStarted) {
-        updatePosition()
-        return
-      }
-      scheduleTrack()
-    }
-    let resizeFollowUp: number | null = null
-    const onViewportResize = () => {
-      onViewport()
-      if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
-      resizeFollowUp = window.setTimeout(() => {
-        resizeFollowUp = null
-        onViewport()
-      }, 200)
+      trackTooltip()
     }
 
-    window.addEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
-    window.addEventListener('resize', onViewportResize)
-    const appScrollHost = document.querySelector('.app')
-    appScrollHost?.addEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
-    window.visualViewport?.addEventListener('scroll', handleScroll)
-    window.visualViewport?.addEventListener('resize', onViewportResize)
     const detachFrameWatch = watchTutorialFrameSize(scheduleTrack)
+    const stopMotion = trackTutorialMotion(followTarget)
 
     return () => {
       cancelled = true
       detachFrameWatch()
+      stopMotion()
       if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
       if (trackTimer != null) window.clearTimeout(trackTimer)
-      if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
-      window.removeEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
-      window.removeEventListener('resize', onViewportResize)
-      appScrollHost?.removeEventListener('scroll', handleScroll, SCROLL_CAPTURE_OPTS)
-      window.visualViewport?.removeEventListener('scroll', handleScroll)
-      window.visualViewport?.removeEventListener('resize', onViewportResize)
       if (scrollDelayTimer !== null) clearTimeout(scrollDelayTimer)
       if (freezeScrollOnCleanup) {
         try {

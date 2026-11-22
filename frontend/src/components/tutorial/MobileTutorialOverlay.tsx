@@ -34,6 +34,7 @@ import {
 import {
   focusTutorialPromptTextarea,
   setTutorialSpotlightSettling,
+  trackTutorialMotion,
   waitForRectStable,
   waitForTutorialLayoutSettle,
   watchTutorialFrameSize,
@@ -740,6 +741,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         isStepTransitioningRef.current = false
         setIsStepTransitioning(false)
         setTutorialSpotlightSettling(false)
+        // A drag during the fade was ignored. Catch the target where it is now.
+        calculatePositions()
       }, 48)
       revealTimerRef.current = id
     }
@@ -871,6 +874,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (!spotlightSettledRef.current || settledStepRef.current !== currentStep) return
       // Writes during the fade move the card while the transition sample is open.
       if (isStepTransitioningRef.current) return
+      // A React render on focus replaces className and drops the prompt glow.
+      if (currentStep === 'enter-prompt' || currentStep === 'enter-prompt-2') {
+        getComposerElement()?.classList.add('mobile-tutorial-highlight')
+      }
       calculatePositions()
     }
     const scheduleTrack = () => {
@@ -888,42 +895,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }, 48)
       }
     }
-    // A keyboard or window resize after the card is showing must move the cutout
-    // and tooltip with the composer. Hiding them to remeasure left the dimmed
-    // page with no hole once the user focused the prompt. The short viewport
-    // stylesheet shrinks the card after the first resize event, so measure once
-    // more after that layout.
-    let resizeFollowUp: number | null = null
-    const onViewportResize = () => {
-      scheduleTrack()
-      if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
-      resizeFollowUp = window.setTimeout(() => {
-        resizeFollowUp = null
-        scheduleTrack()
-      }, 200)
-    }
-    const scrollListen: AddEventListenerOptions = { capture: true, passive: true }
-    window.addEventListener('scroll', scheduleTrack, scrollListen)
-    window.addEventListener('resize', onViewportResize)
-    const appScrollHost = document.querySelector('.app') as HTMLElement | null
-    appScrollHost?.addEventListener('scroll', scheduleTrack, scrollListen)
-    window.visualViewport?.addEventListener('scroll', scheduleTrack)
-    window.visualViewport?.addEventListener('resize', onViewportResize)
     const detachFrameWatch = watchTutorialFrameSize(scheduleTrack)
+    // Touch, momentum, scroll ancestors, and visualViewport (keyboard open or
+    // closed). Hiding the card to remeasure drops the prompt hole on focus.
+    const stopMotion = trackTutorialMotion(trackLockedHighlight)
 
     return () => {
       cancelled = true
       detachFrameWatch()
+      stopMotion()
       if (measureTimer != null) window.clearInterval(measureTimer)
       if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
       if (trackTimer != null) window.clearTimeout(trackTimer)
-      if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
       if (settledFollowUp != null) window.clearTimeout(settledFollowUp)
-      window.removeEventListener('scroll', scheduleTrack, scrollListen)
-      window.removeEventListener('resize', onViewportResize)
-      appScrollHost?.removeEventListener('scroll', scheduleTrack, scrollListen)
-      window.visualViewport?.removeEventListener('scroll', scheduleTrack)
-      window.visualViewport?.removeEventListener('resize', onViewportResize)
       if (!spotlightSettledRef.current) {
         try {
           const root = getTutorialScrollRoot()
@@ -1045,6 +1029,24 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
     }
   }, [targetElement, step])
+
+  // Focus replaces the composer's className and drops the prompt glow. Put it back
+  // while step 5 (and the follow-up prompt) is showing, including while the field is focused.
+  useEffect(() => {
+    if (step !== 'enter-prompt' && step !== 'enter-prompt-2') return
+    const ensureHighlight = () => {
+      const current = stepRef.current
+      if (current !== 'enter-prompt' && current !== 'enter-prompt-2') return
+      getComposerElement()?.classList.add('mobile-tutorial-highlight')
+    }
+    ensureHighlight()
+    document.addEventListener('focusin', ensureHighlight, true)
+    const interval = window.setInterval(ensureHighlight, 100)
+    return () => {
+      document.removeEventListener('focusin', ensureHighlight, true)
+      window.clearInterval(interval)
+    }
+  }, [step])
 
   // Handle dropdown steps - track when dropdown is opened
   // For save-selection: use DOM presence as source of truth (dropdown only renders when user clicks)

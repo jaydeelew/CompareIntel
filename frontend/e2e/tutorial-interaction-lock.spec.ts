@@ -54,18 +54,43 @@ function projectAllowed(project: string): boolean {
 async function clickAt(page: Page, selector: string): Promise<void> {
   const locator = page.locator(selector).first()
   const point = await locator.evaluate(el => {
-    el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    const header = el.closest('header, .app-header, .app-header-shell')
+    const rectNow = el.getBoundingClientRect()
+    const intersectsViewport =
+      rectNow.width > 1 &&
+      rectNow.height > 1 &&
+      rectNow.bottom > 1 &&
+      rectNow.right > 1 &&
+      rectNow.top < window.innerHeight - 1 &&
+      rectNow.left < window.innerWidth - 1
+    // WebKit's scrollIntoView on a sticky header control scrolls to that
+    // control's in-flow position. On iPhone that jump pushes the centered
+    // provider off screen, and the overlay unmounts the step title.
+    if (!header && !intersectsViewport) {
+      el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    }
     const rect = el.getBoundingClientRect()
     const candidates = [
-      [rect.left + rect.width / 2, rect.top + Math.min(rect.height / 2, 12)],
-      [rect.left + 4, rect.top + 4],
-      [rect.right - 4, rect.top + 4],
-      [rect.left + 4, rect.bottom - 4],
+      [rect.left + rect.width / 2, rect.top + Math.min(Math.max(rect.height / 2, 4), 12)],
+      [
+        rect.left + Math.min(8, Math.max(rect.width / 2, 1)),
+        rect.top + Math.min(8, Math.max(rect.height / 2, 1)),
+      ],
+      [
+        rect.right - Math.min(8, Math.max(rect.width / 2, 1)),
+        rect.top + Math.min(8, Math.max(rect.height / 2, 1)),
+      ],
+      [
+        rect.left + Math.min(8, Math.max(rect.width / 2, 1)),
+        rect.bottom - Math.min(8, Math.max(rect.height / 2, 1)),
+      ],
     ]
-    for (const [x, y] of candidates) {
-      if (x < 1 || y < 1 || x >= window.innerWidth - 1 || y >= window.innerHeight - 1) continue
+    for (const [rawX, rawY] of candidates) {
+      const x = Math.min(window.innerWidth - 2, Math.max(1, rawX))
+      const y = Math.min(window.innerHeight - 2, Math.max(1, rawY))
       const hit = document.elementFromPoint(x, y)
       if (!hit) continue
+      if (hit.closest('.tutorial-close-button, .mobile-tutorial-close-button')) continue
       // The tutorial card sits above the header on a phone. A click there is the
       // close button, which ends the tour. Hit the shield or the control itself.
       const inTutorial = hit.closest(
@@ -76,8 +101,12 @@ async function clickAt(page: Page, selector: string): Promise<void> {
     }
     return null
   })
-  if (!point) return
-  await page.mouse.click(point.x, point.y)
+  if (!point) {
+    throw new Error(`no safe click point for ${selector}`)
+  }
+  const hasTouch = await page.evaluate(() => navigator.maxTouchPoints > 0)
+  if (hasTouch) await page.touchscreen.tap(point.x, point.y)
+  else await page.mouse.click(point.x, point.y)
 }
 
 test('non-target controls do nothing and the step target still works', async ({

@@ -76,6 +76,204 @@ function readScrollTop(target: EventTarget): number {
   return (target as HTMLElement).scrollTop
 }
 
+const MOTION_SEED_SELECTOR = [
+  '.app',
+  '.composer',
+  '.tutorial-highlight',
+  '.mobile-tutorial-highlight',
+  '.results-section',
+  '.provider-dropdown',
+  '.history-inline-list',
+  '.saved-selections-dropdown',
+].join(',')
+
+function elementCanScroll(el: HTMLElement): boolean {
+  if (el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1) return false
+  const style = getComputedStyle(el)
+  const overflow = `${style.overflow}${style.overflowY}${style.overflowX}`
+  return /auto|scroll|overlay/.test(overflow)
+}
+
+/**
+ * Viewport signature of the page and the highlighted targets. The tooltip and
+ * cutout are omitted so writing their position does not keep the loop alive.
+ */
+function readTutorialMotionSignature(): string {
+  const vv = window.visualViewport
+  const parts = [
+    window.scrollY || 0,
+    document.documentElement.scrollTop || 0,
+    vv?.offsetTop ?? 0,
+    vv?.offsetLeft ?? 0,
+    vv?.height ?? 0,
+    vv?.width ?? 0,
+  ]
+  document.querySelectorAll(MOTION_SEED_SELECTOR).forEach(el => {
+    if (el instanceof HTMLElement) parts.push(el.scrollTop, el.scrollLeft)
+    const rect = el.getBoundingClientRect()
+    parts.push(
+      Math.round(rect.top),
+      Math.round(rect.left),
+      Math.round(rect.width),
+      Math.round(rect.height)
+    )
+  })
+  return parts.join(',')
+}
+
+/**
+ * Keep fixed tutorial chrome on the target while the page moves.
+ * Scroll on the document (capture) misses some WebKit overflow scrollers, so
+ * every scrollable ancestor of a highlight is bound too. A touch or pointer
+ * drag samples layout every frame: iOS often paints the scroll on the
+ * compositor and delivers the scroll event only when the finger lifts.
+ * After the finger lifts, sampling continues until momentum stops.
+ * A 48ms timer still runs when WebKit drops animation frames during a test wait.
+ */
+export function trackTutorialMotion(onFrame: () => void): () => void {
+  let raf = 0
+  let timer: number | null = null
+  let resizeFollowUp: number | null = null
+  let contacts = 0
+  let stableFrames = 0
+  let trailingFrames = 0
+  let lastSignature = readTutorialMotionSignature()
+  const bound = new Set<EventTarget>()
+  let disposed = false
+
+  const scheduleTimer = () => {
+    if (timer != null) return
+    timer = window.setTimeout(() => {
+      timer = null
+      if (disposed) return
+      onFrame()
+    }, 48)
+  }
+
+  const stopLoop = () => {
+    if (raf !== 0) cancelAnimationFrame(raf)
+    raf = 0
+  }
+
+  const loop = () => {
+    raf = requestAnimationFrame(() => {
+      raf = 0
+      if (disposed) return
+      const next = readTutorialMotionSignature()
+      if (next !== lastSignature) {
+        lastSignature = next
+        stableFrames = 0
+        onFrame()
+        // WebKit drops animation frames while a test is sampling. The timer
+        // still lands, so a touch that never emits scroll still moves the card.
+        scheduleTimer()
+      } else if (contacts > 0) {
+        stableFrames = 0
+      } else {
+        stableFrames += 1
+      }
+      if (contacts > 0) trailingFrames = 0
+      else trailingFrames += 1
+      // Keep sampling through the gesture and the momentum after it. The cap
+      // stops a 1px layout jitter from sampling forever once the finger is up.
+      if (contacts > 0 || (stableFrames < 8 && trailingFrames < 180)) loop()
+    })
+  }
+
+  const ensureLoop = () => {
+    if (raf === 0) loop()
+  }
+
+  const bindTarget = (target: EventTarget | null) => {
+    if (!target || bound.has(target)) return
+    bound.add(target)
+    target.addEventListener('scroll', onScroll, { capture: true, passive: true })
+  }
+
+  const bindScrollAncestors = () => {
+    bindTarget(document)
+    bindTarget(window)
+    bindTarget(document.scrollingElement)
+    document.querySelectorAll(MOTION_SEED_SELECTOR).forEach(el => {
+      let node: HTMLElement | null = el instanceof HTMLElement ? el : null
+      while (node) {
+        if (elementCanScroll(node)) bindTarget(node)
+        node = node.parentElement
+      }
+    })
+  }
+
+  const onScroll = () => {
+    if (disposed) return
+    bindScrollAncestors()
+    lastSignature = ''
+    stableFrames = 0
+    scheduleTimer()
+    ensureLoop()
+  }
+
+  const onResize = () => {
+    onScroll()
+    if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
+    resizeFollowUp = window.setTimeout(() => {
+      resizeFollowUp = null
+      onScroll()
+    }, 200)
+  }
+
+  const noteContacts = (next: number) => {
+    contacts = Math.max(0, next)
+    stableFrames = 0
+    bindScrollAncestors()
+    scheduleTimer()
+    ensureLoop()
+  }
+  const onTouchStart = (event: TouchEvent) => {
+    noteContacts(event.touches?.length || contacts + 1)
+  }
+  const onTouchEnd = (event: TouchEvent) => {
+    noteContacts(event.touches?.length ?? Math.max(0, contacts - 1))
+  }
+  const onPointerDown = (event: PointerEvent) => {
+    if (event.pointerType === 'touch') return
+    noteContacts(contacts + 1)
+  }
+  const onPointerUp = (event: PointerEvent) => {
+    if (event.pointerType === 'touch') return
+    noteContacts(contacts - 1)
+  }
+
+  bindScrollAncestors()
+  document.addEventListener('touchstart', onTouchStart, { capture: true, passive: true })
+  document.addEventListener('touchend', onTouchEnd, { capture: true, passive: true })
+  document.addEventListener('touchcancel', onTouchEnd, { capture: true, passive: true })
+  document.addEventListener('pointerdown', onPointerDown, { capture: true, passive: true })
+  document.addEventListener('pointerup', onPointerUp, { capture: true, passive: true })
+  document.addEventListener('pointercancel', onPointerUp, { capture: true, passive: true })
+  window.addEventListener('resize', onResize)
+  window.visualViewport?.addEventListener('scroll', onScroll)
+  window.visualViewport?.addEventListener('resize', onResize)
+
+  return () => {
+    disposed = true
+    stopLoop()
+    if (timer != null) window.clearTimeout(timer)
+    if (resizeFollowUp != null) window.clearTimeout(resizeFollowUp)
+    bound.forEach(target => {
+      target.removeEventListener('scroll', onScroll, { capture: true })
+    })
+    document.removeEventListener('touchstart', onTouchStart, { capture: true })
+    document.removeEventListener('touchend', onTouchEnd, { capture: true })
+    document.removeEventListener('touchcancel', onTouchEnd, { capture: true })
+    document.removeEventListener('pointerdown', onPointerDown, { capture: true })
+    document.removeEventListener('pointerup', onPointerUp, { capture: true })
+    document.removeEventListener('pointercancel', onPointerUp, { capture: true })
+    window.removeEventListener('resize', onResize)
+    window.visualViewport?.removeEventListener('scroll', onScroll)
+    window.visualViewport?.removeEventListener('resize', onResize)
+  }
+}
+
 /**
  * Resolves when scrolling, visualViewport, and font loading have been quiet.
  * `scrollend` arms the same quiet period; a timeout resolves if the event never fires.
