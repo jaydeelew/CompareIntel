@@ -102,7 +102,8 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
       setOnboardingTutorialActive(Boolean(detail?.active))
     }
     window.addEventListener(ONBOARDING_TUTORIAL_ACTIVE_EVENT, handleOnboardingActive)
-    return () => window.removeEventListener(ONBOARDING_TUTORIAL_ACTIVE_EVENT, handleOnboardingActive)
+    return () =>
+      window.removeEventListener(ONBOARDING_TUTORIAL_ACTIVE_EVENT, handleOnboardingActive)
   }, [])
 
   // Listen for auth sign-in (meaningful engagement - clear dismissal per best practice)

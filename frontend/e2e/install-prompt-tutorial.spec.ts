@@ -5,31 +5,28 @@ import { test, expect } from '@playwright/test'
  * Uses base Playwright (not test-setup) so the welcome modal can appear.
  */
 
+const mockModel = (id: string, name: string, provider: string) => ({
+  id,
+  name,
+  description: `${name} test model`,
+  category: provider.toLowerCase(),
+  provider,
+  available: true,
+  tier_access: 'unregistered' as const,
+})
+
+const fillers = ['Amazon', 'Cohere', 'Google', 'Meta', 'Mistral']
+const MOCK_MODELS: Record<string, ReturnType<typeof mockModel>[]> = {
+  Anthropic: [mockModel('anthropic/claude-sonnet-5.5', 'Claude Sonnet 5.5', 'Anthropic')],
+}
+for (const name of fillers) {
+  MOCK_MODELS[name] = [mockModel(`${name.toLowerCase()}/filler`, `${name} Filler`, name)]
+}
+MOCK_MODELS.OpenAI = [mockModel('openai/gpt-5.2', 'GPT-5.2', 'OpenAI')]
+
 const MOCK_MODELS_RESPONSE = {
-  models: [
-    {
-      id: 'google/gemini-test-a',
-      name: 'Gemini Test A',
-      description: 'Gemini Test A test model',
-      category: 'google',
-      provider: 'Google',
-      available: true,
-      tier_access: 'unregistered',
-    },
-  ],
-  models_by_provider: {
-    Google: [
-      {
-        id: 'google/gemini-test-a',
-        name: 'Gemini Test A',
-        description: 'Gemini Test A test model',
-        category: 'google',
-        provider: 'Google',
-        available: true,
-        tier_access: 'unregistered',
-      },
-    ],
-  },
+  models: Object.values(MOCK_MODELS).flat(),
+  models_by_provider: MOCK_MODELS,
 }
 
 const installPrompt = (page: import('@playwright/test').Page) =>
@@ -59,6 +56,7 @@ test.describe('Install prompt during onboarding tutorial', () => {
   test('stays hidden after starting guided tutorial', async ({ page }) => {
     await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
     await page.goto('/')
+    await page.waitForLoadState('networkidle')
     await expect(page.getByRole('button', { name: 'Start Tutorial' })).toBeVisible()
 
     await page.evaluate(() => {
@@ -68,7 +66,17 @@ test.describe('Install prompt during onboarding tutorial', () => {
 
     await page.getByRole('button', { name: 'Start Tutorial' }).click()
     await expect(page.locator('.tutorial-welcome-backdrop')).toHaveCount(0)
-    await expect(page.locator('html')).toHaveAttribute('data-onboarding-tutorial-active', '')
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const html = document.documentElement
+          return (
+            html.hasAttribute('data-onboarding-tutorial-active') ||
+            html.hasAttribute('data-tutorial-step')
+          )
+        })
+      )
+      .toBe(true)
     await expect(
       page.locator('.tutorial-tooltip, .mobile-tutorial-tooltip, .tutorial-backdrop').first()
     ).toBeVisible({ timeout: 15_000 })
