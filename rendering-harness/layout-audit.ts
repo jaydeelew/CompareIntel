@@ -92,15 +92,15 @@ async function main() {
   let skipped = 0
 
   try {
-    const phonePage = await openThemedPage(browser, vite.port, 'light', PHONE_VIEW)
-    const darkPage = await openThemedPage(browser, vite.port, 'dark', DARK_VIEW)
+    let phonePage = await openThemedPage(browser, vite.port, 'light', PHONE_VIEW)
+    let darkPage = await openThemedPage(browser, vite.port, 'dark', DARK_VIEW)
     const wide = await openThemedPage(browser, vite.port, 'light', EVIDENCE_VIEW)
     const stackContext = await browser.newContext({
       viewport: { width: EVIDENCE_VIEW.width, height: EVIDENCE_VIEW.height },
       deviceScaleFactor: EVIDENCE_VIEW.deviceScaleFactor,
     })
     const stack = await stackContext.newPage()
-    const pages = { wide, phone: phonePage, dark: darkPage, stack }
+    let pages = { wide, phone: phonePage, dark: darkPage, stack }
 
     for (const cell of selected) {
       if (cell.emptyVisible || cell.error) {
@@ -108,16 +108,13 @@ async function main() {
         continue
       }
       try {
-        // Long 02 cells on a warm harness page can miss pageStateReady within 30s; reload first.
+        // 02-markdown cells miss pageStateReady on a warm page after hundreds of renders; cold context.
         if (cell.promptName === '02-markdown-formatting') {
-          for (const page of [phonePage, darkPage]) {
-            await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 })
-            await page.waitForFunction(
-              () => document.documentElement.hasAttribute('data-harness-listening'),
-              undefined,
-              { timeout: 30000 }
-            )
-          }
+          await phonePage.context().close()
+          await darkPage.context().close()
+          phonePage = await openThemedPage(browser, vite.port, 'light', PHONE_VIEW)
+          darkPage = await openThemedPage(browser, vite.port, 'dark', DARK_VIEW)
+          pages = { wide, phone: phonePage, dark: darkPage, stack }
         }
         const generation = `${cell.modelId}:${cell.promptName}:${rendered}`
         await renderOnPage(phonePage, cell.modelId, cell.response, `${generation}:phone`)
