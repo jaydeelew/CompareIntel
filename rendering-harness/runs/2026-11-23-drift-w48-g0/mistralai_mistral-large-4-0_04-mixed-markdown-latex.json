@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/mistral-large-4-0",
+  "modelName": "Mistral Large 4",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "# Sample Response: Mixed Markdown and LaTeX\n\nHere's a response demonstrating various combinations of **markdown** and *mathematical notation*:\n\n## Physics: Kinematics\n**Exercise**: A particle moves with velocity $v(t) = 3t^2 - 2t + 5$ m/s. Find:\n\n1. The *acceleration* $a(t) = v'(t)$\n2. The **displacement** over $[0, 2]$: $\\displaystyle\\int_0^2 v(t)\\,dt$\n\n### Solution\nThe acceleration is the derivative:\n$$a(t) = \\frac{dv}{dt} = 6t - 2$$\n\nThe displacement is:\n$$\\int_0^2 (3t^2 - 2t + 5)\\,dt = \\Big[ t^3 - t^2 + 5t \\Big]_0^2 = 8 - 4 + 10 = 14 \\text{ m}$$\n\n## Statistics with a Table\nFor a random variable $X \\sim \\mathcal{N}(\\mu, \\sigma^2)$:\n\n| Property | Expression |\n|----------|------------|\n| PDF | $f(x) = \\dfrac{1}{\\sigma\\sqrt{2\\pi}}\\, e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}$ |\n| Mean | $\\mathbb{E}[X] = \\mu$ |\n| Variance | $\\operatorname{Var}(X) = \\sigma^2$ |\n\n- Standardization: $Z = \\dfrac{X - \\mu}{\\sigma} \\sim \\mathcal{N}(0, 1)$\n- Empirical rule: $P(\\mu - \\sigma \\le X \\le \\mu + \\sigma) \\approx 0.6827$\n\n## Aligned Equations\nMultiple lines can be aligned with the `aligned` environment:\n\n$$\\begin{aligned}\n(a + b)^2 &= a^2 + 2ab + b^2 \\\\[4pt]\ne^{x} &= \\sum_{n=0}^{\\infty} \\frac{x^n}{n!}\n\\end{aligned}$$\n\n## Series and Convergence\nThe geometric series converges when $|r| < 1$:\n$$\\sum_{n=0}^{\\infty} ar^n = \\frac{a}{1 - r}$$\n\n**Example**: \n$$\\sum_{n=0}^{\\infty} \\left(\\frac{1}{2}\\right)^n = \\frac{1}{1 - \\frac{1}{2}} = 2$$\n\n## Real-World Context\n> **Note**: In finance, continuous compounding uses the formula $A = P e^{rt}$, where $P$ is principal, $r$ is the annual rate, and $t$ is time in years.\n\nMoney context: Investing $\\$1000$ at $r = 5\\% = 0.05$ for $t = 10$ years yields:\n$$A = 1000\\, e^{0.05 \\cdot 10} = 1000\\, e^{0.5} \\approx \\$1648.72$$\n\n---\n\n*Inline math works too: the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ solves any equation of the form $ax^2 + bx + c = 0$.*",
+  "usage": {
+    "prompt_tokens": 301,
+    "completion_tokens": 1554,
+    "total_tokens": 1855,
+    "cost": 0.00382151,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00382151,
+      "upstream_inference_prompt_cost": 0.00023177,
+      "upstream_inference_completions_cost": 0.00358974
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 864,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00382151,
+  "actualCost": 0.00382151,
+  "timestamp": "2026-11-23T12:12:31.317Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3-flash-preview",
+  "modelName": "Gemini 3 Flash Preview",
+  "promptName": "08-casual-prose",
+  "promptText": "# Test Prompt: Casual Plain-Text Math\n\nA student texted you: why is tan(60°) equal to the square root of 3, and why is sin(60°) that same square root over 2? They also asked about a unit cube (the face diagonal and the space diagonal) and about an equilateral triangle with side length 2, whose height they think is the square root of 3.\n\nReply like a helpful tutor in an informal chat. Use ordinary sentences only. Do not use markdown, LaTeX dollar signs, backslash-paren delimiters, or any other special formatting — type the math the way you would in a plain text message. Please include the height, the two diagonals, tan(60°), and sin(60°) in those sentences.\n\nAlong the way, mention that a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping, and that the same square-root value is what Python prints for math.sqrt(3).",
+  "response": "Hey! Those are all actually connected to the same geometry, so it makes total sense that you are seeing that square root of 3 everywhere.\n\nIf you imagine an equilateral triangle where every side is 2, and you chop it right down the middle to make two right triangles, the base of one side is 1. Using the Pythagorean theorem, 1 squared plus the height squared equals 2 squared. That means the height is exactly the square root of 3.\n\nBecause the angles in that equilateral triangle are 60 degrees, you can use that height for your trig. Since sine is opposite over hypotenuse, sin(60) is the square root of 3 over 2. For tangent, which is opposite over adjacent, you get the square root of 3 divided by 1, so tan(60) is just the square root of 3. By the way, if you check that on a calculator or in code, the value 1.7320508 is what Python prints for math.sqrt(3).\n\nFor the unit cube, the face diagonal is the hypotenuse of a triangle with sides 1 and 1, which is the square root of 2. But the space diagonal goes from one corner to the opposite corner through the middle, which uses the face diagonal and one edge. That makes the space diagonal the square root of 3 too!\n\nAlso, I saw a cool poster of the 30-60-90 triangle online for $3 plus $1.50 shipping if you want one for your wall. Let me know if that clears things up!",
+  "usage": {
+    "prompt_tokens": 212,
+    "completion_tokens": 339,
+    "total_tokens": 551,
+    "cost": 0.001123,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.001123,
+      "upstream_inference_prompt_cost": 0.000106,
+      "upstream_inference_completions_cost": 0.001017
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.001123,
+  "actualCost": 0.001123,
+  "timestamp": "2026-11-23T12:08:19.512Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

@@ -86,6 +86,9 @@ runs/*
 !runs/2026-11-18-pr274/
 !runs/2026-11-18-pr274/**
 runs/2026-11-18-pr274/*.png
+!runs/2026-11-23-drift-w48-g0/
+!runs/2026-11-23-drift-w48-g0/**
+runs/2026-11-23-drift-w48-g0/*.png
 !runs/2026-11-23-pr320/
 !runs/2026-11-23-pr320/**
 runs/2026-11-23-pr320/*.png

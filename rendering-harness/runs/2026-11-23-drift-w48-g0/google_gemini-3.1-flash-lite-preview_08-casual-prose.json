@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3.1-flash-lite-preview",
+  "modelName": "Gemini 3.1 Flash Lite Preview",
+  "promptName": "08-casual-prose",
+  "promptText": "# Test Prompt: Casual Plain-Text Math\n\nA student texted you: why is tan(60°) equal to the square root of 3, and why is sin(60°) that same square root over 2? They also asked about a unit cube (the face diagonal and the space diagonal) and about an equilateral triangle with side length 2, whose height they think is the square root of 3.\n\nReply like a helpful tutor in an informal chat. Use ordinary sentences only. Do not use markdown, LaTeX dollar signs, backslash-paren delimiters, or any other special formatting — type the math the way you would in a plain text message. Please include the height, the two diagonals, tan(60°), and sin(60°) in those sentences.\n\nAlong the way, mention that a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping, and that the same square-root value is what Python prints for math.sqrt(3).",
+  "response": "Hey! That is a great question. Think of an equilateral triangle with a side length of 2. If you draw a line straight down from the top point to the base, you split it into two right triangles. Because the base is cut in half, the bottom side of each right triangle is 1, and the slanted side is 2. Using the Pythagorean theorem, you find that the height is the square root of 3.\n\nSince the sine is the opposite side over the hypotenuse, sin(60 degrees) is the square root of 3 divided by 2. For the tangent, you take the opposite side over the adjacent side, so tan(60 degrees) is the square root of 3 divided by 1, which is just the square root of 3. By the way, that same square root value is exactly what Python prints if you type math.sqrt(3).\n\nRegarding the unit cube, if you have a cube with sides of 1, the face diagonal is the square root of 2, and the space diagonal is the square root of 3. It is cool how that number shows up in both the cube and the triangle! If you want a visual reference, I saw a poster of the 30-60-90 triangle that costs 3 dollars plus 1.50 dollars for shipping. Let me know if that makes the trig functions make more sense!",
+  "usage": {
+    "prompt_tokens": 213,
+    "completion_tokens": 294,
+    "total_tokens": 507,
+    "cost": 0.00049425,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00049425,
+      "upstream_inference_prompt_cost": 0.00005325,
+      "upstream_inference_completions_cost": 0.000441
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00049425,
+  "actualCost": 0.00049425,
+  "timestamp": "2026-11-23T12:08:32.154Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}
