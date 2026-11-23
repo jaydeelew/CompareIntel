@@ -44,6 +44,7 @@ export {
   restoreLiteralDollars,
   extractInlineCode,
   gfmSplitRow,
+  gfmColumnAlignments,
   gfmTableSpan,
   restoreInlineCode,
   renderInlineCodeSpan,

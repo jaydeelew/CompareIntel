@@ -783,6 +783,62 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         composer?.addEventListener('animationend', onEnd)
       })
 
+    const composerFloatRunning = (composer: HTMLElement | null) =>
+      !!composer?.getAnimations?.().some(animation => {
+        if (animation.playState !== 'running' || !(animation instanceof CSSAnimation)) return false
+        return (
+          animation.animationName === 'composer-float-in' ||
+          animation.animationName === 'composer-float-in-moz'
+        )
+      })
+
+    // History frames the whole floating composer, then saved selections frames
+    // the bookmark inside it. Dropping the highlight used to restart
+    // composer-float-in (translateY(20px)). WebKit often reports that rise as
+    // stable, shows the tooltip, and then the bookmark moves ~21px. Stay hidden
+    // until a rise that did start has finished. A few ticks cover a restart
+    // that is applied after the class change.
+    const waitOutRestartedComposerFloat = () =>
+      new Promise<void>(resolve => {
+        const composer = getComposerElement()
+        if (!composer) {
+          resolve()
+          return
+        }
+        let done = false
+        const finish = () => {
+          if (done) return
+          done = true
+          resolve()
+        }
+        const arm = () => {
+          if (!composerFloatRunning(composer)) return false
+          const timer = window.setTimeout(finish, 420)
+          const onEnd = (event: Event) => {
+            const name = (event as AnimationEvent).animationName
+            if (name !== 'composer-float-in' && name !== 'composer-float-in-moz') return
+            window.clearTimeout(timer)
+            composer.removeEventListener('animationend', onEnd)
+            finish()
+          }
+          composer.addEventListener('animationend', onEnd)
+          return true
+        }
+        if (arm()) return
+        let ticks = 0
+        const poll = window.setInterval(() => {
+          ticks += 1
+          if (arm()) {
+            window.clearInterval(poll)
+            return
+          }
+          if (ticks >= 3) {
+            window.clearInterval(poll)
+            finish()
+          }
+        }, 32)
+      })
+
     let measureTimer: number | null = null
 
     const showSettledTooltip = () => {
@@ -865,6 +921,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         revealSettledStep()
         return
       }
+      if (currentStep === 'history-dropdown' || currentStep === 'save-selection') {
+        await waitOutRestartedComposerFloat()
+        if (cancelled || stepRef.current !== currentStep) return
+      }
       let rect = liveSpotlight()
       if (!rect || rect.width < 2 || rect.height < 2) return
       centerTutorialStepRect(currentStep, rect)
@@ -898,6 +958,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (Math.abs(nudge) > 2) {
         scrollByDelta(nudge)
         await waitForTutorialLayoutSettle({ timeoutMs: 80, quietMs: 32 })
+        if (cancelled || stepRef.current !== currentStep) return
+      }
+      if (currentStep === 'history-dropdown' || currentStep === 'save-selection') {
+        await waitOutRestartedComposerFloat()
         if (cancelled || stepRef.current !== currentStep) return
       }
       revealSettledStep()

@@ -4,6 +4,7 @@ export interface HtmlSignature {
   fencedCode: string[]
   headings: string[]
   tableCells: string[][]
+  tableCellAlignments: string[][]
   linkHrefs: string[]
   literalDollars: string[]
   dollarRuns: string[]
@@ -77,6 +78,13 @@ export function signatureFromElement(el: Element): HtmlSignature {
       (c.textContent ?? '').replace(/\s+/g, ' ').trim()
     )
   )
+  const tableCellAlignments = Array.from(el.querySelectorAll('table')).map(table =>
+    Array.from(table.querySelectorAll('th,td')).map(c => {
+      const style = (c.getAttribute('style') ?? '').replace(/\s+/g, '').toLowerCase()
+      const match = style.match(/text-align:(left|center|right)/)
+      return match ? match[1] : ''
+    })
+  )
   const linkHrefs = Array.from(el.querySelectorAll('a[href]')).map(
     a => a.getAttribute('href') || ''
   )
@@ -131,6 +139,7 @@ export function signatureFromElement(el: Element): HtmlSignature {
     fencedCode,
     headings,
     tableCells,
+    tableCellAlignments,
     linkHrefs,
     literalDollars,
     dollarRuns,

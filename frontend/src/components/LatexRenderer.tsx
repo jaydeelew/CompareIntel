@@ -63,6 +63,7 @@ import {
   restoreLiteralDollars,
   extractInlineCode,
   gfmSplitRow,
+  gfmColumnAlignments,
   gfmTableSpan,
   restoreInlineCode,
   renderInlineCodeSpan,
@@ -85,6 +86,11 @@ function padGfmRow(cells: string[], columns: number): string[] {
   if (cells.length === columns) return cells
   if (cells.length > columns) return cells.slice(0, columns)
   return cells.concat(Array(columns - cells.length).fill(''))
+}
+
+function gfmCellAlignAttr(align: 'left' | 'center' | 'right' | null | undefined): string {
+  if (!align) return ''
+  return ` style="text-align:${align}"`
 }
 
 function renderGfmCell(cell: string): string {
@@ -142,12 +148,21 @@ function convertGfmTables(text: string): string {
       continue
     }
     const columns = gfmSplitRow(lines[i]).length
+    const columnAlignments = gfmColumnAlignments(lines[i + 1]) ?? []
     const rows = [padGfmRow(gfmSplitRow(lines[i]), columns)]
     for (let j = i + 2; j < end; j++) rows.push(padGfmRow(gfmSplitRow(lines[j]), columns))
     let html = '<div class="markdown-table-scroll"><table class="markdown-table">'
     rows.forEach((row, index) => {
       const tag = index === 0 ? 'th' : 'td'
-      html += '<tr>' + row.map(cell => `<${tag}>${renderGfmCell(cell)}</${tag}>`).join('') + '</tr>'
+      html +=
+        '<tr>' +
+        row
+          .map(
+            (cell, col) =>
+              `<${tag}${gfmCellAlignAttr(columnAlignments[col] ?? null)}>${renderGfmCell(cell)}</${tag}>`
+          )
+          .join('') +
+        '</tr>'
     })
     html += '</table></div>'
     out.push(html)

@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-2.5-pro",
+  "modelName": "Gemini 2.5 Pro",
+  "promptName": "01-math-basics",
+  "promptText": "# Test Prompt: Math Basics\n\nGenerate a response that demonstrates:\n\n1. Inline math: Explain the quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ with inline notation.\n\n2. Display math with aligned equations:\n$$\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}$$\n\n3. Matrices and cases:\n$$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}$$\n\n4. Multiple equations:\n$$E = mc^2$$\n$$F = ma$$\n$$a^2 + b^2 = c^2$$\n\n5. Links: See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n6. Money context (these should NOT render as math): The item costs $5 and the shipping is $10, for a total of $15. Budget: \\$1000 (escaped dollar).\n",
+  "response": "Of course! Here is a demonstration of various mathematical notations and formatting.\n\n### 1. Inline Math: The Quadratic Formula\n\nThe quadratic formula is a fundamental equation used to solve for the roots of a quadratic equation of the form $ax^2 + bx + c = 0$. The formula itself is expressed as $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$, where $a$, $b$, and $c$ are the coefficients of the quadratic equation. The term inside the square root, $b^2 - 4ac$, is known as the discriminant. See [Wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) for more details on the quadratic formula.\n\n### 2. Display Math with Aligned Equations\n\nYou can solve a system of linear equations, such as the one below, by aligning them at the equals sign to make the relationships between variables clearer.\n\n$$\n\\begin{align}\nx + y &= 5 \\\\\n2x - y &= 1\n\\end{align}\n$$\n\n### 3. Matrices and Piecewise Functions\n\nComplex mathematical structures like matrices and piecewise functions can also be displayed. Here is the 2x2 identity matrix, followed by a piecewise function that defines the absolute value:\n\n$$\nI = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}, \\quad\nf(x) = \\begin{cases}\nx^2 & \\text{if } x \\geq 0 \\\\\n-x & \\text{if } x < 0\n\\end{cases}\n$$\n\n### 4. Multiple Equations\n\nHere are some of the most famous equations in physics and mathematics, each displayed on its own line:\n\n$$\nE = mc^2\n$$\n\n$$\nF = ma\n$$\n\n$$\na^2 + b^2 = c^2\n$$\n\n### 5. Money Context (No Math Rendering)\n\nIt's important that dollar signs used for currency are not interpreted as math delimiters. For example: The item costs $5 and the shipping is $10, for a total of $15. My total budget is \\$1000.",
+  "usage": {
+    "prompt_tokens": 280,
+    "completion_tokens": 1486,
+    "total_tokens": 1766,
+    "cost": 0.01521,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.01521,
+      "upstream_inference_prompt_cost": 0.00035,
+      "upstream_inference_completions_cost": 0.01486
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1020,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.01521,
+  "actualCost": 0.01521,
+  "timestamp": "2026-11-23T12:06:04.767Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

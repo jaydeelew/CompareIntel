@@ -52,7 +52,8 @@ export async function renderOnPage(
   page: Page,
   modelId: string,
   content: string,
-  generation: string
+  generation: string,
+  readyTimeoutMs = 30_000
 ): Promise<void> {
   await page.evaluate(
     ({ modelId, content, generation }) => {
@@ -61,7 +62,7 @@ export async function renderOnPage(
     },
     { modelId, content, generation }
   )
-  await page.waitForFunction(pageStateReady, generation, { timeout: 30000 })
+  await page.waitForFunction(pageStateReady, generation, { timeout: readyTimeoutMs })
   const failed = await page.evaluate(() => {
     const el = document.querySelector('[data-render-failed]')
     return el?.getAttribute('data-render-failed') || null

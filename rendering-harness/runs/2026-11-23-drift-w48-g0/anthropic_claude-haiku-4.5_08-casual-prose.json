@@ -1,0 +1,36 @@
+{
+  "modelId": "anthropic/claude-haiku-4.5",
+  "modelName": "Claude Haiku 4.5",
+  "promptName": "08-casual-prose",
+  "promptText": "# Test Prompt: Casual Plain-Text Math\n\nA student texted you: why is tan(60°) equal to the square root of 3, and why is sin(60°) that same square root over 2? They also asked about a unit cube (the face diagonal and the space diagonal) and about an equilateral triangle with side length 2, whose height they think is the square root of 3.\n\nReply like a helpful tutor in an informal chat. Use ordinary sentences only. Do not use markdown, LaTeX dollar signs, backslash-paren delimiters, or any other special formatting — type the math the way you would in a plain text message. Please include the height, the two diagonals, tan(60°), and sin(60°) in those sentences.\n\nAlong the way, mention that a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping, and that the same square-root value is what Python prints for math.sqrt(3).",
+  "response": "Hey! Great questions. Let me walk you through this.\n\nSo the key to understanding both of those trig values is the 30-60-90 triangle. It's one of those special triangles that shows up everywhere in math, and honestly, there's even a poster of it online if you want to put it on your wall — it's $3 plus $1.50 shipping, so like five bucks total.\n\nHere's the thing: in a 30-60-90 triangle, the sides are always in the ratio 1 to square root of 3 to 2. So if the short side (opposite the 30 degree angle) has length 1, then the longer leg has length square root of 3, and the hypotenuse is 2.\n\nNow, sin(60°) is opposite over hypotenuse. The side opposite 60° is the longer leg, which is square root of 3, and the hypotenuse is 2. So sin(60°) equals square root of 3 over 2. That's exactly what you said.\n\nAnd tan(60°) is opposite over adjacent. At the 60° angle, the opposite side is square root of 3 and the adjacent side is 1. So tan(60°) equals square root of 3. Makes sense now?\n\nHere's another way to see this same value pop up. Take an equilateral triangle with side length 2. If you drop a height from one vertex to the opposite side, that height bisects the base, so you get two 30-60-90 triangles. Each half has base 1 and hypotenuse 2. Using the Pythagorean theorem, the height is square root of 2 squared minus 1 squared, which is square root of 3. So the height of that equilateral triangle is square root of 3, just like you thought.\n\nYou can verify this in Python too. If you type math.sqrt(3) it prints 1.7320508075688772, which is that same value.\n\nOne more thing: this square root of 3 value also shows up in geometry. For a unit cube, the face diagonal (the diagonal across one flat face) is square root of 2, but the space diagonal (the long diagonal cutting through the entire cube from one corner to the opposite corner) is square root of 3.\n\nDoes that all connect for you?",
+  "usage": {
+    "prompt_tokens": 230,
+    "completion_tokens": 538,
+    "total_tokens": 768,
+    "cost": 0.00292,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00292,
+      "upstream_inference_prompt_cost": 0.00023,
+      "upstream_inference_completions_cost": 0.00269
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00292,
+  "actualCost": 0.00292,
+  "timestamp": "2026-11-23T12:05:53.507Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "end_turn",
+  "error": null
+}

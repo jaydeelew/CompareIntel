@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-2.5-pro",
+  "modelName": "Gemini 2.5 Pro",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "Of course! Here is a response that follows the requested format, mixing various markdown elements with LaTeX for mathematical notation.\n\n***\n\n## Physics Problem: Kinematics\n\n**Problem 1**: A ball is thrown upwards with an initial velocity $v_0$. Ignoring air resistance, calculate:\n\n1.  The *time* it takes to reach the maximum height.\n2.  The **maximum height** $h_{\\text{max}}$ it reaches.\n\n### Solution\nThe velocity at time $t$ is given by $v(t) = v_0 - gt$, where $g$ is the acceleration due to gravity.\n\nAt the maximum height, the velocity is zero. So we solve for $t$:\n$$0 = v_0 - gt \\implies t = \\frac{v_0}{g}$$\n\nThe height at time $t$ is $h(t) = v_0 t - \\frac{1}{2}gt",
+  "usage": {
+    "prompt_tokens": 318,
+    "completion_tokens": 2036,
+    "total_tokens": 2354,
+    "cost": 0.0207575,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0207575,
+      "upstream_inference_prompt_cost": 0.0003975,
+      "upstream_inference_completions_cost": 0.02036
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1845,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0207575,
+  "actualCost": 0.0207575,
+  "timestamp": "2026-11-23T12:06:36.635Z",
+  "finishReason": "length",
+  "nativeFinishReason": "MAX_TOKENS",
+  "error": null
+}

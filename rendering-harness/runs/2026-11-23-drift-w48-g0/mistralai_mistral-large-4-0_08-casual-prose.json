@@ -1,0 +1,36 @@
+{
+  "modelId": "mistralai/mistral-large-4-0",
+  "modelName": "Mistral Large 4",
+  "promptName": "08-casual-prose",
+  "promptText": "# Test Prompt: Casual Plain-Text Math\n\nA student texted you: why is tan(60°) equal to the square root of 3, and why is sin(60°) that same square root over 2? They also asked about a unit cube (the face diagonal and the space diagonal) and about an equilateral triangle with side length 2, whose height they think is the square root of 3.\n\nReply like a helpful tutor in an informal chat. Use ordinary sentences only. Do not use markdown, LaTeX dollar signs, backslash-paren delimiters, or any other special formatting — type the math the way you would in a plain text message. Please include the height, the two diagonals, tan(60°), and sin(60°) in those sentences.\n\nAlong the way, mention that a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping, and that the same square-root value is what Python prints for math.sqrt(3).",
+  "response": "Hey! So an equilateral triangle with side length 2 can be split into two 30-60-90 right triangles. The height is square root of 3, because half the base is 1 and the hypotenuse is 2, so height squared plus 1 squared equals 4, which means height squared equals 3. In that same right triangle, the side opposite the 60° angle is square root of 3 and the side adjacent to it is 1, so tan(60°) is square root of 3 over 1, which is just square root of 3. The hypotenuse is 2, so sin(60°) is square root of 3 over 2. For a unit cube, each face is a 1 by 1 square, so the face diagonal is square root of 2, since it comes from 1 squared plus 1 squared. The space diagonal runs from one corner to the opposite corner and is square root of 3, since that is square root of 1 squared plus 1 squared plus 1 squared. Fun fact, the same square-root value is what Python prints for math.sqrt(3), about 1.7320508075688772. And if you want a poster of the 30-60-90 triangle, it costs $3 plus $1.50 shipping, so the total is $4.50.",
+  "usage": {
+    "prompt_tokens": 221,
+    "completion_tokens": 1445,
+    "total_tokens": 1666,
+    "cost": 0.00350812,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00350812,
+      "upstream_inference_prompt_cost": 0.00017017,
+      "upstream_inference_completions_cost": 0.00333795
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1154,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.00350812,
+  "actualCost": 0.00350812,
+  "timestamp": "2026-11-23T12:14:18.469Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

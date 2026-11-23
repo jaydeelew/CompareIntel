@@ -1,0 +1,36 @@
+{
+  "modelId": "meta-llama/llama-4-scout",
+  "modelName": "Llama 4 Scout",
+  "promptName": "06-edge-cases-boundaries",
+  "promptText": "# Test Prompt: Edge Cases and Boundaries\n\nGenerate a response testing delimiter variants and edge cases:\n\n## Delimiter Variants\n1. Double dollar display: $$x^2 + y^2 = r^2$$\n2. Bracket display: \\[E = mc^2\\]\n3. Single dollar inline: $a + b = c$\n4. Paren inline: \\(x = 5\\)\n\n## Nested Structures\n1. Display math in a list with continuation:\n   - First item\n   - The equation is:\n     $$\\int_0^1 x dx = \\frac{1}{2}$$\n     And it evaluates to 0.5\n   - Third item\n\n## Code with Math-like Syntax\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\nThe shell variable $HOME is set. Price: $99.99.\n\n## Display math in the middle of a sentence\nThe circle identity $$x^2 + y^2 = r^2$$ holds for every point on the circle, and the mass-energy relation \\[E = mc^2\\] is often quoted in the same way.\n\n## Wide table\n| c1 | c2 | c3 | c4 | c5 | c6 | c7 | c8 |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |\n\n## Mermaid and chemistry\n```mermaid\ngraph TD\n  A[Start] --> B[End]\n```\n\nKaTeX on this site does not load the mhchem extension, so this must still be attempted: $\\ce{H2O}$ and $\\ce{SO4^{2-}}$.\n\n## Emoji, RTL, CJK, and overflow\nStatus emoji: ✅ and 🧪.\nArabic: مرحبا بالعالم\nChinese: 你好世界\nJapanese: こんにちは\nUnbroken token: UNBROKENxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "response": "## Delimiter Variants\n\nThe following are examples of different delimiter variants for mathematical expressions:\n\n1. **Double dollar display**: $$x^2 + y^2 = r^2$$\n2. **Bracket display**: \\[E = mc^2\\]\n3. **Single dollar inline**: $a + b = c$\n4. **Paren inline**: \\(x = 5\\)\n\n## Nested Structures\n\nHere is an example of a list with a display math equation and continuation:\n\n- First item\n- The equation is:\n  $$\\int_0^1 x dx = \\frac{1}{2}$$\n  And it evaluates to 0.5\n- Third item\n\n## Code with Math-like Syntax\n\nThe following code block should remain as literal code:\n```python\n# This should stay as literal code\nprice = $50\nformula = \"E = mc^2\"\nresult = a**2 + b**2\ndef calc(x):\n    return x**2\n```\n\n## Currency and Escaped Dollars\n\nExamples of currency and escaped dollars:\n\n- Plain: The price is $100\n- Escaped: The budget is \\$500\n- Multiple: Costs $25, $30, and $45\n- In sentence: I spent $50 at the store\n\n## Tables with Math\n\n| Variable | Formula | Value |\n|----------|---------|-------|\n| Area | $A = \\pi r^2$ | $78.54$ |\n| Volume | $V = \\frac{4}{3}\\pi r^3$ | $523.60$ |\n\n## Raw Dollar Signs\n\nThe shell variable $HOME is set. Price: $99.99.\n\n## Display Math in the Middle of a Sentence\n\nThe circle identity $$x^2 + y^2 = r^2$$ holds for every point on the circle, and the mass-energy relation \\[E = mc^2\\] is often quoted in the same way.\n\n## Wide Table\n\n| c1 | c2 | c3 | c4 | c5 | c6 | c7 | c8 |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |\n\n## Mermaid and Chemistry\n\n```mermaid\ngraph TD\n  A[Start] --> B[End]\n```\n\nKaTeX on this site does not load the mhchem extension, so this must still be attempted: $\\ce{H2O}$ and $\\ce{SO4^{2-}}$.\n\n## Emoji, RTL, CJK, and Overflow\n\nStatus emoji: ✅ and 🧪.\nArabic: مرحبا بالعالم\nChinese: 你好世界\nJapanese: こんにちは\nUnbroken token: UNBROKENxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "usage": {
+    "prompt_tokens": 585,
+    "completion_tokens": 590,
+    "total_tokens": 1175,
+    "cost": 0.0002355,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0002355,
+      "upstream_inference_prompt_cost": 0.0000585,
+      "upstream_inference_completions_cost": 0.000177
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0002355,
+  "actualCost": 0.0002355,
+  "timestamp": "2026-11-23T12:10:44.666Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

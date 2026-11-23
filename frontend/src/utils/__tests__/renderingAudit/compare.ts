@@ -76,6 +76,16 @@ export function compareSignatures(ref: HtmlSignature, actual: HtmlSignature): Co
     diffs.push({ field: 'tableCells', expected: ref.tableCells, actual: actual.tableCells })
   }
 
+  const refTableAlign = JSON.stringify(ref.tableCellAlignments)
+  const actTableAlign = JSON.stringify(actual.tableCellAlignments)
+  if (refTableAlign !== actTableAlign) {
+    diffs.push({
+      field: 'tableCellAlignments',
+      expected: ref.tableCellAlignments,
+      actual: actual.tableCellAlignments,
+    })
+  }
+
   if (!sameStringArrays(ref.texSources.map(norm), actual.texSources.map(norm))) {
     diffs.push({ field: 'texSources', expected: ref.texSources, actual: actual.texSources })
   }

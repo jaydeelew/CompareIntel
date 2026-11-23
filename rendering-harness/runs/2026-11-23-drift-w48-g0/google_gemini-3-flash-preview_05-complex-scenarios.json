@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3-flash-preview",
+  "modelName": "Gemini 3 Flash Preview",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "This response demonstrates the ability to handle complex formatting, nested LaTeX, technical code blocks, and the distinction between currency symbols and mathematical delimiters.\n\n### Response to Scenario 1: Math in Lists with Formatting\n1.  The **Pythagorean theorem** is fundamental to Euclidean geometry, represented as $a^2 + b^2 = c^2$.\n2.  In a *right-angled triangle* where $a=3$ and $b=4$:\n    *   Step-by-step derivation: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25}$\n    *   Final Result: **$c = 5$** units.\n3.  Verification of the identity: $3^2 + 4^2 = 9 + 16 = 25 = 5^2$.\n\n### Response to Scenario 2: Tables with Math\n| Concept | Formula / Equation | Solution / Identity |\n| :--- | :--- | :--- |\n| **Quadratic Equation** | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| **Arithmetic Series** | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| **Factorial Product** | $\\prod_{i=1}^{n} i$ | $n!$ |\n| **Euler's Identity** | $e^{i\\pi} + 1$ | $0$ |\n\n### Response to Scenario 3: Code and Math Mixed\nTo calculate the area of a circle, we implement the geometric constant $\\pi$.\n\n```python\nimport math\n\ndef calculate_geometry(r):\n    \"\"\"\n    Computes the area based on A = πr²\n    and the circumference based on C = 2πr\n    \"\"\"\n    area = math.pi * pow(r, 2)\n    circumference = 2 * math.pi * r\n    return area, circumference\n\n# Example for r = 5\na, c = calculate_geometry(5)\nprint(f\"Area: {a:.2f}, Circumference: {c:.2f}\")\n```\nThe relationship between the radius $r$ and the area $A$ is defined by the transcendental function $A(r) = \\pi r^2$.\n\n### Response to Scenario 4: Horizontal Rules\n**Introduction to Calculus**\n\n---\n\n**Integration Example:**\nThe definite integral of a linear function represents the area under the curve:\n$$\\int_{0}^{1} x \\,dx = \\left[ \\frac{1}{2}x^2 \\right]_0^1 = \\frac{1}{2}$$\n\n---\n\n**Conclusion:**\nThe result $\\frac{1}{2}$ represents the area of a triangle with base 1 and height 1.\n\n### Response to Scenario 5: Multiple Dollar Signs (Currency vs. Math)\n**Financial Audit:**\nThe hardware procurement list is as follows:\n*   Unit A (Computer): $1,200\n*   Unit B (Monitor): $300\n*   Unit C (Keyboard): $50\n*   Unit D (Mouse): $25\n*   **Total Expenditure:** $1,575\n\n**Mathematical Validation:**\nIf we define the cost function as $C(x_i) = \\sum_{i=1}^{n} x_i$, then for the values above, $C = 1200 + 300 + 50 + 25 = 1575$.\nFurthermore, the parabolic growth of the tax rate can be modeled by $f(x) = x^2$, where $f(5) = 25$.",
+  "usage": {
+    "prompt_tokens": 446,
+    "completion_tokens": 838,
+    "total_tokens": 1284,
+    "cost": 0.002737,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.002737,
+      "upstream_inference_prompt_cost": 0.000223,
+      "upstream_inference_completions_cost": 0.002514
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.002737,
+  "actualCost": 0.002737,
+  "timestamp": "2026-11-23T12:08:10.645Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

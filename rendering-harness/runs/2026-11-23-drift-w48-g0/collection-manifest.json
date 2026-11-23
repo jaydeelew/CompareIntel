@@ -1,0 +1,3611 @@
+{
+  "kind": "paid-collection-manifest-v1",
+  "batchId": "paid-batch-2026-11-23-drift-w48-g0",
+  "routine": "weekly-rendering-drift-re-collection-option-b",
+  "week": "2026-W48",
+  "group": 0,
+  "masterCommit": "c37f505ed03f02fb341aac00e3e4bc616e133687",
+  "sourceWorktree": "/workspace/prism/drift-wt",
+  "rolledOver": [
+    {
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "reason": "partial (1/8) after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "openai/gpt-5-mini",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "openai/gpt-5-nano",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "openai/gpt-5.4-pro",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "openai/gpt-oss-120b",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "qwen/qwen3-30b-a3b-instruct-2507",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "qwen/qwen3-coder",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "qwen/qwen3-coder-next",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "qwen/qwen3.5-397b-a17b",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "tencent/hy4",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "xiaomi/mimo-v2.6-flash",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    },
+    {
+      "modelId": "z-ai/glm-5-turbo",
+      "reason": "not started after stop: Unknown spend permanently halted; explicit resolution/approval required"
+    }
+  ],
+  "maxUsd": 7.5,
+  "dryRunHarnessEstimateUsd": 5.0821,
+  "durableGuardState": "/workspace/prism/collection-guard-global-state.json",
+  "historicalAcceptancePath": "/workspace/prism/historical-risk-acceptance-active.json",
+  "historicalAcceptanceId": "hist-risk-acc-2026-11-08-grok-tencent-global",
+  "maxTokens": 2048,
+  "requestOutputLimitField": "max_tokens",
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "anthropic/claude-haiku-4.5",
+    "google/gemini-2.5-pro",
+    "google/gemini-3-flash-preview",
+    "google/gemini-3.1-flash-lite-preview",
+    "google/gemini-4-hydrogen",
+    "google/gemma-4-31b-it",
+    "meta-llama/llama-4-scout",
+    "mistralai/mistral-large-4-0",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "openai/gpt-5-mini",
+    "openai/gpt-5-nano",
+    "openai/gpt-5.4-pro",
+    "openai/gpt-oss-120b",
+    "qwen/qwen3-30b-a3b-instruct-2507",
+    "qwen/qwen3-coder",
+    "qwen/qwen3-coder-next",
+    "qwen/qwen3.5-397b-a17b",
+    "tencent/hy4",
+    "xiaomi/mimo-v2.6-flash",
+    "z-ai/glm-5-turbo"
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+      "bytes": 778
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "107ef5643c7f57c93dd34e188e838bf94bb5c33e349bae7282407dec89103be3",
+      "bytes": 1313
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "1d59f473a47cb1e5e98a2c105cc3fb5d7c796c4a36a315cd2e14e8b6ed127bd9",
+      "bytes": 961
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f",
+      "bytes": 901
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+      "bytes": 1195
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "793a5dd9a30fb17fe13b09f39f43d2198f351f72457e090655f5a3b2f728820e",
+      "bytes": 1892
+    },
+    {
+      "name": "07-rare-formats",
+      "sha256": "d7b7632006a95f12287a8c5f1c36bec81d43b187521ba14877b29149d4234921",
+      "bytes": 2513
+    },
+    {
+      "name": "08-casual-prose",
+      "sha256": "b6442d36056a7839c38ef4b020072810e495a3da44cbb9b6e24c973a042bbbbd",
+      "bytes": 839
+    }
+  ],
+  "plannedCalls": 160,
+  "attemptedCalls": 66,
+  "knownActualCost": 0.3043448399999999,
+  "unknownCostCalls": 1,
+  "refusedCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "anthropic/claude-haiku-4.5",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-23T12:05:28.858Z",
+      "reserveUsd": 0.013812500000000002,
+      "reserveRates": {
+        "usd": 0.013812500000000002,
+        "inputRate": 0.000001,
+        "outputRate": 0.000005,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.002549,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:1:anthropic/claude-haiku-4.5:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:05:31.284Z",
+      "reportedUsageCost": 0.002549,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 319,
+        "completion_tokens": 446,
+        "total_tokens": 765,
+        "cost": 0.002549,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002549,
+          "upstream_inference_prompt_cost": 0.000319,
+          "upstream_inference_completions_cost": 0.00223
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.000001,
+        "output": 0.000005
+      }
+    },
+    {
+      "index": 2,
+      "modelId": "anthropic/claude-haiku-4.5",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-23T12:05:31.291Z",
+      "reserveUsd": 0.014481250000000001,
+      "reserveRates": {
+        "usd": 0.014481250000000001,
+        "inputRate": 0.000001,
+        "outputRate": 0.000005,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.002668,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:2:anthropic/claude-haiku-4.5:02-markdown-formatting",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:05:32.879Z",
+      "reportedUsageCost": 0.002668,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 448,
+        "completion_tokens": 444,
+        "total_tokens": 892,
+        "cost": 0.002668,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002668,
+          "upstream_inference_prompt_cost": 0.000448,
+          "upstream_inference_completions_cost": 0.00222
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.000001,
+        "output": 0.000005
+      }
+    },
+    {
+      "index": 3,
+      "modelId": "anthropic/claude-haiku-4.5",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-23T12:05:32.882Z",
+      "reserveUsd": 0.01404125,
+      "reserveRates": {
+        "usd": 0.01404125,
+        "inputRate": 0.000001,
+        "outputRate": 0.000005,
+        "inputByteAllowance": 993,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00205,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:3:anthropic/claude-haiku-4.5:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:05:34.235Z",
+      "reportedUsageCost": 0.00205,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 345,
+        "completion_tokens": 341,
+        "total_tokens": 686,
+        "cost": 0.00205,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00205,
+          "upstream_inference_prompt_cost": 0.000345,
+          "upstream_inference_completions_cost": 0.001705
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.000001,
+        "output": 0.000005
+      }
+    },
+    {
+      "index": 4,
+      "modelId": "anthropic/claude-haiku-4.5",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-23T12:05:34.238Z",
+      "reserveUsd": 0.013966250000000001,
+      "reserveRates": {
+        "usd": 0.013966250000000001,
+        "inputRate": 0.000001,
+        "outputRate": 0.000005,
+        "inputByteAllowance": 933,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.002822,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:4:anthropic/claude-haiku-4.5:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:05:36.612Z",
+      "reportedUsageCost": 0.002822,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 357,
+        "completion_tokens": 493,
+        "total_tokens": 850,
+        "cost": 0.002822,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002822,
+          "upstream_inference_prompt_cost": 0.000357,
+          "upstream_inference_completions_cost": 0.002465
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.000001,
+        "output": 0.000005
+      }
+    },
+    {
+      "index": 5,
+      "modelId": "anthropic/claude-haiku-4.5",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-23T12:05:36.615Z",
+      "reserveUsd": 0.014333750000000003,
+      "reserveRates": {
+        "usd": 0.014333750000000003,
+        "inputRate": 0.000001,
+        "outputRate": 0.000005,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.003894,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:5:anthropic/claude-haiku-4.5:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:05:40.272Z",
+      "reportedUsageCost": 0.003894,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 484,
+        "completion_tokens": 682,
+        "total_tokens": 1166,
+        "cost": 0.003894,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.003894,
+          "upstream_inference_prompt_cost": 0.000484,
+          "upstream_inference_completions_cost": 0.00341
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.000001,
+        "output": 0.000005
+      }
+    },
+    {
+      "index": 6,
+      "modelId": "anthropic/claude-haiku-4.5",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-23T12:05:40.275Z",
+      "reserveUsd": 0.015205000000000002,
+      "reserveRates": {
+        "usd": 0.015205000000000002,
+        "inputRate": 0.000001,
+        "outputRate": 0.000005,
+        "inputByteAllowance": 1924,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00542,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:6:anthropic/claude-haiku-4.5:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:05:45.405Z",
+      "reportedUsageCost": 0.00542,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 695,
+        "completion_tokens": 945,
+        "total_tokens": 1640,
+        "cost": 0.00542,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00542,
+          "upstream_inference_prompt_cost": 0.000695,
+          "upstream_inference_completions_cost": 0.004725
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.000001,
+        "output": 0.000005
+      }
+    },
+    {
+      "index": 7,
+      "modelId": "anthropic/claude-haiku-4.5",
+      "promptName": "07-rare-formats",
+      "startedAt": "2026-11-23T12:05:45.410Z",
+      "reserveUsd": 0.015981250000000002,
+      "reserveRates": {
+        "usd": 0.015981250000000002,
+        "inputRate": 0.000001,
+        "outputRate": 0.000005,
+        "inputByteAllowance": 2545,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00508,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:7:anthropic/claude-haiku-4.5:07-rare-formats",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:05:49.881Z",
+      "reportedUsageCost": 0.00508,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 875,
+        "completion_tokens": 841,
+        "total_tokens": 1716,
+        "cost": 0.00508,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00508,
+          "upstream_inference_prompt_cost": 0.000875,
+          "upstream_inference_completions_cost": 0.004205
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.000001,
+        "output": 0.000005
+      }
+    },
+    {
+      "index": 8,
+      "modelId": "anthropic/claude-haiku-4.5",
+      "promptName": "08-casual-prose",
+      "startedAt": "2026-11-23T12:05:49.884Z",
+      "reserveUsd": 0.013888750000000002,
+      "reserveRates": {
+        "usd": 0.013888750000000002,
+        "inputRate": 0.000001,
+        "outputRate": 0.000005,
+        "inputByteAllowance": 871,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00292,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:8:anthropic/claude-haiku-4.5:08-casual-prose",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:05:53.507Z",
+      "reportedUsageCost": 0.00292,
+      "finishReason": "stop",
+      "nativeFinishReason": "end_turn",
+      "usage": {
+        "prompt_tokens": 230,
+        "completion_tokens": 538,
+        "total_tokens": 768,
+        "cost": 0.00292,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00292,
+          "upstream_inference_prompt_cost": 0.00023,
+          "upstream_inference_completions_cost": 0.00269
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.000001,
+        "output": 0.000005
+      }
+    },
+    {
+      "index": 9,
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-23T12:05:53.511Z",
+      "reserveUsd": 0.026865625,
+      "reserveRates": {
+        "usd": 0.026865625,
+        "inputRate": 0.00000125,
+        "outputRate": 0.00001,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.01521,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:9:google/gemini-2.5-pro:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:06:04.767Z",
+      "reportedUsageCost": 0.01521,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 280,
+        "completion_tokens": 1486,
+        "total_tokens": 1766,
+        "cost": 0.01521,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01521,
+          "upstream_inference_prompt_cost": 0.00035,
+          "upstream_inference_completions_cost": 0.01486
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1020,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.00000125,
+        "output": 0.00001
+      }
+    },
+    {
+      "index": 10,
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-23T12:06:04.770Z",
+      "reserveUsd": 0.0277015625,
+      "reserveRates": {
+        "usd": 0.0277015625,
+        "inputRate": 0.00000125,
+        "outputRate": 0.00001,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.01993375,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:10:google/gemini-2.5-pro:02-markdown-formatting",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:06:18.005Z",
+      "reportedUsageCost": 0.01993375,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 411,
+        "completion_tokens": 1942,
+        "total_tokens": 2353,
+        "cost": 0.01993375,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01993375,
+          "upstream_inference_prompt_cost": 0.00051375,
+          "upstream_inference_completions_cost": 0.01942
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1560,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.00000125,
+        "output": 0.00001
+      }
+    },
+    {
+      "index": 11,
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-23T12:06:18.007Z",
+      "reserveUsd": 0.0271515625,
+      "reserveRates": {
+        "usd": 0.0271515625,
+        "inputRate": 0.00000125,
+        "outputRate": 0.00001,
+        "inputByteAllowance": 993,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00436125,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:11:google/gemini-2.5-pro:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:06:21.350Z",
+      "reportedUsageCost": 0.00436125,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 329,
+        "completion_tokens": 395,
+        "total_tokens": 724,
+        "cost": 0.00436125,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00436125,
+          "upstream_inference_prompt_cost": 0.00041125,
+          "upstream_inference_completions_cost": 0.00395
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 76,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.00000125,
+        "output": 0.00001
+      }
+    },
+    {
+      "index": 12,
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-23T12:06:21.354Z",
+      "reserveUsd": 0.027057812500000004,
+      "reserveRates": {
+        "usd": 0.027057812500000004,
+        "inputRate": 0.00000125,
+        "outputRate": 0.00001,
+        "inputByteAllowance": 933,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0207575,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:12:google/gemini-2.5-pro:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:06:36.635Z",
+      "reportedUsageCost": 0.0207575,
+      "finishReason": "length",
+      "nativeFinishReason": "MAX_TOKENS",
+      "usage": {
+        "prompt_tokens": 318,
+        "completion_tokens": 2036,
+        "total_tokens": 2354,
+        "cost": 0.0207575,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0207575,
+          "upstream_inference_prompt_cost": 0.0003975,
+          "upstream_inference_completions_cost": 0.02036
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1845,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.00000125,
+        "output": 0.00001
+      }
+    },
+    {
+      "index": 13,
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-23T12:06:36.639Z",
+      "reserveUsd": 0.0275171875,
+      "reserveRates": {
+        "usd": 0.0275171875,
+        "inputRate": 0.00000125,
+        "outputRate": 0.00001,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.02078875,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:13:google/gemini-2.5-pro:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:07:03.353Z",
+      "reportedUsageCost": 0.02078875,
+      "finishReason": "length",
+      "nativeFinishReason": "MAX_TOKENS",
+      "usage": {
+        "prompt_tokens": 447,
+        "completion_tokens": 2023,
+        "total_tokens": 2470,
+        "cost": 0.02078875,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02078875,
+          "upstream_inference_prompt_cost": 0.00055875,
+          "upstream_inference_completions_cost": 0.02023
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2023,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.00000125,
+        "output": 0.00001
+      }
+    },
+    {
+      "index": 14,
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-23T12:07:03.357Z",
+      "reserveUsd": 0.028606250000000003,
+      "reserveRates": {
+        "usd": 0.028606250000000003,
+        "inputRate": 0.00000125,
+        "outputRate": 0.00001,
+        "inputByteAllowance": 1924,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.02002,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:14:google/gemini-2.5-pro:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:07:18.134Z",
+      "reportedUsageCost": 0.02002,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 616,
+        "completion_tokens": 1925,
+        "total_tokens": 2541,
+        "cost": 0.02002,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02002,
+          "upstream_inference_prompt_cost": 0.00077,
+          "upstream_inference_completions_cost": 0.01925
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1315,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.00000125,
+        "output": 0.00001
+      }
+    },
+    {
+      "index": 15,
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "07-rare-formats",
+      "startedAt": "2026-11-23T12:07:18.137Z",
+      "reserveUsd": 0.0295765625,
+      "reserveRates": {
+        "usd": 0.0295765625,
+        "inputRate": 0.00000125,
+        "outputRate": 0.00001,
+        "inputByteAllowance": 2545,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.02122125,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:15:google/gemini-2.5-pro:07-rare-formats",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:07:32.074Z",
+      "reportedUsageCost": 0.02122125,
+      "finishReason": "length",
+      "nativeFinishReason": "MAX_TOKENS",
+      "usage": {
+        "prompt_tokens": 737,
+        "completion_tokens": 2030,
+        "total_tokens": 2767,
+        "cost": 0.02122125,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02122125,
+          "upstream_inference_prompt_cost": 0.00092125,
+          "upstream_inference_completions_cost": 0.0203
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1491,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.00000125,
+        "output": 0.00001
+      }
+    },
+    {
+      "index": 16,
+      "modelId": "google/gemini-2.5-pro",
+      "promptName": "08-casual-prose",
+      "startedAt": "2026-11-23T12:07:32.077Z",
+      "reserveUsd": 0.0269609375,
+      "reserveRates": {
+        "usd": 0.0269609375,
+        "inputRate": 0.00000125,
+        "outputRate": 0.00001,
+        "inputByteAllowance": 871,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.02046625,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:16:google/gemini-2.5-pro:08-casual-prose",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:07:56.447Z",
+      "reportedUsageCost": 0.02046625,
+      "finishReason": "length",
+      "nativeFinishReason": "MAX_TOKENS",
+      "usage": {
+        "prompt_tokens": 213,
+        "completion_tokens": 2020,
+        "total_tokens": 2233,
+        "cost": 0.02046625,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02046625,
+          "upstream_inference_prompt_cost": 0.00026625,
+          "upstream_inference_completions_cost": 0.0202
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2020,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.00000125,
+        "output": 0.00001
+      }
+    },
+    {
+      "index": 17,
+      "modelId": "google/gemini-3-flash-preview",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-23T12:07:56.451Z",
+      "reserveUsd": 0.00818625,
+      "reserveRates": {
+        "usd": 0.00818625,
+        "inputRate": 5e-7,
+        "outputRate": 0.000003,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0013215,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:17:google/gemini-3-flash-preview:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:07:58.782Z",
+      "reportedUsageCost": 0.0013215,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 279,
+        "completion_tokens": 394,
+        "total_tokens": 673,
+        "cost": 0.0013215,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0013215,
+          "upstream_inference_prompt_cost": 0.0001395,
+          "upstream_inference_completions_cost": 0.001182
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-7,
+        "output": 0.000003
+      }
+    },
+    {
+      "index": 18,
+      "modelId": "google/gemini-3-flash-preview",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-23T12:07:58.786Z",
+      "reserveUsd": 0.008520625,
+      "reserveRates": {
+        "usd": 0.008520625,
+        "inputRate": 5e-7,
+        "outputRate": 0.000003,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.001408,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:18:google/gemini-3-flash-preview:02-markdown-formatting",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:01.965Z",
+      "reportedUsageCost": 0.001408,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 410,
+        "completion_tokens": 401,
+        "total_tokens": 811,
+        "cost": 0.001408,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.001408,
+          "upstream_inference_prompt_cost": 0.000205,
+          "upstream_inference_completions_cost": 0.001203
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-7,
+        "output": 0.000003
+      }
+    },
+    {
+      "index": 19,
+      "modelId": "google/gemini-3-flash-preview",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-23T12:08:01.970Z",
+      "reserveUsd": 0.008300625,
+      "reserveRates": {
+        "usd": 0.008300625,
+        "inputRate": 5e-7,
+        "outputRate": 0.000003,
+        "inputByteAllowance": 993,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.001136,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:19:google/gemini-3-flash-preview:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:03.761Z",
+      "reportedUsageCost": 0.001136,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 328,
+        "completion_tokens": 324,
+        "total_tokens": 652,
+        "cost": 0.001136,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.001136,
+          "upstream_inference_prompt_cost": 0.000164,
+          "upstream_inference_completions_cost": 0.000972
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-7,
+        "output": 0.000003
+      }
+    },
+    {
+      "index": 20,
+      "modelId": "google/gemini-3-flash-preview",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-23T12:08:03.764Z",
+      "reserveUsd": 0.008263125,
+      "reserveRates": {
+        "usd": 0.008263125,
+        "inputRate": 5e-7,
+        "outputRate": 0.000003,
+        "inputByteAllowance": 933,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0017665,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:20:google/gemini-3-flash-preview:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:06.725Z",
+      "reportedUsageCost": 0.0017665,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 317,
+        "completion_tokens": 536,
+        "total_tokens": 853,
+        "cost": 0.0017665,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0017665,
+          "upstream_inference_prompt_cost": 0.0001585,
+          "upstream_inference_completions_cost": 0.001608
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-7,
+        "output": 0.000003
+      }
+    },
+    {
+      "index": 21,
+      "modelId": "google/gemini-3-flash-preview",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-23T12:08:06.731Z",
+      "reserveUsd": 0.008446875000000001,
+      "reserveRates": {
+        "usd": 0.008446875000000001,
+        "inputRate": 5e-7,
+        "outputRate": 0.000003,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.002737,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:21:google/gemini-3-flash-preview:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:10.645Z",
+      "reportedUsageCost": 0.002737,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 446,
+        "completion_tokens": 838,
+        "total_tokens": 1284,
+        "cost": 0.002737,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.002737,
+          "upstream_inference_prompt_cost": 0.000223,
+          "upstream_inference_completions_cost": 0.002514
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-7,
+        "output": 0.000003
+      }
+    },
+    {
+      "index": 22,
+      "modelId": "google/gemini-3-flash-preview",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-23T12:08:10.649Z",
+      "reserveUsd": 0.0088825,
+      "reserveRates": {
+        "usd": 0.0088825,
+        "inputRate": 5e-7,
+        "outputRate": 0.000003,
+        "inputByteAllowance": 1924,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0021105,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:22:google/gemini-3-flash-preview:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:14.142Z",
+      "reportedUsageCost": 0.0021105,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 615,
+        "completion_tokens": 601,
+        "total_tokens": 1216,
+        "cost": 0.0021105,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0021105,
+          "upstream_inference_prompt_cost": 0.0003075,
+          "upstream_inference_completions_cost": 0.001803
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-7,
+        "output": 0.000003
+      }
+    },
+    {
+      "index": 23,
+      "modelId": "google/gemini-3-flash-preview",
+      "promptName": "07-rare-formats",
+      "startedAt": "2026-11-23T12:08:14.145Z",
+      "reserveUsd": 0.009270625000000001,
+      "reserveRates": {
+        "usd": 0.009270625000000001,
+        "inputRate": 5e-7,
+        "outputRate": 0.000003,
+        "inputByteAllowance": 2545,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00215,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:23:google/gemini-3-flash-preview:07-rare-formats",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:16.739Z",
+      "reportedUsageCost": 0.00215,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 736,
+        "completion_tokens": 594,
+        "total_tokens": 1330,
+        "cost": 0.00215,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00215,
+          "upstream_inference_prompt_cost": 0.000368,
+          "upstream_inference_completions_cost": 0.001782
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-7,
+        "output": 0.000003
+      }
+    },
+    {
+      "index": 24,
+      "modelId": "google/gemini-3-flash-preview",
+      "promptName": "08-casual-prose",
+      "startedAt": "2026-11-23T12:08:16.742Z",
+      "reserveUsd": 0.008224375,
+      "reserveRates": {
+        "usd": 0.008224375,
+        "inputRate": 5e-7,
+        "outputRate": 0.000003,
+        "inputByteAllowance": 871,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.001123,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:24:google/gemini-3-flash-preview:08-casual-prose",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:19.512Z",
+      "reportedUsageCost": 0.001123,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 212,
+        "completion_tokens": 339,
+        "total_tokens": 551,
+        "cost": 0.001123,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.001123,
+          "upstream_inference_prompt_cost": 0.000106,
+          "upstream_inference_completions_cost": 0.001017
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 5e-7,
+        "output": 0.000003
+      }
+    },
+    {
+      "index": 25,
+      "modelId": "google/gemini-3.1-flash-lite-preview",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-23T12:08:19.514Z",
+      "reserveUsd": 0.004093125,
+      "reserveRates": {
+        "usd": 0.004093125,
+        "inputRate": 2.5000000000000004e-7,
+        "outputRate": 0.0000015,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0005725,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:25:google/gemini-3.1-flash-lite-preview:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:21.440Z",
+      "reportedUsageCost": 0.0005725,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 280,
+        "completion_tokens": 335,
+        "total_tokens": 615,
+        "cost": 0.0005725,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0005725,
+          "upstream_inference_prompt_cost": 0.00007,
+          "upstream_inference_completions_cost": 0.0005025
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2.5000000000000004e-7,
+        "output": 0.0000015
+      }
+    },
+    {
+      "index": 26,
+      "modelId": "google/gemini-3.1-flash-lite-preview",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-23T12:08:21.443Z",
+      "reserveUsd": 0.0042603125,
+      "reserveRates": {
+        "usd": 0.0042603125,
+        "inputRate": 2.5000000000000004e-7,
+        "outputRate": 0.0000015,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00069375,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:26:google/gemini-3.1-flash-lite-preview:02-markdown-formatting",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:22.587Z",
+      "reportedUsageCost": 0.00069375,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 411,
+        "completion_tokens": 394,
+        "total_tokens": 805,
+        "cost": 0.00069375,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00069375,
+          "upstream_inference_prompt_cost": 0.00010275,
+          "upstream_inference_completions_cost": 0.000591
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2.5000000000000004e-7,
+        "output": 0.0000015
+      }
+    },
+    {
+      "index": 27,
+      "modelId": "google/gemini-3.1-flash-lite-preview",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-23T12:08:22.590Z",
+      "reserveUsd": 0.0041503125,
+      "reserveRates": {
+        "usd": 0.0041503125,
+        "inputRate": 2.5000000000000004e-7,
+        "outputRate": 0.0000015,
+        "inputByteAllowance": 993,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00056225,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:27:google/gemini-3.1-flash-lite-preview:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:23.787Z",
+      "reportedUsageCost": 0.00056225,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 329,
+        "completion_tokens": 320,
+        "total_tokens": 649,
+        "cost": 0.00056225,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00056225,
+          "upstream_inference_prompt_cost": 0.00008225,
+          "upstream_inference_completions_cost": 0.00048
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2.5000000000000004e-7,
+        "output": 0.0000015
+      }
+    },
+    {
+      "index": 28,
+      "modelId": "google/gemini-3.1-flash-lite-preview",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-23T12:08:23.791Z",
+      "reserveUsd": 0.0041315625,
+      "reserveRates": {
+        "usd": 0.0041315625,
+        "inputRate": 2.5000000000000004e-7,
+        "outputRate": 0.0000015,
+        "inputByteAllowance": 933,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0008475,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:28:google/gemini-3.1-flash-lite-preview:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:25.620Z",
+      "reportedUsageCost": 0.0008475,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 318,
+        "completion_tokens": 512,
+        "total_tokens": 830,
+        "cost": 0.0008475,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008475,
+          "upstream_inference_prompt_cost": 0.0000795,
+          "upstream_inference_completions_cost": 0.000768
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2.5000000000000004e-7,
+        "output": 0.0000015
+      }
+    },
+    {
+      "index": 29,
+      "modelId": "google/gemini-3.1-flash-lite-preview",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-23T12:08:25.623Z",
+      "reserveUsd": 0.004223437500000001,
+      "reserveRates": {
+        "usd": 0.004223437500000001,
+        "inputRate": 2.5000000000000004e-7,
+        "outputRate": 0.0000015,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00091575,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:29:google/gemini-3.1-flash-lite-preview:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:27.257Z",
+      "reportedUsageCost": 0.00091575,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 447,
+        "completion_tokens": 536,
+        "total_tokens": 983,
+        "cost": 0.00091575,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00091575,
+          "upstream_inference_prompt_cost": 0.00011175,
+          "upstream_inference_completions_cost": 0.000804
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2.5000000000000004e-7,
+        "output": 0.0000015
+      }
+    },
+    {
+      "index": 30,
+      "modelId": "google/gemini-3.1-flash-lite-preview",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-23T12:08:27.260Z",
+      "reserveUsd": 0.00444125,
+      "reserveRates": {
+        "usd": 0.00444125,
+        "inputRate": 2.5000000000000004e-7,
+        "outputRate": 0.0000015,
+        "inputByteAllowance": 1924,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0010525,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:30:google/gemini-3.1-flash-lite-preview:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:28.972Z",
+      "reportedUsageCost": 0.0010525,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 616,
+        "completion_tokens": 599,
+        "total_tokens": 1215,
+        "cost": 0.0010525,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0010525,
+          "upstream_inference_prompt_cost": 0.000154,
+          "upstream_inference_completions_cost": 0.0008985
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2.5000000000000004e-7,
+        "output": 0.0000015
+      }
+    },
+    {
+      "index": 31,
+      "modelId": "google/gemini-3.1-flash-lite-preview",
+      "promptName": "07-rare-formats",
+      "startedAt": "2026-11-23T12:08:28.975Z",
+      "reserveUsd": 0.0046353125000000005,
+      "reserveRates": {
+        "usd": 0.0046353125000000005,
+        "inputRate": 2.5000000000000004e-7,
+        "outputRate": 0.0000015,
+        "inputByteAllowance": 2545,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00123275,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:31:google/gemini-3.1-flash-lite-preview:07-rare-formats",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:30.839Z",
+      "reportedUsageCost": 0.00123275,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 737,
+        "completion_tokens": 699,
+        "total_tokens": 1436,
+        "cost": 0.00123275,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00123275,
+          "upstream_inference_prompt_cost": 0.00018425,
+          "upstream_inference_completions_cost": 0.0010485
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2.5000000000000004e-7,
+        "output": 0.0000015
+      }
+    },
+    {
+      "index": 32,
+      "modelId": "google/gemini-3.1-flash-lite-preview",
+      "promptName": "08-casual-prose",
+      "startedAt": "2026-11-23T12:08:30.843Z",
+      "reserveUsd": 0.0041121875,
+      "reserveRates": {
+        "usd": 0.0041121875,
+        "inputRate": 2.5000000000000004e-7,
+        "outputRate": 0.0000015,
+        "inputByteAllowance": 871,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00049425,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:32:google/gemini-3.1-flash-lite-preview:08-casual-prose",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:32.154Z",
+      "reportedUsageCost": 0.00049425,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 213,
+        "completion_tokens": 294,
+        "total_tokens": 507,
+        "cost": 0.00049425,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00049425,
+          "upstream_inference_prompt_cost": 0.00005325,
+          "upstream_inference_completions_cost": 0.000441
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 2.5000000000000004e-7,
+        "output": 0.0000015
+      }
+    },
+    {
+      "index": 33,
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-23T12:08:32.156Z",
+      "reserveUsd": 0.020718750000000005,
+      "reserveRates": {
+        "usd": 0.020718750000000005,
+        "inputRate": 0.0000015,
+        "outputRate": 0.000007500000000000001,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0066645,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:33:google/gemini-4-hydrogen:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:37.542Z",
+      "reportedUsageCost": 0.0066645,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 308,
+        "completion_tokens": 827,
+        "total_tokens": 1135,
+        "cost": 0.0066645,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0066645,
+          "upstream_inference_prompt_cost": 0.000462,
+          "upstream_inference_completions_cost": 0.0062025
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 392,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.0000015,
+        "output": 0.000007500000000000001
+      }
+    },
+    {
+      "index": 34,
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-23T12:08:37.545Z",
+      "reserveUsd": 0.021721875000000005,
+      "reserveRates": {
+        "usd": 0.021721875000000005,
+        "inputRate": 0.0000015,
+        "outputRate": 0.000007500000000000001,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0062115,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:34:google/gemini-4-hydrogen:02-markdown-formatting",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:42.583Z",
+      "reportedUsageCost": 0.0062115,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 431,
+        "completion_tokens": 742,
+        "total_tokens": 1173,
+        "cost": 0.0062115,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0062115,
+          "upstream_inference_prompt_cost": 0.0006465,
+          "upstream_inference_completions_cost": 0.005565
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 354,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.0000015,
+        "output": 0.000007500000000000001
+      }
+    },
+    {
+      "index": 35,
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-23T12:08:42.586Z",
+      "reserveUsd": 0.021061875000000004,
+      "reserveRates": {
+        "usd": 0.021061875000000004,
+        "inputRate": 0.0000015,
+        "outputRate": 0.000007500000000000001,
+        "inputByteAllowance": 993,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0039855,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:35:google/gemini-4-hydrogen:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:46.066Z",
+      "reportedUsageCost": 0.0039855,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 347,
+        "completion_tokens": 462,
+        "total_tokens": 809,
+        "cost": 0.0039855,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0039855,
+          "upstream_inference_prompt_cost": 0.0005205,
+          "upstream_inference_completions_cost": 0.003465
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 143,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.0000015,
+        "output": 0.000007500000000000001
+      }
+    },
+    {
+      "index": 36,
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-23T12:08:46.069Z",
+      "reserveUsd": 0.020949375000000006,
+      "reserveRates": {
+        "usd": 0.020949375000000006,
+        "inputRate": 0.0000015,
+        "outputRate": 0.000007500000000000001,
+        "inputByteAllowance": 933,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.015375,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:36:google/gemini-4-hydrogen:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:08:59.378Z",
+      "reportedUsageCost": 0.015375,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 350,
+        "completion_tokens": 1980,
+        "total_tokens": 2330,
+        "cost": 0.015375,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.015375,
+          "upstream_inference_prompt_cost": 0.000525,
+          "upstream_inference_completions_cost": 0.01485
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1497,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.0000015,
+        "output": 0.000007500000000000001
+      }
+    },
+    {
+      "index": 37,
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-23T12:08:59.383Z",
+      "reserveUsd": 0.021500625000000002,
+      "reserveRates": {
+        "usd": 0.021500625000000002,
+        "inputRate": 0.0000015,
+        "outputRate": 0.000007500000000000001,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0123135,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:37:google/gemini-4-hydrogen:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:09:09.782Z",
+      "reportedUsageCost": 0.0123135,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 474,
+        "completion_tokens": 1547,
+        "total_tokens": 2021,
+        "cost": 0.0123135,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0123135,
+          "upstream_inference_prompt_cost": 0.000711,
+          "upstream_inference_completions_cost": 0.0116025
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 571,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.0000015,
+        "output": 0.000007500000000000001
+      }
+    },
+    {
+      "index": 38,
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-23T12:09:09.787Z",
+      "reserveUsd": 0.0228075,
+      "reserveRates": {
+        "usd": 0.0228075,
+        "inputRate": 0.0000015,
+        "outputRate": 0.000007500000000000001,
+        "inputByteAllowance": 1924,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.009216,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:38:google/gemini-4-hydrogen:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:09:16.652Z",
+      "reportedUsageCost": 0.009216,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 634,
+        "completion_tokens": 1102,
+        "total_tokens": 1736,
+        "cost": 0.009216,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.009216,
+          "upstream_inference_prompt_cost": 0.000951,
+          "upstream_inference_completions_cost": 0.008265
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 509,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.0000015,
+        "output": 0.000007500000000000001
+      }
+    },
+    {
+      "index": 39,
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "07-rare-formats",
+      "startedAt": "2026-11-23T12:09:16.656Z",
+      "reserveUsd": 0.023971875000000004,
+      "reserveRates": {
+        "usd": 0.023971875000000004,
+        "inputRate": 0.0000015,
+        "outputRate": 0.000007500000000000001,
+        "inputByteAllowance": 2545,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.016461,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:39:google/gemini-4-hydrogen:07-rare-formats",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:09:29.479Z",
+      "reportedUsageCost": 0.016461,
+      "finishReason": "length",
+      "nativeFinishReason": "MAX_TOKENS",
+      "usage": {
+        "prompt_tokens": 734,
+        "completion_tokens": 2048,
+        "total_tokens": 2782,
+        "cost": 0.016461,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.016461,
+          "upstream_inference_prompt_cost": 0.001101,
+          "upstream_inference_completions_cost": 0.01536
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1572,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.0000015,
+        "output": 0.000007500000000000001
+      }
+    },
+    {
+      "index": 40,
+      "modelId": "google/gemini-4-hydrogen",
+      "promptName": "08-casual-prose",
+      "startedAt": "2026-11-23T12:09:29.482Z",
+      "reserveUsd": 0.020833125,
+      "reserveRates": {
+        "usd": 0.020833125,
+        "inputRate": 0.0000015,
+        "outputRate": 0.000007500000000000001,
+        "inputByteAllowance": 871,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0138135,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:40:google/gemini-4-hydrogen:08-casual-prose",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:09:41.693Z",
+      "reportedUsageCost": 0.0138135,
+      "finishReason": "stop",
+      "nativeFinishReason": "STOP",
+      "usage": {
+        "prompt_tokens": 244,
+        "completion_tokens": 1793,
+        "total_tokens": 2037,
+        "cost": 0.0138135,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0138135,
+          "upstream_inference_prompt_cost": 0.000366,
+          "upstream_inference_completions_cost": 0.0134475
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1372,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0.0000015,
+        "output": 0.000007500000000000001
+      }
+    },
+    {
+      "index": 41,
+      "modelId": "google/gemma-4-31b-it",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-23T12:09:41.698Z",
+      "reserveUsd": 0.0012265,
+      "reserveRates": {
+        "usd": 0.0012265,
+        "inputRate": 2e-7,
+        "outputRate": 4e-7,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0001465,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:41:google/gemma-4-31b-it:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:09:45.751Z",
+      "reportedUsageCost": 0.0001465,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 292,
+        "completion_tokens": 345,
+        "total_tokens": 637,
+        "cost": 0.0001465,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001465,
+          "upstream_inference_prompt_cost": 0.0000292,
+          "upstream_inference_completions_cost": 0.0001173
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.0000000000000001e-7,
+        "output": 3.4000000000000003e-7
+      }
+    },
+    {
+      "index": 42,
+      "modelId": "google/gemma-4-31b-it",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-23T12:09:45.755Z",
+      "reserveUsd": 0.00136025,
+      "reserveRates": {
+        "usd": 0.00136025,
+        "inputRate": 2e-7,
+        "outputRate": 4e-7,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0001842,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:42:google/gemma-4-31b-it:02-markdown-formatting",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:09:46.963Z",
+      "reportedUsageCost": 0.0001842,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 425,
+        "completion_tokens": 397,
+        "total_tokens": 822,
+        "cost": 0.0001842,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001842,
+          "upstream_inference_prompt_cost": 0.0001445,
+          "upstream_inference_completions_cost": 0.0000397
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.4e-7,
+        "output": 3.4000000000000003e-7
+      }
+    },
+    {
+      "index": 43,
+      "modelId": "google/gemma-4-31b-it",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-23T12:09:46.975Z",
+      "reserveUsd": 0.0014460249999999997,
+      "reserveRates": {
+        "usd": 0.0014460249999999997,
+        "inputRate": 3.4e-7,
+        "outputRate": 4e-7,
+        "inputByteAllowance": 993,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00014102,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:43:google/gemma-4-31b-it:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:09:55.189Z",
+      "reportedUsageCost": 0.00014102,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 346,
+        "completion_tokens": 313,
+        "total_tokens": 659,
+        "cost": 0.00014102,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00014102,
+          "upstream_inference_prompt_cost": 0.0000346,
+          "upstream_inference_completions_cost": 0.00010642
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.4e-7,
+        "output": 3.4000000000000003e-7
+      }
+    },
+    {
+      "index": 44,
+      "modelId": "google/gemma-4-31b-it",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-23T12:09:55.194Z",
+      "reserveUsd": 0.001420525,
+      "reserveRates": {
+        "usd": 0.001420525,
+        "inputRate": 3.4e-7,
+        "outputRate": 4e-7,
+        "inputByteAllowance": 933,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0001559,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:44:google/gemma-4-31b-it:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:09:57.023Z",
+      "reportedUsageCost": 0.0001559,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 330,
+        "completion_tokens": 437,
+        "total_tokens": 767,
+        "cost": 0.0001559,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001559,
+          "upstream_inference_prompt_cost": 0.0001122,
+          "upstream_inference_completions_cost": 0.0000437
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.4000000000000003e-7,
+        "output": 3.4000000000000003e-7
+      }
+    },
+    {
+      "index": 45,
+      "modelId": "google/gemma-4-31b-it",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-23T12:09:57.026Z",
+      "reserveUsd": 0.0015454750000000001,
+      "reserveRates": {
+        "usd": 0.0015454750000000001,
+        "inputRate": 3.4000000000000003e-7,
+        "outputRate": 4e-7,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00019958,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:45:google/gemma-4-31b-it:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:00.101Z",
+      "reportedUsageCost": 0.00019958,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 459,
+        "completion_tokens": 452,
+        "total_tokens": 911,
+        "cost": 0.00019958,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00019958,
+          "upstream_inference_prompt_cost": 0.0000459,
+          "upstream_inference_completions_cost": 0.00015368
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.4000000000000003e-7,
+        "output": 3.4000000000000003e-7
+      }
+    },
+    {
+      "index": 46,
+      "modelId": "google/gemma-4-31b-it",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-23T12:10:00.108Z",
+      "reserveUsd": 0.0018417,
+      "reserveRates": {
+        "usd": 0.0018417,
+        "inputRate": 3.4000000000000003e-7,
+        "outputRate": 4e-7,
+        "inputByteAllowance": 1924,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0002876,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:46:google/gemma-4-31b-it:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:02.778Z",
+      "reportedUsageCost": 0.0002876,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 628,
+        "completion_tokens": 615,
+        "total_tokens": 1243,
+        "cost": 0.0002876,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0002876,
+          "upstream_inference_prompt_cost": 0.0000785,
+          "upstream_inference_completions_cost": 0.0002091
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.4000000000000003e-7,
+        "output": 3.4000000000000003e-7
+      }
+    },
+    {
+      "index": 47,
+      "modelId": "google/gemma-4-31b-it",
+      "promptName": "07-rare-formats",
+      "startedAt": "2026-11-23T12:10:02.783Z",
+      "reserveUsd": 0.002105625,
+      "reserveRates": {
+        "usd": 0.002105625,
+        "inputRate": 3.4000000000000003e-7,
+        "outputRate": 4e-7,
+        "inputByteAllowance": 2545,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00031378,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:47:google/gemma-4-31b-it:07-rare-formats",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:07.525Z",
+      "reportedUsageCost": 0.00031378,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 751,
+        "completion_tokens": 702,
+        "total_tokens": 1453,
+        "cost": 0.00031378,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00031378,
+          "upstream_inference_prompt_cost": 0.0000751,
+          "upstream_inference_completions_cost": 0.00023868
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.4000000000000003e-7,
+        "output": 3.4000000000000003e-7
+      }
+    },
+    {
+      "index": 48,
+      "modelId": "google/gemma-4-31b-it",
+      "promptName": "08-casual-prose",
+      "startedAt": "2026-11-23T12:10:07.531Z",
+      "reserveUsd": 0.001394175,
+      "reserveRates": {
+        "usd": 0.001394175,
+        "inputRate": 3.4000000000000003e-7,
+        "outputRate": 4e-7,
+        "inputByteAllowance": 871,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00011446,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:48:google/gemma-4-31b-it:08-casual-prose",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:08.611Z",
+      "reportedUsageCost": 0.00011446,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 230,
+        "completion_tokens": 269,
+        "total_tokens": 499,
+        "cost": 0.00011446,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00011446,
+          "upstream_inference_prompt_cost": 0.000023,
+          "upstream_inference_completions_cost": 0.00009146
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.4000000000000003e-7,
+        "output": 3.4000000000000003e-7
+      }
+    },
+    {
+      "index": 49,
+      "modelId": "meta-llama/llama-4-scout",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-23T12:10:08.615Z",
+      "reserveUsd": 0.001303875,
+      "reserveRates": {
+        "usd": 0.001303875,
+        "inputRate": 1.5000000000000002e-7,
+        "outputRate": 4.5e-7,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0002001,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:49:meta-llama/llama-4-scout:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:12.896Z",
+      "reportedUsageCost": 0.0002001,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 254,
+        "completion_tokens": 360,
+        "total_tokens": 614,
+        "cost": 0.0002001,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0002001,
+          "upstream_inference_prompt_cost": 0.0000381,
+          "upstream_inference_completions_cost": 0.000162
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-7,
+        "output": 4.5000000000000003e-7
+      }
+    },
+    {
+      "index": 50,
+      "modelId": "meta-llama/llama-4-scout",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-23T12:10:12.903Z",
+      "reserveUsd": 0.0014041875000000003,
+      "reserveRates": {
+        "usd": 0.0014041875000000003,
+        "inputRate": 1.5000000000000002e-7,
+        "outputRate": 4.5000000000000003e-7,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0001476,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:50:meta-llama/llama-4-scout:02-markdown-formatting",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:17.885Z",
+      "reportedUsageCost": 0.0001476,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 387,
+        "completion_tokens": 363,
+        "total_tokens": 750,
+        "cost": 0.0001476,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0001476,
+          "upstream_inference_prompt_cost": 0.0000387,
+          "upstream_inference_completions_cost": 0.0001089
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-7,
+        "output": 4.5000000000000003e-7
+      }
+    },
+    {
+      "index": 51,
+      "modelId": "meta-llama/llama-4-scout",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-23T12:10:17.893Z",
+      "reserveUsd": 0.0013381875,
+      "reserveRates": {
+        "usd": 0.0013381875,
+        "inputRate": 1.5000000000000002e-7,
+        "outputRate": 4.5000000000000003e-7,
+        "inputByteAllowance": 993,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00018675,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:51:meta-llama/llama-4-scout:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:21.700Z",
+      "reportedUsageCost": 0.00018675,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 294,
+        "completion_tokens": 317,
+        "total_tokens": 611,
+        "cost": 0.00018675,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00018675,
+          "upstream_inference_prompt_cost": 0.0000441,
+          "upstream_inference_completions_cost": 0.00014265
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-7,
+        "output": 4.5000000000000003e-7
+      }
+    },
+    {
+      "index": 52,
+      "modelId": "meta-llama/llama-4-scout",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-23T12:10:21.710Z",
+      "reserveUsd": 0.0013269375,
+      "reserveRates": {
+        "usd": 0.0013269375,
+        "inputRate": 1.5000000000000002e-7,
+        "outputRate": 4.5000000000000003e-7,
+        "inputByteAllowance": 933,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.000209,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:52:meta-llama/llama-4-scout:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:28.410Z",
+      "reportedUsageCost": 0.000209,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 296,
+        "completion_tokens": 598,
+        "total_tokens": 894,
+        "cost": 0.000209,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000209,
+          "upstream_inference_prompt_cost": 0.0000296,
+          "upstream_inference_completions_cost": 0.0001794
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-7,
+        "output": 4.5000000000000003e-7
+      }
+    },
+    {
+      "index": 53,
+      "modelId": "meta-llama/llama-4-scout",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-23T12:10:28.420Z",
+      "reserveUsd": 0.0013820625,
+      "reserveRates": {
+        "usd": 0.0013820625,
+        "inputRate": 1.5000000000000002e-7,
+        "outputRate": 4.5000000000000003e-7,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0004107,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:53:meta-llama/llama-4-scout:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:36.668Z",
+      "reportedUsageCost": 0.0004107,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 419,
+        "completion_tokens": 773,
+        "total_tokens": 1192,
+        "cost": 0.0004107,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0004107,
+          "upstream_inference_prompt_cost": 0.00006285,
+          "upstream_inference_completions_cost": 0.00034785
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-7,
+        "output": 4.5000000000000003e-7
+      }
+    },
+    {
+      "index": 54,
+      "modelId": "meta-llama/llama-4-scout",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-23T12:10:36.673Z",
+      "reserveUsd": 0.00151275,
+      "reserveRates": {
+        "usd": 0.00151275,
+        "inputRate": 1.5000000000000002e-7,
+        "outputRate": 4.5000000000000003e-7,
+        "inputByteAllowance": 1924,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0002355,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:54:meta-llama/llama-4-scout:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:44.666Z",
+      "reportedUsageCost": 0.0002355,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 585,
+        "completion_tokens": 590,
+        "total_tokens": 1175,
+        "cost": 0.0002355,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0002355,
+          "upstream_inference_prompt_cost": 0.0000585,
+          "upstream_inference_completions_cost": 0.000177
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-7,
+        "output": 4.5000000000000003e-7
+      }
+    },
+    {
+      "index": 55,
+      "modelId": "meta-llama/llama-4-scout",
+      "promptName": "07-rare-formats",
+      "startedAt": "2026-11-23T12:10:44.673Z",
+      "reserveUsd": 0.0016291875,
+      "reserveRates": {
+        "usd": 0.0016291875,
+        "inputRate": 1.5000000000000002e-7,
+        "outputRate": 4.5000000000000003e-7,
+        "inputByteAllowance": 2545,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0002501,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:55:meta-llama/llama-4-scout:07-rare-formats",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:52.265Z",
+      "reportedUsageCost": 0.0002501,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 659,
+        "completion_tokens": 614,
+        "total_tokens": 1273,
+        "cost": 0.0002501,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0002501,
+          "upstream_inference_prompt_cost": 0.0000659,
+          "upstream_inference_completions_cost": 0.0001842
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-7,
+        "output": 4.5000000000000003e-7
+      }
+    },
+    {
+      "index": 56,
+      "modelId": "meta-llama/llama-4-scout",
+      "promptName": "08-casual-prose",
+      "startedAt": "2026-11-23T12:10:52.271Z",
+      "reserveUsd": 0.0013153125,
+      "reserveRates": {
+        "usd": 0.0013153125,
+        "inputRate": 1.5000000000000002e-7,
+        "outputRate": 4.5000000000000003e-7,
+        "inputByteAllowance": 871,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0000859,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:56:meta-llama/llama-4-scout:08-casual-prose",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:10:54.754Z",
+      "reportedUsageCost": 0.0000859,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 214,
+        "completion_tokens": 215,
+        "total_tokens": 429,
+        "cost": 0.0000859,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0000859,
+          "upstream_inference_prompt_cost": 0.0000214,
+          "upstream_inference_completions_cost": 0.0000645
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 1.5000000000000002e-7,
+        "output": 4.5000000000000003e-7
+      }
+    },
+    {
+      "index": 57,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-23T12:10:54.762Z",
+      "reserveUsd": 0.006693224999999999,
+      "reserveRates": {
+        "usd": 0.006693224999999999,
+        "inputRate": 7.7e-7,
+        "outputRate": 0.00000231,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00191268,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:57:mistralai/mistral-large-4-0:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:11:00.353Z",
+      "reportedUsageCost": 0.00191268,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 264,
+        "completion_tokens": 740,
+        "total_tokens": 1004,
+        "cost": 0.00191268,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00191268,
+          "upstream_inference_prompt_cost": 0.00020328,
+          "upstream_inference_completions_cost": 0.0017094
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 214,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 7.7e-7,
+        "output": 0.00000231
+      }
+    },
+    {
+      "index": 58,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-23T12:11:00.357Z",
+      "reserveUsd": 0.0072081624999999995,
+      "reserveRates": {
+        "usd": 0.0072081624999999995,
+        "inputRate": 7.7e-7,
+        "outputRate": 0.00000231,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0016919,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:58:mistralai/mistral-large-4-0:02-markdown-formatting",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:11:06.355Z",
+      "reportedUsageCost": 0.0016919,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 401,
+        "completion_tokens": 672,
+        "total_tokens": 1073,
+        "cost": 0.0016919,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0016919,
+          "upstream_inference_prompt_cost": 0.0002807,
+          "upstream_inference_completions_cost": 0.0014112
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 299,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 7.7e-7,
+        "output": 0.00000231
+      }
+    },
+    {
+      "index": 59,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-23T12:11:06.363Z",
+      "reserveUsd": 0.006869362499999999,
+      "reserveRates": {
+        "usd": 0.006869362499999999,
+        "inputRate": 7.7e-7,
+        "outputRate": 0.00000231,
+        "inputByteAllowance": 993,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0016352,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:59:mistralai/mistral-large-4-0:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:11:12.599Z",
+      "reportedUsageCost": 0.0016352,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 311,
+        "completion_tokens": 675,
+        "total_tokens": 986,
+        "cost": 0.0016352,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0016352,
+          "upstream_inference_prompt_cost": 0.0002177,
+          "upstream_inference_completions_cost": 0.0014175
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 151,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 7.7e-7,
+        "output": 0.00000231
+      }
+    },
+    {
+      "index": 60,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-23T12:11:12.607Z",
+      "reserveUsd": 0.0068116125,
+      "reserveRates": {
+        "usd": 0.0068116125,
+        "inputRate": 7.7e-7,
+        "outputRate": 0.00000231,
+        "inputByteAllowance": 933,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00382151,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:60:mistralai/mistral-large-4-0:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:12:31.317Z",
+      "reportedUsageCost": 0.00382151,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 301,
+        "completion_tokens": 1554,
+        "total_tokens": 1855,
+        "cost": 0.00382151,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00382151,
+          "upstream_inference_prompt_cost": 0.00023177,
+          "upstream_inference_completions_cost": 0.00358974
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 864,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 7.7e-7,
+        "output": 0.00000231
+      }
+    },
+    {
+      "index": 61,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-23T12:12:31.322Z",
+      "reserveUsd": 0.0070945875,
+      "reserveRates": {
+        "usd": 0.0070945875,
+        "inputRate": 7.7e-7,
+        "outputRate": 0.00000231,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0046004,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:61:mistralai/mistral-large-4-0:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:13:15.591Z",
+      "reportedUsageCost": 0.0046004,
+      "finishReason": "length",
+      "nativeFinishReason": "length",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 2048,
+        "total_tokens": 2476,
+        "cost": 0.0046004,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0046004,
+          "upstream_inference_prompt_cost": 0.0002996,
+          "upstream_inference_completions_cost": 0.0043008
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1641,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 7.7e-7,
+        "output": 0.00000231
+      }
+    },
+    {
+      "index": 62,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-23T12:13:15.596Z",
+      "reserveUsd": 0.00776545,
+      "reserveRates": {
+        "usd": 0.00776545,
+        "inputRate": 7.7e-7,
+        "outputRate": 0.00000231,
+        "inputByteAllowance": 1924,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00519673,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:62:mistralai/mistral-large-4-0:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:13:44.851Z",
+      "reportedUsageCost": 0.00519673,
+      "finishReason": "length",
+      "nativeFinishReason": "length",
+      "usage": {
+        "prompt_tokens": 605,
+        "completion_tokens": 2048,
+        "total_tokens": 2653,
+        "cost": 0.00519673,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00519673,
+          "upstream_inference_prompt_cost": 0.00046585,
+          "upstream_inference_completions_cost": 0.00473088
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1686,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": true,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 7.7e-7,
+        "output": 0.00000231
+      }
+    },
+    {
+      "index": 63,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "07-rare-formats",
+      "startedAt": "2026-11-23T12:13:44.856Z",
+      "reserveUsd": 0.0083631625,
+      "reserveRates": {
+        "usd": 0.0083631625,
+        "inputRate": 7.7e-7,
+        "outputRate": 0.00000231,
+        "inputByteAllowance": 2545,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00438361,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:63:mistralai/mistral-large-4-0:07-rare-formats",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:14:03.726Z",
+      "reportedUsageCost": 0.00438361,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 701,
+        "completion_tokens": 1664,
+        "total_tokens": 2365,
+        "cost": 0.00438361,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00438361,
+          "upstream_inference_prompt_cost": 0.00053977,
+          "upstream_inference_completions_cost": 0.00384384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1002,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 7.7e-7,
+        "output": 0.00000231
+      }
+    },
+    {
+      "index": 64,
+      "modelId": "mistralai/mistral-large-4-0",
+      "promptName": "08-casual-prose",
+      "startedAt": "2026-11-23T12:14:03.730Z",
+      "reserveUsd": 0.006751937499999999,
+      "reserveRates": {
+        "usd": 0.006751937499999999,
+        "inputRate": 7.7e-7,
+        "outputRate": 0.00000231,
+        "inputByteAllowance": 871,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00350812,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:64:mistralai/mistral-large-4-0:08-casual-prose",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:14:18.469Z",
+      "reportedUsageCost": 0.00350812,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 221,
+        "completion_tokens": 1445,
+        "total_tokens": 1666,
+        "cost": 0.00350812,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00350812,
+          "upstream_inference_prompt_cost": 0.00017017,
+          "upstream_inference_completions_cost": 0.00333795
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1154,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 7.7e-7,
+        "output": 0.00000231
+      }
+    },
+    {
+      "index": 65,
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-23T12:14:18.477Z",
+      "reserveUsd": 0,
+      "reserveRates": {
+        "usd": 0,
+        "inputRate": 0,
+        "outputRate": 0,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:65:nvidia/nemotron-3-ultra-550b-a55b:free:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-23T12:14:25.756Z",
+      "reportedUsageCost": 0,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 270,
+        "completion_tokens": 482,
+        "total_tokens": 752,
+        "cost": 0,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 110,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 0,
+        "output": 0
+      }
+    },
+    {
+      "index": 66,
+      "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-23T12:14:25.760Z",
+      "reserveUsd": 0,
+      "reserveRates": {
+        "usd": 0,
+        "inputRate": 0,
+        "outputRate": 0,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": null,
+      "callId": "paid-batch-2026-11-23-drift-w48-g0:66:nvidia/nemotron-3-ultra-550b-a55b:free:02-markdown-formatting",
+      "error": "fetch failed",
+      "finishedAt": "2026-11-23T12:17:12.720Z"
+    }
+  ],
+  "budgetCaveat": "Estimate guard, not provider hard billing cap. Reserve uses catalog rates + 25% margin at completion cap 2048.",
+  "coverage": "Not assessed in collector; render-only / reference / layout / coverage run afterwards",
+  "startedAt": "2026-11-23T12:05:28.856Z",
+  "conservativeBatchReserve": 5.105403010000002,
+  "status": "stopped",
+  "stopReason": "Unknown spend permanently halted; explicit resolution/approval required",
+  "finishedAt": "2026-11-23T12:17:13.026Z"
+}

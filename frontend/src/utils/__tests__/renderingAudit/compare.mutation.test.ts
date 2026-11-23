@@ -69,6 +69,16 @@ describe('compareSignatures mutation detection', () => {
     )
   })
 
+  it('fails when table cell alignment is dropped', () => {
+    const ref = signatureFromHtml(
+      '<table><tr><th style="text-align:center">c</th></tr><tr><td style="text-align:right">1</td></tr></table>'
+    )
+    const actual = signatureFromHtml('<table><tr><th>c</th></tr><tr><td>1</td></tr></table>')
+    const result = compareSignatures(ref, actual)
+    expect(result.pass).toBe(false)
+    expect(result.diffs.some(d => d.field === 'tableCellAlignments')).toBe(true)
+  })
+
   it('fails when bold is removed', () => {
     const ref = signatureFromHtml('<p><strong>hello</strong> world</p>')
     const actual = signatureFromHtml('<p>hello world</p>')
