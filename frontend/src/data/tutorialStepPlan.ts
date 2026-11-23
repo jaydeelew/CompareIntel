@@ -171,6 +171,15 @@ export function tutorialStepUsesFramedCutoutShadow(
   )
 }
 
+/**
+ * Composer steps whose card and cutout stay with the field, then yield to the
+ * scroll-back hint once a real scroll takes that field fully outside.
+ * History and save keep their Done button instead.
+ */
+export function tutorialStepFollowsComposer(step: TutorialStep | null | undefined): boolean {
+  return step === 'enter-prompt' || step === 'enter-prompt-2' || step === 'follow-up'
+}
+
 export function isSingleProviderSpotlightStep(step: TutorialStep | null | undefined): boolean {
   return (
     isExpandProviderTutorialStep(step) ||

@@ -11,6 +11,7 @@ import { StyledTooltip } from '../shared'
 import { ModelDetailsInfoModal } from './ModelDetailsInfoModal'
 import { ModelInfoPanelContent } from './ModelInfoPanelContent'
 import { SelectAllInfoModal } from './SelectAllInfoModal'
+import { modelForSelectedRail } from './selectedModelLookup'
 import { ThinkingModelInfoModal } from './ThinkingModelInfoModal'
 import { getTooltipModalSuppressed } from './tooltipModalStorage'
 import { WebSearchInfoModal } from './WebSearchInfoModal'
@@ -290,8 +291,14 @@ export interface ModelsSectionProps {
   originalSelectedModels: string[]
   /** Set of provider names with open dropdowns */
   openDropdowns: Set<string>
-  /** All models in a flat array */
+  /** All models in a flat array (the list currently shown in the provider rows) */
   allModels: Model[]
+  /**
+   * Full catalog used to name already-selected models. Tutorial steps filter
+   * `allModels` down to the model for the current step, which would otherwise
+   * drop the earlier selection from the rail.
+   */
+  catalogModels?: Model[]
   /** Whether models are currently loading */
   isLoadingModels: boolean
   /** Whether in follow-up mode */
@@ -346,6 +353,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   originalSelectedModels,
   openDropdowns,
   allModels,
+  catalogModels,
   isLoadingModels,
   isFollowUpMode,
   maxModelsLimit,
@@ -864,7 +872,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
         <div className="selected-models-section">
           <div ref={selectedModelsGridRef} className="selected-models-grid">
             {selectedModels.map(modelId => {
-              const model = allModels.find(m => m.id === modelId)
+              const model = modelForSelectedRail(modelId, allModels, catalogModels)
               if (!model) return null
 
               return (

@@ -7,6 +7,7 @@ import {
   isProviderPickerTutorialStep,
   isSelectModelTutorialStep,
   resolveTutorialStepConfig,
+  tutorialStepFollowsComposer,
   tutorialStepUsesFramedCutoutShadow,
   type StarterModelEntry,
 } from '../../data/tutorialStepPlan'
@@ -29,7 +30,6 @@ import {
   scrollTutorialRectToCenter,
   seatPortaledFollowUpComposer,
   TUTORIAL_FRAME_OUTSET_PX,
-  visibleViewportHeight,
   type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
 import {
@@ -575,12 +575,17 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       setIsTargetOffScreen(null)
     }
 
-    // Step 5: the card stays while the composer is merely clipped or covered by
-    // the keyboard. The scroll-back hint appears only after a vertical scroll
-    // takes both the composer and the tooltip fully outside the layout viewport.
-    if (step === 'enter-prompt' || step === 'enter-prompt-2') {
+    // Prompt and follow-up: the card stays while the composer is merely clipped
+    // or covered by the keyboard. The scroll-back hint appears only after a
+    // vertical scroll takes the composer fully outside the layout viewport.
+    // Enter-prompt also waits until the tooltip has left, because that card can
+    // hang below a composer that has only just cleared the top. Follow-up shows
+    // as soon as the composer is fully out, so the card cannot sit over results.
+    if (tutorialStepFollowsComposer(step)) {
       const scrollTop = getTutorialScrollRoot().getScrollTop()
-      const composerOff = scrollBackDirectionForTarget(rect, null, true)
+      const composerRect =
+        step === 'follow-up' ? (getComposerElement()?.getBoundingClientRect() ?? rect) : rect
+      const composerOff = scrollBackDirectionForTarget(composerRect, null, true)
       if (!composerOff) {
         // Remember the last offset where the composer was still on screen,
         // including during the settle scroll.
@@ -593,11 +598,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         const scrolledAway =
           promptScrollBaselineRef.current != null &&
           Math.abs(scrollTop - promptScrollBaselineRef.current) > 24
+        const followUpLeft = step === 'follow-up'
         const nextScrollBack = scrolledAway
           ? scrollBackDirectionForTarget(
-              rect,
-              overlayRef.current?.getBoundingClientRect() ?? null,
-              scrollBackActiveRef.current
+              composerRect,
+              followUpLeft ? null : (overlayRef.current?.getBoundingClientRect() ?? null),
+              followUpLeft ? true : scrollBackActiveRef.current
             )
           : null
         scrollBackActiveRef.current = nextScrollBack != null
@@ -1283,24 +1289,36 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   // Step 7 seats the composer, then a deferred results scroll can pin that tall
   // section to the top and leave the field below the iPhone viewport. Pull it
-  // back until it has stayed on screen; after that a user may scroll the results.
+  // back until it has stayed on screen. A later scroll that moves the page is
+  // the user's: leave the composer where they put it so the scroll-back hint
+  // can take over. The keyboard shrinks the visual viewport and must not count.
   useEffect(() => {
     if (step !== 'follow-up') return
     let stableSince = 0
     let intervalId = 0
+    let seatedTop: number | null = null
     const started = performance.now()
     const bringComposerBack = () => {
       if (stepRef.current !== 'follow-up' || performance.now() - started > 15000) {
         window.clearInterval(intervalId)
         return
       }
+      const scrollTop = getTutorialScrollRoot().getScrollTop()
       const composer = readPortaledFollowUpComposerRect()
-      const viewportHeight = visibleViewportHeight()
+      const viewportHeight = window.innerHeight
       const onScreen =
-        composer != null && composer.top >= 12 && composer.bottom <= viewportHeight - 24
+        composer != null &&
+        composer.height > 20 &&
+        composer.top < viewportHeight - 1 &&
+        composer.bottom > 1
       if (onScreen) {
+        seatedTop = scrollTop
         if (stableSince === 0) stableSince = performance.now()
         if (performance.now() - stableSince > 4000) window.clearInterval(intervalId)
+        return
+      }
+      if (seatedTop != null && Math.abs(scrollTop - seatedTop) > 24) {
+        window.clearInterval(intervalId)
         return
       }
       stableSince = 0
@@ -1309,6 +1327,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         arrowSize: MOBILE_TUTORIAL_ARROW_PX,
         preferred: 'below',
       })
+      seatedTop = getTutorialScrollRoot().getScrollTop()
     }
     intervalId = window.setInterval(bringComposerBack, 200)
     return () => window.clearInterval(intervalId)
@@ -1472,7 +1491,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     step === 'save-selection'
   const promptScrollBack =
     scrollBackDirection != null &&
-    (step === 'enter-prompt' || step === 'enter-prompt-2') &&
+    tutorialStepFollowsComposer(step) &&
     !isLoadingStreamingPhase &&
     !isStepTransitioning
   const genericOffScreen =
@@ -1664,10 +1683,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         <div
           className={`mobile-tutorial-scroll-indicator scroll-${scrollHintDirection}`}
           onClick={() => {
-            const composer =
-              step === 'enter-prompt' || step === 'enter-prompt-2'
-                ? getComposerElement()
-                : targetElement
+            const composer = tutorialStepFollowsComposer(step)
+              ? getComposerElement()
+              : targetElement
             ;(composer ?? targetElement)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
           }}
         >

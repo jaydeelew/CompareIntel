@@ -5,10 +5,12 @@ import {
   resolveStarterSelectionModelIds,
 } from '../src/utils/starterSelectionModels'
 
+import { mockComparisonStream } from './helpers/mockModels'
 import { dismissMobileBlockers, isMobileE2eProject } from './helpers/modelCheckbox'
 import {
   completeTutorialPromptInput,
   expandTutorialProvider,
+  runTutorialComparison,
   selectTutorialModelCheckbox,
   tutorialTooltip,
 } from './helpers/tutorialFlow'
@@ -303,5 +305,184 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
       timeout: 25_000,
     })
     await expect.poll(async () => (await readResultsFrame(page)).ok, { timeout: 8_000 }).toBe(true)
+  })
+
+  test('expand OpenAI keeps the model selected earlier in the blue rail', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(90_000)
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Start Tutorial' }).click()
+    await tutorialTooltip(page).first().waitFor({ state: 'visible', timeout: 20_000 })
+    await dismissMobileBlockers(page)
+
+    const first = TUTORIAL_PROVIDERS[0]!
+    const second = TUTORIAL_PROVIDERS[1]!
+    const firstId = TUTORIAL_MODEL_IDS[0]!
+    const firstName = MOCK_MODELS[first]?.find(model => model.id === firstId)?.name
+    expect(firstName).toBeTruthy()
+
+    await expandTutorialProvider(page, first, testInfo)
+    await selectTutorialModelCheckbox(page, firstId, first, testInfo)
+    await expect(tutorialTooltip(page).first()).toContainText(`Expand ${second}`, {
+      timeout: 20_000,
+    })
+
+    const rail = page.locator('.selected-model-card .model-name-text')
+    await expect(rail).toHaveCount(1)
+    await expect(rail).toHaveText(firstName!)
+    await expect(page.locator('.models-count-indicator')).toContainText(/1 of \d+ selected/)
+    await expect(page.locator(`.provider-dropdown[data-provider-name="${first}"]`)).toHaveCount(0)
+    await expect(page.locator(`.provider-dropdown[data-provider-name="${second}"]`)).toHaveCount(1)
+  })
+
+  test('follow-up tooltip follows the composer and asks to scroll down when it leaves', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(180_000)
+    await mockComparisonStream(page)
+    await reachPromptStep(page, testInfo)
+    await completeTutorialPromptInput(page, 'Hello from the follow-up scroll test.', testInfo)
+    await runTutorialComparison(page, testInfo, 25_000, 'Hello from the follow-up scroll test.')
+    await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation', {
+      timeout: 25_000,
+    })
+
+    const hint = page.locator('.mobile-tutorial-scroll-indicator')
+    await expect(hint).toHaveCount(0)
+    await page.evaluate(() => {
+      document
+        .querySelector('[data-after-results-composer-slot] .composer:not(.composer-placeholder)')
+        ?.scrollIntoView({ block: 'center', inline: 'nearest' })
+    })
+    await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation', {
+      timeout: 8_000,
+    })
+    await expect(hint).toHaveCount(0)
+
+    let previous = ''
+    await expect
+      .poll(
+        async () => {
+          const sample = await page.evaluate(() => {
+            const app = document.querySelector('.app') as HTMLElement | null
+            const scroller =
+              app && app.scrollHeight > app.clientHeight + 1
+                ? app
+                : (document.scrollingElement as HTMLElement | null)
+            const composer = document.querySelector(
+              '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+            )
+            const tip = document.querySelector('.mobile-tutorial-tooltip, .tutorial-tooltip')
+            const hidden =
+              tip?.classList.contains('mobile-tutorial-tooltip--transitioning') ||
+              tip?.classList.contains('tutorial-tooltip--settling')
+            return [
+              Math.round(scroller?.scrollTop ?? -1),
+              Math.round(composer?.getBoundingClientRect().top ?? -1),
+              hidden ? 0 : 1,
+            ].join(':')
+          })
+          const stable = sample === previous && sample.endsWith(':1')
+          previous = sample
+          return stable ? 'stable' : sample
+        },
+        { timeout: 15_000, intervals: [400] }
+      )
+      .toBe('stable')
+
+    const nudged = await page.evaluate(() => {
+      const app = document.querySelector('.app') as HTMLElement | null
+      const scroller =
+        app && app.scrollHeight > app.clientHeight + 1
+          ? app
+          : (document.scrollingElement as HTMLElement | null)
+      const composer = document.querySelector(
+        '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+      ) as HTMLElement | null
+      const tip = document.querySelector(
+        '.mobile-tutorial-tooltip, .tutorial-tooltip'
+      ) as HTMLElement | null
+      const ring = document.querySelector(
+        '.tutorial-backdrop-follow-up-composer-ring, .mobile-tutorial-backdrop-follow-up-composer-ring'
+      ) as HTMLElement | null
+      if (!scroller || !composer || !tip) return null
+      const before = {
+        scrollTop: scroller.scrollTop,
+        composer: composer.getBoundingClientRect().top,
+        tip: tip.getBoundingClientRect().top,
+        ring: ring?.getBoundingClientRect().top ?? null,
+      }
+      const nudge = Math.min(80, Math.max(0, scroller.scrollTop - 8))
+      scroller.scrollTop = before.scrollTop - nudge
+      return { ...before, nudge }
+    })
+    expect(nudged).not.toBeNull()
+    expect(nudged!.nudge).toBeGreaterThan(40)
+
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(start => {
+            const composer = document.querySelector(
+              '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+            )
+            const tip = document.querySelector('.mobile-tutorial-tooltip, .tutorial-tooltip')
+            const ring = document.querySelector(
+              '.tutorial-backdrop-follow-up-composer-ring, .mobile-tutorial-backdrop-follow-up-composer-ring'
+            )
+            if (!composer || !tip || !ring || start.ring == null) return 'missing'
+            const composerDy = composer.getBoundingClientRect().top - start.composer
+            const tipDy = tip.getBoundingClientRect().top - start.tip
+            const ringDy = ring.getBoundingClientRect().top - start.ring
+            if (Math.abs(composerDy - start.nudge) > 12) return `composer ${Math.round(composerDy)}`
+            if (Math.abs(tipDy - composerDy) > 16) return `tip ${Math.round(tipDy)}`
+            if (Math.abs(ringDy - composerDy) > 20) return `ring ${Math.round(ringDy)}`
+            return 'followed'
+          }, nudged),
+        { timeout: 4_000, intervals: [50] }
+      )
+      .toBe('followed')
+    await expect(hint).toHaveCount(0)
+
+    const pushed = await page.evaluate(() => {
+      const app = document.querySelector('.app') as HTMLElement | null
+      const scroller =
+        app && app.scrollHeight > app.clientHeight + 1
+          ? app
+          : (document.scrollingElement as HTMLElement | null)
+      const composer = document.querySelector(
+        '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+      ) as HTMLElement | null
+      if (!scroller || !composer) return { direction: 'missing', moved: 0 }
+      const before = scroller.scrollTop
+      const rect = composer.getBoundingClientRect()
+      const below = rect.top - window.innerHeight - 24
+      const max = Math.max(0, scroller.scrollHeight - scroller.clientHeight)
+      scroller.scrollTop = Math.max(0, Math.min(before + below, max))
+      const after = composer.getBoundingClientRect()
+      return {
+        direction: after.top >= window.innerHeight - 1 ? 'down' : 'visible',
+        moved: Math.round(scroller.scrollTop - before),
+        top: Math.round(after.top),
+        scrollTop: Math.round(scroller.scrollTop),
+      }
+    })
+    expect(pushed.direction, JSON.stringify(pushed)).toBe('down')
+    expect(Math.abs(pushed.moved)).toBeGreaterThan(24)
+
+    await expect(hint).toContainText('Scroll back to continue', { timeout: 8_000 })
+    await expect(hint).toHaveClass(/scroll-down/)
+    await expect(tutorialTooltip(page)).toHaveCount(0)
+
+    await page.evaluate(() => {
+      document
+        .querySelector('[data-after-results-composer-slot] .composer:not(.composer-placeholder)')
+        ?.scrollIntoView({ block: 'center', inline: 'nearest' })
+    })
+    await expect(hint).toHaveCount(0, { timeout: 8_000 })
+    await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation', {
+      timeout: 8_000,
+    })
   })
 })
