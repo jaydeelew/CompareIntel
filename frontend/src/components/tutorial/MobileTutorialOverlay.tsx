@@ -26,8 +26,9 @@ import {
   readTutorialSpotlightRect,
   scrollDeltaToFitTooltip,
   scrollBackDirectionForTarget,
+  centerTutorialStepRect,
+  clearTutorialScrollTail,
   scrollFollowUpHighlightIntoView,
-  scrollTutorialRectToCenter,
   seatPortaledFollowUpComposer,
   TUTORIAL_FRAME_OUTSET_PX,
   type TutorialProviderLayoutStep,
@@ -43,12 +44,11 @@ import {
 
 import { useTutorialInteractionLock } from './tutorialInteractionLock'
 import {
+  getBelowResultsHistoryToggleButton,
+  getBelowResultsSavedSelectionsButton,
   getComposerElement,
   getHeroComposerForDropdownSteps,
-  getHistoryInlineListForTutorial,
-  getBelowResultsHistoryToggleButton,
-  getSavedSelectionsButtonForTutorial,
-  getSavedSelectionsDropdownForTutorial,
+  getPortaledHistoryList,
 } from './tutorialUtils'
 
 import './MobileTutorialOverlay.css'
@@ -117,8 +117,6 @@ const MOBILE_STEP_OVERRIDES: Partial<
 // Steps that target the textarea - tooltip appears above on mobile
 const TEXTAREA_STEPS: TutorialStep[] = ['enter-prompt', 'enter-prompt-2']
 // Dropdown steps should keep tooltip above to avoid covering menus
-const DROPDOWN_STEPS: TutorialStep[] = ['history-dropdown', 'save-selection']
-
 const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   step,
   tutorialProviderNames,
@@ -222,6 +220,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (step !== 'history-dropdown') {
       dropdownWasOpenedRef.current = false
       setHistoryDropdownOpened(false)
+    }
+    if (step !== 'history-dropdown' && step !== 'save-selection') {
+      clearTutorialScrollTail()
     }
   }, [step])
 
@@ -345,7 +346,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         // is the composer under the results.
         element = getBelowResultsHistoryToggleButton()
       } else if (step === 'save-selection') {
-        element = getSavedSelectionsButtonForTutorial()
+        element = getBelowResultsSavedSelectionsButton()
       } else {
         element = document.querySelector(config.targetSelector) as HTMLElement
       }
@@ -529,16 +530,24 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       setBackdropRect(null)
     }
 
-    if (DROPDOWN_STEPS.includes(step)) {
+    if (step === 'save-selection') {
+      const frame = readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
+      if (frame) {
+        setDropdownRect({
+          top: frame.top,
+          left: frame.left,
+          width: frame.width,
+          height: frame.height,
+          centerX: frame.left + frame.width / 2,
+          centerY: frame.top + frame.height / 2,
+        })
+      } else {
+        setDropdownRect(null)
+      }
+    } else if (step === 'history-dropdown') {
       // Frame the composer the user can see (below results after a comparison), not the inert hero mirror.
       const composer = getComposerElement()
-      const dropdownElement =
-        (composer?.querySelector(
-          step === 'history-dropdown' ? '.history-inline-list' : '.saved-selections-dropdown'
-        ) as HTMLElement | null) ??
-        (step === 'history-dropdown'
-          ? getHistoryInlineListForTutorial()
-          : getSavedSelectionsDropdownForTutorial())
+      const dropdownElement = getPortaledHistoryList()
       if (composer) {
         const inputWrapper = composer.querySelector('.composer-input-wrapper') as HTMLElement | null
         const toolbar = composer.querySelector('.composer-toolbar') as HTMLElement | null
@@ -858,7 +867,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       let rect = liveSpotlight()
       if (!rect || rect.width < 2 || rect.height < 2) return
-      scrollTutorialRectToCenter(rect)
+      centerTutorialStepRect(currentStep, rect)
       if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
       await waitForTutorialLayoutSettle({ timeoutMs: 240, quietMs: 48 })
       if (cancelled || stepRef.current !== currentStep) return
@@ -869,7 +878,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const viewH = window.innerHeight
       const mid = rect.top + rect.height / 2
       if (rect.height <= viewH * 0.65 && Math.abs(mid - viewH / 2) > 36) {
-        scrollTutorialRectToCenter(rect)
+        centerTutorialStepRect(currentStep, rect)
         await waitForTutorialLayoutSettle({ timeoutMs: 120, quietMs: 32 })
         await waitForRectStable(liveSpotlight, { timeoutMs: 120, quietMs: 32 })
         if (cancelled || stepRef.current !== currentStep) return
@@ -1056,8 +1065,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    // Steps 7–8: same pattern as step 4 — composer faint glow + framed backdrop cutout; toggles use pulsate.
-    if (step === 'history-dropdown' || step === 'save-selection') {
+    // History frames the composer. Saved selections frames only the bookmark button.
+    if (step === 'history-dropdown') {
       const composer = getComposerElement()
       if (composer) {
         composer.classList.add('mobile-tutorial-highlight')
@@ -1113,7 +1122,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let didEnableSaveSelectionDone = false
     const checkDropdown = () => {
       if (step === 'history-dropdown') {
-        const historyDropdown = getHistoryInlineListForTutorial()
+        const historyDropdown = getPortaledHistoryList()
         if (historyDropdown) {
           dropdownWasOpenedRef.current = true
           setHistoryDropdownOpened(true)

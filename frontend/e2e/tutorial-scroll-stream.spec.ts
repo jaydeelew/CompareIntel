@@ -332,8 +332,64 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
     await expect(rail).toHaveCount(1)
     await expect(rail).toHaveText(firstName!)
     await expect(page.locator('.models-count-indicator')).toContainText(/1 of \d+ selected/)
-    await expect(page.locator(`.provider-dropdown[data-provider-name="${first}"]`)).toHaveCount(0)
-    await expect(page.locator(`.provider-dropdown[data-provider-name="${second}"]`)).toHaveCount(1)
+    if (isMobileE2eProject(testInfo.project.name)) {
+      await expect(page.locator(`.provider-dropdown[data-provider-name="${first}"]`)).toHaveCount(0)
+      await expect(page.locator(`.provider-dropdown[data-provider-name="${second}"]`)).toHaveCount(
+        1
+      )
+    } else {
+      await expect(page.locator(`.provider-dropdown[data-provider-name="${first}"]`)).toHaveCount(1)
+      await expect(page.locator(`.provider-dropdown[data-provider-name="${second}"]`)).toHaveCount(
+        1
+      )
+      await expect(page.locator('.provider-dropdown')).toHaveCount(Object.keys(MOCK_MODELS).length)
+    }
+  })
+
+  test('desktop provider steps keep every provider and scroll back to the highlight', async ({
+    page,
+  }, testInfo) => {
+    test.skip(isMobileE2eProject(testInfo.project.name), 'desktop provider list')
+    test.setTimeout(90_000)
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Start Tutorial' }).click()
+    await tutorialTooltip(page).first().waitFor({ state: 'visible', timeout: 20_000 })
+    await dismissMobileBlockers(page)
+
+    await expect(page.locator('.provider-dropdown')).toHaveCount(Object.keys(MOCK_MODELS).length)
+    const highlighted = page.locator('.provider-dropdown.tutorial-highlight')
+    await expect(highlighted).toHaveCount(1)
+    await expect(highlighted).toHaveAttribute('data-provider-name', TUTORIAL_PROVIDERS[0]!)
+
+    const hint = page.locator('.mobile-tutorial-scroll-indicator')
+    await expect(hint).toHaveCount(0)
+    const size = page.viewportSize()
+    expect(size).not.toBeNull()
+    await page.setViewportSize({ width: size!.width, height: 640 })
+    await expect(tutorialTooltip(page).first()).toContainText('Expand', { timeout: 8_000 })
+    await page.waitForTimeout(400)
+    const scrolled = await page.evaluate(() => {
+      const target = document.querySelector(
+        '.provider-dropdown.tutorial-highlight'
+      ) as HTMLElement | null
+      const app = document.querySelector('.app') as HTMLElement | null
+      const scroller =
+        app && app.scrollHeight > app.clientHeight + 1
+          ? app
+          : (document.scrollingElement as HTMLElement | null)
+      if (!target || !scroller) return 'missing'
+      scroller.scrollTop = scroller.scrollHeight
+      const rect = target.getBoundingClientRect()
+      return `top=${Math.round(rect.top)} bottom=${Math.round(rect.bottom)} scroll=${Math.round(scroller.scrollTop)}/${Math.round(scroller.scrollHeight - scroller.clientHeight)}`
+    })
+    expect(scrolled).toMatch(/bottom=-[1-9]/)
+    await expect(hint).toContainText('Scroll back to continue', { timeout: 8_000 })
+    await expect(hint).toHaveClass(/scroll-up/)
+    await expect(tutorialTooltip(page)).toHaveCount(0)
+
+    await hint.click({ force: true })
+    await expect(tutorialTooltip(page).first()).toContainText('Expand', { timeout: 8_000 })
+    await expect(hint).toHaveCount(0)
   })
 
   test('follow-up tooltip follows the composer and asks to scroll down when it leaves', async ({

@@ -34,6 +34,33 @@ describe('tutorial provider steps (step 2)', () => {
     }
   })
 
+  it('frames only the tutorial model when the provider lists others', () => {
+    document.documentElement.setAttribute('data-tutorial-target-models', 'openai/gpt-5.2')
+    const dropdown = mockProviderDropdown(80, 400, 'OpenAI')
+    const extra = document.createElement('label')
+    extra.className = 'model-option'
+    extra.getBoundingClientRect = () => new DOMRect(0, 100, 300, 48)
+    const target = document.createElement('label')
+    target.className = 'model-option'
+    target.getBoundingClientRect = () => new DOMRect(0, 160, 300, 48)
+    const box = document.createElement('input')
+    box.id = 'model-checkbox-openai/gpt-5.2'
+    target.appendChild(box)
+    dropdown.appendChild(extra)
+    dropdown.appendChild(target)
+    document.body.appendChild(dropdown)
+
+    try {
+      const layout = getTutorialProviderStepLayout('select-starter-model-1', ['OpenAI'])
+      expect(layout.highlights).toEqual([target])
+      expect(layout.layoutRect?.top).toBe(160)
+      expect(layout.layoutRect?.height).toBe(48)
+    } finally {
+      dropdown.remove()
+      document.documentElement.removeAttribute('data-tutorial-target-models')
+    }
+  })
+
   it('getUnionClientRect spans multiple provider cards', () => {
     const a = mockProviderDropdown(50, 80, 'A')
     const b = mockProviderDropdown(200, 60, 'B')

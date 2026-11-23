@@ -20,7 +20,10 @@ import {
   getComposerElement,
   computeTextareaCutout,
   computeButtonCutout,
+  centerTutorialStepRect,
+  clearTutorialScrollTail,
   computeDropdownCutout,
+  computeSavedSelectionCutout,
   computeTargetCutout,
   computeTooltipPosition,
   getTutorialProviderDropdowns,
@@ -31,7 +34,6 @@ import {
   readTutorialSpotlightRect,
   scrollDeltaToFitTooltip,
   scrollFollowUpHighlightIntoView,
-  scrollTutorialRectToCenter,
   seatPortaledFollowUpComposer,
   TUTORIAL_FRAME_OUTSET_PX,
   type TutorialProviderLayoutStep,
@@ -50,12 +52,11 @@ import {
 
 import {
   getBelowResultsHistoryToggleButton,
+  getBelowResultsSavedSelectionsButton,
   getHeroComposerForDropdownSteps,
   getHeroMirrorComposerIfPresent,
   getHistoryInlineListForTutorial,
-  getHistoryToggleButtonForTutorial,
-  getSavedSelectionsButtonForTutorial,
-  getSavedSelectionsDropdownForTutorial,
+  getPortaledHistoryList,
 } from './tutorialUtils'
 import { useTutorialCleanup } from './useTutorialCleanup'
 
@@ -171,6 +172,7 @@ export function useTutorialOverlay(
     if (step !== 'history-dropdown' && step !== 'save-selection') {
       dropdownWasOpenedRef.current = false
       setButtonCutout(null)
+      clearTutorialScrollTail()
     }
   }, [step])
 
@@ -579,10 +581,9 @@ export function useTutorialOverlay(
           setHighlightedElements(layout.highlights)
         }
       } else if (step === 'history-dropdown') {
-        // Special handling for history dropdown step - create circular cutout for button
-        element = getHistoryToggleButtonForTutorial()
-        // Find and add the history dropdown if it exists
-        const historyDropdown = getHistoryInlineListForTutorial()
+        // The clickable toggle is the composer under the results, not the hero mirror.
+        element = getBelowResultsHistoryToggleButton()
+        const historyDropdown = getPortaledHistoryList()
         if (historyDropdown) {
           setHighlightedElements([historyDropdown])
         } else {
@@ -592,10 +593,10 @@ export function useTutorialOverlay(
           setButtonCutout(computeButtonCutout(element))
         }
       } else if (step === 'save-selection') {
-        // Special handling for saved selections dropdown step - create circular cutout for button
-        element = getSavedSelectionsButtonForTutorial()
-        // Find and add the saved selections dropdown if it exists
-        const savedSelectionsDropdown = getSavedSelectionsDropdownForTutorial()
+        element = getBelowResultsSavedSelectionsButton()
+        const savedSelectionsDropdown = getComposerElement()?.querySelector(
+          '.saved-selections-dropdown'
+        ) as HTMLElement | null
         if (savedSelectionsDropdown) {
           setHighlightedElements([savedSelectionsDropdown])
         } else {
@@ -822,7 +823,7 @@ export function useTutorialOverlay(
         readTutorialSpotlightRect(step, tutorialProviderNamesRef.current) ??
         el?.getBoundingClientRect()
       if (!rect) return
-      scrollTutorialRectToCenter(rect)
+      centerTutorialStepRect(step, rect)
     }
 
     const revealSettledStep = () => {
@@ -1077,7 +1078,7 @@ export function useTutorialOverlay(
               preferred,
             })
           } else {
-            scrollTutorialRectToCenter(settled)
+            centerTutorialStepRect(step, settled)
             await waitForRectStable(readLayout, { timeoutMs: 240, quietMs: 60 })
             if (cancelled || stepRef.current !== step) return
             const centered = readLayout()
@@ -1221,9 +1222,7 @@ export function useTutorialOverlay(
     let dropdownContainer: HTMLElement | null = null
     if (step === 'history-dropdown') {
       dropdownContainer = getComposerElement()
-      historyDropdown =
-        (dropdownContainer?.querySelector('.history-inline-list') as HTMLElement | null) ??
-        getHistoryInlineListForTutorial()
+      historyDropdown = getPortaledHistoryList()
       if (dropdownContainer) {
         dropdownContainer.classList.add('tutorial-dropdown-container-active')
         if (historyDropdown) {
@@ -1234,20 +1233,14 @@ export function useTutorialOverlay(
         setDropdownCutout(historyCutout)
       }
     } else if (step === 'save-selection') {
-      dropdownContainer = getComposerElement()
-      const savedForCutout =
-        (dropdownContainer?.querySelector('.saved-selections-dropdown') as HTMLElement | null) ??
-        getSavedSelectionsDropdownForTutorial()
-      savedSelectionsDropdown = savedForCutout
-      if (dropdownContainer) {
-        dropdownContainer.classList.add('tutorial-dropdown-container-active')
-        if (savedSelectionsDropdown) {
-          savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
-          savedSelectionsDropdown.classList.add('tutorial-highlight')
-        }
-        const saveCutout = computeDropdownCutout(dropdownContainer, savedForCutout)
-        setDropdownCutout(saveCutout)
+      savedSelectionsDropdown = getComposerElement()?.querySelector(
+        '.saved-selections-dropdown'
+      ) as HTMLElement | null
+      if (savedSelectionsDropdown) {
+        savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
+        savedSelectionsDropdown.classList.add('tutorial-highlight')
       }
+      setDropdownCutout(computeSavedSelectionCutout())
     } else if (!isDropdownStep) {
       // Only clear cutout when NOT on a dropdown step
       setDropdownCutout(null)
@@ -1977,7 +1970,7 @@ export function useTutorialOverlay(
     }
 
     const ensureDropdownActiveAndVisibility = () => {
-      const historyToggleButton = getHistoryToggleButtonForTutorial()
+      const historyToggleButton = getBelowResultsHistoryToggleButton()
       if (historyToggleButton) {
         // Add highlight class to the button for visual emphasis
         if (!historyToggleButton.classList.contains('tutorial-highlight')) {
@@ -1990,11 +1983,9 @@ export function useTutorialOverlay(
         }
       }
 
-      // Cutout expands to include dropdown when open (visible composer + its panel).
+      // Cutout expands to include the list on the visible composer, not the hero mirror.
       const composerElement = getComposerElement()
-      const historyDropdown =
-        (composerElement?.querySelector('.history-inline-list') as HTMLElement | null) ??
-        getHistoryInlineListForTutorial()
+      const historyDropdown = getPortaledHistoryList()
       if (composerElement) {
         if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
           composerElement.classList.add('tutorial-dropdown-container-active')
@@ -2037,17 +2028,15 @@ export function useTutorialOverlay(
         historyDropdown.classList.remove('tutorial-dropdown-active')
         historyDropdown.classList.remove('tutorial-highlight')
       }
-      const historyButton = getHistoryToggleButtonForTutorial()
-      if (historyButton) {
-        historyButton.classList.remove('tutorial-highlight')
+      document.querySelectorAll('.history-toggle-button').forEach(el => {
+        el.classList.remove('tutorial-highlight')
+      })
+      for (const composerElement of [getComposerElement(), getHeroComposerForDropdownSteps()]) {
+        composerElement?.classList.remove('tutorial-dropdown-container-active')
+        composerElement?.classList.remove('tutorial-highlight')
       }
       if (transitioningToSaveSelection) {
         return
-      }
-      const composerElement = getHeroComposerForDropdownSteps()
-      if (composerElement) {
-        composerElement.classList.remove('tutorial-dropdown-container-active')
-        composerElement.classList.remove('tutorial-highlight')
       }
       setDropdownCutout(null)
     }
@@ -2062,9 +2051,8 @@ export function useTutorialOverlay(
 
     let didEnableDoneForThisStep = false
     const ensureDropdownActiveAndVisibility = () => {
-      const savedSelectionsButton = getSavedSelectionsButtonForTutorial()
+      const savedSelectionsButton = getBelowResultsSavedSelectionsButton()
       if (savedSelectionsButton) {
-        // Add highlight class to the button for visual emphasis
         if (!savedSelectionsButton.classList.contains('tutorial-highlight')) {
           savedSelectionsButton.classList.add('tutorial-highlight')
         }
@@ -2074,27 +2062,17 @@ export function useTutorialOverlay(
         }
       }
 
-      // Cutout expands to include dropdown when open (composer + dropdown union).
-      // When the panel portals only under the below-results composer, `savedSelectionsForCutout` is null
-      // so the hole stays on the hero composer only (avoids a full-page union).
-      const composerElement = getComposerElement()
-      const savedSelectionsForCutout =
-        (composerElement?.querySelector('.saved-selections-dropdown') as HTMLElement | null) ??
-        getSavedSelectionsDropdownForTutorial()
-      const savedDropdownAnywhere = document.querySelector(
+      // Frame the bookmark button. Include the open panel, not the whole composer.
+      const savedSelectionsForCutout = getComposerElement()?.querySelector(
         '.saved-selections-dropdown'
       ) as HTMLElement | null
-      if (composerElement) {
-        if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
-          composerElement.classList.add('tutorial-dropdown-container-active')
-        }
-        // Add highlight class to the composer for visual emphasis (same blue & green as step 3)
-        if (!composerElement.classList.contains('tutorial-highlight')) {
-          composerElement.classList.add('tutorial-highlight')
-        }
-        const selCutout = computeDropdownCutout(composerElement, savedSelectionsForCutout)
-        setDropdownCutout(selCutout)
+      const savedDropdownAnywhere = savedSelectionsForCutout
+      if (savedSelectionsForCutout) {
+        savedSelectionsForCutout
+          .closest('.composer')
+          ?.classList.add('tutorial-dropdown-container-active')
       }
+      setDropdownCutout(computeSavedSelectionCutout())
 
       if (savedDropdownAnywhere) {
         // Dropdown only exists when user has clicked "Save or load model selections"
@@ -2125,10 +2103,9 @@ export function useTutorialOverlay(
         node.classList.remove('tutorial-dropdown-active')
         node.classList.remove('tutorial-highlight')
       })
-      const composerElement = getHeroComposerForDropdownSteps()
-      if (composerElement) {
-        composerElement.classList.remove('tutorial-dropdown-container-active')
-        composerElement.classList.remove('tutorial-highlight')
+      for (const composerElement of [getComposerElement(), getHeroComposerForDropdownSteps()]) {
+        composerElement?.classList.remove('tutorial-dropdown-container-active')
+        composerElement?.classList.remove('tutorial-highlight')
       }
       document.querySelectorAll('.saved-selections-button').forEach(el => {
         ;(el as HTMLElement).classList.remove('tutorial-highlight')
@@ -2181,13 +2158,10 @@ export function useTutorialOverlay(
       const composer = getComposerElement()
       if (!composer) return
 
-      const dropdown =
-        step === 'history-dropdown'
-          ? ((composer.querySelector('.history-inline-list') as HTMLElement | null) ??
-            getHistoryInlineListForTutorial())
-          : ((composer.querySelector('.saved-selections-dropdown') as HTMLElement | null) ??
-            getSavedSelectionsDropdownForTutorial())
-      const cutout = computeDropdownCutout(composer, dropdown)
+      const cutout =
+        step === 'save-selection'
+          ? computeSavedSelectionCutout()
+          : computeDropdownCutout(composer, getPortaledHistoryList())
       setDropdownCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
     }
 
