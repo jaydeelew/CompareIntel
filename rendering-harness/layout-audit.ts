@@ -117,9 +117,10 @@ async function main() {
           pages = { wide, phone: phonePage, dark: darkPage, stack }
         }
         const generation = `${cell.modelId}:${cell.promptName}:${rendered}`
-        await renderOnPage(phonePage, cell.modelId, cell.response, `${generation}:phone`)
+        const readyTimeoutMs = cell.promptName === '02-markdown-formatting' ? 120_000 : 30_000
+        await renderOnPage(phonePage, cell.modelId, cell.response, `${generation}:phone`, readyTimeoutMs)
         const phoneFound = await phonePage.evaluate(collectLayoutIssues, 'phone' as const)
-        await renderOnPage(darkPage, cell.modelId, cell.response, `${generation}:dark`)
+        await renderOnPage(darkPage, cell.modelId, cell.response, `${generation}:dark`, readyTimeoutMs)
         const darkFound = await darkPage.evaluate(collectLayoutIssues, 'dark' as const)
         rendered += 1
         if (phoneFound.length > 0) {
