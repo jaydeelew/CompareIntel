@@ -108,6 +108,17 @@ async function main() {
         continue
       }
       try {
+        // Long 02 cells on a warm harness page can miss pageStateReady within 30s; reload first.
+        if (cell.promptName === '02-markdown-formatting') {
+          for (const page of [phonePage, darkPage]) {
+            await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 })
+            await page.waitForFunction(
+              () => document.documentElement.hasAttribute('data-harness-listening'),
+              undefined,
+              { timeout: 30000 }
+            )
+          }
+        }
         const generation = `${cell.modelId}:${cell.promptName}:${rendered}`
         await renderOnPage(phonePage, cell.modelId, cell.response, `${generation}:phone`)
         const phoneFound = await phonePage.evaluate(collectLayoutIssues, 'phone' as const)
