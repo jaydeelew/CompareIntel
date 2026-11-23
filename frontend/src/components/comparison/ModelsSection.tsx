@@ -40,6 +40,20 @@ function restoreProviderModelToggleScroll(pos: { app: number; win: number }): vo
 const PROVIDER_TOGGLE_SCROLL_MAX_AGE_MS = 650
 
 /**
+ * Late restores only correct a small layout nudge. A larger move is a real scroll
+ * (hero icon scroll-into-view, navbar unfold) and must not be yanked back.
+ */
+const SCROLL_RESTORE_DRIFT_PX = 80
+
+function scrollStillNearToggleSnap(pos: { app: number; win: number }): boolean {
+  const current = captureProviderModelToggleScroll()
+  return (
+    Math.abs(current.app - pos.app) <= SCROLL_RESTORE_DRIFT_PX &&
+    Math.abs(current.win - pos.win) <= SCROLL_RESTORE_DRIFT_PX
+  )
+}
+
+/**
  * Filter models to show only those available at the user's tier when hidePremiumModels is enabled.
  * If all models are filtered out for a provider, returns an empty array (the provider will be hidden).
  */
@@ -62,19 +76,31 @@ function getVisibleModelsAfterTierFilter(
   })
 }
 
-function scheduleScrollRestores(pos: { app: number; win: number }): void {
-  const apply = () => restoreProviderModelToggleScroll(pos)
-  apply()
-  queueMicrotask(apply)
+function scheduleScrollRestores(
+  pos: { app: number; win: number },
+  keepLateRestore: () => boolean = () => scrollStillNearToggleSnap(pos)
+): void {
+  const applyNow = () => restoreProviderModelToggleScroll(pos)
+  // Immediate passes undo the click/focus jump. Later passes must not pull the
+  // page back after the pointer has moved on and the scroller has followed it.
+  const applyLate = () => {
+    if (!keepLateRestore()) return
+    restoreProviderModelToggleScroll(pos)
+  }
+  applyNow()
+  queueMicrotask(applyNow)
   requestAnimationFrame(() => {
-    apply()
+    applyNow()
     requestAnimationFrame(() => {
-      apply()
-      requestAnimationFrame(apply)
+      applyNow()
+      requestAnimationFrame(applyNow)
     })
   })
-  for (const ms of [0, 16, 32, 48, 100, 200, 320, 400, 520, 650]) {
-    window.setTimeout(apply, ms)
+  for (const ms of [0, 16, 32, 48]) {
+    window.setTimeout(applyNow, ms)
+  }
+  for (const ms of [100, 200, 320, 400, 520, 650]) {
+    window.setTimeout(applyLate, ms)
   }
 }
 
@@ -388,13 +414,32 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   const providerToggleScrollSnapRef = useRef<{ app: number; win: number } | null>(null)
   const providerTogglePointerTsRef = useRef(0)
   const providerToggleSnapClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const providerTogglePointerRef = useRef<{ x: number; y: number } | null>(null)
   const modelsSelectionLayoutRef = useRef<HTMLDivElement>(null)
   const resizeRestoreRafRef = useRef<number | null>(null)
 
   const selectedModelsSignature = selectedModels.join('\0')
 
+  const keepLateProviderToggleRestore = useCallback((pos: { app: number; win: number }) => {
+    if (scrollStillNearToggleSnap(pos)) return true
+    const point = providerTogglePointerRef.current
+    const layout = modelsSelectionLayoutRef.current
+    if (!point || !layout) return false
+    const rect = layout.getBoundingClientRect()
+    return (
+      point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
+    )
+  }, [])
+
   useEffect(() => {
+    const rememberPointer = (event: PointerEvent | MouseEvent) => {
+      providerTogglePointerRef.current = { x: event.clientX, y: event.clientY }
+    }
+    window.addEventListener('pointermove', rememberPointer)
+    window.addEventListener('mousemove', rememberPointer)
     return () => {
+      window.removeEventListener('pointermove', rememberPointer)
+      window.removeEventListener('mousemove', rememberPointer)
       if (providerToggleSnapClearTimeoutRef.current) {
         clearTimeout(providerToggleSnapClearTimeoutRef.current)
       }
@@ -425,6 +470,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
       }
       resizeRestoreRafRef.current = requestAnimationFrame(() => {
         resizeRestoreRafRef.current = null
+        if (!keepLateProviderToggleRestore(snap)) return
         restoreProviderModelToggleScroll(snap)
       })
     })
@@ -437,7 +483,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
         resizeRestoreRafRef.current = null
       }
     }
-  }, [disableProviderToggleScrollRestore, modelsListReady])
+  }, [disableProviderToggleScrollRestore, keepLateProviderToggleRestore, modelsListReady])
 
   // After React commits the new selection (extra card in the grid, flex height, etc.),
   // the scroll container can move again — restore using the pre-click snapshot.
@@ -448,8 +494,8 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
     }
     const snap = providerToggleScrollSnapRef.current
     if (!snap) return
-    scheduleScrollRestores(snap)
-  }, [disableProviderToggleScrollRestore, selectedModelsSignature])
+    scheduleScrollRestores(snap, () => keepLateProviderToggleRestore(snap))
+  }, [disableProviderToggleScrollRestore, keepLateProviderToggleRestore, selectedModelsSignature])
 
   const handleModelOptionPointerDownCapture = (e: React.PointerEvent<HTMLLabelElement>) => {
     if (disableProviderToggleScrollRestore) return
@@ -458,6 +504,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
       clearTimeout(providerToggleSnapClearTimeoutRef.current)
       providerToggleSnapClearTimeoutRef.current = null
     }
+    providerTogglePointerRef.current = { x: e.clientX, y: e.clientY }
     providerToggleScrollSnapRef.current = captureProviderModelToggleScroll()
     providerTogglePointerTsRef.current = Date.now()
     providerToggleSnapClearTimeoutRef.current = setTimeout(() => {
@@ -472,7 +519,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
     if (!saved) return
     // Do not cancel the pointerdown timeout here: if selection does not change,
     // useLayoutEffect will not run and we still need the timeout to clear the snap.
-    scheduleScrollRestores(saved)
+    scheduleScrollRestores(saved, () => keepLateProviderToggleRestore(saved))
   }
 
   // Determine user tier
