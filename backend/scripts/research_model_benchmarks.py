@@ -1029,6 +1029,8 @@ TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
     "flux.2 [flex]": "black-forest-labs/flux.2-flex",
     "flux.2 [pro]": "black-forest-labs/flux.2-pro",
     "flux.2 [klein-4b]": "black-forest-labs/flux.2-klein-4b",
+    # Live HF row is "FLUX.2 [klein] 4B" (space before 4B), not "klein-4b".
+    "flux.2 [klein] 4b": "black-forest-labs/flux.2-klein-4b",
     "seedream 5.5": "bytedance-seed/seedream-5-5",
     "gemini 2.5 flash image preview": "google/gemini-2.5-flash-image",
 }

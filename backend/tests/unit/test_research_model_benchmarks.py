@@ -29,6 +29,7 @@ sys.path.insert(0, str(BACKEND_DIR))
 from scripts.research_model_benchmarks import (
     FAST_MAX_THROUGHPUT,
     _expand_hyphenated_minor_versions,
+    _match_text_to_image_name,
     _merge_swe_bench_pro_row,
     _score_from_llmdb_score_cell,
     add_model_to_category,
@@ -271,6 +272,16 @@ class TestSweBenchProSlugResolution:
         result: dict = {}
         _merge_swe_bench_pro_row(result, "gemini-3.1-pro (thinking)*", 46.1, model_id_to_name)
         assert result == {}
+
+
+class TestTextToImageNameResolution:
+    """LMArena HF display names vs registry image models."""
+
+    def test_flux_klein_4b_spaced_hf_name(self):
+        assert (
+            _match_text_to_image_name("FLUX.2 [klein] 4B", {})
+            == "black-forest-labs/flux.2-klein-4b"
+        )
 
 
 # --- Tests for TS parsing ---
