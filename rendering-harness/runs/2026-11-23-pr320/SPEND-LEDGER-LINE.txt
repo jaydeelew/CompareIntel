@@ -1,0 +1,3 @@
+PR 320 new-text-model rendering collection (5 models × prompts 01-06, 30 calls).
+Estimate $1.9743. Hard cap $2.18. Actual $0.754551. Unknown charges: 0.
+Date: 2026-11-23. Head: 75fca4cc. No retries. Completion cap 2048.

@@ -45,6 +45,8 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
   'openai/gpt-5-image': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
   'openai/gpt-5-image-mini': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
   'openai/gpt-image-2.6-sunburst': { image_sizes: ['1K', '2K'] },
+  // Copied from GPT Image 2.6 Sunburst (1K and 2K). Not probe-validated.
+  'openai/gpt-image-2.6-flare': { image_sizes: ['1K', '2K'] },
 
   // Sourceful - Riverflow V2
   'sourceful/riverflow-v2.6-pro': { image_sizes: ['1K', '2K'] },
@@ -52,6 +54,8 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
   'qwen/qwen-image-2.1-pro': { image_sizes: ['1K', '2K'] },
   // MiniMax H3 Image: conservative 1K and 2K (4K not claimed; aspect ratios not probe-validated)
   'minimax/minimax-h3-image': { image_sizes: ['1K', '2K'] },
+  // MAI-Image-2.7: add-model fallback 1K and 2K. Aspect ratios and sizes were not probe-validated.
+  'microsoft/mai-image-2.7': { image_sizes: ['1K', '2K'] },
   'sourceful/riverflow-v2-fast-preview': {
     image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
     image_sizes: ['1K'],

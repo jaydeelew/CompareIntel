@@ -11,7 +11,7 @@ export const DEFAULT_MODEL_PRIORITY = [
   'google/gemini-2.5-flash',
   'deepseek/deepseek-v4.1-flash-1017',
   'deepseek/deepseek-v4-flash',
-  'google/gemini-3.1-flash-lite-preview',
+  'google/gemini-3.8-flash',
   'microsoft/phi-4',
   'deepseek/deepseek-v3.2',
   'google/gemma-4-31b-it',

@@ -73,7 +73,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Avg. $0.20/1M tokens. Fetched 2026-11-16.',
       },
       { modelId: 'xiaomi/mimo-v2.6-flash', evidence: 'Avg. $0.21/1M tokens. Fetched 2026-11-16.' },
-      { modelId: 'google/gemma-3-27b-it', evidence: 'Avg. $0.21/1M tokens. Fetched 2026-11-16.' },
       { modelId: 'openai/gpt-5-nano', evidence: 'Avg. $0.22/1M tokens. Fetched 2026-11-16.' },
       { modelId: 'google/gemma-4-31b-it', evidence: 'Avg. $0.30/1M tokens. Fetched 2026-11-16.' },
       {
@@ -115,10 +114,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'z-ai/glm-5.3', evidence: 'Avg. $0.73/1M tokens. Fetched 2026-11-16.' },
       { modelId: 'minimax/minimax-m2.5', evidence: 'Avg. $0.75/1M tokens. Fetched 2026-11-16.' },
       { modelId: 'tencent/hy4', evidence: 'Avg. $0.83/1M tokens. Fetched 2026-11-16.' },
-      {
-        modelId: 'google/gemini-3.1-flash-lite-preview',
-        evidence: 'Avg. $0.88/1M tokens. Fetched 2026-11-16.',
-      },
     ],
   },
   {
@@ -157,10 +152,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'LMSpeed (lmspeed.net): 171 t/s. [stale as of 2026-11-16]',
       },
       {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'LMSpeed (lmspeed.net): 160 t/s. [stale as of 2026-11-16]',
-      },
-      {
         modelId: 'qwen/qwen3-coder-next',
         evidence: 'LMSpeed (lmspeed.net): 147 t/s. [stale as of 2026-11-16]',
       },
@@ -179,10 +170,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'google/gemini-2.5-pro',
         evidence: 'LMSpeed (lmspeed.net): 97 t/s. [stale as of 2026-11-16]',
-      },
-      {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'LMSpeed (lmspeed.net): 96 t/s. [stale as of 2026-11-16]',
       },
       {
         modelId: 'openai/gpt-5.4',
@@ -206,10 +193,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'SWE-Bench Pro public (Scale Labs): 51.90%. Fetched 2026-11-16.',
       },
       {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'SWE-Bench Pro public (Scale Labs): 46.10%. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'openai/gpt-5',
         evidence: 'SWE-Bench Pro public (Scale Labs): 41.78%. Fetched 2026-11-16.',
       },
@@ -226,20 +209,12 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'SWE-Bench Pro public (Scale Labs): 36.81%. Fetched 2026-11-16.',
       },
       {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'SWE-Bench Pro public (Scale Labs): 34.63%. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'openai/gpt-5.2',
         evidence: 'SWE-Bench Pro public (Scale Labs): 29.94%. Fetched 2026-11-16.',
       },
       {
         modelId: 'openai/gpt-oss-120b',
         evidence: 'SWE-Bench Pro public (Scale Labs): 16.20%. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'google/gemma-3-27b-it',
-        evidence: 'SWE-Bench Pro public (Scale Labs): 11.38%. Fetched 2026-11-16.',
       },
       {
         modelId: 'z-ai/glm-5',
@@ -263,16 +238,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       'Ranked by Creative Writing Arena (kearai.com) Elo ratings and Mazur Writing Score. Higher score = stronger prose and narrative generation.',
     models: [
       {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'Creative Writing Arena (kearai.com): 1490 Elo. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'anthropic/claude-opus-4.6',
         evidence: 'Creative Writing Arena (kearai.com): 1478 Elo. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'Creative Writing Arena (kearai.com): 1456 Elo. Fetched 2026-11-16.',
       },
       {
         modelId: 'google/gemini-2.5-pro',
@@ -336,10 +303,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Vision Arena (lmarena.ai): 1297. Fetched 2026-11-16.',
       },
       {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'Vision Arena (lmarena.ai): 1296. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'openai/gpt-5.5',
         evidence: 'Vision Arena (lmarena.ai): 1296. Fetched 2026-11-16.',
       },
@@ -356,10 +319,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Vision Arena (lmarena.ai): 1288. Fetched 2026-11-16.',
       },
       {
-        modelId: 'openai/gpt-6.1-sol',
-        evidence: 'Vision Arena (lmarena.ai): 1286. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'anthropic/claude-sonnet-5.5',
         evidence: 'Vision Arena (lmarena.ai): 1284. Fetched 2026-11-16.',
       },
@@ -370,10 +329,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'moonshotai/kimi-k2.6',
         evidence: 'Vision Arena (lmarena.ai): 1282. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'openai/gpt-6-astra',
-        evidence: 'Vision Arena (lmarena.ai): 1279. Fetched 2026-11-16.',
       },
       {
         modelId: 'google/gemini-2.5-pro',
@@ -404,10 +359,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Vision Arena (lmarena.ai): 1244. Fetched 2026-11-16.',
       },
       {
-        modelId: 'google/gemini-3.1-flash-lite-preview',
-        evidence: 'Vision Arena (lmarena.ai): 1240. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'google/gemini-2.5-flash',
         evidence: 'Vision Arena (lmarena.ai): 1235. Fetched 2026-11-16.',
       },
@@ -428,10 +379,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'openai/gpt-5-mini',
         evidence: 'Vision Arena (lmarena.ai): 1202. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'google/gemma-3-27b-it',
-        evidence: 'Vision Arena (lmarena.ai): 1164. Fetched 2026-11-16.',
       },
       {
         modelId: 'openai/gpt-5-nano',
@@ -530,10 +477,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       'Ranked by MMLU-Pro (awesomeagents.ai), a broad multi-domain reasoning benchmark. Higher % = better general knowledge and problem-solving.',
     models: [
       {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'MMLU-Pro (awesomeagents.ai): 89.8%. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'openai/gpt-5.2-pro',
         evidence: 'MMLU-Pro (awesomeagents.ai): 88.7%. Fetched 2026-11-16.',
       },
@@ -573,10 +516,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'anthropic/claude-opus-4.6',
         evidence: 'MRCR v2 4-needle 256K (awesomeagents.ai): 90%. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'MRCR v2 4-needle 256K (awesomeagents.ai): 85%. Fetched 2026-11-16.',
       },
       {
         modelId: 'anthropic/claude-sonnet-4.6',
@@ -629,20 +568,12 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'LegalBench (vals.ai): 88.3%. Fetched 2026-11-16.',
       },
       {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'LegalBench (vals.ai): 87.03%. Fetched 2026-11-16.',
-      },
-      {
         modelId: 'google/gemini-3.8-flash',
         evidence: 'LegalBench (vals.ai): 86.99%. Fetched 2026-11-16.',
       },
       {
         modelId: 'anthropic/claude-opus-5',
         evidence: 'LegalBench (vals.ai): 86.97%. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'LegalBench (vals.ai): 86.86%. Fetched 2026-11-16.',
       },
       {
         modelId: 'google/gemini-3.6-flash',
@@ -676,10 +607,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'z-ai/glm-5.3-flash',
         evidence: 'LegalBench (vals.ai): 83.93%. Fetched 2026-11-16.',
-      },
-      {
-        modelId: 'google/gemini-3.1-flash-lite-preview',
-        evidence: 'LegalBench (vals.ai): 83.76%. Fetched 2026-11-16.',
       },
       { modelId: 'openai/o3', evidence: 'LegalBench (vals.ai): 83.76%. Fetched 2026-11-16.' },
       {

@@ -7,7 +7,7 @@
     "rankings": "https://openrouter.ai/rankings (fetched 2026-10-25)",
     "compareintel_api": "UNREACHABLE (no response)"
   },
-  "model_count": 96,
+  "model_count": 98,
   "models": [
 {
       "id": "anthropic/claude-haiku-4.5",
@@ -720,73 +720,6 @@
       "in_openrouter": true
     },
 {
-      "id": "google/gemma-3-27b-it",
-      "slug": "gemma-3-27b-it",
-      "name": "Gemma 3 27B It",
-      "provider": "Google",
-      "category": "Language",
-      "description_registry": "Gemma 3 introduces multimodality, supporting vision-language input and text outputs.",
-      "description_openrouter": "Gemma 3 introduces multimodality, supporting vision-language input and text outputs. It handles context windows up to 128k tokens, understands over 140 languages, and offers improved math, reasoning, and chat capabilities,...",
-      "knowledge_cutoff": null,
-      "supports_web_search": false,
-      "supports_vision": true,
-      "supports_image_generation": false,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 131072,
-      "max_completion_tokens": 117964,
-      "input_modalities": [
-        "text",
-        "image"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 0.08,
-      "price_output_usd_per_mtok": 0.35,
-      "price_per_image_usd": null,
-      "openrouter_created": "2025-03-12",
-      "openrouter_url": "https://openrouter.ai/google/gemma-3-27b-it",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-{
-      "id": "google/gemini-3.1-flash-lite-preview",
-      "slug": "gemini-3-1-flash-lite-preview",
-      "name": "Gemini 3.1 Flash Lite Preview",
-      "provider": "Google",
-      "category": "Language",
-      "description_registry": "Gemini 3.1 Flash Lite Preview is Google's high-efficiency model optimized for high-volume use cases.",
-      "description_openrouter": "Gemini 3.1 Flash Lite Preview is Google's high-efficiency model optimized for high-volume use cases. It outperforms Gemini 2.5 Flash Lite on overall quality and approaches Gemini 2.5 Flash performance across...",
-      "knowledge_cutoff": "January 2025",
-      "supports_web_search": true,
-      "supports_vision": true,
-      "supports_image_generation": false,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 1048576,
-      "max_completion_tokens": 65536,
-      "input_modalities": [
-        "text",
-        "image",
-        "video",
-        "file",
-        "audio"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 0.25,
-      "price_output_usd_per_mtok": 1.5,
-      "price_per_image_usd": 2.5E-7,
-      "openrouter_created": "2026-03-03",
-      "openrouter_url": "https://openrouter.ai/google/gemini-3.1-flash-lite-preview",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-{
       "id": "google/gemma-4-26b-a4b-it",
       "slug": "gemma-4-26b-a4b-it",
       "name": "Gemma 4 26B A4B It",
@@ -956,41 +889,6 @@
       "in_openrouter": true
     },
 {
-      "id": "google/gemini-3-flash-preview",
-      "slug": "gemini-3-flash-preview",
-      "name": "Gemini 3 Flash Preview",
-      "provider": "Google",
-      "category": "Language",
-      "description_registry": "Gemini 3 Flash Preview is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance.",
-      "description_openrouter": "Gemini 3 Flash Preview is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance. It delivers near Pro level reasoning and tool...",
-      "knowledge_cutoff": "August 2025",
-      "supports_web_search": true,
-      "supports_vision": true,
-      "supports_image_generation": null,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 1048576,
-      "max_completion_tokens": 65536,
-      "input_modalities": [
-        "text",
-        "image",
-        "file",
-        "audio",
-        "video"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 0.5,
-      "price_output_usd_per_mtok": 3.0,
-      "price_per_image_usd": 5E-7,
-      "openrouter_created": "2025-12-17",
-      "openrouter_url": "https://openrouter.ai/google/gemini-3-flash-preview",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-{
       "id": "google/gemini-3-pro-image-preview",
       "slug": "gemini-3-pro-image-preview",
       "name": "Gemini 3 Pro Image (Nano Banana Pro)",
@@ -1020,41 +918,6 @@
       "openrouter_created": "2025-11-20",
       "openrouter_url": "https://openrouter.ai/google/gemini-3-pro-image-preview",
       "has_renderer_config": false,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-{
-      "id": "google/gemini-3.1-pro-preview",
-      "slug": "gemini-3-1-pro-preview",
-      "name": "Gemini 3.1 Pro Preview",
-      "provider": "Google",
-      "category": "Language",
-      "description_registry": "Gemini 3.1 Pro Preview is Google’s frontier reasoning model, delivering enhanced software engineering performance, improved agentic reliability, and more efficient token usage across complex workflows.",
-      "description_openrouter": "Gemini 3.1 Pro Preview is Google’s frontier reasoning model, delivering enhanced software engineering performance, improved agentic reliability, and more efficient token usage across complex workflows. Building on the multimodal foundation...",
-      "knowledge_cutoff": "January 2025",
-      "supports_web_search": true,
-      "supports_vision": false,
-      "supports_image_generation": null,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 1048576,
-      "max_completion_tokens": 65536,
-      "input_modalities": [
-        "audio",
-        "file",
-        "image",
-        "text",
-        "video"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 2.0,
-      "price_output_usd_per_mtok": 12.0,
-      "price_per_image_usd": 0.000002,
-      "openrouter_created": "2026-02-19",
-      "openrouter_url": "https://openrouter.ai/google/gemini-3.1-pro-preview",
-      "has_renderer_config": true,
       "openrouter_rankings_position": null,
       "in_openrouter": true
     },
@@ -2731,39 +2594,6 @@
       "in_openrouter": true
     },
 {
-      "id": "openai/gpt-6-astra",
-      "slug": "gpt-6-astra",
-      "name": "Gpt 6 Astra",
-      "provider": "OpenAI",
-      "category": "Language",
-      "description_registry": "GPT-6 Astra is OpenAI's flagship model for demanding end-to-end work.",
-      "description_openrouter": "GPT-6 Astra is OpenAI's flagship model for demanding end-to-end work. It is suited for advanced analysis, software engineering, deep research, scientific work, and document creation, with particular strengths in long-horizon...",
-      "knowledge_cutoff": null,
-      "supports_web_search": true,
-      "supports_vision": true,
-      "supports_image_generation": false,
-      "is_thinking_model": true,
-      "available": null,
-      "context_length": 1050000,
-      "max_completion_tokens": 128000,
-      "input_modalities": [
-        "file",
-        "image",
-        "text"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "price_input_usd_per_mtok": 10.0,
-      "price_output_usd_per_mtok": 50.0,
-      "price_per_image_usd": null,
-      "openrouter_created": "2026-09-04",
-      "openrouter_url": "https://openrouter.ai/openai/gpt-6-astra",
-      "has_renderer_config": true,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-{
       "id": "openai/gpt-6.1-terra",
       "slug": "gpt-6-1-terra",
       "name": "Gpt 6.1 Terra",
@@ -3092,6 +2922,273 @@
       "openrouter_rankings_position": null,
       "in_openrouter": true
     }
+  ,
+    {
+      "id": "google/gemini-4-argon",
+      "slug": "gemini-4-argon",
+      "name": "Gemini 4 Argon",
+      "provider": "Google",
+      "category": "Language",
+      "description_registry": "Gemini 4 Argon is Google's flagship reasoning model, built for complex software engineering, deep mathematical and scientific problem solving, and autonomous multi-step agents.",
+      "description_openrouter": "Gemini 4 Argon is Google's flagship reasoning model, built for complex software engineering, deep mathematical and scientific problem solving, and autonomous multi-step agents. Google trained it to keep context across...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1048576,
+      "max_completion_tokens": 943718,
+      "input_modalities": [
+        "audio",
+        "file",
+        "image",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 2.0,
+      "price_output_usd_per_mtok": 10.0,
+      "price_per_image_usd": 2e-06,
+      "openrouter_created": "2026-10-13",
+      "openrouter_url": "https://openrouter.ai/google/gemini-4-argon",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "openai/gpt-6.2-astra",
+      "slug": "gpt-6-2-astra",
+      "name": "Gpt 6.2 Astra",
+      "provider": "OpenAI",
+      "category": "Language",
+      "description_registry": "GPT-6.2 Astra is the flagship model in the GPT-6.2 series from OpenAI, built for the hardest projects.",
+      "description_openrouter": "GPT-6.2 Astra is the flagship model in the GPT-6.2 series from OpenAI, built for the hardest projects. It is suited for real-world engineering, professional work and scientific research, with stronger...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1050000,
+      "max_completion_tokens": 128000,
+      "input_modalities": [
+        "file",
+        "image",
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 8.0,
+      "price_output_usd_per_mtok": 40.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-17",
+      "openrouter_url": "https://openrouter.ai/openai/gpt-6.2-astra",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "openai/gpt-6.2-sol",
+      "slug": "gpt-6-2-sol",
+      "name": "Gpt 6.2 Sol",
+      "provider": "OpenAI",
+      "category": "Language",
+      "description_registry": "GPT-6.2 Sol is an upgrade to GPT-6.1 Sol from OpenAI, positioned below the flagship GPT-6.2 Astra in the GPT-6.2 series.",
+      "description_openrouter": "GPT-6.2 Sol is an upgrade to GPT-6.1 Sol from OpenAI, positioned below the flagship GPT-6.2 Astra in the GPT-6.2 series. It is an efficient, versatile model for everyday work, suited...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1050000,
+      "max_completion_tokens": 128000,
+      "input_modalities": [
+        "file",
+        "image",
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 2.0,
+      "price_output_usd_per_mtok": 10.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-17",
+      "openrouter_url": "https://openrouter.ai/openai/gpt-6.2-sol",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "openai/gpt-6.2-astra-pro",
+      "slug": "gpt-6-2-astra-pro",
+      "name": "Gpt 6.2 Astra Pro",
+      "provider": "OpenAI",
+      "category": "Language",
+      "description_registry": "GPT-6.2 Astra Pro is the same underlying model as GPT-6.2 Astra, served with `reasoning.mode` set to `pro` for higher-quality responses on complex tasks.",
+      "description_openrouter": "GPT-6.2 Astra Pro is the same underlying model as GPT-6.2 Astra, served with `reasoning.mode` set to `pro` for higher-quality responses on complex tasks. **Cost note:** pro mode spends far more...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1050000,
+      "max_completion_tokens": 128000,
+      "input_modalities": [
+        "file",
+        "image",
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 8.0,
+      "price_output_usd_per_mtok": 40.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-17",
+      "openrouter_url": "https://openrouter.ai/openai/gpt-6.2-astra-pro",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "openai/gpt-6.2-sol-pro",
+      "slug": "gpt-6-2-sol-pro",
+      "name": "Gpt 6.2 Sol Pro",
+      "provider": "OpenAI",
+      "category": "Language",
+      "description_registry": "GPT-6.2 Sol Pro is the same underlying model as GPT-6.2 Sol, served with `reasoning.mode` set to `pro` for higher-quality responses on complex tasks.",
+      "description_openrouter": "GPT-6.2 Sol Pro is the same underlying model as GPT-6.2 Sol, served with `reasoning.mode` set to `pro` for higher-quality responses on complex tasks. **Cost note:** pro mode spends far more...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1050000,
+      "max_completion_tokens": 128000,
+      "input_modalities": [
+        "file",
+        "image",
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 2.0,
+      "price_output_usd_per_mtok": 10.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-17",
+      "openrouter_url": "https://openrouter.ai/openai/gpt-6.2-sol-pro",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "google/gemini-4-neon",
+      "slug": "gemini-4-neon",
+      "name": "Gemini 4 Neon",
+      "provider": "Google",
+      "category": "Language",
+      "description_registry": "Gemini 4 Neon is a fast, mid-priced model in the Gemini 4 family from Google, built for coding and agentic work.",
+      "description_openrouter": "Gemini 4 Neon is a fast, mid-priced model in the Gemini 4 family from Google, built for coding and agentic work. It is suited for repository and terminal coding, web...",
+      "knowledge_cutoff": null,
+      "supports_web_search": true,
+      "supports_vision": true,
+      "supports_image_generation": false,
+      "is_thinking_model": true,
+      "available": null,
+      "context_length": 1048576,
+      "max_completion_tokens": 943718,
+      "input_modalities": [
+        "audio",
+        "file",
+        "image",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "price_input_usd_per_mtok": 3.0,
+      "price_output_usd_per_mtok": 15.0,
+      "price_per_image_usd": 3e-06,
+      "openrouter_created": "2026-11-18",
+      "openrouter_url": "https://openrouter.ai/google/gemini-4-neon",
+      "has_renderer_config": true,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "openai/gpt-image-2.6-flare",
+      "slug": "gpt-image-2-6-flare",
+      "name": "Gpt Image 2.6 Flare",
+      "provider": "OpenAI",
+      "category": "Image",
+      "description_registry": "GPT Image 2.6 Flare is OpenAI's image generation and editing model optimized for speed: fast iteration and interactive text-to-image and image-to-image workflows.",
+      "description_openrouter": "GPT Image 2.6 Flare is OpenAI's image generation and editing model optimized for speed: fast iteration and interactive text-to-image and image-to-image workflows, generating about 50% faster than GPT Image 2.5....",
+      "knowledge_cutoff": "N/A",
+      "supports_web_search": false,
+      "supports_vision": true,
+      "supports_image_generation": true,
+      "is_thinking_model": false,
+      "available": null,
+      "context_length": 400000,
+      "max_completion_tokens": 360000,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "image"
+      ],
+      "price_input_usd_per_mtok": 8.0,
+      "price_output_usd_per_mtok": 8.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-04",
+      "openrouter_url": "https://openrouter.ai/openai/gpt-image-2.6-flare",
+      "has_renderer_config": false,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    },
+    {
+      "id": "microsoft/mai-image-2.7",
+      "slug": "mai-image-2-7",
+      "name": "Mai Image 2.7",
+      "provider": "Microsoft",
+      "category": "Image",
+      "description_registry": "MAI-Image-2.7 is an image generation and editing model from Microsoft AI, the precision tier of the MAI-Image-2.7 family alongside the faster MAI-Image-2.7 Flash.",
+      "description_openrouter": "MAI-Image-2.7 is an image generation and editing model from Microsoft AI, the precision tier of the MAI-Image-2.7 family alongside the faster MAI-Image-2.7 Flash. It is suited for design-ready visuals and...",
+      "knowledge_cutoff": "N/A",
+      "supports_web_search": false,
+      "supports_vision": true,
+      "supports_image_generation": true,
+      "is_thinking_model": false,
+      "available": null,
+      "context_length": 4096,
+      "max_completion_tokens": 1024,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "image"
+      ],
+      "price_input_usd_per_mtok": 5.0,
+      "price_output_usd_per_mtok": 0.0,
+      "price_per_image_usd": null,
+      "openrouter_created": "2026-11-17",
+      "openrouter_url": "https://openrouter.ai/microsoft/mai-image-2.7",
+      "has_renderer_config": false,
+      "openrouter_rankings_position": null,
+      "in_openrouter": true
+    }
   ],
   "compare_pairs": [
     {
@@ -3114,14 +3211,14 @@
     },
     {
       "a": "openai/gpt-5.5",
-      "b": "google/gemini-3.1-pro-preview",
-      "path": "/compare/gpt-5-5-vs-gemini-3-1-pro-preview",
+      "b": "google/gemini-4-argon",
+      "path": "/compare/gpt-5-5-vs-gemini-4-argon",
       "reason": "GPT vs Gemini flagships; both among the most-mentioned hosted models on the rankings page"
     },
     {
       "a": "anthropic/claude-opus-5",
-      "b": "google/gemini-3.1-pro-preview",
-      "path": "/compare/claude-opus-5-vs-gemini-3-1-pro-preview",
+      "b": "google/gemini-4-argon",
+      "path": "/compare/claude-opus-5-vs-gemini-4-argon",
       "reason": "Completes the big-three flagship triangle"
     },
     {

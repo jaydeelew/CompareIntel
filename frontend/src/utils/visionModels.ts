@@ -12,7 +12,7 @@ export const KNOWN_VISION_MODEL_IDS = new Set([
   'anthropic/claude-opus-5',
   'google/gemini-2.5-flash',
   'google/gemini-2.5-pro',
-  'google/gemini-3-flash-preview',
+  'google/gemini-3.8-flash',
 ])
 
 /**
