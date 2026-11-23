@@ -41,7 +41,9 @@ const PROVIDER_TOGGLE_SCROLL_MAX_AGE_MS = 650
 
 /**
  * Late restores only correct a small layout nudge. A larger move is a real scroll
- * (hero icon scroll-into-view, navbar unfold) and must not be yanked back.
+ * (hero icon scroll-into-view, scrolling the submit button back into view) and
+ * must not be yanked back. Doing that under a Firefox click drops the click:
+ * the button moves between mousedown and mouseup, so the comparison never starts.
  */
 const SCROLL_RESTORE_DRIFT_PX = 80
 
@@ -414,32 +416,18 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   const providerToggleScrollSnapRef = useRef<{ app: number; win: number } | null>(null)
   const providerTogglePointerTsRef = useRef(0)
   const providerToggleSnapClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const providerTogglePointerRef = useRef<{ x: number; y: number } | null>(null)
   const modelsSelectionLayoutRef = useRef<HTMLDivElement>(null)
   const resizeRestoreRafRef = useRef<number | null>(null)
 
   const selectedModelsSignature = selectedModels.join('\0')
 
-  const keepLateProviderToggleRestore = useCallback((pos: { app: number; win: number }) => {
-    if (scrollStillNearToggleSnap(pos)) return true
-    const point = providerTogglePointerRef.current
-    const layout = modelsSelectionLayoutRef.current
-    if (!point || !layout) return false
-    const rect = layout.getBoundingClientRect()
-    return (
-      point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
-    )
-  }, [])
+  const keepLateProviderToggleRestore = useCallback(
+    (pos: { app: number; win: number }) => scrollStillNearToggleSnap(pos),
+    []
+  )
 
   useEffect(() => {
-    const rememberPointer = (event: PointerEvent | MouseEvent) => {
-      providerTogglePointerRef.current = { x: event.clientX, y: event.clientY }
-    }
-    window.addEventListener('pointermove', rememberPointer)
-    window.addEventListener('mousemove', rememberPointer)
     return () => {
-      window.removeEventListener('pointermove', rememberPointer)
-      window.removeEventListener('mousemove', rememberPointer)
       if (providerToggleSnapClearTimeoutRef.current) {
         clearTimeout(providerToggleSnapClearTimeoutRef.current)
       }
@@ -504,7 +492,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
       clearTimeout(providerToggleSnapClearTimeoutRef.current)
       providerToggleSnapClearTimeoutRef.current = null
     }
-    providerTogglePointerRef.current = { x: e.clientX, y: e.clientY }
     providerToggleScrollSnapRef.current = captureProviderModelToggleScroll()
     providerTogglePointerTsRef.current = Date.now()
     providerToggleSnapClearTimeoutRef.current = setTimeout(() => {
