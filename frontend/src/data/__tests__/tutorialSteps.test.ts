@@ -15,7 +15,7 @@ const MODELS: ModelsByProvider = {
       tier_access: 'unregistered',
     },
     {
-      id: 'google/gemma-3-27b-it',
+      id: 'google/gemma-4-31b-it',
       name: 'Gemma',
       description: '',
       category: 'google',
@@ -44,7 +44,7 @@ describe('filterModelsForTutorial', () => {
     const filtered = filterModelsForTutorial(MODELS, true, starterIds)
     expect(filtered.Google?.map(m => m.id)).toEqual(['google/gemini-2.5-flash'])
     expect(filtered.DeepSeek?.map(m => m.id)).toEqual(['deepseek/deepseek-v4.1-flash-1017'])
-    expect(filtered.Google?.some(m => m.id === 'google/gemma-3-27b-it')).toBe(false)
+    expect(filtered.Google?.some(m => m.id === 'google/gemma-4-31b-it')).toBe(false)
   })
 
   it('no-ops when disabled', () => {

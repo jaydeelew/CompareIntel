@@ -59,8 +59,8 @@ const MOCK_MODELS = {
     mockModel('openai/gpt-5-nano', 'GPT-5 Nano', 'OpenAI'),
   ],
   Google: [
-    mockModel('google/gemma-3-27b-it', 'Gemma 3 27B It', 'Google'),
-    mockModel('google/gemini-3.1-flash-lite-preview', 'Gemini 3.1 Flash Lite', 'Google'),
+    mockModel('google/gemma-4-31b-it', 'Gemma 4 31B It', 'Google'),
+    mockModel('google/gemini-3.8-flash', 'Gemini 3.8 Flash', 'Google'),
     mockModel('google/gemini-2.5-flash', 'Gemini 2.5 Flash', 'Google'),
   ],
   DeepSeek: [
@@ -199,7 +199,7 @@ test.describe('Starter Selection session behavior', () => {
   test('user default saved selection overrides Starter on load', async ({ page }) => {
     const anonId = 'e2e_starter_session_anon'
     const userDefaultId = 'user-default-pick'
-    const userModelIds = ['google/gemini-2.5-flash', 'google/gemini-3.1-flash-lite-preview']
+    const userModelIds = ['google/gemini-2.5-flash', 'google/gemini-3.8-flash']
 
     await page.addInitScript(
       ({ anon, defaultId, starterModels, userModels }) => {

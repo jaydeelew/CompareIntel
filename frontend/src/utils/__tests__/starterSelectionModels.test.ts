@@ -25,7 +25,7 @@ describe('starterSelectionModels', () => {
     OpenAI: [createModel('openai/gpt-5.2', 'OpenAI')],
     Google: [
       createModel('google/gemini-2.5-flash', 'Google'),
-      createModel('google/gemma-3-27b-it', 'Google'),
+      createModel('google/gemma-4-31b-it', 'Google'),
     ],
     DeepSeek: [createModel('deepseek/deepseek-v4.1-flash-1017', 'DeepSeek')],
   }
@@ -39,12 +39,12 @@ describe('starterSelectionModels', () => {
 
   it('falls back when fewer than two priority models exist', () => {
     const sparse: ModelsByProvider = {
-      Google: [createModel('google/gemma-3-27b-it', 'Google')],
+      Google: [createModel('google/gemma-4-31b-it', 'Google')],
     }
-    expect(selectStarterSelectionModels(new Set(['google/gemma-3-27b-it']))).toEqual([
-      'google/gemma-3-27b-it',
+    expect(selectStarterSelectionModels(new Set(['google/gemma-4-31b-it']))).toEqual([
+      'google/gemma-4-31b-it',
     ])
-    expect(resolveStarterSelectionModelIds(sparse)).toEqual(['google/gemma-3-27b-it'])
+    expect(resolveStarterSelectionModelIds(sparse)).toEqual(['google/gemma-4-31b-it'])
   })
 
   it('lists providers that host the resolved model ids', () => {

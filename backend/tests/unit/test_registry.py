@@ -59,6 +59,8 @@ class TestCatalogLineup:
         "minimax/minimax-h3-image",
         "bytedance-seed/seedream-5-0-flash",
         "openai/gpt-image-2.6-sunburst",
+        "openai/gpt-image-2.6-flare",
+        "microsoft/mai-image-2.7",
         "sourceful/riverflow-v2-pro",
         "sourceful/riverflow-v2.6-pro",
         "qwen/qwen-image-2.1-pro",
@@ -77,7 +79,7 @@ class TestCatalogLineup:
     def test_weekly_refresh_adds_and_removes(self):
         ids = registry.get_registry_model_ids()
         for model_id in (
-            "openai/gpt-6-astra",
+            "openai/gpt-6.2-astra",
             "openai/gpt-6.1-terra",
             "sourceful/riverflow-v2.6-pro",
             "qwen/qwen-image-2.1-pro",
@@ -93,7 +95,7 @@ class TestCatalogLineup:
 
     def test_lineup_refresh_swaps_superseded_models(self):
         ids = registry.get_registry_model_ids()
-        assert len(ids) == 101
+        assert len(ids) == 102
         for model_id in (
             "deepseek/deepseek-v4.1-flash-1017",
             "tencent/hy4",
@@ -116,7 +118,7 @@ class TestCatalogLineup:
 
     def test_november_16_lineup_lands_at_101(self):
         ids = registry.get_registry_model_ids()
-        assert len(ids) == 101
+        assert len(ids) == 102
         assert "mistralai/mistral-medium-3.1" not in ids
         assert "google/gemini-4-argon" in ids
         for model_id in (
@@ -153,6 +155,54 @@ class TestCatalogLineup:
             "google/gemini-4-hydrogen",
             "anthropic/claude-fable-5.2",
             "qwen/qwen4-max",
+        }
+        for model_id in paid:
+            assert model_id not in data["free_tier_additional_models"]
+            assert model_id not in data["unregistered_tier_models"]
+
+    def test_november_23_lineup_lands_at_102(self):
+        ids = registry.get_registry_model_ids()
+        assert len(ids) == 102
+        for model_id in (
+            "openai/gpt-6.2-astra",
+            "openai/gpt-6.2-sol",
+            "openai/gpt-6.2-astra-pro",
+            "openai/gpt-6.2-sol-pro",
+            "google/gemini-4-neon",
+            "openai/gpt-image-2.6-flare",
+            "microsoft/mai-image-2.7",
+            "anthropic/claude-opus-4.6",
+            "anthropic/claude-sonnet-4.6",
+            "openai/gpt-5.1-codex-mini",
+            "openai/gpt-5.2",
+            "openai/gpt-5.4",
+            "openai/gpt-5.5",
+        ):
+            assert model_id in ids
+        for model_id in (
+            "openai/gpt-6-astra",
+            "openai/gpt-6.1-sol",
+            "google/gemini-3.1-flash-lite-preview",
+            "google/gemini-3-flash-preview",
+            "google/gemini-3.1-pro-preview",
+            "google/gemma-3-27b-it",
+        ):
+            assert model_id not in ids
+        data = registry.load_registry()
+        assert "google/gemini-3.8-flash" in data["unregistered_tier_models"]
+        assert "google/gemma-3-27b-it" not in data["unregistered_tier_models"]
+        assert "google/gemini-3.1-flash-lite-preview" not in data["unregistered_tier_models"]
+        assert "google/gemma-4-31b-it" in data["unregistered_tier_models"]
+        assert "openai/gpt-image-2.6-flare" in data["image_free_tier_additional_models"]
+        assert "microsoft/mai-image-2.7" in data["image_free_tier_additional_models"]
+        paid = {
+            "openai/gpt-6.2-astra",
+            "openai/gpt-6.2-sol",
+            "openai/gpt-6.2-astra-pro",
+            "openai/gpt-6.2-sol-pro",
+            "google/gemini-4-neon",
+            "openai/gpt-image-2.6-flare",
+            "microsoft/mai-image-2.7",
         }
         for model_id in paid:
             assert model_id not in data["free_tier_additional_models"]

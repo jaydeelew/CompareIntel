@@ -34,7 +34,7 @@ function m(
 const FIXTURE: ModelsByProvider = {
   Google: [
     m('google/gemini-2.5-flash', 'Google'),
-    m('google/gemma-3-27b-it', 'Google'),
+    m('google/gemma-4-31b-it', 'Google'),
     m('google/gemini-2.5-flash-image', 'Google', 'free', { supports_image_generation: true }),
   ],
   xAI: [m('x-ai/grok-4.20', 'xAI')],
@@ -193,7 +193,7 @@ describe('pickTwoDemoModels', () => {
 
   it('falls back to same-provider pair when only one provider available', () => {
     const singleProvider: ModelsByProvider = {
-      Google: [m('google/gemini-2.5-flash', 'Google'), m('google/gemma-3-27b-it', 'Google')],
+      Google: [m('google/gemini-2.5-flash', 'Google'), m('google/gemma-4-31b-it', 'Google')],
     }
     const result = pickTwoDemoModels('natural-language', singleProvider, false, null)
     expect(result).not.toBeNull()

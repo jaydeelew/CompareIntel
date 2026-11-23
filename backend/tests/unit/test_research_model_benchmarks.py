@@ -266,11 +266,12 @@ class TestSweBenchProSlugResolution:
             "SWE-Bench Pro public (Scale Labs): 51.90%.",
         )
 
-    def test_merge_row_maps_gemini_31_pro_thinking_slug(self):
+    def test_merge_row_does_not_alias_retired_gemini_31_pro(self):
+        """Gemini 3.1 Pro Preview left the lineup. Its leaderboard score is not copied onto another Gemini."""
         model_id_to_name = get_model_id_to_name_map()
         result: dict = {}
         _merge_swe_bench_pro_row(result, "gemini-3.1-pro (thinking)*", 46.1, model_id_to_name)
-        assert result["google/gemini-3.1-pro-preview"][0] == 46.1
+        assert result == {}
 
 
 class TestTextToImageNameResolution:

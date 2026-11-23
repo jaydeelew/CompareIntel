@@ -108,7 +108,7 @@ describe('useDefaultTestComparison', () => {
     ],
     Google: [
       createModel('google/gemini-2.5-flash', 'Google', 'unregistered'),
-      createModel('google/gemini-3.1-flash-lite-preview', 'Google', 'unregistered'),
+      createModel('google/gemini-3.8-flash', 'Google', 'unregistered'),
     ],
     DeepSeek: [
       createModel('deepseek/deepseek-v4.1-flash-1017', 'DeepSeek', 'unregistered'),
@@ -241,7 +241,7 @@ describe('useDefaultTestComparison', () => {
           {
             id: 'user-pick',
             name: 'My picks',
-            modelIds: ['google/gemini-2.5-flash', 'google/gemini-3.1-flash-lite-preview'],
+            modelIds: ['google/gemini-2.5-flash', 'google/gemini-3.8-flash'],
           },
         ],
         selectedModels: [],

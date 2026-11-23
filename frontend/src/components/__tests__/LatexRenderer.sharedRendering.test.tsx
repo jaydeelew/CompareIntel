@@ -305,7 +305,7 @@ describe('bug 10: Unicode × in prose stays literal', () => {
 })
 
 describe('bug 12: $HOME must not pair with a later currency dollar', () => {
-  it.each(['anthropic/claude-haiku-5.5', 'google/gemma-3-27b-it', 'qwen/qwen3-coder-flash'])(
+  it.each(['anthropic/claude-haiku-5.5', 'google/gemma-4-31b-it', 'qwen/qwen3-coder-flash'])(
     'keeps "$HOME ... $99.99" as prose (%s)',
     modelId => {
       const el = renderReply('The shell variable $HOME is set. Price: $99.99.', modelId)
@@ -316,7 +316,7 @@ describe('bug 12: $HOME must not pair with a later currency dollar', () => {
 })
 
 describe('bug 13: \\[...\\] display math is recognized even when a JSON config omitted it', () => {
-  it.each(['anthropic/claude-haiku-5.5', 'google/gemma-3-27b-it', 'qwen/qwen3-coder-flash'])(
+  it.each(['anthropic/claude-haiku-5.5', 'google/gemma-4-31b-it', 'qwen/qwen3-coder-flash'])(
     'renders same-line bracket display math (%s)',
     modelId => {
       const el = renderReply('2. **Bracket display:** \\[E = mc^2\\]', modelId)

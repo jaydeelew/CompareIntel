@@ -140,6 +140,11 @@ test('the current repo coverage gate passes', () => {
     'anthropic/claude-fable-5.2',
     'google/gemini-4-carbon',
     'google/gemini-4-hydrogen',
+    'google/gemini-4-neon',
+    'openai/gpt-6.2-astra',
+    'openai/gpt-6.2-astra-pro',
+    'openai/gpt-6.2-sol',
+    'openai/gpt-6.2-sol-pro',
     'qwen/qwen4-max',
     'tencent/hy4-flash',
   ])
@@ -159,8 +164,9 @@ test('the current repo coverage gate passes', () => {
   expect(result.missingModels).toEqual([])
   expect(result.badCells).toEqual([])
   expect(result.ok).toBe(true)
-  // 13 renderer-fail cells, all on the five allowlisted 2026-11-18 re-collection models (see allowlist reasons).
-  expect(manifest.totals.fail).toBe(13)
+  // 18 renderer-fail cells: five on 2026-11-18 re-collection models plus five 06-edge
+  // on the 2026-11-23 PR 320 models (allowlisted open renderer gaps).
+  expect(manifest.totals.fail).toBe(18)
   const allow = new Set(manifest.allowlist.map(entry => entry.modelId))
   for (const [modelId, row] of Object.entries(manifest.models)) {
     if (allow.has(modelId)) continue

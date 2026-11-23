@@ -1,6 +1,6 @@
 /**
- * Standard LaTeX delimiters render for every model, including dollar-only
- * configs such as Gemma 3 27B. Jack's production paragraph is the fixture.
+ * Standard LaTeX delimiters render for every model, including Gemma 4 31B.
+ * Jack's production paragraph is the fixture.
  *
  * `\(\sqrt{2}\)` and `\[...\]` become KaTeX. Bare `(\sqrt{2})` also renders,
  * with the parentheses kept as text around the math. See bareParenLatex.test.tsx.
@@ -13,7 +13,7 @@ import { initializeRegistry } from '../../config/loadModelConfigs'
 import rawConfigs from '../../config/model_renderer_configs.json'
 
 const DOLLAR_ONLY = [
-  'google/gemma-3-27b-it',
+  'google/gemma-4-31b-it',
   'anthropic/claude-sonnet-4.6',
   'google/gemini-2.5-flash',
   'openai/gpt-5',
@@ -104,7 +104,7 @@ describe('standard \\( \\) and \\[ \\] delimiters', () => {
       '',
       'It costs $5 and shipping is $10.',
     ].join('\n')
-    const el = renderReply(markdown, 'google/gemma-3-27b-it')
+    const el = renderReply(markdown, 'google/gemma-4-31b-it')
     expect(texSources(el)).toEqual(['\\sqrt{2}'])
     expect(el.querySelector('code.inline-code')?.textContent).toBe('\\(\\sqrt{2}\\)')
     expect(el.querySelector('pre code')?.textContent).toContain('\\(\\sqrt{2}\\)')
@@ -114,7 +114,7 @@ describe('standard \\( \\) and \\[ \\] delimiters', () => {
   })
 
   it('renders bare (\\sqrt{2}) with the parentheses kept as text', () => {
-    const el = renderReply(BARE_PARAGRAPH, 'google/gemma-3-27b-it')
+    const el = renderReply(BARE_PARAGRAPH, 'google/gemma-4-31b-it')
     expect(el.querySelector('.katex-error')).toBeNull()
     expect(texSources(el)).toEqual(['\\sqrt{2}'])
     expect(visibleText(el)).toBe(BARE_VISIBLE)

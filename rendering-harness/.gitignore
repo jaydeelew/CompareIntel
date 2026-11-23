@@ -86,6 +86,11 @@ runs/*
 !runs/2026-11-18-pr274/
 !runs/2026-11-18-pr274/**
 runs/2026-11-18-pr274/*.png
+!runs/2026-11-23-pr320/
+!runs/2026-11-23-pr320/**
+runs/2026-11-23-pr320/*.png
+runs/2026-11-23-pr320/*.phone.png
+runs/2026-11-23-pr320/*.dark.png
 # 20c screenshots and tarball are generated run artifacts (not committed)
 runs/2026-11-08-20c/*.png
 runs/2026-11-08-20c-artifacts.tar.gz
