@@ -66,12 +66,24 @@
 }
 
 /* In-flow composers have no entrance animation. Floating ones do: composer-float-in
-   is translateY(20px) → 0. animation: none cancels that fill; taking the history
-   highlight off on the way to saved selections starts the 20px slide again, and
-   the tooltip follows it after it has faded in. Leave the float animation alone. */
+   is translateY(20px) → 0. The generic highlight sets mobile-tutorial-pulse
+   !important, which replaces that animation. Taking the history highlight off
+   on the way to saved selections starts the 20px rise again, and the bookmark
+   (and the tooltip) follow it after the card has faded in. Keep the float
+   animation's computed name stable for the whole time the highlight is on. */
 .composer.mobile-tutorial-highlight:not(.composer-floating) {
   transform: translateZ(0) !important;
   animation: none !important;
+}
+
+.composer.composer-floating.mobile-tutorial-highlight {
+  animation: composer-float-in 0.35s var(--ease-spring) forwards !important;
+}
+
+@supports (-moz-appearance: none) {
+  .composer.composer-floating.mobile-tutorial-highlight {
+    animation-name: composer-float-in-moz !important;
+  }
 }
 
 /* Provider dropdown on mobile — same as desktop; cutout inset frame only */
