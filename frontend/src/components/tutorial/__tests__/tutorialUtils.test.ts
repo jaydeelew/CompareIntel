@@ -5,12 +5,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 import {
+  getBelowResultsSavedSelectionsButton,
   getComposerElement,
   getComposerCutoutRects,
   getFollowUpTutorialHeaderElement,
   getHeroComposerForDropdownSteps,
   getHistoryInlineListForTutorial,
   getHistoryToggleButtonForTutorial,
+  getPortaledHistoryList,
   getSavedSelectionsButtonForTutorial,
   getSavedSelectionsDropdownForTutorial,
 } from '../tutorialUtils'
@@ -198,6 +200,35 @@ describe('tutorialUtils', () => {
       expect(getHeroComposerForDropdownSteps()).toBe(composer)
       expect(getSavedSelectionsDropdownForTutorial()).toBe(panel)
       expect(getSavedSelectionsButtonForTutorial()).toBe(btn)
+    })
+
+    it('uses the below-results saved-selections button when a hero mirror is present', () => {
+      const mirror = document.createElement('div')
+      mirror.className = 'composer-hero-mirror'
+      const mirrorComposer = document.createElement('div')
+      mirrorComposer.className = 'composer'
+      const mirrorButton = document.createElement('button')
+      mirrorButton.className = 'saved-selections-button'
+      mirrorComposer.appendChild(mirrorButton)
+      mirror.appendChild(mirrorComposer)
+      container.appendChild(mirror)
+
+      const slot = document.createElement('div')
+      slot.setAttribute('data-after-results-composer-slot', '')
+      const belowComposer = document.createElement('div')
+      belowComposer.className = 'composer'
+      const belowButton = document.createElement('button')
+      belowButton.className = 'saved-selections-button'
+      const belowList = document.createElement('div')
+      belowList.className = 'history-inline-list'
+      belowComposer.appendChild(belowButton)
+      belowComposer.appendChild(belowList)
+      slot.appendChild(belowComposer)
+      container.appendChild(slot)
+
+      expect(getBelowResultsSavedSelectionsButton()).toBe(belowButton)
+      expect(getPortaledHistoryList()).toBe(belowList)
+      expect(getSavedSelectionsButtonForTutorial()).toBe(mirrorButton)
     })
   })
 

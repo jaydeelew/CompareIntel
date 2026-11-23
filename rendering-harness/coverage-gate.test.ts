@@ -207,9 +207,14 @@ test('the current repo coverage gate passes', () => {
     'google/gemini-3.1-flash-lite-preview',
     'google/gemini-4-carbon',
     'google/gemini-4-hydrogen',
+    'google/gemini-4-neon',
     'google/gemma-4-31b-it',
     'meta-llama/llama-4-scout',
     'mistralai/mistral-large-4-0',
+    'openai/gpt-6.2-astra',
+    'openai/gpt-6.2-astra-pro',
+    'openai/gpt-6.2-sol',
+    'openai/gpt-6.2-sol-pro',
     'qwen/qwen4-max',
     'tencent/hy4-flash',
   ])
@@ -229,8 +234,8 @@ test('the current repo coverage gate passes', () => {
   expect(result.missingModels).toEqual([])
   expect(result.badCells).toEqual([])
   expect(result.ok).toBe(true)
-  // 24 renderer-fail/incomplete-gated cells, all on allowlisted models (2026-11-18 re-collection + 2026-W48 drift group 0).
-  expect(manifest.totals.fail).toBe(24)
+  // 35 renderer-fail cells on allowlisted models (PR274 + W48 drift + PR320 new models).
+  expect(manifest.totals.fail).toBe(35)
   const allow = new Set(manifest.allowlist.map(entry => entry.modelId))
   for (const [modelId, row] of Object.entries(manifest.models)) {
     if (allow.has(modelId)) continue

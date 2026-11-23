@@ -24,8 +24,8 @@ test('unique coverage uses the complete rerun, not the empty original', async ()
   // 538 saved text-model cells for current registry models (including 24 for
   // models removed on 2026-11-16), plus 12 pre-rename replies that #231 left in place.
   // runs/2026-11-18-pr274 re-collected the five #259 models on all eight prompts.
-  // runs/2026-11-23-drift-w48-g0 adds 65 W48 group-0 replies (8 models + nemotron 01).
-  expect(cells).toHaveLength(564)
+  // runs/2026-11-23-drift-w48-g0 adds W48 group-0 replies; runs/2026-11-23-pr320 adds PR 320 new-model cells (01-06).
+  expect(cells).toHaveLength(594)
   // Two 2026-11-18 replies are reasoning-only (finish_reason=length, no visible text). A third
   // (hy4-flash 06) is empty too, but the complete 2026-11-17 reply for that cell stays in the unique set.
   expect(

@@ -78,6 +78,20 @@ export function getBelowResultsHistoryToggleButton(): HTMLElement | null {
   return document.querySelector('.history-toggle-button') as HTMLElement | null
 }
 
+/** History list on the composer the user is looking at (below results after a comparison). */
+export function getPortaledHistoryList(): HTMLElement | null {
+  return (getComposerElement()?.querySelector('.history-inline-list') as HTMLElement | null) ?? null
+}
+
+/** Saved-selections control on the visible composer, not the inert hero mirror. */
+export function getBelowResultsSavedSelectionsButton(): HTMLElement | null {
+  const below = document.querySelector(
+    `${AFTER_RESULTS_COMPOSER_SLOT} .saved-selections-button`
+  ) as HTMLElement | null
+  if (below) return below
+  return document.querySelector('.saved-selections-button') as HTMLElement | null
+}
+
 export function getComposerElement(): HTMLElement | null {
   // Follow-up layout: interactive composer is portaled below results (not the inert hero mirror).
   const belowResultsComposer = document.querySelector(

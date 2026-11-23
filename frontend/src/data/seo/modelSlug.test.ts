@@ -18,7 +18,7 @@ import {
 describe('modelIdToSlug', () => {
   it('strips the provider prefix and turns . and : into -', () => {
     expect(modelIdToSlug('openai/gpt-5.5')).toBe('gpt-5-5')
-    expect(modelIdToSlug('google/gemini-3.1-pro-preview')).toBe('gemini-3-1-pro-preview')
+    expect(modelIdToSlug('openai/gpt-6.2-sol')).toBe('gpt-6-2-sol')
     expect(modelIdToSlug('anthropic/claude-sonnet-4.6')).toBe('claude-sonnet-4-6')
   })
 
@@ -52,11 +52,7 @@ describe('compare path helpers', () => {
 
 describe('script slug helper stays in sync with TypeScript', () => {
   it('matches the TS implementation for representative ids', () => {
-    const ids = [
-      'openai/gpt-5.5',
-      'nvidia/nemotron-3-ultra-550b-a55b:free',
-      'google/gemini-3.1-pro-preview',
-    ]
+    const ids = ['openai/gpt-5.5', 'nvidia/nemotron-3-ultra-550b-a55b:free', 'openai/gpt-6.2-sol']
     for (const id of ids) {
       expect(scriptSlug.modelIdToSlug(id)).toBe(modelIdToSlug(id))
       expect(scriptSlug.buildComparePathFromIds(id, 'openai/gpt-5.5')).toBe(

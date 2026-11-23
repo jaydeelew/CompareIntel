@@ -5,7 +5,7 @@
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   
   <!-- Generated automatically at build time from scripts/generate-sitemap.js -->
-  <!-- Last updated: 2026-11-17 -->
+  <!-- Last updated: 2026-11-23 -->
   
   <url>
     <loc>https://compareintel.com/</loc>
@@ -93,7 +93,7 @@
   
   <url>
     <loc>https://compareintel.com/models/claude-opus-5</loc>
-    <lastmod>2026-11-17</lastmod>
+    <lastmod>2026-11-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -106,8 +106,8 @@
   </url>
   
   <url>
-    <loc>https://compareintel.com/models/gemini-3-1-pro-preview</loc>
-    <lastmod>2026-11-17</lastmod>
+    <loc>https://compareintel.com/models/gemini-4-argon</loc>
+    <lastmod>2026-11-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>

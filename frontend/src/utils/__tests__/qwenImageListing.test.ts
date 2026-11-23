@@ -30,8 +30,8 @@ function models(): ModelsByProvider {
     ],
     OpenAI: [
       {
-        id: 'openai/gpt-6-astra',
-        name: 'Gpt 6 Astra',
+        id: 'openai/gpt-6.2-astra',
+        name: 'Gpt 6.2 Astra',
         description: '',
         category: 'Language',
         provider: 'OpenAI',
@@ -51,6 +51,6 @@ describe('Qwen image listing', () => {
   it('keeps Qwen text models on the text tab', () => {
     const textProviders = filterModelsByProviderToText(models())
     expect(textProviders.Qwen?.map(model => model.id)).toEqual(['qwen/qwen3.8-max-0902'])
-    expect(textProviders.OpenAI?.map(model => model.id)).toEqual(['openai/gpt-6-astra'])
+    expect(textProviders.OpenAI?.map(model => model.id)).toEqual(['openai/gpt-6.2-astra'])
   })
 })

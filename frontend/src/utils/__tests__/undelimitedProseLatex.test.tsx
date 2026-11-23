@@ -11,7 +11,7 @@ import LatexRenderer from '../../components/LatexRenderer'
 import { initializeRegistry } from '../../config/loadModelConfigs'
 import modelConfigs from '../../config/model_renderer_configs.json'
 
-const MODEL = 'google/gemma-3-27b-it'
+const MODEL = 'google/gemma-4-31b-it'
 
 const CUBE_PARAGRAPH =
   '(the height is \\sqrt{3}), and the space diagonal of a unit cube is \\sqrt{3}.'

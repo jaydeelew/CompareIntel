@@ -1113,8 +1113,12 @@ export function MainPage() {
     [tutorialSplitModelSteps]
   )
 
+  // Desktop steps 1–4 keep the full provider list the user sees outside the
+  // tutorial. Mobile still narrows the list so the highlighted card fits.
   const tutorialModelFilterActive =
-    tutorialState.isActive && isProviderPickerTutorialStep(tutorialState.currentStep)
+    tutorialState.isActive &&
+    isMobileLayout &&
+    isProviderPickerTutorialStep(tutorialState.currentStep)
 
   const displayModelsByProvider = useMemo(
     () =>
@@ -1129,6 +1133,7 @@ export function MainPage() {
       tutorialState.currentStep,
       tutorialModelFilterActive,
       tutorialModelIds,
+      isMobileLayout,
     ]
   )
 

@@ -102,6 +102,19 @@ export function TutorialManager({
     if (activeTutorialStep)
       document.documentElement.setAttribute('data-tutorial-step', activeTutorialStep)
     else document.documentElement.removeAttribute('data-tutorial-step')
+    const targetModelIds =
+      activeTutorialStep === 'select-starter-model-1'
+        ? tutorialModelIds.slice(0, 1)
+        : activeTutorialStep === 'select-starter-model-2'
+          ? tutorialModelIds.slice(1, 2)
+          : activeTutorialStep === 'select-models'
+            ? tutorialModelIds.slice(0, 2)
+            : []
+    if (targetModelIds.length > 0) {
+      document.documentElement.setAttribute('data-tutorial-target-models', targetModelIds.join(','))
+    } else {
+      document.documentElement.removeAttribute('data-tutorial-target-models')
+    }
   }
 
   useEffect(() => {

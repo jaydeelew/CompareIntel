@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import { tutorialStepFollowsComposer, type StarterModelEntry } from '../../data/tutorialStepPlan'
+import {
+  isProviderPickerTutorialStep,
+  tutorialStepFollowsComposer,
+  type StarterModelEntry,
+} from '../../data/tutorialStepPlan'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import {
   getTutorialScrollRoot,
@@ -97,9 +101,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       return
     }
     const measure = () => {
-      // Prompt and follow-up only. History and save keep their Done button when
-      // the dropdown opens; replacing that card hid the control the tour clicks.
-      if (!tutorialStepFollowsComposer(step)) {
+      // Prompt, follow-up, and the provider steps (1–4). History and save keep
+      // their Done button; replacing that card hid the control the tour clicks.
+      const showsScrollBack =
+        tutorialStepFollowsComposer(step) || isProviderPickerTutorialStep(step)
+      if (!showsScrollBack) {
         if (scrollBackRef.current != null) setScrollBack(null)
         return
       }
