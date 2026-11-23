@@ -305,9 +305,14 @@ export function useTutorialOverlay(
       dx = window.innerWidth - margin - rect.right
     }
 
-    if (rect.top < margin) dy = margin - rect.top
-    else if (rect.bottom > window.innerHeight - margin) {
-      dy = window.innerHeight - margin - rect.bottom
+    // Follow-up is glued to the composer. After it settles, pulling the card
+    // back into the viewport leaves it stuck over the results.
+    const followComposer = step === 'follow-up' && !spotlightSettling
+    if (!followComposer) {
+      if (rect.top < margin) dy = margin - rect.top
+      else if (rect.bottom > window.innerHeight - margin) {
+        dy = window.innerHeight - margin - rect.bottom
+      }
     }
 
     if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
@@ -991,6 +996,10 @@ export function useTutorialOverlay(
     let cancelled = false
     let running = false
     let tries = 0
+    // Scroll offset once the follow-up card is seated. A later user scroll must
+    // not be treated as the results block pushing the composer off screen.
+    let seatedTop: number | null = null
+    let userTookOver = false
 
     const readLayout = () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
 
@@ -1025,14 +1034,24 @@ export function useTutorialOverlay(
     }
 
     const id = window.setInterval(() => {
-      if (cancelled || running || tries >= 3 || stepRef.current !== step) return
+      if (cancelled || running || tries >= 3 || stepRef.current !== step || userTookOver) return
       const tip = document.querySelector('.tutorial-tooltip') as HTMLElement | null
       if (!tip || !(Number(getComputedStyle(tip).opacity) > 0.9)) return
+      if (step === 'follow-up') {
+        const scrollTop = getTutorialScrollRoot().getScrollTop()
+        if (seatedTop == null) {
+          if (!followUpPairOffScreen()) seatedTop = scrollTop
+        } else if (Math.abs(scrollTop - seatedTop) > 24) {
+          userTookOver = true
+          return
+        }
+      }
       const rect = readLayout()
       const pairOffScreen = followUpPairOffScreen()
       if (!rect || (!arrowMissesSpotlight(rect) && !pairOffScreen)) return
       running = true
       tries += 1
+      const scrollAtStart = getTutorialScrollRoot().getScrollTop()
       setSpotlightSettling(true)
       setTutorialSpotlightSettling(true)
       setPositionStabilized(false)
@@ -1040,6 +1059,13 @@ export function useTutorialOverlay(
         try {
           await waitForRectStable(readLayout, { timeoutMs: 800, quietMs: 160 })
           if (cancelled || stepRef.current !== step) return
+          if (
+            step === 'follow-up' &&
+            Math.abs(getTutorialScrollRoot().getScrollTop() - scrollAtStart) > 24
+          ) {
+            userTookOver = true
+            return
+          }
           const settled = readLayout()
           if (!settled) return
           const preferred = TUTORIAL_STEPS_CONFIG[step].position === 'bottom' ? 'below' : 'above'
@@ -1084,6 +1110,9 @@ export function useTutorialOverlay(
             setPositionStabilized(true)
             setSpotlightSettling(false)
             setTutorialSpotlightSettling(false)
+            if (step === 'follow-up' && !userTookOver) {
+              seatedTop = getTutorialScrollRoot().getScrollTop()
+            }
           }
           running = false
         }

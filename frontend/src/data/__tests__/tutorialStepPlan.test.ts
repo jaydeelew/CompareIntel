@@ -8,6 +8,7 @@ import {
   isPrimaryExpandProviderStep,
   resolveStarterModelEntries,
   resolveTutorialStepConfig,
+  tutorialStepFollowsComposer,
   tutorialStepUsesFramedCutoutShadow,
   tutorialUsesSplitModelSteps,
 } from '../tutorialStepPlan'
@@ -46,6 +47,15 @@ describe('tutorialStepPlan', () => {
     expect(tutorialStepUsesFramedCutoutShadow('enter-prompt')).toBe(true)
     expect(tutorialStepUsesFramedCutoutShadow('history-dropdown')).toBe(true)
     expect(tutorialStepUsesFramedCutoutShadow(null)).toBe(false)
+  })
+
+  it('follows the composer on the prompt and follow-up steps only', () => {
+    expect(tutorialStepFollowsComposer('enter-prompt')).toBe(true)
+    expect(tutorialStepFollowsComposer('enter-prompt-2')).toBe(true)
+    expect(tutorialStepFollowsComposer('follow-up')).toBe(true)
+    expect(tutorialStepFollowsComposer('history-dropdown')).toBe(false)
+    expect(tutorialStepFollowsComposer('save-selection')).toBe(false)
+    expect(tutorialStepFollowsComposer('view-follow-up-results')).toBe(false)
   })
 
   it('classifies provider step handoffs for smooth overlay transitions', () => {

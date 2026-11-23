@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import type { StarterModelEntry } from '../../data/tutorialStepPlan'
+import { tutorialStepFollowsComposer, type StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import {
   getTutorialScrollRoot,
@@ -97,9 +97,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       return
     }
     const measure = () => {
-      // Prompt steps only. History and save keep their Done button when the
-      // dropdown opens; replacing that card hid the control the tour clicks.
-      if (step !== 'enter-prompt' && step !== 'enter-prompt-2') {
+      // Prompt and follow-up only. History and save keep their Done button when
+      // the dropdown opens; replacing that card hid the control the tour clicks.
+      if (!tutorialStepFollowsComposer(step)) {
         if (scrollBackRef.current != null) setScrollBack(null)
         return
       }

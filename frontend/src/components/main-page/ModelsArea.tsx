@@ -237,6 +237,13 @@ export function ModelsArea({
     }
   }, [showImageConfig, selectedModels, allModelsByProvider, modelsByProvider])
 
+  // The provider rows are filtered per tutorial step. The rail still needs the
+  // full catalog so a model selected on an earlier step keeps its name.
+  const catalogModels = useMemo(
+    () => (allModelsByProvider ? Object.values(allModelsByProvider).flat() : undefined),
+    [allModelsByProvider]
+  )
+
   const effectiveSupportedAspectRatios =
     effectiveImageConfig?.supportedAspectRatios ?? supportedAspectRatios
   const effectiveSupportedImageSizes =
@@ -457,6 +464,7 @@ export function ModelsArea({
               originalSelectedModels={originalSelectedModels}
               openDropdowns={openDropdowns}
               allModels={allModels}
+              catalogModels={catalogModels}
               isLoadingModels={isLoadingModels}
               isFollowUpMode={isFollowUpMode}
               maxModelsLimit={maxModelsLimit}
