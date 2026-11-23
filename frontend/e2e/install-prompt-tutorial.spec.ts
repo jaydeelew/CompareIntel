@@ -55,8 +55,13 @@ test.describe('Install prompt during onboarding tutorial', () => {
 
   test('stays hidden after starting guided tutorial', async ({ page }) => {
     await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
+    // Firefox never reaches networkidle here: the Vite socket and hero videos stay
+    // open after the welcome modal and model list are already on screen.
+    const modelsLoaded = page.waitForResponse(
+      response => response.url().includes('/api/models') && response.ok()
+    )
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await modelsLoaded
     await expect(page.getByRole('button', { name: 'Start Tutorial' })).toBeVisible()
 
     await page.evaluate(() => {
