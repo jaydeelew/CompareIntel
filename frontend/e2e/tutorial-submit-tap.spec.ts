@@ -119,13 +119,10 @@ test('step 6 submit tap works while the prompt is focused', async ({ page }, tes
   await page.setViewportSize({ width: size!.width, height: Math.max(480, size!.height - 280) })
   await expect.poll(() => submitHit(page), { timeout: 5_000 }).toBe('submit')
 
-  const doneSelecting = page.getByRole('button', { name: 'Done selecting models' })
-  if (await doneSelecting.isVisible().catch(() => false)) {
-    await doneSelecting.click({ timeout: 15_000 })
-    await expect(doneSelecting).toBeHidden({ timeout: 15_000 })
-  }
-  await dismissMobileBlockers(page)
-
+  // The install banner and Done Selecting card are already suppressed for the
+  // tutorial. Probing them here is an extra accessibility hit-test; on WebKit
+  // that leaves the focused prompt as the gesture target and the coordinate
+  // click never reaches submit.
   const point = await submitPoint(page)
   expect(point).not.toBeNull()
   const compareStream = page.waitForResponse(

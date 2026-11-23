@@ -413,7 +413,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const padding = 12 // Padding from screen edges
     const tooltipRect = overlayRef.current?.getBoundingClientRect()
     const tooltipHeight = tooltipRect?.height ?? tooltipEstimatedHeight
-    const tooltipWidth = tooltipRect?.width ?? Math.min(340, viewportWidth - 24)
+    // CSS caps .mobile-tutorial-tooltip at 300px (width: 100%). The desktop
+    // card is 340px. Using that estimate while the card is unmounted, then
+    // measuring 300px after it is already opaque, shifts the card 20px sideways.
+    const measuredWidth = tooltipRect && tooltipRect.width > 1 ? tooltipRect.width : null
+    const tooltipWidth = measuredWidth ?? Math.min(300, viewportWidth)
     const arrowSize = 10
     const isSubmitTooltipStep = step === 'submit-comparison' || step === 'submit-comparison-2'
 
@@ -1674,12 +1678,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         </div>
       )}
 
-      {/* Tooltip - hidden during loading/streaming phase on submit steps */}
-      {!shouldShowScrollIndicator && !isLoadingStreamingPhase && isVisible && tooltipPosition && (
+      {/* Keep the card mounted during the results hold so its real width is
+          known before the hide class comes off. Unmounting it forces the
+          300px estimate, and the correction lands after the card is opaque. */}
+      {!shouldShowScrollIndicator && isVisible && tooltipPosition && (
         <div
           key={step}
           ref={overlayRef}
-          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
+          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition || isLoadingStreamingPhase ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
           style={
             tooltipPosition.useFullscreen
               ? undefined

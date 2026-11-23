@@ -2535,6 +2535,8 @@ video.capability-tile-image-lightbox-img {
   transform-origin: center center;
   position: relative;
   box-shadow: none;
+  /* Safari drops the click on a transformed control unless double-tap zoom is off. */
+  touch-action: manipulation;
 }
 
 /* Prompt text and/or model selection started — emerald outline; full emerald fill stays on .submit-ready */
