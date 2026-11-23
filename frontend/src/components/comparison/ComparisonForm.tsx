@@ -1129,6 +1129,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
             {useTouchFirstComposerChrome ? (
               <button
+                onMouseDown={event => {
+                  // iOS uses the first tap on a focused prompt to dismiss the
+                  // keyboard and never fires click. Keeping the focus lets this
+                  // tap submit.
+                  event.preventDefault()
+                }}
                 onClick={() => {
                   if (blockPromptStepForTutorial) return
                   if (submitImageConfigBlocked && !hardSubmitDisabled) {
@@ -1173,6 +1179,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   !submitImageConfigBlocked
                 const submitButton = (
                   <button
+                    onMouseDown={event => {
+                      // iOS uses the first tap on a focused prompt to dismiss the
+                      // keyboard and never fires click. Keeping the focus lets this
+                      // tap submit.
+                      event.preventDefault()
+                    }}
                     onClick={() => {
                       if (blockPromptStepForTutorial) return
                       if (submitImageConfigBlocked && !hardSubmitDisabled) {
