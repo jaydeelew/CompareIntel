@@ -11,7 +11,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { chromium, type Page } from 'playwright'
+import { chromium, type Page, type Route } from 'playwright'
 import {
   DARK_VIEW,
   EVIDENCE_VIEW,
@@ -44,6 +44,14 @@ function argValue(name: string): string | undefined {
 
 function safeName(cell: SavedCell, kind: string): string {
   return `${kind}__${cell.modelId.replace(/[^a-z0-9.-]+/gi, '_')}__${cell.promptName}.png`
+}
+
+/** 02 replies may include https://example.com/... images that never settle in CI. */
+async function stubExampleImages(page: Page): Promise<void> {
+  await page.route(
+    url => url.hostname === 'example.com' && url.pathname.endsWith('.png'),
+    (route: Route) => route.abort('connectionrefused')
+  )
 }
 
 async function evidenceFor(
@@ -93,8 +101,11 @@ async function main() {
 
   try {
     let phonePage = await openThemedPage(browser, vite.port, 'light', PHONE_VIEW)
+    await stubExampleImages(phonePage)
     let darkPage = await openThemedPage(browser, vite.port, 'dark', DARK_VIEW)
+    await stubExampleImages(darkPage)
     const wide = await openThemedPage(browser, vite.port, 'light', EVIDENCE_VIEW)
+    await stubExampleImages(wide)
     const stackContext = await browser.newContext({
       viewport: { width: EVIDENCE_VIEW.width, height: EVIDENCE_VIEW.height },
       deviceScaleFactor: EVIDENCE_VIEW.deviceScaleFactor,
@@ -113,7 +124,9 @@ async function main() {
           await phonePage.context().close()
           await darkPage.context().close()
           phonePage = await openThemedPage(browser, vite.port, 'light', PHONE_VIEW)
+          await stubExampleImages(phonePage)
           darkPage = await openThemedPage(browser, vite.port, 'dark', DARK_VIEW)
+          await stubExampleImages(darkPage)
           pages = { wide, phone: phonePage, dark: darkPage, stack }
         }
         const generation = `${cell.modelId}:${cell.promptName}:${rendered}`
