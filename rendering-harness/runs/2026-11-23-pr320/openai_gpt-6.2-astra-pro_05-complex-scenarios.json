@@ -1,0 +1,36 @@
+{
+  "modelId": "openai/gpt-6.2-astra-pro",
+  "modelName": "OpenAI: GPT-6.2 Astra Pro",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "## Scenario 1: Math in nested lists\n\n1. The **Pythagorean theorem** states that $a^2+b^2=c^2$, where $c$ is the hypotenuse.\n2. For a *right triangle* with legs $a=3$ and $b=4$:\n   - Substitute: $c^2=3^2+4^2=9+16=25$.\n   - Since $c$ is a length, take the positive root: $c=\\sqrt{25}=5$ units.\n\n## Scenario 2: Raw LaTeX and rendered math in a table\n\n| Formula | LaTeX source | Rendered result |\n|---|---|---|\n| Roots of $ax^2+bx+c=0$, with $a\\ne 0$ | `x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}` | $x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}$ |\n| Sum of the first $n$ positive integers | `\\sum_{i=1}^{n}i=\\frac{n(n+1)}{2}` | $\\sum_{i=1}^{n}i=\\frac{n(n+1)}{2}$ |\n| Product of the first $n$ positive integers | `\\prod_{i=1}^{n}i=n!` | $\\prod_{i=1}^{n}i=n!$ |\n\n## Scenario 3: Code, Unicode, and math\n\n```python\nimport math\n\ndef circle_area(r):\n    \"\"\"Return the area A = πr² for a nonnegative radius.\"\"\"\n    if r < 0:\n        raise ValueError(\"Radius cannot be negative.\")\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5):.2f}\")\n```\n\nThe exact area is $A=\\pi(5)^2=25\\pi$ square units. The program prints `Area: 78.54`.\n\n## Scenario 4: Horizontal rules between steps\n\n**First section:** Find the area under $y=x$ from $x=0$ to $x=1$.\n\n---\n\n**Second section:** Integrate: $\\int_0^1 x\\,dx=\\left[\\frac{x^2}{2}\\right]_0^1=\\frac12$.\n\n---\n\n**Third section:** Check geometrically: the region is a triangle with base and height both equal to $1$, so its area is $\\tfrac12(1)(1)=\\tfrac12$ square units.\n\n## Scenario 5: Currency and math delimiters\n\n**Prices:** A computer costs \\$1,200, a monitor \\$300, a keyboard \\$50, and a mouse \\$25. The total is **\\$1,575**.\n\n**Math:** For $f(x)=x^2$, the value at $x=5$ is $f(5)=25$.\n\n**Mixed line:** A \\$50 keyboard discounted by $r=0.20$ costs \\$40, since $50(1-r)=40$.",
+  "usage": {
+    "prompt_tokens": 4087,
+    "completion_tokens": 1208,
+    "total_tokens": 5295,
+    "cost": 0.081016,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.081016,
+      "upstream_inference_prompt_cost": 0.032696,
+      "upstream_inference_completions_cost": 0.04832
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 20,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.081016,
+  "actualCost": 0.081016,
+  "timestamp": "2026-11-23T15:38:45.465Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "completed",
+  "error": null
+}

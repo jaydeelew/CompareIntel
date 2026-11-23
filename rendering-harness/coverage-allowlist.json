@@ -22,23 +22,23 @@
     },
     {
       "modelId": "openai/gpt-6.2-astra",
-      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost). Open renderer gaps, already seen in the W48 drift run; 07 and 08 were not part of this collection (optional prompts)."
     },
     {
       "modelId": "openai/gpt-6.2-sol",
-      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost). Open renderer gaps, already seen in the W48 drift run; 07 and 08 were not part of this collection (optional prompts)."
     },
     {
       "modelId": "openai/gpt-6.2-astra-pro",
-      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost). Open renderer gaps, already seen in the W48 drift run; 07 and 08 were not part of this collection (optional prompts)."
     },
     {
       "modelId": "openai/gpt-6.2-sol-pro",
-      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost). Open renderer gaps, already seen in the W48 drift run; 07 and 08 were not part of this collection (optional prompts)."
     },
     {
       "modelId": "google/gemini-4-neon",
-      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost) \u2014 open renderer gaps, already seen in the W48 drift run. 05-complex-scenarios hit the 2048-token cap (1962 reasoning tokens; finish_reason=length) and ends mid-equation, so that cell is truncated/incomplete rather than a renderer bug. 07 and 08 were not part of this collection (optional prompts)."
     }
   ]
 }
