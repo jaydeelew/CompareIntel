@@ -359,4 +359,17 @@ Bare URL: https://example.com/lab-bare-url/with/a/long/path
 `,
     startRe: '.',
   },
+  {
+    bug: 33,
+    id: '33-table-column-alignment',
+    title: 'GFM table column alignment on th/td',
+    modelId: 'anthropic/claude-haiku-4.5',
+    promptName: '07-rare-formats',
+    inlineContent: `## Table with alignment, inline math, and a pipe
+| left | center | right | pipe |
+| :--- | :---: | ---: | :--- |
+| $\\alpha$ | $x^2$ | $1$ | a \\| b |
+`,
+    startRe: '^## Table with alignment',
+  },
 ]

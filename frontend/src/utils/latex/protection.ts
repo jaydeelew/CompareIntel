@@ -360,10 +360,21 @@ export function gfmSplitRow(row: string): string[] {
 
 /** Column count of a `|---|` separator, or null when the line is not one. */
 export function gfmSeparatorCount(line: string): number | null {
+  const alignments = gfmColumnAlignments(line)
+  return alignments ? alignments.length : null
+}
+
+export type GfmColumnAlign = 'left' | 'center' | 'right'
+
+/**
+ * Per-column GFM alignment from the `|:---|:---:|---:|` row.
+ * Columns without `:` markers are omitted (markdown-it leaves them unstyled).
+ */
+export function gfmColumnAlignments(line: string): (GfmColumnAlign | null)[] | null {
   const t = line.trim()
   if (!t || /[^|\-:\s]/.test(t)) return null
   const parts = t.split('|')
-  let count = 0
+  const alignments: (GfmColumnAlign | null)[] = []
   for (let i = 0; i < parts.length; i++) {
     const cell = parts[i].trim()
     if (!cell) {
@@ -371,9 +382,12 @@ export function gfmSeparatorCount(line: string): number | null {
       return null
     }
     if (!/^:?-+:?$/.test(cell)) return null
-    count += 1
+    if (cell.startsWith(':') && cell.endsWith(':')) alignments.push('center')
+    else if (cell.endsWith(':')) alignments.push('right')
+    else if (cell.startsWith(':')) alignments.push('left')
+    else alignments.push(null)
   }
-  return count > 0 ? count : null
+  return alignments.length > 0 ? alignments : null
 }
 
 /** A block that ends a GFM table the way markdown-it's terminator rules do. */

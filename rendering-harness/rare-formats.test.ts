@@ -82,10 +82,10 @@ function passHtml(): string {
           <th style="text-align:left">pipe</th>
         </tr>
         <tr>
-          <td>${katexAnn('\\alpha')}</td>
+          <td style="text-align:left">${katexAnn('\\alpha')}</td>
           <td style="text-align:center">${katexAnn('x^2')}</td>
           <td style="text-align:right">${katexAnn('1')}</td>
-          <td>a | b</td>
+          <td style="text-align:left">a | b</td>
         </tr>
       </table>
     </div>
