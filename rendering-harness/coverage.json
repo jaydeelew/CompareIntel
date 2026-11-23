@@ -33,9 +33,11 @@
     "google/gemini-3-pro-image",
     "google/gemini-3.1-flash-image",
     "google/gemini-nano-banana-2.1",
+    "microsoft/mai-image-2.7",
     "minimax/minimax-h3-image",
     "openai/gpt-5-image",
     "openai/gpt-5-image-mini",
+    "openai/gpt-image-2.6-flare",
     "openai/gpt-image-2.6-sunburst",
     "qwen/qwen-image-2.1-pro",
     "sourceful/riverflow-v2-pro",
@@ -53,6 +55,26 @@
     {
       "modelId": "google/gemini-4-hydrogen",
       "reason": "Eight replies collected 2026-11-18. 02, 06 and 07 fail renderer DOM assertions (autolinks, mermaid fence, RTL, footnotes, nested fences, bare URLs); 05 hit the 2048 cap; 08 swallows text around a $3 poster price. Open renderer gaps."
+    },
+    {
+      "modelId": "google/gemini-4-neon",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+    },
+    {
+      "modelId": "openai/gpt-6.2-astra",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+    },
+    {
+      "modelId": "openai/gpt-6.2-astra-pro",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+    },
+    {
+      "modelId": "openai/gpt-6.2-sol",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+    },
+    {
+      "modelId": "openai/gpt-6.2-sol-pro",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
     },
     {
       "modelId": "qwen/qwen4-max",
@@ -642,108 +664,6 @@
         "replyPath": null
       }
     },
-    "google/gemini-3-flash-preview": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-07/google_gemini-3-flash-preview_06-edge-cases-boundaries.json"
-      },
-      "07-rare-formats": {
-        "status": "not-covered",
-        "replyPath": null
-      },
-      "08-casual-prose": {
-        "status": "not-covered",
-        "replyPath": null
-      }
-    },
-    "google/gemini-3.1-flash-lite-preview": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-03/google_gemini-3.1-flash-lite-preview_06-edge-cases-boundaries.json"
-      },
-      "07-rare-formats": {
-        "status": "not-covered",
-        "replyPath": null
-      },
-      "08-casual-prose": {
-        "status": "not-covered",
-        "replyPath": null
-      }
-    },
-    "google/gemini-3.1-pro-preview": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-11/google_gemini-3.1-pro-preview_06-edge-cases-boundaries.json"
-      },
-      "07-rare-formats": {
-        "status": "not-covered",
-        "replyPath": null
-      },
-      "08-casual-prose": {
-        "status": "not-covered",
-        "replyPath": null
-      }
-    },
     "google/gemini-3.6-flash": {
       "01-math-basics": {
         "status": "pass",
@@ -914,30 +834,30 @@
         "replyPath": "runs/2026-11-18-pr274/google_gemini-4-hydrogen_08-casual-prose.json"
       }
     },
-    "google/gemma-3-27b-it": {
+    "google/gemini-4-neon": {
       "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_01-math-basics.json"
+        "status": "not-covered",
+        "replyPath": null
       },
       "02-markdown-formatting": {
         "status": "not-covered",
-        "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_02-markdown-formatting.json"
+        "replyPath": null
       },
       "03-code-blocks": {
         "status": "not-covered",
-        "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_03-code-blocks.json"
+        "replyPath": null
       },
       "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_04-mixed-markdown-latex.json"
+        "status": "not-covered",
+        "replyPath": null
       },
       "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_05-complex-scenarios.json"
+        "status": "not-covered",
+        "replyPath": null
       },
       "06-edge-cases-boundaries": {
         "status": "not-covered",
-        "replyPath": "runs/2026-11-08-01/google_gemma-3-27b-it_06-edge-cases-boundaries.json"
+        "replyPath": null
       },
       "07-rare-formats": {
         "status": "not-covered",
@@ -1900,40 +1820,6 @@
         "replyPath": null
       }
     },
-    "openai/gpt-6-astra": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-20a/openai_gpt-6-astra_06-edge-cases-boundaries.json"
-      },
-      "07-rare-formats": {
-        "status": "not-covered",
-        "replyPath": null
-      },
-      "08-casual-prose": {
-        "status": "not-covered",
-        "replyPath": null
-      }
-    },
     "openai/gpt-6-luna": {
       "01-math-basics": {
         "status": "pass",
@@ -1968,40 +1854,6 @@
         "replyPath": null
       }
     },
-    "openai/gpt-6.1-sol": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-16/openai_gpt-6.1-sol_06-edge-cases-boundaries.json"
-      },
-      "07-rare-formats": {
-        "status": "not-covered",
-        "replyPath": null
-      },
-      "08-casual-prose": {
-        "status": "not-covered",
-        "replyPath": null
-      }
-    },
     "openai/gpt-6.1-terra": {
       "01-math-basics": {
         "status": "pass",
@@ -2026,6 +1878,142 @@
       "06-edge-cases-boundaries": {
         "status": "not-covered",
         "replyPath": "runs/2026-11-08-14/openai_gpt-6.1-terra_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
+      }
+    },
+    "openai/gpt-6.2-astra": {
+      "01-math-basics": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "02-markdown-formatting": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "03-code-blocks": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "04-mixed-markdown-latex": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "05-complex-scenarios": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "06-edge-cases-boundaries": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
+      }
+    },
+    "openai/gpt-6.2-astra-pro": {
+      "01-math-basics": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "02-markdown-formatting": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "03-code-blocks": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "04-mixed-markdown-latex": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "05-complex-scenarios": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "06-edge-cases-boundaries": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
+      }
+    },
+    "openai/gpt-6.2-sol": {
+      "01-math-basics": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "02-markdown-formatting": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "03-code-blocks": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "04-mixed-markdown-latex": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "05-complex-scenarios": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "06-edge-cases-boundaries": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
+      }
+    },
+    "openai/gpt-6.2-sol-pro": {
+      "01-math-basics": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "02-markdown-formatting": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "03-code-blocks": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "04-mixed-markdown-latex": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "05-complex-scenarios": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "06-edge-cases-boundaries": {
+        "status": "not-covered",
+        "replyPath": null
       },
       "07-rare-formats": {
         "status": "not-covered",
@@ -2888,16 +2876,16 @@
     }
   },
   "totals": {
-    "registryModels": 101,
-    "textModels": 83,
-    "imageModels": 18,
-    "allowlisted": 5,
-    "cells": 664,
-    "pass": 247,
-    "notCovered": 400,
+    "registryModels": 102,
+    "textModels": 82,
+    "imageModels": 20,
+    "allowlisted": 10,
+    "cells": 656,
+    "pass": 229,
+    "notCovered": 410,
     "fail": 13,
     "incomplete": 4,
     "sourceIssue": 0,
-    "missing": 156
+    "missing": 184
   }
 }

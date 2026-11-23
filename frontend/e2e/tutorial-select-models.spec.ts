@@ -38,8 +38,8 @@ const MOCK_MODELS = {
   Anthropic: [mockModel('anthropic/claude-sonnet-5.5', 'Claude Sonnet 5.5', 'Anthropic')],
   OpenAI: [mockModel('openai/gpt-5.2', 'GPT-5.2', 'OpenAI')],
   Google: [
-    mockModel('google/gemma-3-27b-it', 'Gemma 3 27B It', 'Google'),
-    mockModel('google/gemini-3.1-flash-lite-preview', 'Gemini 3.1 Flash Lite Preview', 'Google'),
+    mockModel('google/gemma-4-31b-it', 'Gemma 4 31B It', 'Google'),
+    mockModel('google/gemini-3.8-flash', 'Gemini 3.8 Flash', 'Google'),
     mockModel('google/gemini-2.5-flash', 'Gemini 2.5 Flash', 'Google'),
   ],
   DeepSeek: [

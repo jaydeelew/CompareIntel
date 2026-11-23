@@ -396,28 +396,6 @@
         "returns_multiple_images": false
       },
       {
-        "id": "google/gemma-3-27b-it",
-        "name": "Gemma 3 27B It",
-        "description": "Gemma 3 introduces multimodality, supporting vision-language input and text outputs.",
-        "category": "Language",
-        "provider": "Google",
-        "supports_web_search": false,
-        "supports_image_generation": false,
-        "knowledge_cutoff": null,
-        "supports_vision_probed": true
-      },
-      {
-        "id": "google/gemini-3.1-flash-lite-preview",
-        "name": "Gemini 3.1 Flash Lite Preview",
-        "description": "Gemini 3.1 Flash Lite Preview is Google's high-efficiency model optimized for high-volume use cases.",
-        "category": "Language",
-        "provider": "Google",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "knowledge_cutoff": "January 2025",
-        "supports_vision_probed": true
-      },
-      {
         "id": "google/gemma-4-26b-a4b-it",
         "name": "Gemma 4 26B A4B It",
         "description": "Gemma 4 26B A4B IT is an instruction-tuned Mixture-of-Experts (MoE) model from Google DeepMind.",
@@ -530,16 +508,6 @@
         "supports_vision_probed": false
       },
       {
-        "id": "google/gemini-3-flash-preview",
-        "name": "Gemini 3 Flash Preview",
-        "description": "Gemini 3 Flash Preview is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance.",
-        "category": "Language",
-        "provider": "Google",
-        "supports_web_search": true,
-        "knowledge_cutoff": "August 2025",
-        "supports_vision_probed": true
-      },
-      {
         "id": "google/gemini-3-pro-image",
         "name": "Gemini 3 Pro Image",
         "description": "Nano Banana Pro is Google’s most advanced image-generation and editing model, built on Gemini 3 Pro.",
@@ -564,16 +532,6 @@
           "1K"
         ],
         "returns_multiple_images": true
-      },
-      {
-        "id": "google/gemini-3.1-pro-preview",
-        "name": "Gemini 3.1 Pro Preview",
-        "description": "Gemini 3.1 Pro Preview is Google’s frontier reasoning model, delivering enhanced software engineering performance, improved agentic reliability, and more efficient token usage across complex workflows.",
-        "category": "Language",
-        "provider": "Google",
-        "supports_web_search": true,
-        "knowledge_cutoff": "January 2025",
-        "supports_vision_probed": false
       },
       {
         "id": "google/gemini-4-argon",
@@ -601,6 +559,17 @@
         "id": "google/gemini-4-hydrogen",
         "name": "Gemini 4 Hydrogen",
         "description": "Gemini 4 Hydrogen is the high-efficiency workhorse model of the Gemini 4 family from Google, built for high-throughput agentic workflows, coding and multi-model routing at lower cost and latency.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "google/gemini-4-neon",
+        "name": "Gemini 4 Neon",
+        "description": "Gemini 4 Neon is a fast, mid-priced model in the Gemini 4 family from Google, built for coding and agentic work.",
         "category": "Language",
         "provider": "Google",
         "supports_web_search": true,
@@ -663,6 +632,32 @@
         "supports_web_search": false,
         "knowledge_cutoff": "June 2024",
         "supports_vision_probed": false
+      },
+      {
+        "id": "microsoft/mai-image-2.7",
+        "name": "Mai Image 2.7",
+        "description": "MAI-Image-2.7 is an image generation and editing model from Microsoft AI, the precision tier of the MAI-Image-2.7 family alongside the faster MAI-Image-2.7 Flash.",
+        "category": "Image",
+        "provider": "Microsoft",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "9:16",
+          "2:3",
+          "3:4",
+          "4:5",
+          "1:1",
+          "5:4",
+          "4:3",
+          "3:2",
+          "16:9",
+          "21:9"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ]
       }
     ],
     "Minimax": [
@@ -897,6 +892,32 @@
         ]
       },
       {
+        "id": "openai/gpt-image-2.6-flare",
+        "name": "Gpt Image 2.6 Flare",
+        "description": "GPT Image 2.6 Flare is OpenAI's image generation and editing model optimized for speed: fast iteration and interactive text-to-image and image-to-image workflows.",
+        "category": "Image",
+        "provider": "OpenAI",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": "N/A",
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ]
+      },
+      {
         "id": "openai/o3",
         "name": "o3",
         "description": "OpenAI's advanced reasoning model with state-of-the-art performance across math, science, and coding benchmarks.",
@@ -1019,31 +1040,53 @@
         "supports_vision_probed": true
       },
       {
-        "id": "openai/gpt-6.1-sol",
-        "name": "Gpt 6.1 Sol",
-        "description": "GPT-6.1 Sol is an upgrade to GPT-6 Sol from OpenAI, positioned below the flagship GPT-6 Astra in the GPT-6 series.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "is_thinking_model": true,
-        "knowledge_cutoff": null
-      },
-      {
-        "id": "openai/gpt-6-astra",
-        "name": "Gpt 6 Astra",
-        "description": "GPT-6 Astra is OpenAI's flagship model for demanding end-to-end work.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "is_thinking_model": true,
-        "knowledge_cutoff": null
-      },
-      {
         "id": "openai/gpt-6.1-terra",
         "name": "Gpt 6.1 Terra",
         "description": "GPT-6.1 Terra is the mid-tier model in OpenAI's GPT-6.1 series, priced below GPT-6.1 Sol.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-6.2-astra",
+        "name": "Gpt 6.2 Astra",
+        "description": "GPT-6.2 Astra is the flagship model in the GPT-6.2 series from OpenAI, built for the hardest projects.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-6.2-sol",
+        "name": "Gpt 6.2 Sol",
+        "description": "GPT-6.2 Sol is an upgrade to GPT-6.1 Sol from OpenAI, positioned below the flagship GPT-6.2 Astra in the GPT-6.2 series.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-6.2-astra-pro",
+        "name": "Gpt 6.2 Astra Pro",
+        "description": "GPT-6.2 Astra Pro is the same underlying model as GPT-6.2 Astra, served with `reasoning.mode` set to `pro` for higher-quality responses on complex tasks.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-6.2-sol-pro",
+        "name": "Gpt 6.2 Sol Pro",
+        "description": "GPT-6.2 Sol Pro is the same underlying model as GPT-6.2 Sol, served with `reasoning.mode` set to `pro` for higher-quality responses on complex tasks.",
         "category": "Language",
         "provider": "OpenAI",
         "supports_web_search": true,
@@ -1408,8 +1451,7 @@
     "deepseek/deepseek-v4.1-flash-1017",
     "google/gemini-2.5-flash",
     "google/gemini-2.5-flash-image",
-    "google/gemini-3.1-flash-lite-preview",
-    "google/gemma-3-27b-it",
+    "google/gemini-3.8-flash",
     "google/gemma-4-26b-a4b-it",
     "google/gemma-4-31b-it",
     "meta-llama/llama-4-scout",
@@ -1445,8 +1487,10 @@
     "google/gemini-3.1-flash-image",
     "google/gemini-nano-banana-2.1",
     "openai/gpt-image-2.6-sunburst",
+    "openai/gpt-image-2.6-flare",
     "qwen/qwen-image-2.1-pro",
-    "minimax/minimax-h3-image"
+    "minimax/minimax-h3-image",
+    "microsoft/mai-image-2.7"
   ],
   "free_tier_additional_models": [
     "anthropic/claude-haiku-4.5",

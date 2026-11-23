@@ -260,7 +260,7 @@ class TestConfigGenerator(unittest.TestCase):
             "needs_manual_review": False,
         }
 
-        config = self.generator.generate_config("google/gemma-3-27b-it", analysis)
+        config = self.generator.generate_config("google/gemma-4-31b-it", analysis)
         display_names = [item["name"] for item in config["displayMathDelimiters"]]
         inline_names = [item["name"] for item in config["inlineMathDelimiters"]]
 

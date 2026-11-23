@@ -381,9 +381,8 @@ MATH_SLUG_TO_MODEL_ID: dict[str, str] = {
 }
 
 # VALS model slug (e.g. google_gemini-3-pro-preview) -> our registry model_id
+# Gemini 3 preview leaderboard slugs are not aliased onto Gemini 4. Those models left the lineup.
 VALS_TO_MODEL_ID: dict[str, str] = {
-    "google_gemini-3-pro-preview": "google/gemini-3.1-pro-preview",
-    "google_gemini-3-flash-preview": "google/gemini-3-flash-preview",
     "openai_gpt-5-2025-08-07": "openai/gpt-5",
 }
 
@@ -543,7 +542,8 @@ def fetch_global_mmlu_scores() -> dict[str, tuple[float, str]]:
         GLOBAL_MMLU_URL,
         "Global-MMLU",
         "Global-MMLU (llmdb.com): {score}%.",
-        extra_slug_map={"gemma-3": "google/gemma-3-27b-it"},
+        # gemma-3 pointed at gemma-3-27b-it. That model left the lineup, and the
+        # slug is not aliased onto Gemma 4.
     )
 
 
@@ -731,13 +731,10 @@ def fetch_lmspeed_scores() -> dict[str, tuple[float, str]]:
 SWE_BENCH_PRO_SLUG_TO_MODEL_ID: dict[str, str] = {
     # Explicit rows where leaderboard label does not normalize to registry display name
     "claude-opus-4-6 (thinking)*": "anthropic/claude-opus-4.6",
-    "gemini-3.1-pro (thinking)*": "google/gemini-3.1-pro-preview",
-    "gemini-3-pro-preview": "google/gemini-3.1-pro-preview",
     "gpt-5-2025-08-07 (High)": "openai/gpt-5",
     "claude-4-5-haiku": "anthropic/claude-haiku-4.5",
     "qwen3-coder-480b-a35b": "qwen/qwen3-coder",
     "minimax-2.1": "minimax/minimax-m2.5",
-    "gemini-3-flash": "google/gemini-3-flash-preview",
     "gpt-5.2": "openai/gpt-5.2",
     "gpt-oss-120b": "openai/gpt-oss-120b",
     "claude-opus-5 (thinking)*": "anthropic/claude-opus-5",
@@ -839,7 +836,6 @@ def fetch_swe_bench_pro_scores() -> dict[str, tuple[float, str]]:
 
 
 MMLU_PRO_NAME_TO_MODEL_ID: dict[str, str] = {
-    "Gemini 3 Pro": "google/gemini-3.1-pro-preview",
     "Qwen 3.5": "qwen/qwen3.5-397b-a17b",
     "Claude Opus 5": "anthropic/claude-opus-5",
     "Grok 4.5": "x-ai/grok-4.5",
@@ -888,9 +884,6 @@ WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
     "Grok 4.1 Thinking": "x-ai/grok-4.20",
     "Grok 4.1": "x-ai/grok-4.20",
     "Grok 3 Preview 02 24": "x-ai/grok-3-mini",
-    "Gemini 3 Pro": "google/gemini-3.1-pro-preview",
-    "Gemini 3 Flash": "google/gemini-3-flash-preview",
-    "Gemini 3 Flash (thinking Minimal)": "google/gemini-3-flash-preview",
     "Claude Opus 5": "anthropic/claude-opus-5",
     "Grok 4.5": "x-ai/grok-4.5",
     "Kimi K3": "moonshotai/kimi-k3",
@@ -916,10 +909,6 @@ VISION_ARENA_SLUG_TO_MODEL_ID: dict[str, str] = {
     "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
     "grok-4.5": "x-ai/grok-4.5",
     "kimi-k3": "moonshotai/kimi-k3",
-    "gemini-3-pro": "google/gemini-3.1-pro-preview",
-    "gemini-3.1-pro-preview": "google/gemini-3.1-pro-preview",
-    "gemini-3-flash": "google/gemini-3-flash-preview",
-    "gemini-3-flash (thinking-minimal)": "google/gemini-3-flash-preview",
     "gemini-2.5-pro": "google/gemini-2.5-pro",
     "gemini-2.5-flash": "google/gemini-2.5-flash",
     "gemini-2.5-flash-preview-09-2025": "google/gemini-2.5-flash",
@@ -1244,7 +1233,6 @@ MRCR_NAME_TO_MODEL_ID: dict[str, str] = {
 
 # Awesome Agents long-context: model display name -> registry model_id
 AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID: dict[str, str] = {
-    "Gemini 3 Pro": "google/gemini-3.1-pro-preview",
     "Claude Opus 4.6": "anthropic/claude-opus-4.6",
     "GPT-5.2": "openai/gpt-5.2",
     "Claude Sonnet 4.6": "anthropic/claude-sonnet-4.6",

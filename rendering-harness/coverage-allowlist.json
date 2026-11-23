@@ -19,6 +19,26 @@
     {
       "modelId": "tencent/hy4-flash",
       "reason": "Eight replies collected 2026-11-18. 02 and 07 fail renderer DOM assertions; 06-edge-cases-boundaries and 08-casual-prose produced no visible text (reasoning-only, hit the 2048 cap). Open renderer gaps."
+    },
+    {
+      "modelId": "openai/gpt-6.2-astra",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+    },
+    {
+      "modelId": "openai/gpt-6.2-sol",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+    },
+    {
+      "modelId": "openai/gpt-6.2-astra-pro",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+    },
+    {
+      "modelId": "openai/gpt-6.2-sol-pro",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
+    },
+    {
+      "modelId": "google/gemini-4-neon",
+      "reason": "No OpenRouter API key in this environment, so the eight rendering-harness replies were not collected on 2026-11-23. Copying another model's replies onto this id would be false attribution."
     }
   ]
 }
