@@ -1,0 +1,36 @@
+{
+  "modelId": "meta-llama/llama-4-scout",
+  "modelName": "Llama 4 Scout",
+  "promptName": "08-casual-prose",
+  "promptText": "# Test Prompt: Casual Plain-Text Math\n\nA student texted you: why is tan(60°) equal to the square root of 3, and why is sin(60°) that same square root over 2? They also asked about a unit cube (the face diagonal and the space diagonal) and about an equilateral triangle with side length 2, whose height they think is the square root of 3.\n\nReply like a helpful tutor in an informal chat. Use ordinary sentences only. Do not use markdown, LaTeX dollar signs, backslash-paren delimiters, or any other special formatting — type the math the way you would in a plain text message. Please include the height, the two diagonals, tan(60°), and sin(60°) in those sentences.\n\nAlong the way, mention that a poster of the 30-60-90 triangle costs $3 plus $1.50 shipping, and that the same square-root value is what Python prints for math.sqrt(3).",
+  "response": "So you're wondering about some triangle and cube stuff. \n\nThe height of an equilateral triangle with side length 2 is actually sqrt(3), which is correct. \n\nThe tan(60°) being equal to sqrt(3) comes from the 30-60-90 triangle, where the side opposite the 60° angle is sqrt(3) and the side adjacent to it is 1. \n\nThe sin(60°) is sqrt(3)/2 because it's the ratio of that same side opposite the 60° angle, sqrt(3), to the hypotenuse, which is 2. \n\nBy the way, a poster of the 30-60-90 triangle is really helpful - I think I saw one for $3 plus $1.50 shipping.\n\nNow, about that unit cube: the face diagonal is sqrt(2) and the space diagonal is sqrt(3). \n\nIt's cool that sqrt(3) keeps showing up, and if you ever code in Python, you can see that math.sqrt(3) prints out that same value.",
+  "usage": {
+    "prompt_tokens": 214,
+    "completion_tokens": 215,
+    "total_tokens": 429,
+    "cost": 0.0000859,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0000859,
+      "upstream_inference_prompt_cost": 0.0000214,
+      "upstream_inference_completions_cost": 0.0000645
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0000859,
+  "actualCost": 0.0000859,
+  "timestamp": "2026-11-23T12:10:54.754Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

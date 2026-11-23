@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemini-3.1-flash-lite-preview",
+  "modelName": "Gemini 3.1 Flash Lite Preview",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "This response builds upon your structure, incorporating further mathematical analysis and formatting.\n\n## Extended Analysis: Calculus\nBuilding on your function $f(x) = x^2 + 2x + 1$, let's analyze its roots and local extrema.\n\n### Root Finding\nSince $f(x) = (x+1)^2$, the function has a **double root** at:\n$$x = -1$$\n\n### Critical Points\nTo find the critical point, we set the derivative to zero:\n$$f'(x) = 2x + 2 = 0 \\implies x = -1$$\nUsing the **second derivative test**, $f''(x) = 2$. Since $2 > 0$, the point $(-1, 0)$ is a *global minimum*.\n\n---\n\n## Matrix Operations\nWhen considering a transformation matrix $T$, we often look at the eigenvalues $\\lambda$ by solving the **characteristic equation**:\n$$\\det(A - \\lambda I) = 0$$\n\nFor a $2 \\times 2$ matrix, this simplifies to the quadratic form:\n$$\\lambda^2 - \\text{tr}(A)\\lambda + \\det(A) = 0$$\n\n- **Key takeaway**: The sum of eigenvalues equals the trace, and the product equals the determinant.\n\n---\n\n## Economic Application\n> **Refinement**: If the marginal cost $MC(q)$ is defined as the derivative of the total cost function $C(q)$, then for $C(q) = 100 + 5q$:\n> $$MC(q) = \\frac{d}{dq}(100 + 5q) = 5$$\n\n### Summary Table\n| Metric | Formula | Value for $C(q)$ |\n| :--- | :--- | :--- |\n| **Fixed Cost** | $C(0)$ | $100$ |\n| **Variable Cost** | $C(q) - C(0)$ | $5q$ |\n| **Average Cost** | $\\frac{C(q)}{q}$ | $\\frac{100}{q} + 5$ |\n\nIn the limit as production $q \\to \\infty$, the average cost approaches the **marginal cost**:\n$$\\lim_{q \\to \\infty} \\left( \\frac{100}{q} + 5 \\right) = 5$$",
+  "usage": {
+    "prompt_tokens": 318,
+    "completion_tokens": 512,
+    "total_tokens": 830,
+    "cost": 0.0008475,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0008475,
+      "upstream_inference_prompt_cost": 0.0000795,
+      "upstream_inference_completions_cost": 0.000768
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0008475,
+  "actualCost": 0.0008475,
+  "timestamp": "2026-11-23T12:08:25.620Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "STOP",
+  "error": null
+}

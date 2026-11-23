@@ -1,0 +1,36 @@
+{
+  "modelId": "meta-llama/llama-4-scout",
+  "modelName": "Llama 4 Scout",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "## Step 1: Analyze Scenario 1 for mathematical accuracy and formatting\nThe Pythagorean theorem is correctly stated as $a^2 + b^2 = c^2$. For a right triangle with sides $a=3$ and $b=4$, the calculation of $c$ is correct: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$. Therefore, $c = 5$ units, which is accurate.\n\n## Step 2: Examine Scenario 2 for correct table formatting and mathematical formulas\nThe table lists mathematical formulas with their LaTeX representations and results. The quadratic formula is correctly given as $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$. The sum of the first $n$ natural numbers is correctly represented as $\\frac{n(n+1)}{2}$. The product of the first $n$ natural numbers is correctly given as $n!$. All entries seem accurate.\n\n## Scenario 2 Mathematical Verification\n- The quadratic formula $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ is a standard formula for solving quadratic equations.\n- The sum $\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$ is correct.\n- The product $\\prod_{i=1}^{n} i = n!$ is correct.\n\n## Step 3: Evaluate Scenario 3 for correct code and mathematical application\nThe Python code calculates the area of a circle given its radius $r$ using the formula $A = \\pi r^2$. The code is correct:\n```python\nimport math\ndef circle_area(r):\n    return math.pi * r**2\nprint(f\"Area: {circle_area(5)}\")\n```\nThis will correctly output the area of a circle with radius $5$.\n\n## Scenario 3 Verification\nFor $r=5$, $A = \\pi (5)^2 = 25\\pi$. Using $\\pi \\approx 3.14159$, $A \\approx 25 \\times 3.14159 = 78.53975$. The code will output a similar value, confirming its correctness.\n\n## Step 4: Assess Scenario 4 for proper use of horizontal rules and mathematical content\nThe scenario demonstrates the use of a horizontal rule to separate sections. The mathematical content, $\\int_{0}^{1} x dx = \\frac{1}{2}$, is correct. This is a basic integral in calculus, which equals $\\left[\\frac{x^2}{2}\\right]_0^1 = \\frac{1^2}{2} - \\frac{0^2}{2} = \\frac{1}{2}$.\n\n## Scenario 4 Verification\nThe integral $\\int_{0}^{1} x dx = \\left[\\frac{x^2}{2}\\right]_0^1 = \\frac{1}{2}$ is correctly evaluated.\n\n## Step 5: Review Scenario 5 for accurate representation of prices and mathematical formulas\nThe scenario lists prices and a mathematical formula. The total cost is correctly calculated as $1,200 + 300 + 50 + 25 = 1,575$. The mathematical formula $f(x) = x^2$ is evaluated correctly as $f(5) = 5^2 = 25$.\n\n## Scenario 5 Verification\n- The total cost is $1,200 + 300 + 50 + 25 = 1,575$, which matches.\n- The formula $f(x) = x^2$ and its evaluation $f(5) = 25$ are correct.\n\nThe final answer is: $\\boxed{1}$",
+  "usage": {
+    "prompt_tokens": 419,
+    "completion_tokens": 773,
+    "total_tokens": 1192,
+    "cost": 0.0004107,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0004107,
+      "upstream_inference_prompt_cost": 0.00006285,
+      "upstream_inference_completions_cost": 0.00034785
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0004107,
+  "actualCost": 0.0004107,
+  "timestamp": "2026-11-23T12:10:36.668Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

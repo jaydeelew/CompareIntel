@@ -1,0 +1,36 @@
+{
+  "modelId": "google/gemma-4-31b-it",
+  "modelName": "Gemma 4 31B It",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "This is a high-quality example of mixed Markdown and LaTeX. Below is a similar response following your requested style, expanding on the concepts of **Calculus and Linear Algebra**.\n\n***\n\n## Advanced Problem Set\n**Exercise 2**: Consider the vector-valued function $\\vec{r}(t) = \\langle \\cos(t), \\sin(t), t \\rangle$. Find:\n\n1. The *velocity vector* $\\vec{v}(t)$\n2. The **magnitude** of the speed $\\|\\vec{v}(t)\\|$\n\n### Solution\nThe velocity vector is the derivative of the position vector:\n$$\\vec{v}(t) = \\frac{d\\vec{r}}{dt} = \\langle -\\sin(t), \\cos(t), 1 \\rangle$$\n\nTo find the speed, we calculate the norm:\n$$\\|\\vec{v}(t)\\| = \\sqrt{(-\\sin t)^2 + (\\cos t)^2 + 1^2} = \\sqrt{1 + 1} = \\sqrt{2}$$\n\n## Eigenvalues and Eigenvectors\nFor a square matrix $A$, we define the characteristic equation as:\n$$\\det(A - \\lambda I) = 0$$\n\nKey properties of eigenvalues $\\lambda$:\n- **Sum of Eigenvalues**: $\\sum \\lambda_i = \\text{tr}(A)$\n- **Product of Eigenvalues**: $\\prod \\lambda_i = \\det(A)$\n- **Algebraic Multiplicity**: The number of times a root $\\lambda$ appears in the characteristic polynomial.\n\n## Practical Application: Physics\n> **Tip**: In classical mechanics, the relationship between force, mass, and acceleration is governed by Newton's Second Law: $F = ma$.\n\nIf a constant force $F = 20\\text{N}$ is applied to a mass $m = 5\\text{kg}$, the acceleration is:\n$$a = \\frac{F}{m} = \\frac{20}{5} = 4\\text{m/s}^2$$",
+  "usage": {
+    "prompt_tokens": 330,
+    "completion_tokens": 437,
+    "total_tokens": 767,
+    "cost": 0.0001559,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0001559,
+      "upstream_inference_prompt_cost": 0.0001122,
+      "upstream_inference_completions_cost": 0.0000437
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0001559,
+  "actualCost": 0.0001559,
+  "timestamp": "2026-11-23T12:09:57.023Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

@@ -139,6 +139,8 @@ interface Candidate extends ReplyFile {
   fromRollup: boolean
   rollupStatus: CellStatus | null
   resultsStatus: CellStatus | null
+  /** Saved reply matches the current on-disk prompt hash (promptText / promptHash). */
+  matchesCurrentPrompt: boolean
 }
 
 export function isImageOnlyModel(model: RegistryModel): boolean {
@@ -378,11 +380,24 @@ function rankAgainst(next: Candidate, current: Candidate): number {
   const numeric: Array<[number, number]> = [
     [next.complete ? 1 : 0, current.complete ? 1 : 0],
     [
-      next.rollupStatus && next.rollupStatus !== 'incomplete' ? 1 : 0,
-      current.rollupStatus && current.rollupStatus !== 'incomplete' ? 1 : 0,
+      next.complete && next.matchesCurrentPrompt ? 1 : 0,
+      current.complete && current.matchesCurrentPrompt ? 1 : 0,
     ],
-    [next.fromRollup ? 1 : 0, current.fromRollup ? 1 : 0],
   ]
+  const bothCompleteOnCurrentPrompt =
+    next.complete &&
+    next.matchesCurrentPrompt &&
+    current.complete &&
+    current.matchesCurrentPrompt
+  if (!bothCompleteOnCurrentPrompt) {
+    numeric.push(
+      [
+        next.rollupStatus && next.rollupStatus !== 'incomplete' ? 1 : 0,
+        current.rollupStatus && current.rollupStatus !== 'incomplete' ? 1 : 0,
+      ],
+      [next.fromRollup ? 1 : 0, current.fromRollup ? 1 : 0]
+    )
+  }
   for (const [left, right] of numeric) {
     if (left !== right) return left - right
   }
@@ -448,7 +463,9 @@ export function buildCoverageFrom(harnessRoot: string, registry: Registry): Cove
     if (!PROMPTS.includes(cell.promptName as PromptName)) continue
     const resolved = resolveRollupReply(runsDir, cell)
     if (!resolved) continue
-    const data = readJson(resolved.absPath) as { response?: string | null }
+    const data = readJson(resolved.absPath) as Record<string, unknown> & {
+      response?: string | null
+    }
     const baseName = path.posix.basename(resolved.relPath)
     const candidate: Candidate = {
       absPath: resolved.absPath,
@@ -464,6 +481,11 @@ export function buildCoverageFrom(harnessRoot: string, registry: Registry): Cove
         resultsIndex.get(`${cell.modelId}::${cell.promptName}::${baseName}`) ||
         resultsIndex.get(`${cell.modelId}::${cell.promptName}`) ||
         null,
+      matchesCurrentPrompt: replyMatchesCurrentPrompt(
+        cell.promptName as PromptName,
+        data,
+        promptCatalog
+      ),
     }
     const key = `${candidate.modelId}::${candidate.promptName}`
     if (betterCandidate(candidate, byKey.get(key))) byKey.set(key, candidate)
@@ -471,6 +493,12 @@ export function buildCoverageFrom(harnessRoot: string, registry: Registry): Cove
 
   for (const file of scanReplyFiles(runsDir)) {
     const baseName = path.posix.basename(file.relPath)
+    let replyData: Record<string, unknown>
+    try {
+      replyData = readJson(file.absPath) as Record<string, unknown>
+    } catch {
+      continue
+    }
     const candidate: Candidate = {
       ...file,
       overlayKey: file.batchKey,
@@ -480,6 +508,11 @@ export function buildCoverageFrom(harnessRoot: string, registry: Registry): Cove
         resultsIndex.get(`${file.modelId}::${file.promptName}::${baseName}`) ||
         resultsIndex.get(`${file.modelId}::${file.promptName}`) ||
         null,
+      matchesCurrentPrompt: replyMatchesCurrentPrompt(
+        file.promptName as PromptName,
+        replyData,
+        promptCatalog
+      ),
     }
     const key = `${candidate.modelId}::${candidate.promptName}`
     if (betterCandidate(candidate, byKey.get(key))) byKey.set(key, candidate)

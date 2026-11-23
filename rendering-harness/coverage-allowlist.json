@@ -5,12 +5,40 @@
       "reason": "Eight replies collected 2026-11-18 on the 8-prompt baseline. 02 fails the DOM check (autolink <https://...> not linked); 06 fails mermaid-fence and RTL assertions; 07-rare-formats hit the 2048-token cap (finish_reason=length). Open renderer gaps, tracked in the PR274 8-prompt re-collection report."
     },
     {
+      "modelId": "anthropic/claude-haiku-4.5",
+      "reason": "Eight replies collected 2026-11-23 (weekly drift W48 group 0). 06-edge-cases-boundaries and 07-rare-formats fail renderer DOM checks: mermaid fence and RTL text (open gaps, same as 2026-11-18 allowlist); 07 also fails table column alignment (GFM :---: / ---: dropped by the renderer; fix in flight)."
+    },
+    {
       "modelId": "google/gemini-4-carbon",
       "reason": "Eight replies collected 2026-11-18. 02, 06 and 07 fail renderer DOM assertions (autolinks, mermaid fence, RTL, footnotes, nested fences, bare URLs); 04 has an unescaped-pipe table cell; 05 has clipped KaTeX in a table at 960px; 08-casual-prose produced no visible text (reasoning-only, hit the 2048 cap). Open renderer gaps, not collection gaps."
     },
     {
       "modelId": "google/gemini-4-hydrogen",
-      "reason": "Eight replies collected 2026-11-18. 02, 06 and 07 fail renderer DOM assertions (autolinks, mermaid fence, RTL, footnotes, nested fences, bare URLs); 05 hit the 2048 cap; 08 swallows text around a $3 poster price. Open renderer gaps."
+      "reason": "Re-collected on the current 8-prompt baseline 2026-11-23 (W48 group 0); prior 2026-11-18 collection on allowlist for comparison. 06 fails mermaid fence and RTL; 07 fails table alignment, mermaid, RTL, and (in the new truncated reply) cases environment and currency-beside-math assertions in the tail clipped at the 2048 cap. Renderer fixes are separate PRs."
+    },
+    {
+      "modelId": "google/gemini-2.5-pro",
+      "reason": "Eight drift replies collected 2026-11-23 (W48 group 0). 04, 05, 07, and 08 hit finish_reason=length at the 2048 cap (08 empty/reasoning-only); coverage keeps older complete replies for 04–05 where the new attempts truncated. 06 fails mermaid and RTL; 07 fails table alignment, mermaid, and currency-beside-math in the clipped tail. Open renderer and cap issues."
+    },
+    {
+      "modelId": "google/gemini-3-flash-preview",
+      "reason": "Eight drift replies collected 2026-11-23 (W48 group 0). 06 and 07 fail mermaid fence, RTL, and table alignment on 07 (renderer gaps; table alignment bug tracked separately)."
+    },
+    {
+      "modelId": "google/gemini-3.1-flash-lite-preview",
+      "reason": "Eight drift replies collected 2026-11-23 (W48 group 0). 06 and 07 fail mermaid fence, RTL, and table alignment on 07. 08-casual-prose is optional/not-covered for this model. Open renderer gaps."
+    },
+    {
+      "modelId": "google/gemma-4-31b-it",
+      "reason": "Eight drift replies collected 2026-11-23 (W48 group 0). 06 and 07 fail mermaid fence, RTL, and table alignment on 07. 08-casual-prose not-covered. Open renderer gaps."
+    },
+    {
+      "modelId": "meta-llama/llama-4-scout",
+      "reason": "Eight drift replies collected 2026-11-23 (W48 group 0). 06 and 07 fail mermaid fence, RTL, and table alignment on 07; 05-complex-scenarios not-covered for this model. Open renderer gaps."
+    },
+    {
+      "modelId": "mistralai/mistral-large-4-0",
+      "reason": "Eight drift replies collected 2026-11-23 (W48 group 0). 05-complex-scenarios and 06-edge-cases-boundaries truncated at the 2048 cap (05 fails code-blocks because the tail is an unclosed fence, not a renderer loss); coverage keeps the older complete 05 where the new attempt truncated. 07 fails table alignment, mermaid, and RTL. Open renderer gaps."
     },
     {
       "modelId": "qwen/qwen4-max",

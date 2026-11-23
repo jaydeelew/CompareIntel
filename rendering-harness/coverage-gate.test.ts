@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import { expect, test } from '@playwright/test'
 import {
   buildCoverage,
+  buildCoverageFrom,
   COLLECTION_OPTIONAL_PROMPTS,
   PROMPTS,
   collectCommand,
@@ -14,6 +15,7 @@ import {
   type CoverageManifest,
   type Registry,
 } from './coverage-lib.js'
+import { hashPromptText, loadPromptCatalog } from './prompt-catalog.js'
 import { contentExpectsKatex } from './render-ready.js'
 
 const harnessRoot = path.dirname(fileURLToPath(import.meta.url))
@@ -34,6 +36,67 @@ function writeReply(dir: string, modelId: string, promptName: string): string {
   )
   return replyPath
 }
+
+test('coverage ranking prefers current-hash complete reply over stale rollup', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-rank-'))
+  const modelId = 'test/rank-model'
+  const promptName = '01-math-basics'
+  fs.cpSync(path.join(harnessRoot, 'prompts'), path.join(root, 'prompts'), { recursive: true })
+  fs.writeFileSync(path.join(root, 'coverage-allowlist.json'), JSON.stringify({ entries: [] }))
+  const catalog = loadPromptCatalog(root)
+  const currentText = catalog.get(promptName)!.text
+  const staleText = `${currentText}\n<!-- stale revision -->`
+  const registry: Registry = {
+    models_by_provider: { Test: [{ id: modelId, category: 'Language' }] },
+  }
+  const fileName = `${modelId.replace(/\//g, '_')}_${promptName}.json`
+  const staleBatch = '2026-11-08-rollup-win'
+  const freshBatch = '2026-11-23-fresh'
+  fs.mkdirSync(path.join(root, 'runs', staleBatch), { recursive: true })
+  fs.mkdirSync(path.join(root, 'runs', freshBatch), { recursive: true })
+  fs.writeFileSync(
+    path.join(root, 'runs', staleBatch, fileName),
+    JSON.stringify({
+      modelId,
+      promptName,
+      promptText: staleText,
+      promptHash: hashPromptText(staleText),
+      response: 'Stale rollup-complete reply',
+      finishReason: 'stop',
+      truncated: false,
+    })
+  )
+  fs.writeFileSync(
+    path.join(root, 'runs', freshBatch, fileName),
+    JSON.stringify({
+      modelId,
+      promptName,
+      promptText: currentText,
+      promptHash: catalog.get(promptName)!.hash,
+      response: 'Fresh current-prompt reply',
+      finishReason: 'stop',
+      truncated: false,
+    })
+  )
+  fs.writeFileSync(
+    path.join(root, 'runs', staleBatch, 'unique-partial-fixture.json'),
+    JSON.stringify({
+      cells: [
+        {
+          batch: staleBatch,
+          modelId,
+          promptName,
+          validationStatus: 'pass',
+          sourceFile: fileName,
+        },
+      ],
+    })
+  )
+  const manifest = buildCoverageFrom(root, registry)
+  expect(manifest.models[modelId][promptName].replyPath).toBe(
+    path.posix.join('runs', freshBatch, fileName)
+  )
+})
 
 test('fake registry model with no fixtures fails and names the collect command', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-missing-'))
@@ -138,8 +201,15 @@ test('the current repo coverage gate passes', () => {
   expect(onDisk).toBe(stableManifest(manifest))
   expect(manifest.allowlist.map(entry => entry.modelId)).toEqual([
     'anthropic/claude-fable-5.2',
+    'anthropic/claude-haiku-4.5',
+    'google/gemini-2.5-pro',
+    'google/gemini-3-flash-preview',
+    'google/gemini-3.1-flash-lite-preview',
     'google/gemini-4-carbon',
     'google/gemini-4-hydrogen',
+    'google/gemma-4-31b-it',
+    'meta-llama/llama-4-scout',
+    'mistralai/mistral-large-4-0',
     'qwen/qwen4-max',
     'tencent/hy4-flash',
   ])
@@ -159,8 +229,8 @@ test('the current repo coverage gate passes', () => {
   expect(result.missingModels).toEqual([])
   expect(result.badCells).toEqual([])
   expect(result.ok).toBe(true)
-  // 13 renderer-fail cells, all on the five allowlisted 2026-11-18 re-collection models (see allowlist reasons).
-  expect(manifest.totals.fail).toBe(13)
+  // 24 renderer-fail/incomplete-gated cells, all on allowlisted models (2026-11-18 re-collection + 2026-W48 drift group 0).
+  expect(manifest.totals.fail).toBe(24)
   const allow = new Set(manifest.allowlist.map(entry => entry.modelId))
   for (const [modelId, row] of Object.entries(manifest.models)) {
     if (allow.has(modelId)) continue
