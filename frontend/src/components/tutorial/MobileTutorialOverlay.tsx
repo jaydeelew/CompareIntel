@@ -30,7 +30,6 @@ import {
   scrollTutorialRectToCenter,
   seatPortaledFollowUpComposer,
   TUTORIAL_FRAME_OUTSET_PX,
-  visibleViewportHeight,
   type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
 import {
@@ -1290,24 +1289,36 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   // Step 7 seats the composer, then a deferred results scroll can pin that tall
   // section to the top and leave the field below the iPhone viewport. Pull it
-  // back until it has stayed on screen; after that a user may scroll the results.
+  // back until it has stayed on screen. A later scroll that moves the page is
+  // the user's: leave the composer where they put it so the scroll-back hint
+  // can take over. The keyboard shrinks the visual viewport and must not count.
   useEffect(() => {
     if (step !== 'follow-up') return
     let stableSince = 0
     let intervalId = 0
+    let seatedTop: number | null = null
     const started = performance.now()
     const bringComposerBack = () => {
       if (stepRef.current !== 'follow-up' || performance.now() - started > 15000) {
         window.clearInterval(intervalId)
         return
       }
+      const scrollTop = getTutorialScrollRoot().getScrollTop()
       const composer = readPortaledFollowUpComposerRect()
-      const viewportHeight = visibleViewportHeight()
+      const viewportHeight = window.innerHeight
       const onScreen =
-        composer != null && composer.top >= 12 && composer.bottom <= viewportHeight - 24
+        composer != null &&
+        composer.height > 20 &&
+        composer.top < viewportHeight - 1 &&
+        composer.bottom > 1
       if (onScreen) {
+        seatedTop = scrollTop
         if (stableSince === 0) stableSince = performance.now()
         if (performance.now() - stableSince > 4000) window.clearInterval(intervalId)
+        return
+      }
+      if (seatedTop != null && Math.abs(scrollTop - seatedTop) > 24) {
+        window.clearInterval(intervalId)
         return
       }
       stableSince = 0
@@ -1316,6 +1327,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         arrowSize: MOBILE_TUTORIAL_ARROW_PX,
         preferred: 'below',
       })
+      seatedTop = getTutorialScrollRoot().getScrollTop()
     }
     intervalId = window.setInterval(bringComposerBack, 200)
     return () => window.clearInterval(intervalId)
