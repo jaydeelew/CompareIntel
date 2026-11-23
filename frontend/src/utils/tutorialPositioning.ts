@@ -367,6 +367,44 @@ export function visibleViewportHeight(): number {
   return Math.min(layout, visual)
 }
 
+export type ScrollBackDirection = 'up' | 'down'
+
+export interface VerticalBox {
+  top: number
+  bottom: number
+  width: number
+  height: number
+}
+
+function fullyOutsideLayoutViewport(
+  box: VerticalBox,
+  viewportHeight: number
+): ScrollBackDirection | null {
+  if (box.width < 2 || box.height < 2) return null
+  if (box.bottom <= 1) return 'up'
+  if (box.top >= viewportHeight - 1) return 'down'
+  return null
+}
+
+/**
+ * Scroll-back hint when the spotlight and the tooltip are both fully outside the
+ * layout viewport. The visual viewport shrinks when the keyboard opens and must
+ * not count. Once the hint is showing, it stays until the spotlight intersects
+ * the layout viewport again, even if the tooltip has unmounted.
+ */
+export function scrollBackDirectionForTarget(
+  target: VerticalBox | null,
+  tooltip: VerticalBox | null,
+  alreadyShowing: boolean
+): ScrollBackDirection | null {
+  if (typeof window === 'undefined' || !target) return null
+  const targetOff = fullyOutsideLayoutViewport(target, window.innerHeight)
+  if (!targetOff) return null
+  if (alreadyShowing) return targetOff
+  if (!tooltip || !fullyOutsideLayoutViewport(tooltip, window.innerHeight)) return null
+  return targetOff
+}
+
 /** Scroll the below-results composer into place. Does nothing while it is still in the hero. */
 export function scrollFollowUpHighlightIntoView(options: FollowUpScrollOptions): void {
   const composer = readPortaledFollowUpComposerRect()
