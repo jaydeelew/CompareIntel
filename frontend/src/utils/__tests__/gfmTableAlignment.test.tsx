@@ -39,10 +39,7 @@ describe('GFM table column alignment', () => {
     const ref = signatureFromHtml(renderReferenceHtml(SECTION))
     const actual = signatureFromElement(renderSection())
     const { pass, diffs } = compareSignatures(ref, actual)
-    expect(
-      diffs,
-      diffs.map(d => `${d.field}: ${JSON.stringify(d.actual)}`).join('\n')
-    ).toEqual([])
+    expect(diffs, diffs.map(d => `${d.field}: ${JSON.stringify(d.actual)}`).join('\n')).toEqual([])
     expect(pass).toBe(true)
   })
 
@@ -64,9 +61,9 @@ describe('GFM table column alignment', () => {
       'a | b',
     ])
 
-    const tex = Array.from(
-      el.querySelectorAll('annotation[encoding="application/x-tex"]')
-    ).map(n => n.textContent?.trim())
+    const tex = Array.from(el.querySelectorAll('annotation[encoding="application/x-tex"]')).map(n =>
+      n.textContent?.trim()
+    )
     expect(tex).toEqual(['\\alpha', 'x^2', '1'])
 
     const aligns = cells.map(c => {
