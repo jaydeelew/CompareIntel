@@ -1,4 +1,3 @@
-
 import { test, expect } from '@playwright/test'
 
 import {
@@ -129,12 +128,12 @@ test.describe('Onboarding tutorial full run (split model steps)', () => {
     await clickTutorialDoneButton(page, testInfo)
 
     await expectTutorialStepTitle(page, 'Access Your History')
-    await page.getByRole('button', { name: 'Load previous conversations' }).first().click()
+    await page.locator('[data-after-results-composer-slot] .history-toggle-button').click()
     await expect(page.locator('.history-inline-list').first()).toBeVisible({ timeout: 15000 })
     await clickTutorialDoneButton(page, testInfo)
 
     await expectTutorialStepTitle(page, 'Save Model Selections')
-    await page.getByRole('button', { name: 'Save or load model selections' }).first().click()
+    await page.locator('[data-after-results-composer-slot] .saved-selections-button').click()
     await expect(page.getByTestId('saved-selections-dropdown').first()).toBeVisible({
       timeout: 15000,
     })

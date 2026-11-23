@@ -67,6 +67,28 @@ export function computeDropdownCutout(
   return computeRectUnion(allRects, padding)
 }
 
+/** Blue frame for the last tutorial step: the visible bookmark button, plus its panel once open. */
+export function computeSavedSelectionCutout(padding = 8): RectCutout | null {
+  const frame = readSavedSelectionSpotlightRect(getComposerElement())
+  if (!frame) return null
+  return {
+    top: frame.top - padding,
+    left: frame.left - padding,
+    width: frame.width + padding * 2,
+    height: frame.height + padding * 2,
+  }
+}
+
+function readSavedSelectionSpotlightRect(composer: HTMLElement | null): DOMRect | null {
+  if (!composer) return null
+  const button = composer.querySelector('.saved-selections-button')
+  if (!button) return null
+  const rects = [button.getBoundingClientRect()]
+  const panel = composer.querySelector('.saved-selections-dropdown')
+  if (panel) rects.push(panel.getBoundingClientRect())
+  return unionViewportRects(rects)
+}
+
 export function computeButtonCutout(buttonElement: HTMLElement): ButtonCutout {
   const rect = buttonElement.getBoundingClientRect()
   const centerX = rect.left + rect.width / 2
@@ -199,6 +221,52 @@ export function scrollTutorialRectToCenter(rect: { top: number; height: number }
   root.scrollToTop(nextTop, 'auto')
 }
 
+const SCROLL_TAIL_ATTR = 'data-tutorial-scroll-tail'
+
+/**
+ * History and saved selections sit at the end of the page. Extra padding lets
+ * scrollTutorialRectToCenter place them in the vertical middle, the same way
+ * earlier steps center a target that still has room below it.
+ */
+export function ensureTutorialScrollTail(rect: { top: number; height: number }): void {
+  const scroller = tutorialPageScroller()
+  const viewH = window.innerHeight
+  const margin = 16
+  const desiredTop =
+    rect.height >= viewH - margin * 2 ? margin : Math.max(margin, (viewH - rect.height) / 2)
+  const existing = Number(scroller.getAttribute(SCROLL_TAIL_ATTR) || '0')
+  const documentTop = scroller.scrollTop + rect.top
+  const desiredScroll = documentTop - desiredTop
+  const maxWithoutTail = Math.max(0, scroller.scrollHeight - existing - scroller.clientHeight)
+  const next = Math.max(0, Math.ceil(desiredScroll - maxWithoutTail))
+  if (next <= 0) {
+    if (existing > 0) clearTutorialScrollTail()
+    return
+  }
+  if (Math.abs(next - existing) < 1) return
+  scroller.setAttribute(SCROLL_TAIL_ATTR, String(next))
+  scroller.style.paddingBottom = `${next}px`
+}
+
+export function clearTutorialScrollTail(): void {
+  const nodes = new Set<HTMLElement>()
+  nodes.add(tutorialPageScroller())
+  const app = document.querySelector('.app')
+  if (app instanceof HTMLElement) nodes.add(app)
+  for (const node of nodes) {
+    if (!node.hasAttribute(SCROLL_TAIL_ATTR)) continue
+    node.style.paddingBottom = ''
+    node.removeAttribute(SCROLL_TAIL_ATTR)
+  }
+}
+
+export function centerTutorialStepRect(step: string, rect: { top: number; height: number }): void {
+  if (step === 'history-dropdown' || step === 'save-selection') {
+    ensureTutorialScrollTail(rect)
+  }
+  scrollTutorialRectToCenter(rect)
+}
+
 export interface TooltipBoxPlacement {
   /** Viewport Y of the tooltip box's top edge. */
   top: number
@@ -320,13 +388,12 @@ export function readTutorialSpotlightRect(
     }
     const composer = getComposerElement()
     if (!composer) return null
+    if (step === 'save-selection') {
+      return readSavedSelectionSpotlightRect(composer)
+    }
     const parts = getComposerCutoutRects(composer)
     if (step === 'history-dropdown') {
       const panel = composer.querySelector('.history-inline-list')
-      if (panel) parts.push(panel.getBoundingClientRect())
-    }
-    if (step === 'save-selection') {
-      const panel = composer.querySelector('.saved-selections-dropdown')
       if (panel) parts.push(panel.getBoundingClientRect())
     }
     return unionViewportRects(parts)
@@ -564,6 +631,35 @@ export interface TutorialProviderStepLayout {
   layoutRect: DOMRect | null
 }
 
+function tutorialTargetModelIds(): string[] {
+  if (typeof document === 'undefined') return []
+  return (document.documentElement.getAttribute('data-tutorial-target-models') ?? '')
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean)
+}
+
+/**
+ * When a provider lists more models than the step asks for, frame those model
+ * rows. A filtered list (one row per target) keeps the whole provider card.
+ */
+function frameTutorialModelRows(dropdowns: HTMLElement[]): HTMLElement[] {
+  const ids = tutorialTargetModelIds()
+  if (ids.length === 0) return dropdowns
+  const rows: HTMLElement[] = []
+  let optionCount = 0
+  for (const dropdown of dropdowns) {
+    optionCount += dropdown.querySelectorAll('.model-option').length
+    for (const id of ids) {
+      const checkbox = dropdown.querySelector(`#${CSS.escape(`model-checkbox-${id}`)}`)
+      const row = checkbox?.closest('.model-option')
+      if (row instanceof HTMLElement && !rows.includes(row)) rows.push(row)
+    }
+  }
+  if (rows.length === 0 || optionCount <= rows.length) return dropdowns
+  return rows
+}
+
 /** Layout for tutorial provider steps (step 1 = first provider; step 2 = union of all tutorial providers). */
 export function getTutorialProviderStepLayout(
   step: TutorialProviderLayoutStep,
@@ -573,22 +669,23 @@ export function getTutorialProviderStepLayout(
   if (dropdowns.length === 0) {
     return { anchor: null, highlights: [], layoutRect: null }
   }
-  if (step === 'select-models') {
+  if (
+    step === 'select-models' ||
+    step === 'select-starter-model-1' ||
+    step === 'select-starter-model-2'
+  ) {
+    const pool = step === 'select-models' ? dropdowns : [dropdowns[0]]
+    const highlights = frameTutorialModelRows(pool)
+    const anchor = highlights[0] ?? dropdowns[0]
     return {
-      anchor: dropdowns[0],
-      highlights: dropdowns,
-      layoutRect: getUnionClientRect(dropdowns),
+      anchor,
+      highlights,
+      layoutRect:
+        highlights.length > 1 ? getUnionClientRect(highlights) : anchor.getBoundingClientRect(),
     }
   }
   const primary = dropdowns[0]
   const header = primary.querySelector('.provider-header') as HTMLElement | null
-  if (step === 'select-starter-model-1' || step === 'select-starter-model-2') {
-    return {
-      anchor: primary,
-      highlights: [primary],
-      layoutRect: primary.getBoundingClientRect(),
-    }
-  }
   const anchor =
     step === 'expand-provider' || step === 'expand-starter-provider-2'
       ? (header ?? primary)

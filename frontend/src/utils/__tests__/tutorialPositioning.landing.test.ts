@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  clearTutorialScrollTail,
+  ensureTutorialScrollTail,
   focusFollowUpComposerTextarea,
   landOnFollowUpComposerAfterTutorial,
 } from '../tutorialPositioning'
@@ -20,6 +22,23 @@ describe('tutorialPositioning post-tutorial landing', () => {
   afterEach(() => {
     document.body.innerHTML = ''
     vi.restoreAllMocks()
+  })
+
+  it('adds bottom padding so a target at the end of the page can be centered', () => {
+    Object.defineProperty(app, 'scrollHeight', { value: 1600, configurable: true })
+    Object.defineProperty(app, 'clientHeight', { value: 800, configurable: true })
+    Object.defineProperty(app, 'scrollTop', { value: 800, configurable: true })
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(800)
+
+    ensureTutorialScrollTail({ top: 640, height: 120 })
+
+    const tail = Number(app.getAttribute('data-tutorial-scroll-tail'))
+    expect(tail).toBeGreaterThan(200)
+    expect(app.style.paddingBottom).toBe(`${tail}px`)
+
+    clearTutorialScrollTail()
+    expect(app.hasAttribute('data-tutorial-scroll-tail')).toBe(false)
+    expect(app.style.paddingBottom).toBe('')
   })
 
   it('focusFollowUpComposerTextarea prefers the below-results composer textarea', () => {

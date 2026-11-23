@@ -6,7 +6,7 @@
  * sync, scroll-to behavior, and misc UI coordination.
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 
 import type { ConversationSummary, ModelConversation } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
@@ -180,6 +180,17 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
       return () => clearTimeout(t)
     }
   }, [showWelcomeModal, isTouchDevice, currentView, tutorialState.isActive, attemptFocusTextarea])
+
+  // History step starts collapsed. A list left open from an earlier click would
+  // sit at the bottom of the page with the tutorial card.
+  const prevTutorialStepRef = useRef(tutorialState.currentStep)
+  useLayoutEffect(() => {
+    const step = tutorialState.currentStep
+    if (step === 'history-dropdown' && prevTutorialStepRef.current !== 'history-dropdown') {
+      setShowHistoryDropdown(false)
+    }
+    prevTutorialStepRef.current = step
+  }, [tutorialState.currentStep, setShowHistoryDropdown])
 
   // History dropdown close on outside click
   useEffect(() => {

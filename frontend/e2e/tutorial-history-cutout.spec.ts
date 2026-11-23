@@ -120,14 +120,81 @@ async function toggleHistory(page: Page): Promise<void> {
   })
 }
 
+async function verticalCenterReason(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const cutouts = Array.from(
+      document.querySelectorAll('.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout')
+    )
+      .map(el => el.getBoundingClientRect())
+      .filter(rect => rect.width > 2 && rect.height > 2)
+    const cutout = cutouts[0]
+    if (!cutout) return 'no cutout'
+    const offset = Math.abs(cutout.top + cutout.height / 2 - window.innerHeight / 2)
+    if (cutout.height > window.innerHeight * 0.65) return 'ok'
+    if (offset > 80) return `centerOffset ${Math.round(offset)}`
+    return 'ok'
+  })
+}
+
+async function saveButtonCutoutReason(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const button = (document.querySelector(
+      '[data-after-results-composer-slot] .saved-selections-button'
+    ) ?? document.querySelector('.saved-selections-button')) as HTMLElement | null
+    if (!button) return 'button missing'
+    const highlighted =
+      button.classList.contains('tutorial-highlight') ||
+      button.classList.contains('mobile-tutorial-highlight') ||
+      button.classList.contains('mobile-tutorial-button-pulsate')
+    if (!highlighted) return 'button not highlighted'
+    const rect = button.getBoundingClientRect()
+    const outset = 8
+    const tolerance = 8
+    const cutouts = Array.from(
+      document.querySelectorAll('.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout')
+    )
+      .map(el => el.getBoundingClientRect())
+      .filter(cutout => cutout.width > 2 && cutout.height > 2)
+    const matched = cutouts.some(
+      cutout =>
+        Math.abs(cutout.top - (rect.top - outset)) <= tolerance &&
+        Math.abs(cutout.left - (rect.left - outset)) <= tolerance &&
+        Math.abs(cutout.bottom - (rect.bottom + outset)) <= tolerance &&
+        Math.abs(cutout.right - (rect.right + outset)) <= tolerance
+    )
+    if (!matched) {
+      const nearest = cutouts[0]
+      return nearest
+        ? `cutout ${Math.round(nearest.top)}..${Math.round(nearest.bottom)} button ${Math.round(rect.top)}..${Math.round(rect.bottom)}`
+        : 'no cutout'
+    }
+    const arrow = document.querySelector(
+      '.mobile-tutorial-arrow, .tutorial-arrow'
+    ) as HTMLElement | null
+    if (!arrow) return 'missing arrow'
+    const arrowBox = arrow.getBoundingClientRect()
+    const pointsDown =
+      arrow.classList.contains('mobile-tutorial-arrow-down') ||
+      arrow.classList.contains('tutorial-arrow-top')
+    const tipY = pointsDown ? arrowBox.bottom : arrowBox.top
+    const gap = Math.min(
+      ...cutouts.map(cutout => Math.abs(tipY - (pointsDown ? cutout.top : cutout.bottom)))
+    )
+    if (gap > 6) return `arrow gap ${Math.round(gap)}`
+    const offset = Math.abs(rect.top + rect.height / 2 - window.innerHeight / 2)
+    if (offset > 80) return `centerOffset ${Math.round(offset)}`
+    return 'ok'
+  })
+}
+
 test('history cutout grows and shrinks with the dropdown', async ({ page }, testInfo) => {
   test.setTimeout(180_000)
   const project = testInfo.project.name
-  const mobileChromium =
-    project === 'Mobile Chrome - Pixel 5' && process.env.TUTORIAL_MOBILE_CHROMIUM === '1'
   test.skip(
-    project !== 'chromium' && project !== 'Mobile Safari - iPhone 12' && !mobileChromium,
-    'desktop, Mobile Safari, and opted-in mobile Chromium'
+    project !== 'chromium' &&
+      project !== 'Mobile Safari - iPhone 12' &&
+      project !== 'Mobile Chrome - Pixel 5',
+    'desktop, Mobile Safari, and mobile Chromium'
   )
   if (project === 'Mobile Chrome - Pixel 5') {
     await page.setViewportSize({ width: 393, height: 851 })
@@ -177,6 +244,43 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
     )
     .toBe('ready')
 
+  await expect
+    .poll(() => page.locator('[data-after-results-composer-slot] .history-inline-list').count(), {
+      timeout: 5_000,
+    })
+    .toBe(0)
+  await expect(tutorialTooltip(page).getByRole('button', { name: 'Done' })).toBeDisabled()
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const button =
+            document.querySelector(
+              '[data-after-results-composer-slot] .history-toggle-button'
+            ) ?? document.querySelector('.history-toggle-button')
+          if (!button) return 'missing toggle'
+          const highlighted =
+            button.classList.contains('tutorial-highlight') ||
+            button.classList.contains('mobile-tutorial-highlight') ||
+            button.classList.contains('mobile-tutorial-button-pulsate')
+          return highlighted ? 'ok' : 'toggle not highlighted'
+        }),
+      { timeout: 5_000, message: 'history toggle should be highlighted' }
+    )
+    .toBe('ok')
+  await expect
+    .poll(() => verticalCenterReason(page), {
+      timeout: 8_000,
+      message: 'history highlight should be vertically centered',
+    })
+    .toBe('ok')
+  await expect
+    .poll(() => historyCutoutReason(page, false), {
+      timeout: 2_000,
+      message: 'collapsed history should frame the composer',
+    })
+    .toBe('ok')
+
   await toggleHistory(page)
   await expect
     .poll(() => page.locator('.history-inline-list').count(), { timeout: 5_000 })
@@ -204,4 +308,16 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
     })
     .toBe('ok')
   await page.screenshot({ path: `${dir}/09-closed.png` })
+
+  await clickTutorialDoneButton(page, testInfo)
+  await expect(tutorialTooltip(page).first()).toContainText('Save Model Selections', {
+    timeout: 20_000,
+  })
+  await expect
+    .poll(() => saveButtonCutoutReason(page), {
+      timeout: 8_000,
+      message: 'saved selections button should be the centered highlight',
+    })
+    .toBe('ok')
+  await page.screenshot({ path: `${dir}/10-save.png` })
 })
