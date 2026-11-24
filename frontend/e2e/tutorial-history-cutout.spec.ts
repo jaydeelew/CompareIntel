@@ -178,9 +178,16 @@ interface SpotlightBoxes {
   bookmarkAnimation: string
   composerRadius: string
   composerShadow: string
+  composerBorderColor: string
+  composerOpacity: string
   cutoutWidth: number
   cutoutHeight: number
   cutoutRadius: string
+  cutoutBorderColor: string
+  cutoutShadow: string
+  cutoutOpacity: string
+  cutoutClass: string
+  fullBackdrop: boolean
   historyOpen: boolean
 }
 
@@ -219,6 +226,7 @@ async function readSpotlightBoxes(page: Page): Promise<SpotlightBoxes> {
     }) as HTMLElement | undefined
     const cutoutBox = cutout?.getBoundingClientRect()
     const composerStyle = composer ? getComputedStyle(composer) : null
+    const cutoutStyle = cutout ? getComputedStyle(cutout) : null
     const highlighted = (el: HTMLElement | null) =>
       !!el &&
       (el.classList.contains('tutorial-highlight') ||
@@ -241,9 +249,18 @@ async function readSpotlightBoxes(page: Page): Promise<SpotlightBoxes> {
       bookmarkAnimation: saved.animation,
       composerRadius: composerStyle?.borderRadius ?? '',
       composerShadow: composerStyle?.boxShadow ?? '',
+      composerBorderColor: composerStyle?.borderColor ?? '',
+      composerOpacity: composerStyle?.opacity ?? '',
       cutoutWidth: cutoutBox ? Math.round(cutoutBox.width) : 0,
       cutoutHeight: cutoutBox ? Math.round(cutoutBox.height) : 0,
-      cutoutRadius: cutout ? getComputedStyle(cutout).borderRadius : '',
+      cutoutRadius: cutoutStyle?.borderRadius ?? '',
+      cutoutBorderColor: cutoutStyle?.borderColor ?? '',
+      cutoutShadow: cutoutStyle?.boxShadow ?? '',
+      cutoutOpacity: cutoutStyle?.opacity ?? '',
+      cutoutClass: cutout?.className ?? '',
+      fullBackdrop: !!document.querySelector(
+        '.mobile-tutorial-backdrop, .tutorial-backdrop:not(.tutorial-backdrop-cutout)'
+      ),
       historyOpen: !!composer?.querySelector('.history-inline-list'),
     }
   })
@@ -264,6 +281,14 @@ function spotlightMismatch(before: SpotlightBoxes, after: SpotlightBoxes): strin
   if (before.historyAnimation !== after.bookmarkAnimation) return 'highlight glow changed'
   if (before.composerRadius !== after.composerRadius) return 'composer radius changed'
   if (before.composerShadow !== after.composerShadow) return 'composer glow changed'
+  if (before.composerBorderColor !== after.composerBorderColor) return 'composer border changed'
+  if (before.composerOpacity !== after.composerOpacity) return 'composer opacity changed'
+  if (before.cutoutBorderColor !== after.cutoutBorderColor) return 'composer ring border changed'
+  if (before.cutoutShadow !== after.cutoutShadow) return 'composer ring glow changed'
+  if (before.cutoutOpacity !== after.cutoutOpacity) return 'composer ring opacity changed'
+  if (before.cutoutClass !== after.cutoutClass) return 'composer ring class changed'
+  if (after.cutoutOpacity !== '1') return `composer ring faded (${after.cutoutOpacity})`
+  if (after.fullBackdrop) return 'dim overlay on composer ring'
   if (before.cutoutRadius !== after.cutoutRadius) return 'cutout radius changed'
   if (Math.abs(before.cutoutWidth - after.cutoutWidth) > 4) return 'cutout width changed'
   if (Math.abs(before.cutoutHeight - after.cutoutHeight) > 4) return 'cutout height changed'
