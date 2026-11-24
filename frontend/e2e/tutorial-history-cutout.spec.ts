@@ -110,6 +110,35 @@ async function historyCutoutReason(page: Page, open: boolean): Promise<string> {
   )
 }
 
+async function toggleSquareRingReason(page: Page, which: 'history' | 'bookmark'): Promise<string> {
+  return page.evaluate(target => {
+    const selector = target === 'history' ? '.history-toggle-button' : '.saved-selections-button'
+    const button = (document.querySelector(`[data-after-results-composer-slot] ${selector}`) ??
+      document.querySelector(selector)) as HTMLElement | null
+    if (!button) return 'missing toggle'
+    const highlighted =
+      button.classList.contains('tutorial-highlight') ||
+      button.classList.contains('mobile-tutorial-highlight')
+    if (!highlighted) return 'missing highlight class'
+    const shadow = getComputedStyle(button).boxShadow
+    if (!/0px 0px 0px 3px/.test(shadow)) return `no square ring (${shadow})`
+    if (button.offsetWidth !== 32 || button.offsetHeight !== 32) {
+      return `size ${button.offsetWidth}x${button.offsetHeight}`
+    }
+    if (target === 'bookmark') {
+      const history = (document.querySelector(
+        '[data-after-results-composer-slot] .history-toggle-button'
+      ) ?? document.querySelector('.history-toggle-button')) as HTMLElement | null
+      const historyOn =
+        !!history &&
+        (history.classList.contains('tutorial-highlight') ||
+          history.classList.contains('mobile-tutorial-highlight'))
+      if (historyOn) return 'history still highlighted'
+    }
+    return 'ok'
+  }, which)
+}
+
 async function toggleHistory(page: Page): Promise<void> {
   await page.evaluate(() => {
     const slotted = document.querySelector(
@@ -432,7 +461,7 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
   if (project === 'Mobile Chrome - Pixel 5') {
     await page.setViewportSize({ width: 393, height: 851 })
   } else if (!isMobileE2eProject(project)) {
-    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.setViewportSize({ width: 1003, height: 900 })
   }
 
   await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
@@ -547,6 +576,14 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
       { timeout: 2_000, message: 'open history toggle should stay highlighted' }
     )
     .toBe('ok')
+  if (project === 'chromium') {
+    await expect
+      .poll(() => toggleSquareRingReason(page, 'history'), {
+        timeout: 2_000,
+        message: 'desktop step 9 history toggle should keep the square ring while open',
+      })
+      .toBe('ok')
+  }
   await expect
     .poll(async () => pairAnchorShift(historyAnchor, await readPairAnchor(page)), {
       timeout: 2_000,
@@ -586,6 +623,14 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
   const step9Boxes = await readSpotlightBoxes(page)
   expect(step9Boxes.composerHighlighted).toBe(true)
   expect(step9Boxes.historyHighlighted).toBe(true)
+  if (project === 'chromium') {
+    await expect
+      .poll(() => toggleSquareRingReason(page, 'history'), {
+        timeout: 2_000,
+        message: 'desktop step 9 history toggle should keep the square ring',
+      })
+      .toBe('ok')
+  }
 
   await clickTutorialDoneButton(page, testInfo)
   await expect(tutorialTooltip(page).first()).toContainText('Save Model Selections', {
@@ -604,6 +649,14 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
       message: 'step 10 bookmark highlight should match the step 9 history toggle',
     })
     .toBe('ok')
+  if (project === 'chromium') {
+    await expect
+      .poll(() => toggleSquareRingReason(page, 'bookmark'), {
+        timeout: 2_000,
+        message: 'desktop step 10 bookmark should keep the square ring',
+      })
+      .toBe('ok')
+  }
   const saveAnchor = await readPairAnchor(page)
   await page.screenshot({ path: `${dir}/10-save.png` })
 

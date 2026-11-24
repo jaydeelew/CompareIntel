@@ -785,6 +785,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         !mirror &&
         tutorialIsActive &&
         (tutorialStep === 'history-dropdown' || tutorialStep === 'save-selection')
+      // React owns this class. Adding it with classList and letting the next
+      // render strip it restarts the floating composer's 20px entrance.
+      const followUpComposerSpotlight =
+        !mirror && tutorialIsActive && isMobileLayout && tutorialStep === 'follow-up'
       const historyToggleSpotlight =
         !mirror && tutorialIsActive && tutorialStep === 'history-dropdown'
       const saveButtonSpotlight = !mirror && tutorialIsActive && tutorialStep === 'save-selection'
@@ -810,7 +814,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         isAnimatingTextarea && !mirror ? 'animate-pulse-border' : '',
         composerDemoPauseHighlight && !mirror ? 'composer-demo-pause-highlight' : '',
         composerFloating && !mirror ? 'composer-floating' : '',
-        spotlightClass(historyComposerSpotlight),
+        spotlightClass(historyComposerSpotlight || followUpComposerSpotlight),
         historyComposerSpotlight ? 'tutorial-dropdown-container-active' : '',
         lockHistoryPrompt ? 'tutorial-history-input-locked' : '',
       ]
@@ -1379,6 +1383,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           onNewComparison={onNewComparison}
           modelsSectionRef={modelsSectionRef}
           onOpenHelpMeChoose={onOpenHelpMeChoose}
+          interactive={false}
         />
         {composerContentMirror}
         {buildUsageAndContextBelowComposer(composerFloating)}

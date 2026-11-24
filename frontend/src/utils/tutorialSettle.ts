@@ -363,6 +363,46 @@ export function waitForTutorialLayoutSettle(options?: {
 }
 
 /**
+ * Resolves once `frames` consecutive layout reads match. The success condition
+ * is the box itself. `timeoutMs` only fires when the box never settles. An
+ * interval is used because WebKit does not run requestAnimationFrame while a
+ * test is blocked on the next sample.
+ */
+export function waitForRectFrames(
+  read: () => { top: number; left?: number; height: number } | null,
+  options?: { timeoutMs?: number; frames?: number }
+): Promise<void> {
+  const timeoutMs = options?.timeoutMs ?? 800
+  const frames = options?.frames ?? 2
+  return new Promise(resolve => {
+    const start = performance.now()
+    let previous: { top: number; left: number; height: number } | null = null
+    let matched = 0
+    const timer = window.setInterval(() => {
+      const timedOut = performance.now() - start >= timeoutMs
+      const next = read()
+      if (!next) {
+        matched = 0
+        previous = null
+      } else {
+        const box = { top: next.top, left: next.left ?? 0, height: next.height }
+        const same =
+          previous != null &&
+          Math.abs(box.top - previous.top) <= 0.5 &&
+          Math.abs(box.left - previous.left) <= 0.5 &&
+          Math.abs(box.height - previous.height) <= 0.5
+        previous = box
+        matched = same ? matched + 1 : 0
+      }
+      if (timedOut || (next != null && matched >= frames - 1)) {
+        window.clearInterval(timer)
+        resolve()
+      }
+    }, 32)
+  })
+}
+
+/**
  * Resolves once `read` stays still. Font swaps and the hero lock move targets
  * without a scroll event, which left the frozen tooltip short of the frame.
  */

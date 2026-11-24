@@ -7,13 +7,14 @@ import {
   isFollowUpComposerUnavailable,
   setFollowUpComposerUnavailable,
 } from '../../utils/followUpComposerReady'
-import { readPortaledFollowUpComposerRect } from '../../utils/tutorialPositioning'
 import { waitForRectStable } from '../../utils/tutorialSettle'
 
 /**
- * Leave "Run Your Comparison" only after the continue-conversation composer is
- * visible and its box has stopped moving. A fixed delay is not the signal.
- * If the stream ends with no results, stay on this step so the user can retry.
+ * Leave "Run Your Comparison" once the continue-conversation composer is on
+ * screen. Waiting here for its box to stop moving stacks the entrance float
+ * on the overlay's own settle, and WebKit still has the card hidden when the
+ * transition sample ends. The overlay keeps the card transparent until that
+ * float finishes. If the stream ends with no results, stay on this step.
  */
 export function useAdvanceSubmitWhenFollowUpComposerReady(
   step: TutorialStep | null,
@@ -69,16 +70,14 @@ export function useAdvanceSubmitWhenFollowUpComposerReady(
       } else {
         return
       }
+      // Advance as soon as the composer is on screen. Waiting for its box to
+      // stop moving stacks the entrance float on top of the overlay's own
+      // settle, and WebKit still has the card hidden when the sample ends.
+      // The overlay keeps the card transparent until that float finishes.
       settling = true
-      void waitForRectStable(readPortaledFollowUpComposerRect, {
-        timeoutMs: 800,
-        quietMs: 80,
-      }).then(() => {
-        settling = false
-        if (cancelled || !isFollowUpComposerReady()) return
-        completeStep('submit-comparison')
-        onComparisonCompleteRef.current?.()
-      })
+      if (cancelled || !isFollowUpComposerReady()) return
+      completeStep('submit-comparison')
+      onComparisonCompleteRef.current?.()
     }
 
     attempt()

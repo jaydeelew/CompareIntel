@@ -92,4 +92,55 @@ describe('ResultsDisplay mobile tab swipe', () => {
     expect(tabs[0]).toHaveAttribute('aria-selected', 'false')
     expect(tabs[1]).toHaveAttribute('aria-selected', 'true')
   })
+
+  it('changes model tab when streaming drops changedTouches and only touchmove remains', () => {
+    const gpt = createModelId('gpt-4')
+    const claude = createModelId('claude-3')
+
+    render(
+      <ResultsDisplay
+        conversations={[
+          createMockModelConversation({ modelId: gpt, modelName: 'GPT-4' }),
+          createMockModelConversation({ modelId: claude, modelName: 'Claude' }),
+        ]}
+        closedCards={new Set()}
+        allModels={[
+          { id: gpt, name: 'GPT-4' },
+          { id: claude, name: 'Claude' },
+        ]}
+        activeResultTabs={{
+          [gpt]: RESULT_TAB.FORMATTED,
+          [claude]: RESULT_TAB.FORMATTED,
+        }}
+        onCloseCard={vi.fn()}
+        onSwitchTab={vi.fn()}
+        onBreakout={vi.fn()}
+        onHideOthers={vi.fn()}
+        onCopyMessage={vi.fn()}
+      />
+    )
+
+    const tabs = screen.getAllByRole('tab')
+    const touchTarget = document.querySelector('.mobile-swipe-touch-target')
+    const start = { clientX: 280, clientY: 300 }
+    fireEvent.touchStart(touchTarget!, {
+      touches: [start],
+      targetTouches: [start],
+      changedTouches: [start],
+    })
+    const moved = { clientX: 90, clientY: 304 }
+    fireEvent.touchMove(window, {
+      touches: [moved],
+      targetTouches: [moved],
+      changedTouches: [moved],
+    })
+    touchTarget!.remove()
+    fireEvent.touchEnd(window, {
+      touches: [],
+      changedTouches: [],
+    })
+
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'false')
+    expect(tabs[1]).toHaveAttribute('aria-selected', 'true')
+  })
 })

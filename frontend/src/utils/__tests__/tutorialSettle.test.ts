@@ -5,6 +5,7 @@ import {
   setTutorialSpotlightSettling,
   trackTutorialMotion,
   tutorialBoxesNearlyEqual,
+  waitForRectFrames,
   waitForTutorialLayoutSettle,
   watchTutorialFrameSize,
 } from '../tutorialSettle'
@@ -28,6 +29,36 @@ describe('tutorialSettle', () => {
     expect(tutorialBoxesNearlyEqual(box, { ...box, top: 14 })).toBe(false)
     expect(tutorialBoxesNearlyEqual(null, null)).toBe(true)
     expect(tutorialBoxesNearlyEqual(box, null)).toBe(false)
+  })
+
+  it('resolves once two consecutive layout reads match', async () => {
+    const boxes = [
+      { top: 100, left: 8, height: 40 },
+      { top: 80, left: 8, height: 40 },
+      { top: 80, left: 8, height: 40 },
+    ]
+    let reads = 0
+    const start = performance.now()
+    await waitForRectFrames(() => boxes[Math.min(reads++, boxes.length - 1)] ?? null, {
+      frames: 2,
+      timeoutMs: 500,
+    })
+    expect(reads).toBe(3)
+    expect(performance.now() - start).toBeLessThan(400)
+  })
+
+  it('falls back to the timeout while the box is still moving', async () => {
+    let top = 0
+    const start = performance.now()
+    await waitForRectFrames(
+      () => {
+        top += 5
+        return { top, height: 40 }
+      },
+      { frames: 2, timeoutMs: 120 }
+    )
+    expect(performance.now() - start).toBeGreaterThanOrEqual(100)
+    expect(performance.now() - start).toBeLessThan(400)
   })
 
   it('resolves after the quiet period when the page is still', async () => {

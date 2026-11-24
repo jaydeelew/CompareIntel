@@ -47,6 +47,7 @@ import {
   focusTutorialPromptTextarea,
   setTutorialSpotlightSettling,
   trackTutorialMotion,
+  waitForRectFrames,
   waitForRectStable,
   waitForTutorialLayoutSettle,
   watchTutorialFrameSize,
@@ -757,31 +758,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     })
   }, [targetElement, step, tooltipEstimatedHeight])
 
-  // Follow-up step: the portaled composer runs `composer-float-in` (~350ms). Early position reads run
-  // while `translateY(20px)` is still applied, so fixed cutouts sit too low; this step also skips the
-  // 200ms polling used on other steps. Recalculate when the float animation ends (and via fallback).
-  useEffect(() => {
-    if (step !== 'follow-up' || !targetElement) return
-
-    const onAnimationEnd = (e: AnimationEvent) => {
-      if (e.animationName !== 'composer-float-in' && e.animationName !== 'composer-float-in-moz')
-        return
-      if (spotlightSettledRef.current) return
-      calculatePositions()
-    }
-
-    targetElement.addEventListener('animationend', onAnimationEnd)
-    const fallback = window.setTimeout(() => {
-      if (spotlightSettledRef.current) return
-      calculatePositions()
-    }, 450)
-
-    return () => {
-      targetElement.removeEventListener('animationend', onAnimationEnd)
-      window.clearTimeout(fallback)
-    }
-  }, [step, targetElement, calculatePositions])
-
   // Update positions on mount, scroll, resize
   useEffect(() => {
     if (!targetElement || !step) return
@@ -808,38 +784,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const position = MOBILE_STEP_OVERRIDES[currentStep]?.position ?? 'top'
       return position === 'bottom' ? 'below' : 'above'
     }
-
-    const waitForComposerFloat = () =>
-      new Promise<void>(resolve => {
-        let finished = false
-        const finish = () => {
-          if (finished) return
-          finished = true
-          resolve()
-        }
-        const composer = getComposerElement()
-        const running = composer?.getAnimations?.().some(animation => {
-          if (animation.playState !== 'running' || !(animation instanceof CSSAnimation))
-            return false
-          return (
-            animation.animationName === 'composer-float-in' ||
-            animation.animationName === 'composer-float-in-moz'
-          )
-        })
-        if (!running) {
-          finish()
-          return
-        }
-        const timer = window.setTimeout(finish, 420)
-        const onEnd = (event: Event) => {
-          const name = (event as AnimationEvent).animationName
-          if (name !== 'composer-float-in' && name !== 'composer-float-in-moz') return
-          window.clearTimeout(timer)
-          composer?.removeEventListener('animationend', onEnd)
-          finish()
-        }
-        composer?.addEventListener('animationend', onEnd)
-      })
 
     const composerFloatRunning = (composer: HTMLElement | null) =>
       !!composer?.getAnimations?.().some(animation => {
@@ -952,7 +896,16 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         calculatePositions()
         spotlightSettledRef.current = true
         settledStepRef.current = currentStep
-        showSettledTooltip()
+        if (currentStep === 'follow-up') {
+          // Position was written above, while the card was still hidden.
+          // Another write after the hide class comes off is the 20px float
+          // landing in the same paint as the card becoming opaque.
+          isStepTransitioningRef.current = false
+          setIsStepTransitioning(false)
+          setTutorialSpotlightSettling(false)
+        } else {
+          showSettledTooltip()
+        }
       }, 32)
     }
 
@@ -963,23 +916,42 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           arrowSize: MOBILE_TUTORIAL_ARROW_PX,
           preferred: 'below' as const,
         }
-        await seatPortaledFollowUpComposer(
-          () => cancelled || stepRef.current !== currentStep,
-          placement
-        )
+        // The submit step advances as soon as this composer exists. Scroll it
+        // into view, then stay hidden until its layout box has stopped moving.
+        if (!isFollowUpComposerReady()) {
+          await seatPortaledFollowUpComposer(
+            () => cancelled || stepRef.current !== currentStep,
+            placement
+          )
+          if (cancelled || stepRef.current !== currentStep) return
+        }
+        const placeFollowUp = () =>
+          scrollFollowUpHighlightIntoView({
+            ...placement,
+            tooltipHeight: Math.max(
+              overlayRef.current?.getBoundingClientRect().height || 0,
+              tooltipEstimatedHeight
+            ),
+          })
+        // The ring is on the React className too. classList keeps it if a
+        // render has not committed that class yet.
+        getComposerElement()?.classList.add('mobile-tutorial-highlight')
+        placeFollowUp()
+        // Drop settling while the card is still hidden so highlight styles
+        // settle before the sample. The entrance float is disabled for the
+        // tutorial; the reveal still waits on the composer's box.
+        setTutorialSpotlightSettling(false)
+        const readComposerBox = () => {
+          const rect = getComposerElement()?.getBoundingClientRect()
+          if (!rect || rect.width < 1 || rect.height < 1) return null
+          return { top: rect.top, left: rect.left, height: rect.height }
+        }
+        await waitForRectFrames(readComposerBox, { frames: 2, timeoutMs: 800 })
         if (cancelled || stepRef.current !== currentStep) return
-        await waitForComposerFloat()
+        placeFollowUp()
+        await waitForRectFrames(readComposerBox, { frames: 2, timeoutMs: 800 })
         if (cancelled || stepRef.current !== currentStep) return
-        scrollFollowUpHighlightIntoView({
-          ...placement,
-          tooltipHeight: Math.max(
-            overlayRef.current?.getBoundingClientRect().height || 0,
-            tooltipEstimatedHeight
-          ),
-        })
-        await waitForRectStable(liveSpotlight, { timeoutMs: 200, quietMs: 48 })
-        if (cancelled || stepRef.current !== currentStep) return
-        if (!liveSpotlight()) return
+        if (!readComposerBox()) return
         revealSettledStep()
         return
       }
@@ -1260,9 +1232,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (nextStep === 'history-dropdown' || nextStep === 'save-selection') {
         return
       }
+      // Step 7's ring is the same class. Stripping it when the target element
+      // changes and putting it back starts translateY(20px) again after the
+      // card is already opaque.
+      const keepFollowUpComposerRing = nextStep === 'follow-up'
       getComposerElement()?.classList.remove('tutorial-dropdown-container-active')
       getHeroComposerForDropdownSteps()?.classList.remove('tutorial-dropdown-container-active')
       providerHighlights.forEach(el => {
+        if (keepFollowUpComposerRing && el.classList.contains('composer')) return
         el.classList.remove('mobile-tutorial-highlight')
       })
       targetElement.classList.remove('mobile-tutorial-button-pulsate')
@@ -1272,6 +1249,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
       // Clean up all highlights
       document.querySelectorAll('.mobile-tutorial-highlight').forEach(el => {
+        if (keepFollowUpComposerRing && el.classList.contains('composer')) return
         el.classList.remove('mobile-tutorial-highlight')
       })
     }
@@ -1439,9 +1417,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (resultsReady && resultsSection && resultsRect) {
         const isFollowUpStyle = current === 'submit-comparison-2' || isReview || followUpPost
         const canScroll = isFollowUpStyle ? loadingSectionWasSeen : true
-        // Scrolling the growing results during the first follow-up settle pins
-        // that section and leaves the composer below the iPhone viewport.
-        if (!holdFirstStream && !hasScrolledToResults && canScroll) {
+        // The first comparison's results scroll is scheduled while step 6 is
+        // still showing. On WebKit the deferred callback lands as step 7
+        // starts, pins the tall results block, and parks the composer (and
+        // the still-hidden card) below the iPhone viewport until the sample
+        // window is almost over.
+        const firstComparisonHandoff =
+          current === 'submit-comparison' || (current === 'follow-up' && !followUpStarted)
+        if (!firstComparisonHandoff && !holdFirstStream && !hasScrolledToResults && canScroll) {
           hasScrolledToResults = true
           cancelDeferredScrolls.push(
             deferScroll(() => {

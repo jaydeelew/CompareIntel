@@ -20,7 +20,10 @@ test.describe('Mobile model-tab swipe while result content churns', () => {
     const input = page.getByTestId('comparison-input-textarea')
     await input.fill('Tab swipe during streaming')
 
-    await page.locator('.loading-message').waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {})
+    await page
+      .locator('.loading-message')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {})
 
     const providerHeader = page.locator('.provider-header').first()
     if ((await providerHeader.getAttribute('aria-expanded')) !== 'true') {
@@ -53,9 +56,24 @@ test.describe('Mobile model-tab swipe while result content churns', () => {
         zone?.querySelector('[data-testid^="result-card-"]') ??
         zone
       if (!host) return null
+      // innerHTML detaches the node under the finger. Chrome then delivers
+      // neither touchend nor touchcancel, so the swipe cannot finish. Streaming
+      // updates text in place; do that, and keep tearing down a sibling so the
+      // panel DOM is still being replaced during the gesture.
+      let churn = host.querySelector('p.stream-churn')
+      if (!churn) {
+        churn = document.createElement('p')
+        churn.className = 'stream-churn'
+        host.appendChild(churn)
+      }
+      const aside = document.createElement('div')
+      aside.className = 'stream-churn-aside'
+      host.appendChild(aside)
       let n = 0
       const id = window.setInterval(() => {
-        host.innerHTML = `<p class="stream-churn">chunk ${n++}</p>`
+        churn.textContent = `chunk ${n}`
+        aside.innerHTML = `<span>replaced ${n}</span>`
+        n += 1
       }, 25)
       return id
     })
