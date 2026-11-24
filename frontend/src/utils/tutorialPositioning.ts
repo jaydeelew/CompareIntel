@@ -70,14 +70,15 @@ export function computeDropdownCutout(
 
 /**
  * Unpadded composer frame shared by the history step and the saved-selections
- * step: input + toolbar, plus the history list when it is open. Both steps draw
- * the same ring from this box.
+ * step: input + toolbar, plus the open history list or saved-selections panel.
+ * Both steps draw the same ring from this box. The panel grows the frame
+ * downward; it does not move the frame's top.
  */
 export function readHistoryComposerFrame(): RectCutout | null {
   const composer = getComposerElement()
   if (!composer) return null
   const rects = getComposerCutoutRects(composer)
-  const list = composer.querySelector('.history-inline-list')
+  const list = composer.querySelector('.history-inline-list, .saved-selections-dropdown')
   if (list) rects.push(list.getBoundingClientRect())
   return computeRectUnion(rects, 0)
 }
@@ -475,9 +476,10 @@ export function readTutorialSpotlightRect(
     if (!composer) return null
     const parts = getComposerCutoutRects(composer)
     // History and saved selections share one composer frame, so the arrow meets
-    // the same ring on both steps. The open history list is part of that ring.
+    // the same ring on both steps. An open history list or saved-selections
+    // panel grows that ring downward.
     if (step === 'history-dropdown' || step === 'save-selection') {
-      const panel = composer.querySelector('.history-inline-list')
+      const panel = composer.querySelector('.history-inline-list, .saved-selections-dropdown')
       if (panel) parts.push(panel.getBoundingClientRect())
     }
     return unionViewportRects(parts)

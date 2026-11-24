@@ -120,6 +120,57 @@ async function toggleHistory(page: Page): Promise<void> {
   })
 }
 
+interface PairAnchor {
+  composerTop: number
+  composerLeft: number
+  tipTop: number
+  tipLeft: number
+}
+
+async function readPairAnchor(page: Page): Promise<PairAnchor> {
+  return page.evaluate(() => {
+    const composer = document.querySelector(
+      '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+    ) as HTMLElement | null
+    const tip = document.querySelector(
+      '.mobile-tutorial-tooltip, .tutorial-tooltip'
+    ) as HTMLElement | null
+    const composerBox = composer?.getBoundingClientRect()
+    const tipBox = tip?.getBoundingClientRect()
+    return {
+      composerTop: composerBox?.top ?? Number.NaN,
+      composerLeft: composerBox?.left ?? Number.NaN,
+      tipTop: tipBox?.top ?? Number.NaN,
+      tipLeft: tipBox?.left ?? Number.NaN,
+    }
+  })
+}
+
+function pairAnchorShift(before: PairAnchor, after: PairAnchor): string {
+  const checks: Array<[string, number, number]> = [
+    ['composer top', before.composerTop, after.composerTop],
+    ['composer left', before.composerLeft, after.composerLeft],
+    ['tooltip top', before.tipTop, after.tipTop],
+    ['tooltip left', before.tipLeft, after.tipLeft],
+  ]
+  for (const [label, start, next] of checks) {
+    if (!Number.isFinite(start) || !Number.isFinite(next)) return `${label} missing`
+    if (Math.abs(start - next) > 1)
+      return `${label} moved ${Math.round(start)} -> ${Math.round(next)}`
+  }
+  return 'ok'
+}
+
+async function toggleSavedSelections(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const slotted = document.querySelector(
+      '[data-after-results-composer-slot] .saved-selections-button'
+    ) as HTMLButtonElement | null
+    const fallback = document.querySelector('.saved-selections-button') as HTMLButtonElement | null
+    ;(slotted ?? fallback)?.click()
+  })
+}
+
 async function verticalCenterReason(page: Page): Promise<string> {
   return page.evaluate(() => {
     const mobile = window.innerWidth <= 768
@@ -473,6 +524,7 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
   await expect(prompt).toHaveValue(promptBefore)
   await expect.poll(() => prompt.evaluate(el => (el as HTMLTextAreaElement).readOnly)).toBe(true)
 
+  const historyAnchor = await readPairAnchor(page)
   await toggleHistory(page)
   await expect
     .poll(() => page.locator('.history-inline-list').count(), { timeout: 5_000 })
@@ -495,6 +547,12 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
       { timeout: 2_000, message: 'open history toggle should stay highlighted' }
     )
     .toBe('ok')
+  await expect
+    .poll(async () => pairAnchorShift(historyAnchor, await readPairAnchor(page)), {
+      timeout: 2_000,
+      message: 'opening history should keep the tooltip and composer in place',
+    })
+    .toBe('ok')
 
   const surface = isMobileE2eProject(testInfo.project.name) ? 'mobile' : 'desktop'
   const phase = process.env.HISTORY_SHOT ?? 'after'
@@ -515,6 +573,12 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
     .poll(() => historyCutoutReason(page, false), {
       timeout: 2_000,
       message: 'closing history should shrink the cutout back to the composer',
+    })
+    .toBe('ok')
+  await expect
+    .poll(async () => pairAnchorShift(historyAnchor, await readPairAnchor(page)), {
+      timeout: 2_000,
+      message: 'closing history should restore the same tooltip and composer position',
     })
     .toBe('ok')
   await page.screenshot({ path: `${dir}/09-closed.png` })
@@ -540,5 +604,29 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
       message: 'step 10 bookmark highlight should match the step 9 history toggle',
     })
     .toBe('ok')
+  const saveAnchor = await readPairAnchor(page)
   await page.screenshot({ path: `${dir}/10-save.png` })
+
+  await toggleSavedSelections(page)
+  await expect
+    .poll(() => page.locator('.saved-selections-dropdown').count(), { timeout: 5_000 })
+    .toBeGreaterThan(0)
+  await expect
+    .poll(async () => pairAnchorShift(saveAnchor, await readPairAnchor(page)), {
+      timeout: 2_000,
+      message: 'opening saved selections should keep the tooltip and composer in place',
+    })
+    .toBe('ok')
+  await page.screenshot({ path: `${dir}/10-open.png` })
+
+  await toggleSavedSelections(page)
+  await expect
+    .poll(() => page.locator('.saved-selections-dropdown').count(), { timeout: 5_000 })
+    .toBe(0)
+  await expect
+    .poll(async () => pairAnchorShift(saveAnchor, await readPairAnchor(page)), {
+      timeout: 2_000,
+      message: 'closing saved selections should restore the same tooltip and composer position',
+    })
+    .toBe('ok')
 })
