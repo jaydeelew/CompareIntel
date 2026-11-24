@@ -14,6 +14,42 @@ import type { PublicShareSnapshot } from '../services/shareService'
 
 const BASE_URL = 'https://compareintel.com'
 const DEFAULT_OG_IMAGE = 'https://compareintel.com/brand/CompareIntel-social.png'
+const INDEXABLE_ROBOTS =
+  'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+const NOT_FOUND_TITLE = '404 - Page Not Found - CompareIntel'
+const NOT_FOUND_DESCRIPTION =
+  'Page not found. The URL you requested does not exist on CompareIntel.'
+
+export function normalizePathname(pathname: string): string {
+  if (!pathname || pathname === '/') return '/'
+  const trimmed = pathname.replace(/\/$/, '')
+  return trimmed === '' ? '/' : trimmed
+}
+
+/**
+ * Paths that are not a public document and are not an app deep link.
+ * These must not keep the homepage canonical.
+ */
+export function isNotFoundPath(pathname: string): boolean {
+  const normalized = normalizePathname(pathname)
+  if (getPageMetadata(normalized)) return false
+  if (normalized.startsWith('/c/')) return false
+  if (normalized === '/admin' || normalized === '/reset-password' || normalized === '/terms') {
+    return false
+  }
+  return true
+}
+
+function shouldNoindex(pathname: string): boolean {
+  const normalized = normalizePathname(pathname)
+  return (
+    isPreviewDeploy() ||
+    normalized.startsWith('/c/') ||
+    normalized === '/admin' ||
+    normalized.startsWith('/admin/') ||
+    normalized === '/reset-password'
+  )
+}
 
 interface PageMeta {
   title: string
@@ -117,6 +153,39 @@ function updateLinkTag(rel: string, href: string): void {
   link.setAttribute('href', href)
 }
 
+function removeLinkTag(rel: string): void {
+  document.querySelectorAll(`link[rel="${rel}"]`).forEach(tag => tag.remove())
+}
+
+function removeMetaTag(attribute: 'name' | 'property', attributeValue: string): void {
+  document.querySelectorAll(`meta[${attribute}="${attributeValue}"]`).forEach(tag => tag.remove())
+}
+
+function restoreIndexableRobots(): void {
+  const robots = document.querySelector('meta[name="robots"]')
+  if (robots && /noindex/i.test(robots.getAttribute('content') || '')) {
+    robots.setAttribute('content', INDEXABLE_ROBOTS)
+  }
+  const googlebot = document.querySelector('meta[name="googlebot"]')
+  if (googlebot && /noindex/i.test(googlebot.getAttribute('content') || '')) {
+    googlebot.remove()
+  }
+}
+
+function applyNotFoundMeta(): void {
+  document.title = NOT_FOUND_TITLE
+  removeLinkTag('canonical')
+  updateMetaTag('meta', 'name', 'description', NOT_FOUND_DESCRIPTION)
+  updateMetaTag('meta', 'name', 'robots', 'noindex, nofollow')
+  updateMetaTag('meta', 'name', 'googlebot', 'noindex, nofollow')
+  removeMetaTag('property', 'og:url')
+  removeMetaTag('name', 'twitter:url')
+  updateMetaTag('meta', 'property', 'og:title', NOT_FOUND_TITLE)
+  updateMetaTag('meta', 'property', 'og:description', NOT_FOUND_DESCRIPTION)
+  updateMetaTag('meta', 'name', 'twitter:title', NOT_FOUND_TITLE)
+  updateMetaTag('meta', 'name', 'twitter:description', NOT_FOUND_DESCRIPTION)
+}
+
 /**
  * Update all meta tags for the current page
  * This includes:
@@ -129,6 +198,11 @@ function updateLinkTag(rel: string, href: string): void {
  * @param pathname - The current route pathname
  */
 export function updatePageMeta(pathname: string): void {
+  if (isNotFoundPath(pathname)) {
+    applyNotFoundMeta()
+    return
+  }
+
   const meta = getPageMeta(pathname)
 
   // Update title
@@ -141,10 +215,13 @@ export function updatePageMeta(pathname: string): void {
   updateMetaTag('meta', 'name', 'description', meta.description)
 
   // Preview deploys must stay noindex even after client-side route updates.
-  // Shared comparison permalinks are noindex by default (opt-in share, not a landing page).
-  if (isPreviewDeploy() || pathname.startsWith('/c/')) {
+  // Shared comparison permalinks, admin, and password-reset links are noindex.
+  // Unknown paths are handled above and must not keep a canonical to another URL.
+  if (shouldNoindex(pathname)) {
     updateMetaTag('meta', 'name', 'robots', 'noindex, nofollow')
     updateMetaTag('meta', 'name', 'googlebot', 'noindex, nofollow')
+  } else {
+    restoreIndexableRobots()
   }
 
   // Update Open Graph tags

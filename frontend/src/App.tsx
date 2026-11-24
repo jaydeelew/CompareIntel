@@ -126,6 +126,7 @@ function App() {
                     </Suspense>
                   }
                 />
+                {/* Client-side alias. Production nginx 301s direct visits to /privacy-policy. */}
                 <Route
                   path="/privacy"
                   element={
@@ -187,6 +188,8 @@ function App() {
                 />
                 {/* MainPage is eager-loaded: lazy route + Vite dev can load a second `react` copy and break hooks (Invalid hook call / useRef null). */}
                 <Route path="/" element={<MainPage />} />
+                {/* Password-reset emails link here with ?token=. The modal lives on MainPage. */}
+                <Route path="/reset-password" element={<MainPage />} />
                 <Route
                   path="/c/:shareSlug"
                   element={

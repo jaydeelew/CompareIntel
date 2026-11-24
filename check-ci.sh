@@ -44,7 +44,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 if node scripts/check-nginx-ssl-spa.js; then
   echo -e "${GREEN}✓ nginx.ssl.conf 404s unknown /models/<slug>${NC}"
 else
-  echo -e "${RED}❌ nginx.ssl.conf is missing @spa_or_404 model-page routing${NC}"
+  echo -e "${RED}❌ nginx is missing real 404 routing for unknown URLs${NC}"
   FAILED=1
 fi
 echo ""
@@ -67,6 +67,17 @@ if bash scripts/check-nginx-ssl-syntax.sh; then
   echo -e "${GREEN}✓ nginx.ssl.conf syntax check finished${NC}"
 else
   echo -e "${RED}❌ nginx.ssl.conf failed nginx -t${NC}"
+  FAILED=1
+fi
+echo ""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🧭 Nginx known-route 200 / unknown 404"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if bash scripts/check-nginx-spa-status.sh; then
+  echo -e "${GREEN}✓ nginx returns 200 for known routes and 404 for unknown URLs${NC}"
+else
+  echo -e "${RED}❌ nginx SPA status check failed${NC}"
   FAILED=1
 fi
 echo ""
