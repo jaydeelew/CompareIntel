@@ -4,6 +4,8 @@ import { RESULT_TAB, type ResultTab } from '../../types'
 import { formatTime, getSafeId } from '../../utils'
 import { StyledTooltip } from '../shared'
 
+import { getLoadedLatexRenderer, setLoadedLatexRenderer } from './latexRendererCache'
+
 interface LazyLatexRendererProps {
   children: string
   className?: string
@@ -12,11 +14,9 @@ interface LazyLatexRendererProps {
 
 type LatexRendererComponent = React.ComponentType<LazyLatexRendererProps>
 
-let loadedLatexRenderer: LatexRendererComponent | null = null
-
 const loadLatexRenderer = () =>
   import('../LatexRenderer').then(module => {
-    loadedLatexRenderer = module.default
+    setLoadedLatexRenderer(module.default)
     return module.default
   })
 
@@ -155,8 +155,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   deferLinkPreviews = false,
 }) => {
   const [failedImageIndices, setFailedImageIndices] = useState<Set<number>>(new Set())
-  const [LatexView, setLatexView] = useState<LatexRendererComponent | null>(
-    () => loadedLatexRenderer
+  const [LatexView, setLatexView] = useState<LatexRendererComponent | null>(() =>
+    getLoadedLatexRenderer()
   )
   const [FormattedWithPreviews, setFormattedWithPreviews] = useState<React.ComponentType<
     import('../comparison/FormattedAnswerWithInlinePreviews').FormattedAnswerWithInlinePreviewsProps

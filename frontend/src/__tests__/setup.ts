@@ -7,12 +7,16 @@ import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
+import { setLoadedLatexRenderer } from '../components/conversation/latexRendererCache'
+import LatexRenderer from '../components/LatexRenderer'
 import { apiClient } from '../services/api/client'
-// MessageBubble loads this graph from an effect. Resolve it during setup so a
-// coverage run cannot tear the worker down while footnotes.ts is still loading.
-import '../components/LatexRenderer'
 
 import { server } from './msw/server'
+
+// MessageBubble otherwise loads this graph from an effect. Installing it here
+// keeps footnotes.ts from resolving after worker teardown, and the first paint
+// is already the formatted view so assertions do not catch the placeholder.
+setLoadedLatexRenderer(LatexRenderer)
 
 // MSW: intercept /api in service tests; non-API requests pass through to avoid breaking geo etc.
 beforeAll(() => {
