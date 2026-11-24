@@ -40,6 +40,8 @@ export interface StepConfig {
   targetSelector: string
   title: string
   description: string
+  /** Mobile tooltip body when the desktop sentence uses click wording. */
+  mobileDescription?: string
   position: 'top' | 'bottom' | 'left' | 'right'
   completionCheck?: () => boolean | Promise<boolean>
 }
@@ -91,7 +93,8 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'submit-comparison',
     targetSelector: '[data-testid="comparison-submit-button"]',
     title: 'Run Your Comparison',
-    description: 'Click the submit button to send your prompt to the selected models.',
+    description: 'Click the green submit button to send your prompt to the selected models.',
+    mobileDescription: 'Tap the green submit button to send your prompt to the selected models.',
     position: 'top',
   },
   'follow-up': {

@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
+import { isFollowUpComposerReady } from '../../utils/followUpComposerReady'
 
 import MobileTutorialOverlay from './MobileTutorialOverlay'
+import { useAdvanceSubmitWhenFollowUpComposerReady } from './useAdvanceSubmitWhenFollowUpComposerReady'
 
 interface MobileTutorialControllerProps {
   tutorialState: TutorialState
@@ -158,14 +160,12 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onModelsSelected?.()
     }
 
-    if (
+    // The composer-ready hook advances this step after the box settles.
+    const deferSubmitUntilComposer =
       currentStep === 'submit-comparison' &&
-      hasCompletedComparison &&
-      !previousStateRef.current.hasCompletedComparison
-    ) {
-      completeStep('submit-comparison')
-      onComparisonComplete?.()
-    }
+      Boolean(hasCompletedComparison) &&
+      !previousStateRef.current.hasCompletedComparison &&
+      !isFollowUpComposerReady()
 
     // The first comparison sets hasCompletedComparison in the same commit the
     // result-card poll moves us onto follow-up. This effect runs before the
@@ -198,7 +198,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       secondModelSelected: secondModelSelected || false,
       bothModelsSelected: bothModelsSelected || false,
       hasPromptText: hasPromptText || false,
-      hasCompletedComparison: hasCompletedComparison || false,
+      hasCompletedComparison: deferSubmitUntilComposer ? false : hasCompletedComparison || false,
       isFollowUpMode: isFollowUpMode || false,
       showHistoryDropdown: showHistoryDropdown || false,
     }
@@ -262,30 +262,13 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
     }
   }
 
-  // The result card is on screen before Safari clears isLoading. Advance then,
-  // so the next tooltip fades in during the transition instead of after it.
-  useEffect(() => {
-    if (tutorialState.currentStep !== 'submit-comparison') return
-    if (tutorialState.completedSteps.has('submit-comparison')) return
-    const replyIsVisible = () => {
-      const card = document.querySelector(
-        '.result-card.conversation-card, .results-section [data-testid^="result-card-"]'
-      )
-      if (!card) return false
-      const rect = card.getBoundingClientRect()
-      return rect.width > 0 && rect.height > 0
-    }
-    if (replyIsVisible()) {
-      completeStep('submit-comparison')
-      return
-    }
-    const id = window.setInterval(() => {
-      if (!replyIsVisible()) return
-      window.clearInterval(id)
-      completeStep('submit-comparison')
-    }, 100)
-    return () => window.clearInterval(id)
-  }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep])
+  useAdvanceSubmitWhenFollowUpComposerReady(
+    tutorialState.currentStep,
+    tutorialState.completedSteps.has('submit-comparison'),
+    isLoading,
+    completeStep,
+    onComparisonComplete
+  )
 
   // The follow-up reply is on screen before Safari clears isLoading. The review
   // card has to fade in during that tail, not after the stream flag drops.

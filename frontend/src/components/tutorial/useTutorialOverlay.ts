@@ -15,6 +15,10 @@ import {
   getTutorialVisibleStepProgress,
 } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
+import {
+  isFollowUpComposerReady,
+  isFollowUpComposerUnavailable,
+} from '../../utils/followUpComposerReady'
 import logger from '../../utils/logger'
 import {
   getComposerElement,
@@ -55,6 +59,7 @@ import {
   watchTutorialFrameSize,
 } from '../../utils/tutorialSettle'
 
+import { useTutorialSubmitAttention } from './tutorialSubmitAttention'
 import {
   getBelowResultsHistoryToggleButton,
   getBelowResultsSavedSelectionsButton,
@@ -89,6 +94,7 @@ export function useTutorialOverlay(
   tutorialSplitModelSteps = false,
   followUpSubmitStarted = false
 ) {
+  useTutorialSubmitAttention(step)
   const tutorialProviderNamesRef = useRef(tutorialProviderNames)
   tutorialProviderNamesRef.current = tutorialProviderNames
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -1579,7 +1585,7 @@ export function useTutorialOverlay(
       if (step === 'follow-up') {
         if (stepRef.current !== 'follow-up') return
         const spotlight = applyStreamingComparisonHighlight(streamAnswerStartedRef.current)
-        if (spotlight === 'loading') {
+        if (spotlight === 'loading' || !isFollowUpComposerReady()) {
           const composerElement = getComposerElement()
           composerElement?.classList.remove('tutorial-highlight')
           composerElement?.classList.remove('tutorial-textarea-active')
@@ -1808,6 +1814,17 @@ export function useTutorialOverlay(
 
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
       const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
+      // Cancel or error before a reply removes both panels. Drop the streaming
+      // frame so the submit tooltip can come back and the user can retry.
+      if (
+        isSubmit &&
+        !loading &&
+        (isFollowUpComposerUnavailable() ||
+          (!elementHasSpotlightBox(loadingSection) && !elementHasSpotlightBox(resultsSection)))
+      ) {
+        publish(null)
+        return
+      }
       const preferLoading = !started && elementHasSpotlightBox(loadingSection)
       const watch =
         preferLoading && loadingSection ? loadingSection : (resultsSection ?? loadingSection)

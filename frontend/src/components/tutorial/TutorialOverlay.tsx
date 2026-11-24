@@ -7,6 +7,7 @@ import {
   type StarterModelEntry,
 } from '../../data/tutorialStepPlan'
 import type { TutorialStep } from '../../hooks/useTutorial'
+import { isFollowUpComposerReady } from '../../utils/followUpComposerReady'
 import {
   getTutorialScrollRoot,
   readTutorialSpotlightRect,
@@ -145,6 +146,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   const shouldHideTooltipDuringFollowUpStream =
     step === 'follow-up' && followUpSubmitStarted && streamAnswerStarted
+  const followUpComposerPending = step === 'follow-up' && !isFollowUpComposerReady()
   // The processing panel keeps its own tooltip. The review step must too:
   // hiding on any streaming cutout left that card with a ring and no popover.
   const hideTooltipForStreamingCutout =
@@ -184,6 +186,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {!scrollBack &&
         !hideTooltipForStreamingCutout &&
         !shouldHideTooltipDuringFollowUpStream &&
+        !followUpComposerPending &&
         !shouldHideTooltip &&
         isVisible &&
         config && (

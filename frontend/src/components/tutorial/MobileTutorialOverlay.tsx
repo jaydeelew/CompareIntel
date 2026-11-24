@@ -17,7 +17,12 @@ import {
 } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import {
+  isFollowUpComposerReady,
+  isFollowUpComposerUnavailable,
+} from '../../utils/followUpComposerReady'
+import {
   deferScroll,
+  elementHasSpotlightBox,
   getTutorialProviderStepLayout,
   getTutorialScrollRoot,
   MOBILE_TUTORIAL_ARROW_PX,
@@ -43,6 +48,7 @@ import {
 } from '../../utils/tutorialSettle'
 
 import { useTutorialInteractionLock } from './tutorialInteractionLock'
+import { useTutorialSubmitAttention } from './tutorialSubmitAttention'
 import {
   getBelowResultsHistoryToggleButton,
   getBelowResultsSavedSelectionsButton,
@@ -50,7 +56,6 @@ import {
   getHeroComposerForDropdownSteps,
   getPortaledHistoryList,
 } from './tutorialUtils'
-
 import './MobileTutorialOverlay.css'
 
 interface MobileTutorialOverlayProps {
@@ -130,6 +135,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   streamAnswerStarted = false,
   followUpSubmitStarted = false,
 }) => {
+  useTutorialSubmitAttention(step)
   const overlayRef = useRef<HTMLDivElement>(null)
   const tutorialProviderNamesRef = useRef(tutorialProviderNames)
   tutorialProviderNamesRef.current = tutorialProviderNames
@@ -357,6 +363,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           suppressReviewTooltipRevealRef.current = false
           setIsVisible(true)
         } else if (isPrimaryExpandProviderStep(step)) {
+          setIsVisible(false)
+        } else if (step === 'follow-up' && !isFollowUpComposerReady()) {
           setIsVisible(false)
         } else if (isSelectModelTutorialStep(step)) {
           setIsVisible(true)
@@ -1100,7 +1108,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     // Add button pulsate when tooltip says "Tap the highlighted button" (same ring + pulse as submit step).
     if (
-      step === 'submit-comparison' ||
       step === 'submit-comparison-2' ||
       step === 'history-dropdown' ||
       step === 'save-selection'
@@ -1111,7 +1118,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Step 5: full results section; step 6: response body (grid or tab content) + tabs pulse on mobile
     const resultsSection =
       step === 'follow-up' ? (document.querySelector('.results-section') as HTMLElement) : null
-    if (resultsSection) {
+    if (resultsSection && isFollowUpComposerReady()) {
       resultsSection.classList.add('mobile-tutorial-highlight')
     }
     if (step === 'follow-up' || step === 'view-follow-up-results') {
@@ -1122,7 +1129,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     // For submit steps and follow-up, highlight the composer (match step 3). Follow-up also highlights the hero mirror when present.
-    if (step === 'submit-comparison' || step === 'submit-comparison-2' || step === 'follow-up') {
+    if (
+      (step === 'submit-comparison' || step === 'submit-comparison-2' || step === 'follow-up') &&
+      (step !== 'follow-up' || isFollowUpComposerReady())
+    ) {
       const composer = getComposerElement()
       if (composer) {
         composer.classList.add('mobile-tutorial-highlight')
@@ -1265,10 +1275,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         current === 'follow-up' && !followUpStarted && (loading || transitioning)
       if (isSubmit && loading) framedDuringLoad = true
       const active =
-        (isSubmit && (loading || (transitioning && framedDuringLoad))) ||
+        (isSubmit &&
+          (loading ||
+            (current === 'submit-comparison' && started) ||
+            (transitioning && framedDuringLoad))) ||
         (isReview && loading) ||
         (followUpPost && (loading || started)) ||
-        holdFirstStream
+        holdFirstStream ||
+        (current === 'follow-up' && !followUpStarted && !isFollowUpComposerReady())
       if (!active) {
         setLoadingStreamingRect(prev => (prev == null ? prev : null))
         return
@@ -1276,6 +1290,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
       const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
+      if (
+        isSubmit &&
+        !loading &&
+        (isFollowUpComposerUnavailable() ||
+          (!elementHasSpotlightBox(loadingSection) && !elementHasSpotlightBox(resultsSection)))
+      ) {
+        setLoadingStreamingRect(prev => (prev == null ? prev : null))
+        return
+      }
       const watch = resultsSection ?? loadingSection
       if (watch !== observed) {
         if (observed) resizeObserver.unobserve(observed)
@@ -1531,7 +1554,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   // Get description - use mobile override if available, otherwise config
   const getDescription = (): string =>
-    MOBILE_STEP_OVERRIDES[step]?.description ?? config.description
+    MOBILE_STEP_OVERRIDES[step]?.description ?? config.mobileDescription ?? config.description
 
   // Check if we're in loading/streaming phase on submit-comparison step
   // This needs to be calculated before early returns so we can skip them during loading/streaming
@@ -1539,11 +1562,17 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const isFollowUpPostSubmit = step === 'follow-up' && followUpSubmitStarted
   // Follow-up's settle waits out the rest of the stream. Keep the results frame
   // through that window instead of the plain transition backdrop.
+  const followUpComposerPending = step === 'follow-up' && !isFollowUpComposerReady()
   const holdFirstComparisonFrame =
-    step === 'follow-up' && !followUpSubmitStarted && (isLoading || isStepTransitioning)
+    step === 'follow-up' &&
+    !followUpSubmitStarted &&
+    (isLoading || isStepTransitioning || followUpComposerPending)
   const isLoadingStreamingPhase = Boolean(
     loadingStreamingRect &&
-    ((isSubmitStep && (isLoading || isStepTransitioning)) ||
+    ((isSubmitStep &&
+      (isLoading ||
+        isStepTransitioning ||
+        (step === 'submit-comparison' && streamAnswerStarted))) ||
       holdFirstComparisonFrame ||
       (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)))
   )
@@ -1776,7 +1805,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         <div
           key={step}
           ref={overlayRef}
-          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition || isLoadingStreamingPhase ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
+          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition || isLoadingStreamingPhase || followUpComposerPending ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
           style={
             tooltipPosition.useFullscreen
               ? undefined

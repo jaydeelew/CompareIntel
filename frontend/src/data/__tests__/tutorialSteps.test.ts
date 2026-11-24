@@ -66,4 +66,13 @@ describe('tutorial step copy', () => {
     )
     expect(TUTORIAL_STEPS_CONFIG['expand-provider'].description).not.toMatch(/Starter Selection/i)
   })
+
+  it('names the green submit button on the run-comparison step', () => {
+    expect(TUTORIAL_STEPS_CONFIG['submit-comparison'].description).toBe(
+      'Click the green submit button to send your prompt to the selected models.'
+    )
+    expect(TUTORIAL_STEPS_CONFIG['submit-comparison'].mobileDescription).toBe(
+      'Tap the green submit button to send your prompt to the selected models.'
+    )
+  })
 })

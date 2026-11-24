@@ -137,6 +137,23 @@ interface FrameSample {
   glow: boolean
 }
 
+async function continueTooltipDuringProcessing(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const loading = document.querySelector('.loading-section')
+    if (!loading) return false
+    const text = loading.textContent ?? ''
+    if (!text.includes('Processing')) return false
+    const tips = Array.from(
+      document.querySelectorAll('.tutorial-tooltip, .mobile-tutorial-tooltip')
+    )
+    return tips.some(tip => {
+      const style = getComputedStyle(tip)
+      if (style.visibility === 'hidden' || Number(style.opacity) === 0) return false
+      return (tip.textContent ?? '').includes('Continue the Conversation')
+    })
+  })
+}
+
 async function readResultsFrame(page: Page): Promise<FrameSample> {
   return page.evaluate(() => {
     const results = document.querySelector('.results-section') as HTMLElement | null
@@ -294,6 +311,7 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
           if (requireGrowth && !grew) {
             return `waiting-for-growth ${Math.round(sample.height)} text=${sample.text}`
           }
+          if (await continueTooltipDuringProcessing(page)) return 'tooltip-during-processing'
           return 'framed'
         },
         { timeout: 20_000, intervals: [100] }
@@ -301,6 +319,19 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
       .toBe('framed')
     expect(sawGlow).toBe(true)
 
+    await expect
+      .poll(
+        async () => {
+          if (await continueTooltipDuringProcessing(page)) return 'tooltip-during-processing'
+          const loadingCount = await page.locator('.loading-section').count()
+          return loadingCount === 0 ? 'done' : 'loading'
+        },
+        { timeout: 25_000, intervals: [100] }
+      )
+      .toBe('done')
+    await expect(
+      page.locator('[data-after-results-composer-slot] .composer:not(.composer-placeholder)')
+    ).toBeVisible({ timeout: 15_000 })
     await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation', {
       timeout: 25_000,
     })
