@@ -26,9 +26,13 @@ describe('tutorial toolbar highlight CSS (steps 7–8)', () => {
     const mobileCss = readFileSync(join(tutorialDir, 'MobileTutorialOverlay.css'), 'utf8')
     const desktopCss = readFileSync(join(tutorialDir, 'TutorialOverlay.css'), 'utf8')
 
-    expect(desktopCss).toMatch(
-      /\.history-toggle-button\.tutorial-highlight,\s*\n\.saved-selections-button\.tutorial-highlight/
-    )
+    const desktopRule = desktopCss.match(
+      /\.history-toggle-button\.tutorial-highlight,\s*\n\.saved-selections-button\.tutorial-highlight\s*\{[^}]*\}/
+    )?.[0]
+    expect(desktopRule).toBeTruthy()
+    expect(desktopRule).toMatch(/0 0 0 3px var\(--accent-color\)/)
+    expect(desktopRule).toMatch(/animation:\s*mobile-tutorial-pulse/)
+    expect(desktopRule).not.toMatch(/animation:\s*none/)
     expect(mobileCss).not.toMatch(
       /\.saved-selections-button\.mobile-tutorial-highlight\s*\{[^}]*box-shadow[^}]*\}/
     )

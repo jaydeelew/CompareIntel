@@ -188,13 +188,16 @@ body:has(.tutorial-backdrop) .hero-section {
   overflow: visible;
 }
 
-/* Toolbar buttons on steps 7–8: framed composer cutout draws the ring — no second ring on the control. */
+/* Steps 9–10 toolbar controls keep the same 32px square ring as mobile.
+   The composer cutout is a separate frame and does not replace this outline. */
 .history-toggle-button.tutorial-highlight,
 .saved-selections-button.tutorial-highlight {
   box-shadow:
-    0 0 20px rgba(6, 182, 212, 0.08),
-    0 0 40px rgba(6, 182, 212, 0.04) !important;
-  animation: none !important;
+    0 0 0 3px var(--accent-color),
+    0 0 0 7px rgba(14, 165, 233, 0.25),
+    0 0 18px rgba(14, 165, 233, 0.45) !important;
+  border-radius: var(--radius-md) !important;
+  animation: mobile-tutorial-pulse 2s ease-in-out infinite !important;
 }
 
 /* Results use the shared backdrop frame as their tutorial border.
