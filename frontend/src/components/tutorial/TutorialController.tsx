@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState, Suspense, lazy } from 'react'
 
 import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
+import { isFollowUpComposerReady } from '../../utils/followUpComposerReady'
+
+import { useAdvanceSubmitWhenFollowUpComposerReady } from './useAdvanceSubmitWhenFollowUpComposerReady'
 
 // Lazy load TutorialOverlay to prevent blocking React mount
 // This fixes the module export error that was preventing React from initializing
@@ -194,14 +197,15 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
     // This step now requires manual completion via button click
 
     // Submit comparison completion
-    if (
+    // The composer-ready hook advances this step after the box settles.
+    // Completing here would show step 7 on the same frame the field mounts.
+    // Keep the rising edge unconsumed until that field exists so a later
+    // follow-up edge is not mistaken for this comparison.
+    const deferSubmitUntilComposer =
       currentStep === 'submit-comparison' &&
-      hasCompletedComparison &&
-      !previousStateRef.current.hasCompletedComparison
-    ) {
-      completeStep('submit-comparison')
-      onComparisonComplete?.()
-    }
+      Boolean(hasCompletedComparison) &&
+      !previousStateRef.current.hasCompletedComparison &&
+      !isFollowUpComposerReady()
 
     // Same gate as mobile: the first comparison's completion flag is still true
     // on the render that lands on follow-up. Wait until this step's own submit.
@@ -244,7 +248,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       secondModelSelected: secondModelSelected || false,
       bothModelsSelected: bothModelsSelected || false,
       hasPromptText: hasPromptText || false,
-      hasCompletedComparison: hasCompletedComparison || false,
+      hasCompletedComparison: deferSubmitUntilComposer ? false : hasCompletedComparison || false,
       isFollowUpMode: isFollowUpMode || false,
       hasBreakoutConversation: hasBreakoutConversation || false,
       showHistoryDropdown: showHistoryDropdown || false,
@@ -322,30 +326,13 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   }
 
   // Handle manual completion via button click
-  // The result card is on screen before Safari clears isLoading. Advance then,
-  // so the next tooltip fades in during the transition instead of after it.
-  useEffect(() => {
-    if (tutorialState.currentStep !== 'submit-comparison') return
-    if (tutorialState.completedSteps.has('submit-comparison')) return
-    const replyIsVisible = () => {
-      const card = document.querySelector(
-        '.result-card.conversation-card, .results-section [data-testid^="result-card-"]'
-      )
-      if (!card) return false
-      const rect = card.getBoundingClientRect()
-      return rect.width > 0 && rect.height > 0
-    }
-    if (replyIsVisible()) {
-      completeStep('submit-comparison')
-      return
-    }
-    const id = window.setInterval(() => {
-      if (!replyIsVisible()) return
-      window.clearInterval(id)
-      completeStep('submit-comparison')
-    }, 100)
-    return () => window.clearInterval(id)
-  }, [tutorialState.currentStep, tutorialState.completedSteps, completeStep])
+  useAdvanceSubmitWhenFollowUpComposerReady(
+    tutorialState.currentStep,
+    tutorialState.completedSteps.has('submit-comparison'),
+    isLoading,
+    completeStep,
+    onComparisonComplete
+  )
 
   const handleComplete = () => {
     if (!tutorialState.currentStep) return

@@ -628,3 +628,34 @@ body.mobile-tutorial-active {
     min-height: 34px;
   }
 }
+
+/* Step 6: green ring on the submit control. Box-shadow only, so the layout
+   box, tooltip anchor, and hit target stay put. */
+.submit-button.tutorial-submit-attention {
+  animation: tutorial-submit-attention 1.75s ease-out infinite !important;
+  transition: none !important;
+}
+
+@keyframes tutorial-submit-attention {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(16, 185, 129, 0.65),
+      0 4px 16px rgba(16, 185, 129, 0.35);
+  }
+
+  70%,
+  100% {
+    box-shadow:
+      0 0 0 10px rgba(16, 185, 129, 0),
+      0 4px 16px rgba(16, 185, 129, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submit-button.tutorial-submit-attention {
+    animation: none !important;
+    box-shadow:
+      0 0 0 3px rgba(16, 185, 129, 0.85),
+      0 4px 16px rgba(16, 185, 129, 0.4) !important;
+  }
+}

@@ -344,6 +344,33 @@ describe('TutorialOverlay comparison spotlight', () => {
     )
   })
 
+  it('does not show the continue-conversation tooltip while the processing panel is up', async () => {
+    render(<TutorialOverlay {...props} step="follow-up" isLoading streamAnswerStarted />)
+
+    await vi.waitFor(
+      () => {
+        expect(
+          document.querySelector('.loading-section')?.classList.contains('tutorial-highlight')
+        ).toBe(false)
+        expect(
+          document.querySelector('.results-section')?.classList.contains('tutorial-highlight')
+        ).toBe(true)
+      },
+      { timeout: 8000 }
+    )
+
+    const tips = Array.from(document.querySelectorAll('.tutorial-tooltip'))
+    const visibleContinue = tips.filter(tip => {
+      const style = getComputedStyle(tip)
+      return (
+        style.visibility !== 'hidden' &&
+        Number(style.opacity) !== 0 &&
+        (tip.textContent ?? '').includes('Continue the Conversation')
+      )
+    })
+    expect(visibleContinue).toHaveLength(0)
+  })
+
   it('renders the review tooltip on screen above a tall Comparison Results card', async () => {
     resultsRect = new DOMRect(40, 16, 640, 2400)
     render(

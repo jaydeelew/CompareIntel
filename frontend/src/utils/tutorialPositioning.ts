@@ -3,6 +3,7 @@ import { isSingleProviderSpotlightStep } from '../data/tutorialStepPlan'
 import type { StepConfig } from '../data/tutorialSteps'
 import type { TutorialStep } from '../hooks/useTutorial'
 
+import { isFollowUpComposerReady } from './followUpComposerReady'
 import { waitForRectStable } from './tutorialSettle'
 
 export type TutorialProviderLayoutStep = Extract<
@@ -587,13 +588,20 @@ export async function seatPortaledFollowUpComposer(
   const deadline = performance.now() + 12000
   while (performance.now() < deadline) {
     if (isCancelled()) return false
-    if (readPortaledFollowUpComposerRect()) {
+    if (readPortaledFollowUpComposerRect() && isFollowUpComposerReady()) {
       scrollFollowUpHighlightIntoView(placement)
       await waitForRectStable(readPortaledFollowUpComposerRect, { timeoutMs: 200, quietMs: 48 })
-      if (isCancelled()) return false
-      scrollFollowUpHighlightIntoView(placement)
-      await waitForRectStable(readPortaledFollowUpComposerRect, { timeoutMs: 160, quietMs: 32 })
-      return !isCancelled() && readPortaledFollowUpComposerRect() != null
+      if (!isCancelled() && isFollowUpComposerReady()) {
+        scrollFollowUpHighlightIntoView(placement)
+        await waitForRectStable(readPortaledFollowUpComposerRect, { timeoutMs: 160, quietMs: 32 })
+        if (
+          !isCancelled() &&
+          isFollowUpComposerReady() &&
+          readPortaledFollowUpComposerRect() != null
+        ) {
+          return true
+        }
+      }
     }
     await new Promise<void>(resolve => {
       window.setTimeout(resolve, 32)
