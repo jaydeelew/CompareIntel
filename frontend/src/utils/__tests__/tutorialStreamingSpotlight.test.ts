@@ -1,0 +1,110 @@
+import { afterEach, describe, expect, it } from 'vitest'
+
+import { TUTORIAL_STEPS_CONFIG } from '../../data/tutorialSteps'
+import {
+  applyStreamingComparisonHighlight,
+  computeTooltipPosition,
+  desktopResultsTooltipMinTop,
+  readStreamingComparisonSpotlight,
+  scrollTutorialRectToCenter,
+} from '../tutorialPositioning'
+
+function box(top: number, height: number, width = 640): DOMRect {
+  return new DOMRect(40, top, width, height)
+}
+
+describe('streaming comparison spotlight', () => {
+  const originalRect = HTMLElement.prototype.getBoundingClientRect
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+    HTMLElement.prototype.getBoundingClientRect = originalRect
+  })
+
+  function mount(rects: { loading?: DOMRect; results?: DOMRect }) {
+    const loading = document.createElement('section')
+    loading.className = 'loading-section'
+    const results = document.createElement('section')
+    results.className = 'results-section'
+    document.body.append(loading, results)
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect(
+      this: HTMLElement
+    ) {
+      if (this === loading && rects.loading) return rects.loading
+      if (this === results && rects.results) return rects.results
+      return new DOMRect(0, 0, 0, 0)
+    }
+    return { loading, results }
+  }
+
+  it('keeps the processing panel until the first streamed token, then the results card', () => {
+    const { loading, results } = mount({
+      loading: box(120, 140),
+      results: box(280, 400),
+    })
+
+    expect(readStreamingComparisonSpotlight(false)?.kind).toBe('loading')
+    expect(applyStreamingComparisonHighlight(false)).toBe('loading')
+    expect(loading.classList.contains('tutorial-highlight')).toBe(true)
+    expect(results.classList.contains('tutorial-highlight')).toBe(false)
+
+    expect(readStreamingComparisonSpotlight(true)?.kind).toBe('results')
+    expect(applyStreamingComparisonHighlight(true)).toBe('results')
+    expect(loading.classList.contains('tutorial-highlight')).toBe(false)
+    expect(results.classList.contains('tutorial-highlight')).toBe(true)
+  })
+
+  it('ignores an empty results card that has no box yet', () => {
+    const { loading } = mount({ loading: box(120, 140), results: box(0, 0) })
+    expect(readStreamingComparisonSpotlight(false)?.element).toBe(loading)
+  })
+
+  it('pulls a tooltip that would sit above a tall results card back into the viewport', () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
+    const placed = computeTooltipPosition(
+      box(16, 2400),
+      'view-follow-up-results',
+      TUTORIAL_STEPS_CONFIG['view-follow-up-results']
+    )
+    const visualTop = placed.top - 210
+    expect(placed.effectivePosition).toBe('top')
+    expect(visualTop).toBeGreaterThanOrEqual(12)
+    expect(placed.top).toBeLessThanOrEqual(900 - 12)
+  })
+
+  it('does not move a tooltip that already meets a frame parked below the reserve', () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
+    const minTop = desktopResultsTooltipMinTop()
+    const placed = computeTooltipPosition(
+      box(minTop, 2400),
+      'view-follow-up-results',
+      TUTORIAL_STEPS_CONFIG['view-follow-up-results']
+    )
+    const frameTop = minTop - 8
+    expect(placed.top).toBe(frameTop - 8)
+    expect(placed.top - 210).toBeGreaterThanOrEqual(12)
+  })
+
+  it('scrolls a tall results card down far enough for the tooltip above it', () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
+    const app = document.createElement('div')
+    app.className = 'app'
+    Object.defineProperty(app, 'scrollHeight', { configurable: true, value: 4000 })
+    Object.defineProperty(app, 'clientHeight', { configurable: true, value: 900 })
+    app.scrollTop = 800
+    app.scrollTo = (options?: ScrollToOptions | number) => {
+      if (typeof options === 'number') {
+        app.scrollTop = options
+        return
+      }
+      app.scrollTop = options?.top ?? app.scrollTop
+    }
+    document.body.appendChild(app)
+
+    const minTop = desktopResultsTooltipMinTop()
+    scrollTutorialRectToCenter({ top: 16, height: 2400 }, minTop)
+    expect(app.scrollTop).toBe(800 + 16 - minTop)
+  })
+})

@@ -144,7 +144,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   }
 
   const shouldHideTooltipDuringFollowUpStream =
-    step === 'follow-up' && followUpSubmitStarted && (isLoading || streamAnswerStarted)
+    step === 'follow-up' && followUpSubmitStarted && streamAnswerStarted
+  // The processing panel keeps its own tooltip. The review step must too:
+  // hiding on any streaming cutout left that card with a ring and no popover.
+  const hideTooltipForStreamingCutout =
+    isLoadingStreamingPhase &&
+    !(isLoading && !streamAnswerStarted) &&
+    step !== 'view-follow-up-results'
 
   const overlayUi = (
     <>
@@ -176,7 +182,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       )}
 
       {!scrollBack &&
-        !isLoadingStreamingPhase &&
+        !hideTooltipForStreamingCutout &&
         !shouldHideTooltipDuringFollowUpStream &&
         !shouldHideTooltip &&
         isVisible &&

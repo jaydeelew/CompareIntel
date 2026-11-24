@@ -20,20 +20,25 @@ import {
   getComposerElement,
   computeTextareaCutout,
   computeButtonCutout,
+  applyStreamingComparisonHighlight,
   centerTutorialStepRect,
   clearTutorialScrollTail,
   computeDropdownCutout,
   computeSavedSelectionCutout,
   computeTargetCutout,
   computeTooltipPosition,
+  desktopResultsTooltipMinTop,
+  elementHasSpotlightBox,
   getTutorialProviderDropdowns,
   getTutorialProviderStepLayout,
   getTutorialScrollMax,
   getTutorialScrollRoot,
   DESKTOP_TUTORIAL_ARROW_PX,
   readTutorialSpotlightRect,
+  readStreamingComparisonSpotlight,
   scrollDeltaToFitTooltip,
   scrollFollowUpHighlightIntoView,
+  scrollTutorialElementToViewportY,
   seatPortaledFollowUpComposer,
   TUTORIAL_FRAME_OUTSET_PX,
   type TutorialProviderLayoutStep,
@@ -776,8 +781,19 @@ export function useTutorialOverlay(
       return targetElement
     }
 
-    const layoutRectForStep = (): DOMRect | null =>
-      readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
+    const layoutRectForStep = (): DOMRect | null => {
+      const spot = readStreamingComparisonSpotlight(streamAnswerStartedRef.current)
+      const comparisonStep =
+        step === 'submit-comparison' ||
+        step === 'submit-comparison-2' ||
+        step === 'follow-up' ||
+        step === 'view-follow-up-results'
+      // Anchor the card to the processing panel until the first streamed token.
+      if (spot?.kind === 'loading' && comparisonStep) {
+        return spot.element.getBoundingClientRect()
+      }
+      return readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
+    }
 
     const readAnchor = (): { top: number; left: number } | null => {
       const el = layoutTarget()
@@ -819,11 +835,13 @@ export function useTutorialOverlay(
 
     const scrollOnce = () => {
       const el = layoutTarget()
-      const rect =
-        readTutorialSpotlightRect(step, tutorialProviderNamesRef.current) ??
-        el?.getBoundingClientRect()
+      const rect = layoutRectForStep() ?? el?.getBoundingClientRect()
       if (!rect) return
-      centerTutorialStepRect(step, rect)
+      centerTutorialStepRect(
+        step,
+        rect,
+        step === 'view-follow-up-results' ? desktopResultsTooltipMinTop() : undefined
+      )
     }
 
     const revealSettledStep = () => {
@@ -893,18 +911,12 @@ export function useTutorialOverlay(
           }
           await waitForTutorialLayoutSettle()
           if (cancelled || stepRef.current !== step) return
-          await waitForRectStable(
-            () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current),
-            { timeoutMs: 400, quietMs: 80 }
-          )
+          await waitForRectStable(() => layoutRectForStep(), { timeoutMs: 400, quietMs: 80 })
           if (cancelled || stepRef.current !== step) return
           scrollOnce()
-          await waitForRectStable(
-            () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current),
-            { timeoutMs: 280, quietMs: 80 }
-          )
+          await waitForRectStable(() => layoutRectForStep(), { timeoutMs: 280, quietMs: 80 })
           if (cancelled || stepRef.current !== step) return
-          const fitted = readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
+          const fitted = layoutRectForStep()
           if (fitted) {
             const delta = scrollDeltaToFitTooltip({
               frameTop: fitted.top - TUTORIAL_FRAME_OUTSET_PX,
@@ -921,10 +933,7 @@ export function useTutorialOverlay(
                 Math.max(0, Math.min(root.getScrollTop() + delta, maxScroll)),
                 'auto'
               )
-              await waitForRectStable(
-                () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current),
-                { timeoutMs: 240, quietMs: 60 }
-              )
+              await waitForRectStable(() => layoutRectForStep(), { timeoutMs: 240, quietMs: 60 })
             }
           }
           revealSettledStep()
@@ -1002,7 +1011,11 @@ export function useTutorialOverlay(
     let seatedTop: number | null = null
     let userTookOver = false
 
-    const readLayout = () => readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
+    const readLayout = () => {
+      const spot = readStreamingComparisonSpotlight(streamAnswerStartedRef.current)
+      if (spot?.kind === 'loading') return spot.element.getBoundingClientRect()
+      return readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
+    }
 
     const followUpPairOffScreen = () => {
       if (step !== 'follow-up') return false
@@ -1078,7 +1091,11 @@ export function useTutorialOverlay(
               preferred,
             })
           } else {
-            centerTutorialStepRect(step, settled)
+            centerTutorialStepRect(
+              step,
+              settled,
+              step === 'view-follow-up-results' ? desktopResultsTooltipMinTop() : undefined
+            )
             await waitForRectStable(readLayout, { timeoutMs: 240, quietMs: 60 })
             if (cancelled || stepRef.current !== step) return
             const centered = readLayout()
@@ -1168,29 +1185,27 @@ export function useTutorialOverlay(
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
-    } else if (step === 'submit-comparison') {
-      // Highlight the composer for step 4 (same as step 3)
-      const composerElement = getComposerElement()
-      if (composerElement) {
-        elementsToHighlight = [composerElement]
-      }
-    } else if (step === 'follow-up') {
-      const resultsSection = document.querySelector('.results-section') as HTMLElement
-      elementsToHighlight = resultsSection ? [resultsSection] : []
-    } else if (step === 'submit-comparison-2') {
-      // Highlight the Comparison Results card or loading section
-      const resultsSection = document.querySelector('.results-section') as HTMLElement
-      const loadingSection = document.querySelector('.loading-section') as HTMLElement
-      elementsToHighlight = []
-      if (loadingSection) {
-        elementsToHighlight.push(loadingSection)
-      }
-      if (resultsSection) {
-        elementsToHighlight.push(resultsSection)
-      }
-    } else if (step === 'view-follow-up-results') {
+    } else if (
+      step === 'submit-comparison' ||
+      step === 'submit-comparison-2' ||
+      step === 'follow-up' ||
+      step === 'view-follow-up-results'
+    ) {
+      const kind = applyStreamingComparisonHighlight(streamAnswerStartedRef.current)
+      const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
-      elementsToHighlight = resultsSection ? [resultsSection] : []
+      if (kind === 'loading' && loadingSection) {
+        elementsToHighlight = [loadingSection]
+      } else if (kind === 'results' && resultsSection) {
+        elementsToHighlight = [resultsSection]
+        if (step === 'follow-up') {
+          const composerElement = getComposerElement()
+          if (composerElement) elementsToHighlight.push(composerElement)
+        }
+      } else if (step === 'submit-comparison' || step === 'submit-comparison-2') {
+        const composerElement = getComposerElement()
+        if (composerElement) elementsToHighlight = [composerElement]
+      }
     } else if (!shouldSkipHighlight) {
       elementsToHighlight =
         highlightedElements.length > 0 ? highlightedElements : targetElement ? [targetElement] : []
@@ -1338,7 +1353,7 @@ export function useTutorialOverlay(
       }
       // If we're still on expand-provider, select-models, enter-prompt, submit-comparison, or dropdown steps, don't clean up - keep the highlight
     }
-  }, [step, highlightedElements, targetElement, expandProviderEffectsReady])
+  }, [step, highlightedElements, targetElement, expandProviderEffectsReady, streamAnswerStarted])
 
   // Re-apply tutorial provider highlight if the DOM dropped it (production timing).
   useEffect(() => {
@@ -1560,14 +1575,19 @@ export function useTutorialOverlay(
 
     const ensureHighlightCutoutAndVisibility = () => {
       const resultsSection = document.querySelector('.results-section') as HTMLElement
-      const loadingSection = document.querySelector('.loading-section') as HTMLElement
 
       if (step === 'follow-up') {
         if (stepRef.current !== 'follow-up') return
-        if (loadingSection) {
-          loadingSection.classList.remove('tutorial-highlight')
-          loadingSection.style.pointerEvents = ''
-          loadingSection.style.position = ''
+        const spotlight = applyStreamingComparisonHighlight(streamAnswerStartedRef.current)
+        if (spotlight === 'loading') {
+          const composerElement = getComposerElement()
+          composerElement?.classList.remove('tutorial-highlight')
+          composerElement?.classList.remove('tutorial-textarea-active')
+          const mirrorComposer = getHeroMirrorComposerIfPresent()
+          if (mirrorComposer && mirrorComposer !== composerElement) {
+            mirrorComposer.classList.remove('tutorial-highlight')
+          }
+          return
         }
         if (resultsSection && !resultsSection.classList.contains('tutorial-highlight')) {
           resultsSection.classList.add('tutorial-highlight')
@@ -1592,11 +1612,8 @@ export function useTutorialOverlay(
       }
 
       if (step === 'view-follow-up-results') {
-        if (loadingSection) {
-          loadingSection.classList.remove('tutorial-highlight')
-          loadingSection.style.pointerEvents = ''
-          loadingSection.style.position = ''
-        }
+        const spotlight = applyStreamingComparisonHighlight(streamAnswerStartedRef.current)
+        if (spotlight === 'loading') return
         if (resultsSection) {
           if (!resultsSection.classList.contains('tutorial-highlight')) {
             resultsSection.classList.add('tutorial-highlight')
@@ -1609,53 +1626,21 @@ export function useTutorialOverlay(
               setIsVisible(true)
             }
           }
+          // The follow-up → review handoff suppresses the first paint so the
+          // previous card can leave. Once this step has settled, keep the
+          // review card mounted even if that flag is still set.
+          if (spotlightSettledRef.current && !isLoadingRef.current) {
+            suppressReviewTooltipRevealRef.current = false
+            setIsVisible(true)
+            setSpotlightSettling(false)
+            setTutorialSpotlightSettling(false)
+          }
         }
         return
       }
 
-      if (step === 'submit-comparison') {
-        const started = streamAnswerStartedRef.current
-        const loadingNow = isLoadingRef.current
-        const shouldHighlightLoading = !started && loadingNow && loadingSection
-        const shouldHighlightResults = Boolean(resultsSection) && (started || loadingNow)
-
-        if (loadingSection) {
-          if (shouldHighlightLoading) {
-            loadingSection.classList.add('tutorial-highlight')
-            loadingSection.style.pointerEvents = 'auto'
-            loadingSection.style.position = 'relative'
-          } else {
-            loadingSection.classList.remove('tutorial-highlight')
-            loadingSection.style.pointerEvents = ''
-            loadingSection.style.position = ''
-          }
-        }
-
-        if (resultsSection) {
-          if (shouldHighlightResults) {
-            resultsSection.classList.add('tutorial-highlight')
-            resultsSection.style.pointerEvents = 'auto'
-            resultsSection.style.position = 'relative'
-          } else {
-            resultsSection.classList.remove('tutorial-highlight')
-            resultsSection.style.pointerEvents = ''
-            resultsSection.style.position = ''
-          }
-        }
-      } else {
-        // Highlight loading section if it exists (appears after submit, before results)
-        if (loadingSection && !loadingSection.classList.contains('tutorial-highlight')) {
-          loadingSection.classList.add('tutorial-highlight')
-          loadingSection.style.pointerEvents = 'auto'
-          loadingSection.style.position = 'relative'
-        }
-
-        // Highlight results section if it exists (appears when results start coming in)
-        if (resultsSection && !resultsSection.classList.contains('tutorial-highlight')) {
-          resultsSection.classList.add('tutorial-highlight')
-          resultsSection.style.pointerEvents = 'auto'
-          resultsSection.style.position = 'relative'
-        }
+      if (step === 'submit-comparison' || step === 'submit-comparison-2') {
+        applyStreamingComparisonHighlight(streamAnswerStartedRef.current)
       }
 
       // Maintain textarea cutout for submit steps (view-follow-up-results returns above)
@@ -1663,9 +1648,18 @@ export function useTutorialOverlay(
       if (composerElement) {
         composerElement.classList.add('tutorial-textarea-active')
         if (step === 'submit-comparison') {
-          composerElement.classList.add('tutorial-highlight')
-          composerElement.style.pointerEvents = 'auto'
-          composerElement.style.position = 'relative'
+          // Before the request, the composer is the spotlight. Once the processing
+          // panel or the results card is on screen, that panel owns the ring.
+          const comparisonSpotlight = readStreamingComparisonSpotlight(
+            streamAnswerStartedRef.current
+          )
+          if (comparisonSpotlight) {
+            composerElement.classList.remove('tutorial-highlight')
+          } else {
+            composerElement.classList.add('tutorial-highlight')
+            composerElement.style.pointerEvents = 'auto'
+            composerElement.style.position = 'relative'
+          }
         }
         const cutout = computeTextareaCutout(composerElement)
         setTextareaCutout(cutout)
@@ -1805,7 +1799,8 @@ export function useTutorialOverlay(
       const active =
         (isSubmit && (loading || started || (settling && framedDuringLoad))) ||
         (isReview && loading) ||
-        holdFirstStream
+        holdFirstStream ||
+        (current === 'follow-up' && loading && !started)
       if (!active) {
         publish(null)
         return
@@ -1813,7 +1808,9 @@ export function useTutorialOverlay(
 
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
       const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
-      const watch = resultsSection ?? loadingSection
+      const preferLoading = !started && elementHasSpotlightBox(loadingSection)
+      const watch =
+        preferLoading && loadingSection ? loadingSection : (resultsSection ?? loadingSection)
       if (watch !== observed) {
         if (observed) resizeObserver.unobserve(observed)
         observed = watch
@@ -1821,33 +1818,49 @@ export function useTutorialOverlay(
       }
       if (loadingSection) loadingSectionWasSeen = true
 
+      const anchorTooltipTo = (rect: DOMRect) => {
+        const currentStep = stepRef.current
+        if (!currentStep) return
+        const stepConfig = TUTORIAL_STEPS_CONFIG[currentStep]
+        const placed = computeTooltipPosition(rect, currentStep, stepConfig)
+        setEffectivePosition(placed.effectivePosition)
+        setOverlayPosition(prev =>
+          Math.abs(prev.top - placed.top) < 1 && Math.abs(prev.left - placed.left) < 1
+            ? prev
+            : { top: placed.top, left: placed.left }
+        )
+        setIsVisible(true)
+        if (!started) {
+          suppressReviewTooltipRevealRef.current = false
+          setSpotlightSettling(false)
+          setTutorialSpotlightSettling(false)
+          setPositionStabilized(true)
+          spotlightSettledRef.current = true
+          settledStepRef.current = currentStep
+        }
+      }
+
       const resultsRect = resultsSection?.getBoundingClientRect()
       const resultsReady = Boolean(
         resultsSection && resultsRect && resultsRect.width > 2 && resultsRect.height > 2
       )
 
-      if (isReview && !started && loadingSection) {
-        const rect = loadingSection.getBoundingClientRect()
-        publish({
-          top: rect.top - 8,
-          left: rect.left - 8,
-          width: rect.width + 16,
-          height: rect.height + 16,
-          borderRadius: 20,
-        })
-        return
-      }
-
-      if (current === 'submit-comparison' && !started && loadingSection && !resultsReady) {
+      // Empty result cards mount with the request. Keep the ring on the processing
+      // panel until any model has streamed answer text.
+      if (preferLoading && loadingSection) {
+        applyStreamingComparisonHighlight(false)
+        const composer = getComposerElement()
+        composer?.classList.remove('tutorial-highlight')
+        const mirror = getHeroMirrorComposerIfPresent()
+        if (mirror && mirror !== composer) mirror.classList.remove('tutorial-highlight')
         if (!hasScrolledToLoading) {
           hasScrolledToLoading = true
-          scrollToResultsRaf = requestAnimationFrame(() => {
-            scrollToResultsRaf = null
-            scrollToResultsTimeout = setTimeout(() => {
-              scrollToResultsTimeout = null
-              loadingSection.scrollIntoView({ behavior: 'auto', block: 'center' })
-            }, 100)
-          })
+          const box = loadingSection.getBoundingClientRect()
+          const desiredTop = Math.max(
+            desktopResultsTooltipMinTop(),
+            (window.innerHeight - box.height) / 2
+          )
+          scrollTutorialElementToViewportY(loadingSection, desiredTop)
         }
         const rect = loadingSection.getBoundingClientRect()
         publish({
@@ -1857,14 +1870,20 @@ export function useTutorialOverlay(
           height: rect.height + 16,
           borderRadius: 20,
         })
+        anchorTooltipTo(rect)
         return
       }
 
       if (resultsReady && resultsSection) {
         const isFollowUpStyle = current === 'submit-comparison-2' || isReview || followUpPost
         const canScroll = isFollowUpStyle ? loadingSectionWasSeen : true
+        // Review placement is owned by the settle scroll, which leaves room for
+        // the tooltip. scrollIntoView(block: start) pins a tall card to y=0 and
+        // pushes that tooltip above the viewport.
         const shouldScrollResultsIntoView =
-          !holdFirstStream && (current !== 'submit-comparison' || started)
+          !holdFirstStream &&
+          current !== 'view-follow-up-results' &&
+          (current !== 'submit-comparison' || started)
         if (
           !spotlightSettledRef.current &&
           !hasScrolledToResults &&
@@ -1882,9 +1901,14 @@ export function useTutorialOverlay(
         }
         const cutout = computeTargetCutout([resultsSection], 8, 24)
         publish(cutout)
-        resultsSection.classList.add('tutorial-highlight')
-        resultsSection.style.pointerEvents = 'auto'
-        resultsSection.style.position = 'relative'
+        applyStreamingComparisonHighlight(streamAnswerStartedRef.current)
+        if (
+          current === 'view-follow-up-results' ||
+          current === 'submit-comparison' ||
+          current === 'submit-comparison-2'
+        ) {
+          anchorTooltipTo(resultsSection.getBoundingClientRect())
+        }
         return
       }
 
@@ -1920,38 +1944,16 @@ export function useTutorialOverlay(
     }
   }, [step])
 
-  // Pulse/highlight on the processing block before stream tokens for all submit/loading steps
+  // Re-apply the exclusive processing/results highlight when loading or the first token flips.
+  // The interval above covers DOM that appears between those renders.
   useEffect(() => {
-    const isLoadingHighlightStep =
+    const watched =
       step === 'submit-comparison' ||
       step === 'submit-comparison-2' ||
-      step === 'view-follow-up-results'
-    const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
-    if (!isLoadingHighlightStep) {
-      if (loadingSection) {
-        loadingSection.classList.remove('tutorial-highlight')
-        loadingSection.style.pointerEvents = ''
-        loadingSection.style.position = ''
-      }
-      return
-    }
-    const shouldHighlight = isLoading && !streamAnswerStarted && loadingSection
-    if (!shouldHighlight) {
-      if (loadingSection) {
-        loadingSection.classList.remove('tutorial-highlight')
-        loadingSection.style.pointerEvents = ''
-        loadingSection.style.position = ''
-      }
-      return
-    }
-    loadingSection.classList.add('tutorial-highlight')
-    loadingSection.style.pointerEvents = 'auto'
-    loadingSection.style.position = 'relative'
-    return () => {
-      loadingSection.classList.remove('tutorial-highlight')
-      loadingSection.style.pointerEvents = ''
-      loadingSection.style.position = ''
-    }
+      step === 'view-follow-up-results' ||
+      step === 'follow-up'
+    if (!watched) return
+    applyStreamingComparisonHighlight(streamAnswerStarted)
   }, [step, isLoading, streamAnswerStarted])
 
   // Separate effect to continuously maintain dropdown active class for history-dropdown step
