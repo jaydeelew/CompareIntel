@@ -122,21 +122,116 @@ async function toggleHistory(page: Page): Promise<void> {
 
 async function verticalCenterReason(page: Page): Promise<string> {
   return page.evaluate(() => {
-    const cutouts = Array.from(
-      document.querySelectorAll('.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout')
-    )
-      .map(el => el.getBoundingClientRect())
-      .filter(rect => rect.width > 2 && rect.height > 2)
-    const cutout = cutouts[0]
-    if (!cutout) return 'no cutout'
-    const offset = Math.abs(cutout.top + cutout.height / 2 - window.innerHeight / 2)
-    if (cutout.height > window.innerHeight * 0.65) return 'ok'
-    if (offset > 80) return `centerOffset ${Math.round(offset)}`
+    const mobile = window.innerWidth <= 768
+    if (!mobile) {
+      const cutouts = Array.from(
+        document.querySelectorAll('.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout')
+      )
+        .map(el => el.getBoundingClientRect())
+        .filter(rect => rect.width > 2 && rect.height > 2)
+      const cutout = cutouts[0]
+      if (!cutout) return 'no cutout'
+      const offset = Math.abs(cutout.top + cutout.height / 2 - window.innerHeight / 2)
+      if (cutout.height > window.innerHeight * 0.65) return 'ok'
+      if (offset > 80) return `centerOffset ${Math.round(offset)}`
+      return 'ok'
+    }
+    const composer = document.querySelector(
+      '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+    ) as HTMLElement | null
+    const tip = document.querySelector(
+      '.mobile-tutorial-tooltip, .tutorial-tooltip'
+    ) as HTMLElement | null
+    if (!composer || !tip) return 'missing pair'
+    const hidden =
+      tip.classList.contains('mobile-tutorial-tooltip--transitioning') ||
+      tip.classList.contains('tutorial-tooltip--transitioning')
+    if (hidden || Number(getComputedStyle(tip).opacity) < 0.9) return 'tooltip hidden'
+    const composerBox = composer.getBoundingClientRect()
+    const tipBox = tip.getBoundingClientRect()
+    const visual = window.visualViewport
+    const viewTop = visual?.offsetTop ?? 0
+    const viewH = Math.min(window.innerHeight, visual?.height || window.innerHeight)
+    const top = Math.min(composerBox.top, tipBox.top)
+    const bottom = Math.max(composerBox.bottom, tipBox.bottom)
+    const offset = Math.abs((top + bottom) / 2 - (viewTop + viewH / 2))
+    if (offset > 72) return `pairOffset ${Math.round(offset)}`
+    const gap = viewTop + viewH - composerBox.bottom
+    if (gap < 36 && bottom - top < viewH * 0.9) return `composerLow gap ${Math.round(gap)}`
     return 'ok'
   })
 }
 
-async function saveButtonCutoutReason(page: Page): Promise<string> {
+interface SpotlightBoxes {
+  composerHighlighted: boolean
+  toggleHighlighted: boolean
+  toggleWidth: number
+  toggleHeight: number
+  toggleRadius: string
+  togglePadding: string
+  composerRadius: string
+  composerShadow: string
+  cutoutWidth: number
+  cutoutHeight: number
+  cutoutRadius: string
+  historyOpen: boolean
+}
+
+async function readSpotlightBoxes(page: Page): Promise<SpotlightBoxes> {
+  return page.evaluate(() => {
+    const composer = document.querySelector(
+      '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+    ) as HTMLElement | null
+    const toggle = (document.querySelector(
+      '[data-after-results-composer-slot] .history-toggle-button'
+    ) ?? document.querySelector('.history-toggle-button')) as HTMLElement | null
+    const cutout = Array.from(
+      document.querySelectorAll('.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout')
+    ).find(el => {
+      const rect = el.getBoundingClientRect()
+      return rect.width > 2 && rect.height > 2
+    }) as HTMLElement | undefined
+    const cutoutBox = cutout?.getBoundingClientRect()
+    const toggleStyle = toggle ? getComputedStyle(toggle) : null
+    const composerStyle = composer ? getComputedStyle(composer) : null
+    const highlighted = (el: HTMLElement | null) =>
+      !!el &&
+      (el.classList.contains('tutorial-highlight') ||
+        el.classList.contains('mobile-tutorial-highlight'))
+    return {
+      composerHighlighted: highlighted(composer),
+      toggleHighlighted: highlighted(toggle),
+      toggleWidth: toggle?.offsetWidth ?? 0,
+      toggleHeight: toggle?.offsetHeight ?? 0,
+      toggleRadius: toggleStyle?.borderRadius ?? '',
+      togglePadding: toggleStyle?.padding ?? '',
+      composerRadius: composerStyle?.borderRadius ?? '',
+      composerShadow: composerStyle?.boxShadow ?? '',
+      cutoutWidth: cutoutBox ? Math.round(cutoutBox.width) : 0,
+      cutoutHeight: cutoutBox ? Math.round(cutoutBox.height) : 0,
+      cutoutRadius: cutout ? getComputedStyle(cutout).borderRadius : '',
+      historyOpen: !!composer?.querySelector('.history-inline-list'),
+    }
+  })
+}
+
+function spotlightMismatch(before: SpotlightBoxes, after: SpotlightBoxes): string {
+  if (!after.composerHighlighted || !after.toggleHighlighted) return 'step 10 missing highlight'
+  if (before.historyOpen !== after.historyOpen) return 'history open state changed'
+  if (before.toggleWidth !== after.toggleWidth || before.toggleHeight !== after.toggleHeight) {
+    return `toggle size ${before.toggleWidth}x${before.toggleHeight} vs ${after.toggleWidth}x${after.toggleHeight}`
+  }
+  if (before.toggleRadius !== after.toggleRadius) return 'toggle radius changed'
+  if (before.togglePadding !== after.togglePadding) return 'toggle padding changed'
+  if (before.composerRadius !== after.composerRadius) return 'composer radius changed'
+  if (before.composerShadow !== after.composerShadow) return 'composer glow changed'
+  if (before.cutoutRadius !== after.cutoutRadius) return 'cutout radius changed'
+  if (Math.abs(before.cutoutWidth - after.cutoutWidth) > 4) return 'cutout width changed'
+  if (Math.abs(before.cutoutHeight - after.cutoutHeight) > 4) return 'cutout height changed'
+  return 'ok'
+}
+
+async function saveStepReason(page: Page): Promise<string> {
   return page.evaluate(() => {
     const button = (document.querySelector(
       '[data-after-results-composer-slot] .saved-selections-button'
@@ -147,42 +242,18 @@ async function saveButtonCutoutReason(page: Page): Promise<string> {
       button.classList.contains('mobile-tutorial-highlight') ||
       button.classList.contains('mobile-tutorial-button-pulsate')
     if (!highlighted) return 'button not highlighted'
-    const rect = button.getBoundingClientRect()
-    const outset = 8
-    const tolerance = 8
-    const cutouts = Array.from(
-      document.querySelectorAll('.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout')
-    )
-      .map(el => el.getBoundingClientRect())
-      .filter(cutout => cutout.width > 2 && cutout.height > 2)
-    const matched = cutouts.some(
-      cutout =>
-        Math.abs(cutout.top - (rect.top - outset)) <= tolerance &&
-        Math.abs(cutout.left - (rect.left - outset)) <= tolerance &&
-        Math.abs(cutout.bottom - (rect.bottom + outset)) <= tolerance &&
-        Math.abs(cutout.right - (rect.right + outset)) <= tolerance
-    )
-    if (!matched) {
-      const nearest = cutouts[0]
-      return nearest
-        ? `cutout ${Math.round(nearest.top)}..${Math.round(nearest.bottom)} button ${Math.round(rect.top)}..${Math.round(rect.bottom)}`
-        : 'no cutout'
-    }
-    const arrow = document.querySelector(
-      '.mobile-tutorial-arrow, .tutorial-arrow'
+    const composer = document.querySelector(
+      '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
     ) as HTMLElement | null
-    if (!arrow) return 'missing arrow'
-    const arrowBox = arrow.getBoundingClientRect()
-    const pointsDown =
-      arrow.classList.contains('mobile-tutorial-arrow-down') ||
-      arrow.classList.contains('tutorial-arrow-top')
-    const tipY = pointsDown ? arrowBox.bottom : arrowBox.top
-    const gap = Math.min(
-      ...cutouts.map(cutout => Math.abs(tipY - (pointsDown ? cutout.top : cutout.bottom)))
-    )
-    if (gap > 6) return `arrow gap ${Math.round(gap)}`
-    const offset = Math.abs(rect.top + rect.height / 2 - window.innerHeight / 2)
-    if (offset > 80) return `centerOffset ${Math.round(offset)}`
+    if (
+      !composer ||
+      !(
+        composer.classList.contains('tutorial-highlight') ||
+        composer.classList.contains('mobile-tutorial-highlight')
+      )
+    ) {
+      return 'composer not highlighted'
+    }
     return 'ok'
   })
 }
@@ -255,9 +326,8 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
       () =>
         page.evaluate(() => {
           const button =
-            document.querySelector(
-              '[data-after-results-composer-slot] .history-toggle-button'
-            ) ?? document.querySelector('.history-toggle-button')
+            document.querySelector('[data-after-results-composer-slot] .history-toggle-button') ??
+            document.querySelector('.history-toggle-button')
           if (!button) return 'missing toggle'
           const highlighted =
             button.classList.contains('tutorial-highlight') ||
@@ -271,7 +341,7 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
   await expect
     .poll(() => verticalCenterReason(page), {
       timeout: 8_000,
-      message: 'history highlight should be vertically centered',
+      message: 'history target and tooltip should be vertically centered',
     })
     .toBe('ok')
   await expect
@@ -281,10 +351,37 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
     })
     .toBe('ok')
 
+  const prompt = page.locator(
+    '[data-after-results-composer-slot] [data-testid="comparison-input-textarea"]'
+  )
+  const promptBefore = await prompt.inputValue()
+  await prompt.click({ force: true })
+  await page.keyboard.type('should-not-stick')
+  await expect(prompt).toHaveValue(promptBefore)
+  await expect.poll(() => prompt.evaluate(el => (el as HTMLTextAreaElement).readOnly)).toBe(true)
+
   await toggleHistory(page)
   await expect
     .poll(() => page.locator('.history-inline-list').count(), { timeout: 5_000 })
     .toBeGreaterThan(0)
+  await page.waitForTimeout(400)
+  await expect(tutorialTooltip(page).first()).toContainText('Access Your History')
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const button = (document.querySelector(
+            '[data-after-results-composer-slot] .history-toggle-button'
+          ) ?? document.querySelector('.history-toggle-button')) as HTMLElement | null
+          if (!button) return 'missing toggle'
+          const highlighted =
+            button.classList.contains('tutorial-highlight') ||
+            button.classList.contains('mobile-tutorial-highlight')
+          return highlighted ? 'ok' : 'toggle not highlighted'
+        }),
+      { timeout: 2_000, message: 'open history toggle should stay highlighted' }
+    )
+    .toBe('ok')
 
   const surface = isMobileE2eProject(testInfo.project.name) ? 'mobile' : 'desktop'
   const phase = process.env.HISTORY_SHOT ?? 'after'
@@ -309,14 +406,24 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
     .toBe('ok')
   await page.screenshot({ path: `${dir}/09-closed.png` })
 
+  const step9Boxes = await readSpotlightBoxes(page)
+  expect(step9Boxes.composerHighlighted).toBe(true)
+  expect(step9Boxes.toggleHighlighted).toBe(true)
+
   await clickTutorialDoneButton(page, testInfo)
   await expect(tutorialTooltip(page).first()).toContainText('Save Model Selections', {
     timeout: 20_000,
   })
   await expect
-    .poll(() => saveButtonCutoutReason(page), {
+    .poll(() => saveStepReason(page), {
       timeout: 8_000,
-      message: 'saved selections button should be the centered highlight',
+      message: 'step 10 should highlight the composer and the saved-selections button',
+    })
+    .toBe('ok')
+  await expect
+    .poll(async () => spotlightMismatch(step9Boxes, await readSpotlightBoxes(page)), {
+      timeout: 8_000,
+      message: 'step 10 composer and history toggle highlights should match step 9',
     })
     .toBe('ok')
   await page.screenshot({ path: `${dir}/10-save.png` })

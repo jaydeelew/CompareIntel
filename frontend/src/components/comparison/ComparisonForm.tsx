@@ -780,83 +780,140 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 ? 'Continue conversation'
                 : 'Submit'
 
-    const buildComposerContent = (mirror: boolean) => (
-      <div
-        className={`composer ${isAnimatingTextarea && !mirror ? 'animate-pulse-border' : ''} ${composerDemoPauseHighlight && !mirror ? 'composer-demo-pause-highlight' : ''} ${composerFloating && !mirror ? 'composer-floating' : ''}`}
-      >
-        <div className="composer-input-wrapper">
-          {attachedFiles.length > 0 && (
-            <AttachmentChips
-              attachedFiles={attachedFiles}
-              setAttachedFiles={setAttachedFiles}
-              setInput={setInput}
-              disabled={isLoading}
-              imageTooltipUsePortal={showComposerStyledTooltips}
-            />
-          )}
-          <textarea
-            id={mirror ? 'comparison-input-mirror' : 'comparison-input'}
-            name={mirror ? undefined : 'comparisonPrompt'}
-            ref={mirror ? mirrorTextareaRef : (textareaRef as React.RefObject<HTMLTextAreaElement>)}
-            value={input}
-            onChange={mirror ? undefined : e => setInput(e.target.value)}
-            readOnly={mirror}
-            disabled={!mirror && followUpUnavailable}
-            tabIndex={mirror ? -1 : undefined}
-            onKeyDown={
-              mirror
-                ? undefined
-                : e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      if (blockPromptStepForTutorial) return
-                      if (submitImageConfigBlocked && !hardSubmitDisabled) {
-                        onImageGenerationSubmitBlockedTap?.()
+    const buildComposerContent = (mirror: boolean) => {
+      const historyComposerSpotlight =
+        !mirror &&
+        tutorialIsActive &&
+        (tutorialStep === 'history-dropdown' || tutorialStep === 'save-selection')
+      const lockHistoryPrompt = !mirror && tutorialIsActive && tutorialStep === 'history-dropdown'
+      const historySpotlightClass = historyComposerSpotlight
+        ? isMobileLayout
+          ? 'mobile-tutorial-highlight'
+          : 'tutorial-highlight'
+        : ''
+      const historyToggleClassName = [
+        'history-toggle-button',
+        showHistoryDropdown ? 'active' : '',
+        historySpotlightClass,
+        historyComposerSpotlight && isMobileLayout ? 'mobile-tutorial-button-pulsate' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      const composerClassName = [
+        'composer',
+        isAnimatingTextarea && !mirror ? 'animate-pulse-border' : '',
+        composerDemoPauseHighlight && !mirror ? 'composer-demo-pause-highlight' : '',
+        composerFloating && !mirror ? 'composer-floating' : '',
+        historySpotlightClass,
+        historyComposerSpotlight ? 'tutorial-dropdown-container-active' : '',
+        lockHistoryPrompt ? 'tutorial-history-input-locked' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      return (
+        <div className={composerClassName}>
+          <div className="composer-input-wrapper">
+            {attachedFiles.length > 0 && (
+              <AttachmentChips
+                attachedFiles={attachedFiles}
+                setAttachedFiles={setAttachedFiles}
+                setInput={setInput}
+                disabled={isLoading}
+                imageTooltipUsePortal={showComposerStyledTooltips}
+              />
+            )}
+            <textarea
+              id={mirror ? 'comparison-input-mirror' : 'comparison-input'}
+              name={mirror ? undefined : 'comparisonPrompt'}
+              ref={
+                mirror ? mirrorTextareaRef : (textareaRef as React.RefObject<HTMLTextAreaElement>)
+              }
+              value={input}
+              onChange={mirror || lockHistoryPrompt ? undefined : e => setInput(e.target.value)}
+              onBeforeInput={lockHistoryPrompt ? event => event.preventDefault() : undefined}
+              onPaste={lockHistoryPrompt ? event => event.preventDefault() : undefined}
+              onFocus={lockHistoryPrompt ? event => event.currentTarget.blur() : undefined}
+              readOnly={mirror || lockHistoryPrompt}
+              disabled={!mirror && followUpUnavailable}
+              tabIndex={mirror || lockHistoryPrompt ? -1 : undefined}
+              onKeyDown={
+                mirror
+                  ? undefined
+                  : e => {
+                      if (lockHistoryPrompt) {
+                        e.preventDefault()
                         return
                       }
-                      if (hardSubmitDisabled) return
-                      if (isFollowUpMode) onContinueConversation()
-                      else onSubmitClick()
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        if (blockPromptStepForTutorial) return
+                        if (submitImageConfigBlocked && !hardSubmitDisabled) {
+                          onImageGenerationSubmitBlockedTap?.()
+                          return
+                        }
+                        if (hardSubmitDisabled) return
+                        if (isFollowUpMode) onContinueConversation()
+                        else onSubmitClick()
+                      }
                     }
-                  }
-            }
-            onDragEnter={mirror ? undefined : handleDragEnter}
-            onDragOver={mirror ? undefined : handleDragOver}
-            onDragLeave={mirror ? undefined : handleDragLeave}
-            onDrop={mirror ? undefined : handleDrop}
-            onPaste={undefined}
-            placeholder={
-              followUpUnavailable
-                ? 'Start a new comparison to continue'
-                : isFollowUpMode
-                  ? 'Continue your conversation here'
-                  : 'Enter your input here...'
-            }
-            aria-label={
-              followUpUnavailable
-                ? 'Start a new comparison to continue'
-                : isFollowUpMode
-                  ? 'Continue your conversation'
-                  : 'Enter your prompt to compare AI models'
-            }
-            className={`hero-input-textarea ${isDraggingOver && !mirror ? 'drag-over' : ''}`}
-            rows={1}
-            data-testid={mirror ? undefined : 'comparison-input-textarea'}
-          />
-        </div>
+              }
+              onDragEnter={mirror ? undefined : handleDragEnter}
+              onDragOver={mirror ? undefined : handleDragOver}
+              onDragLeave={mirror ? undefined : handleDragLeave}
+              onDrop={mirror ? undefined : handleDrop}
+              placeholder={
+                followUpUnavailable
+                  ? 'Start a new comparison to continue'
+                  : isFollowUpMode
+                    ? 'Continue your conversation here'
+                    : 'Enter your input here...'
+              }
+              aria-label={
+                followUpUnavailable
+                  ? 'Start a new comparison to continue'
+                  : isFollowUpMode
+                    ? 'Continue your conversation'
+                    : 'Enter your prompt to compare AI models'
+              }
+              className={`hero-input-textarea ${isDraggingOver && !mirror ? 'drag-over' : ''}`}
+              rows={1}
+              data-testid={mirror ? undefined : 'comparison-input-textarea'}
+            />
+          </div>
 
-        <div
-          className={`composer-toolbar ${isDraggingOver ? 'drag-over' : ''}`}
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          {showComposerStyledTooltips ? (
-            <StyledTooltip usePortal text="Load previous conversations">
+          <div
+            className={`composer-toolbar ${isDraggingOver ? 'drag-over' : ''}`}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {showComposerStyledTooltips ? (
+              <StyledTooltip usePortal text="Load previous conversations">
+                <button
+                  type="button"
+                  className={historyToggleClassName}
+                  aria-label="Load previous conversations"
+                  onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+              </StyledTooltip>
+            ) : (
               <button
                 type="button"
-                className={`history-toggle-button ${showHistoryDropdown ? 'active' : ''}`}
+                className={historyToggleClassName}
                 aria-label="Load previous conversations"
                 onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
               >
@@ -873,130 +930,144 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   <path d="M6 9l6 6 6-6" />
                 </svg>
               </button>
-            </StyledTooltip>
-          ) : (
-            <button
-              type="button"
-              className={`history-toggle-button ${showHistoryDropdown ? 'active' : ''}`}
-              aria-label="Load previous conversations"
-              onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-          )}
-
-          <SavedSelectionsDropdown
-            selectionProps={selectionProps}
-            selectedModels={selectedModels}
-            modelsByProvider={modelsByProvider}
-            isFollowUpMode={isFollowUpMode}
-            dropdownContainerRef={
-              mirror ? mirrorSavedSelectionsSlotRef : savedSelectionsDropdownSlotRef
-            }
-            hideTooltip={!showComposerStyledTooltips}
-            tooltipUsePortal={showComposerStyledTooltips}
-          />
-
-          <div className="textarea-actions">
-            <FileUpload
-              ref={mirror ? undefined : fileUploadRef}
-              attachedFiles={attachedFiles}
-              setAttachedFiles={setAttachedFiles}
-              input={input}
-              setInput={setInput}
-              textareaRef={textareaRef}
-              disabled={isLoading}
-              isMobileLayout={useTouchFirstComposerChrome}
-              hideTooltip={!showComposerStyledTooltips}
-              tooltipUsePortal={showComposerStyledTooltips}
-              onMobileButtonClick={
-                useTouchFirstComposerChrome && !isLoading
-                  ? () => {
-                      if (getTooltipModalSuppressed('add-file')) {
-                        fileUploadRef.current?.openFilePicker()
-                      } else {
-                        setTooltipModalButton('add-file')
-                      }
-                    }
-                  : undefined
-              }
-            />
-
-            {(isFollowUpMode || input.trim().length > 0) && (
-              <TokenUsageDisplay
-                input={input}
-                selectedModels={selectedModels}
-                conversations={conversations}
-                modelsByProvider={modelsByProvider}
-                isFollowUpMode={isFollowUpMode}
-                attachedFiles={attachedFiles}
-                onExpandFiles={onExpandFiles}
-                onAccurateTokenCountChange={onAccurateTokenCountChange}
-                onTokenUsageInfoChange={setTokenUsageInfo}
-                tutorialIsActive={tutorialIsActive}
-                hideTooltip={!showComposerStyledTooltips}
-                tooltipUsePortal={showComposerStyledTooltips}
-                isMobileLayout={useTouchFirstComposerChrome}
-              />
             )}
 
-            {isSpeechSupported &&
-              speechBrowserSupport === 'native' &&
-              (useTouchFirstComposerChrome ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isSpeechListening) {
-                      stopSpeechListening()
-                    } else if (getTooltipModalSuppressed('voice')) {
-                      startSpeechListening()
-                    } else {
-                      setTooltipModalButton('voice')
-                    }
-                  }}
-                  className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
-                  aria-label={voiceButtonAriaLabel}
-                  disabled={isLoading}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{ width: '20px', height: '20px', display: 'block' }}
+            <SavedSelectionsDropdown
+              selectionProps={selectionProps}
+              selectedModels={selectedModels}
+              modelsByProvider={modelsByProvider}
+              isFollowUpMode={isFollowUpMode}
+              dropdownContainerRef={
+                mirror ? mirrorSavedSelectionsSlotRef : savedSelectionsDropdownSlotRef
+              }
+              hideTooltip={!showComposerStyledTooltips}
+              tooltipUsePortal={showComposerStyledTooltips}
+            />
+
+            <div className="textarea-actions">
+              <FileUpload
+                ref={mirror ? undefined : fileUploadRef}
+                attachedFiles={attachedFiles}
+                setAttachedFiles={setAttachedFiles}
+                input={input}
+                setInput={setInput}
+                textareaRef={textareaRef}
+                disabled={isLoading}
+                isMobileLayout={useTouchFirstComposerChrome}
+                hideTooltip={!showComposerStyledTooltips}
+                tooltipUsePortal={showComposerStyledTooltips}
+                onMobileButtonClick={
+                  useTouchFirstComposerChrome && !isLoading
+                    ? () => {
+                        if (getTooltipModalSuppressed('add-file')) {
+                          fileUploadRef.current?.openFilePicker()
+                        } else {
+                          setTooltipModalButton('add-file')
+                        }
+                      }
+                    : undefined
+                }
+              />
+
+              {(isFollowUpMode || input.trim().length > 0) && (
+                <TokenUsageDisplay
+                  input={input}
+                  selectedModels={selectedModels}
+                  conversations={conversations}
+                  modelsByProvider={modelsByProvider}
+                  isFollowUpMode={isFollowUpMode}
+                  attachedFiles={attachedFiles}
+                  onExpandFiles={onExpandFiles}
+                  onAccurateTokenCountChange={onAccurateTokenCountChange}
+                  onTokenUsageInfoChange={setTokenUsageInfo}
+                  tutorialIsActive={tutorialIsActive}
+                  hideTooltip={!showComposerStyledTooltips}
+                  tooltipUsePortal={showComposerStyledTooltips}
+                  isMobileLayout={useTouchFirstComposerChrome}
+                />
+              )}
+
+              {isSpeechSupported &&
+                speechBrowserSupport === 'native' &&
+                (useTouchFirstComposerChrome ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isSpeechListening) {
+                        stopSpeechListening()
+                      } else if (getTooltipModalSuppressed('voice')) {
+                        startSpeechListening()
+                      } else {
+                        setTooltipModalButton('voice')
+                      }
+                    }}
+                    className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
+                    aria-label={voiceButtonAriaLabel}
+                    disabled={isLoading}
                   >
-                    <path
-                      d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill={isSpeechListening ? 'currentColor' : 'none'}
-                    />
-                    <path
-                      d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              ) : showComposerStyledTooltips ? (
-                <StyledTooltip
-                  usePortal
-                  text={isSpeechListening ? 'Stop recording' : 'Start voice input'}
-                >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{ width: '20px', height: '20px', display: 'block' }}
+                    >
+                      <path
+                        d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill={isSpeechListening ? 'currentColor' : 'none'}
+                      />
+                      <path
+                        d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                ) : showComposerStyledTooltips ? (
+                  <StyledTooltip
+                    usePortal
+                    text={isSpeechListening ? 'Stop recording' : 'Start voice input'}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isSpeechListening) stopSpeechListening()
+                        else startSpeechListening()
+                      }}
+                      className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
+                      aria-label={voiceButtonAriaLabel}
+                      disabled={isLoading}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{ width: '20px', height: '20px', display: 'block' }}
+                      >
+                        <path
+                          d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill={isSpeechListening ? 'currentColor' : 'none'}
+                        />
+                        <path
+                          d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </StyledTooltip>
+                ) : (
                   <button
                     type="button"
                     onClick={() => {
@@ -1030,69 +1101,51 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       />
                     </svg>
                   </button>
-                </StyledTooltip>
-              ) : (
+                ))}
+
+              {useTouchFirstComposerChrome ? (
                 <button
                   type="button"
+                  data-testid={mirror ? undefined : 'web-search-button'}
                   onClick={() => {
-                    if (isSpeechListening) stopSpeechListening()
-                    else startSpeechListening()
-                  }}
-                  className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
-                  aria-label={voiceButtonAriaLabel}
-                  disabled={isLoading}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{ width: '20px', height: '20px', display: 'block' }}
-                  >
-                    <path
-                      d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill={isSpeechListening ? 'currentColor' : 'none'}
-                    />
-                    <path
-                      d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              ))}
-
-            {useTouchFirstComposerChrome ? (
-              <button
-                type="button"
-                data-testid={mirror ? undefined : 'web-search-button'}
-                onClick={() => {
-                  if (webSearchControlDisabled && isTouchDevice) {
-                    handleDisabledButtonTap('websearch')
-                  } else if (!webSearchControlDisabled) {
-                    if (webSearchEnabled) {
-                      setWebSearchEnabled(false)
-                    } else if (getTooltipModalSuppressed('web-search')) {
-                      setWebSearchEnabled(true)
-                    } else {
-                      setTooltipModalButton('web-search')
+                    if (webSearchControlDisabled && isTouchDevice) {
+                      handleDisabledButtonTap('websearch')
+                    } else if (!webSearchControlDisabled) {
+                      if (webSearchEnabled) {
+                        setWebSearchEnabled(false)
+                      } else if (getTooltipModalSuppressed('web-search')) {
+                        setWebSearchEnabled(true)
+                      } else {
+                        setTooltipModalButton('web-search')
+                      }
                     }
-                  }
-                }}
-                className={webSearchButtonClassName}
-                disabled={webSearchButtonNativeDisabled}
-                aria-label={webSearchButtonAriaLabel}
-                aria-disabled={webSearchControlDisabled}
-              >
-                <WebSearchGlobeIcon includeTestId={!mirror} />
-              </button>
-            ) : showComposerStyledTooltips ? (
-              <StyledTooltip usePortal text={webSearchTooltipText}>
+                  }}
+                  className={webSearchButtonClassName}
+                  disabled={webSearchButtonNativeDisabled}
+                  aria-label={webSearchButtonAriaLabel}
+                  aria-disabled={webSearchControlDisabled}
+                >
+                  <WebSearchGlobeIcon includeTestId={!mirror} />
+                </button>
+              ) : showComposerStyledTooltips ? (
+                <StyledTooltip usePortal text={webSearchTooltipText}>
+                  <button
+                    type="button"
+                    data-testid={mirror ? undefined : 'web-search-button'}
+                    onClick={() => {
+                      if (webSearchControlDisabled && isTouchDevice)
+                        handleDisabledButtonTap('websearch')
+                      else if (!webSearchControlDisabled) setWebSearchEnabled(!webSearchEnabled)
+                    }}
+                    className={webSearchButtonClassName}
+                    disabled={webSearchButtonNativeDisabled}
+                    aria-label={webSearchButtonAriaLabel}
+                    aria-disabled={webSearchControlDisabled}
+                  >
+                    <WebSearchGlobeIcon includeTestId={!mirror} />
+                  </button>
+                </StyledTooltip>
+              ) : (
                 <button
                   type="button"
                   data-testid={mirror ? undefined : 'web-search-button'}
@@ -1108,157 +1161,141 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 >
                   <WebSearchGlobeIcon includeTestId={!mirror} />
                 </button>
-              </StyledTooltip>
-            ) : (
-              <button
-                type="button"
-                data-testid={mirror ? undefined : 'web-search-button'}
-                onClick={() => {
-                  if (webSearchControlDisabled && isTouchDevice)
-                    handleDisabledButtonTap('websearch')
-                  else if (!webSearchControlDisabled) setWebSearchEnabled(!webSearchEnabled)
-                }}
-                className={webSearchButtonClassName}
-                disabled={webSearchButtonNativeDisabled}
-                aria-label={webSearchButtonAriaLabel}
-                aria-disabled={webSearchControlDisabled}
-              >
-                <WebSearchGlobeIcon includeTestId={!mirror} />
-              </button>
-            )}
+              )}
 
-            {useTouchFirstComposerChrome ? (
-              <button
-                onMouseDown={event => {
-                  // iOS uses the first tap on a focused prompt to dismiss the
-                  // keyboard and never fires click. Keeping the focus lets this
-                  // tap submit.
-                  event.preventDefault()
-                }}
-                onClick={() => {
-                  if (blockPromptStepForTutorial) return
-                  if (submitImageConfigBlocked && !hardSubmitDisabled) {
-                    onImageGenerationSubmitBlockedTap?.()
-                    return
-                  }
-                  if (hardSubmitDisabled && isTouchDevice) {
-                    handleDisabledButtonTap('submit')
-                  } else if (!hardSubmitDisabled) {
-                    if (isFollowUpMode) onContinueConversation()
-                    else onSubmitClick()
-                  }
-                }}
-                disabled={!isTouchDevice && hardSubmitDisabled}
-                className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitProgressOutline ? 'submit-progress-outline' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
-                  submitImageConfigBlocked && !hardSubmitDisabled
-                    ? 'submit-blocked-image-config'
-                    : ''
-                } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
-                data-testid={mirror ? undefined : 'comparison-submit-button'}
-                aria-label={submitButtonAriaLabel}
-                aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
-              >
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M7 14l5-5 5 5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            ) : (
-              (() => {
-                const isReadyToSubmit =
-                  !isLoading &&
-                  creditsRemaining > 0 &&
-                  input.trim().length > 0 &&
-                  selectedModels.length > 0 &&
-                  !(isFollowUpMode && tokenUsageInfo?.isExceeded) &&
-                  !submitImageConfigBlocked
-                const submitButton = (
-                  <button
-                    onMouseDown={event => {
-                      // iOS uses the first tap on a focused prompt to dismiss the
-                      // keyboard and never fires click. Keeping the focus lets this
-                      // tap submit.
-                      event.preventDefault()
-                    }}
-                    onClick={() => {
-                      if (blockPromptStepForTutorial) return
-                      if (submitImageConfigBlocked && !hardSubmitDisabled) {
-                        onImageGenerationSubmitBlockedTap?.()
-                        return
-                      }
-                      if (hardSubmitDisabled && isTouchDevice) handleDisabledButtonTap('submit')
-                      else if (!hardSubmitDisabled) {
-                        if (isFollowUpMode) onContinueConversation()
-                        else onSubmitClick()
-                      }
-                    }}
-                    disabled={!isTouchDevice && hardSubmitDisabled}
-                    className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitProgressOutline ? 'submit-progress-outline' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
-                      submitImageConfigBlocked && !hardSubmitDisabled
-                        ? 'submit-blocked-image-config'
-                        : ''
-                    } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
-                    data-testid={mirror ? undefined : 'comparison-submit-button'}
-                    aria-label={submitButtonAriaLabel}
-                    aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        d="M7 14l5-5 5 5"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                )
-                return isReadyToSubmit || isLoading || !showComposerStyledTooltips ? (
-                  submitButton
-                ) : (
-                  <StyledTooltip
-                    usePortal
-                    text={
-                      creditsRemaining <= 0
-                        ? 'You have run out of credits'
-                        : !input.trim() || selectedModels.length === 0
-                          ? submitIncompleteComposerTooltip(
-                              input.trim().length > 0,
-                              selectedModels.length > 0
-                            )
-                          : submitImageBlockTooltip !== ''
-                            ? submitImageBlockTooltip
-                            : isFollowUpMode && tokenUsageInfo?.isExceeded
-                              ? 'Input capacity exceeded - inputs may be truncated'
-                              : 'Submit'
+              {useTouchFirstComposerChrome ? (
+                <button
+                  onMouseDown={event => {
+                    // iOS uses the first tap on a focused prompt to dismiss the
+                    // keyboard and never fires click. Keeping the focus lets this
+                    // tap submit.
+                    event.preventDefault()
+                  }}
+                  onClick={() => {
+                    if (blockPromptStepForTutorial) return
+                    if (submitImageConfigBlocked && !hardSubmitDisabled) {
+                      onImageGenerationSubmitBlockedTap?.()
+                      return
                     }
-                  >
-                    {submitButton}
-                  </StyledTooltip>
-                )
-              })()
-            )}
+                    if (hardSubmitDisabled && isTouchDevice) {
+                      handleDisabledButtonTap('submit')
+                    } else if (!hardSubmitDisabled) {
+                      if (isFollowUpMode) onContinueConversation()
+                      else onSubmitClick()
+                    }
+                  }}
+                  disabled={!isTouchDevice && hardSubmitDisabled}
+                  className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitProgressOutline ? 'submit-progress-outline' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                    submitImageConfigBlocked && !hardSubmitDisabled
+                      ? 'submit-blocked-image-config'
+                      : ''
+                  } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
+                  data-testid={mirror ? undefined : 'comparison-submit-button'}
+                  aria-label={submitButtonAriaLabel}
+                  aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M7 14l5-5 5 5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              ) : (
+                (() => {
+                  const isReadyToSubmit =
+                    !isLoading &&
+                    creditsRemaining > 0 &&
+                    input.trim().length > 0 &&
+                    selectedModels.length > 0 &&
+                    !(isFollowUpMode && tokenUsageInfo?.isExceeded) &&
+                    !submitImageConfigBlocked
+                  const submitButton = (
+                    <button
+                      onMouseDown={event => {
+                        // iOS uses the first tap on a focused prompt to dismiss the
+                        // keyboard and never fires click. Keeping the focus lets this
+                        // tap submit.
+                        event.preventDefault()
+                      }}
+                      onClick={() => {
+                        if (blockPromptStepForTutorial) return
+                        if (submitImageConfigBlocked && !hardSubmitDisabled) {
+                          onImageGenerationSubmitBlockedTap?.()
+                          return
+                        }
+                        if (hardSubmitDisabled && isTouchDevice) handleDisabledButtonTap('submit')
+                        else if (!hardSubmitDisabled) {
+                          if (isFollowUpMode) onContinueConversation()
+                          else onSubmitClick()
+                        }
+                      }}
+                      disabled={!isTouchDevice && hardSubmitDisabled}
+                      className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitProgressOutline ? 'submit-progress-outline' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                        submitImageConfigBlocked && !hardSubmitDisabled
+                          ? 'submit-blocked-image-config'
+                          : ''
+                      } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
+                      data-testid={mirror ? undefined : 'comparison-submit-button'}
+                      aria-label={submitButtonAriaLabel}
+                      aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                          d="M7 14l5-5 5 5"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  )
+                  return isReadyToSubmit || isLoading || !showComposerStyledTooltips ? (
+                    submitButton
+                  ) : (
+                    <StyledTooltip
+                      usePortal
+                      text={
+                        creditsRemaining <= 0
+                          ? 'You have run out of credits'
+                          : !input.trim() || selectedModels.length === 0
+                            ? submitIncompleteComposerTooltip(
+                                input.trim().length > 0,
+                                selectedModels.length > 0
+                              )
+                            : submitImageBlockTooltip !== ''
+                              ? submitImageBlockTooltip
+                              : isFollowUpMode && tokenUsageInfo?.isExceeded
+                                ? 'Input capacity exceeded - inputs may be truncated'
+                                : 'Submit'
+                      }
+                    >
+                      {submitButton}
+                    </StyledTooltip>
+                  )
+                })()
+              )}
+            </div>
           </div>
+
+          <div
+            ref={mirror ? mirrorSavedSelectionsSlotRef : savedSelectionsDropdownSlotRef}
+            className="saved-selections-dropdown-slot"
+          />
+
+          <HistoryDropdown
+            historyProps={historyProps}
+            isAuthenticated={isAuthenticated}
+            userSubscriptionTier={user?.subscription_tier}
+            isSmallLayout={isSmallLayout}
+          />
         </div>
-
-        <div
-          ref={mirror ? mirrorSavedSelectionsSlotRef : savedSelectionsDropdownSlotRef}
-          className="saved-selections-dropdown-slot"
-        />
-
-        <HistoryDropdown
-          historyProps={historyProps}
-          isAuthenticated={isAuthenticated}
-          userSubscriptionTier={user?.subscription_tier}
-          isSmallLayout={isSmallLayout}
-        />
-      </div>
-    )
+      )
+    }
 
     const composerContent = buildComposerContent(false)
     const composerContentMirror = buildComposerContent(true)

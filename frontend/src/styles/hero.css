@@ -1946,6 +1946,12 @@ video.capability-tile-image-lightbox-img {
   border-radius: 0;
 }
 
+/* History tutorial step is toggle-only. Keep the field looking the same, but drop focus and typing. */
+.composer.tutorial-history-input-locked .hero-input-textarea {
+  pointer-events: none;
+  caret-color: transparent;
+}
+
 /* Textarea focus state */
 .hero-input-textarea:focus {
   outline: none;
