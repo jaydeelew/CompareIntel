@@ -1294,12 +1294,16 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             className="saved-selections-dropdown-slot"
           />
 
-          <HistoryDropdown
-            historyProps={historyProps}
-            isAuthenticated={isAuthenticated}
-            userSubscriptionTier={user?.subscription_tier}
-            isSmallLayout={isSmallLayout}
-          />
+          {/* The hero mirror is an inert copy. A second open list unlocks the
+              hero height lock and pushes the real composer down the page. */}
+          {!mirror && (
+            <HistoryDropdown
+              historyProps={historyProps}
+              isAuthenticated={isAuthenticated}
+              userSubscriptionTier={user?.subscription_tier}
+              isSmallLayout={isSmallLayout}
+            />
+          )}
         </div>
       )
     }

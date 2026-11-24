@@ -226,6 +226,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   }
   const tooltipEstimatedHeight = getTooltipEstimatedHeight()
   const previousStepRef = useRef<TutorialStep | null>(null)
+  // Steps 9 and 10 keep the tooltip where step entry placed it. Opening a
+  // dropdown must not recompute that position.
+  const frozenPairRef = useRef<{
+    step: TutorialStep
+    tooltipTop: number
+    tooltipLeft: number
+    arrowDirection: TooltipPosition['arrowDirection']
+    arrowOffset: number
+    scrollTop: number
+    lift: number
+  } | null>(null)
+  // Capture only the position written when the card finishes fading in.
+  const pairFreezeReadyRef = useRef(false)
   // History → save keeps the composer cutout mounted. Replaying its opacity
   // transition (or swapping in the full-screen dim) leaves Mobile Safari at a
   // partial opacity, so step 10's ring paints fainter than step 9's.
@@ -268,8 +281,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Hide tooltip and highlight before paint on every step, including provider handoffs.
   useLayoutEffect(() => {
     const prev = previousStepRef.current
+    if (step !== prev) {
+      pairFreezeReadyRef.current = false
+    }
     if (step && step !== prev) {
       previousStepRef.current = step
+    }
+    if (frozenPairRef.current && frozenPairRef.current.step !== step) {
+      frozenPairRef.current = null
     }
     setPreserveComposerRing(prev === 'history-dropdown' && step === 'save-selection')
     if (!step) {
@@ -417,6 +436,25 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Calculate target rect and tooltip position
   const calculatePositions = useCallback(() => {
     if (!targetElement || !step) return
+
+    const pairStep = step === 'history-dropdown' || step === 'save-selection'
+    const frozenPair =
+      pairStep &&
+      spotlightSettledRef.current &&
+      pairFreezeReadyRef.current &&
+      frozenPairRef.current?.step === step
+        ? frozenPairRef.current
+        : null
+    if (frozenPair) {
+      const root = getTutorialScrollRoot()
+      if (Math.abs(root.getScrollTop() - frozenPair.scrollTop) > 0.5) {
+        root.scrollToTop(frozenPair.scrollTop, 'auto')
+      }
+      const composer = getComposerElement()
+      if (composer && Math.abs(readHistoryComposerLift(composer) - frozenPair.lift) > 0.5) {
+        setHistoryComposerLift(composer, frozenPair.lift)
+      }
+    }
 
     if (step !== 'follow-up') {
       setFollowUpComposerHoleRect(null)
@@ -653,9 +691,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       lockSide: step === 'follow-up',
     })
 
-    const tooltipTop = placed.top
+    let tooltipTop = placed.top
     let tooltipLeft = 0
-    const arrowDirection: 'up' | 'down' | 'left' | 'right' = placed.arrowDirection
+    let arrowDirection: 'up' | 'down' | 'left' | 'right' = placed.arrowDirection
     let arrowOffset = 50
 
     // Calculate horizontal position - try to center on target
@@ -677,6 +715,26 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     arrowOffset = isSubmitTooltipStep
       ? Math.max(4, Math.min(96, rawArrowPct))
       : Math.max(15, Math.min(85, rawArrowPct))
+
+    if (pairStep && spotlightSettledRef.current && pairFreezeReadyRef.current) {
+      if (frozenPair) {
+        tooltipTop = frozenPair.tooltipTop
+        tooltipLeft = frozenPair.tooltipLeft
+        arrowDirection = frozenPair.arrowDirection
+        arrowOffset = frozenPair.arrowOffset
+      } else {
+        const composer = getComposerElement()
+        frozenPairRef.current = {
+          step,
+          tooltipTop,
+          tooltipLeft,
+          arrowDirection,
+          arrowOffset,
+          scrollTop: getTutorialScrollRoot().getScrollTop(),
+          lift: composer ? readHistoryComposerLift(composer) : 0,
+        }
+      }
+    }
 
     setTooltipPosition(prev => {
       if (
@@ -864,6 +922,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         setIsStepTransitioning(false)
         setTutorialSpotlightSettling(false)
         // A drag during the fade was ignored. Catch the target where it is now.
+        // Steps 9 and 10 freeze this sample; later dropdown resizes must not move it.
+        if (currentStep === 'history-dropdown' || currentStep === 'save-selection') {
+          pairFreezeReadyRef.current = true
+        }
         calculatePositions()
       }, 48)
       revealTimerRef.current = id

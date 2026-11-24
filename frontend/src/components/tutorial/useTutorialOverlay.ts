@@ -115,6 +115,8 @@ export function useTutorialOverlay(
   const settledStepRef = useRef<TutorialStep | null>(null)
   /** Target rect captured when the fade-in starts. Later drift hides the tooltip before a remeasure. */
   const placedAnchorRef = useRef<{ top: number; left: number } | null>(null)
+  /** Scroll captured when steps 9 and 10 finish centering. Dropdown resize must not move it. */
+  const frozenPairScrollRef = useRef<{ step: TutorialStep; scrollTop: number } | null>(null)
   const [spotlightSettling, setSpotlightSettling] = useState(true)
   const spotlightSettlingRef = useRef(spotlightSettling)
   spotlightSettlingRef.current = spotlightSettling
@@ -207,6 +209,7 @@ export function useTutorialOverlay(
     if (settledStepRef.current === step && spotlightSettledRef.current) return
     spotlightSettledRef.current = false
     spotlightSettlingRef.current = true
+    frozenPairScrollRef.current = null
     setSpotlightSettling(true)
     setTutorialSpotlightSettling(true)
     setPositionStabilized(false)
@@ -817,6 +820,20 @@ export function useTutorialOverlay(
     const updatePosition = () => {
       const el = layoutTarget()
       if (!el) return
+      const pairStep = step === 'history-dropdown' || step === 'save-selection'
+      const frozen = frozenPairScrollRef.current
+      if (
+        pairStep &&
+        spotlightSettledRef.current &&
+        settledStepRef.current === step &&
+        frozen?.step === step
+      ) {
+        const root = getTutorialScrollRoot()
+        if (Math.abs(root.getScrollTop() - frozen.scrollTop) > 0.5) {
+          root.scrollToTop(frozen.scrollTop, 'auto')
+        }
+        return
+      }
       const rect = layoutRectForStep() ?? el.getBoundingClientRect()
       const { top, left, effectivePosition: effPos } = computeTooltipPosition(rect, step, config)
       setEffectivePosition(effPos)
@@ -855,6 +872,12 @@ export function useTutorialOverlay(
         setExpandProviderEffectsReady(true)
       }
       updatePosition()
+      if (step === 'history-dropdown' || step === 'save-selection') {
+        frozenPairScrollRef.current = {
+          step,
+          scrollTop: getTutorialScrollRoot().getScrollTop(),
+        }
+      }
       initialScrollCompleteRef.current = true
       spotlightSettledRef.current = true
       settledStepRef.current = step
@@ -880,7 +903,8 @@ export function useTutorialOverlay(
     const alreadySettled = spotlightSettledRef.current && settledStepRef.current === step
     if (alreadySettled) {
       freezeScrollOnCleanup = false
-      if (anchorMoved()) {
+      const pairStep = step === 'history-dropdown' || step === 'save-selection'
+      if (!pairStep && anchorMoved()) {
         setSpotlightSettling(true)
         setTutorialSpotlightSettling(true)
         setPositionStabilized(false)
@@ -1270,7 +1294,9 @@ export function useTutorialOverlay(
         savedSelectionsDropdown.classList.add('tutorial-highlight')
       }
       if (dropdownContainer) {
-        setDropdownCutout(computeDropdownCutout(dropdownContainer, historyDropdown))
+        setDropdownCutout(
+          computeDropdownCutout(dropdownContainer, savedSelectionsDropdown ?? historyDropdown)
+        )
       }
     } else if (!isDropdownStep) {
       // Only clear cutout when NOT on a dropdown step
@@ -2110,7 +2136,9 @@ export function useTutorialOverlay(
       ) as HTMLElement | null
       const savedDropdownAnywhere = savedSelectionsForCutout
       setDropdownCutout(
-        composerElement ? computeDropdownCutout(composerElement, historyDropdown) : null
+        composerElement
+          ? computeDropdownCutout(composerElement, savedSelectionsForCutout ?? historyDropdown)
+          : null
       )
 
       if (savedDropdownAnywhere) {
@@ -2200,7 +2228,10 @@ export function useTutorialOverlay(
       const composer = getComposerElement()
       if (!composer) return
 
-      const cutout = computeDropdownCutout(composer, getPortaledHistoryList())
+      const openPanel =
+        getPortaledHistoryList() ??
+        (composer.querySelector('.saved-selections-dropdown') as HTMLElement | null)
+      const cutout = computeDropdownCutout(composer, openPanel)
       setDropdownCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
     }
 
