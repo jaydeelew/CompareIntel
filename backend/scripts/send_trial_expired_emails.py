@@ -34,6 +34,7 @@ for env_path in env_paths:
 from sqlalchemy import and_, or_
 
 from app.database import SessionLocal
+from app.email_deliverability import split_deliverable
 from app.email_service import EMAIL_CONFIGURED, send_trial_expired_email
 from app.models import User, UserPreference
 
@@ -113,12 +114,21 @@ async def send_trial_expired_emails() -> None:
             print("No users with expired trials found.")
             return
 
+        deliverable, skipped = split_deliverable(users, log=True)
         print(f"Found {len(users)} user(s) with expired trials.")
+        if skipped:
+            print(f"Skipping {len(skipped)} undeliverable address(es).")
+            for user in skipped:
+                print(f"  skip {user.email}")
+
+        if not deliverable:
+            print("No deliverable recipients. No emails sent.")
+            return
 
         success_count = 0
         error_count = 0
 
-        for user in users:
+        for user in deliverable:
             try:
                 print(
                     f"Sending trial expired email to {user.email} (trial ended: {user.trial_ends_at})..."
@@ -132,6 +142,7 @@ async def send_trial_expired_emails() -> None:
 
         print("\nSummary:")
         print(f"  Total users: {len(users)}")
+        print(f"  Skipped undeliverable: {len(skipped)}")
         print(f"  Emails sent successfully: {success_count}")
         print(f"  Errors: {error_count}")
 
