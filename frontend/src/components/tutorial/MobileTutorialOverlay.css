@@ -44,11 +44,17 @@
     0 0 0 7px rgba(14, 165, 233, 0.25),
     0 0 18px rgba(14, 165, 233, 0.45) !important;
   border-radius: var(--radius-md) !important;
-  animation: mobile-tutorial-pulse 2s ease-in-out infinite !important;
   /* Override any transition on the element so it doesn't dampen the pulse animation */
   transition: none !important;
   pointer-events: auto !important;
   isolation: isolate !important;
+}
+
+/* Pulse every highlighted target except the composer. Redeclaring
+   composer-float-in on the floating composer restarts translateY(20px)
+   when the ring is added, and the follow-up card moves while it is opaque. */
+.mobile-tutorial-highlight:not(.composer) {
+  animation: mobile-tutorial-pulse 2s ease-in-out infinite !important;
 }
 
 /* Special styling for textarea container highlight on mobile — match desktop: framed
@@ -65,12 +71,10 @@
   transition: none !important;
 }
 
-/* In-flow composers have no entrance animation. Floating ones do: composer-float-in
-   is translateY(20px) → 0. The generic highlight sets mobile-tutorial-pulse
-   !important, which replaces that animation. Taking the history highlight off
-   on the way to saved selections starts the 20px rise again, and the bookmark
-   (and the tooltip) follow it after the card has faded in. Keep the float
-   animation's computed name stable for the whole time the highlight is on. */
+/* In-flow composers have no entrance animation. The floating composer must
+   keep composer-float-in rather than the pulse. The overlay adds this class
+   before it measures step 7, then waits the rise out, so the restarted
+   translateY(20px) finishes while the card is still hidden. */
 .composer.mobile-tutorial-highlight:not(.composer-floating) {
   transform: translateZ(0) !important;
   animation: none !important;

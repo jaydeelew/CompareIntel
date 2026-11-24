@@ -283,6 +283,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const swipeTouchStartRef = useRef<{
     x: number
     y: number
+    lastX: number
+    lastY: number
     suppress: boolean
   } | null>(null)
   const goToModelTabRef = useRef<(nextIndex: number, source?: TabChangeSource) => void>(() => {})
@@ -500,23 +502,38 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       swipeTouchStartRef.current = {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
+        lastX: e.touches[0].clientX,
+        lastY: e.touches[0].clientY,
         suppress: shouldSuppressMobileModelTabSwipe(e.target),
       }
     }
 
-    const onTouchEnd = (e: TouchEvent) => {
+    const onTouchMove = (e: TouchEvent) => {
       const start = swipeTouchStartRef.current
-      swipeTouchStartRef.current = null
-      if (!start || start.suppress || e.changedTouches.length !== 1) return
+      if (!start || start.suppress || e.touches.length !== 1) return
+      start.lastX = e.touches[0].clientX
+      start.lastY = e.touches[0].clientY
+    }
 
-      const dx = e.changedTouches[0].clientX - start.x
-      const dy = e.changedTouches[0].clientY - start.y
+    // Replacing the node under the finger (streaming) drops the gesture: touchend
+    // often arrives with no changedTouches, or the browser sends touchcancel
+    // instead. The last move on window still has the release point.
+    const finishSwipe = (release: { x: number; y: number } | null, endGesture: boolean) => {
+      const start = swipeTouchStartRef.current
+      if (!start || start.suppress) return
+      const endX = release ? release.x : start.lastX
+      const endY = release ? release.y : start.lastY
+      const dx = endX - start.x
+      const dy = endY - start.y
       const absDx = Math.abs(dx)
       const absDy = Math.abs(dy)
       const threshold = mobileModelTabSwipeThreshold(viewportWidthRef.current)
-      if (absDx < threshold) return
-      /* Require a clearer horizontal intent than a shallow diagonal (avoids conflict with vertical reading). */
-      if (absDx < absDy * 1.35) return
+      const horizontal = absDx >= threshold && absDx >= absDy * 1.35
+      if (!horizontal) {
+        if (endGesture) swipeTouchStartRef.current = null
+        return
+      }
+      swipeTouchStartRef.current = null
 
       const tabIndex = activeTabIndexRef.current
       if (dx < 0) {
@@ -527,15 +544,68 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       }
     }
 
+    // Chrome drops the rest of a touch sequence (no touchend, no touchcancel)
+    // once streaming replaces the node that received touchstart. Capturing the
+    // pointer on the zone, which stays mounted, keeps the move and the release.
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch' || !e.isPrimary) return
+      if (zone.hasPointerCapture(e.pointerId)) return
+      try {
+        zone.setPointerCapture(e.pointerId)
+      } catch {
+        // The pointer can already be gone if the hit node was removed this turn.
+      }
+    }
+    const onPointerMove = (e: PointerEvent) => {
+      const start = swipeTouchStartRef.current
+      if (!start || start.suppress || e.pointerType !== 'touch') return
+      start.lastX = e.clientX
+      start.lastY = e.clientY
+    }
+    const onPointerUp = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return
+      const start = swipeTouchStartRef.current
+      if (!start || start.suppress) return
+      start.lastX = e.clientX
+      start.lastY = e.clientY
+      const dx = e.clientX - start.x
+      const dy = e.clientY - start.y
+      const absDx = Math.abs(dx)
+      const threshold = mobileModelTabSwipeThreshold(viewportWidthRef.current)
+      // A capture boundary can emit pointerup at the press point before the
+      // real touchend. Clearing the gesture there drops a swipe that Chrome
+      // does still deliver. Only a drag that is already horizontal finishes
+      // here, which is the path where touchend never arrives.
+      if (absDx < threshold || absDx < Math.abs(dy) * 1.35) return
+      finishSwipe({ x: e.clientX, y: e.clientY }, true)
+    }
+
+    const onTouchRelease = (e: TouchEvent) => {
+      const point = e.changedTouches.length === 1 ? e.changedTouches[0] : null
+      finishSwipe(point ? { x: point.clientX, y: point.clientY } : null, e.type === 'touchend')
+    }
+
     zone.addEventListener('touchstart', onTouchStart, { passive: true })
-    zone.addEventListener('touchend', onTouchEnd, { passive: true })
-    // Streaming replaces nodes under the finger; detached targets do not bubble touchend to `zone`.
-    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    zone.addEventListener('touchend', onTouchRelease, { passive: true })
+    zone.addEventListener('pointerdown', onPointerDown)
+    zone.addEventListener('pointermove', onPointerMove)
+    zone.addEventListener('pointerup', onPointerUp)
+    zone.addEventListener('pointercancel', onPointerUp)
+    // Streaming replaces nodes under the finger; detached targets do not bubble to `zone`.
+    window.addEventListener('touchmove', onTouchMove, { passive: true, capture: true })
+    window.addEventListener('touchend', onTouchRelease, { passive: true })
+    window.addEventListener('touchcancel', onTouchRelease, { passive: true })
 
     return () => {
       zone.removeEventListener('touchstart', onTouchStart)
-      zone.removeEventListener('touchend', onTouchEnd)
-      window.removeEventListener('touchend', onTouchEnd)
+      zone.removeEventListener('touchend', onTouchRelease)
+      zone.removeEventListener('pointerdown', onPointerDown)
+      zone.removeEventListener('pointermove', onPointerMove)
+      zone.removeEventListener('pointerup', onPointerUp)
+      zone.removeEventListener('pointercancel', onPointerUp)
+      window.removeEventListener('touchmove', onTouchMove, { capture: true })
+      window.removeEventListener('touchend', onTouchRelease)
+      window.removeEventListener('touchcancel', onTouchRelease)
     }
   }, [useTabbedMultiModelResults, visibleConversations.length, modelTabStripKey])
 

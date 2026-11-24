@@ -7,6 +7,8 @@ export interface FormHeaderProps {
   selectedModels: string[]
   isLoading: boolean
   tutorialIsActive?: boolean
+  /** Inert hero mirror. Keep the same box, but do not expose a second exit control. */
+  interactive?: boolean
   onNewComparison: () => void
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
   /** When provided and no models selected, scrolls to models, expands section, opens Help me choose */
@@ -51,6 +53,7 @@ export function FormHeader({
   selectedModels,
   isLoading,
   tutorialIsActive,
+  interactive = true,
   onNewComparison,
   modelsSectionRef,
   onOpenHelpMeChoose,
@@ -73,11 +76,13 @@ export function FormHeader({
           <h2 style={{ margin: 0 }}>Start over ➜</h2>
           <button
             type="button"
-            onClick={onNewInquiryClick}
+            onClick={interactive ? onNewInquiryClick : undefined}
             className="textarea-icon-button new-inquiry-button"
-            disabled={isLoading}
+            disabled={isLoading || !interactive}
             aria-label="Exit follow up mode"
-            data-testid="exit-follow-up-button"
+            aria-hidden={interactive ? undefined : true}
+            tabIndex={interactive ? undefined : -1}
+            data-testid={interactive ? 'exit-follow-up-button' : undefined}
           >
             {NEW_INQUIRY_ICON}
           </button>

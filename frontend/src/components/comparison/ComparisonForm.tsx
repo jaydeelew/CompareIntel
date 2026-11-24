@@ -1379,6 +1379,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           onNewComparison={onNewComparison}
           modelsSectionRef={modelsSectionRef}
           onOpenHelpMeChoose={onOpenHelpMeChoose}
+          interactive={false}
         />
         {composerContentMirror}
         {buildUsageAndContextBelowComposer(composerFloating)}
