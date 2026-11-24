@@ -37,6 +37,7 @@ for env_path in env_paths:
         break
 
 from app.database import SessionLocal
+from app.email_deliverability import split_deliverable
 from app.email_service import EMAIL_CONFIGURED, send_new_models_added_email
 from app.services.new_models_notify import get_new_model_notification_recipients, summarize_model
 
@@ -84,16 +85,26 @@ async def send_new_models_added_emails(
             print("No registered users to notify.")
             return 0
 
+        deliverable, skipped = split_deliverable(users, log=True)
         print(f"Found {len(users)} registered user(s) to notify.")
+        if skipped:
+            print(f"Skipping {len(skipped)} undeliverable address(es).")
+            for user in skipped:
+                print(f"  skip {user.email}")
+
+        if not deliverable:
+            print("No deliverable recipients. No emails sent.")
+            return 0
+
         if dry_run:
-            for user in users:
+            for user in deliverable:
                 print(f"  [dry-run] would send to {user.email}")
             print("Dry run complete. No emails sent.")
             return 0
 
         success_count = 0
         error_count = 0
-        for user in users:
+        for user in deliverable:
             try:
                 print(f"Sending new-models email to {user.email}...")
                 await send_new_models_added_email(user.id, user.email, new_models)
@@ -105,6 +116,7 @@ async def send_new_models_added_emails(
 
         print("\nSummary:")
         print(f"  Total users: {len(users)}")
+        print(f"  Skipped undeliverable: {len(skipped)}")
         print(f"  Emails sent successfully: {success_count}")
         print(f"  Errors: {error_count}")
         return 1 if error_count and success_count == 0 else 0

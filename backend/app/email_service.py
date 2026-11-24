@@ -3,6 +3,7 @@ Email service for sending verification and notification emails.
 """
 
 import html
+import logging
 import os
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +12,13 @@ from typing import Any
 
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MultipartSubtypeEnum
 from pydantic import EmailStr
+
+from .email_deliverability import (
+    log_no_deliverable_recipients,
+    split_deliverable,
+)
+
+logger = logging.getLogger(__name__)
 
 MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
@@ -44,6 +52,28 @@ def _load_template(name: str) -> Template:
     return Template(path.read_text())
 
 
+async def _send_message(message: MessageSchema) -> None:
+    """Deliver one message after dropping addresses that cannot receive mail.
+
+    Every SMTP send goes through here so callers cannot bypass the check.
+    """
+    subject = message.subject or ""
+    recipients, _skipped = split_deliverable(
+        list(message.recipients or []), subject=subject, log=True
+    )
+    if not recipients:
+        log_no_deliverable_recipients(subject)
+        return
+
+    message.recipients = recipients
+    if message.cc:
+        message.cc, _skipped_cc = split_deliverable(list(message.cc), subject=subject, log=True)
+    if message.bcc:
+        message.bcc, _skipped_bcc = split_deliverable(list(message.bcc), subject=subject, log=True)
+
+    await fm.send_message(message)
+
+
 async def send_verification_email(email: EmailStr, code: str) -> None:
     if not EMAIL_CONFIGURED:
         print(f"Email service not configured - skipping verification email for {email}")
@@ -56,7 +86,7 @@ async def send_verification_email(email: EmailStr, code: str) -> None:
         subject="Your CompareIntel Verification Code", recipients=[email], body=html, subtype="html"
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send verification email to {email}: {str(e)}")
         raise
@@ -80,7 +110,7 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
         subject="Reset Your CompareIntel Password", recipients=[email], body=html, subtype="html"
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send password reset email to {email}: {str(e)}")
         raise
@@ -148,7 +178,7 @@ async def send_subscription_confirmation_email(
         subtype="html",
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send subscription confirmation email to {email}: {str(e)}")
 
@@ -176,7 +206,7 @@ async def send_usage_limit_warning_email(
         subject="CompareIntel Usage Warning", recipients=[email], body=html, subtype="html"
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send usage warning email to {email}: {str(e)}")
 
@@ -262,7 +292,7 @@ async def send_model_availability_report(check_results: dict[str, Any]) -> None:
         subject=subject, recipients=[recipient_email], body=html, subtype="html"
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send model availability report email: {str(e)}")
         raise
@@ -301,7 +331,7 @@ async def send_spend_cap_alert_email(
         subtype="html",
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send spend cap alert to {recipient_email}: {str(e)}")
 
@@ -336,7 +366,7 @@ async def send_new_user_signup_notification(
         subtype="html",
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send new user signup notification to {recipient_email}: {str(e)}")
 
@@ -445,7 +475,7 @@ async def send_new_model_discovery_report(
         subject=subject, recipients=[recipient_email], body=html_out, subtype="html"
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send new model discovery report email: {str(e)}")
         raise
@@ -496,7 +526,7 @@ async def send_new_models_added_email(
         headers=unsubscribe["headers"],
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send new models email to {email}: {str(e)}")
         raise
@@ -535,7 +565,7 @@ async def send_trial_expired_email(user_id: int, email: EmailStr) -> None:
         headers=unsubscribe["headers"],
     )
     try:
-        await fm.send_message(message)
+        await _send_message(message)
     except Exception as e:
         print(f"Failed to send trial expired email to {email}: {str(e)}")
         raise
