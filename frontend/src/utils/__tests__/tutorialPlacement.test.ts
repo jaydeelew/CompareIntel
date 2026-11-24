@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   deferScroll,
   followUpScrollDelta,
+  historyPairScrollDelta,
   placeTooltipBoxAgainstFrame,
   scrollDeltaToFitTooltip,
   visibleViewportHeight,
@@ -95,6 +96,58 @@ describe('placeTooltipBoxAgainstFrame', () => {
         preferred: 'above',
       })
     ).toBe(0)
+  })
+})
+
+describe('historyPairScrollDelta', () => {
+  const view = { viewportTop: 0, viewportHeight: 800, tooltipHeight: 180, arrowSize: 10 }
+
+  it('returns zero when the tooltip and composer already share the visual middle', () => {
+    const above = view.tooltipHeight + view.arrowSize
+    const composerHeight = 160
+    const composerTop = view.viewportHeight / 2 - (composerHeight - above) / 2
+    expect(
+      historyPairScrollDelta({
+        ...view,
+        composerTop,
+        composerHeight,
+      })
+    ).toBe(0)
+  })
+
+  it('moves a bottom-pinned composer up until the pair is centered', () => {
+    const delta = historyPairScrollDelta({
+      ...view,
+      composerTop: 640,
+      composerHeight: 160,
+    })
+    expect(delta).toBe(225)
+    const composerTop = 640 - delta
+    const pairTop = composerTop - (view.tooltipHeight + view.arrowSize)
+    const pairBottom = composerTop + 160
+    expect((pairTop + pairBottom) / 2).toBe(view.viewportHeight / 2)
+  })
+
+  it('uses the visual viewport offset when browser chrome shifts the visible area', () => {
+    const delta = historyPairScrollDelta({
+      ...view,
+      viewportTop: 120,
+      viewportHeight: 640,
+      composerTop: 620,
+      composerHeight: 140,
+    })
+    const above = view.tooltipHeight + view.arrowSize
+    const desired = 120 + 640 / 2 - (140 - above) / 2
+    expect(delta).toBe(620 - desired)
+  })
+
+  it('moves a composer that sits too high down by the same rule', () => {
+    const delta = historyPairScrollDelta({
+      ...view,
+      composerTop: 80,
+      composerHeight: 160,
+    })
+    expect(delta).toBe(80 - 415)
   })
 })
 

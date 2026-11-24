@@ -32,9 +32,14 @@ import {
   scrollDeltaToFitTooltip,
   scrollBackDirectionForTarget,
   centerTutorialStepRect,
+  clearHistoryComposerLift,
   clearTutorialScrollTail,
+  readHistoryComposerFrame,
+  readHistoryComposerLift,
   scrollFollowUpHighlightIntoView,
+  scrollHistoryComposerPair,
   seatPortaledFollowUpComposer,
+  setHistoryComposerLift,
   TUTORIAL_FRAME_OUTSET_PX,
   type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
@@ -199,6 +204,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (el?.parentNode) el.parentNode.removeChild(el)
       // Restore composer and all elements when tutorial completes (unmount)
       getHeroComposerForDropdownSteps()?.classList.remove('tutorial-dropdown-container-active')
+      clearHistoryComposerLift()
       document.querySelectorAll('.mobile-tutorial-highlight').forEach(htmlEl => {
         htmlEl.classList.remove('mobile-tutorial-highlight')
       })
@@ -237,6 +243,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (step === 'save-selection') {
       setSaveSelectionDropdownOpened(false)
     }
+  }, [step])
+
+  // Drop the history lift before paint, while the tooltip is already hidden,
+  // so the step 9 → 10 card does not travel while it is opaque.
+  useLayoutEffect(() => {
+    if (step !== 'history-dropdown') clearHistoryComposerLift()
   }, [step])
 
   // Step 5 tooltip must vanish before step 6 paints; same pattern as desktop useTutorialOverlay.
@@ -538,8 +550,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       setBackdropRect(null)
     }
 
-    if (step === 'save-selection') {
-      const frame = readTutorialSpotlightRect(step, tutorialProviderNamesRef.current)
+    if (step === 'save-selection' || step === 'history-dropdown') {
+      // Same composer ring on both steps (input + toolbar, plus the open history list).
+      const frame = readHistoryComposerFrame()
       if (frame) {
         setDropdownRect({
           top: frame.top,
@@ -548,33 +561,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           height: frame.height,
           centerX: frame.left + frame.width / 2,
           centerY: frame.top + frame.height / 2,
-        })
-      } else {
-        setDropdownRect(null)
-      }
-    } else if (step === 'history-dropdown') {
-      // Frame the composer the user can see (below results after a comparison), not the inert hero mirror.
-      const composer = getComposerElement()
-      const dropdownElement = getPortaledHistoryList()
-      if (composer) {
-        const inputWrapper = composer.querySelector('.composer-input-wrapper') as HTMLElement | null
-        const toolbar = composer.querySelector('.composer-toolbar') as HTMLElement | null
-        const parts = [inputWrapper, toolbar, dropdownElement].filter(Boolean) as HTMLElement[]
-        const elements = parts.length > 0 ? parts : [composer]
-        const rects = elements.map(el => el.getBoundingClientRect())
-        const minTop = Math.min(...rects.map(r => r.top))
-        const minLeft = Math.min(...rects.map(r => r.left))
-        const maxRight = Math.max(...rects.map(r => r.right))
-        const maxBottom = Math.max(...rects.map(r => r.bottom))
-        const width = maxRight - minLeft
-        const height = maxBottom - minTop
-        setDropdownRect({
-          top: minTop,
-          left: minLeft,
-          width,
-          height,
-          centerX: minLeft + width / 2,
-          centerY: minTop + height / 2,
         })
       } else {
         setDropdownRect(null)
@@ -929,7 +915,39 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         revealSettledStep()
         return
       }
-      if (currentStep === 'history-dropdown' || currentStep === 'save-selection') {
+      if (currentStep === 'history-dropdown') {
+        await waitOutRestartedComposerFloat()
+        if (cancelled || stepRef.current !== currentStep) return
+        const settlePair = async () => {
+          const composer = getComposerElement()
+          if (!composer || stepRef.current !== currentStep) return
+          const measured = overlayRef.current?.getBoundingClientRect().height ?? 0
+          const remain = scrollHistoryComposerPair({
+            composer,
+            tooltipHeight: measured > 1 ? measured : tooltipEstimatedHeight,
+            arrowSize: MOBILE_TUTORIAL_ARROW_PX + TUTORIAL_FRAME_OUTSET_PX,
+          })
+          if (Math.abs(remain) > 16) {
+            setHistoryComposerLift(composer, readHistoryComposerLift(composer) - remain)
+          }
+        }
+        await settlePair()
+        await waitForTutorialLayoutSettle({ timeoutMs: 240, quietMs: 48 })
+        if (cancelled || stepRef.current !== currentStep) return
+        await settlePair()
+        await waitForTutorialLayoutSettle({ timeoutMs: 120, quietMs: 32 })
+        if (cancelled || stepRef.current !== currentStep) return
+        // Lay the hidden card out so the next pass uses its real height.
+        calculatePositions()
+        await waitForTutorialLayoutSettle({ timeoutMs: 80, quietMs: 32 })
+        if (cancelled || stepRef.current !== currentStep) return
+        await settlePair()
+        await waitOutRestartedComposerFloat()
+        if (cancelled || stepRef.current !== currentStep) return
+        revealSettledStep()
+        return
+      }
+      if (currentStep === 'save-selection') {
         await waitOutRestartedComposerFloat()
         if (cancelled || stepRef.current !== currentStep) return
       }
@@ -968,7 +986,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         await waitForTutorialLayoutSettle({ timeoutMs: 80, quietMs: 32 })
         if (cancelled || stepRef.current !== currentStep) return
       }
-      if (currentStep === 'history-dropdown' || currentStep === 'save-selection') {
+      if (currentStep === 'save-selection') {
         await waitOutRestartedComposerFloat()
         if (cancelled || stepRef.current !== currentStep) return
       }
@@ -1139,18 +1157,28 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    // History frames the composer. Saved selections frames only the bookmark button.
-    if (step === 'history-dropdown') {
+    // History and saved selections share one composer ring and one history-toggle outline.
+    if (step === 'history-dropdown' || step === 'save-selection') {
       const composer = getComposerElement()
       if (composer) {
         composer.classList.add('mobile-tutorial-highlight')
         composer.classList.add('tutorial-dropdown-container-active')
+      }
+      const historyToggle = getBelowResultsHistoryToggleButton()
+      if (historyToggle) {
+        historyToggle.classList.add('mobile-tutorial-highlight')
+        historyToggle.classList.add('mobile-tutorial-button-pulsate')
       }
     }
 
     return () => {
       const nextStep = stepRef.current
       if (nextStep && isProviderPickerTutorialStep(nextStep)) {
+        return
+      }
+      // Keep the shared composer ring and history-toggle outline across step 9 → 10.
+      // Removing the class restarts composer-float-in and the card moves while opaque.
+      if (nextStep === 'history-dropdown' || nextStep === 'save-selection') {
         return
       }
       getComposerElement()?.classList.remove('tutorial-dropdown-container-active')

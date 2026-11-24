@@ -68,6 +68,20 @@ export function computeDropdownCutout(
   return computeRectUnion(allRects, padding)
 }
 
+/**
+ * Unpadded composer frame shared by the history step and the saved-selections
+ * step: input + toolbar, plus the history list when it is open. Both steps draw
+ * the same ring from this box.
+ */
+export function readHistoryComposerFrame(): RectCutout | null {
+  const composer = getComposerElement()
+  if (!composer) return null
+  const rects = getComposerCutoutRects(composer)
+  const list = composer.querySelector('.history-inline-list')
+  if (list) rects.push(list.getBoundingClientRect())
+  return computeRectUnion(rects, 0)
+}
+
 /** Blue frame for the last tutorial step: the visible bookmark button, plus its panel once open. */
 export function computeSavedSelectionCutout(padding = 8): RectCutout | null {
   const frame = readSavedSelectionSpotlightRect(getComposerElement())
@@ -211,16 +225,20 @@ export function followUpScrollDelta(args: {
 
 export function scrollTutorialRectToCenter(
   rect: { top: number; height: number },
-  minTopPx?: number
+  minTopPx?: number,
+  viewport?: { top?: number; height: number }
 ): void {
   const root = getTutorialScrollRoot()
-  const viewH = window.innerHeight
+  const viewTop = viewport?.top ?? 0
+  const viewH = viewport?.height ?? window.innerHeight
   const y0 = root.getScrollTop()
   const maxScroll = getTutorialScrollMax()
   const margin = 16
-  const minTop = minTopPx ?? margin
+  const minTop = minTopPx ?? viewTop + margin
   const desiredTop =
-    rect.height >= viewH - margin * 2 ? minTop : Math.max(minTop, (viewH - rect.height) / 2)
+    rect.height >= viewH - margin * 2
+      ? minTop
+      : Math.max(minTop, viewTop + (viewH - rect.height) / 2)
   const nextTop = Math.max(0, Math.min(y0 + rect.top - desiredTop, maxScroll))
   if (Math.abs(nextTop - y0) < 1) return
   root.scrollToTop(nextTop, 'auto')
@@ -233,12 +251,18 @@ const SCROLL_TAIL_ATTR = 'data-tutorial-scroll-tail'
  * scrollTutorialRectToCenter place them in the vertical middle, the same way
  * earlier steps center a target that still has room below it.
  */
-export function ensureTutorialScrollTail(rect: { top: number; height: number }): void {
+export function ensureTutorialScrollTail(
+  rect: { top: number; height: number },
+  viewport?: { top?: number; height: number }
+): void {
   const scroller = tutorialPageScroller()
-  const viewH = window.innerHeight
+  const viewTop = viewport?.top ?? 0
+  const viewH = viewport?.height ?? window.innerHeight
   const margin = 16
   const desiredTop =
-    rect.height >= viewH - margin * 2 ? margin : Math.max(margin, (viewH - rect.height) / 2)
+    rect.height >= viewH - margin * 2
+      ? viewTop + margin
+      : Math.max(viewTop + margin, viewTop + (viewH - rect.height) / 2)
   const existing = Number(scroller.getAttribute(SCROLL_TAIL_ATTR) || '0')
   const documentTop = scroller.scrollTop + rect.top
   const desiredScroll = documentTop - desiredTop
@@ -268,12 +292,13 @@ export function clearTutorialScrollTail(): void {
 export function centerTutorialStepRect(
   step: string,
   rect: { top: number; height: number },
-  minTopPx?: number
+  minTopPx?: number,
+  viewport?: { top?: number; height: number }
 ): void {
   if (step === 'history-dropdown' || step === 'save-selection') {
-    ensureTutorialScrollTail(rect)
+    ensureTutorialScrollTail(rect, viewport)
   }
-  scrollTutorialRectToCenter(rect, minTopPx)
+  scrollTutorialRectToCenter(rect, minTopPx, viewport)
 }
 
 export interface TooltipBoxPlacement {
@@ -492,6 +517,106 @@ export function visibleViewportHeight(): number {
   const visual = window.visualViewport?.height
   if (visual == null || visual <= 0) return layout
   return Math.min(layout, visual)
+}
+
+/** Layout-viewport box the user can see. `top` is visualViewport.offsetTop. */
+export function readVisualViewportBox(): { top: number; height: number } {
+  if (typeof window === 'undefined') return { top: 0, height: 0 }
+  return {
+    top: window.visualViewport?.offsetTop ?? 0,
+    height: visibleViewportHeight(),
+  }
+}
+
+export interface HistoryPairScrollArgs {
+  composerTop: number
+  composerHeight: number
+  tooltipHeight: number
+  arrowSize: number
+  viewportTop: number
+  viewportHeight: number
+}
+
+/**
+ * How far the history composer must move up so the tooltip (above it) and the
+ * composer share the visual viewport's vertical middle.
+ * Positive means move the composer up.
+ */
+export function historyPairScrollDelta(args: HistoryPairScrollArgs): number {
+  const above = args.tooltipHeight + args.arrowSize
+  const viewCenter = args.viewportTop + args.viewportHeight / 2
+  const desiredTop = viewCenter - (args.composerHeight - above) / 2
+  return args.composerTop - desiredTop
+}
+
+const HISTORY_LIFT_ATTR = 'data-tutorial-history-lift'
+
+export function readHistoryComposerLift(composer: HTMLElement): number {
+  const value = Number(composer.getAttribute(HISTORY_LIFT_ATTR) || '0')
+  return Number.isFinite(value) ? value : 0
+}
+
+/** Shift the composer with the CSS `translate` property so the float animation name stays put. */
+export function setHistoryComposerLift(composer: HTMLElement, translateY: number): void {
+  const next = Math.round(translateY)
+  if (Math.abs(next) < 1) {
+    clearHistoryComposerLift(composer)
+    return
+  }
+  composer.setAttribute(HISTORY_LIFT_ATTR, String(next))
+  composer.style.translate = `0 ${next}px`
+}
+
+export function clearHistoryComposerLift(composer?: HTMLElement | null): void {
+  const nodes: Element[] = composer
+    ? [composer]
+    : Array.from(document.querySelectorAll(`[${HISTORY_LIFT_ATTR}]`))
+  for (const node of nodes) {
+    if (!(node instanceof HTMLElement)) continue
+    node.style.translate = ''
+    node.removeAttribute(HISTORY_LIFT_ATTR)
+  }
+}
+
+/**
+ * Scroll the history composer until the tooltip+composer pair is centered in the
+ * visual viewport. Returns the leftover upward pixels when scroll cannot finish
+ * the move (a fixed composer, or no scroll room). Callers apply that leftover
+ * with setHistoryComposerLift.
+ */
+export function scrollHistoryComposerPair(args: {
+  composer: HTMLElement
+  tooltipHeight: number
+  arrowSize: number
+}): number {
+  const view = readVisualViewportBox()
+  const measureDelta = () => {
+    const rect = args.composer.getBoundingClientRect()
+    return historyPairScrollDelta({
+      composerTop: rect.top,
+      composerHeight: rect.height,
+      tooltipHeight: args.tooltipHeight,
+      arrowSize: args.arrowSize,
+      viewportTop: view.top,
+      viewportHeight: view.height,
+    })
+  }
+  const rect = args.composer.getBoundingClientRect()
+  const above = args.tooltipHeight + args.arrowSize
+  ensureTutorialScrollTail({ top: rect.top - above, height: rect.height + above }, view)
+  const before = args.composer.getBoundingClientRect().top
+  const delta = measureDelta()
+  if (Math.abs(delta) >= 1) {
+    const root = getTutorialScrollRoot()
+    const start = root.getScrollTop()
+    const nextTop = Math.max(0, Math.min(start + delta, getTutorialScrollMax()))
+    if (Math.abs(nextTop - start) >= 1) root.scrollToTop(nextTop, 'auto')
+    const afterRoot = args.composer.getBoundingClientRect().top
+    if (Math.abs(afterRoot - before) < 1) {
+      window.scrollBy(0, delta)
+    }
+  }
+  return measureDelta()
 }
 
 export type ScrollBackDirection = 'up' | 'down'
