@@ -71,23 +71,21 @@
   transition: none !important;
 }
 
-/* In-flow composers have no entrance animation. The floating composer must
-   keep composer-float-in rather than the pulse. The overlay adds this class
-   before it measures step 7, then waits the rise out, so the restarted
-   translateY(20px) finishes while the card is still hidden. */
+/* In-flow composers have no entrance animation. The floating composer's
+   composer-float-in is translateY(20px) for 0.35s. WebKit applies that on
+   the compositor, so getBoundingClientRect can look still and the follow-up
+   card becomes opaque, then the composer (and the card) jump 20px. The
+   tutorial places the composer itself, so the entrance float stays off for
+   the whole tutorial, including before the highlight class is added. */
 .composer.mobile-tutorial-highlight:not(.composer-floating) {
   transform: translateZ(0) !important;
   animation: none !important;
 }
 
+html[data-onboarding-tutorial-active] .composer.composer-floating,
+html[data-onboarding-tutorial-active] .mobile-composer-in-flow-wrapper .composer.composer-floating,
 .composer.composer-floating.mobile-tutorial-highlight {
-  animation: composer-float-in 0.35s var(--ease-spring) forwards !important;
-}
-
-@supports (-moz-appearance: none) {
-  .composer.composer-floating.mobile-tutorial-highlight {
-    animation-name: composer-float-in-moz !important;
-  }
+  animation: none !important;
 }
 
 /* Provider dropdown on mobile — same as desktop; cutout inset frame only */
@@ -237,8 +235,15 @@
 
 html.tutorial-spotlight-settling .mobile-tutorial-highlight,
 html.tutorial-spotlight-settling .tutorial-highlight {
-  animation: none !important;
   box-shadow: none !important;
+}
+
+/* Settling clears highlight motion on everything except the composer. The
+   composer's entrance float is already off for the tutorial; zeroing it here
+   and restoring it when settling ends restarts translateY(20px). */
+html.tutorial-spotlight-settling .mobile-tutorial-highlight:not(.composer),
+html.tutorial-spotlight-settling .tutorial-highlight:not(.composer) {
+  animation: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

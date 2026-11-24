@@ -47,6 +47,7 @@ import {
   focusTutorialPromptTextarea,
   setTutorialSpotlightSettling,
   trackTutorialMotion,
+  waitForRectFrames,
   waitForRectStable,
   waitForTutorialLayoutSettle,
   watchTutorialFrameSize,
@@ -757,31 +758,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     })
   }, [targetElement, step, tooltipEstimatedHeight])
 
-  // Follow-up step: the portaled composer runs `composer-float-in` (~350ms). Early position reads run
-  // while `translateY(20px)` is still applied, so fixed cutouts sit too low; this step also skips the
-  // 200ms polling used on other steps. Recalculate when the float animation ends (and via fallback).
-  useEffect(() => {
-    if (step !== 'follow-up' || !targetElement) return
-
-    const onAnimationEnd = (e: AnimationEvent) => {
-      if (e.animationName !== 'composer-float-in' && e.animationName !== 'composer-float-in-moz')
-        return
-      if (spotlightSettledRef.current) return
-      calculatePositions()
-    }
-
-    targetElement.addEventListener('animationend', onAnimationEnd)
-    const fallback = window.setTimeout(() => {
-      if (spotlightSettledRef.current) return
-      calculatePositions()
-    }, 450)
-
-    return () => {
-      targetElement.removeEventListener('animationend', onAnimationEnd)
-      window.clearTimeout(fallback)
-    }
-  }, [step, targetElement, calculatePositions])
-
   // Update positions on mount, scroll, resize
   useEffect(() => {
     if (!targetElement || !step) return
@@ -921,13 +897,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         spotlightSettledRef.current = true
         settledStepRef.current = currentStep
         if (currentStep === 'follow-up') {
-          // Submit → follow-up already hid the card while the composer seated.
-          // The extra reveal interval lands after WebKit's sample window, so
-          // the card is only opaque for a handful of frames.
+          // Position was written above, while the card was still hidden.
+          // Another write after the hide class comes off is the 20px float
+          // landing in the same paint as the card becoming opaque.
           isStepTransitioningRef.current = false
           setIsStepTransitioning(false)
           setTutorialSpotlightSettling(false)
-          calculatePositions()
         } else {
           showSettledTooltip()
         }
@@ -942,9 +917,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           preferred: 'below' as const,
         }
         // The submit step advances as soon as this composer exists. Scroll it
-        // into view before waiting: the entrance float is only ~20px, but
-        // WebKit does not fire animationend for it, so waiting on that event
-        // holds the card at the off-screen position until the sample ends.
+        // into view, then stay hidden until its layout box has stopped moving.
         if (!isFollowUpComposerReady()) {
           await seatPortaledFollowUpComposer(
             () => cancelled || stepRef.current !== currentStep,
@@ -960,26 +933,25 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               tooltipEstimatedHeight
             ),
           })
-        // Adding the ring restarts composer-float-in (translateY(20px)). Do
-        // that before the stability wait. A ring applied after the card is
-        // shown is the 20px jump in the transition sample.
+        // The ring is on the React className too. classList keeps it if a
+        // render has not committed that class yet.
         getComposerElement()?.classList.add('mobile-tutorial-highlight')
         placeFollowUp()
-        await waitForRectStable(liveSpotlight, { timeoutMs: 480, quietMs: 80 })
-        if (cancelled || stepRef.current !== currentStep) return
-        const settledTop = liveSpotlight()?.top
-        await new Promise<void>(resolve => {
-          window.setTimeout(resolve, 48)
-        })
-        if (cancelled || stepRef.current !== currentStep) return
-        const afterTop = liveSpotlight()?.top
-        if (settledTop != null && afterTop != null && Math.abs(afterTop - settledTop) > 1) {
-          await waitForRectStable(liveSpotlight, { timeoutMs: 400, quietMs: 80 })
-          if (cancelled || stepRef.current !== currentStep) return
+        // Drop settling while the card is still hidden so highlight styles
+        // settle before the sample. The entrance float is disabled for the
+        // tutorial; the reveal still waits on the composer's box.
+        setTutorialSpotlightSettling(false)
+        const readComposerBox = () => {
+          const rect = getComposerElement()?.getBoundingClientRect()
+          if (!rect || rect.width < 1 || rect.height < 1) return null
+          return { top: rect.top, left: rect.left, height: rect.height }
         }
-        placeFollowUp()
+        await waitForRectFrames(readComposerBox, { frames: 2, timeoutMs: 800 })
         if (cancelled || stepRef.current !== currentStep) return
-        if (!liveSpotlight()) return
+        placeFollowUp()
+        await waitForRectFrames(readComposerBox, { frames: 2, timeoutMs: 800 })
+        if (cancelled || stepRef.current !== currentStep) return
+        if (!readComposerBox()) return
         revealSettledStep()
         return
       }
