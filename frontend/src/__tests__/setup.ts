@@ -8,6 +8,9 @@ import { cleanup } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
 import { apiClient } from '../services/api/client'
+// MessageBubble loads this graph from an effect. Resolve it during setup so a
+// coverage run cannot tear the worker down while footnotes.ts is still loading.
+import '../components/LatexRenderer'
 
 import { server } from './msw/server'
 

@@ -473,11 +473,10 @@ export function readTutorialSpotlightRect(
     }
     const composer = getComposerElement()
     if (!composer) return null
-    if (step === 'save-selection') {
-      return readSavedSelectionSpotlightRect(composer)
-    }
     const parts = getComposerCutoutRects(composer)
-    if (step === 'history-dropdown') {
+    // History and saved selections share one composer frame, so the arrow meets
+    // the same ring on both steps. The open history list is part of that ring.
+    if (step === 'history-dropdown' || step === 'save-selection') {
       const panel = composer.querySelector('.history-inline-list')
       if (panel) parts.push(panel.getBoundingClientRect())
     }

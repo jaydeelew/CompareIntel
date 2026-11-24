@@ -116,7 +116,18 @@ async function readPlacement(page: Page): Promise<PlacementReport> {
         : (document.scrollingElement ?? document.documentElement)
     const scrollTop = scroller.scrollTop
     const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight)
-    const signedOffset = closest.top + closest.height / 2 - vh / 2
+    // Mobile history centers the tooltip and the composer together. The composer
+    // ring then sits below the screen middle by about half the card height.
+    const historyPair = window.innerWidth <= 768 && (title ?? '').includes('Access Your History')
+    let signedOffset = closest.top + closest.height / 2 - vh / 2
+    if (historyPair) {
+      const tipBox = tip.getBoundingClientRect()
+      const top = Math.min(tipBox.top, closest.top)
+      const bottom = Math.max(tipBox.bottom, closest.bottom)
+      const mid = (top + bottom) / 2
+      centerOffset = Math.abs(mid - vh / 2)
+      signedOffset = mid - vh / 2
+    }
     const canScrollCloser =
       (signedOffset > 48 && scrollTop < maxScroll - 2) || (signedOffset < -48 && scrollTop > 2)
     const tall = closest.height > vh * 0.55
