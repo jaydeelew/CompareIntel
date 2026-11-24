@@ -226,6 +226,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   }
   const tooltipEstimatedHeight = getTooltipEstimatedHeight()
   const previousStepRef = useRef<TutorialStep | null>(null)
+  // History → save keeps the composer cutout mounted. Replaying its opacity
+  // transition (or swapping in the full-screen dim) leaves Mobile Safari at a
+  // partial opacity, so step 10's ring paints fainter than step 9's.
+  const [preserveComposerRing, setPreserveComposerRing] = useState(false)
 
   // Reset dropdown opened flag when step changes
   useEffect(() => {
@@ -263,9 +267,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   // Hide tooltip and highlight before paint on every step, including provider handoffs.
   useLayoutEffect(() => {
-    if (step && step !== previousStepRef.current) {
+    const prev = previousStepRef.current
+    if (step && step !== prev) {
       previousStepRef.current = step
     }
+    setPreserveComposerRing(prev === 'history-dropdown' && step === 'save-selection')
     if (!step) {
       spotlightSettledRef.current = false
       settledStepRef.current = null
@@ -1521,6 +1527,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const activeStep = step
 
   const fadeDuringTransition = isStepTransitioning
+  // Same cutout class and shadow as step 9. Skipping the fade keeps opacity at 1.
+  const fadeCutout = fadeDuringTransition && !preserveComposerRing
 
   const config = resolveTutorialStepConfig(
     activeStep,
@@ -1728,7 +1736,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             className="mobile-tutorial-backdrop-cutout mobile-tutorial-backdrop-cutout--enter"
             style={cutoutStyle}
           />
-        ) : isStepTransitioning ? (
+        ) : isStepTransitioning && !preserveComposerRing ? (
           <div className="mobile-tutorial-backdrop" />
         ) : !isLoadingStreamingPhase ? (
           useFollowUpDualCutout && followUpVResults && followUpVComposer ? (
@@ -1809,7 +1817,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             </>
           ) : cutoutStyle ? (
             <div
-              className={`mobile-tutorial-backdrop-cutout mobile-tutorial-backdrop-cutout--enter${fadeDuringTransition ? ' mobile-tutorial-backdrop-cutout--transitioning' : ''}`}
+              className={`mobile-tutorial-backdrop-cutout mobile-tutorial-backdrop-cutout--enter${fadeCutout ? ' mobile-tutorial-backdrop-cutout--transitioning' : ''}`}
               style={cutoutStyle}
             />
           ) : (
