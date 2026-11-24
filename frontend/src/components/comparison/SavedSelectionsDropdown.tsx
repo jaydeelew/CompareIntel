@@ -152,6 +152,8 @@ export interface SavedSelectionsDropdownProps {
   hideTooltip?: boolean
   /** When true with tooltip visible, render tooltip in a portal (avoids composer overflow clipping) */
   tooltipUsePortal?: boolean
+  /** Extra classes for the bookmark button (tutorial highlight). */
+  triggerClassName?: string
 }
 
 export function SavedSelectionsDropdown({
@@ -162,6 +164,7 @@ export function SavedSelectionsDropdown({
   dropdownContainerRef,
   hideTooltip = false,
   tooltipUsePortal = false,
+  triggerClassName = '',
 }: SavedSelectionsDropdownProps) {
   const {
     savedModelSelections,
@@ -224,7 +227,9 @@ export function SavedSelectionsDropdown({
   const triggerButton = (
     <button
       type="button"
-      className={`saved-selections-button ${showDropdown ? 'active' : ''}`}
+      className={['saved-selections-button', showDropdown ? 'active' : '', triggerClassName]
+        .filter(Boolean)
+        .join(' ')}
       aria-label="Save or load model selections"
       data-testid="saved-selections-trigger"
       onClick={() => {

@@ -164,11 +164,18 @@ async function verticalCenterReason(page: Page): Promise<string> {
 
 interface SpotlightBoxes {
   composerHighlighted: boolean
-  toggleHighlighted: boolean
-  toggleWidth: number
-  toggleHeight: number
-  toggleRadius: string
-  togglePadding: string
+  historyHighlighted: boolean
+  bookmarkHighlighted: boolean
+  historyWidth: number
+  historyHeight: number
+  historyRadius: string
+  historyPadding: string
+  historyAnimation: string
+  bookmarkWidth: number
+  bookmarkHeight: number
+  bookmarkRadius: string
+  bookmarkPadding: string
+  bookmarkAnimation: string
   composerRadius: string
   composerShadow: string
   cutoutWidth: number
@@ -179,12 +186,31 @@ interface SpotlightBoxes {
 
 async function readSpotlightBoxes(page: Page): Promise<SpotlightBoxes> {
   return page.evaluate(() => {
+    const buttonMetrics = (button: HTMLElement | null) => {
+      const style = button ? getComputedStyle(button) : null
+      const highlighted =
+        !!button &&
+        (button.classList.contains('tutorial-highlight') ||
+          button.classList.contains('mobile-tutorial-highlight') ||
+          button.classList.contains('mobile-tutorial-button-pulsate'))
+      return {
+        highlighted,
+        width: button?.offsetWidth ?? 0,
+        height: button?.offsetHeight ?? 0,
+        radius: style?.borderRadius ?? '',
+        padding: style?.padding ?? '',
+        animation: style?.animationName ?? '',
+      }
+    }
     const composer = document.querySelector(
       '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
     ) as HTMLElement | null
     const toggle = (document.querySelector(
       '[data-after-results-composer-slot] .history-toggle-button'
     ) ?? document.querySelector('.history-toggle-button')) as HTMLElement | null
+    const bookmark = (document.querySelector(
+      '[data-after-results-composer-slot] .saved-selections-button'
+    ) ?? document.querySelector('.saved-selections-button')) as HTMLElement | null
     const cutout = Array.from(
       document.querySelectorAll('.mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout')
     ).find(el => {
@@ -192,19 +218,27 @@ async function readSpotlightBoxes(page: Page): Promise<SpotlightBoxes> {
       return rect.width > 2 && rect.height > 2
     }) as HTMLElement | undefined
     const cutoutBox = cutout?.getBoundingClientRect()
-    const toggleStyle = toggle ? getComputedStyle(toggle) : null
     const composerStyle = composer ? getComputedStyle(composer) : null
     const highlighted = (el: HTMLElement | null) =>
       !!el &&
       (el.classList.contains('tutorial-highlight') ||
         el.classList.contains('mobile-tutorial-highlight'))
+    const history = buttonMetrics(toggle)
+    const saved = buttonMetrics(bookmark)
     return {
       composerHighlighted: highlighted(composer),
-      toggleHighlighted: highlighted(toggle),
-      toggleWidth: toggle?.offsetWidth ?? 0,
-      toggleHeight: toggle?.offsetHeight ?? 0,
-      toggleRadius: toggleStyle?.borderRadius ?? '',
-      togglePadding: toggleStyle?.padding ?? '',
+      historyHighlighted: history.highlighted,
+      bookmarkHighlighted: saved.highlighted,
+      historyWidth: history.width,
+      historyHeight: history.height,
+      historyRadius: history.radius,
+      historyPadding: history.padding,
+      historyAnimation: history.animation,
+      bookmarkWidth: saved.width,
+      bookmarkHeight: saved.height,
+      bookmarkRadius: saved.radius,
+      bookmarkPadding: saved.padding,
+      bookmarkAnimation: saved.animation,
       composerRadius: composerStyle?.borderRadius ?? '',
       composerShadow: composerStyle?.boxShadow ?? '',
       cutoutWidth: cutoutBox ? Math.round(cutoutBox.width) : 0,
@@ -216,19 +250,60 @@ async function readSpotlightBoxes(page: Page): Promise<SpotlightBoxes> {
 }
 
 function spotlightMismatch(before: SpotlightBoxes, after: SpotlightBoxes): string {
-  if (!after.composerHighlighted || !after.toggleHighlighted) return 'step 10 missing highlight'
+  if (!after.composerHighlighted || !after.bookmarkHighlighted) return 'step 10 missing highlight'
+  if (after.historyHighlighted) return 'step 10 still highlights history'
   if (before.historyOpen !== after.historyOpen) return 'history open state changed'
-  if (before.toggleWidth !== after.toggleWidth || before.toggleHeight !== after.toggleHeight) {
-    return `toggle size ${before.toggleWidth}x${before.toggleHeight} vs ${after.toggleWidth}x${after.toggleHeight}`
+  if (
+    before.historyWidth !== after.bookmarkWidth ||
+    before.historyHeight !== after.bookmarkHeight
+  ) {
+    return `highlight box ${before.historyWidth}x${before.historyHeight} vs ${after.bookmarkWidth}x${after.bookmarkHeight}`
   }
-  if (before.toggleRadius !== after.toggleRadius) return 'toggle radius changed'
-  if (before.togglePadding !== after.togglePadding) return 'toggle padding changed'
+  if (before.historyRadius !== after.bookmarkRadius) return 'highlight radius changed'
+  if (before.historyPadding !== after.bookmarkPadding) return 'highlight padding changed'
+  if (before.historyAnimation !== after.bookmarkAnimation) return 'highlight glow changed'
   if (before.composerRadius !== after.composerRadius) return 'composer radius changed'
   if (before.composerShadow !== after.composerShadow) return 'composer glow changed'
   if (before.cutoutRadius !== after.cutoutRadius) return 'cutout radius changed'
   if (Math.abs(before.cutoutWidth - after.cutoutWidth) > 4) return 'cutout width changed'
   if (Math.abs(before.cutoutHeight - after.cutoutHeight) > 4) return 'cutout height changed'
   return 'ok'
+}
+
+async function resultsPanelStableReason(page: Page): Promise<string> {
+  return page.evaluate(async () => {
+    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+    const panel = document.querySelector('.results-section') as HTMLElement | null
+    const card = document.querySelector('.result-card') as HTMLElement | null
+    if (!panel || !card) return 'missing results'
+    if (
+      panel.classList.contains('mobile-tutorial-button-pulsate') ||
+      card.classList.contains('mobile-tutorial-button-pulsate')
+    ) {
+      return 'results still pulsating'
+    }
+    const firstPanel = panel.getBoundingClientRect()
+    const firstCard = card.getBoundingClientRect()
+    const panelWidth = Math.round(firstPanel.width)
+    const panelHeight = Math.round(firstPanel.height)
+    const cardWidth = Math.round(firstCard.width)
+    const cardHeight = Math.round(firstCard.height)
+    for (let i = 0; i < 8; i++) {
+      await sleep(250)
+      const nextPanel = panel.getBoundingClientRect()
+      const nextCard = card.getBoundingClientRect()
+      if (
+        Math.round(nextPanel.width) !== panelWidth ||
+        Math.round(nextPanel.height) !== panelHeight
+      ) {
+        return `panel ${panelWidth}x${panelHeight} -> ${Math.round(nextPanel.width)}x${Math.round(nextPanel.height)}`
+      }
+      if (Math.round(nextCard.width) !== cardWidth || Math.round(nextCard.height) !== cardHeight) {
+        return `card ${cardWidth}x${cardHeight} -> ${Math.round(nextCard.width)}x${Math.round(nextCard.height)}`
+      }
+    }
+    return 'ok'
+  })
 }
 
 async function saveStepReason(page: Page): Promise<string> {
@@ -242,6 +317,17 @@ async function saveStepReason(page: Page): Promise<string> {
       button.classList.contains('mobile-tutorial-highlight') ||
       button.classList.contains('mobile-tutorial-button-pulsate')
     if (!highlighted) return 'button not highlighted'
+    const history = (document.querySelector(
+      '[data-after-results-composer-slot] .history-toggle-button'
+    ) ?? document.querySelector('.history-toggle-button')) as HTMLElement | null
+    if (
+      history &&
+      (history.classList.contains('tutorial-highlight') ||
+        history.classList.contains('mobile-tutorial-highlight') ||
+        history.classList.contains('mobile-tutorial-button-pulsate'))
+    ) {
+      return 'history toggle still highlighted'
+    }
     const composer = document.querySelector(
       '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
     ) as HTMLElement | null
@@ -314,6 +400,8 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
       { timeout: 8_000 }
     )
     .toBe('ready')
+
+  await expect(resultsPanelStableReason(page)).resolves.toBe('ok')
 
   await expect
     .poll(() => page.locator('[data-after-results-composer-slot] .history-inline-list').count(), {
@@ -408,7 +496,7 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
 
   const step9Boxes = await readSpotlightBoxes(page)
   expect(step9Boxes.composerHighlighted).toBe(true)
-  expect(step9Boxes.toggleHighlighted).toBe(true)
+  expect(step9Boxes.historyHighlighted).toBe(true)
 
   await clickTutorialDoneButton(page, testInfo)
   await expect(tutorialTooltip(page).first()).toContainText('Save Model Selections', {
@@ -420,10 +508,11 @@ test('history cutout grows and shrinks with the dropdown', async ({ page }, test
       message: 'step 10 should highlight the composer and the saved-selections button',
     })
     .toBe('ok')
+  await expect(resultsPanelStableReason(page)).resolves.toBe('ok')
   await expect
     .poll(async () => spotlightMismatch(step9Boxes, await readSpotlightBoxes(page)), {
       timeout: 8_000,
-      message: 'step 10 composer and history toggle highlights should match step 9',
+      message: 'step 10 bookmark highlight should match the step 9 history toggle',
     })
     .toBe('ok')
   await page.screenshot({ path: `${dir}/10-save.png` })

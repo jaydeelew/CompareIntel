@@ -785,17 +785,23 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         !mirror &&
         tutorialIsActive &&
         (tutorialStep === 'history-dropdown' || tutorialStep === 'save-selection')
+      const historyToggleSpotlight =
+        !mirror && tutorialIsActive && tutorialStep === 'history-dropdown'
+      const saveButtonSpotlight = !mirror && tutorialIsActive && tutorialStep === 'save-selection'
       const lockHistoryPrompt = !mirror && tutorialIsActive && tutorialStep === 'history-dropdown'
-      const historySpotlightClass = historyComposerSpotlight
-        ? isMobileLayout
-          ? 'mobile-tutorial-highlight'
-          : 'tutorial-highlight'
-        : ''
+      const spotlightClass = (on: boolean) =>
+        on ? (isMobileLayout ? 'mobile-tutorial-highlight' : 'tutorial-highlight') : ''
       const historyToggleClassName = [
         'history-toggle-button',
         showHistoryDropdown ? 'active' : '',
-        historySpotlightClass,
-        historyComposerSpotlight && isMobileLayout ? 'mobile-tutorial-button-pulsate' : '',
+        spotlightClass(historyToggleSpotlight),
+        historyToggleSpotlight && isMobileLayout ? 'mobile-tutorial-button-pulsate' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      const saveButtonClassName = [
+        spotlightClass(saveButtonSpotlight),
+        saveButtonSpotlight && isMobileLayout ? 'mobile-tutorial-button-pulsate' : '',
       ]
         .filter(Boolean)
         .join(' ')
@@ -804,7 +810,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         isAnimatingTextarea && !mirror ? 'animate-pulse-border' : '',
         composerDemoPauseHighlight && !mirror ? 'composer-demo-pause-highlight' : '',
         composerFloating && !mirror ? 'composer-floating' : '',
-        historySpotlightClass,
+        spotlightClass(historyComposerSpotlight),
         historyComposerSpotlight ? 'tutorial-dropdown-container-active' : '',
         lockHistoryPrompt ? 'tutorial-history-input-locked' : '',
       ]
@@ -937,6 +943,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               selectedModels={selectedModels}
               modelsByProvider={modelsByProvider}
               isFollowUpMode={isFollowUpMode}
+              triggerClassName={saveButtonClassName}
               dropdownContainerRef={
                 mirror ? mirrorSavedSelectionsSlotRef : savedSelectionsDropdownSlotRef
               }

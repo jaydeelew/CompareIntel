@@ -1125,11 +1125,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     providerHighlights.forEach(el => el.classList.add('mobile-tutorial-highlight'))
 
     // Add button pulsate when tooltip says "Tap the highlighted button" (same ring + pulse as submit step).
-    if (
-      step === 'submit-comparison-2' ||
-      step === 'history-dropdown' ||
-      step === 'save-selection'
-    ) {
+    // History and saved selections must not use targetElement here: it is still the
+    // results section for a frame after the step changes, and the scale then pulses
+    // the whole results panel.
+    if (step === 'submit-comparison-2') {
       targetElement.classList.add('mobile-tutorial-button-pulsate')
     }
 
@@ -1157,17 +1156,29 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    // History and saved selections share one composer ring and one history-toggle outline.
+    // Both steps share the composer ring. Only the step's own toolbar button gets the square outline.
     if (step === 'history-dropdown' || step === 'save-selection') {
+      document.querySelectorAll('.results-section').forEach(el => {
+        el.classList.remove('mobile-tutorial-highlight', 'mobile-tutorial-button-pulsate')
+      })
+      document.querySelectorAll('.mobile-tutorial-tabs-pulse').forEach(el => {
+        el.classList.remove('mobile-tutorial-tabs-pulse')
+      })
       const composer = getComposerElement()
       if (composer) {
         composer.classList.add('mobile-tutorial-highlight')
         composer.classList.add('tutorial-dropdown-container-active')
       }
       const historyToggle = getBelowResultsHistoryToggleButton()
-      if (historyToggle) {
-        historyToggle.classList.add('mobile-tutorial-highlight')
-        historyToggle.classList.add('mobile-tutorial-button-pulsate')
+      const saveButton = getBelowResultsSavedSelectionsButton()
+      if (step === 'history-dropdown') {
+        saveButton?.classList.remove('mobile-tutorial-highlight', 'mobile-tutorial-button-pulsate')
+        historyToggle?.classList.add('mobile-tutorial-highlight', 'mobile-tutorial-button-pulsate')
+      } else {
+        document.querySelectorAll('.history-toggle-button').forEach(el => {
+          el.classList.remove('mobile-tutorial-highlight', 'mobile-tutorial-button-pulsate')
+        })
+        saveButton?.classList.add('mobile-tutorial-highlight', 'mobile-tutorial-button-pulsate')
       }
     }
 

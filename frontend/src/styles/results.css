@@ -3935,6 +3935,28 @@ button.nav-button-primary {
   padding: 0;
 }
 
+/* Tutorial square matches the 32×32 history toggle. The resting bookmark is 18px wide. */
+.composer-toolbar
+  .saved-selections-bookmark-cluster
+  .saved-selections-button.mobile-tutorial-highlight,
+.composer-toolbar .saved-selections-bookmark-cluster .saved-selections-button.tutorial-highlight {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.composer-toolbar
+  .saved-selections-bookmark-cluster
+  .saved-selections-button.mobile-tutorial-highlight
+  svg,
+.composer-toolbar
+  .saved-selections-bookmark-cluster
+  .saved-selections-button.tutorial-highlight
+  svg {
+  margin-right: 0;
+}
+
 .composer-toolbar .saved-selections-bookmark-cluster .saved-selections-button::before {
   content: '';
   position: absolute;
