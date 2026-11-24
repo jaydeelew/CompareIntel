@@ -1262,12 +1262,9 @@ export function useTutorialOverlay(
         dropdownContainer.classList.add('tutorial-dropdown-container-active')
         dropdownContainer.classList.add('tutorial-highlight')
       }
-      const historyToggle = getBelowResultsHistoryToggleButton()
-      if (historyToggle) historyToggle.classList.add('tutorial-highlight')
-      if (historyDropdown) {
-        historyDropdown.classList.add('tutorial-dropdown-active')
-        historyDropdown.classList.add('tutorial-highlight')
-      }
+      document.querySelectorAll('.history-toggle-button').forEach(el => {
+        el.classList.remove('tutorial-highlight')
+      })
       if (savedSelectionsDropdown) {
         savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
         savedSelectionsDropdown.classList.add('tutorial-highlight')
@@ -2094,20 +2091,19 @@ export function useTutorialOverlay(
         }
       }
 
-      // Same composer ring and history-toggle outline as the history step.
+      // Same composer ring as the history step. The square outline is the bookmark only.
       const composerElement = getComposerElement()
       const historyDropdown = getPortaledHistoryList()
-      const historyToggle = getBelowResultsHistoryToggleButton()
+      document.querySelectorAll('.history-toggle-button').forEach(el => {
+        el.classList.remove('tutorial-highlight')
+      })
       if (composerElement) {
         composerElement.classList.add('tutorial-dropdown-container-active')
         composerElement.classList.add('tutorial-highlight')
       }
-      if (historyToggle && !historyToggle.classList.contains('tutorial-highlight')) {
-        historyToggle.classList.add('tutorial-highlight')
-      }
       if (historyDropdown) {
         historyDropdown.classList.add('tutorial-dropdown-active')
-        historyDropdown.classList.add('tutorial-highlight')
+        historyDropdown.classList.remove('tutorial-highlight')
       }
       const savedSelectionsForCutout = composerElement?.querySelector(
         '.saved-selections-dropdown'
