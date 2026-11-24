@@ -192,3 +192,182 @@ describe('TutorialOverlay', () => {
     )
   })
 })
+
+describe('TutorialOverlay comparison spotlight', () => {
+  const props = {
+    tutorialProviderNames: ['Google', 'DeepSeek'] as const,
+    tutorialVisibleStepOrder: [
+      'expand-provider',
+      'select-starter-model-1',
+      'select-starter-model-2',
+      'enter-prompt',
+      'submit-comparison',
+      'follow-up',
+      'view-follow-up-results',
+      'history-dropdown',
+      'save-selection',
+    ] as const,
+    tutorialStarterEntries: [
+      { modelId: 'google/gemini-2.5-flash', provider: 'Google', displayName: 'Gemini 2.5 Flash' },
+      {
+        modelId: 'deepseek/deepseek-v4.1-flash-1017',
+        provider: 'DeepSeek',
+        displayName: 'DeepSeek V4.1 Flash',
+      },
+    ],
+    tutorialSplitModelSteps: true,
+    onComplete: vi.fn(),
+    onSkip: vi.fn(),
+    isStepCompleted: false,
+  }
+
+  const originalRect = HTMLElement.prototype.getBoundingClientRect
+  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+  const originalOffsetHeight = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetHeight'
+  )
+  const originalOffsetParent = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetParent'
+  )
+  let resultsRect = new DOMRect(40, 280, 640, 400)
+  let restoreRaf: () => void
+  let restoreScrollTo: () => void
+
+  function mountComparison() {
+    const wrap = document.createElement('div')
+    wrap.setAttribute('data-tutorial-test-stub', '1')
+    wrap.innerHTML = `
+      <div class="composer" style="width:320px;min-height:100px">
+        <div class="composer-input-wrapper" style="height:40px"></div>
+        <div class="hero-input-textarea" style="height:40px"></div>
+        <div class="composer-toolbar" style="height:24px"></div>
+        <button data-testid="comparison-submit-button" type="button">Submit</button>
+      </div>
+      <section class="loading-section">Processing responses from 2 AI models...</section>
+      <section class="results-section">Comparison Results</section>`
+    document.body.appendChild(wrap)
+  }
+
+  beforeEach(() => {
+    restoreRaf = stubRafForTutorialTests()
+    restoreScrollTo = stubScrollToForTutorialTests()
+    resultsRect = new DOMRect(40, 280, 640, 400)
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+      configurable: true,
+      get() {
+        return 320
+      },
+    })
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get() {
+        return 80
+      },
+    })
+    Object.defineProperty(HTMLElement.prototype, 'offsetParent', {
+      configurable: true,
+      get() {
+        return document.body
+      },
+    })
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect(
+      this: HTMLElement
+    ) {
+      if (this.classList.contains('loading-section')) return new DOMRect(40, 120, 640, 140)
+      if (this.classList.contains('results-section')) return resultsRect
+      if (this.getAttribute('data-testid') === 'comparison-submit-button') {
+        return new DOMRect(200, 480, 120, 40)
+      }
+      return new DOMRect(40, 40, 320, 80)
+    }
+    const existing = document.getElementById('tutorial-portal-root')
+    if (existing) existing.remove()
+    mountComparison()
+  })
+
+  afterEach(() => {
+    cleanup()
+    document.querySelectorAll('[data-tutorial-test-stub]').forEach(n => n.remove())
+    HTMLElement.prototype.getBoundingClientRect = originalRect
+    if (originalOffsetWidth)
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
+    if (originalOffsetHeight)
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
+    if (originalOffsetParent)
+      Object.defineProperty(HTMLElement.prototype, 'offsetParent', originalOffsetParent)
+    restoreScrollTo?.()
+    restoreRaf?.()
+  })
+
+  function tooltipVisualTop(tip: HTMLElement): number {
+    const cssTop = Number.parseFloat(tip.style.top)
+    const estimated = window.innerHeight < 700 ? 160 : 210
+    return tip.classList.contains('tutorial-tooltip-top') ? cssTop - estimated : cssTop
+  }
+
+  it('highlights the processing panel until the first streamed token, with its tooltip', async () => {
+    const view = render(
+      <TutorialOverlay {...props} step="submit-comparison" isLoading streamAnswerStarted={false} />
+    )
+
+    await vi.waitFor(
+      () => {
+        const loading = document.querySelector('.loading-section')
+        const results = document.querySelector('.results-section')
+        expect(loading?.classList.contains('tutorial-highlight')).toBe(true)
+        expect(results?.classList.contains('tutorial-highlight')).toBe(false)
+        const tip = document.querySelector('.tutorial-tooltip')
+        expect(tip?.textContent).toContain('Run Your Comparison')
+        expect(tip?.classList.contains('tutorial-tooltip--settling')).toBe(false)
+        expect(tooltipVisualTop(tip as HTMLElement)).toBeGreaterThanOrEqual(12)
+      },
+      { timeout: 8000 }
+    )
+
+    resultsRect = new DOMRect(40, 280, 640, 480)
+    view.rerender(
+      <TutorialOverlay {...props} step="submit-comparison" isLoading streamAnswerStarted />
+    )
+
+    await vi.waitFor(
+      () => {
+        const loading = document.querySelector('.loading-section')
+        const results = document.querySelector('.results-section')
+        expect(results?.classList.contains('tutorial-highlight')).toBe(true)
+        expect(loading?.classList.contains('tutorial-highlight')).toBe(false)
+      },
+      { timeout: 8000 }
+    )
+  })
+
+  it('renders the review tooltip on screen above a tall Comparison Results card', async () => {
+    resultsRect = new DOMRect(40, 16, 640, 2400)
+    render(
+      <TutorialOverlay
+        {...props}
+        step="view-follow-up-results"
+        isLoading={false}
+        streamAnswerStarted
+      />
+    )
+
+    await vi.waitFor(
+      () => {
+        const tip = document.querySelector('.tutorial-tooltip') as HTMLElement | null
+        expect(tip?.textContent).toContain('Review the New Responses')
+        expect(tip?.classList.contains('tutorial-tooltip--settling')).toBe(false)
+        expect(
+          document.querySelector('.results-section')?.classList.contains('tutorial-highlight')
+        ).toBe(true)
+        const visualTop = tooltipVisualTop(tip as HTMLElement)
+        expect(visualTop).toBeGreaterThanOrEqual(12)
+        expect(Number.parseFloat(tip?.style.top ?? '')).toBeLessThanOrEqual(window.innerHeight - 12)
+      },
+      { timeout: 8000 }
+    )
+  })
+})

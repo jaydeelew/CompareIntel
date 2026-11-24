@@ -208,14 +208,18 @@ export function followUpScrollDelta(args: {
   return args.composerTop - 306
 }
 
-export function scrollTutorialRectToCenter(rect: { top: number; height: number }): void {
+export function scrollTutorialRectToCenter(
+  rect: { top: number; height: number },
+  minTopPx?: number
+): void {
   const root = getTutorialScrollRoot()
   const viewH = window.innerHeight
   const y0 = root.getScrollTop()
   const maxScroll = getTutorialScrollMax()
   const margin = 16
+  const minTop = minTopPx ?? margin
   const desiredTop =
-    rect.height >= viewH - margin * 2 ? margin : Math.max(margin, (viewH - rect.height) / 2)
+    rect.height >= viewH - margin * 2 ? minTop : Math.max(minTop, (viewH - rect.height) / 2)
   const nextTop = Math.max(0, Math.min(y0 + rect.top - desiredTop, maxScroll))
   if (Math.abs(nextTop - y0) < 1) return
   root.scrollToTop(nextTop, 'auto')
@@ -260,11 +264,15 @@ export function clearTutorialScrollTail(): void {
   }
 }
 
-export function centerTutorialStepRect(step: string, rect: { top: number; height: number }): void {
+export function centerTutorialStepRect(
+  step: string,
+  rect: { top: number; height: number },
+  minTopPx?: number
+): void {
   if (step === 'history-dropdown' || step === 'save-selection') {
     ensureTutorialScrollTail(rect)
   }
-  scrollTutorialRectToCenter(rect)
+  scrollTutorialRectToCenter(rect, minTopPx)
 }
 
 export interface TooltipBoxPlacement {
@@ -348,6 +356,57 @@ function unionViewportRects(rects: DOMRect[]): DOMRect | null {
   const right = Math.max(...visible.map(rect => rect.right))
   const bottom = Math.max(...visible.map(rect => rect.bottom))
   return new DOMRect(left, top, right - left, bottom - top)
+}
+
+export function elementHasSpotlightBox(el: Element | null): el is HTMLElement {
+  if (!(el instanceof HTMLElement)) return false
+  const rect = el.getBoundingClientRect()
+  return rect.width > 2 && rect.height > 2
+}
+
+/**
+ * Processing panel until the first streamed answer token, then Comparison Results.
+ * An empty results card is on screen as soon as the request starts; it must not
+ * take the spotlight while the loading panel is still the only feedback.
+ */
+export function readStreamingComparisonSpotlight(streamAnswerStarted: boolean): {
+  kind: 'loading' | 'results'
+  element: HTMLElement
+} | null {
+  const loading = document.querySelector('.loading-section')
+  const results = document.querySelector('.results-section')
+  if (!streamAnswerStarted && elementHasSpotlightBox(loading)) {
+    return { kind: 'loading', element: loading }
+  }
+  if (elementHasSpotlightBox(results)) return { kind: 'results', element: results }
+  if (elementHasSpotlightBox(loading)) return { kind: 'loading', element: loading }
+  return null
+}
+
+function paintTutorialSpotlight(el: HTMLElement | null, on: boolean): void {
+  if (!el) return
+  if (on) {
+    el.classList.add('tutorial-highlight')
+    el.style.pointerEvents = 'auto'
+    el.style.position = 'relative'
+    return
+  }
+  el.classList.remove('tutorial-highlight')
+  el.style.pointerEvents = ''
+  el.style.position = ''
+}
+
+/** Exclusive desktop highlight: loading panel or results, never both. */
+export function applyStreamingComparisonHighlight(
+  streamAnswerStarted: boolean
+): 'loading' | 'results' | null {
+  const loading = document.querySelector('.loading-section')
+  const results = document.querySelector('.results-section')
+  const spot = readStreamingComparisonSpotlight(streamAnswerStarted)
+  if (!spot) return null
+  paintTutorialSpotlight(loading instanceof HTMLElement ? loading : null, spot.kind === 'loading')
+  paintTutorialSpotlight(results instanceof HTMLElement ? results : null, spot.kind === 'results')
+  return spot.kind
 }
 
 /**
@@ -731,6 +790,35 @@ function getEstimatedTooltipHeight(): number {
   return window.innerHeight < 700 ? TOOLTIP_HEIGHT_SMALL : TOOLTIP_HEIGHT_LARGE
 }
 
+/**
+ * Viewport Y where a tall Comparison Results card must start so the desktop
+ * review tooltip fits above its top edge instead of sitting off-screen.
+ */
+export function desktopResultsTooltipMinTop(): number {
+  const reserve =
+    getEstimatedTooltipHeight() + DESKTOP_TUTORIAL_ARROW_PX + TUTORIAL_FRAME_OUTSET_PX + MARGIN
+  const viewH = window.innerHeight
+  const maxTop = Math.max(MARGIN, viewH - 180)
+  return Math.min(reserve, maxTop)
+}
+
+function clampDesktopTooltipTop(
+  top: number,
+  effectivePosition: 'top' | 'bottom',
+  tooltipHeight: number
+): number {
+  const vh = window.innerHeight
+  if (effectivePosition === 'top') {
+    const visualTop = top - tooltipHeight
+    if (visualTop < MARGIN) return MARGIN + tooltipHeight
+    if (top > vh - MARGIN) return vh - MARGIN
+    return top
+  }
+  if (top < MARGIN) return MARGIN
+  if (top + tooltipHeight > vh - MARGIN) return Math.max(MARGIN, vh - MARGIN - tooltipHeight)
+  return top
+}
+
 export function computeTooltipPosition(
   rect: DOMRect,
   _step: TutorialStep,
@@ -753,13 +841,21 @@ export function computeTooltipPosition(
   const left = Math.max(180, Math.min(centerX, window.innerWidth - 180))
   if (placed.arrowDirection === 'down') {
     return {
-      top: frameTop - DESKTOP_TUTORIAL_ARROW_PX,
+      top: clampDesktopTooltipTop(
+        frameTop - DESKTOP_TUTORIAL_ARROW_PX,
+        'top',
+        estimatedTooltipHeight
+      ),
       left,
       effectivePosition: 'top',
     }
   }
   return {
-    top: frameBottom + DESKTOP_TUTORIAL_ARROW_PX,
+    top: clampDesktopTooltipTop(
+      frameBottom + DESKTOP_TUTORIAL_ARROW_PX,
+      'bottom',
+      estimatedTooltipHeight
+    ),
     left,
     effectivePosition: 'bottom',
   }
