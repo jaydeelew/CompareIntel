@@ -27,7 +27,7 @@ jobs:
   detect-changes:
     name: Detect Changed Paths
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 6
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
@@ -95,6 +95,11 @@ jobs:
         env:
           NGINX_T_REQUIRE: "1"
         run: bash scripts/check-nginx-ssl-syntax.sh
+
+      - name: Check nginx known-route 200 and unknown-route 404
+        env:
+          NGINX_T_REQUIRE: "1"
+        run: bash scripts/check-nginx-spa-status.sh
 
   frontend-lint:
     name: Frontend Lint & Type Check

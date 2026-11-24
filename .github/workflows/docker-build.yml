@@ -218,9 +218,29 @@ jobs:
           fi
           echo "✅ /models/claude-opus-5 prerendered successfully"
           
-          # Check 404.html exists
+          # Check 404.html exists and is a real not-found document
           if [ ! -f "./temp-dist/404.html" ]; then
             echo "❌ 404.html not found!"
+            exit 1
+          fi
+          if ! grep -q '404 - Page Not Found' "./temp-dist/404.html"; then
+            echo "❌ 404.html is missing the not-found heading!"
+            exit 1
+          fi
+          if ! grep -q 'noindex' "./temp-dist/404.html"; then
+            echo "❌ 404.html must be noindex!"
+            exit 1
+          fi
+          if grep -q 'rel="canonical"' "./temp-dist/404.html"; then
+            echo "❌ 404.html must not include a canonical link!"
+            exit 1
+          fi
+          if [ -d "./temp-dist/privacy" ]; then
+            echo "❌ /privacy must not be prerendered; it aliases /privacy-policy"
+            exit 1
+          fi
+          if grep -q '<loc>https://compareintel.com/privacy</loc>' "./temp-dist/sitemap.xml"; then
+            echo "❌ sitemap lists /privacy instead of only the canonical privacy policy"
             exit 1
           fi
           

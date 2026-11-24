@@ -12,17 +12,27 @@ import { writeFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
-import { getPublicPages } from './loadPublicPages.js'
+import { getPathAliases, getPublicPages } from './loadPublicPages.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 function generateSitemap() {
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
   const baseUrl = 'https://compareintel.com'
+  const aliases = getPathAliases()
   const publicPages = getPublicPages()
+  const leakedAliases = publicPages.filter(page => aliases.has(page.path)).map(page => page.path)
+  if (leakedAliases.length > 0) {
+    throw new Error(`Sitemap generator included alias URL(s): ${leakedAliases.join(', ')}`)
+  }
 
   console.log('🗺️  Generating sitemap.xml...')
   console.log(`   Date: ${today}`)
+  if (aliases.size > 0) {
+    console.log(
+      `   Omitting ${aliases.size} alias URL(s): ${[...aliases.keys()].join(', ')}`
+    )
+  }
 
   const urls = publicPages
     .map(page => {

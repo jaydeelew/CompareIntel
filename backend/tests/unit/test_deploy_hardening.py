@@ -164,12 +164,14 @@ class TestBackendEnvCheck:
 
 
 class TestNginxSslSpaRouting:
-    def test_ssl_conf_uses_spa_or_404_for_unknown_models(self):
+    def test_ssl_conf_returns_real_404_for_unknown_urls(self):
         text = SSL_CONF.read_text()
-        assert "location @spa_or_404" in text
-        assert "try_files $uri $uri/index.html @spa_or_404;" in text
-        assert "if ($uri = /models)" in text
+        # try_files /404.html =404 would serve that file with HTTP 200.
+        assert "error_page 404 /404.html;" in text
+        assert "try_files $uri $uri/index.html =404;" in text
+        assert "try_files /404.html =404;" not in text
         assert "try_files $uri $uri/ /index.html;" not in text
+        assert "return 301 /privacy-policy$is_args$args;" in text
         assert "location ~ ^/c/[A-Za-z0-9]+$" in text
         assert "location = /internal/metrics/host" in text
         assert "location ~* \\.(js|css)$" in text

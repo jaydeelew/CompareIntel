@@ -111,13 +111,29 @@ echo ""
 echo "🚫 Test 5: 404 for unknown routes"
 echo "========================================"
 
-HTTP_STATUS=$(curl -sI "$BASE_URL/nonexistent-xyz-test" | grep -i "^HTTP" | head -1)
-echo "Unknown URL status: $HTTP_STATUS"
+for unknown in "/nonexistent-xyz-test" "/models/does-not-exist" "/random-page"; do
+    HTTP_STATUS=$(curl -s -o /tmp/compareintel-seo-body.html -w '%{http_code}' "$BASE_URL$unknown")
+    echo "$unknown status: $HTTP_STATUS"
+    if [[ "$HTTP_STATUS" != "404" ]]; then
+        fail "$unknown did not return 404 (got $HTTP_STATUS)"
+    fi
+    if ! grep -q 'noindex' /tmp/compareintel-seo-body.html; then
+        fail "$unknown 404 page is missing noindex"
+    fi
+    if grep -q 'rel="canonical" href="https://compareintel.com/"' /tmp/compareintel-seo-body.html; then
+        fail "$unknown 404 page still canonicalizes to the homepage"
+    fi
+done
+pass "Unknown routes return 404 without a homepage canonical"
 
-if [[ "$HTTP_STATUS" == *"404"* ]]; then
-    pass "Unknown routes return 404"
+PRIVACY_HEADERS=$(curl -sI --max-redirs 0 "$BASE_URL/privacy")
+PRIVACY_CODE=$(printf '%s\n' "$PRIVACY_HEADERS" | awk 'toupper($1) ~ /^HTTP/ { code=$2 } END { print code }')
+PRIVACY_LOCATION=$(printf '%s\n' "$PRIVACY_HEADERS" | awk 'tolower($1)=="location:" { print $2 }' | tr -d '\r')
+echo "/privacy status: $PRIVACY_CODE location: $PRIVACY_LOCATION"
+if [[ "$PRIVACY_CODE" == "301" && "$PRIVACY_LOCATION" == *"/privacy-policy"* ]]; then
+    pass "/privacy 301s to /privacy-policy"
 else
-    fail "Unknown routes do not return 404! Got: $HTTP_STATUS"
+    fail "/privacy should 301 to /privacy-policy (got $PRIVACY_CODE $PRIVACY_LOCATION)"
 fi
 echo ""
 
@@ -132,7 +148,12 @@ if [[ "$SITEMAP_STATUS" == *"200"* ]]; then
     pass "Sitemap is accessible"
     
     # Check sitemap content
-    SITEMAP_URLS=$(curl -s "$BASE_URL/sitemap.xml" | grep -c "<loc>")
+    SITEMAP_BODY=$(curl -s "$BASE_URL/sitemap.xml")
+    SITEMAP_URLS=$(printf '%s\n' "$SITEMAP_BODY" | grep -c "<loc>")
+    if printf '%s\n' "$SITEMAP_BODY" | grep -q '<loc>https://compareintel.com/privacy</loc>'; then
+        fail "Sitemap lists /privacy; only /privacy-policy is canonical"
+    fi
+    pass "Sitemap omits the /privacy alias"
     echo "Sitemap contains $SITEMAP_URLS URLs"
     
     if [[ "$SITEMAP_URLS" -ge 18 ]]; then
@@ -204,7 +225,7 @@ echo ""
 echo "🌐 Test 8: All prerendered routes"
 echo "========================================"
 
-ROUTES=("/" "/about" "/features" "/how-it-works" "/faq" "/image-generation" "/help-me-choose-methodology" "/privacy-policy" "/terms-of-service" "/models" "/models/claude-opus-5")
+ROUTES=("/" "/about" "/features" "/how-it-works" "/faq" "/pricing" "/image-generation" "/help-me-choose-methodology" "/privacy-policy" "/terms-of-service" "/models" "/models/claude-opus-5" "/admin" "/reset-password" "/terms")
 
 for route in "${ROUTES[@]}"; do
     STATUS=$(curl -sI "$BASE_URL$route" | grep -i "^HTTP" | head -1)

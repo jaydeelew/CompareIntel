@@ -29,27 +29,34 @@ export function loadSeoCatalog() {
   return readJson(SEO_CATALOG_PATH)
 }
 
-function expandStaticPages(staticPages) {
-  const expanded = []
-  for (const page of staticPages) {
-    const { aliases, ...canonical } = page
-    expanded.push(canonical)
-    if (!Array.isArray(aliases)) continue
-    for (const alias of aliases) {
-      expanded.push({ ...canonical, path: alias })
-    }
-  }
-  return expanded
+function canonicalStaticPages(staticPages) {
+  return staticPages.map(({ aliases: _aliases, ...page }) => page)
 }
 
 const VERDICT_METHODOLOGY_PATH = '/verdict-methodology'
 
+/**
+ * Canonical public URLs only. Aliases such as /privacy are not separate
+ * sitemap or prerender entries; they redirect to the canonical path.
+ */
 export function getPublicPages() {
-  const staticPages = expandStaticPages(readJson(STATIC_PAGES_PATH))
+  const staticPages = canonicalStaticPages(readJson(STATIC_PAGES_PATH))
   const catalog = loadSeoCatalog()
   const pages = [...staticPages, catalog.index, ...catalog.models.map(model => model.page)]
   if (isVerdictPanelEnabledInBuild()) return pages
   return pages.filter(page => page.path !== VERDICT_METHODOLOGY_PATH)
+}
+
+/** alias path → canonical path. Not included in the sitemap. */
+export function getPathAliases() {
+  const aliases = new Map()
+  for (const page of readJson(STATIC_PAGES_PATH)) {
+    if (!Array.isArray(page.aliases)) continue
+    for (const alias of page.aliases) {
+      aliases.set(alias, page.path)
+    }
+  }
+  return aliases
 }
 
 export function getPublicPaths() {

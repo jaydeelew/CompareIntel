@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { readFileSync, existsSync } from 'fs'
 
-import { getPublicPaths } from './loadPublicPages.js'
+import { getPathAliases, getPublicPaths } from './loadPublicPages.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -63,30 +63,55 @@ app.use(compression({
   threshold: 1024, // Only compress responses larger than 1KB
 }))
 
+// Alias URLs (for example /privacy) redirect before static files so a stale
+// prerender cannot be served in place of the canonical page.
+const PATH_ALIASES = getPathAliases()
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+  const normalized =
+    req.path.length > 1 && req.path.endsWith('/') ? req.path.slice(0, -1) : req.path
+  const target = PATH_ALIASES.get(normalized)
+  if (!target || target === normalized) return next()
+  res.redirect(301, target)
+})
+
 // Serve static files from dist directory
 const distPath = join(__dirname, '..', 'dist')
 app.use(express.static(distPath))
 
 // Known public routes from the shared page list (static + generated model pages)
 const PUBLIC_ROUTES = getPublicPaths()
+// Documents the SPA serves that are not prerendered marketing pages.
+const SPA_DOCUMENT_ROUTES = new Set(['/admin', '/reset-password', '/terms'])
+const NOT_FOUND_PRERENDER_PATH = '/__prerender-not-found'
 
 // SPA fallback with 404 handling
 app.get('/{*splat}', (req, res) => {
   try {
     const path = req.path
-    
-    // Check if this is a known public route or /admin
+
+    // Build-only URL. prerender.js captures the React not-found view from it.
+    // Production nginx does not allow this path, so a direct request 404s.
+    if (path === NOT_FOUND_PRERENDER_PATH) {
+      const indexHtml = readFileSync(join(distPath, 'index.html'), 'utf-8')
+      res.setHeader('Content-Type', 'text/html')
+      res.send(indexHtml)
+      return
+    }
+
     const isKnownRoute =
-      PUBLIC_ROUTES.includes(path) || path.startsWith('/admin') || /^\/c\/[A-Za-z0-9]+$/.test(path)
+      PUBLIC_ROUTES.includes(path) ||
+      SPA_DOCUMENT_ROUTES.has(path) ||
+      /^\/c\/[A-Za-z0-9]+$/.test(path)
     
     if (isKnownRoute) {
       // Serve the appropriate prerendered HTML or index.html
       let htmlPath
       if (path === '/') {
         htmlPath = join(distPath, 'index.html')
-      } else if (path.startsWith('/admin')) {
-        // Admin routes use the main SPA
-        htmlPath = join(distPath, 'index.html')
+      } else if (SPA_DOCUMENT_ROUTES.has(path)) {
+        const shellPath = join(distPath, path.slice(1), 'index.html')
+        htmlPath = existsSync(shellPath) ? shellPath : join(distPath, 'index.html')
       } else {
         // Try to serve prerendered HTML
         const pagePath = join(distPath, path.slice(1), 'index.html')
