@@ -13,6 +13,8 @@ export interface TutorialBox {
   left: number
   width: number
   height: number
+  anchorX?: number
+  anchorY?: number
 }
 
 export function prefersReducedTutorialMotion(): boolean {
@@ -31,12 +33,31 @@ export function tutorialBoxesNearlyEqual(
   epsilon = 2
 ): boolean {
   if (a == null || b == null) return a == null && b == null
+  // Viewport tops change on every scroll. Content tops do not, so a scroll
+  // must not count as a move and rewrite the highlight.
+  const anchored = a.anchorY != null && b.anchorY != null && a.anchorX != null && b.anchorX != null
+  const aTop = anchored ? a.top - (a.anchorY as number) : a.top
+  const bTop = anchored ? b.top - (b.anchorY as number) : b.top
+  const aLeft = anchored ? a.left - (a.anchorX as number) : a.left
+  const bLeft = anchored ? b.left - (b.anchorX as number) : b.left
   return (
-    Math.abs(a.top - b.top) < epsilon &&
-    Math.abs(a.left - b.left) < epsilon &&
+    Math.abs(aTop - bTop) < epsilon &&
+    Math.abs(aLeft - bLeft) < epsilon &&
     Math.abs(a.width - b.width) < epsilon &&
     Math.abs(a.height - b.height) < epsilon
   )
+}
+
+/** Window and visualViewport size changes. Page scroll is intentionally not observed. */
+export function watchTutorialLayout(onChange: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const run = () => onChange()
+  window.addEventListener('resize', run)
+  window.visualViewport?.addEventListener('resize', run)
+  return () => {
+    window.removeEventListener('resize', run)
+    window.visualViewport?.removeEventListener('resize', run)
+  }
 }
 
 interface ViewportSnapshot {

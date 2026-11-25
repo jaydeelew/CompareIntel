@@ -314,7 +314,7 @@ body:has(.tutorial-backdrop) .hero-section {
 /* Tooltip bubble. top/left and the placement transform are set while hidden.
    The visible fade is opacity only, so the box does not travel after it appears. */
 .tutorial-tooltip {
-  position: fixed;
+  position: absolute;
   z-index: 10000;
   width: max-content;
   max-width: min(340px, calc(100vw - 2rem));
@@ -337,6 +337,7 @@ body:has(.tutorial-backdrop) .hero-section {
 }
 
 .tutorial-backdrop-cutout {
+  position: absolute;
   transition: opacity 200ms ease;
 }
 

@@ -20,12 +20,17 @@ export interface RectCutout {
   left: number
   width: number
   height: number
+  /** Scroll-layer origin when `top`/`left` were read in viewport space. */
+  anchorX?: number
+  anchorY?: number
 }
 
 export interface ButtonCutout {
   top: number
   left: number
   radius: number
+  anchorX?: number
+  anchorY?: number
 }
 
 export interface TargetCutout extends RectCutout {
@@ -51,7 +56,8 @@ export function computeTextareaCutout(
   padding = 8
 ): RectCutout | null {
   const rects = getComposerCutoutRects(composerElement)
-  return computeRectUnion(rects, padding)
+  const box = computeRectUnion(rects, padding)
+  return box ? withScrollAnchor(box) : null
 }
 
 export function computeDropdownCutout(
@@ -65,7 +71,8 @@ export function computeDropdownCutout(
   if (dropdownElement) {
     allRects.push(dropdownElement.getBoundingClientRect())
   }
-  return computeRectUnion(allRects, padding)
+  const box = computeRectUnion(allRects, padding)
+  return box ? withScrollAnchor(box) : null
 }
 
 /**
@@ -110,7 +117,7 @@ export function computeButtonCutout(buttonElement: HTMLElement): ButtonCutout {
   const centerX = rect.left + rect.width / 2
   const centerY = rect.top + rect.height / 2
   const radius = Math.max(rect.width, rect.height) / 2 + 2
-  return { top: centerY, left: centerX, radius }
+  return withScrollAnchor({ top: centerY, left: centerX, radius })
 }
 
 export function computeTargetCutout(
@@ -131,13 +138,13 @@ export function computeTargetCutout(
     maxBottom = Math.max(maxBottom, rect.bottom)
   })
   if (minTop === Infinity) return null
-  return {
+  return withScrollAnchor({
     top: minTop - padding,
     left: minLeft - padding,
     width: maxRight - minLeft + padding * 2,
     height: maxBottom - minTop + padding * 2,
     borderRadius,
-  }
+  })
 }
 
 const TOOLTIP_HEIGHT_SMALL = 160
@@ -156,6 +163,63 @@ function tutorialPageScroller(): HTMLElement {
   const app = document.querySelector('.app') as HTMLElement | null
   if (app && app.scrollHeight > app.clientHeight + 1) return app
   return (document.scrollingElement as HTMLElement | null) ?? document.documentElement
+}
+
+/**
+ * Origin of `.app` content in viewport pixels. Subtract this from a
+ * getBoundingClientRect() to get coordinates that stay valid while the page
+ * scrolls. The highlight layer is position:absolute inside that scroller, so
+ * the compositor moves it with the target and scroll listeners must not
+ * rewrite top/left.
+ */
+export function readTutorialContentOrigin(): { x: number; y: number } {
+  // The ring is position:absolute inside `.app`, so its origin is `.app`'s
+  // padding edge — even when the document is the element that actually
+  // scrolled. The document element's border box already shifts by -scrollTop;
+  // subtracting scrollTop again parks the ring a full page away.
+  const host = (document.querySelector('.app') as HTMLElement | null) ?? tutorialPageScroller()
+  const rect = host.getBoundingClientRect()
+  return {
+    x: rect.left + host.clientLeft - host.scrollLeft,
+    y: rect.top + host.clientTop - host.scrollTop,
+  }
+}
+
+export function withScrollAnchor<T extends { top: number; left: number }>(
+  box: T
+): T & { anchorX: number; anchorY: number } {
+  const origin = readTutorialContentOrigin()
+  return { ...box, anchorX: origin.x, anchorY: origin.y }
+}
+
+export function scrollContentOffset(box: {
+  top: number
+  left: number
+  anchorX?: number
+  anchorY?: number
+}): { top: number; left: number } {
+  // Never read the live scroll origin here. A render that runs after the page
+  // has moved would subtract the new origin from a viewport top captured
+  // earlier and pin the ring in the viewport — the lag Jack reported.
+  // Callers stamp the origin at measurement time. A box with no stamp is
+  // already in content coordinates (scroll 0 in unit tests).
+  return {
+    top: box.top - (box.anchorY ?? 0),
+    left: box.left - (box.anchorX ?? 0),
+  }
+}
+
+/** Portal host inside the same scroll container as tutorial targets. */
+export function ensureTutorialScrollLayer(id: string): HTMLElement {
+  const host = (document.querySelector('.app') as HTMLElement | null) ?? document.body
+  let el = document.getElementById(id) as HTMLElement | null
+  if (!el) {
+    el = document.createElement('div')
+    el.id = id
+  }
+  el.classList.add('tutorial-scroll-layer')
+  if (el.parentElement !== host) host.appendChild(el)
+  return el
 }
 
 export function getTutorialScrollRoot(): {

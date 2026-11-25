@@ -303,8 +303,14 @@ describe('TutorialOverlay comparison spotlight', () => {
     restoreRaf?.()
   })
 
+  function viewportStyleTop(el: HTMLElement): number {
+    const cssTop = Number.parseFloat(el.style.top)
+    const anchor = Number.parseFloat(el.dataset.scrollAnchorY ?? '0')
+    return cssTop + (Number.isFinite(anchor) ? anchor : 0)
+  }
+
   function tooltipVisualTop(tip: HTMLElement): number {
-    const cssTop = Number.parseFloat(tip.style.top)
+    const cssTop = viewportStyleTop(tip)
     const estimated = window.innerHeight < 700 ? 160 : 210
     return tip.classList.contains('tutorial-tooltip-top') ? cssTop - estimated : cssTop
   }
@@ -365,7 +371,7 @@ describe('TutorialOverlay comparison spotlight', () => {
           '.tutorial-backdrop-cutout:not(.tutorial-backdrop-follow-up-results-ring)'
         ) as HTMLElement | null
         expect(cutout).toBeTruthy()
-        expect(Math.abs(Number.parseFloat(cutout?.style.top ?? '') - (120 - 8))).toBeLessThan(28)
+        expect(Math.abs(viewportStyleTop(cutout as HTMLElement) - (120 - 8))).toBeLessThan(28)
         expect(document.querySelector('.tutorial-backdrop-follow-up-results-ring')).toBeNull()
       },
       { timeout: 8000 }
@@ -391,7 +397,7 @@ describe('TutorialOverlay comparison spotlight', () => {
           '.tutorial-backdrop-cutout:not(.tutorial-backdrop-follow-up-results-ring)'
         ) as HTMLElement | null
         expect(cutout).toBeTruthy()
-        expect(Math.abs(Number.parseFloat(cutout?.style.top ?? '') - (280 - 8))).toBeLessThan(28)
+        expect(Math.abs(viewportStyleTop(cutout as HTMLElement) - (280 - 8))).toBeLessThan(28)
         expect(document.querySelector('.tutorial-backdrop-follow-up-results-ring')).toBeNull()
         const tips = Array.from(document.querySelectorAll('.tutorial-tooltip'))
         const visibleContinue = tips.filter(tip => {
@@ -456,7 +462,7 @@ describe('TutorialOverlay comparison spotlight', () => {
         ).toBe(true)
         const visualTop = tooltipVisualTop(tip as HTMLElement)
         expect(visualTop).toBeGreaterThanOrEqual(12)
-        expect(Number.parseFloat(tip?.style.top ?? '')).toBeLessThanOrEqual(window.innerHeight - 12)
+        expect(viewportStyleTop(tip as HTMLElement)).toBeLessThanOrEqual(window.innerHeight - 12)
       },
       { timeout: 8000 }
     )

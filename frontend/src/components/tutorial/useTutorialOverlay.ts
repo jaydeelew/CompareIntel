@@ -33,6 +33,7 @@ import {
   computeTooltipPosition,
   desktopResultsTooltipMinTop,
   elementHasSpotlightBox,
+  ensureTutorialScrollLayer,
   getTutorialProviderDropdowns,
   getTutorialProviderStepLayout,
   getTutorialScrollMax,
@@ -40,11 +41,13 @@ import {
   DESKTOP_TUTORIAL_ARROW_PX,
   readTutorialSpotlightRect,
   readStreamingComparisonSpotlight,
+  scrollContentOffset,
   scrollDeltaToFitTooltip,
   scrollFollowUpHighlightIntoView,
   scrollTutorialElementToViewportY,
   streamingResultsTopInViewport,
   seatPortaledFollowUpComposer,
+  withScrollAnchor,
   TUTORIAL_FRAME_OUTSET_PX,
   type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
@@ -58,6 +61,7 @@ import {
   waitForRectStable,
   waitForTutorialLayoutSettle,
   watchTutorialFrameSize,
+  watchTutorialLayout,
 } from '../../utils/tutorialSettle'
 
 import { useTutorialSubmitAttention } from './tutorialSubmitAttention'
@@ -77,12 +81,38 @@ interface HTMLElementWithTutorialProps extends HTMLElement {
 }
 
 /**
- * Re-run layout reads while the page scrolls, including touch and momentum.
- * WebKit drops animation frames while a test is waiting; the tracker still
- * lands a read on a short timer.
+ * Scroll plus resize. Used where a scroll must be observed (results pin,
+ * user-took-over). Highlight coordinates themselves are not rewritten from
+ * viewport tops: callers stamp a scroll anchor and skip unchanged content boxes.
  */
 function attachScrollResizeRaf(update: () => void): () => void {
   return trackTutorialMotion(update)
+}
+
+/** Resize and visualViewport only. Scroll must not rewrite highlight coordinates. */
+function attachLayoutWatch(update: () => void): () => void {
+  return watchTutorialLayout(update)
+}
+
+function placeOverlayPoint(top: number, left: number) {
+  return withScrollAnchor({ top, left })
+}
+
+function overlayPointUnchanged(
+  prev: { top: number; left: number; anchorX?: number; anchorY?: number },
+  next: { top: number; left: number; anchorX?: number; anchorY?: number }
+): boolean {
+  if (
+    prev.anchorY == null ||
+    next.anchorY == null ||
+    prev.anchorX == null ||
+    next.anchorX == null
+  ) {
+    return Math.abs(prev.top - next.top) < 1 && Math.abs(prev.left - next.left) < 1
+  }
+  const a = scrollContentOffset(prev)
+  const b = scrollContentOffset(next)
+  return Math.abs(a.top - b.top) < 1 && Math.abs(a.left - b.left) < 1
 }
 
 export function useTutorialOverlay(
@@ -136,7 +166,12 @@ export function useTutorialOverlay(
   const targetElementRef = useRef<HTMLElement | null>(null)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const [highlightedElements, setHighlightedElements] = useState<HTMLElement[]>([])
-  const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0 })
+  const [overlayPosition, setOverlayPosition] = useState<{
+    top: number
+    left: number
+    anchorX?: number
+    anchorY?: number
+  }>({ top: 0, left: 0 })
   const [isVisible, setIsVisible] = useState(false)
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
   // Dynamic position for step 3 - can switch between 'top' and 'bottom' based on scroll
@@ -153,17 +188,23 @@ export function useTutorialOverlay(
     left: number
     width: number
     height: number
+    anchorX?: number
+    anchorY?: number
   } | null>(null)
   const [dropdownCutout, setDropdownCutout] = useState<{
     top: number
     left: number
     width: number
     height: number
+    anchorX?: number
+    anchorY?: number
   } | null>(null)
   const [buttonCutout, setButtonCutout] = useState<{
     top: number
     left: number
     radius: number
+    anchorX?: number
+    anchorY?: number
   } | null>(null)
   const [loadingStreamingCutout, setLoadingStreamingCutout] = useState<{
     top: number
@@ -171,6 +212,8 @@ export function useTutorialOverlay(
     width: number
     height: number
     borderRadius?: number
+    anchorX?: number
+    anchorY?: number
   } | null>(null)
   // General-purpose cutout for target elements (used for steps without special cutout handling)
   const [targetCutout, setTargetCutout] = useState<{
@@ -179,6 +222,8 @@ export function useTutorialOverlay(
     width: number
     height: number
     borderRadius: number
+    anchorX?: number
+    anchorY?: number
   } | null>(null)
 
   useTutorialCleanup()
@@ -276,20 +321,11 @@ export function useTutorialOverlay(
     targetElementRef.current = targetElement
   }, [targetElement])
 
-  // Render the tutorial UI in a portal attached to <body> so `position: fixed` is truly viewport-fixed.
-  // This avoids cases where an ancestor has `contain/transform` which can break fixed positioning or clip the tooltip.
+  // The layer sits inside `.app` so absolute cutouts and tooltips scroll with the page.
   useEffect(() => {
     if (typeof document === 'undefined') return
 
-    const existing = document.getElementById('tutorial-portal-root') as HTMLElement | null
-    if (existing) {
-      setPortalRoot(existing)
-      return
-    }
-
-    const el = document.createElement('div')
-    el.id = 'tutorial-portal-root'
-    document.body.appendChild(el)
+    const el = ensureTutorialScrollLayer('tutorial-portal-root')
     setPortalRoot(el)
 
     return () => {
@@ -336,7 +372,7 @@ export function useTutorialOverlay(
 
     if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
       tooltipClampAttemptsRef.current += 1
-      setOverlayPosition(pos => ({ top: pos.top + dy, left: pos.left + dx }))
+      setOverlayPosition(pos => ({ ...pos, top: pos.top + dy, left: pos.left + dx }))
     } else {
       tooltipClampAttemptsRef.current = 0
     }
@@ -359,7 +395,7 @@ export function useTutorialOverlay(
   // after the initial scroll finishes so the tooltip does not track a moving target.
   useEffect(() => {
     if (isProviderPickerTutorialStep(step)) {
-      setOverlayPosition({ top: 320, left: window.innerWidth / 2 })
+      setOverlayPosition(withScrollAnchor({ top: 320, left: window.innerWidth / 2 }))
     } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
       // Do NOT force visibility for enter-prompt steps.
       // These steps require scrolling to the composer first, and the scroll effect
@@ -367,7 +403,7 @@ export function useTutorialOverlay(
       // Forcing isVisible=true here causes a flicker (tooltip briefly appears at wrong
       // position before the scroll effect hides it).
       // Just set a default position so the tooltip has a reasonable starting point.
-      setOverlayPosition({ top: 450, left: window.innerWidth / 2 })
+      setOverlayPosition(withScrollAnchor({ top: 450, left: window.innerWidth / 2 }))
     }
   }, [step])
 
@@ -524,7 +560,7 @@ export function useTutorialOverlay(
       setDropdownCutout(null)
       setButtonCutout(null)
       setLoadingStreamingCutout(null)
-      setOverlayPosition({ top: 0, left: 0 })
+      setOverlayPosition(placeOverlayPoint(0, 0))
       setEffectivePosition(null)
       // Clean up any remaining tutorial classes when tutorial ends
       const composerElementActive = document.querySelector(
@@ -841,7 +877,7 @@ export function useTutorialOverlay(
       const rect = layoutRectForStep() ?? el.getBoundingClientRect()
       const { top, left, effectivePosition: effPos } = computeTooltipPosition(rect, step, config)
       setEffectivePosition(effPos)
-      setOverlayPosition({ top, left })
+      setOverlayPosition(placeOverlayPoint(top, left))
     }
 
     let fadeStarted = false
@@ -999,23 +1035,23 @@ export function useTutorialOverlay(
     const followTarget = () => {
       if (cancelled || stepRef.current !== step) return
       if (!spotlightSettledRef.current || settledStepRef.current !== step) return
-      // The settle scroll runs while the card is hidden. After it fades in, a
-      // user scroll, touch, or keyboard resize must move the fixed cutout and
-      // tooltip with the target. Hiding them here drops the prompt step as
-      // soon as the textarea is focused, and it is the transition flicker.
-      if (!fadeStarted) {
+      // History and save yank the page back to the seated offset. That is a
+      // scroll policy, not a highlight reposition. Every other step leaves the
+      // scroll layer alone: rewriting top/left from a scroll sample is what
+      // made the ring lag the content.
+      if (step === 'history-dropdown' || step === 'save-selection') {
         updatePosition()
-        return
       }
-      trackTooltip()
     }
 
     const detachFrameWatch = watchTutorialFrameSize(scheduleTrack)
+    const detachLayoutWatch = watchTutorialLayout(scheduleTrack)
     const stopMotion = trackTutorialMotion(followTarget)
 
     return () => {
       cancelled = true
       detachFrameWatch()
+      detachLayoutWatch()
       stopMotion()
       if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
       if (trackTimer != null) window.clearTimeout(trackTimer)
@@ -1158,7 +1194,7 @@ export function useTutorialOverlay(
           if (!finalRect) return
           const placed = computeTooltipPosition(finalRect, step, TUTORIAL_STEPS_CONFIG[step])
           setEffectivePosition(placed.effectivePosition)
-          setOverlayPosition({ top: placed.top, left: placed.left })
+          setOverlayPosition(placeOverlayPoint(placed.top, placed.left))
         } finally {
           if (!cancelled && stepRef.current === step) {
             setPositionStabilized(true)
@@ -1427,7 +1463,7 @@ export function useTutorialOverlay(
     }
 
     ensureHighlight()
-    const detachScrollResize = attachScrollResizeRaf(ensureHighlight)
+    const detachScrollResize = attachLayoutWatch(ensureHighlight)
     const interval = setInterval(ensureHighlight, 250)
 
     return () => {
@@ -1474,7 +1510,7 @@ export function useTutorialOverlay(
 
     ensureHighlight()
 
-    const detachScrollResize = attachScrollResizeRaf(ensureHighlight)
+    const detachScrollResize = attachLayoutWatch(ensureHighlight)
 
     const interval = setInterval(ensureHighlight, 250)
 
@@ -1518,7 +1554,7 @@ export function useTutorialOverlay(
     ensureHighlightAndCutout()
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, ensureHighlightAndCutout)
 
-    const detachScrollResize = attachScrollResizeRaf(ensureHighlightAndCutout)
+    const detachScrollResize = attachLayoutWatch(ensureHighlightAndCutout)
 
     // Also run after a brief delay to handle any cleanup that might run after this effect
     const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
@@ -1572,7 +1608,7 @@ export function useTutorialOverlay(
     ensureHighlightAndCutout()
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, ensureHighlightAndCutout)
 
-    const detachScrollResize = attachScrollResizeRaf(ensureHighlightAndCutout)
+    const detachScrollResize = attachLayoutWatch(ensureHighlightAndCutout)
 
     // Also run after a brief delay to handle any cleanup that might run after this effect
     const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
@@ -1729,7 +1765,7 @@ export function useTutorialOverlay(
     // Check immediately
     ensureHighlightCutoutAndVisibility()
 
-    const detachScrollResize = attachScrollResizeRaf(ensureHighlightCutoutAndVisibility)
+    const detachScrollResize = attachLayoutWatch(ensureHighlightCutoutAndVisibility)
 
     // Check periodically to maintain highlight, cutout, and visibility
     const interval = setInterval(ensureHighlightCutoutAndVisibility, 200)
@@ -1824,6 +1860,10 @@ export function useTutorialOverlay(
     let observed: Element | null = null
     const resizeObserver = new ResizeObserver(() => updateLoadingStreamingCutout())
 
+    // A pure scroll stamps the same content box (viewport and anchor move
+    // together), so nearlyEqual skips the update and the layer keeps the ring
+    // on the target. A layout change visible in this sample, such as the
+    // processing panel unmounting, publishes the new content box.
     const publish = (
       cutout: {
         top: number
@@ -1910,11 +1950,8 @@ export function useTutorialOverlay(
         const stepConfig = TUTORIAL_STEPS_CONFIG[currentStep]
         const placed = computeTooltipPosition(rect, currentStep, stepConfig)
         setEffectivePosition(placed.effectivePosition)
-        setOverlayPosition(prev =>
-          Math.abs(prev.top - placed.top) < 1 && Math.abs(prev.left - placed.left) < 1
-            ? prev
-            : { top: placed.top, left: placed.left }
-        )
+        const nextPoint = placeOverlayPoint(placed.top, placed.left)
+        setOverlayPosition(prev => (overlayPointUnchanged(prev, nextPoint) ? prev : nextPoint))
         setIsVisible(true)
         if (!started) {
           suppressReviewTooltipRevealRef.current = false
@@ -1964,13 +2001,15 @@ export function useTutorialOverlay(
           scrollTutorialElementToViewportY(loadingSection, desiredTop)
         }
         const rect = loadingSection.getBoundingClientRect()
-        publish({
-          top: rect.top - 8,
-          left: rect.left - 8,
-          width: rect.width + 16,
-          height: rect.height + 16,
-          borderRadius: 20,
-        })
+        publish(
+          withScrollAnchor({
+            top: rect.top - 8,
+            left: rect.left - 8,
+            width: rect.width + 16,
+            height: rect.height + 16,
+            borderRadius: 20,
+          })
+        )
         anchorTooltipTo(rect)
         return
       }
@@ -2038,18 +2077,22 @@ export function useTutorialOverlay(
 
       if (loadingSection) {
         const rect = loadingSection.getBoundingClientRect()
-        publish({
-          top: rect.top - 8,
-          left: rect.left - 8,
-          width: rect.width + 16,
-          height: rect.height + 16,
-          borderRadius: 20,
-        })
+        publish(
+          withScrollAnchor({
+            top: rect.top - 8,
+            left: rect.left - 8,
+            width: rect.width + 16,
+            height: rect.height + 16,
+            borderRadius: 20,
+          })
+        )
       }
     }
 
     updateLoadingStreamingCutout()
-    const detachScrollResize = attachScrollResizeRaf(updateLoadingStreamingCutout)
+    const detachScrollResize = attachScrollResizeRaf(() => {
+      updateLoadingStreamingCutout()
+    })
     const interval = setInterval(updateLoadingStreamingCutout, 100)
 
     return () => {
@@ -2277,7 +2320,7 @@ export function useTutorialOverlay(
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTextareaCutout)
     window.addEventListener(TUTORIAL_FRAME_RESIZED_EVENT, updateTextareaCutout)
 
-    const detachScrollResize = attachScrollResizeRaf(updateTextareaCutout)
+    const detachScrollResize = attachLayoutWatch(updateTextareaCutout)
     const interval = setInterval(updateTextareaCutout, 100)
 
     return () => {
@@ -2311,7 +2354,7 @@ export function useTutorialOverlay(
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateDropdownCutout)
     window.addEventListener(TUTORIAL_FRAME_RESIZED_EVENT, updateDropdownCutout)
 
-    const detachScrollResize = attachScrollResizeRaf(updateDropdownCutout)
+    const detachScrollResize = attachLayoutWatch(updateDropdownCutout)
     const interval = setInterval(updateDropdownCutout, 100)
 
     return () => {
@@ -2337,16 +2380,8 @@ export function useTutorialOverlay(
 
       const targetCut = resultsSection != null ? computeTargetCutout([resultsSection], 8, 24) : null
 
-      const composerCutFull =
+      const composerCutRect =
         composerElement != null ? computeTargetCutout([composerElement], 8, 32) : null
-      const composerCutRect = composerCutFull
-        ? {
-            top: composerCutFull.top,
-            left: composerCutFull.left,
-            width: composerCutFull.width,
-            height: composerCutFull.height,
-          }
-        : null
 
       setTargetCutout(prev => (tutorialBoxesNearlyEqual(prev, targetCut) ? prev : targetCut))
       setTextareaCutout(prev =>
@@ -2357,7 +2392,7 @@ export function useTutorialOverlay(
     syncFollowUpBackdropCutouts()
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, syncFollowUpBackdropCutouts)
     window.addEventListener(TUTORIAL_FRAME_RESIZED_EVENT, syncFollowUpBackdropCutouts)
-    const detachScrollResize = attachScrollResizeRaf(syncFollowUpBackdropCutouts)
+    const detachScrollResize = attachLayoutWatch(syncFollowUpBackdropCutouts)
     const interval = setInterval(syncFollowUpBackdropCutouts, 100)
 
     return () => {
@@ -2422,7 +2457,7 @@ export function useTutorialOverlay(
     window.addEventListener(TUTORIAL_SPOTLIGHT_SETTLED_EVENT, updateTargetCutout)
     window.addEventListener(TUTORIAL_FRAME_RESIZED_EVENT, updateTargetCutout)
 
-    const detachScrollResize = attachScrollResizeRaf(updateTargetCutout)
+    const detachScrollResize = attachLayoutWatch(updateTargetCutout)
     const interval = setInterval(updateTargetCutout, 100)
 
     return () => {
