@@ -501,7 +501,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const placementRect = rect
     const viewportWidth = window.innerWidth
     const visualViewport = readVisualViewportBox()
-    const viewportHeight = visualViewport.top + visualViewport.height
+    // Side choice stays on the layout viewport. Composer steps scroll the card
+    // with the field; measuring against the shorter visual viewport flipped the
+    // card and left it behind the composer.
+    const viewportHeight = window.innerHeight
     const padding = 12 // Padding from screen edges
     const tooltipRect = overlayRef.current?.getBoundingClientRect()
     const tooltipHeight = tooltipRect?.height ?? tooltipEstimatedHeight
@@ -719,13 +722,21 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       lockSide: step === 'follow-up',
     })
 
-    let tooltipTop = clampTooltipTop({
-      top: placed.top,
-      height: tooltipHeight,
-      viewportTop: visualViewport.top,
-      viewportHeight: visualViewport.height,
-      padding,
-    })
+    // Composer steps must keep the card glued to the field, including while it
+    // slides off screen so the scroll-back hint can replace it. Clamping those
+    // cards pinned them in the viewport and the hint never appeared. Other
+    // steps clamp so a card cannot sit above the URL bar or below the fold
+    // while its highlight is still on screen.
+    const clampTooltip = !tutorialStepFollowsComposer(step)
+    let tooltipTop = clampTooltip
+      ? clampTooltipTop({
+          top: placed.top,
+          height: tooltipHeight,
+          viewportTop: visualViewport.top,
+          viewportHeight: visualViewport.height,
+          padding,
+        })
+      : placed.top
     let tooltipLeft = 0
     let arrowDirection: 'up' | 'down' | 'left' | 'right' = placed.arrowDirection
     let arrowOffset = 50
@@ -770,13 +781,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    tooltipTop = clampTooltipTop({
-      top: tooltipTop,
-      height: tooltipHeight,
-      viewportTop: visualViewport.top,
-      viewportHeight: visualViewport.height,
-      padding,
-    })
+    if (clampTooltip) {
+      tooltipTop = clampTooltipTop({
+        top: tooltipTop,
+        height: tooltipHeight,
+        viewportTop: visualViewport.top,
+        viewportHeight: visualViewport.height,
+        padding,
+      })
+    }
 
     setTooltipPosition(prev => {
       if (
