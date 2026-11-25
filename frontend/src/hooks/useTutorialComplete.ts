@@ -39,6 +39,24 @@ export interface TutorialState {
 const TUTORIAL_STORAGE_KEY = 'compareintel_tutorial_completed'
 const WELCOME_DONT_SHOW_KEY = 'compareintel_welcome_dont_show_again'
 
+/** A user prompt sent after the first assistant reply, and that reply's answer. */
+function hasFinishedFollowUpRound(conversations: ModelConversation[]): boolean {
+  return conversations.some(conv => {
+    let seenAssistant = false
+    let userAfterAssistant = false
+    for (const msg of conv.messages) {
+      const text = typeof msg.content === 'string' ? msg.content.trim() : ''
+      if (!seenAssistant) {
+        if (msg.type === 'assistant' && text.length > 0) seenAssistant = true
+        continue
+      }
+      if (msg.type === 'user') userAfterAssistant = true
+      if (userAfterAssistant && msg.type === 'assistant' && text.length > 0) return true
+    }
+    return false
+  })
+}
+
 /** Playwright injects these in e2e; welcome modal would otherwise race after auth and block the whole suite. */
 export function shouldSuppressWelcomeModalForAutomation(): boolean {
   if (typeof window === 'undefined') return false
@@ -129,6 +147,8 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   const followUpSawIdleRef = useRef(false)
   /** User prompts already on screen while follow-up is idle. A later round has to add one. */
   const followUpUserBaselineRef = useRef<number | null>(null)
+  /** Follow-up was answered before this step opened. One timer, not cleared by stream updates. */
+  const followUpAlreadyAnsweredTimerRef = useRef<number | null>(null)
   useEffect(() => {
     if (tutorialState.currentStep !== 'follow-up') {
       setFollowUpSubmitStarted(false)
@@ -234,6 +254,31 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
       currentStep: step,
     }))
   }, [])
+
+  // The processing panel holds step 6 until its stream ends, but the result card
+  // is already visible. The follow-up can be submitted and answered before this
+  // step opens. The completion flag is still true from the first comparison, so
+  // resetting it and setting it again never produces the rising edge the
+  // controller needs, and the step sits on "Continue the Conversation" with
+  // both rounds already on screen. Advance on the next turn instead.
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'follow-up') {
+      if (followUpAlreadyAnsweredTimerRef.current != null) {
+        window.clearTimeout(followUpAlreadyAnsweredTimerRef.current)
+        followUpAlreadyAnsweredTimerRef.current = null
+      }
+      return
+    }
+    if (followUpAlreadyAnsweredTimerRef.current != null) return
+    if (isLoading || followUpSubmitInitiatedRef.current) return
+    if (!isFollowUpMode || !hasFinishedFollowUpRound(conversations)) return
+    followUpAlreadyAnsweredTimerRef.current = window.setTimeout(() => {
+      followUpAlreadyAnsweredTimerRef.current = null
+      setFollowUpSubmitStarted(true)
+      setTutorialHasCompletedComparison(true)
+      completeStep('follow-up')
+    }, 0)
+  }, [conversations, isLoading, isFollowUpMode, tutorialState.currentStep, completeStep])
 
   // Effects (previously in useTutorialEffects)
 
