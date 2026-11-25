@@ -23,7 +23,7 @@ export default defineConfig({
     // Writing screenshots/HTML into runs/ must not restart Vite (that dropped
     // the connection after the first screenshot: ERR_CONNECTION_REFUSED).
     watch: {
-      ignored: ['**/runs/**', '**/test-results/**', '**/layout-audit/**', '**/triage-out/**', '**/*.png', '**/*.log'],
+      ignored: ['**/runs/**', '**/test-results/**', '**/layout-audit/**', '**/triage-out/**', '**/evidence/**', '**/*.png', '**/*.log'],
     },
   },
 });

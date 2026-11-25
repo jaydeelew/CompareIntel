@@ -1006,6 +1006,15 @@
   margin: 0;
 }
 
+/* Streaming blocks are layout-neutral wrappers so closed blocks do not jump. */
+.latex-content > .latex-stream-block,
+.latex-content > .latex-stream-tail {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* Ensure proper spacing between block elements */
 .latex-content h1,
 .latex-content h2,
