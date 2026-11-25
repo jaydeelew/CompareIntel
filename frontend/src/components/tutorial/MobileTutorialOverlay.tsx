@@ -67,6 +67,13 @@ import {
 } from './tutorialUtils'
 import './MobileTutorialOverlay.css'
 
+function isComparisonSubmitButton(el: Element): boolean {
+  return (
+    el.classList.contains('submit-button') ||
+    el.getAttribute('data-testid') === 'comparison-submit-button'
+  )
+}
+
 interface MobileTutorialOverlayProps {
   step: TutorialStep | null
   tutorialProviderNames: readonly string[]
@@ -1167,13 +1174,20 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             ).highlights
           : [targetElement]
 
-    providerHighlights.forEach(el => el.classList.add('mobile-tutorial-highlight'))
+    providerHighlights.forEach(el => {
+      // The compare submit control is a circle. The shared highlight radius is a
+      // rounded square, and the settling pass clears that ring, so the mobile
+      // compare step was drawing a plain square. The green attention ring is the cue.
+      if (isComparisonSubmitButton(el)) return
+      el.classList.add('mobile-tutorial-highlight')
+    })
 
     // Add button pulsate when tooltip says "Tap the highlighted button" (same ring + pulse as submit step).
     // History and saved selections must not use targetElement here: it is still the
     // results section for a frame after the step changes, and the scale then pulses
-    // the whole results panel.
-    if (step === 'submit-comparison-2') {
+    // the whole results panel. The submit control must not scale either: that
+    // changes its size, and the attention ring already marks it.
+    if (step === 'submit-comparison-2' && !isComparisonSubmitButton(targetElement)) {
       targetElement.classList.add('mobile-tutorial-button-pulsate')
     }
 

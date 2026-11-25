@@ -233,8 +233,8 @@ html[data-onboarding-tutorial-active] .mobile-composer-in-flow-wrapper .composer
   animation: tutorial-frame-in 200ms ease;
 }
 
-html.tutorial-spotlight-settling .mobile-tutorial-highlight,
-html.tutorial-spotlight-settling .tutorial-highlight {
+html.tutorial-spotlight-settling .mobile-tutorial-highlight:not(.submit-button),
+html.tutorial-spotlight-settling .tutorial-highlight:not(.submit-button) {
   box-shadow: none !important;
 }
 
@@ -667,4 +667,19 @@ body.mobile-tutorial-active {
       0 0 0 3px rgba(16, 185, 129, 0.85),
       0 4px 16px rgba(16, 185, 129, 0.4) !important;
   }
+}
+
+/* The shared highlight forces --radius-md (a rounded square) onto every target.
+   On the compare steps that target is the round submit control. Keep its
+   circle and its toolbar size, and let the green attention ring be the cue. */
+.submit-button.mobile-tutorial-highlight,
+.textarea-icon-button.submit-button.mobile-tutorial-highlight {
+  border-radius: 50% !important;
+  animation: tutorial-submit-attention 1.75s ease-out infinite !important;
+}
+
+html.tutorial-spotlight-settling .submit-button.mobile-tutorial-highlight,
+html.tutorial-spotlight-settling .textarea-icon-button.submit-button.mobile-tutorial-highlight {
+  border-radius: 50% !important;
+  animation: tutorial-submit-attention 1.75s ease-out infinite !important;
 }
