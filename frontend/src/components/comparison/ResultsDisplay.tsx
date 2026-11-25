@@ -9,6 +9,7 @@ import { useResponsive } from '../../hooks'
 import { RESULT_TAB, createModelId } from '../../types'
 import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
 import { isErrorMessage } from '../../utils/error'
+import { shouldSuppressMobileModelTabSwipe } from '../../utils/mobileModelTabSwipe'
 import {
   modelDisplayLabel,
   partitionAgainstKnownModels,
@@ -72,40 +73,6 @@ function mobileModelTabSwipeThreshold(width: number): number {
   return Math.max(64, Math.min(104, Math.round(width * 0.14)))
 }
 
-/** Skip changing model tabs when the gesture began on code or a horizontally scrollable block. */
-function shouldSuppressMobileModelTabSwipe(target: EventTarget | null): boolean {
-  const el = target instanceof Element ? target : null
-  if (!el) return false
-
-  if (
-    el.closest(
-      [
-        '.code-block',
-        '.code-block-direct',
-        '.message-content .latex-content pre',
-        '.latex-content pre',
-        'pre.raw-output',
-        '.result-output.raw-output',
-      ].join(', ')
-    )
-  ) {
-    return true
-  }
-
-  let node: Element | null = el
-  while (node && !node.classList.contains('results-tabs-container')) {
-    const { overflowX } = window.getComputedStyle(node)
-    if (
-      (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'overlay') &&
-      node.scrollWidth > node.clientWidth + 2
-    ) {
-      return true
-    }
-    node = node.parentElement
-  }
-  return false
-}
-
 /**
  * Center the active tab inside the horizontal tab strip only.
  * Do not use `Element.scrollIntoView` on tab buttons: it scrolls ancestor chains and can shift the whole page horizontally.
@@ -128,6 +95,18 @@ function scrollActiveModelTabIntoStrip(
   } else {
     strip.scrollTo({ left: targetLeft, behavior: 'smooth' })
   }
+}
+
+/** Pill under the card header. The response body is never a safe place for this hint. */
+function MobileModelSwipeHint() {
+  return (
+    <div className="results-tab-swipe-hint" data-testid="results-tab-swipe-hint" role="note">
+      <span className="results-tab-swipe-hint-hand" aria-hidden="true">
+        <Hand strokeWidth={1.75} className="results-tab-swipe-hint-hand-icon" aria-hidden />
+      </span>
+      <span className="results-tab-swipe-hint-label">Swipe or tap ‹ › to switch models</span>
+    </div>
+  )
 }
 
 export interface ResultsDisplayProps {
@@ -549,6 +528,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     // pointer on the zone, which stays mounted, keeps the move and the release.
     const onPointerDown = (e: PointerEvent) => {
       if (e.pointerType !== 'touch' || !e.isPrimary) return
+      // A swipe that starts on wide code, a table, or other horizontal overflow
+      // must stay with that element. Capturing the pointer here would take the
+      // pan away from the browser, so the block could not scroll.
+      if (shouldSuppressMobileModelTabSwipe(e.target)) return
       if (zone.hasPointerCapture(e.pointerId)) return
       try {
         zone.setPointerCapture(e.pointerId)
@@ -788,21 +771,6 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             ref={resultsTabSwipeZoneRef}
             className="results-tab-content results-tab-content--swipe-zone"
           >
-            {showFingerSwipeOverlay ? (
-              <div className="results-tab-swipe-hint-overlay">
-                <span className="sr-only">
-                  Swipe sideways on this panel to compare another model&apos;s results.
-                </span>
-                <div className="results-tab-swipe-hint-contents" aria-hidden>
-                  <Hand
-                    strokeWidth={1.75}
-                    className="results-tab-swipe-hint-hand-icon"
-                    aria-hidden
-                  />
-                  <span className="results-tab-swipe-hint-label">Swipe to another model</span>
-                </div>
-              </div>
-            ) : null}
             {showAwaitingFirstPanel ? (
               <div key="results-awaiting-first-stream" className={slidePanelClass}>
                 <div
@@ -838,6 +806,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   onCopyMessage={onCopyMessage}
                   showBreakoutButton={visibleConversations.length > 1 && !isError}
                   isTutorialActive={isTutorialActive}
+                  swipeHint={showFingerSwipeOverlay ? <MobileModelSwipeHint /> : null}
                   streamingReasoning={getStreamingReasoningForModel(
                     activeConversation.modelId,
                     streamingReasoningByModel

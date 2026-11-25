@@ -63,6 +63,11 @@ export interface ResultCardProps {
   webSearchEnabled?: boolean
   /** Model is no longer in the catalog. Past messages stay readable. */
   retired?: boolean
+  /**
+   * Mobile model-switch hint. Rendered under the header and formatted/raw row,
+   * outside the scrolling response.
+   */
+  swipeHint?: React.ReactNode
 }
 
 // Single model result card with formatted/raw toggle
@@ -90,6 +95,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   streamAnswerStarted = false,
   webSearchEnabled = false,
   retired = false,
+  swipeHint = null,
 }) => {
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const lastAssistantIndex = safeMessages.reduce(
@@ -419,6 +425,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           <span className={`status ${statusClass}`}>{statusText}</span>
         </div>
       </div>
+      {swipeHint}
       <div
         ref={contentRef}
         className="conversation-content"
