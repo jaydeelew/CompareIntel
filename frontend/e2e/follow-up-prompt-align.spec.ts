@@ -72,6 +72,20 @@ function promptIsPinned(align: Awaited<ReturnType<typeof readPromptAlign>>): boo
   )
 }
 
+/** The signed-in comparison page, with the guided tutorial closed. */
+async function expectTutorialClosed(page: Page): Promise<void> {
+  const state = await page.evaluate(() => ({
+    active: document.documentElement.hasAttribute('data-onboarding-tutorial-active'),
+    overlay: Boolean(
+      document.querySelector(
+        '.tutorial-backdrop, .mobile-tutorial-backdrop, .tutorial-welcome-backdrop, .tutorial-tooltip, .mobile-tutorial-tooltip'
+      )
+    ),
+  }))
+  expect(state.active, 'per-model scroll is checked outside the tutorial').toBe(false)
+  expect(state.overlay, 'per-model scroll is checked outside the tutorial').toBe(false)
+}
+
 /** Sideways swipe with the vertical drift that used to mark the card as hand-scrolled. */
 async function swipeToNextModel(page: Page): Promise<void> {
   const zone = page.locator('.results-tab-content--swipe-zone')
@@ -82,14 +96,16 @@ async function swipeToNextModel(page: Page): Promise<void> {
   await touchSwipe(page, box.x + box.width * 0.8, midY, box.x + box.width * 0.12, midY + 28)
 }
 
-test.describe('Follow-up cards open on the latest prompt', () => {
+test.describe('Normal app follow-up cards keep their own scroll', () => {
   test.describe.configure({ timeout: 120000 })
 
-  test('switching to the other model shows its latest prompt at the top of the card', async ({
+  test('switching away and back restores that model, with the tutorial closed', async ({
     mockedModelsAuthenticatedPage: page,
   }, testInfo) => {
+    await page.evaluate(() => localStorage.setItem('compareintel_tutorial_completed', 'true'))
     await installLongComparisonStream(page)
     await dismissMobileBlockers(page)
+    await expectTutorialClosed(page)
 
     const providerHeader = page.locator('.provider-header').first()
     if ((await providerHeader.getAttribute('aria-expanded')) !== 'true') {
@@ -114,6 +130,7 @@ test.describe('Follow-up cards open on the latest prompt', () => {
     await expect(page.getByText('Follow-up answer stays under the prompt.').first()).toBeVisible({
       timeout: 20000,
     })
+    await expectTutorialClosed(page)
 
     const tabs = page.locator('.results-tab-button')
     const tabbed = (await tabs.count()) >= 2
@@ -162,6 +179,7 @@ test.describe('Follow-up cards open on the latest prompt', () => {
         return kept ? 'kept' : JSON.stringify({ firstOpen, align })
       })
       .toBe('kept')
+    await expectTutorialClosed(page)
 
     await dismissMobileBlockers(page)
     const shotDir = testInfo.project.name.includes('iPhone')
