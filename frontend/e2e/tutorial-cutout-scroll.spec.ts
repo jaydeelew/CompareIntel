@@ -127,7 +127,9 @@ async function scrollPage(page: Page): Promise<number> {
   return page.evaluate(() => {
     const app = document.querySelector('.app') as HTMLElement | null
     const scroller =
-      app && app.scrollHeight > app.clientHeight + 1
+      app &&
+      app.scrollHeight > app.clientHeight + 1 &&
+      app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
         ? app
         : ((document.scrollingElement ?? document.documentElement) as HTMLElement)
     const before = scroller.scrollTop
@@ -149,7 +151,9 @@ async function scrollPageBy(page: Page, delta: number): Promise<void> {
   await page.evaluate(amount => {
     const app = document.querySelector('.app') as HTMLElement | null
     const scroller =
-      app && app.scrollHeight > app.clientHeight + 1
+      app &&
+      app.scrollHeight > app.clientHeight + 1 &&
+      app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
         ? app
         : ((document.scrollingElement ?? document.documentElement) as HTMLElement)
     const max = Math.max(0, scroller.scrollHeight - scroller.clientHeight)

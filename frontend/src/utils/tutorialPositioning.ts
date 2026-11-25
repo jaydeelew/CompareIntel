@@ -160,9 +160,19 @@ export const MOBILE_TUTORIAL_ARROW_PX = 10
  * Tutorial scroll and document-Y cutout math must use this root.
  */
 function tutorialPageScroller(): HTMLElement {
+  const doc = (document.scrollingElement as HTMLElement | null) ?? document.documentElement
   const app = document.querySelector('.app') as HTMLElement | null
-  if (app && app.scrollHeight > app.clientHeight + 1) return app
-  return (document.scrollingElement as HTMLElement | null) ?? document.documentElement
+  if (!app) return doc
+  const appOverflow = app.scrollHeight - app.clientHeight
+  if (appOverflow <= 1) return doc
+  // .app is the page scroller when it is the viewport-sized box. When the page
+  // grows, the document scrolls that tall box, and an absolute tutorial card
+  // can add a little scrollHeight inside .app. That sliver is not the scroller.
+  const viewH = window.visualViewport?.height ?? window.innerHeight
+  if (app.clientHeight <= viewH + 1) return app
+  const docOverflow = doc.scrollHeight - doc.clientHeight
+  if (docOverflow > appOverflow + 1) return doc
+  return app
 }
 
 /**

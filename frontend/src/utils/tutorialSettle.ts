@@ -86,8 +86,16 @@ function viewportMoved(previous: ViewportSnapshot | null, next: ViewportSnapshot
 
 function tutorialScrollTarget(): EventTarget {
   const app = document.querySelector('.app') as HTMLElement | null
-  if (app && app.scrollHeight > app.clientHeight + 1) return app
-  return window
+  if (!app) return window
+  const appOverflow = app.scrollHeight - app.clientHeight
+  if (appOverflow <= 1) return window
+  const viewH = window.visualViewport?.height ?? window.innerHeight
+  if (app.clientHeight <= viewH + 1) return app
+  const doc = document.scrollingElement
+  const docOverflow =
+    doc instanceof HTMLElement ? doc.scrollHeight - doc.clientHeight : window.innerHeight
+  if (docOverflow > appOverflow + 1) return window
+  return app
 }
 
 function readScrollTop(target: EventTarget): number {
