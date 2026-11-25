@@ -7,6 +7,7 @@ import {
   desktopResultsTooltipMinTop,
   readStreamingComparisonSpotlight,
   scrollTutorialRectToCenter,
+  streamingResultsTopInViewport,
 } from '../tutorialPositioning'
 
 function box(top: number, height: number, width = 640): DOMRect {
@@ -85,6 +86,41 @@ describe('streaming comparison spotlight', () => {
     const frameTop = minTop - 8
     expect(placed.top).toBe(frameTop - 8)
     expect(placed.top - 210).toBeGreaterThanOrEqual(12)
+  })
+
+  it('puts streaming results under the header when the mobile card is hidden', () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 })
+    const header = document.createElement('div')
+    header.className = 'app-header-shell'
+    const tip = document.createElement('div')
+    tip.className = 'mobile-tutorial-tooltip'
+    tip.style.opacity = '0'
+    document.body.append(header, tip)
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect(
+      this: HTMLElement
+    ) {
+      if (this === header) return new DOMRect(0, 0, 390, 64)
+      if (this === tip) return new DOMRect(12, 400, 300, 160)
+      return new DOMRect(0, 0, 0, 0)
+    }
+    expect(streamingResultsTopInViewport()).toBe(76)
+  })
+
+  it('keeps a visible mobile card from covering the streaming results', () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 })
+    const header = document.createElement('div')
+    header.className = 'app-header-shell'
+    const tip = document.createElement('div')
+    tip.className = 'mobile-tutorial-tooltip'
+    document.body.append(header, tip)
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect(
+      this: HTMLElement
+    ) {
+      if (this === header) return new DOMRect(0, 0, 390, 64)
+      if (this === tip) return new DOMRect(12, 76, 300, 140)
+      return new DOMRect(0, 0, 0, 0)
+    }
+    expect(streamingResultsTopInViewport()).toBe(76 + 140 + 12)
   })
 
   it('scrolls a tall results card down far enough for the tooltip above it', () => {

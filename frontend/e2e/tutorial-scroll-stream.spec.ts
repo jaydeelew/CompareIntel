@@ -332,6 +332,18 @@ async function readStreamingHandoff(page: Page): Promise<string> {
     const visibleText = `${results.innerText}\n${results.textContent ?? ''}`
     if (!/streaming-token-0/.test(visibleText)) return 'no-stream-text'
     const rect = results.getBoundingClientRect()
+    if (window.innerWidth <= 768) {
+      const visual = window.visualViewport
+      const viewTop = visual?.offsetTop ?? 0
+      const header = document.querySelector('.app-header-shell')
+      const headerBottom = header
+        ? Math.max(viewTop, header.getBoundingClientRect().bottom)
+        : viewTop
+      if (rect.top < viewTop - 8) return `results-high ${Math.round(rect.top)}`
+      if (rect.top > headerBottom + 72) {
+        return `results-low ${Math.round(rect.top)}>${Math.round(headerBottom + 72)}`
+      }
+    }
     const framed = Array.from(
       document.querySelectorAll<HTMLElement>(
         '.tutorial-backdrop-cutout, .mobile-tutorial-backdrop-cutout'
@@ -521,7 +533,7 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
       .toBe('ok')
 
     if (testInfo.project.name === 'Mobile Safari - iPhone 12') {
-      const dir = '/opt/cursor/artifacts/tutorial-processing-ring/iphone'
+      const dir = '/opt/cursor/artifacts/tutorial-results-top/iphone'
       fs.mkdirSync(dir, { recursive: true })
       await page.screenshot({ path: `${dir}/processing.png` })
     }
@@ -535,7 +547,7 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
 
     if (testInfo.project.name === 'Mobile Safari - iPhone 12') {
       await page.screenshot({
-        path: '/opt/cursor/artifacts/tutorial-processing-ring/iphone/streaming.png',
+        path: '/opt/cursor/artifacts/tutorial-results-top/iphone/streaming.png',
       })
     }
 

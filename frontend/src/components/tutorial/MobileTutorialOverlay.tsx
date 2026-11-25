@@ -39,6 +39,7 @@ import {
   scrollFollowUpHighlightIntoView,
   scrollHistoryComposerPair,
   scrollTutorialElementToViewportY,
+  streamingResultsTopInViewport,
   seatPortaledFollowUpComposer,
   setHistoryComposerLift,
   TUTORIAL_FRAME_OUTSET_PX,
@@ -1322,6 +1323,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let hasScrolledToLoading = false
     let loadingSectionWasSeen = false
     let framedDuringLoad = false
+    let resultsPinScroll: number | null = null
+    let userMovedResults = false
     const cancelDeferredScrolls: Array<() => void> = []
     let observed: Element | null = null
     const resizeObserver = new ResizeObserver(() => updateLoadingStreamingRect())
@@ -1442,14 +1445,35 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (resultsReady && resultsSection && resultsRect) {
         const isFollowUpStyle = current === 'submit-comparison-2' || isReview || followUpPost
         const canScroll = isFollowUpStyle ? loadingSectionWasSeen : true
-        // The first comparison's results scroll is scheduled while step 6 is
-        // still showing. On WebKit the deferred callback lands as step 7
-        // starts, pins the tall results block, and parks the composer (and
-        // the still-hidden card) below the iPhone viewport until the sample
-        // window is almost over.
+        // The first comparison used to defer scrollIntoView until after this
+        // tick. On WebKit that callback landed as step 7 started, pinned the
+        // tall results block, and parked the composer below the iPhone
+        // viewport. Pin now, while step 6 is still showing, and stop as soon
+        // as the step changes so step 7 can seat the composer. A later scroll
+        // that is not ours is the user's: leave the panel where they put it.
         const firstComparisonHandoff =
           current === 'submit-comparison' || (current === 'follow-up' && !followUpStarted)
-        if (!firstComparisonHandoff && !holdFirstStream && !hasScrolledToResults && canScroll) {
+        if (started && current === 'submit-comparison') {
+          if (!userMovedResults) {
+            const root = getTutorialScrollRoot()
+            const scrollTop = root.getScrollTop()
+            if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
+              userMovedResults = true
+            } else {
+              const desiredTop = streamingResultsTopInViewport()
+              const before = resultsSection.getBoundingClientRect()
+              if (Math.abs(before.top - desiredTop) > 12) {
+                scrollTutorialElementToViewportY(resultsSection, desiredTop)
+              }
+              resultsPinScroll = root.getScrollTop()
+            }
+          }
+        } else if (
+          !firstComparisonHandoff &&
+          !holdFirstStream &&
+          !hasScrolledToResults &&
+          canScroll
+        ) {
           hasScrolledToResults = true
           cancelDeferredScrolls.push(
             deferScroll(() => {
@@ -1457,7 +1481,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             })
           )
         }
-        publish(resultsRect)
+        const framedRect = resultsSection.getBoundingClientRect()
+        publish(framedRect)
         resultsSection.classList.add('mobile-tutorial-highlight')
         resultsSection.classList.remove('mobile-tutorial-button-pulsate')
         resultsSection.style.pointerEvents = 'auto'

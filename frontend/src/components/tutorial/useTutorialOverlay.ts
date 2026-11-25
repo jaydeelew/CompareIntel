@@ -42,6 +42,7 @@ import {
   scrollDeltaToFitTooltip,
   scrollFollowUpHighlightIntoView,
   scrollTutorialElementToViewportY,
+  streamingResultsTopInViewport,
   seatPortaledFollowUpComposer,
   TUTORIAL_FRAME_OUTSET_PX,
   type TutorialProviderLayoutStep,
@@ -1805,6 +1806,8 @@ export function useTutorialOverlay(
     let hasScrolledToResults = false
     let loadingSectionWasSeen = false
     let framedDuringLoad = false
+    let resultsPinScroll: number | null = null
+    let userMovedResults = false
     let streamedIntoFollowUp = false
     let scrollToResultsRaf: number | null = null
     let scrollToResultsTimeout: ReturnType<typeof setTimeout> | null = null
@@ -1937,7 +1940,23 @@ export function useTutorialOverlay(
           !holdFirstStream &&
           current !== 'view-follow-up-results' &&
           (current !== 'submit-comparison' || started)
-        if (
+        // Same handoff as mobile: once the first token arrives, the results
+        // card leaves the bottom of the viewport. The deferred scrollIntoView
+        // stays skipped while the spotlight is already settled.
+        if (started && current === 'submit-comparison' && !userMovedResults) {
+          const root = getTutorialScrollRoot()
+          const scrollTop = root.getScrollTop()
+          if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
+            userMovedResults = true
+          } else {
+            const desiredTop = streamingResultsTopInViewport()
+            const before = resultsSection.getBoundingClientRect()
+            if (Math.abs(before.top - desiredTop) > 12) {
+              scrollTutorialElementToViewportY(resultsSection, desiredTop)
+            }
+            resultsPinScroll = root.getScrollTop()
+          }
+        } else if (
           !spotlightSettledRef.current &&
           !hasScrolledToResults &&
           canScroll &&

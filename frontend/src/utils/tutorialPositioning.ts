@@ -189,6 +189,40 @@ export function scrollTutorialElementToViewportY(
   root.scrollToTop(nextTop, 'auto')
 }
 
+function tutorialTooltipCoversContent(node: Element): boolean {
+  if (!(node instanceof HTMLElement)) return false
+  const style = getComputedStyle(node)
+  if (style.opacity === '0' || style.visibility === 'hidden' || style.display === 'none')
+    return false
+  const box = node.getBoundingClientRect()
+  return box.height > 2 && box.width > 2
+}
+
+/**
+ * Viewport Y for the top of the streaming results card.
+ * Sits under the sticky header. A visible desktop card also keeps the room the
+ * review tooltip uses; the mobile card is hidden during this handoff.
+ */
+export function streamingResultsTopInViewport(): number {
+  const visualTop = window.visualViewport?.offsetTop ?? 0
+  const header = document.querySelector('.app-header-shell')
+  const headerBottom =
+    header instanceof HTMLElement ? header.getBoundingClientRect().bottom : visualTop
+  let cover = Math.max(visualTop, headerBottom)
+  const desktopTip = document.querySelector('.tutorial-tooltip')
+  if (window.innerWidth > 768 && desktopTip && tutorialTooltipCoversContent(desktopTip)) {
+    cover = Math.max(cover, desktopResultsTooltipMinTop() - 12)
+  }
+  const mobileTip = document.querySelector('.mobile-tutorial-tooltip')
+  if (mobileTip && tutorialTooltipCoversContent(mobileTip)) {
+    const bottom = mobileTip.getBoundingClientRect().bottom
+    if (bottom > cover && mobileTip.getBoundingClientRect().top < cover + 220) {
+      cover = bottom
+    }
+  }
+  return cover + 12
+}
+
 /**
  * Center a highlight in the viewport. A target taller than the screen pins its top
  * just inside the viewport so the framed area still starts on screen.
