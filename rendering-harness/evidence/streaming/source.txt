@@ -1,0 +1,20 @@
+The quadratic formula is settled.
+
+$$
+E = mc^2
+$$
+
+A diagram is next.
+
+```mermaid
+graph TD
+  A-->B
+
+| Method | Result |
+| --- |
+
+\[
+\gamma = 1
+
+\begin{align}
+y &= 2

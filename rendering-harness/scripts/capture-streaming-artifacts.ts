@@ -110,7 +110,14 @@ async function main() {
   const stack960 = path.join(evidenceDir, 'streaming-960.png')
   const stack390 = path.join(evidenceDir, 'streaming-390.png')
 
-  const browser = await chromium.launch()
+  const browser = await chromium.launch().catch(async err => {
+    try {
+      git(['worktree', 'remove', '--force', base.dir])
+    } catch {
+      fs.rmSync(base.dir, { recursive: true, force: true })
+    }
+    throw err
+  })
   try {
     await shoot({
       browser,
