@@ -201,7 +201,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
   // Initialize hooks that don't depend on renderLatex - MUST be called before any early returns
   const contentRef = useRef<HTMLDivElement>(null)
   const [prismLoaded, setPrismLoaded] = useState(false)
-  const [mermaidTheme, setMermaidTheme] = useState<MermaidThemeName>(() => mermaidThemeFromDocument())
+  const [mermaidTheme, setMermaidTheme] = useState<MermaidThemeName>(() =>
+    mermaidThemeFromDocument()
+  )
 
   useRenderedCopyHandler(contentRef, isValidChildren ? children : undefined)
 

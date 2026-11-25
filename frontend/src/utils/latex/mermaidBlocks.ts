@@ -25,7 +25,7 @@ export function renderMermaidFallback(code: string): string {
   return (
     '<div class="preformatted-text mermaid-fallback" data-language="mermaid" data-mermaid-fallback="true" dir="ltr" style="' +
     'background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:16px;margin:16px 0;' +
-    'overflow-x:auto;font-size:14px;line-height:1.5;font-family:Consolas,Monaco,\'Courier New\',monospace;' +
+    "overflow-x:auto;font-size:14px;line-height:1.5;font-family:Consolas,Monaco,'Courier New',monospace;" +
     'white-space:pre-wrap;word-wrap:break-word;color:#1f2328;">' +
     `<pre dir="ltr" style="margin:0;"><code class="language-mermaid" dir="ltr">${escaped}</code></pre>` +
     '</div>'

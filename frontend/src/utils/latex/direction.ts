@@ -5,8 +5,7 @@
  * so they are skipped by that heuristic and are not reordered inside an RTL block.
  */
 
-const BLOCK_TAG =
-  /<(p|li|td|th|h[1-6]|blockquote|ul|ol)\b((?![^>]*\bdir\s*=)[^>]*)>/gi
+const BLOCK_TAG = /<(p|li|td|th|h[1-6]|blockquote|ul|ol)\b((?![^>]*\bdir\s*=)[^>]*)>/gi
 
 const LTR_TAG = /<(pre|code)\b((?![^>]*\bdir\s*=)[^>]*)>/gi
 

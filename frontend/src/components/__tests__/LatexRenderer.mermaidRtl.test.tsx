@@ -20,7 +20,9 @@ const mermaidState = vi.hoisted(() => {
     initialize: vi.fn((config: { theme?: string }) => {
       theme = config.theme ?? 'default'
     }),
-    parse: vi.fn(async (source: string) => (source.includes('NOT_A_DIAGRAM') ? false : { diagramType: 'flowchart' })),
+    parse: vi.fn(async (source: string) =>
+      source.includes('NOT_A_DIAGRAM') ? false : { diagramType: 'flowchart' }
+    ),
     render: vi.fn(async (_id: string, source: string) => ({
       svg: `<svg class="test-mermaid" data-theme="${theme}"><title>${source.length}</title></svg>`,
     })),
@@ -77,14 +79,23 @@ function rtlHosts(root: ParentNode): string[] {
           /[\u0590-\u08FF]/.test(child.textContent || '')
         )
     )
-    .map(el => `${el.tagName.toLowerCase()}|${el.getAttribute('dir')}|${(el.textContent || '').replace(/\s+/g, ' ').trim()}`)
+    .map(
+      el =>
+        `${el.tagName.toLowerCase()}|${el.getAttribute('dir')}|${(el.textContent || '').replace(/\s+/g, ' ').trim()}`
+    )
 }
 
 describe('mermaid diagrams and RTL blocks', () => {
   it('renders a mermaid fence as an SVG and keeps the source for the reference', async () => {
-    const section = ['## Mermaid and chemistry', '', '```mermaid', 'graph TD', '  A[Start] --> B[End]', '```', ''].join(
-      '\n'
-    )
+    const section = [
+      '## Mermaid and chemistry',
+      '',
+      '```mermaid',
+      'graph TD',
+      '  A[Start] --> B[End]',
+      '```',
+      '',
+    ].join('\n')
     const el = renderSection(section)
     await waitFor(() => {
       expect(el.querySelector('.mermaid-diagram svg')).not.toBeNull()
@@ -107,7 +118,9 @@ describe('mermaid diagrams and RTL blocks', () => {
     })
     expect(el.querySelector('.mermaid-diagram svg')).toBeNull()
     expect(el.querySelector('[data-mermaid-pending]')).toBeNull()
-    expect(el.querySelector('[data-language="mermaid"] code')?.textContent).toContain('NOT_A_DIAGRAM')
+    expect(el.querySelector('[data-language="mermaid"] code')?.textContent).toContain(
+      'NOT_A_DIAGRAM'
+    )
     const { pass, diffs } = compareSignatures(
       signatureFromHtml(renderReferenceHtml(section)),
       signatureFromElement(el)
@@ -135,8 +148,13 @@ describe('mermaid diagrams and RTL blocks', () => {
     await waitFor(() => {
       expect(el.querySelector('.mermaid-diagram svg, [data-mermaid-fallback]')).not.toBeNull()
     })
-    const english = Array.from(el.querySelectorAll('p')).find(p => (p.textContent || '').includes('English stays'))
-    expect(english?.getAttribute('dir'), el.innerHTML.slice(el.innerHTML.indexOf('RTL'), el.innerHTML.indexOf('RTL') + 220)).toBe('auto')
+    const english = Array.from(el.querySelectorAll('p')).find(p =>
+      (p.textContent || '').includes('English stays')
+    )
+    expect(
+      english?.getAttribute('dir'),
+      el.innerHTML.slice(el.innerHTML.indexOf('RTL'), el.innerHTML.indexOf('RTL') + 220)
+    ).toBe('auto')
   })
 
   it('puts dir=auto on RTL paragraphs, list items, and table cells without flipping LTR, math, or code', () => {
@@ -167,8 +185,9 @@ describe('mermaid diagrams and RTL blocks', () => {
     const el = renderSection(section)
     const ref = renderReferenceHtml(section)
     expect(rtlHosts(el)).toEqual(rtlHosts(new DOMParser().parseFromString(ref, 'text/html')))
-    const arabicParagraph = Array.from(el.querySelectorAll('p')).find(p =>
-      (p.textContent || '').includes('مرحبا بالعالم') && !(p.textContent || '').includes('Inline')
+    const arabicParagraph = Array.from(el.querySelectorAll('p')).find(
+      p =>
+        (p.textContent || '').includes('مرحبا بالعالم') && !(p.textContent || '').includes('Inline')
     )
     expect(arabicParagraph?.getAttribute('dir')).toBe('auto')
     const english = Array.from(el.querySelectorAll('p')).find(p =>
@@ -203,29 +222,32 @@ describe('mermaid diagrams and RTL blocks', () => {
     expect(pass, JSON.stringify(diffs, null, 2)).toBe(true)
   })
 
-  it.each(PR320)('matches the reference for the full mermaid and RTL sections of %s', async modelId => {
-    const response = savedResponse(modelId)
-    const mermaid = extractHeadingSection(response, '^## .*[Mm]ermaid')
-    const rtl = extractHeadingSection(response, '^## .*RTL')
-    expect(mermaid).toMatch(/```mermaid/)
-    expect(rtl).toMatch(/مرحبا/)
+  it.each(PR320)(
+    'matches the reference for the full mermaid and RTL sections of %s',
+    async modelId => {
+      const response = savedResponse(modelId)
+      const mermaid = extractHeadingSection(response, '^## .*[Mm]ermaid')
+      const rtl = extractHeadingSection(response, '^## .*RTL')
+      expect(mermaid).toMatch(/```mermaid/)
+      expect(rtl).toMatch(/مرحبا/)
 
-    for (const section of [mermaid, rtl]) {
-      const el = renderSection(section)
-      if (section.includes('```mermaid')) {
-        await waitFor(() => {
-          expect(el.querySelector('.mermaid-diagram svg, [data-mermaid-fallback]')).not.toBeNull()
-        })
-        expect(el.querySelector('code.language-mermaid')?.textContent).toMatch(/graph TD/)
+      for (const section of [mermaid, rtl]) {
+        const el = renderSection(section)
+        if (section.includes('```mermaid')) {
+          await waitFor(() => {
+            expect(el.querySelector('.mermaid-diagram svg, [data-mermaid-fallback]')).not.toBeNull()
+          })
+          expect(el.querySelector('code.language-mermaid')?.textContent).toMatch(/graph TD/)
+        }
+        const rtlBlocks = rtlHosts(el)
+        expect(rtlBlocks.every(row => row.includes('|auto|'))).toBe(true)
+        if (section.includes('مرحبا')) {
+          expect(rtlBlocks.some(row => row.includes('مرحبا'))).toBe(true)
+        }
+        const ref = signatureFromHtml(renderReferenceHtml(section))
+        const { pass, diffs } = compareSignatures(ref, signatureFromElement(el))
+        expect(pass, JSON.stringify(diffs, null, 2)).toBe(true)
       }
-      const rtlBlocks = rtlHosts(el)
-      expect(rtlBlocks.every(row => row.includes('|auto|'))).toBe(true)
-      if (section.includes('مرحبا')) {
-        expect(rtlBlocks.some(row => row.includes('مرحبا'))).toBe(true)
-      }
-      const ref = signatureFromHtml(renderReferenceHtml(section))
-      const { pass, diffs } = compareSignatures(ref, signatureFromElement(el))
-      expect(pass, JSON.stringify(diffs, null, 2)).toBe(true)
     }
-  })
+  )
 })

@@ -54,7 +54,9 @@ describe('applyBlockDirection', () => {
     for (const html of [wrapped, stray]) {
       expect(html).toContain('</div>\n<p dir="auto">Chemistry support</p>')
       expect(html).not.toContain('</div></p>')
-      expect(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')).toContain('B[End] Chemistry support')
+      expect(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')).toContain(
+        'B[End] Chemistry support'
+      )
     }
   })
 
@@ -67,7 +69,9 @@ describe('applyBlockDirection', () => {
   })
 
   it('does not split inline code that follows a heading', () => {
-    const html = applyBlockDirection('<h2>Rules</h2>\nMultiple horizontal rules (<code>---</code>) successfully:')
+    const html = applyBlockDirection(
+      '<h2>Rules</h2>\nMultiple horizontal rules (<code>---</code>) successfully:'
+    )
     expect(html).not.toContain('<p dir="auto">---')
     expect(html).toContain('(<code dir="ltr">---</code>)')
   })
