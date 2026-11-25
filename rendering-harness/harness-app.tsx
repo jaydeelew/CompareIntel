@@ -85,6 +85,11 @@ function HarnessApp() {
       const text = (container.textContent || '').replace(/\s+/g, ' ').trim();
       if (!text) return false;
       if (container.querySelectorAll('.katex-html[style*="visibility: hidden"]').length > 0) return false;
+      if (container.querySelector('[data-mermaid-pending]')) return false;
+      const diagrams = Array.from(container.querySelectorAll('.mermaid-diagram'));
+      if (diagrams.some(diagram => !diagram.hasAttribute('data-mermaid-fallback') && !diagram.querySelector('svg'))) {
+        return false;
+      }
       const images = Array.from(container.querySelectorAll('img'));
       if (images.some(img => !img.complete)) return false;
       return true;

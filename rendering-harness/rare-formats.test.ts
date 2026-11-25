@@ -92,7 +92,8 @@ function passHtml(): string {
     <div class="markdown-table-scroll"><table>
       <tr><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td></tr>
     </table></div>
-    <div class="code-block-direct" data-language="mermaid"><span class="code-language-label">mermaid</span>
+    <div class="mermaid-diagram" data-language="mermaid" data-mermaid-rendered="true">
+      <svg class="mermaid-svg"></svg>
       <pre class="language-mermaid"><code class="language-mermaid">graph TD</code></pre>
     </div>
     ${katexAnn('\\ce{H2O}')}

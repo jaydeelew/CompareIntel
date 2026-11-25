@@ -612,19 +612,20 @@ export function validateRenderedHTML(
     'table cell lost its inline math'
   )
 
-  const mermaidDom =
-    container.querySelector('[data-language="mermaid" i], code.language-mermaid, pre.language-mermaid') !=
-      null ||
-    Array.from(container.querySelectorAll('.code-language-label')).some(node =>
-      /mermaid/i.test(node.textContent || '')
-    )
+  const mermaidSvg = container.querySelector(
+    '.mermaid-diagram svg, [data-mermaid-rendered] svg, [data-language="mermaid" i] svg'
+  )
+  const mermaidFallback =
+    container.querySelector('[data-mermaid-fallback][data-language="mermaid" i], [data-mermaid-fallback] code.language-mermaid') !=
+    null
+  const mermaidDom = mermaidSvg != null || mermaidFallback
   pushFeature(
     expectedFeatures.mermaid,
     source?.hasMermaid,
     mermaidDom,
     'mermaid fence',
-    'mermaid language preserved on the fence',
-    'mermaid fence lost its language'
+    'mermaid diagram SVG or a parse-error code block',
+    'mermaid fence was not rendered as a diagram'
   )
 
   pushFeature(
@@ -677,11 +678,18 @@ export function validateRenderedHTML(
       pushFeature(true, source?.hasEmoji, ok, 'emoji', 'emoji kept', 'emoji dropped')
     }
     if (expectedFeatures.rtl) {
-      const rtlNode = Array.from(container.querySelectorAll('[dir="rtl"], [dir="RTL"]')).some(node =>
-        phrases.rtl.some(token => (node.textContent || '').includes(token))
-      )
+      const rtlNode = Array.from(
+        container.querySelectorAll('[dir="auto"], [dir="rtl"], [dir="RTL"]')
+      ).some(node => phrases.rtl.some(token => (node.textContent || '').includes(token)))
       const ok = phrases.rtl.length > 0 && phrases.rtl.every(token => visible.includes(token)) && rtlNode
-      pushFeature(true, source?.hasRtl, ok, 'RTL text', 'RTL text kept with dir=rtl', 'RTL text missing dir=rtl or dropped')
+      pushFeature(
+        true,
+        source?.hasRtl,
+        ok,
+        'RTL text',
+        'RTL text kept with dir=auto',
+        'RTL text missing dir=auto or dropped'
+      )
     }
     if (expectedFeatures.cjk) {
       const ok = phrases.cjk.length > 0 && phrases.cjk.every(token => visible.includes(token))
