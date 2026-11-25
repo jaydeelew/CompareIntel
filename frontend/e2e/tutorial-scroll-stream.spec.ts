@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 
 import {
@@ -192,6 +194,163 @@ async function readResultsFrame(page: Page): Promise<FrameSample> {
   })
 }
 
+/** Hold the first token so the processing panel is on screen before any answer text. */
+async function installHeldComparisonStream(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const win = window as Window & { __tutorialStreamPhase?: 'hold' | 'first' | 'rest' }
+    win.__tutorialStreamPhase = 'hold'
+    const original = window.fetch.bind(window)
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url =
+        typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+      if (!url.includes('compare-stream')) return original(input, init)
+      let models: string[] = []
+      try {
+        models = JSON.parse(String(init?.body ?? '{}')).models ?? []
+      } catch {
+        models = []
+      }
+      const encoder = new TextEncoder()
+      const starts = models.map(model => ({ model, type: 'start' }))
+      // The client applies stream text at most every 50ms and drops an update
+      // that lands inside that window, so the first token has to arrive after
+      // the start event's paint.
+      const firstChunks = models.map(model => ({
+        model,
+        type: 'chunk',
+        content: 'streaming-token-0 ',
+      }))
+      const rest = [
+        ...models.flatMap(model => [
+          { model, type: 'chunk', content: 'streaming-token-1 keeps going. ' },
+          { model, type: 'done', error: false },
+        ]),
+        {
+          type: 'complete',
+          metadata: {
+            input_length: 12,
+            models_requested: models.length,
+            models_successful: models.length,
+            models_failed: 0,
+            timestamp: new Date().toISOString(),
+            processing_time_ms: 4000,
+          },
+        },
+      ]
+      const send = (controller: ReadableStreamDefaultController<Uint8Array>, events: object[]) => {
+        for (const event of events) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
+        }
+      }
+      const stream = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          const startedAt = Date.now()
+          const waitFor = async (phase: 'first' | 'rest') => {
+            while (win.__tutorialStreamPhase !== phase && Date.now() - startedAt < 20000) {
+              await new Promise(resolve => window.setTimeout(resolve, 40))
+            }
+          }
+          await waitFor('first')
+          send(controller, starts)
+          await new Promise(resolve => window.setTimeout(resolve, 80))
+          send(controller, firstChunks)
+          await waitFor('rest')
+          send(controller, rest)
+          controller.close()
+        },
+      })
+      return new Response(stream, {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+      })
+    }
+  })
+}
+
+async function readProcessingFrame(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const loading = document.querySelector('.loading-section') as HTMLElement | null
+    if (!loading) return 'no-loading'
+    if (!/Processing/.test(loading.textContent ?? '')) return 'not-processing'
+    const highlighted =
+      loading.classList.contains('mobile-tutorial-highlight') ||
+      loading.classList.contains('tutorial-highlight')
+    if (!highlighted) return 'no-highlight'
+    if (loading.classList.contains('mobile-tutorial-button-pulsate')) return 'pulsing'
+    const rect = loading.getBoundingClientRect()
+    if (rect.height < 20) return 'short'
+    const visual = window.visualViewport
+    const viewTop = visual?.offsetTop ?? 0
+    const viewH = visual?.height ?? window.innerHeight
+    const visible = Math.max(
+      0,
+      Math.min(rect.bottom, viewTop + viewH) - Math.max(rect.top, viewTop)
+    )
+    if (visible < rect.height * 0.7) {
+      return `offscreen ${Math.round(visible)}/${Math.round(rect.height)}`
+    }
+    const center = rect.top + rect.height / 2
+    if (center < viewTop || center > viewTop + viewH) return 'center-offscreen'
+    const framed = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.tutorial-backdrop-cutout, .mobile-tutorial-backdrop-cutout'
+      )
+    ).some(cutout => {
+      const box = cutout.getBoundingClientRect()
+      const style = getComputedStyle(cutout)
+      if (style.opacity === '0' || style.visibility === 'hidden' || box.height < 2) return false
+      return (
+        Math.abs(box.top - (rect.top - 8)) < 28 &&
+        Math.abs(box.left - (rect.left - 8)) < 28 &&
+        Math.abs(box.height - (rect.height + 16)) < 48
+      )
+    })
+    if (!framed) return 'no-cutout'
+    const results = document.querySelector('.results-section')
+    if (results?.classList.contains('mobile-tutorial-button-pulsate')) return 'results-pulsing'
+    return 'ok'
+  })
+}
+
+async function readStreamingHandoff(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const loading = document.querySelector('.loading-section')
+    if (
+      loading &&
+      (loading.classList.contains('mobile-tutorial-highlight') ||
+        loading.classList.contains('tutorial-highlight'))
+    ) {
+      return 'loading-still-highlighted'
+    }
+    const results = document.querySelector('.results-section') as HTMLElement | null
+    if (!results) return 'no-results'
+    const highlighted =
+      results.classList.contains('mobile-tutorial-highlight') ||
+      results.classList.contains('tutorial-highlight')
+    if (!highlighted) return 'results-not-highlighted'
+    if (results.classList.contains('mobile-tutorial-button-pulsate')) return 'results-pulsing'
+    const visibleText = `${results.innerText}\n${results.textContent ?? ''}`
+    if (!/streaming-token-0/.test(visibleText)) return 'no-stream-text'
+    const rect = results.getBoundingClientRect()
+    const framed = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.tutorial-backdrop-cutout, .mobile-tutorial-backdrop-cutout'
+      )
+    ).some(cutout => {
+      const box = cutout.getBoundingClientRect()
+      const style = getComputedStyle(cutout)
+      if (style.opacity === '0' || style.visibility === 'hidden' || box.height < 2) return false
+      return (
+        Math.abs(box.top - (rect.top - 8)) < 28 &&
+        Math.abs(box.left - (rect.left - 8)) < 28 &&
+        Math.abs(box.height - (rect.height + 16)) < 48 &&
+        box.width > rect.width * 0.5
+      )
+    })
+    return framed ? 'ok' : 'no-cutout'
+  })
+}
+
 test.describe('tutorial scroll-back and streaming highlight', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     test.skip(
@@ -336,6 +495,53 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
       timeout: 25_000,
     })
     await expect.poll(async () => (await readResultsFrame(page)).ok, { timeout: 8_000 }).toBe(true)
+  })
+
+  test('processing panel is framed and on screen until the first token', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(180_000)
+    await installHeldComparisonStream(page)
+    await reachPromptStep(page, testInfo)
+    await completeTutorialPromptInput(page, 'Sqrt 3?', testInfo)
+    await expect(tutorialTooltip(page).first()).toContainText('Run Your Comparison', {
+      timeout: 20_000,
+    })
+
+    const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()
+    await expect(submit).toBeEnabled({ timeout: 20_000 })
+    if (isMobileE2eProject(testInfo.project.name)) {
+      await submit.tap({ force: true }).catch(() => submit.click({ force: true }))
+    } else {
+      await submit.click({ force: true })
+    }
+
+    await expect
+      .poll(() => readProcessingFrame(page), { timeout: 15_000, intervals: [100] })
+      .toBe('ok')
+
+    if (testInfo.project.name === 'Mobile Safari - iPhone 12') {
+      const dir = '/opt/cursor/artifacts/tutorial-processing-ring/iphone'
+      fs.mkdirSync(dir, { recursive: true })
+      await page.screenshot({ path: `${dir}/processing.png` })
+    }
+
+    await page.evaluate(() => {
+      ;(window as Window & { __tutorialStreamPhase?: string }).__tutorialStreamPhase = 'first'
+    })
+    await expect
+      .poll(() => readStreamingHandoff(page), { timeout: 15_000, intervals: [100] })
+      .toBe('ok')
+
+    if (testInfo.project.name === 'Mobile Safari - iPhone 12') {
+      await page.screenshot({
+        path: '/opt/cursor/artifacts/tutorial-processing-ring/iphone/streaming.png',
+      })
+    }
+
+    await page.evaluate(() => {
+      ;(window as Window & { __tutorialStreamPhase?: string }).__tutorialStreamPhase = 'rest'
+    })
   })
 
   test('expand OpenAI keeps the model selected earlier in the blue rail', async ({
