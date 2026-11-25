@@ -1,8 +1,16 @@
-import React, { useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { useResponsive } from '../../hooks'
 import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types'
 import { getSafeId } from '../../utils'
+import {
+  clearManualCardScroll,
+  clearPromptAlignPadding,
+  contentSkipsPromptAlign,
+  markManualCardScroll,
+  scrollContentToLatestUserPrompt,
+  userManuallyScrolledCard,
+} from '../../utils/alignLatestUserPrompt'
 import { isErrorMessage } from '../../utils/error'
 import { humanizeModelId } from '../../utils/retiredConversationModels'
 import { MessageBubble } from '../conversation/MessageBubble'
@@ -95,6 +103,67 @@ export const ResultCard: React.FC<ResultCardProps> = ({
 
   const { isSmallLayout } = useResponsive()
   const [showTooltip, setShowTooltip] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const userRound = safeMessages.reduce((count, message) => {
+    return message.type === 'user' ? count + 1 : count
+  }, 0)
+
+  useLayoutEffect(() => {
+    const content = contentRef.current
+    if (!content) return
+    if (userRound < 2) {
+      clearManualCardScroll(modelId)
+      content.removeAttribute('data-manual-scroll-round')
+      clearPromptAlignPadding(content)
+      return
+    }
+    if (userManuallyScrolledCard(modelId, userRound)) {
+      content.setAttribute('data-manual-scroll-round', String(userRound))
+      return
+    }
+    const align = () => {
+      if (contentSkipsPromptAlign(content, userRound)) return
+      scrollContentToLatestUserPrompt(content)
+    }
+    align()
+    const observer = new ResizeObserver(align)
+    observer.observe(content)
+    for (const child of content.children) observer.observe(child)
+    return () => observer.disconnect()
+  }, [modelId, userRound])
+
+  useEffect(() => {
+    const content = contentRef.current
+    if (!content || userRound < 2) return
+    let touchStartY = 0
+    const mark = () => markManualCardScroll(modelId, userRound, content)
+    const onWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) < 1) return
+      mark()
+    }
+    const onTouchStart = (event: TouchEvent) => {
+      touchStartY = event.touches[0]?.clientY ?? 0
+    }
+    const onTouchMove = (event: TouchEvent) => {
+      const y = event.touches[0]?.clientY ?? touchStartY
+      if (Math.abs(y - touchStartY) < 12) return
+      mark()
+    }
+    const onMouseDown = (event: MouseEvent) => {
+      if (event.target !== content) return
+      mark()
+    }
+    content.addEventListener('wheel', onWheel, { passive: true })
+    content.addEventListener('touchstart', onTouchStart, { passive: true })
+    content.addEventListener('touchmove', onTouchMove, { passive: true })
+    content.addEventListener('mousedown', onMouseDown)
+    return () => {
+      content.removeEventListener('wheel', onWheel)
+      content.removeEventListener('touchstart', onTouchStart)
+      content.removeEventListener('touchmove', onTouchMove)
+      content.removeEventListener('mousedown', onMouseDown)
+    }
+  }, [modelId, userRound])
 
   const handleOutputLengthClick = () => {
     if (isSmallLayout) {
@@ -311,7 +380,12 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           <span className={`status ${statusClass}`}>{statusText}</span>
         </div>
       </div>
-      <div className="conversation-content" id={`conversation-content-${safeId}`}>
+      <div
+        ref={contentRef}
+        className="conversation-content"
+        id={`conversation-content-${safeId}`}
+        data-model-id={modelId}
+      >
         {safeMessages.map((message, index) => {
           const messageId = message.id ? String(message.id) : `msg-${index}`
           const uniqueKey = message.id ? `${String(message.id)}-${index}` : `msg-${index}`

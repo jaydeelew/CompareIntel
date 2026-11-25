@@ -9,6 +9,7 @@ import { describe, it, expect, vi } from 'vitest'
 
 import { createMockConversationMessage } from '../../../__tests__/utils/test-factories'
 import { RESULT_TAB, createModelId } from '../../../types'
+import * as alignLatestUserPrompt from '../../../utils/alignLatestUserPrompt'
 import { ResultCard } from '../ResultCard'
 
 // Mock useResponsive hook
@@ -261,6 +262,53 @@ describe('ResultCard', () => {
         <ResultCard modelId={mockModel.id} model={mockModel} messages={messagesWithLongContent} />
       )
       expect(screen.getByText(/500 chars/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('follow-up prompt alignment', () => {
+    const followUpMessages = [
+      createMockConversationMessage({ type: 'user', content: 'First question' }),
+      createMockConversationMessage({ type: 'assistant', content: 'A'.repeat(500) }),
+      createMockConversationMessage({ type: 'user', content: 'Latest question' }),
+      createMockConversationMessage({ type: 'assistant', content: 'Second answer' }),
+    ]
+
+    it('aligns a follow-up card and leaves it after a manual scroll', () => {
+      const spy = vi
+        .spyOn(alignLatestUserPrompt, 'scrollContentToLatestUserPrompt')
+        .mockReturnValue(true)
+      const { rerender, container } = render(
+        <ResultCard modelId={mockModel.id} model={mockModel} messages={followUpMessages} />
+      )
+      expect(spy).toHaveBeenCalled()
+
+      const content = container.querySelector('.conversation-content')
+      expect(content).toBeTruthy()
+      content?.dispatchEvent(new WheelEvent('wheel', { deltaY: 30, bubbles: true }))
+      spy.mockClear()
+
+      rerender(
+        <ResultCard
+          modelId={mockModel.id}
+          model={mockModel}
+          messages={[
+            ...followUpMessages,
+            createMockConversationMessage({ type: 'assistant', content: 'Still the same round' }),
+          ]}
+        />
+      )
+      expect(spy).not.toHaveBeenCalled()
+      spy.mockRestore()
+      alignLatestUserPrompt.clearManualCardScroll(mockModel.id)
+    })
+
+    it('does not align the first comparison', () => {
+      const spy = vi
+        .spyOn(alignLatestUserPrompt, 'scrollContentToLatestUserPrompt')
+        .mockReturnValue(true)
+      render(<ResultCard modelId={mockModel.id} model={mockModel} messages={mockMessages} />)
+      expect(spy).not.toHaveBeenCalled()
+      spy.mockRestore()
     })
   })
 
