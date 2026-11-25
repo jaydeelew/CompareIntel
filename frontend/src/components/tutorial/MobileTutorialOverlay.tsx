@@ -38,6 +38,7 @@ import {
   readHistoryComposerLift,
   scrollFollowUpHighlightIntoView,
   scrollHistoryComposerPair,
+  scrollTutorialElementToViewportY,
   seatPortaledFollowUpComposer,
   setHistoryComposerLift,
   TUTORIAL_FRAME_OUTSET_PX,
@@ -1305,6 +1306,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // submit-comparison onto follow-up: that step stays in its settle until the
   // composer portals, which is when the stream finishes. Tearing the rect down
   // on streamAnswerStarted or the step change is the gap with no glow.
+  const updateLoadingStreamingRectRef = useRef<() => void>(() => {})
   useEffect(() => {
     const watched =
       step === 'submit-comparison' ||
@@ -1392,6 +1394,29 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       if (loadingSection) loadingSectionWasSeen = true
 
+      // The processing panel owns the ring until the first answer token. Empty
+      // result cards mount with the request and must not take the frame yet.
+      if (!started && loadingSection && elementHasSpotlightBox(loadingSection)) {
+        resultsSection?.classList.remove(
+          'mobile-tutorial-highlight',
+          'mobile-tutorial-button-pulsate'
+        )
+        getComposerElement()?.classList.remove('mobile-tutorial-highlight')
+        loadingSection.classList.add('mobile-tutorial-highlight')
+        loadingSection.style.pointerEvents = 'auto'
+        loadingSection.style.position = 'relative'
+        const visual = window.visualViewport
+        const viewTop = visual?.offsetTop ?? 0
+        const viewH = Math.min(window.innerHeight, visual?.height ?? window.innerHeight)
+        const box = loadingSection.getBoundingClientRect()
+        const desiredTop =
+          box.height >= viewH - 24 ? viewTop + 12 : viewTop + Math.max(12, (viewH - box.height) / 2)
+        const inView = box.height > 2 && box.top >= viewTop - 2 && box.bottom <= viewTop + viewH + 2
+        if (!inView) scrollTutorialElementToViewportY(loadingSection, desiredTop)
+        publish(loadingSection.getBoundingClientRect())
+        return
+      }
+
       const resultsRect = resultsSection?.getBoundingClientRect()
       const resultsReady = Boolean(
         resultsSection && resultsRect && resultsRect.width > 2 && resultsRect.height > 2
@@ -1434,9 +1459,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }
         publish(resultsRect)
         resultsSection.classList.add('mobile-tutorial-highlight')
+        resultsSection.classList.remove('mobile-tutorial-button-pulsate')
         resultsSection.style.pointerEvents = 'auto'
         resultsSection.style.position = 'relative'
-        if (loadingSection && started) {
+        if (loadingSection) {
           loadingSection.classList.remove('mobile-tutorial-highlight')
           loadingSection.style.pointerEvents = ''
           loadingSection.style.position = ''
@@ -1454,11 +1480,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
+    updateLoadingStreamingRectRef.current = updateLoadingStreamingRect
     updateLoadingStreamingRect()
     const interval = window.setInterval(updateLoadingStreamingRect, 100)
     const stopMotion = trackTutorialMotion(updateLoadingStreamingRect)
 
     return () => {
+      updateLoadingStreamingRectRef.current = () => {}
       window.clearInterval(interval)
       stopMotion()
       resizeObserver.disconnect()
@@ -1520,6 +1548,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   }, [step, tooltipEstimatedHeight])
 
   useEffect(() => {
+    updateLoadingStreamingRectRef.current()
     const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
     const highlightFollowUp =
       step === 'follow-up' && followUpSubmitStarted && isLoading && !streamAnswerStarted
