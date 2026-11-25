@@ -1,10 +1,90 @@
 /**
  * After a follow-up, each result card should open on the user's latest prompt.
- * A card the user has already scrolled stays where they left it, including
- * when a mobile tab unmounts that card and mounts it again.
+ * That jump happens once per model per round. Switching away and back — swipe,
+ * tab, or button — restores the scroll position that card had when it left,
+ * including after a mobile tab unmounts it.
  */
 
 const manualScrollRoundByModel = new Map<string, number>()
+
+export type CardScrollSnapshot = {
+  round: number
+  scrollTop: number
+  pad: number
+  basePad: number
+  opened: boolean
+}
+
+const scrollSnapshotByModel = new Map<string, CardScrollSnapshot>()
+
+export function readCardScrollSnapshot(modelId: string, round: number): CardScrollSnapshot | null {
+  const snap = scrollSnapshotByModel.get(modelId)
+  if (!snap || snap.round !== round) return null
+  return snap
+}
+
+export function writeCardScrollSnapshot(
+  modelId: string,
+  round: number,
+  content: HTMLElement,
+  options?: { opened?: boolean }
+): void {
+  const prev = scrollSnapshotByModel.get(modelId)
+  const sameRound = prev?.round === round
+  const datasetPad = content.dataset.promptAlignPad
+  const datasetBase = content.dataset.promptAlignBasePad
+  const pad =
+    datasetPad == null || datasetPad === ''
+      ? sameRound
+        ? prev.pad
+        : 0
+      : Number.parseFloat(datasetPad) || 0
+  const basePad =
+    datasetBase == null || datasetBase === ''
+      ? sameRound
+        ? prev.basePad
+        : 0
+      : Number.parseFloat(datasetBase) || 0
+  let scrollTop = content.scrollTop
+  // A remount can report scrollTop 0 before the card has a scroll range.
+  // Keep the position captured when the card was still on screen.
+  if (
+    sameRound &&
+    scrollTop < 1 &&
+    prev.scrollTop > 1 &&
+    content.scrollHeight <= content.clientHeight + 1
+  ) {
+    scrollTop = prev.scrollTop
+  }
+  scrollSnapshotByModel.set(modelId, {
+    round,
+    scrollTop,
+    pad,
+    basePad,
+    opened: Boolean(options?.opened) || (sameRound && prev.opened),
+  })
+}
+
+export function applyCardScrollSnapshot(content: HTMLElement, snap: CardScrollSnapshot): void {
+  if (snap.pad > 0 || snap.basePad > 0) {
+    content.dataset.promptAlignPad = String(snap.pad)
+    content.dataset.promptAlignBasePad = String(snap.basePad)
+    content.style.paddingBottom = `${snap.basePad + snap.pad}px`
+  }
+  const max = Math.max(0, content.scrollHeight - content.clientHeight)
+  const next = Math.max(0, Math.min(snap.scrollTop, max))
+  if (Math.abs(content.scrollTop - next) < 1) return
+  content.scrollTop = next
+}
+
+export function clearCardScrollSnapshot(modelId: string): void {
+  scrollSnapshotByModel.delete(modelId)
+}
+
+/** A model-tab swipe is sideways. Only a vertical drag scrolls inside the card. */
+export function isVerticalCardScroll(dx: number, dy: number): boolean {
+  return dy >= 12 && dy > dx
+}
 
 export function markManualCardScroll(modelId: string, round: number, content?: HTMLElement): void {
   manualScrollRoundByModel.set(modelId, round)
@@ -17,6 +97,7 @@ export function userManuallyScrolledCard(modelId: string, round: number): boolea
 
 export function clearManualCardScroll(modelId: string): void {
   manualScrollRoundByModel.delete(modelId)
+  clearCardScrollSnapshot(modelId)
 }
 
 /** Scroll offset that puts the latest user prompt at the top of the card's scrollport. */
