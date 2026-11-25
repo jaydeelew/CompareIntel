@@ -22,6 +22,7 @@ import {
 } from '../../utils/followUpComposerReady'
 import {
   advanceFollowUpStreamingRound,
+  clampTooltipTop,
   deferScroll,
   elementHasSpotlightBox,
   getTutorialProviderStepLayout,
@@ -30,6 +31,7 @@ import {
   placeTooltipBoxAgainstFrame,
   readPortaledFollowUpComposerRect,
   readTutorialSpotlightRect,
+  readVisualViewportBox,
   scrollDeltaToFitTooltip,
   scrollBackDirectionForTarget,
   centerTutorialStepRect,
@@ -167,6 +169,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const isStepTransitioningRef = useRef(false)
   const spotlightSettledRef = useRef(false)
   const settledStepRef = useRef<TutorialStep | null>(null)
+  // Set synchronously when this step's card is shown. A later target search
+  // must not hide it again: that left step 1 highlighted with no tooltip.
+  const tooltipShownForStepRef = useRef<TutorialStep | null>(null)
   const prevIsLoadingRef = useRef(isLoading)
   const dropdownWasOpenedRef = useRef<boolean>(false)
   // Refs do not re-render. Done stays disabled until this state flips.
@@ -292,6 +297,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
     if (step && step !== prev) {
       previousStepRef.current = step
+      tooltipShownForStepRef.current = null
     }
     if (frozenPairRef.current && frozenPairRef.current.step !== step) {
       frozenPairRef.current = null
@@ -402,8 +408,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
       if (element && (element.offsetParent !== null || element.offsetWidth > 0)) {
         setTargetElement(element)
+        const alreadyShown = tooltipShownForStepRef.current === step
         if (step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current) {
           suppressReviewTooltipRevealRef.current = false
+          tooltipShownForStepRef.current = step
+          setIsVisible(true)
+        } else if (alreadyShown) {
+          // A provider list that arrives after the card is showing must not
+          // hide it. Step 1 did that and left only the highlighted row.
           setIsVisible(true)
         } else if (isPrimaryExpandProviderStep(step)) {
           setIsVisible(false)
@@ -421,21 +433,29 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       return false
     }
 
+    let cancelled = false
+    let retryTimer: number | null = null
     if (!findElement()) {
       let attempts = 0
       const maxAttempts = step === 'follow-up' ? 120 : 15
       const attemptDelay = step === 'follow-up' ? 100 : 300
       const tryFind = () => {
+        if (cancelled || stepRef.current !== step) return
         attempts++
         if (findElement()) return
         if (attempts < maxAttempts) {
-          setTimeout(tryFind, attemptDelay)
+          retryTimer = window.setTimeout(tryFind, attemptDelay)
         } else if (stepRef.current !== 'follow-up') {
           suppressReviewTooltipRevealRef.current = false
+          tooltipShownForStepRef.current = step
           setIsVisible(true) // Show tooltip anyway
         }
       }
-      setTimeout(tryFind, 300)
+      retryTimer = window.setTimeout(tryFind, 300)
+    }
+    return () => {
+      cancelled = true
+      if (retryTimer != null) window.clearTimeout(retryTimer)
     }
   }, [step, tutorialStarterEntries, tutorialSplitModelSteps, tutorialProviderNames])
 
@@ -480,7 +500,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         : targetElement.getBoundingClientRect())
     const placementRect = rect
     const viewportWidth = window.innerWidth
-    const viewportHeight = window.innerHeight
+    const visualViewport = readVisualViewportBox()
+    const viewportHeight = visualViewport.top + visualViewport.height
     const padding = 12 // Padding from screen edges
     const tooltipRect = overlayRef.current?.getBoundingClientRect()
     const tooltipHeight = tooltipRect?.height ?? tooltipEstimatedHeight
@@ -619,10 +640,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       setDropdownRect(null)
     }
 
-    // Check if target is off-screen
-    if (rect.bottom < 0) {
+    // Check if target is off the visible viewport, not the layout viewport.
+    // A mobile URL bar makes those differ, and the card was treated as gone.
+    if (rect.bottom < visualViewport.top) {
       setIsTargetOffScreen('up')
-    } else if (rect.top > viewportHeight) {
+    } else if (rect.top > visualViewport.top + visualViewport.height) {
       setIsTargetOffScreen('down')
     } else {
       setIsTargetOffScreen(null)
@@ -697,7 +719,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       lockSide: step === 'follow-up',
     })
 
-    let tooltipTop = placed.top
+    let tooltipTop = clampTooltipTop({
+      top: placed.top,
+      height: tooltipHeight,
+      viewportTop: visualViewport.top,
+      viewportHeight: visualViewport.height,
+      padding,
+    })
     let tooltipLeft = 0
     let arrowDirection: 'up' | 'down' | 'left' | 'right' = placed.arrowDirection
     let arrowOffset = 50
@@ -741,6 +769,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }
       }
     }
+
+    tooltipTop = clampTooltipTop({
+      top: tooltipTop,
+      height: tooltipHeight,
+      viewportTop: visualViewport.top,
+      viewportHeight: visualViewport.height,
+      padding,
+    })
 
     setTooltipPosition(prev => {
       if (
@@ -887,6 +923,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       // meets the frame. Top and left are not written after the fade starts.
       // A double rAF never ran on Mobile Safari while Playwright was waiting,
       // so the card stayed transparent until the sample window ended.
+      tooltipShownForStepRef.current = currentStep
       calculatePositions()
       setIsVisible(true)
       if (measureTimer != null) window.clearInterval(measureTimer)
@@ -956,7 +993,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         placeFollowUp()
         await waitForRectFrames(readComposerBox, { frames: 2, timeoutMs: 800 })
         if (cancelled || stepRef.current !== currentStep) return
-        if (!readComposerBox()) return
+        if (!readComposerBox()) {
+          tooltipShownForStepRef.current = currentStep
+        }
         revealSettledStep()
         return
       }
@@ -997,7 +1036,17 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         if (cancelled || stepRef.current !== currentStep) return
       }
       let rect = liveSpotlight()
-      if (!rect || rect.width < 2 || rect.height < 2) return
+      for (let attempt = 0; !rect || rect.width < 2 || rect.height < 2; attempt += 1) {
+        // The provider row can be highlighted before its box exists. Leaving
+        // here hid the tooltip for the rest of the step.
+        if (attempt >= 20 || cancelled || stepRef.current !== currentStep) {
+          tooltipShownForStepRef.current = currentStep
+          revealSettledStep()
+          return
+        }
+        await new Promise<void>(resolve => window.setTimeout(resolve, 80))
+        rect = liveSpotlight()
+      }
       centerTutorialStepRect(currentStep, rect)
       if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
       await waitForTutorialLayoutSettle({ timeoutMs: 240, quietMs: 48 })
@@ -1005,8 +1054,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       await waitForRectStable(liveSpotlight, { timeoutMs: 200, quietMs: 48 })
       if (cancelled || stepRef.current !== currentStep) return
       rect = liveSpotlight()
-      if (!rect) return
-      const viewH = window.innerHeight
+      if (!rect) {
+        revealSettledStep()
+        return
+      }
+      const fittedView = readVisualViewportBox()
+      const viewH = fittedView.top + fittedView.height
       const mid = rect.top + rect.height / 2
       if (rect.height <= viewH * 0.65 && Math.abs(mid - viewH / 2) > 36) {
         centerTutorialStepRect(currentStep, rect)
@@ -1014,7 +1067,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         await waitForRectStable(liveSpotlight, { timeoutMs: 120, quietMs: 32 })
         if (cancelled || stepRef.current !== currentStep) return
         rect = liveSpotlight()
-        if (!rect) return
+        if (!rect) {
+          revealSettledStep()
+          return
+        }
       }
       const tooltipHeight =
         overlayRef.current?.getBoundingClientRect().height || tooltipEstimatedHeight
@@ -1048,9 +1104,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       // StrictMode re-runs this effect while the reveal interval is still pending;
       // clearing the hide here would skip the sample that proves the card was hidden.
       if (revealTimerRef.current == null) {
+        tooltipShownForStepRef.current = currentStep
         isStepTransitioningRef.current = false
         setIsStepTransitioning(false)
         setTutorialSpotlightSettling(false)
+        setIsVisible(true)
         calculatePositions()
         const measureAgain = () => {
           if (cancelled || stepRef.current !== currentStep || isStepTransitioningRef.current) return

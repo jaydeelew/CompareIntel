@@ -593,6 +593,26 @@ export function readVisualViewportBox(): { top: number; height: number } {
   }
 }
 
+/**
+ * Keep a tooltip box inside the visible viewport. Placement still prefers the
+ * arrow against the highlight; this only pulls a box back in when that seat
+ * would sit under the browser chrome or past the screen edge.
+ */
+export function clampTooltipTop(args: {
+  top: number
+  height: number
+  viewportTop: number
+  viewportHeight: number
+  padding?: number
+}): number {
+  const padding = args.padding ?? MARGIN
+  if (!(args.height > 0)) return args.top
+  const min = args.viewportTop + padding
+  const max = args.viewportTop + args.viewportHeight - args.height - padding
+  if (max < min) return min
+  return Math.min(Math.max(args.top, min), max)
+}
+
 export interface HistoryPairScrollArgs {
   composerTop: number
   composerHeight: number
@@ -1005,15 +1025,17 @@ function clampDesktopTooltipTop(
   effectivePosition: 'top' | 'bottom',
   tooltipHeight: number
 ): number {
-  const vh = window.innerHeight
+  const view = readVisualViewportBox()
+  const min = view.top + MARGIN
+  const maxBottom = view.top + view.height - MARGIN
   if (effectivePosition === 'top') {
     const visualTop = top - tooltipHeight
-    if (visualTop < MARGIN) return MARGIN + tooltipHeight
-    if (top > vh - MARGIN) return vh - MARGIN
+    if (visualTop < min) return min + tooltipHeight
+    if (top > maxBottom) return maxBottom
     return top
   }
-  if (top < MARGIN) return MARGIN
-  if (top + tooltipHeight > vh - MARGIN) return Math.max(MARGIN, vh - MARGIN - tooltipHeight)
+  if (top < min) return min
+  if (top + tooltipHeight > maxBottom) return Math.max(min, maxBottom - tooltipHeight)
   return top
 }
 

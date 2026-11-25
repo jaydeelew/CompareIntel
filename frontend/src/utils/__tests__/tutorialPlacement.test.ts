@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  clampTooltipTop,
   deferScroll,
   followUpScrollDelta,
   historyPairScrollDelta,
@@ -8,6 +9,44 @@ import {
   scrollDeltaToFitTooltip,
   visibleViewportHeight,
 } from '../tutorialPositioning'
+
+describe('clampTooltipTop', () => {
+  it('pulls a card that sits above the visual viewport back into view', () => {
+    expect(
+      clampTooltipTop({
+        top: -240,
+        height: 180,
+        viewportTop: 40,
+        viewportHeight: 700,
+        padding: 12,
+      })
+    ).toBe(52)
+  })
+
+  it('pulls a card that sits under the browser chrome back up', () => {
+    expect(
+      clampTooltipTop({
+        top: 640,
+        height: 180,
+        viewportTop: 0,
+        viewportHeight: 700,
+        padding: 12,
+      })
+    ).toBe(508)
+  })
+
+  it('leaves a card that already fits', () => {
+    expect(
+      clampTooltipTop({
+        top: 120,
+        height: 180,
+        viewportTop: 0,
+        viewportHeight: 800,
+        padding: 12,
+      })
+    ).toBe(120)
+  })
+})
 
 describe('placeTooltipBoxAgainstFrame', () => {
   const frame = {
