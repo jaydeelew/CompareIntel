@@ -146,7 +146,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   const shouldHideTooltipDuringFollowUpStream =
     step === 'follow-up' && followUpSubmitStarted && streamAnswerStarted
-  const followUpComposerPending = step === 'follow-up' && !isFollowUpComposerReady()
+  // The composer is not "ready" while the processing panel is up, but that
+  // panel keeps this step's tooltip the same way the first comparison does.
+  const followUpComposerPending =
+    step === 'follow-up' && !isFollowUpComposerReady() && !(isLoading && !streamAnswerStarted)
   // The processing panel keeps its own tooltip. The review step must too:
   // hiding on any streaming cutout left that card with a ring and no popover.
   const hideTooltipForStreamingCutout =

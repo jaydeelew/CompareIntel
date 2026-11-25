@@ -4,12 +4,16 @@ import { useResponsive } from '../../hooks'
 import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types'
 import { getSafeId } from '../../utils'
 import {
+  applyCardScrollSnapshot,
   clearManualCardScroll,
   clearPromptAlignPadding,
   contentSkipsPromptAlign,
+  isVerticalCardScroll,
   markManualCardScroll,
+  readCardScrollSnapshot,
   scrollContentToLatestUserPrompt,
   userManuallyScrolledCard,
+  writeCardScrollSnapshot,
 } from '../../utils/alignLatestUserPrompt'
 import { isErrorMessage } from '../../utils/error'
 import { humanizeModelId } from '../../utils/retiredConversationModels'
@@ -117,51 +121,86 @@ export const ResultCard: React.FC<ResultCardProps> = ({
       clearPromptAlignPadding(content)
       return
     }
+    const snap = readCardScrollSnapshot(modelId, userRound)
+    if (snap?.opened) {
+      if (userManuallyScrolledCard(modelId, userRound)) {
+        content.setAttribute('data-manual-scroll-round', String(userRound))
+      }
+      const restore = () => {
+        const current = readCardScrollSnapshot(modelId, userRound)
+        if (current) applyCardScrollSnapshot(content, current)
+      }
+      restore()
+      const observer = new ResizeObserver(restore)
+      observer.observe(content)
+      return () => {
+        writeCardScrollSnapshot(modelId, userRound, content)
+        observer.disconnect()
+      }
+    }
     if (userManuallyScrolledCard(modelId, userRound)) {
       content.setAttribute('data-manual-scroll-round', String(userRound))
-      return
+      return () => writeCardScrollSnapshot(modelId, userRound, content)
     }
     const align = () => {
       if (contentSkipsPromptAlign(content, userRound)) return
-      scrollContentToLatestUserPrompt(content)
+      if (!scrollContentToLatestUserPrompt(content)) return
+      writeCardScrollSnapshot(modelId, userRound, content, { opened: true })
     }
     align()
     const observer = new ResizeObserver(align)
     observer.observe(content)
     for (const child of content.children) observer.observe(child)
-    return () => observer.disconnect()
+    return () => {
+      writeCardScrollSnapshot(modelId, userRound, content)
+      observer.disconnect()
+    }
   }, [modelId, userRound])
 
   useEffect(() => {
     const content = contentRef.current
     if (!content || userRound < 2) return
+    let touchStartX = 0
     let touchStartY = 0
     const mark = () => markManualCardScroll(modelId, userRound, content)
+    const remember = () => writeCardScrollSnapshot(modelId, userRound, content)
     const onWheel = (event: WheelEvent) => {
       if (Math.abs(event.deltaY) < 1) return
       mark()
+      remember()
     }
     const onTouchStart = (event: TouchEvent) => {
+      touchStartX = event.touches[0]?.clientX ?? 0
       touchStartY = event.touches[0]?.clientY ?? 0
     }
     const onTouchMove = (event: TouchEvent) => {
+      const x = event.touches[0]?.clientX ?? touchStartX
       const y = event.touches[0]?.clientY ?? touchStartY
-      if (Math.abs(y - touchStartY) < 12) return
+      const dx = Math.abs(x - touchStartX)
+      const dy = Math.abs(y - touchStartY)
+      // A sideways model-tab swipe can drift a few dozen pixels vertically.
+      // That gesture changes cards; it is not a scroll inside this card.
+      if (!isVerticalCardScroll(dx, dy)) return
       mark()
+      remember()
     }
     const onMouseDown = (event: MouseEvent) => {
       if (event.target !== content) return
       mark()
+      remember()
     }
+    const onScroll = () => remember()
     content.addEventListener('wheel', onWheel, { passive: true })
     content.addEventListener('touchstart', onTouchStart, { passive: true })
     content.addEventListener('touchmove', onTouchMove, { passive: true })
     content.addEventListener('mousedown', onMouseDown)
+    content.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       content.removeEventListener('wheel', onWheel)
       content.removeEventListener('touchstart', onTouchStart)
       content.removeEventListener('touchmove', onTouchMove)
       content.removeEventListener('mousedown', onMouseDown)
+      content.removeEventListener('scroll', onScroll)
     }
   }, [modelId, userRound])
 

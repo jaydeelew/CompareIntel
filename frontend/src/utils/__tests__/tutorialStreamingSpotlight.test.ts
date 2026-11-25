@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { TUTORIAL_STEPS_CONFIG } from '../../data/tutorialSteps'
 import {
+  advanceFollowUpStreamingRound,
   applyStreamingComparisonHighlight,
   computeTooltipPosition,
   desktopResultsTooltipMinTop,
@@ -37,6 +38,59 @@ describe('streaming comparison spotlight', () => {
     }
     return { loading, results }
   }
+
+  it('starts a follow-up round only after step 7 has been idle, and keeps it through the first token', () => {
+    const idle = advanceFollowUpStreamingRound({
+      step: 'follow-up',
+      loading: false,
+      followUpSubmitStarted: false,
+      streamAnswerStarted: true,
+      sawIdle: false,
+      round: false,
+    })
+    expect(idle).toEqual({ sawIdle: true, round: false, startedRound: false })
+
+    const tail = advanceFollowUpStreamingRound({
+      step: 'follow-up',
+      loading: true,
+      followUpSubmitStarted: false,
+      streamAnswerStarted: true,
+      sawIdle: false,
+      round: false,
+    })
+    expect(tail.round).toBe(false)
+
+    const processing = advanceFollowUpStreamingRound({
+      step: 'follow-up',
+      loading: true,
+      followUpSubmitStarted: false,
+      streamAnswerStarted: false,
+      sawIdle: idle.sawIdle,
+      round: false,
+    })
+    expect(processing).toEqual({ sawIdle: true, round: true, startedRound: true })
+
+    const streaming = advanceFollowUpStreamingRound({
+      step: 'follow-up',
+      loading: true,
+      followUpSubmitStarted: true,
+      streamAnswerStarted: true,
+      sawIdle: processing.sawIdle,
+      round: processing.round,
+    })
+    expect(streaming.round).toBe(true)
+    expect(streaming.startedRound).toBe(false)
+
+    const cancelled = advanceFollowUpStreamingRound({
+      step: 'follow-up',
+      loading: false,
+      followUpSubmitStarted: true,
+      streamAnswerStarted: false,
+      sawIdle: true,
+      round: true,
+    })
+    expect(cancelled.round).toBe(false)
+  })
 
   it('keeps the processing panel until the first streamed token, then the results card', () => {
     const { loading, results } = mount({

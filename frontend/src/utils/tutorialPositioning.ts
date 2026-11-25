@@ -471,6 +471,36 @@ export function applyStreamingComparisonHighlight(
 }
 
 /**
+ * Step 7's follow-up request uses the same processing-then-results spotlight as
+ * the first comparison. The first comparison can still be loading when step 7
+ * opens; that tail is not this round. Once a new request starts, the round
+ * stays active until the step changes so the results pin survives the first token.
+ */
+export function advanceFollowUpStreamingRound(state: {
+  step: string | null
+  loading: boolean
+  followUpSubmitStarted: boolean
+  streamAnswerStarted: boolean
+  sawIdle: boolean
+  round: boolean
+}): { sawIdle: boolean; round: boolean; startedRound: boolean } {
+  if (state.step !== 'follow-up') {
+    return { sawIdle: false, round: false, startedRound: false }
+  }
+  const sawIdle = state.sawIdle || (!state.loading && !state.followUpSubmitStarted)
+  const rising = state.loading && (state.followUpSubmitStarted || sawIdle)
+  // Cancel before any token: release the round so the composer can seat again.
+  // A finished stream keeps streamAnswerStarted, so the results pin stays up
+  // until the step changes.
+  const round = (state.round || rising) && (state.loading || state.streamAnswerStarted || rising)
+  return {
+    sawIdle,
+    round,
+    startedRound: rising && !state.round,
+  }
+}
+
+/**
  * The element box the blue frame is drawn around. Tooltip placement and scroll
  * centering both use this so the arrow meets the highlight the user sees.
  */

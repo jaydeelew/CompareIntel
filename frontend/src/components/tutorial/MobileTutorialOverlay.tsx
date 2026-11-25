@@ -21,6 +21,7 @@ import {
   isFollowUpComposerUnavailable,
 } from '../../utils/followUpComposerReady'
 import {
+  advanceFollowUpStreamingRound,
   deferScroll,
   elementHasSpotlightBox,
   getTutorialProviderStepLayout,
@@ -182,6 +183,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   streamAnswerStartedRef.current = streamAnswerStarted
   const followUpSubmitStartedRef = useRef(followUpSubmitStarted)
   followUpSubmitStartedRef.current = followUpSubmitStarted
+  /** True after step 7's own submit, so composer seating yields to the shared spotlight. */
+  const followUpStreamingRoundRef = useRef(false)
   const suppressReviewTooltipRevealRef = useRef(false)
   const prevStepForTooltipExitRef = useRef<TutorialStep | null>(null)
   // Survives the position effect's StrictMode re-run. Cleared by the interval itself.
@@ -1325,6 +1328,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let framedDuringLoad = false
     let resultsPinScroll: number | null = null
     let userMovedResults = false
+    let sawFollowUpIdle = false
+    let followUpRound = false
     const cancelDeferredScrolls: Array<() => void> = []
     let observed: Element | null = null
     const resizeObserver = new ResizeObserver(() => updateLoadingStreamingRect())
@@ -1363,6 +1368,23 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const followUpPost = current === 'follow-up' && followUpStarted
       const holdFirstStream =
         current === 'follow-up' && !followUpStarted && (loading || transitioning)
+      const followUpAdvance = advanceFollowUpStreamingRound({
+        step: current,
+        loading,
+        followUpSubmitStarted: followUpStarted,
+        streamAnswerStarted: started,
+        sawIdle: sawFollowUpIdle,
+        round: followUpRound,
+      })
+      sawFollowUpIdle = followUpAdvance.sawIdle
+      if (followUpAdvance.startedRound) {
+        hasScrolledToLoading = false
+        hasScrolledToResults = false
+        resultsPinScroll = null
+        userMovedResults = false
+      }
+      followUpRound = followUpAdvance.round
+      followUpStreamingRoundRef.current = followUpRound
       if (isSubmit && loading) framedDuringLoad = true
       const active =
         (isSubmit &&
@@ -1370,7 +1392,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             (current === 'submit-comparison' && started) ||
             (transitioning && framedDuringLoad))) ||
         (isReview && loading) ||
-        (followUpPost && (loading || started)) ||
+        (followUpRound && (loading || started)) ||
         holdFirstStream ||
         (current === 'follow-up' && !followUpStarted && !isFollowUpComposerReady())
       if (!active) {
@@ -1453,22 +1475,26 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         // that is not ours is the user's: leave the panel where they put it.
         const firstComparisonHandoff =
           current === 'submit-comparison' || (current === 'follow-up' && !followUpStarted)
-        if (started && current === 'submit-comparison') {
-          if (!userMovedResults) {
-            const root = getTutorialScrollRoot()
-            const scrollTop = root.getScrollTop()
-            if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
-              userMovedResults = true
-            } else {
-              const desiredTop = streamingResultsTopInViewport()
-              const before = resultsSection.getBoundingClientRect()
-              if (Math.abs(before.top - desiredTop) > 12) {
-                scrollTutorialElementToViewportY(resultsSection, desiredTop)
-              }
-              resultsPinScroll = root.getScrollTop()
-            }
+        const pinStreamingResults =
+          started && (current === 'submit-comparison' || followUpRound || (isReview && loading))
+        if (pinStreamingResults && !userMovedResults) {
+          const root = getTutorialScrollRoot()
+          const scrollTop = root.getScrollTop()
+          const desiredTop = streamingResultsTopInViewport()
+          const before = resultsSection.getBoundingClientRect()
+          // Keep correcting until the card is actually at the top. A scroll
+          // that happens before that is the handoff, not the user.
+          if (Math.abs(before.top - desiredTop) > 12) {
+            scrollTutorialElementToViewportY(resultsSection, desiredTop)
+            resultsPinScroll = root.getScrollTop()
+          } else if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
+            userMovedResults = true
+          } else {
+            resultsPinScroll = scrollTop
           }
         } else if (
+          !pinStreamingResults &&
+          !followUpRound &&
           !firstComparisonHandoff &&
           !holdFirstStream &&
           !hasScrolledToResults &&
@@ -1515,6 +1541,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       window.clearInterval(interval)
       stopMotion()
       resizeObserver.disconnect()
+      followUpStreamingRoundRef.current = false
       for (const cancel of cancelDeferredScrolls) cancel()
       const next = stepRef.current
       const still =
@@ -1539,6 +1566,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const started = performance.now()
     const bringComposerBack = () => {
       if (stepRef.current !== 'follow-up' || performance.now() - started > 15000) {
+        window.clearInterval(intervalId)
+        return
+      }
+      // The follow-up request uses the same processing/results spotlight as the
+      // first comparison. Pulling the composer back would scroll that panel away.
+      if (followUpStreamingRoundRef.current) {
         window.clearInterval(intervalId)
         return
       }
@@ -1575,6 +1608,21 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   useEffect(() => {
     updateLoadingStreamingRectRef.current()
     const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
+    if (
+      followUpStreamingRoundRef.current &&
+      !streamAnswerStarted &&
+      loadingSection &&
+      elementHasSpotlightBox(loadingSection)
+    ) {
+      loadingSection.classList.add('mobile-tutorial-highlight')
+      loadingSection.style.pointerEvents = 'auto'
+      loadingSection.style.position = 'relative'
+      return () => {
+        loadingSection.classList.remove('mobile-tutorial-highlight')
+        loadingSection.style.pointerEvents = ''
+        loadingSection.style.position = ''
+      }
+    }
     const highlightFollowUp =
       step === 'follow-up' && followUpSubmitStarted && isLoading && !streamAnswerStarted
     const highlightReview = step === 'view-follow-up-results' && isLoading && !streamAnswerStarted
@@ -1618,7 +1666,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   if (
     !step ||
     !portalRoot ||
-    !(isVisible || isStepTransitioning || isProviderPickerTutorialStep(step))
+    !(
+      isVisible ||
+      isStepTransitioning ||
+      isProviderPickerTutorialStep(step) ||
+      // Follow-up hides the card while the composer is behind the processing
+      // panel. The same streaming cutout still has to paint.
+      loadingStreamingRect != null
+    )
   ) {
     return null
   }

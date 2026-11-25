@@ -302,6 +302,36 @@ describe('ResultCard', () => {
       alignLatestUserPrompt.clearManualCardScroll(mockModel.id)
     })
 
+    it('restores the saved scroll instead of jumping again when the card remounts', () => {
+      const spy = vi
+        .spyOn(alignLatestUserPrompt, 'scrollContentToLatestUserPrompt')
+        .mockReturnValue(true)
+      const first = render(
+        <ResultCard modelId={mockModel.id} model={mockModel} messages={followUpMessages} />
+      )
+      expect(spy).toHaveBeenCalled()
+      const content = first.container.querySelector('.conversation-content')
+      expect(content).toBeTruthy()
+      if (content instanceof HTMLElement) {
+        content.scrollTop = 180
+        content.dispatchEvent(new Event('scroll'))
+      }
+      first.unmount()
+      spy.mockClear()
+
+      const second = render(
+        <ResultCard modelId={mockModel.id} model={mockModel} messages={followUpMessages} />
+      )
+      expect(spy).not.toHaveBeenCalled()
+      expect(alignLatestUserPrompt.readCardScrollSnapshot(mockModel.id, 2)).toMatchObject({
+        opened: true,
+        scrollTop: 180,
+      })
+      second.unmount()
+      spy.mockRestore()
+      alignLatestUserPrompt.clearManualCardScroll(mockModel.id)
+    })
+
     it('does not align the first comparison', () => {
       const spy = vi
         .spyOn(alignLatestUserPrompt, 'scrollContentToLatestUserPrompt')

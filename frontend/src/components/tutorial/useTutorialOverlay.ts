@@ -24,6 +24,7 @@ import {
   getComposerElement,
   computeTextareaCutout,
   computeButtonCutout,
+  advanceFollowUpStreamingRound,
   applyStreamingComparisonHighlight,
   centerTutorialStepRect,
   clearTutorialScrollTail,
@@ -127,6 +128,8 @@ export function useTutorialOverlay(
   streamAnswerStartedRef.current = streamAnswerStarted
   const followUpSubmitStartedRef = useRef(followUpSubmitStarted)
   followUpSubmitStartedRef.current = followUpSubmitStarted
+  /** True after step 7's own submit, so composer seating yields to the shared spotlight. */
+  const followUpStreamingRoundRef = useRef(false)
   /** After follow-up → view-follow-up-results, skip immediate tooltip show so step 5 vanishes first. */
   const suppressReviewTooltipRevealRef = useRef(false)
   const prevStepForTooltipExitRef = useRef<TutorialStep | null>(null)
@@ -1079,6 +1082,9 @@ export function useTutorialOverlay(
 
     const id = window.setInterval(() => {
       if (cancelled || running || tries >= 3 || stepRef.current !== step || userTookOver) return
+      // Step 7's own request uses the same processing/results spotlight as the
+      // first comparison. Seating the composer here would scroll that panel away.
+      if (step === 'follow-up' && followUpStreamingRoundRef.current) return
       const tip = document.querySelector('.tutorial-tooltip') as HTMLElement | null
       if (!tip || !(Number(getComputedStyle(tip).opacity) > 0.9)) return
       if (step === 'follow-up') {
@@ -1808,6 +1814,10 @@ export function useTutorialOverlay(
     let framedDuringLoad = false
     let resultsPinScroll: number | null = null
     let userMovedResults = false
+    let loadingPinScroll: number | null = null
+    let userMovedLoading = false
+    let sawFollowUpIdle = false
+    let followUpRound = false
     let streamedIntoFollowUp = false
     let scrollToResultsRaf: number | null = null
     let scrollToResultsTimeout: ReturnType<typeof setTimeout> | null = null
@@ -1840,12 +1850,32 @@ export function useTutorialOverlay(
       const holdFirstStream =
         streamedIntoFollowUp && current === 'follow-up' && !followUpStarted && (loading || settling)
       if (streamedIntoFollowUp && !loading && !settling) streamedIntoFollowUp = false
+      const followUpAdvance = advanceFollowUpStreamingRound({
+        step: current,
+        loading,
+        followUpSubmitStarted: followUpStarted,
+        streamAnswerStarted: started,
+        sawIdle: sawFollowUpIdle,
+        round: followUpRound,
+      })
+      sawFollowUpIdle = followUpAdvance.sawIdle
+      if (followUpAdvance.startedRound) {
+        hasScrolledToLoading = false
+        hasScrolledToResults = false
+        resultsPinScroll = null
+        userMovedResults = false
+        loadingPinScroll = null
+        userMovedLoading = false
+      }
+      followUpRound = followUpAdvance.round
+      followUpStreamingRoundRef.current = followUpRound
       if ((isSubmit || isReview) && loading) framedDuringLoad = true
+      // Follow-up stays in this phase through the first token, same as submit.
       const active =
         (isSubmit && (loading || started || (settling && framedDuringLoad))) ||
         (isReview && loading) ||
         holdFirstStream ||
-        (current === 'follow-up' && loading && !started)
+        (followUpRound && (loading || started))
       if (!active) {
         publish(null)
         return
@@ -1909,13 +1939,28 @@ export function useTutorialOverlay(
         composer?.classList.remove('tutorial-highlight')
         const mirror = getHeroMirrorComposerIfPresent()
         if (mirror && mirror !== composer) mirror.classList.remove('tutorial-highlight')
-        if (!hasScrolledToLoading) {
+        const box = loadingSection.getBoundingClientRect()
+        const desiredTop = Math.max(
+          desktopResultsTooltipMinTop(),
+          (window.innerHeight - box.height) / 2
+        )
+        // The first comparison scrolls once. Follow-up keeps correcting until
+        // the panel sits in that same spot, unless the user has scrolled away.
+        if (followUpRound) {
+          if (!userMovedLoading) {
+            const root = getTutorialScrollRoot()
+            const scrollTop = root.getScrollTop()
+            if (loadingPinScroll != null && Math.abs(scrollTop - loadingPinScroll) > 24) {
+              userMovedLoading = true
+            } else if (Math.abs(box.top - desiredTop) > 12) {
+              scrollTutorialElementToViewportY(loadingSection, desiredTop)
+              loadingPinScroll = root.getScrollTop()
+            } else if (loadingPinScroll == null) {
+              loadingPinScroll = scrollTop
+            }
+          }
+        } else if (!hasScrolledToLoading) {
           hasScrolledToLoading = true
-          const box = loadingSection.getBoundingClientRect()
-          const desiredTop = Math.max(
-            desktopResultsTooltipMinTop(),
-            (window.innerHeight - box.height) / 2
-          )
           scrollTutorialElementToViewportY(loadingSection, desiredTop)
         }
         const rect = loadingSection.getBoundingClientRect()
@@ -1943,20 +1988,26 @@ export function useTutorialOverlay(
         // Same handoff as mobile: once the first token arrives, the results
         // card leaves the bottom of the viewport. The deferred scrollIntoView
         // stays skipped while the spotlight is already settled.
-        if (started && current === 'submit-comparison' && !userMovedResults) {
+        const pinStreamingResults =
+          started && (current === 'submit-comparison' || followUpRound || (isReview && loading))
+        if (pinStreamingResults && !userMovedResults) {
           const root = getTutorialScrollRoot()
           const scrollTop = root.getScrollTop()
-          if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
+          const desiredTop = streamingResultsTopInViewport()
+          const before = resultsSection.getBoundingClientRect()
+          // Keep correcting until the card is actually at the top. A scroll
+          // that happens before that is the handoff, not the user.
+          if (Math.abs(before.top - desiredTop) > 12) {
+            scrollTutorialElementToViewportY(resultsSection, desiredTop)
+            resultsPinScroll = root.getScrollTop()
+          } else if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
             userMovedResults = true
           } else {
-            const desiredTop = streamingResultsTopInViewport()
-            const before = resultsSection.getBoundingClientRect()
-            if (Math.abs(before.top - desiredTop) > 12) {
-              scrollTutorialElementToViewportY(resultsSection, desiredTop)
-            }
-            resultsPinScroll = root.getScrollTop()
+            resultsPinScroll = scrollTop
           }
         } else if (
+          !pinStreamingResults &&
+          !followUpRound &&
           !spotlightSettledRef.current &&
           !hasScrolledToResults &&
           canScroll &&
@@ -1977,7 +2028,8 @@ export function useTutorialOverlay(
         if (
           current === 'view-follow-up-results' ||
           current === 'submit-comparison' ||
-          current === 'submit-comparison-2'
+          current === 'submit-comparison-2' ||
+          followUpRound
         ) {
           anchorTooltipTo(resultsSection.getBoundingClientRect())
         }
@@ -2001,6 +2053,7 @@ export function useTutorialOverlay(
     const interval = setInterval(updateLoadingStreamingCutout, 100)
 
     return () => {
+      followUpStreamingRoundRef.current = false
       detachScrollResize()
       clearInterval(interval)
       resizeObserver.disconnect()
