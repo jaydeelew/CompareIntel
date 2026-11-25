@@ -82,6 +82,8 @@ import {
 import { extractFootnoteDefinitions, renderFootnotes } from '../utils/latex/footnotes'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
 
+import { StreamingLatex } from './StreamingLatex'
+
 function padGfmRow(cells: string[], columns: number): string[] {
   if (cells.length === columns) return cells
   if (cells.length > columns) return cells.slice(0, columns)
@@ -175,9 +177,20 @@ interface LatexRendererProps {
   children: string
   className?: string
   modelId?: string
+  /**
+   * True while this reply is still receiving tokens. Closed blocks stay
+   * mounted and unclosed math, fences, and tables stay hidden. A finished
+   * reply leaves this unset and renders the original string.
+   */
+  streaming?: boolean
 }
 
-const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '', modelId }) => {
+const LatexRenderer: React.FC<LatexRendererProps> = ({
+  children,
+  className = '',
+  modelId,
+  streaming = false,
+}) => {
   // All hooks must be called before any early returns (Rules of Hooks)
 
   // Get model-specific configuration (falls back to default if modelId not provided or not found)
@@ -1220,9 +1233,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
   // when these hooks execute because hooks run during render after all code is parsed
 
   const processedContent = useMemo(() => {
-    if (!isValidChildren) return ''
+    if (!isValidChildren || streaming) return ''
     return renderLatex(children)
-  }, [children, isValidChildren, renderLatex])
+  }, [children, isValidChildren, renderLatex, streaming])
 
   // Extract languages from code blocks in the content
   const detectedLanguages = useMemo(() => {
@@ -1286,7 +1299,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
   // Apply Prism highlighting after content is rendered and Prism is loaded
 
   useEffect(() => {
-    if (!prismLoaded || !contentRef.current) return
+    if (streaming || !prismLoaded || !contentRef.current) return
 
     const highlightCode = () => {
       if (!contentRef.current) return
@@ -1310,11 +1323,23 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Small delay to ensure DOM is ready
     const timer = setTimeout(highlightCode, 100)
     return () => clearTimeout(timer)
-  }, [children, prismLoaded])
+  }, [children, prismLoaded, streaming])
 
   // Early return check - must be after all hooks
   if (!isValidChildren) {
     return <div>Invalid content</div>
+  }
+
+  if (streaming) {
+    return (
+      <StreamingLatex
+        source={children}
+        className={className}
+        contentRef={contentRef}
+        renderLatex={renderLatex}
+        prismLoaded={prismLoaded}
+      />
+    )
   }
 
   return (

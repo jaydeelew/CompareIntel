@@ -458,6 +458,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                   showLinkPreviews && isLatestAssistant && activeTab === RESULT_TAB.FORMATTED
                 )}
                 deferLinkPreviews={isProcessing}
+                streaming={Boolean(isProcessing && isLatestAssistant)}
                 onCopyMessage={
                   onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
                 }

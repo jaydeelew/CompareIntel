@@ -459,12 +459,14 @@ export function useComparisonStreaming(
 
       stateCb.setModelErrors({})
 
-      // Set all selected models to 'raw' tab to show streaming content immediately
-      const rawTabs: ActiveResultTabs = {} as ActiveResultTabs
+      // Keep the formatted renderer mounted while tokens arrive. Switching to
+      // the raw tab paints `$$`, fences, and table separators as text, then
+      // remounts the whole answer when formatting starts.
+      const formattedTabs: ActiveResultTabs = {} as ActiveResultTabs
       selectedModels.forEach(modelId => {
-        rawTabs[createModelId(modelId)] = RESULT_TAB.RAW
+        formattedTabs[createModelId(modelId)] = RESULT_TAB.FORMATTED
       })
-      stateCb.setActiveResultTabs(rawTabs)
+      stateCb.setActiveResultTabs(formattedTabs)
 
       // Initialize empty conversations immediately so cards appear during streaming
       if (!isFollowUpMode) {
