@@ -1,0 +1,4 @@
+{
+  "description": "Text models that use the built-in default renderer in frontend/src/config/modelRendererRegistry.ts instead of a row in model_renderer_configs.json. Each entry needs modelId (provider/model-name) and a non-empty reason. An empty entries array means every text model needs its own renderer config.",
+  "entries": []
+}

@@ -476,9 +476,9 @@ def load_registry() -> dict[str, Any]:
 
 
 def save_registry(data: dict[str, Any]) -> None:
-    with _REGISTRY_PATH.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+    from app.utils.atomic_json import atomic_write_json
+
+    atomic_write_json(_REGISTRY_PATH, data)
 
 
 def get_openrouter_models_json_path() -> Path:

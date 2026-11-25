@@ -309,7 +309,10 @@ def harness_result_line(model_id: str, state: str, message: str, command: str) -
 def admin_setup_failure_message(returncode: int, stdout: str, stderr: str) -> str:
     """HTTP/SSE detail when setup does not exit 0. Never claims the model was added."""
     combined = f"{stderr or ''}\n{stdout or ''}"
-    removed = "Renderer config and reply files written by this attempt were removed."
+    removed = (
+        "Reply files written by this attempt were removed. "
+        "The registry and renderer config were left unchanged."
+    )
     if returncode == 2 or "HARNESS_RENDER_NOT_RUN" in combined:
         return (
             f"Rendering harness did not run, so the model was not added to the registry. {removed}"

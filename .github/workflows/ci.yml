@@ -79,6 +79,15 @@ jobs:
               - 'packages/compare-core/**'
               - '.github/workflows/ci.yml'
 
+      - name: Fetch base ref for catalog checks
+        run: git fetch origin "+refs/heads/${{ github.base_ref || 'master' }}:refs/remotes/origin/${{ github.base_ref || 'master' }}"
+
+      - name: Check model catalog and new-model rendering gate
+        env:
+          CATALOG_BASE_REF: origin/${{ github.base_ref || 'master' }}
+          CI: "true"
+        run: python3 backend/scripts/check_model_catalog.py
+
       - name: Check CSP header sync
         run: node scripts/check-csp-sync.js
 

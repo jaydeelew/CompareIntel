@@ -178,18 +178,21 @@ def test_unsuccessful_render_removes_files_this_attempt_wrote(monkeypatch, tmp_p
     from scripts.setup_model_renderer import ModelRendererSetup
 
     setup = ModelRendererSetup("acme/new-model", verbose=False)
+    setup.defer_config_write = True
     with pytest.raises(HarnessRenderFailedError):
         setup.run(defer_coverage=True)
-    assert removed == ["acme/new-model"]
+    assert removed == []
     assert not any(path.name.startswith("admin-") for path in runs.iterdir())
     assert (historical / "keep.json").is_file()
     assert set(replies) == set(PROMPT_ORDER)
+    assert not (tmp_path / "config-written-this-attempt.json").exists()
 
     monkeypatch.setattr("scripts.setup_model_renderer.has_model_config", lambda _mid: True)
     setup_skipped = ModelRendererSetup("acme/new-model", verbose=False)
+    setup_skipped.defer_config_write = True
     with pytest.raises(HarnessRenderNotRunError):
         setup_skipped.run(defer_coverage=True)
-    assert removed == ["acme/new-model"]
+    assert removed == []
     assert not any(path.name.startswith("admin-") for path in runs.iterdir())
     assert (historical / "keep.json").is_file()
 
