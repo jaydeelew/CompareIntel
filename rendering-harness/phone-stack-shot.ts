@@ -32,7 +32,7 @@ export async function stackPhoneBeforeAfter(
     `<!DOCTYPE html><html><head><meta charset="utf-8" /><style>
       * { box-sizing: border-box; }
       body { margin: 0; width: 390px; font-family: system-ui, sans-serif; background: #fff; color: #111; }
-      figcaption { font: 800 20px/1.2 system-ui; padding: 10px 8px 6px; }
+      figcaption { font: 800 20px/1.2 system-ui; padding: 10px 8px 6px; word-break: break-all; }
       figcaption.before { background: #fef3c7; color: #78350f; border-top: 3px solid #f59e0b; }
       figcaption.after { background: #dcfce7; color: #14532d; border-top: 3px solid #22c55e; }
       figcaption.title { background: #1e293b; color: #f8fafc; font-size: 16px; border-top: none; }

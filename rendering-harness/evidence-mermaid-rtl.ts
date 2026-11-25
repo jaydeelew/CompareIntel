@@ -72,12 +72,14 @@ async function main() {
   const headVite = await launchVite({ port: 5176 })
   const browser = await chromium.launch()
   try {
-    const report = await compareAll(browser, baseVite, headVite, base.sha, headSha)
-    const reportPath = path.join(OUT, 'master-render-diff.json')
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n')
-    console.log(
-      `compared ${report.cells} cells: ${report.same} same, ${report.differ} differ, ${report.errors} errors`
-    )
+    if (process.env.EVIDENCE_ONLY !== '1') {
+      const report = await compareAll(browser, baseVite, headVite, base.sha, headSha)
+      const reportPath = path.join(OUT, 'master-render-diff.json')
+      fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n')
+      console.log(
+        `compared ${report.cells} cells: ${report.same} same, ${report.differ} differ, ${report.errors} errors`
+      )
+    }
     await captureEvidence(browser, baseVite, headVite, base.sha, headSha)
   } finally {
     await browser.close()

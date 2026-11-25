@@ -1,0 +1,187 @@
+{
+  "rechecked": 56,
+  "same": 23,
+  "differ": 23,
+  "errors": [
+    {
+      "cell": "meta-llama/llama-4-scout:02-markdown-formatting",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    },
+    {
+      "cell": "google/gemini-3.1-flash-lite-preview:02-markdown-formatting",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    },
+    {
+      "cell": "google/gemma-4-31b-it:02-markdown-formatting",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    },
+    {
+      "cell": "google/gemini-3-flash-preview:02-markdown-formatting",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    },
+    {
+      "cell": "anthropic/claude-haiku-4.5:02-markdown-formatting",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    },
+    {
+      "cell": "mistralai/mistral-large-4-0:02-markdown-formatting",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    },
+    {
+      "cell": "google/gemini-2.5-pro:02-markdown-formatting",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    },
+    {
+      "cell": "google/gemini-4-carbon:08-casual-prose",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    },
+    {
+      "cell": "tencent/hy4-flash:08-casual-prose",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    },
+    {
+      "cell": "google/gemini-2.5-pro:08-casual-prose",
+      "message": "page.waitForFunction: Timeout 45000ms exceeded."
+    }
+  ],
+  "diffs": [
+    {
+      "cell": "openai/gpt-4o-mini:05-complex-scenarios",
+      "at": 2148,
+      "base": " \"area\" strictly). Scenario 5: Multiple Dollar Signs Prices: Computer costs $1,200Monitor costs $300Keyboard costs $50Mouse costs $25Total: ",
+      "head": " \"area\" strictly). Scenario 5: Multiple Dollar Signs Prices:Computer costs $1,200Monitor costs $300Keyboard costs $50Mouse costs $25Total: $"
+    },
+    {
+      "cell": "google/gemini-3.1-flash-lite-preview:05-complex-scenarios",
+      "at": 1404,
+      "base": "hey are not interpreted as LaTeX delimiters by the renderer. Prices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1",
+      "head": "hey are not interpreted as LaTeX delimiters by the renderer.Prices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,"
+    },
+    {
+      "cell": "google/gemini-3.1-flash-lite-preview:06-edge-cases-boundaries",
+      "at": 908,
+      "base": "Dollar Signs The shell variable $HOME is set. Price: $99.99. Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ",
+      "head": "Dollar Signs The shell variable $HOME is set. Price: $99.99.Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ="
+    },
+    {
+      "cell": "qwen/qwen3-next-80b-a3b-instruct:06-edge-cases-boundaries",
+      "at": 3057,
+      "base": "n text Recommendation for Robust Systems To avoid ambiguity: Use $$...$$ or \\[...\\] for display math.Use $...$ or \\(...\\) for inline math on",
+      "head": "n text Recommendation for Robust Systems To avoid ambiguity:Use $$...$$ or \\[...\\] for display math.Use $...$ or \\(...\\) for inline math onl"
+    },
+    {
+      "cell": "google/gemma-4-31b-it:06-edge-cases-boundaries",
+      "at": 930,
+      "base": "Dollar Signs The shell variable $HOME is set. Price: $99.99. Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ",
+      "head": "Dollar Signs The shell variable $HOME is set. Price: $99.99.Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ="
+    },
+    {
+      "cell": "google/gemini-3-flash-preview:06-edge-cases-boundaries",
+      "at": 933,
+      "base": "Dollar Signs The shell variable $HOME is set. Price: $99.99. Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ",
+      "head": "Dollar Signs The shell variable $HOME is set. Price: $99.99.Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ="
+    },
+    {
+      "cell": "qwen/qwen3.5-397b-a17b:05-complex-scenarios",
+      "at": 1130,
+      "base": "12\\int_{0}^{1} x \\, dx = \\frac{1}{2}∫01​xdx=21​Third section Scenario 5: Multiple Dollar Signs (Currency vs. Math) Note: Currency symbols ar",
+      "head": "12\\int_{0}^{1} x \\, dx = \\frac{1}{2}∫01​xdx=21​Third sectionScenario 5: Multiple Dollar Signs (Currency vs. Math) Note: Currency symbols are"
+    },
+    {
+      "cell": "xiaomi/mimo-v2.5:05-complex-scenarios",
+      "at": 966,
+      "base": "dx=12\\int_{0}^{1} x dx = \\frac{1}{2}∫01​xdx=21​Third section Scenario 5: Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, ",
+      "head": "dx=12\\int_{0}^{1} x dx = \\frac{1}{2}∫01​xdx=21​Third sectionScenario 5: Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, k"
+    },
+    {
+      "cell": "stepfun/step-5-preview:05-complex-scenarios",
+      "at": 2072,
+      "base": "\\pi^2}{6}n=1∑∞​n21​=6π2​Text immediately after display math. 5. Currency vs. Math Delimiter Chaos The laptop costs $1,299 and the formula is",
+      "head": "\\pi^2}{6}n=1∑∞​n21​=6π2​Text immediately after display math.5. Currency vs. Math Delimiter Chaos The laptop costs $1,299 and the formula is "
+    },
+    {
+      "cell": "tencent/hy4-preview:05-complex-scenarios",
+      "at": 1219,
+      "base": "dx=12\\int_{0}^{1} x dx = \\frac{1}{2}∫01​xdx=21​Third section Scenario 5: Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, ",
+      "head": "dx=12\\int_{0}^{1} x dx = \\frac{1}{2}∫01​xdx=21​Third sectionScenario 5: Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, k"
+    },
+    {
+      "cell": "z-ai/glm-5.3:05-complex-scenarios",
+      "at": 144,
+      "base": "re's verification plus a second round of even nastier cases. Verifying Your Scenarios Scenario 1 — Nested lists with inline math render fine",
+      "head": "re's verification plus a second round of even nastier cases.Verifying Your Scenarios Scenario 1 — Nested lists with inline math render fine,"
+    },
+    {
+      "cell": "google/gemini-3.8-flash:05-complex-scenarios",
+      "at": 1165,
+      "base": "12\\int_{0}^{1} x \\, dx = \\frac{1}{2}∫01​xdx=21​Third section Scenario 5: Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, ",
+      "head": "12\\int_{0}^{1} x \\, dx = \\frac{1}{2}∫01​xdx=21​Third sectionScenario 5: Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, k"
+    },
+    {
+      "cell": "google/gemini-2.5-pro:06-edge-cases-boundaries",
+      "at": 917,
+      "base": "Dollar Signs The shell variable $HOME is set. Price: $99.99. Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ",
+      "head": "Dollar Signs The shell variable $HOME is set. Price: $99.99.Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ="
+    },
+    {
+      "cell": "anthropic/claude-opus-4.7:05-complex-scenarios",
+      "at": 84,
+      "base": "arios Test Here's my handling of each challenging edge case: Scenario 1: Math in Lists with Formatting The Pythagorean theorem states that a",
+      "head": "arios Test Here's my handling of each challenging edge case:Scenario 1: Math in Lists with Formatting The Pythagorean theorem states that a2"
+    },
+    {
+      "cell": "anthropic/claude-fable-5:05-complex-scenarios",
+      "at": 1905,
+      "base": "x) \\, dx = 2∫0π​sin(x)dx=2Final section after the last rule. Scenario 5: Multiple Dollar Signs Currency context (not math): Prices: Computer",
+      "head": "x) \\, dx = 2∫0π​sin(x)dx=2Final section after the last rule.Scenario 5: Multiple Dollar Signs Currency context (not math): Prices: Computer "
+    },
+    {
+      "cell": "x-ai/grok-4.3:05-complex-scenarios",
+      "at": 1089,
+      "base": "12\\int_{0}^{1} x \\, dx = \\frac{1}{2}∫01​xdx=21​Third section 5. Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, keyboard ",
+      "head": "12\\int_{0}^{1} x \\, dx = \\frac{1}{2}∫01​xdx=21​Third section5. Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, keyboard $"
+    },
+    {
+      "cell": "google/gemini-4-carbon:06-edge-cases-boundaries",
+      "at": 153,
+      "base": "miter variants, nested structures, and rendering edge cases. Delimiter Variants Double dollar display: x2+y2=r2x^2 + y^2 = r^2x2+y2=r2Bracke",
+      "head": "miter variants, nested structures, and rendering edge cases.Delimiter Variants Double dollar display: x2+y2=r2x^2 + y^2 = r^2x2+y2=r2Bracket"
+    },
+    {
+      "cell": "google/gemini-4-hydrogen:05-complex-scenarios",
+      "at": 2252,
+      "base": "es below.Fourth section after an underscore horizontal rule. Scenario 5: Multiple Dollar Signs Currency test: A workstation setup costs $1,2",
+      "head": "es below.Fourth section after an underscore horizontal rule.Scenario 5: Multiple Dollar Signs Currency test: A workstation setup costs $1,20"
+    },
+    {
+      "cell": "qwen/qwen4-max:06-edge-cases-boundaries",
+      "at": 989,
+      "base": "Dollar Signs The shell variable $HOME is set. Price: $99.99. Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ",
+      "head": "Dollar Signs The shell variable $HOME is set. Price: $99.99.Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ="
+    },
+    {
+      "cell": "tencent/hy4-flash:05-complex-scenarios",
+      "at": 949,
+      "base": "dx=12\\int_{0}^{1} x dx = \\frac{1}{2}∫01​xdx=21​Third section Scenario 5: Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, ",
+      "head": "dx=12\\int_{0}^{1} x dx = \\frac{1}{2}∫01​xdx=21​Third sectionScenario 5: Multiple Dollar Signs Prices: Computer costs $1,200, monitor $300, k"
+    },
+    {
+      "cell": "google/gemini-4-neon:06-edge-cases-boundaries",
+      "at": 952,
+      "base": "Dollar Signs The shell variable $HOME is set. Price: $99.99. Display Math in the Middle of a Sentence The circle identity x2+y2=r2x^2 + y^2 ",
+      "head": "Dollar Signs The shell variable $HOME is set. Price: $99.99.Display Math in the Middle of a Sentence The circle identity x2+y2=r2x^2 + y^2 ="
+    },
+    {
+      "cell": "openai/gpt-6.2-astra-pro:06-edge-cases-boundaries",
+      "at": 879,
+      "base": "Dollar Signs The shell variable $HOME is set. Price: $99.99. Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ",
+      "head": "Dollar Signs The shell variable $HOME is set. Price: $99.99.Display math in the middle of a sentence The circle identity x2+y2=r2x^2 + y^2 ="
+    },
+    {
+      "cell": "openai/gpt-6.2-sol-pro:06-edge-cases-boundaries",
+      "at": 842,
+      "base": "Dollar Signs The shell variable $HOME is set. Price: $99.99. Display Math in the Middle of a Sentence The circle identity x2+y2=r2x^2 + y^2 ",
+      "head": "Dollar Signs The shell variable $HOME is set. Price: $99.99.Display Math in the Middle of a Sentence The circle identity x2+y2=r2x^2 + y^2 ="
+    }
+  ]
+}

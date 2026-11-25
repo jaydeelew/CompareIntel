@@ -1,0 +1,18 @@
+{
+  "baseSha": "c1c8115ce5bee03657e64a74f0fa3324f658c16f",
+  "headSha": "979a9b004f36f8830026fe3b135cb4072264c70d",
+  "cells": 594,
+  "normalization": "SVG elements removed in the page, then whitespace-collapsed textContent. No OpenRouter calls.",
+  "same": 538,
+  "differBeforeSvgRemoval": 46,
+  "recheck": {
+    "cells": 56,
+    "sameAfterRemovingSvg": 23,
+    "boundarySpaceOnly": 23,
+    "readinessTimeouts": 10,
+    "contentDiffs": 0
+  },
+  "boundarySpaceNote": "The 23 remaining text diffs are a single space at a heading boundary (for example '99.99. Display' vs '99.99.Display'). The loose paragraph is now a <p>, and textContent no longer keeps the space that sat between the bare text node and the next heading. The markdown-it reference comparison inserts a space around block tags and passed for the full saved corpus, so the visible block text is unchanged.",
+  "timeoutNote": "Ten cells timed out in pageStateReady on both passes (seven prompt-02 markdown cells and three prompt-08 casual-prose cells). They do not contain a mermaid fence. The wait is the existing font/KaTeX readiness check, not a fixed sleep.",
+  "pr320Prompt06": "openai/gpt-6.2-astra, astra-pro, sol, sol-pro, and google/gemini-4-neon prompt 06 all passed render-only validation after this change. gemini-4-neon prompt 05 stays incomplete because the saved reply hit the token cap."
+}
