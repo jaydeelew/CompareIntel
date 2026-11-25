@@ -46,11 +46,14 @@ const MOCK_RESPONSE_TEXT = 'Test response from mocked API.'
  * Builds an SSE body in the same `data: {"type": ...}` shape that
  * backend/app/services/comparison_stream.py emits and sseProcessor.ts parses.
  */
-export function buildMockComparisonStream(models: string[]): string {
+export function buildMockComparisonStream(
+  models: string[],
+  responseText: string = MOCK_RESPONSE_TEXT
+): string {
   const events: object[] = []
   for (const model of models) {
     events.push({ model, type: 'start' })
-    for (const word of MOCK_RESPONSE_TEXT.split(' ')) {
+    for (const word of responseText.split(' ')) {
       events.push({ model, type: 'chunk', content: `${word} ` })
     }
     events.push({ model, type: 'done', error: false })

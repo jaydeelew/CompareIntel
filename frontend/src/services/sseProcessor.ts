@@ -12,6 +12,10 @@ import type {
   ModelConversation,
   ActiveResultTabs,
 } from '../types'
+import {
+  contentSkipsPromptAlign,
+  scrollContentToLatestUserPrompt,
+} from '../utils/alignLatestUserPrompt'
 import { isErrorMessage } from '../utils/error'
 
 import type { CreditBalance } from './creditService'
@@ -339,7 +343,13 @@ export async function processComparisonStream(
           if (completedModels.has(modelId) || autoScrollPausedRef.current.has(modelId)) return
           const safeId = modelId.replace(/[^a-zA-Z0-9_-]/g, '-')
           const el = document.querySelector(`#conversation-content-${safeId}`) as HTMLElement
-          if (el) el.scrollTop = el.scrollHeight
+          if (!el) return
+          const userPrompts = el.querySelectorAll('.conversation-message.user').length
+          if (userPrompts >= 2) {
+            if (!contentSkipsPromptAlign(el, userPrompts)) scrollContentToLatestUserPrompt(el)
+            return
+          }
+          el.scrollTop = el.scrollHeight
         })
       })
     }
