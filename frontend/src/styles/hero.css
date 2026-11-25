@@ -3291,11 +3291,6 @@ video.capability-tile-image-lightbox-img {
     margin-bottom: 2rem;
   }
 
-  .hero-subtitle-second-line {
-    display: block !important;
-    margin-left: 0;
-  }
-
   /* Tile row + in-wrap logo flash: net offset vs subtitle (~0.5in up, then +1rem down) */
   .hero-capabilities-wrap {
     margin-top: calc(-0.5in + 1rem);
@@ -3628,6 +3623,21 @@ video.capability-tile-image-lightbox-img {
 
   .hero-subtitle {
     margin-bottom: 1.25rem;
+  }
+
+  /* Phone widths only: line 1 is "Where human intelligence judges", line 2 is
+     "artificial intelligence". nowrap keeps line 1 from wrapping down to 360px.
+     The existing phone clamps (≤768 / ≤380 / ≤360) already fit that phrase in
+     the content box at 360px, so the font size stays as it is. */
+  .hero-subtitle-first-line {
+    display: block !important;
+    white-space: nowrap;
+  }
+
+  .hero-subtitle-second-line {
+    display: block !important;
+    margin-left: 0;
+    white-space: nowrap;
   }
 
   .hero-capabilities-wrap {
