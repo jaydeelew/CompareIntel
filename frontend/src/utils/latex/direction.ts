@@ -47,7 +47,11 @@ function repairLooseParagraphs(html: string): string {
     // A `<code>` or `<span>` means this run is the middle of a paragraph.
     // Wrapping only the text in front of it inserts a space into `(\`---\`)`.
     if (closer || blockNext || paragraphNext) {
-      out += `${loose[1]}<p dir="auto">${loose[2].trim()}</p>`
+      // Keep the whitespace that followed the run. Trimming it removes the
+      // text node between this paragraph and the next block, and a selection
+      // that crosses the boundary then copies "99.99.Display".
+      const trailing = /\s*$/.exec(loose[2])?.[0] ?? ''
+      out += `${loose[1]}<p dir="auto">${loose[2].trim()}</p>${trailing}`
       const consumed = loose[0].length + (closer ? closer[0].length : 0)
       cursor = boundaryEnd + consumed
       BOUNDARY_RE.lastIndex = cursor
@@ -59,8 +63,21 @@ function repairLooseParagraphs(html: string): string {
   return out
 }
 
+/**
+ * A mermaid fence leaves a stray `</p>` after the diagram (`</div></p><p>…`).
+ * The parser turns that closer into an empty paragraph and drops the break,
+ * so collapsed text glues `B[End]` to the next sentence. Drop the closer and
+ * keep a newline. Also unwrap a diagram that is still inside `<p>…</p>`.
+ */
+function separateMermaidFromParagraphs(html: string): string {
+  const diagram = '<div\\b[^>]*\\bclass="[^"]*\\bmermaid-diagram\\b[^"]*"[^>]*>[\\s\\S]*?<\\/div>'
+  return html
+    .replace(new RegExp(`<p>\\s*(${diagram})\\s*<\\/p>`, 'gi'), '$1\n')
+    .replace(new RegExp(`(${diagram})\\s*<\\/p>`, 'gi'), '$1\n')
+}
+
 export function applyBlockDirection(html: string): string {
-  return repairLooseParagraphs(html)
+  return repairLooseParagraphs(separateMermaidFromParagraphs(html))
     .replace(BLOCK_TAG, '<$1 dir="auto"$2>')
     .replace(LTR_TAG, '<$1 dir="ltr"$2>')
     .replace(KATEX_SPAN, '<span dir="ltr"$1')

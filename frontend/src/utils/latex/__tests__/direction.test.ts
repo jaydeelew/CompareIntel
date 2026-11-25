@@ -44,6 +44,28 @@ describe('applyBlockDirection', () => {
     expect(html).not.toContain('بالعالم</p><p')
   })
 
+  it('unwraps a mermaid diagram so the next sentence keeps its break', () => {
+    const wrapped = applyBlockDirection(
+      '<p><div class="mermaid-diagram"><pre><code>B[End]</code></pre></div></p><p>Chemistry support</p>'
+    )
+    const stray = applyBlockDirection(
+      '<h3>Mermaid and chemistry</h3>\n<div class="mermaid-diagram"><pre><code>B[End]</code></pre></div></p><p>Chemistry support</p>'
+    )
+    for (const html of [wrapped, stray]) {
+      expect(html).toContain('</div>\n<p dir="auto">Chemistry support</p>')
+      expect(html).not.toContain('</div></p>')
+      expect(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')).toContain('B[End] Chemistry support')
+    }
+  })
+
+  it('keeps the whitespace between a repaired paragraph and the next block', () => {
+    const html = applyBlockDirection(
+      '<h2>Dollar Signs</h2>\nPrice: $99.99.\n<h2>Display math</h2><h2>Lists</h2>\nNested unordered list:\n<ul><li>Level 1</li></ul>'
+    )
+    expect(html).toContain('<p dir="auto">Price: $99.99.</p>\n<h2 dir="auto">Display math</h2>')
+    expect(html).toContain('<p dir="auto">Nested unordered list:</p>\n<ul dir="auto">')
+  })
+
   it('does not split inline code that follows a heading', () => {
     const html = applyBlockDirection('<h2>Rules</h2>\nMultiple horizontal rules (<code>---</code>) successfully:')
     expect(html).not.toContain('<p dir="auto">---')
