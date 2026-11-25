@@ -85,6 +85,10 @@ import {
   type ActiveResultTabs,
 } from '../types'
 import { generateBrowserFingerprint } from '../utils'
+import {
+  contentSkipsPromptAlign,
+  scrollContentToLatestUserPrompt,
+} from '../utils/alignLatestUserPrompt'
 import { removePlaceholderFromInput } from '../utils/attachmentInputUtils'
 import { BILLING_UPDATED_EVENT } from '../utils/billingSync'
 import { loadLocalConversationRecord } from '../utils/conversationAttachmentStore'
@@ -1714,30 +1718,12 @@ export function MainPage() {
 
     setTimeout(() => {
       const cards = document.querySelectorAll('.result-card.conversation-card')
-      if (cards.length === 0) return
-
-      let maxOffsetTop = 0
-      const scrollData: { element: HTMLElement; targetOffsetTop: number }[] = []
-
       cards.forEach(card => {
-        const conversationContent = card.querySelector('.conversation-content') as HTMLElement
-        if (!conversationContent) return
-
-        const userMessages = conversationContent.querySelectorAll('.conversation-message.user')
-        if (userMessages.length === 0) return
-
-        const lastUserMessage = userMessages[userMessages.length - 1] as HTMLElement
-        const offsetTop = lastUserMessage.offsetTop
-
-        maxOffsetTop = Math.max(maxOffsetTop, offsetTop)
-        scrollData.push({ element: conversationContent, targetOffsetTop: offsetTop })
-      })
-
-      scrollData.forEach(({ element }) => {
-        element.scrollTo({
-          top: maxOffsetTop,
-          behavior: 'smooth',
-        })
+        const conversationContent = card.querySelector('.conversation-content')
+        if (!(conversationContent instanceof HTMLElement)) return
+        const round = conversationContent.querySelectorAll('.conversation-message.user').length
+        if (round < 2 || contentSkipsPromptAlign(conversationContent, round)) return
+        scrollContentToLatestUserPrompt(conversationContent)
       })
 
       lastAlignedRoundRef.current = currentRound
