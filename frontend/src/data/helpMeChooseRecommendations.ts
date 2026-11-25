@@ -496,10 +496,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'Text-to-Image Arena (lmarena.ai): 1236. Fetched 2026-11-23.',
       },
       {
-        modelId: 'minimax/minimax-h3-image',
-        evidence: 'Text-to-Image Arena (lmarena.ai): 1198. Fetched 2026-11-23.',
-      },
-      {
         modelId: 'black-forest-labs/flux.2-max',
         evidence: 'Text-to-Image Arena (lmarena.ai): 1161. Fetched 2026-11-23.',
       },
