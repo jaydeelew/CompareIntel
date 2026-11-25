@@ -28,7 +28,6 @@ from app.model_runner import call_openrouter
 from scripts.config_helpers import (
     ensure_standard_math_delimiters,
     has_model_config,
-    load_existing_configs,
 )
 from scripts.harness_replies import (
     PROMPT_ORDER,
@@ -62,6 +61,10 @@ class ModelRendererSetup:
         self.max_retries = max_retries
         self.verbose = verbose
         self.concurrency = concurrency
+        self.defer_config_write = False
+        self.proposal_out: Path | None = None
+        self.staged_registry: dict[str, Any] | None = None
+        self._rollback = None
         self.stats = {"total_requests": 0, "successful": 0, "failed": 0}
 
     def log(self, message: str, end: str = "\n", flush: bool = False):
@@ -487,43 +490,98 @@ class ModelRendererSetup:
         }
 
     def save_config(self, config: dict[str, Any]) -> Path:
-        """Save configuration to the config file."""
-        config_path = (
-            Path(__file__).parent.parent.parent
-            / "frontend"
-            / "src"
-            / "config"
-            / "model_renderer_configs.json"
+        """Validate and commit this config together with the registry.
+
+        A validation or write failure leaves both catalog files unchanged.
+        """
+        path = self.publish_config(config)
+        if path is None:
+            raise RuntimeError("Renderer config was not written")
+        return path
+
+    def _registry_for_commit(self) -> dict[str, Any]:
+        from scripts.catalog_transaction import default_paths, load_registry_document
+
+        if self.staged_registry is not None:
+            return self.staged_registry
+        return load_registry_document(default_paths().registry)
+
+    def _reject_before_any_write(self) -> None:
+        """Check the id, and for a CLI commit that the registry already names it."""
+        from scripts.catalog_transaction import (
+            ADDING_NEW_MODELS_DOC,
+            CatalogValidationError,
+            registry_model_ids,
+            validate_model_id,
         )
-        config_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Load existing configs
-        existing_configs = load_existing_configs()
+        errors = validate_model_id(self.model_id)
+        if errors:
+            raise CatalogValidationError(errors)
+        if self.defer_config_write:
+            return
+        if self.model_id not in registry_model_ids(self._registry_for_commit()):
+            raise CatalogValidationError(
+                [
+                    f"{self.model_id} is not in models_registry.json. "
+                    "Pass --model-json with the new registry entry so both files "
+                    "are written together, or add the row before re-running. "
+                    f"Nothing was written. See {ADDING_NEW_MODELS_DOC}"
+                ]
+            )
 
-        # Add or update the new config
-        existing_configs[self.model_id] = config
+    def _write_proposal(self, config: dict[str, Any] | None) -> None:
+        from scripts.catalog_transaction import _atomic_write_text
 
-        # Convert back to list format
-        configs_list = list(existing_configs.values())
+        if self.proposal_out is None:
+            return
+        _atomic_write_text(
+            self.proposal_out,
+            json.dumps(config, indent=2, ensure_ascii=False) + "\n",
+        )
 
-        # Write to file
-        with open(config_path, "w", encoding="utf-8") as f:
-            json.dump(configs_list, f, indent=2, ensure_ascii=False)
+    def publish_config(self, config: dict[str, Any] | None) -> Path | None:
+        """Validate the registry and renderer configs, then replace both or neither."""
+        from scripts.catalog_transaction import (
+            commit_catalog_files,
+            default_paths,
+            load_renderer_configs,
+        )
 
-        return config_path
+        paths = default_paths()
+        configs = load_renderer_configs(paths.renderer_configs)
+        if config is not None:
+            replaced = False
+            for index, existing in enumerate(configs):
+                if existing.get("modelId") == config.get("modelId"):
+                    configs[index] = config
+                    replaced = True
+                    break
+            if not replaced:
+                configs.append(config)
+        self._rollback = commit_catalog_files(
+            self._registry_for_commit(),
+            configs,
+            paths=paths,
+            write_registry=True,
+            write_configs=config is not None,
+        )
+        return paths.renderer_configs if config is not None else None
 
     def run(self, *, defer_coverage: bool = False) -> dict[str, Any]:
-        """Collect harness replies, write a renderer config, and render offline.
+        """Collect harness replies, then commit the registry and renderer config.
 
-        Saved complete replies from an earlier batch are reused, so that retry does
-        not call OpenRouter again. A render that fails, is skipped, or cannot
-        start deletes the admin batch and any renderer config this attempt
-        wrote. defer_coverage leaves coverage.json to the caller that has just
-        persisted models_registry.json.
+        Validation of the model id (and, unless the admin flow defers the
+        write, the registry row) happens before OpenRouter is called and before
+        any catalog file is replaced. Saved complete replies are reused. A
+        render that fails deletes the admin batch and leaves the registry and
+        renderer config untouched. ``defer_coverage`` leaves coverage.json to
+        the caller. ``defer_config_write`` leaves both catalog files to the
+        caller and writes the proposed config to ``proposal_out`` when set.
         """
+        self._reject_before_any_write()
         self.log_progress("starting", f"Starting setup process for {self.model_id}...", 0.0)
         existing = find_complete_replies(self.model_id)
-        config_written = False
         if len(existing) == len(PROMPT_ORDER):
             self.log_progress(
                 "collecting",
@@ -540,13 +598,8 @@ class ModelRendererSetup:
                     f"Need all {len(PROMPT_ORDER)} harness replies from {self.model_id}; "
                     f"got {self.stats['successful']}"
                 )
-        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-        run_dir = runs_root() / f"admin-{stamp}"
-        write_harness_replies(self.model_id, self.model_id, responses, run_dir)
-
         analysis = self.analyze_responses(responses)
         config: dict[str, Any] | None
-        config_path: Path | None
         if has_model_config(self.model_id):
             self.log_progress(
                 "generating",
@@ -554,25 +607,46 @@ class ModelRendererSetup:
                 100.0,
             )
             config = None
-            config_path = None
         else:
             config = self.generate_config(analysis)
-            self.log_progress("saving", "Saving renderer configuration to file...", 0.0)
-            config_path = self.save_config(config)
-            config_written = True
-            self.log_progress("saving", "Configuration saved successfully", 100.0)
+            from scripts.catalog_transaction import CatalogValidationError, renderer_config_errors
 
+            config_errors = renderer_config_errors(config)
+            if config_errors:
+                raise CatalogValidationError(config_errors)
+
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        run_dir = runs_root() / f"admin-{stamp}"
+        write_harness_replies(self.model_id, self.model_id, responses, run_dir)
+
+        # Render before either catalog file is replaced. A failed render deletes
+        # this attempt's replies and does not touch the registry or renderer config.
         self.log_progress("harness", "Rendering saved replies with LatexRenderer...", 0.0)
         rendered = render_saved_replies(run_dir, self.model_id)
         if rendered["state"] != "passed":
-            discard_attempt_files(run_dir, model_id=self.model_id, remove_config=config_written)
+            discard_attempt_files(run_dir, model_id=self.model_id, remove_config=False)
             if rendered["state"] == "not-run":
                 raise HarnessRenderNotRunError(rendered["message"], rendered["command"])
             raise HarnessRenderFailedError(rendered["message"])
 
+        config_path: Path | None = None
+        if self.defer_config_write:
+            if self.proposal_out is not None:
+                self._write_proposal(config)
+        elif config is not None or self.staged_registry is not None:
+            try:
+                config_path = self.publish_config(config)
+            except Exception:
+                discard_attempt_files(run_dir, model_id=self.model_id, remove_config=False)
+                raise
+            self.log_progress("saving", "Configuration saved successfully", 100.0)
+
         if not defer_coverage:
             coverage = regenerate_coverage_manifest()
             if coverage.returncode != 0:
+                if self._rollback is not None:
+                    self._rollback()
+                discard_attempt_files(run_dir, model_id=self.model_id, remove_config=False)
                 detail = (coverage.stderr or coverage.stdout or "generate-coverage failed")[-500:]
                 raise RuntimeError(f"Failed to update rendering-harness/coverage.json: {detail}")
 
@@ -583,6 +657,7 @@ class ModelRendererSetup:
             rendered["command"],
         )
         print(result_line, flush=True)
+        print(f"HARNESS_RUN_DIR:{run_dir}", flush=True)
         self.log_progress("harness", rendered["message"], 100.0)
         self.log(f"\n✓ Setup complete for {self.model_id}")
         if config_path is not None:
@@ -619,10 +694,29 @@ def main():
     parser.add_argument(
         "--defer-coverage",
         action="store_true",
-        help="Do not rewrite coverage.json (admin add saves the registry first)",
+        help="Do not rewrite coverage.json (admin add commits the catalog first)",
+    )
+    parser.add_argument(
+        "--defer-config-write",
+        action="store_true",
+        help="Do not write the registry or renderer config (admin commits both)",
+    )
+    parser.add_argument(
+        "--proposal-out",
+        type=str,
+        default="",
+        help="With --defer-config-write, write the proposed renderer config JSON here",
+    )
+    parser.add_argument(
+        "--model-json",
+        type=str,
+        default="",
+        help="Registry entry JSON to merge in memory and commit with the renderer config",
     )
 
     args = parser.parse_args()
+
+    from scripts.catalog_transaction import CatalogValidationError
 
     setup = ModelRendererSetup(
         model_id=args.model_id,
@@ -631,6 +725,21 @@ def main():
         verbose=not args.quiet,
         concurrency=args.concurrency,
     )
+    setup.defer_config_write = args.defer_config_write
+    if args.proposal_out:
+        setup.proposal_out = Path(args.proposal_out)
+    if args.model_json:
+        from scripts.catalog_transaction import (
+            default_paths,
+            load_registry_document,
+            merge_model_entry,
+        )
+
+        entry = json.loads(Path(args.model_json).read_text(encoding="utf-8"))
+        setup.staged_registry = merge_model_entry(
+            load_registry_document(default_paths().registry),
+            entry,
+        )
 
     try:
         setup.run(defer_coverage=args.defer_coverage)
@@ -642,6 +751,11 @@ def main():
         sys.exit(2)
     except HarnessRenderFailedError as e:
         print(f"RENDERING HARNESS FAILED: {e}", file=sys.stderr)
+        sys.exit(1)
+    except CatalogValidationError as e:
+        print("\n✗ Catalog validation failed. No catalog file was written.", file=sys.stderr)
+        for error in e.errors:
+            print(f"- {error}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
         print(f"\n✗ Error: {e}", file=sys.stderr)

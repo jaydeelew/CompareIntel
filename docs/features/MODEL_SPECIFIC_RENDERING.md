@@ -96,7 +96,7 @@ The rendering harness owns the eight prompts in `rendering-harness/prompts/`. Ne
   - Validate configurations against the schema
   - Document configuration decisions and reasoning
 
-**Note:** Review the harness screenshots for a new model before committing the reply JSON. That review replaces opening the site and judging a prompt by eye. Do not commit the PNGs.
+**Note:** The required check for a new text model is the rendering harness, then the catalog commit. Run the harness, review the screenshots, and attach those PNGs to the pull request. Do not commit the PNGs. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
 
 #### Step 3.3: Create Configuration Validation
 - Build validation system to ensure:
@@ -139,7 +139,7 @@ The rendering harness owns the eight prompts in `rendering-harness/prompts/`. Ne
 
 ### Phase 5: Testing Framework
 
-The required check for a new text model is the rendering harness, not a manual pass in the running app. `rendering-harness/coverage.json` must list a saved reply for each current prompt version, with status `pass`, `not-covered`, or `source-issue`. Cells saved under an older prompt body (hash mismatch) or prompts not yet collected (`07-rare-formats`, `08-casual-prose`, or revised `02` / `03` / `06`) stay `not-covered` until a paid batch re-collects them. CI re-renders models that are new versus the base branch offline. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
+The required check for a new text model is the rendering harness, not a manual pass in the running app. Before either `backend/data/models_registry.json` or `frontend/src/config/model_renderer_configs.json` is replaced, the add validates both documents (required fields, unique ids, `provider/model-name` ids, renderer schema). The two files are then written with a temp file and rename, or neither is written. `rendering-harness/coverage.json` must list a saved reply for each current prompt version, with status `pass`, `not-covered`, or `source-issue`. Separately, CI fails a pull request when a text model that is new versus the base branch has no saved reply for the standard prompts `01`–`06` and no explicit `rendering-harness/coverage-allowlist.json` reason. That check does not call a model. Cells saved under an older prompt body (hash mismatch) or prompts not yet collected (`07-rare-formats`, `08-casual-prose`, or revised `02` / `03` / `06`) stay `not-covered` until a paid batch re-collects them. The harness job re-renders models that are new versus the base branch offline. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
 
 #### Step 5.1: Unit Tests for Renderer Configurations
 - Create tests for each model configuration:
@@ -336,20 +336,30 @@ The required check for a new text model is the rendering harness, not a manual p
 
 ## Implementation Workflow
 
-Adding a text model (admin panel or CLI) writes harness replies for the eight prompts, renders them with `LatexRenderer`, and updates `rendering-harness/coverage.json`. CI rejects a registry row that lacks current replies or has a `fail` or `incomplete` cell on a non-optional prompt. Screenshot review happens on the harness output. See [Adding New Models](../development/ADDING_NEW_MODELS.md).
+Adding a text model does not edit the registry and the renderer config as two independent saves.
+
+1. Build the registry row and the renderer config in memory. `setup_model_renderer.py` validates the `provider/model-name` id before any OpenRouter call, reuses saved harness replies when they exist, and renders them with `LatexRenderer`.
+2. Validate the registry document and the renderer-config list (required fields, unique ids, schema, no orphan configs, standard delimiters the generator would emit). This happens before either file is opened for writing.
+3. Write both files by renaming a temp file over the destination. If the second rename fails, the first file is restored. A failed render or a failed coverage refresh leaves both files unchanged and deletes that attempt's `rendering-harness/runs/admin-<timestamp>/` directory.
+4. Run the rendering harness for any prompt that does not already have a saved reply (`npm run harness -- --dry-run` first, then the paid batch). CI never makes that paid call.
+5. Open the screenshots next to the saved replies. Attach them to the pull request. Do not commit the PNGs.
+6. Commit the registry row, the renderer config when it changed, the reply JSON, and `rendering-harness/coverage.json`.
+
+`python3 backend/scripts/check_model_catalog.py` is the pull-request check. A text model needs a row in `model_renderer_configs.json` or an explicit entry in `renderer_defaults.json`. A config whose id is not in the registry fails the check. A text model added since the base branch needs saved replies for prompts `01`–`06` or an allowlist reason. The failure names the model and points at [Adding New Models](../development/ADDING_NEW_MODELS.md).
+
+The harness coverage job still rejects a `fail` or `incomplete` cell on a non-optional prompt and re-renders new models offline.
 
 ## Next Steps
 
-1. Add the model to the registry or through the development admin panel.
-2. Run `setup_model_renderer.py` (CLI) or let the admin flow run it.
-3. Estimate a paid harness collection with `--dry-run` only when saved replies are not already on disk.
-4. Review harness screenshots, commit reply JSON and `coverage.json`, and let CI run the coverage gate.
+1. Add the model through the development admin panel, or through `setup_model_renderer.py --model-json` so the registry and renderer config commit together.
+2. Estimate a paid harness collection with `--dry-run` only when saved replies are not already on disk, then run the harness.
+3. Review the screenshots, attach them to the PR, commit the reply JSON and `coverage.json`, and let CI run the catalog check and the coverage gate.
 
 ---
 
-**Document Version:** 1.1  
-**Last Updated:** November 2026  
-**Status:** Harness coverage gate is the check for new text models
+**Document Version:** 1.2
+**Last Updated:** November 2026
+**Status:** Catalog commit plus harness coverage gate is the check for new text models
 
 ## Harness prompts (eight total)
 

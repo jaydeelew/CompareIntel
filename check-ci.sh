@@ -82,6 +82,17 @@ else
 fi
 echo ""
 
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🧩 Model catalog consistency"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if python3 backend/scripts/check_model_catalog.py; then
+  echo -e "${GREEN}✓ registry, renderer configs, and new-model replies agree${NC}"
+else
+  echo -e "${RED}❌ model catalog check failed${NC}"
+  FAILED=1
+fi
+echo ""
+
 # Backend checks
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🐍 Backend checks"

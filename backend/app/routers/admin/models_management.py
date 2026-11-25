@@ -8,6 +8,7 @@ import logging
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -175,6 +176,95 @@ def _is_image_generation_model(model_data: dict[str, Any] | None) -> bool:
         " ".join(str(m) for m in out_mods).lower() if isinstance(out_mods, (list, tuple)) else ""
     )
     return "image" in out_str
+
+
+def _harness_run_dir(stdout: str) -> Path | None:
+    for line in (stdout or "").splitlines():
+        if line.startswith("HARNESS_RUN_DIR:"):
+            raw = line.split(":", 1)[1].strip()
+            if raw:
+                return Path(raw)
+    return None
+
+
+def _load_renderer_proposal(proposal_path: Path | None) -> dict[str, Any] | None:
+    if proposal_path is None or not proposal_path.is_file():
+        return None
+    data = json.loads(proposal_path.read_text(encoding="utf-8"))
+    if data is None:
+        return None
+    if not isinstance(data, dict):
+        raise HTTPException(
+            status_code=500, detail="Renderer config proposal was not a JSON object"
+        )
+    return data
+
+
+def commit_added_model(
+    registry: dict[str, Any],
+    *,
+    proposal_path: Path | None = None,
+    setup_stdout: str = "",
+) -> Any:
+    """Validate the registry and renderer configs, then write them together.
+
+    A validation error or a failed replace leaves both catalog files unchanged.
+    The returned rollback restores the bytes from before this commit.
+    """
+    from scripts.catalog_transaction import (
+        CatalogValidationError,
+        CatalogWriteError,
+        commit_catalog_files,
+        default_paths,
+        load_renderer_configs,
+    )
+    from scripts.harness_replies import discard_attempt_files
+
+    paths = default_paths()
+    configs = load_renderer_configs(paths.renderer_configs)
+    proposal = _load_renderer_proposal(proposal_path)
+    if proposal is not None:
+        replaced = False
+        for index, existing in enumerate(configs):
+            if existing.get("modelId") == proposal.get("modelId"):
+                configs[index] = proposal
+                replaced = True
+                break
+        if not replaced:
+            configs.append(proposal)
+    try:
+        rollback = commit_catalog_files(
+            registry,
+            configs,
+            paths=paths,
+            write_registry=True,
+            write_configs=proposal is not None,
+        )
+    except (CatalogValidationError, CatalogWriteError) as exc:
+        run_dir = _harness_run_dir(setup_stdout)
+        if run_dir is not None:
+            discard_attempt_files(run_dir, model_id="", remove_config=False)
+        detail = "; ".join(exc.errors) if isinstance(exc, CatalogValidationError) else str(exc)
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Model was not added. The registry and renderer config were left unchanged. "
+                f"{detail}"
+            ),
+        ) from exc
+    reload_registry()
+    return rollback
+
+
+def _rollback_failed_coverage(rollback: Any, setup_stdout: str) -> None:
+    from scripts.harness_replies import discard_attempt_files
+
+    if rollback is not None:
+        rollback()
+    reload_registry()
+    run_dir = _harness_run_dir(setup_stdout)
+    if run_dir is not None:
+        discard_attempt_files(run_dir, model_id="", remove_config=False)
 
 
 def persist_added_registry(registry: dict[str, Any], *, setup_returncode: int | None) -> None:
@@ -526,36 +616,62 @@ async def add_model(
                 new_model["image_sizes"] = ["1K", "2K"]
 
         harness_note = ""
+        proposal_path: Path | None = None
+        setup_stdout = ""
         if not is_image_model:
             script_path = backend_dir / "scripts" / "setup_model_renderer.py"
+            fd, proposal_name = tempfile.mkstemp(
+                prefix="renderer-proposal-",
+                suffix=".json",
+                dir=backend_dir,
+            )
+            os.close(fd)
+            proposal_path = Path(proposal_name)
             result = subprocess.run(
-                [sys.executable, str(script_path), model_id, "--defer-coverage"],
+                [
+                    sys.executable,
+                    str(script_path),
+                    model_id,
+                    "--defer-coverage",
+                    "--defer-config-write",
+                    "--proposal-out",
+                    str(proposal_path),
+                ],
                 capture_output=True,
                 text=True,
                 timeout=900,
                 cwd=str(backend_dir),
             )
+            setup_stdout = result.stdout or ""
             if result.returncode != 0:
+                proposal_path.unlink(missing_ok=True)
                 raise HTTPException(
                     status_code=500,
                     detail=admin_setup_failure_message(
-                        result.returncode, result.stdout or "", result.stderr or ""
+                        result.returncode, setup_stdout, result.stderr or ""
                     ),
                 )
-            harness_note = harness_summary_from_output(result.stdout or "")
+            harness_note = harness_summary_from_output(setup_stdout)
 
-        persist_added_registry(registry, setup_returncode=None if is_image_model else 0)
+        try:
+            rollback = commit_added_model(
+                registry,
+                proposal_path=proposal_path,
+                setup_stdout=setup_stdout,
+            )
+        finally:
+            if proposal_path is not None:
+                proposal_path.unlink(missing_ok=True)
         if not is_image_model:
             coverage = regenerate_coverage_manifest()
             if coverage.returncode != 0:
-                save_registry(registry_before)
-                reload_registry()
+                _rollback_failed_coverage(rollback, setup_stdout)
                 detail = (coverage.stderr or coverage.stdout or "generate-coverage failed")[-400:]
                 raise HTTPException(
                     status_code=500,
                     detail=(
                         "Rendering harness passed but coverage.json could not be updated, "
-                        "so the model was not kept in the registry. "
+                        "so the model was not kept in the registry or renderer config. "
                         f"{detail}"
                     ),
                 )
@@ -648,6 +764,8 @@ async def add_model_stream(
         registry_backup = None
         config_backup = None
         process = None
+        proposal_path: Path | None = None
+        catalog_rollback = None
 
         disconnect_exceptions = (
             BrokenPipeError,
@@ -873,11 +991,21 @@ async def add_model_stream(
             else:
                 backend_dir = Path(__file__).parent.parent.parent.parent
                 script_path = backend_dir / "scripts" / "setup_model_renderer.py"
+                fd, proposal_name = tempfile.mkstemp(
+                    prefix="renderer-proposal-",
+                    suffix=".json",
+                    dir=backend_dir,
+                )
+                os.close(fd)
+                proposal_path = Path(proposal_name)
                 process = await asyncio.create_subprocess_exec(
                     sys.executable,
                     str(script_path),
                     model_id,
                     "--defer-coverage",
+                    "--defer-config-write",
+                    "--proposal-out",
+                    str(proposal_path),
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                     cwd=str(backend_dir),
@@ -942,6 +1070,8 @@ async def add_model_stream(
                 return_code = await process.wait()
 
                 if return_code != 0:
+                    if proposal_path is not None and proposal_path.exists():
+                        proposal_path.unlink()
                     error_msg = admin_setup_failure_message(
                         return_code,
                         "\n".join(harness_stdout_lines),
@@ -954,30 +1084,39 @@ async def add_model_stream(
                     return
 
             try:
-                persist_added_registry(registry, setup_returncode=None if is_image_model else 0)
+                catalog_rollback = commit_added_model(
+                    registry,
+                    proposal_path=proposal_path,
+                    setup_stdout="\n".join(harness_stdout_lines),
+                )
             except HTTPException as persist_error:
                 try:
                     yield f"data: {json.dumps({'type': 'error', 'message': persist_error.detail})}\n\n"
                 except disconnect_exceptions:
                     raise
                 return
+            finally:
+                if proposal_path is not None and proposal_path.exists():
+                    proposal_path.unlink()
 
             if not is_image_model:
                 coverage = await asyncio.to_thread(regenerate_coverage_manifest)
                 if coverage.returncode != 0:
                     try:
-                        save_registry(registry_backup)
-                        reload_registry()
+                        _rollback_failed_coverage(
+                            catalog_rollback,
+                            "\n".join(harness_stdout_lines),
+                        )
                     except Exception as restore_error:
                         logger.error(
-                            "Failed to restore registry after coverage error: %s", restore_error
+                            "Failed to restore catalog after coverage error: %s", restore_error
                         )
                     detail = (coverage.stderr or coverage.stdout or "generate-coverage failed")[
                         -400:
                     ]
                     message = (
                         "Rendering harness passed but coverage.json could not be updated, "
-                        "so the model was not kept in the registry. "
+                        "so the model was not kept in the registry or renderer config. "
                         f"{detail}"
                     )
                     try:

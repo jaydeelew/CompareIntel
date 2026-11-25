@@ -1162,75 +1162,6 @@
     }
   },
   {
-    "modelId": "google/gemini-2.0-flash",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\\\begin\\{equation\\}([\\s\\S]*?)\\\\end\\{equation\\}/g",
-        "name": "equation-env",
-        "priority": 2
-      },
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-12-04T14:43:01.728276Z",
-      "needsManualReview": true
-    }
-  },
-  {
     "modelId": "openai/gpt-oss-120b",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -2128,6 +2059,75 @@
     },
     "metadata": {
       "createdAt": "2026-03-25T20:10:14.009531+00:00Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "z-ai/glm-5",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\begin\\{align\\}([\\s\\S]*?)\\\\end\\{align\\}/g",
+        "name": "align-env",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 2
+      },
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 3
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": true,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2026-11-08T00:00:00Z",
       "needsManualReview": true
     }
   },

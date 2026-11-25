@@ -190,43 +190,11 @@ class ConfigGenerator:
         Returns:
             List of validation errors (empty if valid)
         """
-        errors = []
+        from scripts.catalog_transaction import renderer_config_errors
 
-        # Required fields
-        if not config.get("modelId"):
-            errors.append("Missing modelId")
-
-        if not config.get("displayMathDelimiters") or not isinstance(
-            config["displayMathDelimiters"], list
-        ):
-            errors.append("Missing or invalid displayMathDelimiters")
-
-        if not config.get("inlineMathDelimiters") or not isinstance(
-            config["inlineMathDelimiters"], list
-        ):
-            errors.append("Missing or invalid inlineMathDelimiters")
-
-        if not config.get("codeBlockPreservation"):
-            errors.append("Missing codeBlockPreservation")
-        else:
-            cb = config["codeBlockPreservation"]
-            if not cb.get("enabled"):
-                errors.append("Code block preservation must be enabled")
-            if not cb.get("extractBeforeProcessing"):
-                errors.append("Code blocks must be extracted before processing")
-            if not cb.get("restoreAfterProcessing"):
-                errors.append("Code blocks must be restored after processing")
-
-        # Validate delimiter patterns
-        for delim_type in ["displayMathDelimiters", "inlineMathDelimiters"]:
-            if delim_type in config:
-                for delim in config[delim_type]:
-                    if not delim.get("pattern"):
-                        errors.append(f"Missing pattern in {delim_type}")
-                    if not delim.get("name"):
-                        errors.append(f"Missing name in {delim_type}")
-
-        return errors
+        # The generator unit tests use short fixture ids. The catalog commit
+        # and ``--check`` path require provider/model-name ids separately.
+        return renderer_config_errors(config, require_provider_id=False)
 
     def generate_configs(
         self, analysis_data: dict[str, Any], preserve_existing: bool = True
@@ -300,12 +268,52 @@ class ConfigGenerator:
         return configs
 
 
+def _output_path(raw: str) -> Path:
+    if Path(raw).is_absolute():
+        return Path(raw)
+    script_dir = Path(__file__).parent
+    project_root = script_dir.parent.parent
+    return project_root / raw
+
+
+def _check_output(output_path: Path) -> int:
+    """Validate the committed configs and compare them to generator normalization.
+
+    Writes nothing. A drift or schema error leaves the file unchanged.
+    """
+    from scripts.catalog_transaction import (
+        generator_drift,
+        load_renderer_configs,
+        validate_renderer_configs,
+    )
+
+    if not output_path.is_file():
+        print(f"Error: Renderer config file not found: {output_path}", file=sys.stderr)
+        return 1
+    configs = load_renderer_configs(output_path)
+    errors = validate_renderer_configs(configs)
+    errors.extend(generator_drift(configs))
+    if errors:
+        print("Renderer configs are not up to date with the generator:", file=sys.stderr)
+        for error in errors:
+            print(f"- {error}", file=sys.stderr)
+        print("See docs/development/ADDING_NEW_MODELS.md", file=sys.stderr)
+        return 1
+    print(f"Renderer configs match the generator checks: {output_path}")
+    return 0
+
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Generate renderer configurations from analysis data"
     )
-    parser.add_argument("analysis_file", type=str, help="Path to analysis JSON file")
+    parser.add_argument(
+        "analysis_file",
+        nargs="?",
+        type=str,
+        help="Path to analysis JSON file (omit with --check)",
+    )
     parser.add_argument(
         "--output",
         type=str,
@@ -318,8 +326,21 @@ def main():
         action="store_true",
         help="Overwrite existing configs instead of preserving them",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Validate the output file against the generator and write nothing",
+    )
 
     args = parser.parse_args()
+    output_path = _output_path(args.output)
+
+    if args.check and not args.analysis_file:
+        sys.exit(_check_output(output_path))
+
+    if not args.analysis_file:
+        print("Error: analysis file is required unless --check is set", file=sys.stderr)
+        sys.exit(1)
 
     # Load analysis data
     analysis_path = Path(args.analysis_file)
@@ -345,21 +366,25 @@ def main():
         print("Error: No configurations generated", file=sys.stderr)
         sys.exit(1)
 
-    # Create output directory if needed
-    # Resolve relative paths from project root (two levels up from script location)
-    if not Path(args.output).is_absolute():
-        script_dir = Path(__file__).parent
-        project_root = script_dir.parent.parent
-        output_path = project_root / args.output
-    else:
-        output_path = Path(args.output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    from scripts.catalog_transaction import validate_renderer_configs
 
-    # Write configurations
+    validation_errors = validate_renderer_configs(configs)
+    if validation_errors:
+        print("Refusing to write renderer configs. Validation failed:", file=sys.stderr)
+        for error in validation_errors:
+            print(f"- {error}", file=sys.stderr)
+        print("The output file was not changed.", file=sys.stderr)
+        sys.exit(1)
+
+    if args.check:
+        sys.exit(_check_output(output_path))
+
+    # Write configurations only after every config validates.
+    from app.utils.atomic_json import atomic_write_json
+
     generator.log(f"\nWriting configurations to {output_path}...")
     try:
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(configs, f, indent=2, ensure_ascii=False)
+        atomic_write_json(output_path, configs)
         generator.log(f"Successfully wrote {len(configs)} configurations to {output_path}")
     except Exception as e:
         print(f"Error writing output file: {e}", file=sys.stderr)
