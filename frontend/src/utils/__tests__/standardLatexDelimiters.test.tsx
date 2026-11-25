@@ -119,7 +119,7 @@ describe('standard \\( \\) and \\[ \\] delimiters', () => {
     expect(texSources(el)).toEqual(['\\sqrt{2}'])
     expect(visibleText(el)).toBe(BARE_VISIBLE)
     expect(el.querySelector('strong')?.textContent).toBe('1.41421356…')
-    expect(el.innerHTML).toMatch(/\(\s*<span class="katex">/)
+    expect(el.innerHTML).toMatch(/\(\s*<span\b[^>]*\bclass="katex"/)
     expect(el.innerHTML).toMatch(/<\/span>\)/)
   })
 })
