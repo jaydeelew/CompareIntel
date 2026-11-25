@@ -344,6 +344,70 @@ describe('TutorialOverlay comparison spotlight', () => {
     )
   })
 
+  it('frames follow-up processing, then hands the same cutout to the results card', async () => {
+    const view = render(
+      <TutorialOverlay
+        {...props}
+        step="follow-up"
+        isLoading
+        streamAnswerStarted={false}
+        followUpSubmitStarted
+      />
+    )
+
+    await vi.waitFor(
+      () => {
+        const loading = document.querySelector('.loading-section') as HTMLElement | null
+        const results = document.querySelector('.results-section')
+        expect(loading?.classList.contains('tutorial-highlight')).toBe(true)
+        expect(results?.classList.contains('tutorial-highlight')).toBe(false)
+        const cutout = document.querySelector(
+          '.tutorial-backdrop-cutout:not(.tutorial-backdrop-follow-up-results-ring)'
+        ) as HTMLElement | null
+        expect(cutout).toBeTruthy()
+        expect(Math.abs(Number.parseFloat(cutout?.style.top ?? '') - (120 - 8))).toBeLessThan(28)
+        expect(document.querySelector('.tutorial-backdrop-follow-up-results-ring')).toBeNull()
+      },
+      { timeout: 8000 }
+    )
+
+    view.rerender(
+      <TutorialOverlay
+        {...props}
+        step="follow-up"
+        isLoading
+        streamAnswerStarted
+        followUpSubmitStarted
+      />
+    )
+
+    await vi.waitFor(
+      () => {
+        const loading = document.querySelector('.loading-section')
+        const results = document.querySelector('.results-section') as HTMLElement | null
+        expect(results?.classList.contains('tutorial-highlight')).toBe(true)
+        expect(loading?.classList.contains('tutorial-highlight')).toBe(false)
+        const cutout = document.querySelector(
+          '.tutorial-backdrop-cutout:not(.tutorial-backdrop-follow-up-results-ring)'
+        ) as HTMLElement | null
+        expect(cutout).toBeTruthy()
+        expect(Math.abs(Number.parseFloat(cutout?.style.top ?? '') - (280 - 8))).toBeLessThan(28)
+        expect(document.querySelector('.tutorial-backdrop-follow-up-results-ring')).toBeNull()
+        const tips = Array.from(document.querySelectorAll('.tutorial-tooltip'))
+        const visibleContinue = tips.filter(tip => {
+          const style = getComputedStyle(tip)
+          return (
+            style.visibility !== 'hidden' &&
+            Number(style.opacity) !== 0 &&
+            (tip.textContent ?? '').includes('Continue the Conversation')
+          )
+        })
+        expect(visibleContinue).toHaveLength(0)
+      },
+      { timeout: 8000 }
+    )
+  })
+
   it('does not show the continue-conversation tooltip while the processing panel is up', async () => {
     render(<TutorialOverlay {...props} step="follow-up" isLoading streamAnswerStarted />)
 

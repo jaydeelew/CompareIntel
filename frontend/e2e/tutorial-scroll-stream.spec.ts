@@ -556,6 +556,128 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
     })
   })
 
+  test('follow-up processing panel is framed, then the results panel takes the highlight', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(180_000)
+    const project = testInfo.project.name
+    const shotDir = project.includes('iPhone')
+      ? '/opt/cursor/artifacts/tutorial-followup-processing/iphone'
+      : project.includes('Pixel')
+        ? '/opt/cursor/artifacts/tutorial-followup-processing/android360'
+        : '/opt/cursor/artifacts/tutorial-followup-processing/desktop'
+    if (project === 'Mobile Chrome - Pixel 5') {
+      await page.setViewportSize({ width: 360, height: 800 })
+    }
+    await installHeldComparisonStream(page)
+    await reachPromptStep(page, testInfo)
+    await completeTutorialPromptInput(page, 'Sqrt 3?', testInfo)
+    await expect(tutorialTooltip(page).first()).toContainText('Run Your Comparison', {
+      timeout: 20_000,
+    })
+
+    const submitComparison = async () => {
+      const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()
+      await expect(submit).toBeEnabled({ timeout: 20_000 })
+      if (isMobileE2eProject(testInfo.project.name)) {
+        await submit.tap({ force: true }).catch(() => submit.click({ force: true }))
+      } else {
+        await submit.click({ force: true })
+      }
+    }
+
+    await submitComparison()
+    await expect
+      .poll(() => readProcessingFrame(page), { timeout: 15_000, intervals: [100] })
+      .toBe('ok')
+    await page.evaluate(() => {
+      ;(window as Window & { __tutorialStreamPhase?: string }).__tutorialStreamPhase = 'first'
+    })
+    await expect
+      .poll(() => readStreamingHandoff(page), { timeout: 15_000, intervals: [100] })
+      .toBe('ok')
+    await page.evaluate(() => {
+      ;(window as Window & { __tutorialStreamPhase?: string }).__tutorialStreamPhase = 'rest'
+    })
+
+    await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation', {
+      timeout: 25_000,
+    })
+    await page.evaluate(() => {
+      ;(window as Window & { __tutorialStreamPhase?: string }).__tutorialStreamPhase = 'hold'
+    })
+
+    const followUp = page.getByTestId('comparison-input-textarea').filter({ visible: true }).first()
+    await followUp.fill('Follow-up while the models are processing')
+    if (
+      !(await page
+        .getByTestId('comparison-submit-button')
+        .filter({ visible: true })
+        .first()
+        .isEnabled()
+        .catch(() => false))
+    ) {
+      await followUp.evaluate(el => {
+        const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+        setter?.call(el, 'Follow-up while the models are processing')
+        el.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+    }
+    await submitComparison()
+
+    await expect
+      .poll(() => readProcessingFrame(page), { timeout: 15_000, intervals: [100] })
+      .toBe('ok')
+    if (!isMobileE2eProject(project)) {
+      await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation')
+    }
+    await dismissMobileBlockers(page)
+    fs.mkdirSync(shotDir, { recursive: true })
+    await page.screenshot({ path: `${shotDir}/processing.png` })
+
+    await page.evaluate(() => {
+      ;(window as Window & { __tutorialStreamPhase?: string }).__tutorialStreamPhase = 'first'
+    })
+    await expect
+      .poll(
+        async () => {
+          const handoff = await readStreamingHandoff(page)
+          if (handoff !== 'ok') return handoff
+          if (
+            isMobileE2eProject(project) ||
+            (await page.evaluate(() => window.innerWidth <= 768))
+          ) {
+            return 'ok'
+          }
+          return page.evaluate(() => {
+            const results = document.querySelector('.results-section')
+            if (!results) return 'no-results'
+            const top = results.getBoundingClientRect().top
+            const header = document.querySelector('.app-header-shell')
+            const headerBottom = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0
+            const tip = document.querySelector('.tutorial-tooltip')
+            if (tip) {
+              const style = getComputedStyle(tip)
+              const shown =
+                style.visibility !== 'hidden' &&
+                Number(style.opacity) !== 0 &&
+                (tip.textContent ?? '').includes('Continue the Conversation')
+              if (shown) return 'tooltip-during-stream'
+            }
+            if (top > headerBottom + 80) return `results-low ${Math.round(top)}`
+            return 'ok'
+          })
+        },
+        { timeout: 15_000, intervals: [100] }
+      )
+      .toBe('ok')
+    await dismissMobileBlockers(page)
+    await page.screenshot({ path: `${shotDir}/streaming.png` })
+    await page.evaluate(() => {
+      ;(window as Window & { __tutorialStreamPhase?: string }).__tutorialStreamPhase = 'rest'
+    })
+  })
+
   test('expand OpenAI keeps the model selected earlier in the blue rail', async ({
     page,
   }, testInfo) => {
