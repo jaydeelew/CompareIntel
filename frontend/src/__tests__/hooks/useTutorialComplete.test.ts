@@ -645,6 +645,47 @@ describe('useTutorialComplete', () => {
       expect(result.current.tutorialHasCompletedComparison).toBe(false)
     })
 
+    it('completes follow-up when the second round finished before the step opened', async () => {
+      const answered = [
+        {
+          modelId: 'm1',
+          messages: [
+            { type: 'user', role: 'user', content: 'hi' },
+            { type: 'assistant', role: 'assistant', content: 'first' },
+            { type: 'user', role: 'user', content: 'follow' },
+            { type: 'assistant', role: 'assistant', content: 'second' },
+          ],
+        },
+      ] as ModelConversation[]
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: defaultConfig,
+      })
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('submit-comparison')
+      })
+      rerender({
+        ...defaultConfig,
+        isFollowUpMode: true,
+        isLoading: false,
+        conversations: answered,
+      })
+      expect(result.current.tutorialHasCompletedComparison).toBe(true)
+
+      act(() => {
+        result.current.goToStep('follow-up')
+      })
+      expect(result.current.tutorialHasCompletedComparison).toBe(false)
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0))
+      })
+
+      expect(result.current.tutorialState.currentStep).toBe('view-follow-up-results')
+      expect(result.current.tutorialState.completedSteps.has('follow-up')).toBe(true)
+    })
+
     it('should reset tutorialHasCompletedComparison when entering follow-up so step 5 can detect a new comparison', () => {
       const { result, rerender } = renderHook(props => useTutorialComplete(props), {
         initialProps: defaultConfig,
