@@ -35,4 +35,20 @@ describe('tutorial submit attention', () => {
     expect(rule).toMatch(/prefers-reduced-motion:\s*reduce/)
     expect(rule).toMatch(/animation:\s*none !important/)
   })
+
+  it('keeps a highlighted submit control circular instead of the square highlight radius', () => {
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), '../MobileTutorialOverlay.css'),
+      'utf8'
+    )
+    const rule = css.slice(css.indexOf('.submit-button.mobile-tutorial-highlight'))
+    expect(rule).toMatch(/border-radius:\s*50% !important/)
+    expect(rule).toMatch(
+      /animation:\s*tutorial-submit-attention 1\.75s ease-out infinite !important/
+    )
+    expect(rule).not.toMatch(/border-radius:\s*var\(--radius-md\)/)
+    expect(css).toMatch(
+      /tutorial-spotlight-settling \.mobile-tutorial-highlight:not\(\.submit-button\)/
+    )
+  })
 })
