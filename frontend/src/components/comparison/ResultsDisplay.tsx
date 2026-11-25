@@ -97,6 +97,10 @@ function scrollActiveModelTabIntoStrip(
   }
 }
 
+function pointerOnModelPager(target: EventTarget | null): boolean {
+  return target instanceof Element && Boolean(target.closest('.results-model-pager'))
+}
+
 /** Pill under the card header. The response body is never a safe place for this hint. */
 function MobileModelSwipeHint() {
   return (
@@ -483,7 +487,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         y: e.touches[0].clientY,
         lastX: e.touches[0].clientX,
         lastY: e.touches[0].clientY,
-        suppress: shouldSuppressMobileModelTabSwipe(e.target),
+        suppress: shouldSuppressMobileModelTabSwipe(e.target) || pointerOnModelPager(e.target),
       }
     }
 
@@ -531,7 +535,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       // A swipe that starts on wide code, a table, or other horizontal overflow
       // must stay with that element. Capturing the pointer here would take the
       // pan away from the browser, so the block could not scroll.
-      if (shouldSuppressMobileModelTabSwipe(e.target)) return
+      if (shouldSuppressMobileModelTabSwipe(e.target) || pointerOnModelPager(e.target)) return
       if (zone.hasPointerCapture(e.pointerId)) return
       try {
         zone.setPointerCapture(e.pointerId)
@@ -661,6 +665,39 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const showFingerSwipeOverlay =
     visibleConversations.length >= 2 &&
     (showFingerSwipeTutorialOverlay || showFingerSwipeCapabilityDemoOverlay)
+
+  const modelCount = visibleConversations.length
+  const modelPager =
+    useTabbedMultiModelResults && modelCount >= 2 ? (
+      <div className="results-model-pager" data-testid="results-model-pager" role="group">
+        <button
+          type="button"
+          className="results-model-pager-button"
+          aria-label="Previous model"
+          disabled={activeTabIndex <= 0}
+          onClick={() => goToModelTab(activeTabIndex - 1, 'tab-click')}
+        >
+          <span aria-hidden="true">‹</span>
+        </button>
+        <span className="results-model-pager-position">
+          <span aria-hidden="true">
+            {Math.max(activeTabIndex, 0) + 1} / {modelCount}
+          </span>
+          <span className="sr-only">
+            Model {Math.max(activeTabIndex, 0) + 1} of {modelCount}
+          </span>
+        </span>
+        <button
+          type="button"
+          className="results-model-pager-button"
+          aria-label="Next model"
+          disabled={activeTabIndex < 0 || activeTabIndex >= modelCount - 1}
+          onClick={() => goToModelTab(activeTabIndex + 1, 'tab-click')}
+        >
+          <span aria-hidden="true">›</span>
+        </button>
+      </div>
+    ) : null
 
   const metadataSection = metadata && (
     <div className="response-metadata">
@@ -807,6 +844,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   showBreakoutButton={visibleConversations.length > 1 && !isError}
                   isTutorialActive={isTutorialActive}
                   swipeHint={showFingerSwipeOverlay ? <MobileModelSwipeHint /> : null}
+                  modelPager={modelPager}
                   streamingReasoning={getStreamingReasoningForModel(
                     activeConversation.modelId,
                     streamingReasoningByModel

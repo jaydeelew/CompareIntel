@@ -115,6 +115,13 @@ async function shot(page: Page, testInfo: TestInfo, width: number): Promise<void
     path: `${root}/${folder}/results-${width}.png`,
     animations: 'disabled',
   })
+  const pager = page.getByTestId('results-model-pager')
+  if (await pager.count()) {
+    await pager.screenshot({
+      path: `${root}/${folder}/pager-${width}.png`,
+      animations: 'disabled',
+    })
+  }
 }
 
 async function expectHintOutsideResponse(page: Page): Promise<void> {
@@ -140,159 +147,204 @@ async function expectHintOutsideResponse(page: Page): Promise<void> {
     return 'ok'
   })
   expect(placement).toBe('ok')
+
+  const pager = page.getByTestId('results-model-pager')
+  await expect(pager).toBeVisible()
+  const previous = pager.getByRole('button', { name: 'Previous model' })
+  const next = pager.getByRole('button', { name: 'Next model' })
+  await expect(previous).toBeDisabled()
+  await expect(next).toBeEnabled()
+  await expect(pager).toContainText('1 / 2')
+  const target = await next.evaluate(el => {
+    const style = getComputedStyle(el)
+    const box = el.getBoundingClientRect()
+    return {
+      width: box.width,
+      height: box.height,
+      minHeight: parseFloat(style.minHeight),
+    }
+  })
+  expect(target.height).toBeGreaterThanOrEqual(44)
+  expect(target.width).toBeGreaterThanOrEqual(44)
+  const place = await page.evaluate(() => {
+    const bar = document.querySelector('.results-model-pager')
+    const body = document.querySelector('.conversation-content')
+    const hint = document.querySelector('.results-tab-swipe-hint')
+    const card = document.querySelector('.result-card')
+    if (!bar || !body || !hint || !card) return 'missing'
+    if (!card.contains(bar) || body.contains(bar)) return 'not-at-card-bottom'
+    const hintBeforeBody = hint.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING
+    const pagerAfterBody = body.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING
+    if (!hintBeforeBody) return 'hint-not-above-response'
+    if (!pagerAfterBody) return 'pager-not-below-response'
+    return 'ok'
+  })
+  expect(place).toBe('ok')
+  await next.scrollIntoViewIfNeeded()
+  await next.click()
+  await expect(page.locator('.results-tab-button').nth(1)).toHaveAttribute('aria-selected', 'true')
+  await expect(pager).toContainText('2 / 2')
+  await expect(pager.getByRole('button', { name: 'Next model' })).toBeDisabled()
+  await expect(pager.getByRole('button', { name: 'Previous model' })).toBeEnabled()
+  await expect(page.getByTestId('results-tab-swipe-hint')).toBeVisible()
 }
 
 base.describe('tutorial swipe hint placement', () => {
   base.describe.configure({ timeout: 180_000 })
 
-  base('tutorial hint sits under the result header, off the code block', async ({
-    page,
-  }, testInfo) => {
-    base.skip(!projectAllowed(testInfo.project.name), 'desktop chromium and the two phone projects')
-    const mobile = isMobileE2eProject(testInfo.project.name)
-    const widths = mobile ? (testInfo.project.name.includes('Pixel') ? [360, 473] : [390]) : [390]
+  base(
+    'tutorial hint sits under the result header, off the code block',
+    async ({ page }, testInfo) => {
+      base.skip(
+        !projectAllowed(testInfo.project.name),
+        'desktop chromium and the two phone projects'
+      )
+      const mobile = isMobileE2eProject(testInfo.project.name)
+      const widths = mobile ? (testInfo.project.name.includes('Pixel') ? [360, 473] : [390]) : [390]
 
-    await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
-    await installCodeComparisonStream(page)
+      await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
+      await installCodeComparisonStream(page)
 
-    for (const width of widths) {
-      const height = width === 473 ? 840 : 800
-      await page.setViewportSize({ width, height })
-      await page.goto('/')
-      await page.evaluate(() => {
-        localStorage.removeItem('compareintel_tutorial_completed')
-        localStorage.removeItem('compareintel_tutorial_progress')
-      })
-      await page.reload()
-      await page.getByRole('button', { name: 'Start Tutorial' }).click()
-      await tutorialTooltip(page).first().waitFor({ state: 'visible', timeout: 20_000 })
-      await dismissMobileBlockers(page)
+      for (const width of widths) {
+        const height = width === 473 ? 840 : 800
+        await page.setViewportSize({ width, height })
+        await page.goto('/')
+        await page.evaluate(() => {
+          localStorage.removeItem('compareintel_tutorial_completed')
+          localStorage.removeItem('compareintel_tutorial_progress')
+        })
+        await page.reload()
+        await page.getByRole('button', { name: 'Start Tutorial' }).click()
+        await tutorialTooltip(page).first().waitFor({ state: 'visible', timeout: 20_000 })
+        await dismissMobileBlockers(page)
 
-      const first = TUTORIAL_PROVIDERS[0]!
-      const second = TUTORIAL_PROVIDERS[1]!
-      await expandTutorialProvider(page, first, testInfo)
-      await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[0]!, first, testInfo)
-      await expandTutorialProvider(page, second, testInfo)
-      await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[1]!, second, testInfo, {
-        requireMinSelected: 2,
-      })
-      await completeTutorialPromptInput(page, 'Show a short Python square root.', testInfo)
-      await runTutorialComparison(page, testInfo, 25_000, 'Show a short Python square root.')
-      await expect(page.locator('.code-block, .code-block-direct').first()).toBeVisible({
-        timeout: 20_000,
-      })
-      await expectHintOutsideResponse(page)
-      await shot(page, testInfo, width)
+        const first = TUTORIAL_PROVIDERS[0]!
+        const second = TUTORIAL_PROVIDERS[1]!
+        await expandTutorialProvider(page, first, testInfo)
+        await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[0]!, first, testInfo)
+        await expandTutorialProvider(page, second, testInfo)
+        await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[1]!, second, testInfo, {
+          requireMinSelected: 2,
+        })
+        await completeTutorialPromptInput(page, 'Show a short Python square root.', testInfo)
+        await runTutorialComparison(page, testInfo, 25_000, 'Show a short Python square root.')
+        await expect(page.locator('.code-block, .code-block-direct').first()).toBeVisible({
+          timeout: 20_000,
+        })
+        await expectHintOutsideResponse(page)
+        await shot(page, testInfo, width)
+      }
     }
-  })
+  )
 })
 
 fixtureTest.describe('code block swipe versus prose swipe', () => {
   fixtureTest.describe.configure({ timeout: 120_000 })
 
-  fixtureTest('a sideways swipe scrolls wide code and a swipe on prose switches models', async ({
-    mockedModelsAuthenticatedPage: page,
-  }, testInfo) => {
-    fixtureTest.skip(
-      !isMobileChromeProject(testInfo.project.name),
-      'CDP touch gestures run on Mobile Chrome device projects only'
-    )
-    await installCodeComparisonStream(page)
-    await page.setViewportSize({ width: 393, height: 851 })
+  fixtureTest(
+    'a sideways swipe scrolls wide code and a swipe on prose switches models',
+    async ({ mockedModelsAuthenticatedPage: page }, testInfo) => {
+      fixtureTest.skip(
+        !isMobileChromeProject(testInfo.project.name),
+        'CDP touch gestures run on Mobile Chrome device projects only'
+      )
+      await installCodeComparisonStream(page)
+      await page.setViewportSize({ width: 393, height: 851 })
 
-    const input = page.getByTestId('comparison-input-textarea')
-    await input.fill('Show a short Python square root.')
-    await page
-      .locator('.loading-message')
-      .waitFor({ state: 'hidden', timeout: 15_000 })
-      .catch(() => {})
+      const input = page.getByTestId('comparison-input-textarea')
+      await input.fill('Show a short Python square root.')
+      await page
+        .locator('.loading-message')
+        .waitFor({ state: 'hidden', timeout: 15_000 })
+        .catch(() => {})
 
-    const providerHeader = page.locator('.provider-header').first()
-    if ((await providerHeader.getAttribute('aria-expanded')) !== 'true') {
-      await providerHeader.click()
-      await page.waitForTimeout(400)
-    }
-    for (const modelId of ['openai/gpt-5', 'openai/gpt-4.1']) {
-      const checkbox = page.getByTestId(`model-checkbox-${modelId}`)
-      await expect(checkbox).toBeVisible({ timeout: 15_000 })
-      await toggleModelCheckbox(checkbox, testInfo.project.name)
-    }
-
-    await submitAndAwaitCompareStream(page)
-    const tabs = page.locator('.results-tab-button')
-    await expect(tabs).toHaveCount(2)
-    await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true')
-
-    const code = page.locator('.code-block, .code-block-direct').first()
-    await expect(code).toBeVisible({ timeout: 20_000 })
-    await code.scrollIntoViewIfNeeded()
-    const scrollerInfo = await code.evaluate(el => {
-      const candidates = [el, ...Array.from(el.querySelectorAll<HTMLElement>('*'))]
-      for (const node of candidates) {
-        const overflowX = getComputedStyle(node).overflowX
-        const range = node.scrollWidth - node.clientWidth
-        if (
-          range > 24 &&
-          (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'overlay')
-        ) {
-          node.setAttribute('data-testid', 'wide-code-scroller')
-          return { range, overflowX }
-        }
+      const providerHeader = page.locator('.provider-header').first()
+      if ((await providerHeader.getAttribute('aria-expanded')) !== 'true') {
+        await providerHeader.click()
+        await page.waitForTimeout(400)
       }
-      const inner = el.querySelector('code')
-      return {
-        range: el.scrollWidth - el.clientWidth,
-        overflowX: getComputedStyle(el).overflowX,
-        inner: inner
-          ? {
-              range: inner.scrollWidth - inner.clientWidth,
-              overflowX: getComputedStyle(inner).overflowX,
-              whiteSpace: getComputedStyle(inner).whiteSpace,
-              wordBreak: getComputedStyle(inner).wordBreak,
-            }
-          : null,
+      for (const modelId of ['openai/gpt-5', 'openai/gpt-4.1']) {
+        const checkbox = page.getByTestId(`model-checkbox-${modelId}`)
+        await expect(checkbox).toBeVisible({ timeout: 15_000 })
+        await toggleModelCheckbox(checkbox, testInfo.project.name)
       }
-    })
-    expect(scrollerInfo.range, JSON.stringify(scrollerInfo)).toBeGreaterThan(24)
-    const scroller = page.getByTestId('wide-code-scroller')
-    const before = await scroller.evaluate(el => el.scrollLeft)
-    const box = await scroller.boundingBox()
-    expect(box).toBeTruthy()
-    const y = box!.y + Math.min(box!.height * 0.72, box!.height - 16)
-    await touchSwipe(page, box!.x + box!.width - 16, y, box!.x + 12, y)
 
-    await expect
-      .poll(async () => scroller.evaluate(el => el.scrollLeft), { timeout: 3_000 })
-      .toBeGreaterThan(before + 8)
-    await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true')
+      await submitAndAwaitCompareStream(page)
+      const tabs = page.locator('.results-tab-button')
+      await expect(tabs).toHaveCount(2)
+      await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true')
 
-    const prose = await page.evaluate(() => {
-      const body = document.querySelector('.conversation-content')
-      if (!body) return null
-      const rect = body.getBoundingClientRect()
-      const y = Math.min(rect.bottom - 16, rect.top + rect.height - 28)
-      for (let x = rect.right - 28; x > rect.left + 90; x -= 10) {
-        const hit = document.elementFromPoint(x, y)
-        if (!hit || !body.contains(hit)) continue
-        let node: Element | null = hit
-        let blocked = false
-        while (node && node !== body.parentElement) {
+      const code = page.locator('.code-block, .code-block-direct').first()
+      await expect(code).toBeVisible({ timeout: 20_000 })
+      await code.scrollIntoViewIfNeeded()
+      const scrollerInfo = await code.evaluate(el => {
+        const candidates = [el, ...Array.from(el.querySelectorAll<HTMLElement>('*'))]
+        for (const node of candidates) {
           const overflowX = getComputedStyle(node).overflowX
+          const range = node.scrollWidth - node.clientWidth
           if (
-            (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'overlay') &&
-            node.scrollWidth > node.clientWidth + 2
+            range > 24 &&
+            (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'overlay')
           ) {
-            blocked = true
-            break
+            node.setAttribute('data-testid', 'wide-code-scroller')
+            return { range, overflowX }
           }
-          node = node.parentElement
         }
-        if (!blocked) return { x, y }
-      }
-      return null
-    })
-    expect(prose, 'a prose point that is not inside a horizontal scroller').not.toBeNull()
-    await touchSwipe(page, prose!.x, prose!.y, prose!.x - 140, prose!.y + 6)
-    await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true')
-  })
+        const inner = el.querySelector('code')
+        return {
+          range: el.scrollWidth - el.clientWidth,
+          overflowX: getComputedStyle(el).overflowX,
+          inner: inner
+            ? {
+                range: inner.scrollWidth - inner.clientWidth,
+                overflowX: getComputedStyle(inner).overflowX,
+                whiteSpace: getComputedStyle(inner).whiteSpace,
+                wordBreak: getComputedStyle(inner).wordBreak,
+              }
+            : null,
+        }
+      })
+      expect(scrollerInfo.range, JSON.stringify(scrollerInfo)).toBeGreaterThan(24)
+      const scroller = page.getByTestId('wide-code-scroller')
+      const before = await scroller.evaluate(el => el.scrollLeft)
+      const box = await scroller.boundingBox()
+      expect(box).toBeTruthy()
+      const y = box!.y + Math.min(box!.height * 0.72, box!.height - 16)
+      await touchSwipe(page, box!.x + box!.width - 16, y, box!.x + 12, y)
+
+      await expect
+        .poll(async () => scroller.evaluate(el => el.scrollLeft), { timeout: 3_000 })
+        .toBeGreaterThan(before + 8)
+      await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true')
+
+      const prose = await page.evaluate(() => {
+        const body = document.querySelector('.conversation-content')
+        if (!body) return null
+        const rect = body.getBoundingClientRect()
+        const y = Math.min(rect.bottom - 16, rect.top + rect.height - 28)
+        for (let x = rect.right - 28; x > rect.left + 90; x -= 10) {
+          const hit = document.elementFromPoint(x, y)
+          if (!hit || !body.contains(hit)) continue
+          let node: Element | null = hit
+          let blocked = false
+          while (node && node !== body.parentElement) {
+            const overflowX = getComputedStyle(node).overflowX
+            if (
+              (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'overlay') &&
+              node.scrollWidth > node.clientWidth + 2
+            ) {
+              blocked = true
+              break
+            }
+            node = node.parentElement
+          }
+          if (!blocked) return { x, y }
+        }
+        return null
+      })
+      expect(prose, 'a prose point that is not inside a horizontal scroller').not.toBeNull()
+      await touchSwipe(page, prose!.x, prose!.y, prose!.x - 140, prose!.y + 6)
+      await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true')
+    }
+  )
 })

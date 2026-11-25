@@ -443,6 +443,7 @@
   pointer-events: none;
   position: relative;
   z-index: 2;
+  overflow-anchor: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -499,6 +500,62 @@
   .results-tab-swipe-hint-hand-icon {
     animation: none;
     transform: translateX(0);
+  }
+}
+
+/* Always-visible model switcher at the bottom of a tabbed mobile card. */
+.results-model-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0.15rem 0 0.35rem;
+  padding: 0 0.5rem;
+  overflow-anchor: none;
+  container-type: inline-size;
+}
+
+.results-model-pager-button {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border-glass);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1.35rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.results-model-pager-button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.results-model-pager-position {
+  flex: 0 1 auto;
+  min-width: 2.75rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+@container (max-width: 148px) {
+  .results-model-pager-position {
+    display: none;
   }
 }
 

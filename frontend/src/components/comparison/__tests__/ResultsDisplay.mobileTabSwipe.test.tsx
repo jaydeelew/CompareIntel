@@ -12,7 +12,15 @@ import { RESULT_TAB, createModelId } from '../../../types'
 import { ResultsDisplay } from '../ResultsDisplay'
 
 vi.mock('../ResultCard', () => ({
-  ResultCard: ({ modelId, swipeHint }: { modelId: string; swipeHint?: React.ReactNode }) => (
+  ResultCard: ({
+    modelId,
+    swipeHint,
+    modelPager,
+  }: {
+    modelId: string
+    swipeHint?: React.ReactNode
+    modelPager?: React.ReactNode
+  }) => (
     <div data-testid="result-card" data-model-id={modelId}>
       <div className="result-header">header</div>
       {swipeHint}
@@ -22,6 +30,7 @@ vi.mock('../ResultCard', () => ({
           <code>wide code</code>
         </pre>
       </div>
+      {modelPager}
     </div>
   ),
 }))
@@ -238,5 +247,71 @@ describe('ResultsDisplay mobile tab swipe', () => {
     expect(body!.contains(hint)).toBe(false)
     expect(header!.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(hint.compareDocumentPosition(body!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('switches models from the bottom arrows and stops at the ends', () => {
+    const gpt = createModelId('gpt-4')
+    const claude = createModelId('claude-3')
+    const gemini = createModelId('gemini')
+
+    render(
+      <ResultsDisplay
+        conversations={[
+          createMockModelConversation({ modelId: gpt, modelName: 'GPT-4' }),
+          createMockModelConversation({ modelId: claude, modelName: 'Claude' }),
+          createMockModelConversation({ modelId: gemini, modelName: 'Gemini' }),
+        ]}
+        closedCards={new Set()}
+        allModels={[
+          { id: gpt, name: 'GPT-4' },
+          { id: claude, name: 'Claude' },
+          { id: gemini, name: 'Gemini' },
+        ]}
+        activeResultTabs={{
+          [gpt]: RESULT_TAB.FORMATTED,
+          [claude]: RESULT_TAB.FORMATTED,
+          [gemini]: RESULT_TAB.FORMATTED,
+        }}
+        onCloseCard={vi.fn()}
+        onSwitchTab={vi.fn()}
+        onBreakout={vi.fn()}
+        onHideOthers={vi.fn()}
+        onCopyMessage={vi.fn()}
+      />
+    )
+
+    const previous = screen.getByRole('button', { name: 'Previous model' })
+    const next = screen.getByRole('button', { name: 'Next model' })
+    expect(previous).toBeDisabled()
+    expect(next).toBeEnabled()
+    expect(screen.getByTestId('results-model-pager')).toHaveTextContent('1 / 3')
+
+    fireEvent.click(next)
+    expect(screen.getAllByRole('tab')[1]).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByTestId('results-model-pager')).toHaveTextContent('2 / 3')
+    expect(screen.getByRole('button', { name: 'Previous model' })).toBeEnabled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next model' }))
+    expect(screen.getAllByRole('tab')[2]).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('button', { name: 'Next model' })).toBeDisabled()
+    expect(screen.getByTestId('results-model-pager')).toHaveTextContent('3 / 3')
+  })
+
+  it('hides the model pager when only one model is showing', () => {
+    const gpt = createModelId('gpt-4')
+    render(
+      <ResultsDisplay
+        conversations={[createMockModelConversation({ modelId: gpt, modelName: 'GPT-4' })]}
+        closedCards={new Set()}
+        allModels={[{ id: gpt, name: 'GPT-4' }]}
+        activeResultTabs={{ [gpt]: RESULT_TAB.FORMATTED }}
+        onCloseCard={vi.fn()}
+        onSwitchTab={vi.fn()}
+        onBreakout={vi.fn()}
+        onHideOthers={vi.fn()}
+        onCopyMessage={vi.fn()}
+      />
+    )
+    expect(screen.queryByRole('button', { name: 'Previous model' })).toBeNull()
   })
 })

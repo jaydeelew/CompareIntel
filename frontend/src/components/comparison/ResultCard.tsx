@@ -68,6 +68,11 @@ export interface ResultCardProps {
    * outside the scrolling response.
    */
   swipeHint?: React.ReactNode
+  /**
+   * Mobile previous/next model controls. Rendered at the bottom of the card,
+   * outside the response body. The hint pill stays at the top.
+   */
+  modelPager?: React.ReactNode
 }
 
 // Single model result card with formatted/raw toggle
@@ -96,6 +101,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   webSearchEnabled = false,
   retired = false,
   swipeHint = null,
+  modelPager = null,
 }) => {
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const lastAssistantIndex = safeMessages.reduce(
@@ -475,6 +481,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           )
         })}
       </div>
+      {modelPager}
     </div>
   )
 }
