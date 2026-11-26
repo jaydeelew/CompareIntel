@@ -14,38 +14,28 @@
   /* Allow clicks to pass through to highlighted elements */
 }
 
-/* The page footer sits after `.app`. The scroll-layer dim is clipped by
-   `.app`'s overflow, so the footer stayed bright. This veil is part of the
-   footer, so it covers that block on every cutout step and scrolls with it.
-   It is not a cutout and does not change the page's scroll height.
-   A fixed full-viewport backdrop already covers the footer, so this stays off
-   then and the footer is not dimmed twice.
-   The veil color matches the overlay. The footer base continues the hero
-   gradient (see syncTutorialFooterWithHero) so the dimmed footer matches the
-   dimmed hero instead of a lighter panel. */
-body:has(#tutorial-portal-root):has(.tutorial-scroll-dim, .tutorial-backdrop-cutout) footer,
-body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
-  footer {
-  position: relative;
-  /* The inline border sits above the veil and reads as a light seam. */
-  border-top-width: 0 !important;
+/* `.app` is an overflow scroller, so the scroll-layer dim and a tooltip that
+   hangs past the page are clipped, and the footer after `.app` stays put
+   while that box scrolls. While the tutorial portal is mounted the document
+   is the scroller. The footer keeps its place in the flow and drops its own
+   panel so the page background continues through it. The same overlay then
+   paints across that background, including the footer. No footer veil. */
+body:has(#tutorial-portal-root),
+body:has(#mobile-tutorial-portal-root) {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, #0f172a 100%);
 }
 
-body:has(#tutorial-portal-root):has(.tutorial-scroll-dim, .tutorial-backdrop-cutout) footer::after,
-body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
-  footer::after {
-  content: '';
-  position: absolute;
-  /* Cover the 1px top border. It sits outside the padding box and stayed bright. */
-  inset: -1px 0 0 0;
-  background: rgba(0, 0, 0, 0.6);
-  pointer-events: none;
-  z-index: 1;
+body:has(#tutorial-portal-root) .app,
+body:has(#mobile-tutorial-portal-root) .app {
+  overflow: visible;
+  background: transparent;
 }
 
-body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
-  footer::after {
-  background: rgba(0, 0, 0, 0.65);
+body:has(#tutorial-portal-root) footer,
+body:has(#mobile-tutorial-portal-root) footer {
+  background-color: transparent !important;
+  background-image: none !important;
+  border-top-color: transparent !important;
 }
 
 /* Cutout is position:absolute in the `.app` scroll layer (content coordinates).

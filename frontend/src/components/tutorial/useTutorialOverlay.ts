@@ -45,6 +45,7 @@ import {
   scrollContentOffset,
   scrollDeltaToFitTooltip,
   scrollFollowUpHighlightIntoView,
+  scrollReviewTooltipBesideResults,
   tutorialTooltipPrefersBelow,
   scrollTutorialElementToViewportY,
   streamingResultsTopInViewport,
@@ -910,7 +911,12 @@ export function useTutorialOverlay(
       const el = layoutTarget()
       const rect = layoutRectForStep() ?? el?.getBoundingClientRect()
       if (!rect) return
-      if (tutorialTooltipPrefersBelow(step)) {
+      if (step === 'view-follow-up-results') {
+        scrollReviewTooltipBesideResults({
+          tooltipHeight: window.innerHeight < 700 ? 160 : 210,
+          arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+        })
+      } else if (tutorialTooltipPrefersBelow(step)) {
         scrollFollowUpHighlightIntoView({
           tooltipHeight: window.innerHeight < 700 ? 160 : 210,
           arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
@@ -1151,6 +1157,28 @@ export function useTutorialOverlay(
           return
         }
       }
+      // The arrow can already meet the composer while the card still runs
+      // under the footer. Keep opening room until the laid-out card fits.
+      // Step 8 uses the same loop to keep its card off the results panel.
+      if (step === 'view-follow-up-results' && !userTookOver) {
+        const scrollTop = getTutorialScrollRoot().getScrollTop()
+        if (seatedTop != null && Math.abs(scrollTop - seatedTop) > 24) {
+          userTookOver = true
+        } else {
+          const delta = scrollReviewTooltipBesideResults({
+            tooltipHeight: tip.getBoundingClientRect().height,
+            arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+          })
+          if (delta === 0) seatedTop = getTutorialScrollRoot().getScrollTop()
+        }
+      }
+      if (tutorialTooltipPrefersBelow(step) && !userTookOver) {
+        scrollFollowUpHighlightIntoView({
+          tooltipHeight: tip.getBoundingClientRect().height,
+          arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+          preferred: 'below',
+        })
+      }
       const rect = readLayout()
       const pairOffScreen = followUpPairOffScreen()
       const decision = readTooltipAnchorAvoidingProcessingPanel({
@@ -1196,7 +1224,12 @@ export function useTutorialOverlay(
               ? 'below'
               : 'above'
           const tooltipHeight = window.innerHeight < 700 ? 160 : 210
-          if (tutorialTooltipPrefersBelow(step)) {
+          if (step === 'view-follow-up-results') {
+            scrollReviewTooltipBesideResults({
+              tooltipHeight,
+              arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+            })
+          } else if (tutorialTooltipPrefersBelow(step)) {
             scrollFollowUpHighlightIntoView({
               tooltipHeight,
               arrowSize: DESKTOP_TUTORIAL_ARROW_PX,

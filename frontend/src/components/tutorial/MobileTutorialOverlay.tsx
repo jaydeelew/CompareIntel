@@ -29,6 +29,7 @@ import {
   getTutorialProviderStepLayout,
   getTutorialScrollRoot,
   MOBILE_TUTORIAL_ARROW_PX,
+  placeReviewTooltip,
   placeTooltipBoxAgainstFrame,
   readPortaledFollowUpComposerRect,
   readTutorialSpotlightRect,
@@ -44,6 +45,7 @@ import {
   readHistoryComposerFrame,
   readHistoryComposerLift,
   scrollFollowUpHighlightIntoView,
+  scrollReviewTooltipBesideResults,
   tutorialTooltipPrefersBelow,
   scrollHistoryComposerPair,
   scrollTutorialElementToViewportY,
@@ -191,7 +193,6 @@ const MOBILE_STEP_OVERRIDES: Partial<
       'Review the responses from both models above by selecting their tabs or swiping to the next model. Then, type a follow-up.',
   },
   'view-follow-up-results': {
-    position: 'bottom', // Same seat as the follow-up card: under the composer, never on the results.
     description:
       'Read the latest replies from each model. Compare how they stay consistent with the conversation so far.',
   },
@@ -760,9 +761,23 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     // Place against the framed highlight, not a stale header or a clamped screen edge.
-    // Follow-up keeps the card below the composer. A short estimate lets the real
-    // card flip upward and cover the responses the step is asking the user to read.
-    if (tutorialTooltipPrefersBelow(step) && !spotlightSettledRef.current) {
+    // Follow-up keeps the card below the composer. Step 8 sits above the results
+    // panel so it does not cover the replies or the highlighted composer.
+    const reviewStep = step === 'view-follow-up-results' && !isLoadingRef.current
+    if (reviewStep) {
+      scrollReviewTooltipBesideResults({
+        tooltipHeight: tooltipHeight > 1 ? tooltipHeight : tooltipEstimatedHeight,
+        arrowSize,
+        padding,
+      })
+    } else if (
+      tutorialTooltipPrefersBelow(step) &&
+      !followUpStreamingRoundRef.current &&
+      // After the card is shown, a late font wrap makes it taller than the gap
+      // reserved at settle. Keep opening that gap. Once the follow-up request
+      // is in flight, scrolling would pull the processing panel off screen.
+      (!spotlightSettledRef.current || !isLoadingRef.current)
+    ) {
       scrollFollowUpHighlightIntoView({
         tooltipHeight: tooltipHeight > 1 ? tooltipHeight : tooltipEstimatedHeight,
         arrowSize,
@@ -778,23 +793,32 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
     const mobileOverride = MOBILE_STEP_OVERRIDES[step]
     const preferredPosition = mobileOverride?.position ?? 'top'
-    const placed = placeTooltipBoxAgainstFrame({
-      frameTop: frameSource.top - TUTORIAL_FRAME_OUTSET_PX,
-      frameBottom: frameSource.bottom + TUTORIAL_FRAME_OUTSET_PX,
-      tooltipHeight,
-      arrowSize,
-      viewportHeight,
-      padding,
-      preferred: preferredPosition === 'bottom' ? 'below' : 'above',
-      lockSide: tutorialTooltipPrefersBelow(step),
-    })
+    const placed = reviewStep
+      ? placeReviewTooltip({
+          frameTop: frameSource.top - TUTORIAL_FRAME_OUTSET_PX,
+          frameBottom: frameSource.bottom + TUTORIAL_FRAME_OUTSET_PX,
+          tooltipHeight,
+          arrowSize,
+          padding,
+        })
+      : placeTooltipBoxAgainstFrame({
+          frameTop: frameSource.top - TUTORIAL_FRAME_OUTSET_PX,
+          frameBottom: frameSource.bottom + TUTORIAL_FRAME_OUTSET_PX,
+          tooltipHeight,
+          arrowSize,
+          viewportHeight,
+          padding,
+          preferred: preferredPosition === 'bottom' ? 'below' : 'above',
+          lockSide: tutorialTooltipPrefersBelow(step),
+        })
 
     // Composer steps must keep the card glued to the field, including while it
     // slides off screen so the scroll-back hint can replace it. Clamping those
     // cards pinned them in the viewport and the hint never appeared. Other
     // steps clamp so a card cannot sit above the URL bar or below the fold
     // while its highlight is still on screen.
-    const clampTooltip = !tutorialStepFollowsComposer(step) && !tutorialTooltipPrefersBelow(step)
+    const clampTooltip =
+      !reviewStep && !tutorialStepFollowsComposer(step) && !tutorialTooltipPrefersBelow(step)
     let tooltipTop = clampTooltip
       ? clampTooltipTop({
           top: placed.top,
@@ -891,16 +915,24 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         tooltipLeft = floated.left
         hideArrow = true
       } else if (decision && anchorMoved) {
-        const next = placeTooltipBoxAgainstFrame({
-          frameTop: decision.anchor.top - TUTORIAL_FRAME_OUTSET_PX,
-          frameBottom: decision.anchor.bottom + TUTORIAL_FRAME_OUTSET_PX,
-          tooltipHeight,
-          arrowSize,
-          viewportHeight,
-          padding,
-          preferred: preferredPosition === 'bottom' ? 'below' : 'above',
-          lockSide: tutorialTooltipPrefersBelow(step),
-        })
+        const next = reviewStep
+          ? placeReviewTooltip({
+              frameTop: decision.anchor.top - TUTORIAL_FRAME_OUTSET_PX,
+              frameBottom: decision.anchor.bottom + TUTORIAL_FRAME_OUTSET_PX,
+              tooltipHeight,
+              arrowSize,
+              padding,
+            })
+          : placeTooltipBoxAgainstFrame({
+              frameTop: decision.anchor.top - TUTORIAL_FRAME_OUTSET_PX,
+              frameBottom: decision.anchor.bottom + TUTORIAL_FRAME_OUTSET_PX,
+              tooltipHeight,
+              arrowSize,
+              viewportHeight,
+              padding,
+              preferred: preferredPosition === 'bottom' ? 'below' : 'above',
+              lockSide: tutorialTooltipPrefersBelow(step),
+            })
         tooltipTop = clampTooltip
           ? clampTooltipTop({
               top: next.top,
@@ -1109,6 +1141,20 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     const scrollAndReveal = async () => {
+      if (currentStep === 'view-follow-up-results') {
+        const placeReview = () =>
+          scrollReviewTooltipBesideResults({
+            tooltipHeight: Math.max(
+              overlayRef.current?.getBoundingClientRect().height || 0,
+              tooltipEstimatedHeight
+            ),
+            arrowSize: MOBILE_TUTORIAL_ARROW_PX,
+          })
+        placeReview()
+        setTutorialSpotlightSettling(false)
+        revealSettledStep()
+        return
+      }
       if (tutorialTooltipPrefersBelow(currentStep)) {
         const placement = {
           tooltipHeight: tooltipEstimatedHeight,
@@ -1710,22 +1756,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         (current === 'follow-up' && !followUpStarted && !isFollowUpComposerReady())
       if (!active) {
         if (isReview) {
-          const composer = document.querySelector(
-            '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
-          )
-          if (composer instanceof HTMLElement && elementHasSpotlightBox(composer)) {
-            const box = composer.getBoundingClientRect()
-            const viewTop = window.visualViewport?.offsetTop ?? 0
-            const viewH = window.visualViewport?.height ?? window.innerHeight
-            const onScreen = box.top > viewTop + 24 && box.bottom < viewTop + viewH - 24
-            if (!onScreen) {
-              scrollFollowUpHighlightIntoView({
-                tooltipHeight: overlayRef.current?.getBoundingClientRect().height || 220,
-                arrowSize: MOBILE_TUTORIAL_ARROW_PX,
-                preferred: 'below',
-              })
-            }
-          }
+          scrollReviewTooltipBesideResults({
+            tooltipHeight: overlayRef.current?.getBoundingClientRect().height || 220,
+            arrowSize: MOBILE_TUTORIAL_ARROW_PX,
+          })
         }
         setLoadingStreamingRect(prev => (prev == null ? prev : null))
         return
@@ -1911,13 +1945,40 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       const scrollTop = getTutorialScrollRoot().getScrollTop()
       const composer = readPortaledFollowUpComposerRect()
-      const viewportHeight = window.innerHeight
+      const view = readVisualViewportBox()
+      const viewBottom = view.top + view.height
       const onScreen =
         composer != null &&
         composer.height > 20 &&
-        composer.top < viewportHeight - 1 &&
-        composer.bottom > 1
-      if (onScreen) {
+        composer.top < viewBottom - 1 &&
+        composer.bottom > view.top + 1
+      const card = overlayRef.current?.getBoundingClientRect()
+      const footer = document
+        .querySelector('nav[aria-label="Footer navigation"]')
+        ?.closest('footer')
+      const foot = footer instanceof HTMLElement ? footer.getBoundingClientRect() : null
+      const cardStyle = overlayRef.current ? getComputedStyle(overlayRef.current) : null
+      const cardVisible = Boolean(
+        card &&
+        card.height > 2 &&
+        cardStyle &&
+        cardStyle.visibility !== 'hidden' &&
+        Number(cardStyle.opacity) > 0.05
+      )
+      const cardOffscreen = Boolean(
+        cardVisible && card && (card.top < view.top - 1 || card.bottom > viewBottom + 1)
+      )
+      const cardOnFooter = Boolean(
+        cardVisible &&
+        card &&
+        foot &&
+        foot.height > 2 &&
+        Math.min(card.right, foot.right) - Math.max(card.left, foot.left) > 1 &&
+        Math.min(card.bottom, foot.bottom) - Math.max(card.top, foot.top) > 1
+      )
+      // The composer can be on screen while the card under it hangs past the
+      // fold or sits on the footer. That is not seated yet.
+      if (onScreen && !cardOffscreen && !cardOnFooter) {
         seatedTop = scrollTop
         if (stableSince === 0) stableSince = performance.now()
         if (performance.now() - stableSince > 4000) window.clearInterval(intervalId)

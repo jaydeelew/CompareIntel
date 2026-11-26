@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
+import sharp from 'sharp'
 
 import {
   getProvidersForModelIds,
@@ -146,7 +147,8 @@ async function setStreamPhase(page: Page, phase: 'hold' | 'first' | 'rest'): Pro
 }
 
 /**
- * The visible tooltip's arrow meets the composer and stays off the results panel.
+ * Where the visible tooltip's arrow lands.
+ * `results` means the tip meets the results panel and the card does not cover it.
  * `hidden` means no card is on screen.
  */
 async function tooltipAim(page: Page): Promise<string> {
@@ -199,12 +201,15 @@ async function tooltipAim(page: Page): Promise<string> {
     }
     if (results instanceof HTMLElement) {
       const resultsBox = results.getBoundingClientRect()
-      const insideResults =
-        tipX >= resultsBox.left + 8 &&
-        tipX <= resultsBox.right - 8 &&
-        tipY >= resultsBox.top + 8 &&
-        tipY <= resultsBox.bottom - 8
-      if (insideResults) return 'on-results'
+      const card = tip.getBoundingClientRect()
+      const overlapW = Math.min(card.right, resultsBox.right) - Math.max(card.left, resultsBox.left)
+      const overlapH = Math.min(card.bottom, resultsBox.bottom) - Math.max(card.top, resultsBox.top)
+      if (overlapW > 1 && overlapH > 1) return 'on-results'
+      const withinX = tipX >= resultsBox.left - 48 && tipX <= resultsBox.right + 48
+      const gapAbove = resultsBox.top - card.bottom
+      const gapBelow = card.top - resultsBox.bottom
+      const beside = (gapAbove >= -1 && gapAbove <= 40) || (gapBelow >= -1 && gapBelow <= 40)
+      if (beside && withinX) return 'results'
     }
     const onComposer =
       tipX >= composerBox.left - 48 &&
@@ -251,37 +256,149 @@ async function composerCutout(page: Page): Promise<string> {
   })
 }
 
-/**
- * The page footer is outside `.app`, so a clipped scroll-layer dim leaves it
- * bright. `dimmed` means the footer veil covers it. `offscreen` means this
- * viewport is not showing the footer.
- */
-async function footerDim(page: Page): Promise<string> {
+/** The page footer stays in normal flow. A fixed or sticky footer covers the tooltip. */
+async function footerFlowsWithPage(page: Page): Promise<string> {
   return page.evaluate(() => {
     const nav = document.querySelector('nav[aria-label="Footer navigation"]')
     const footer = nav?.closest('footer')
     if (!(footer instanceof HTMLElement)) return 'missing'
-    const box = footer.getBoundingClientRect()
-    const onScreen =
-      box.height > 8 &&
-      box.bottom > 8 &&
-      box.top < window.innerHeight - 8 &&
-      box.left < window.innerWidth - 8 &&
-      box.right > 8
-    if (!onScreen) return 'offscreen'
+    const pos = getComputedStyle(footer).position
+    if (pos === 'fixed' || pos === 'sticky') return pos
     const veil = getComputedStyle(footer, '::after')
-    const alpha = Number(/rgba?\([^)]+,\s*([\d.]+)\s*\)/.exec(veil.backgroundColor)?.[1] ?? '1')
-    const covers =
-      veil.content !== 'none' &&
-      veil.content !== 'normal' &&
-      veil.position === 'absolute' &&
-      alpha > 0.4 &&
-      /rgba?\(\s*0\s*,\s*0\s*,\s*0/.test(veil.backgroundColor)
-    return covers ? 'dimmed' : 'bright'
+    if (veil.content !== 'none' && veil.content !== 'normal' && veil.position === 'absolute') {
+      return 'veil'
+    }
+    return 'flow'
   })
 }
 
-/** The composer tooltip must not cover the results the step asks the user to read. */
+/**
+ * The footer is covered by the same follow-up dim as the page around it.
+ * A light footer panel fails this even when a veil is absent.
+ */
+async function footerDimMatchesPage(page: Page): Promise<string> {
+  const sample = await page.evaluate(() => {
+    const nav = document.querySelector('nav[aria-label="Footer navigation"]')
+    const footer = nav?.closest('footer')
+    const svg = document.querySelector('svg.tutorial-scroll-dim')
+    if (!(footer instanceof HTMLElement)) return { status: 'missing-footer' as const }
+    if (!(svg instanceof SVGSVGElement)) {
+      const rings = document.querySelectorAll('.tutorial-backdrop-follow-up-composer-ring').length
+      const svgs = document.querySelectorAll('svg.tutorial-scroll-dim').length
+      return { status: `missing-svg:rings${rings}:svgs${svgs}` as const }
+    }
+    const foot = footer.getBoundingClientRect()
+    const dim = svg.getBoundingClientRect()
+    if (foot.height < 2 || dim.width < 2 || dim.height < 2) {
+      return {
+        status: `missing-size:${Math.round(dim.width)}x${Math.round(dim.height)}` as const,
+      }
+    }
+    const covers =
+      dim.left <= foot.left + 1 &&
+      dim.right >= foot.right - 1 &&
+      dim.top <= foot.top + 1 &&
+      dim.bottom >= foot.bottom - 1
+    if (!covers) {
+      const r = (b: DOMRect) =>
+        `${Math.round(b.left)},${Math.round(b.top)},${Math.round(b.right)},${Math.round(b.bottom)}`
+      return { status: `uncovered:dim${r(dim)}:foot${r(foot)}` as const }
+    }
+    const tips = Array.from(
+      document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+    ).map(el => el.getBoundingClientRect())
+    const inTip = (x: number, y: number) =>
+      tips.some(
+        box => x >= box.left - 2 && x <= box.right + 2 && y >= box.top - 2 && y <= box.bottom + 2
+      )
+    const aboveY = foot.top - 6
+    const footerY = Math.min(foot.top + 10, foot.bottom - 4)
+    const candidates = [8, 14, window.innerWidth - 14, window.innerWidth - 8]
+    const x = candidates.find(
+      px => px > 1 && px < window.innerWidth - 1 && !inTip(px, aboveY) && !inTip(px, footerY)
+    )
+    if (x == null) return { status: 'blocked' as const }
+    return {
+      status: 'ready' as const,
+      x: x + window.scrollX,
+      aboveY: aboveY + window.scrollY,
+      footerY: footerY + window.scrollY,
+    }
+  })
+  if (sample.status !== 'ready') return sample.status
+  const dpr = await page.evaluate(() => window.devicePixelRatio || 1)
+  const buf = await page.screenshot({ type: 'png', fullPage: true })
+  const { data, info } = await sharp(buf).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const pixel = (x: number, y: number) => {
+    const px = Math.min(info.width - 1, Math.max(0, Math.round(x * dpr)))
+    const py = Math.min(info.height - 1, Math.max(0, Math.round(y * dpr)))
+    const i = (py * info.width + px) * info.channels
+    return [data[i] ?? 0, data[i + 1] ?? 0, data[i + 2] ?? 0]
+  }
+  const above = pixel(sample.x, sample.aboveY)
+  const onFooter = pixel(sample.x, sample.footerY)
+  const delta = Math.max(
+    Math.abs(above[0] - onFooter[0]),
+    Math.abs(above[1] - onFooter[1]),
+    Math.abs(above[2] - onFooter[2])
+  )
+  return delta <= 22 ? 'match' : `mismatch:${delta}`
+}
+
+/**
+ * The composer tooltip is fully inside the visual viewport and finishes above
+ * the footer. `covered` means the footer overlaps the card.
+ */
+async function tooltipFullyAboveFooter(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const tip = Array.from(
+      document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+    ).find(el => {
+      const box = el.getBoundingClientRect()
+      const style = getComputedStyle(el)
+      return (
+        box.width > 2 &&
+        box.height > 2 &&
+        style.visibility !== 'hidden' &&
+        Number(style.opacity) > 0.05
+      )
+    })
+    const nav = document.querySelector('nav[aria-label="Footer navigation"]')
+    const footer = nav?.closest('footer')
+    if (!tip || !(footer instanceof HTMLElement)) return 'missing'
+    const card = tip.getBoundingClientRect()
+    const viewTop = window.visualViewport?.offsetTop ?? 0
+    const viewBottom = viewTop + (window.visualViewport?.height ?? window.innerHeight)
+    if (card.top < viewTop - 1 || card.left < -1 || card.right > window.innerWidth + 1) {
+      return 'offscreen'
+    }
+    if (card.bottom > viewBottom + 1) return 'offscreen'
+    const foot = footer.getBoundingClientRect()
+    const overlapW = Math.min(card.right, foot.right) - Math.max(card.left, foot.left)
+    const overlapH = Math.min(card.bottom, foot.bottom) - Math.max(card.top, foot.top)
+    if (overlapW > 1 && overlapH > 1) return 'covered'
+    return 'clear'
+  })
+}
+
+/** User prompts on screen. The tour sends the original prompt plus one follow-up. */
+async function userPromptCount(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const title =
+      document.querySelector('.tutorial-tooltip, .mobile-tutorial-tooltip')?.textContent ?? ''
+    if (/Enter a Follow-Up|Submit Your Follow-Up/.test(title)) return 'extra-step'
+    const counts = Array.from(document.querySelectorAll('.result-card.conversation-card')).map(
+      card => card.querySelectorAll('.conversation-message.user').length
+    )
+    if (counts.length === 0) return '0'
+    return String(Math.max(...counts))
+  })
+}
+
+/**
+ * The card must not cover the results. On step 8 it also must not cover the
+ * highlighted follow-up composer or any other highlighted element.
+ */
 async function tooltipClearsResults(page: Page): Promise<string> {
   return page.evaluate(() => {
     const tip = Array.from(
@@ -299,65 +416,29 @@ async function tooltipClearsResults(page: Page): Promise<string> {
     const results = document.querySelector('.results-section')
     if (!tip || !(results instanceof HTMLElement)) return 'missing'
     const a = tip.getBoundingClientRect()
-    const b = results.getBoundingClientRect()
-    const overlapW = Math.min(a.right, b.right) - Math.max(a.left, b.left)
-    const overlapH = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
-    return overlapW > 4 && overlapH > 4 ? 'overlaps' : 'clear'
-  })
-}
-
-/**
- * The footer veil uses the same black as the live overlay, and the footer
- * continues the hero gradient the overlay darkens.
- */
-async function footerVeilMatchesOverlay(page: Page): Promise<string> {
-  return page.evaluate(() => {
-    const nav = document.querySelector('nav[aria-label="Footer navigation"]')
-    const footer = nav?.closest('footer')
-    const hero = document.querySelector('.hero-section')
-    if (!(footer instanceof HTMLElement) || !(hero instanceof HTMLElement)) return 'missing'
-    const parse = (value: string): [number, number, number, number] | null => {
-      const probe = document.createElement('span')
-      probe.style.color = value
-      document.body.append(probe)
-      const got = getComputedStyle(probe).color
-      probe.remove()
-      const match =
-        /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/.exec(got)
-      if (!match) return null
-      return [
-        Number(match[1]),
-        Number(match[2]),
-        Number(match[3]),
-        match[4] == null ? 1 : Number(match[4]),
-      ]
+    const overlaps = (box: DOMRect | undefined) => {
+      if (!box || box.width < 2 || box.height < 2) return false
+      const overlapW = Math.min(a.right, box.right) - Math.max(a.left, box.left)
+      const overlapH = Math.min(a.bottom, box.bottom) - Math.max(a.top, box.top)
+      return overlapW > 1 && overlapH > 1
     }
-    const veil = getComputedStyle(footer, '::after').backgroundColor
-    const svgFill = document
-      .querySelector('svg.tutorial-scroll-dim rect[mask]')
-      ?.getAttribute('fill')
-    let overlay = svgFill ?? ''
-    if (!overlay) {
-      const cutout = document.querySelector<HTMLElement>(
-        '.tutorial-backdrop, .mobile-tutorial-backdrop, .tutorial-backdrop-cutout, .mobile-tutorial-backdrop-cutout'
-      )
-      if (cutout) {
-        const shadow = getComputedStyle(cutout).boxShadow
-        overlay = shadow.match(/rgba?\(\s*0\s*,\s*0\s*,\s*0\s*,\s*[\d.]+\)/)?.[0] ?? ''
-      }
+    if (overlaps(results.getBoundingClientRect())) return 'overlaps-results'
+    const review = /Review the New Responses/.test(tip.textContent ?? '')
+    if (!review) return 'clear'
+    const composer = document.querySelector(
+      '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+    )
+    if (composer instanceof HTMLElement && overlaps(composer.getBoundingClientRect())) {
+      return 'overlaps-composer'
     }
-    const veilColor = parse(veil)
-    const overlayColor = overlay ? parse(overlay) : null
-    if (!veilColor || !overlayColor) return 'no-color'
-    const same =
-      veilColor[0] === overlayColor[0] &&
-      veilColor[1] === overlayColor[1] &&
-      veilColor[2] === overlayColor[2] &&
-      Math.abs(veilColor[3] - overlayColor[3]) < 0.02
-    if (!same) return 'color'
-    const footerImage = getComputedStyle(footer).backgroundImage
-    if (footerImage === 'none' || !footerImage.includes('gradient')) return 'base'
-    return 'match'
+    const highlighted = Array.from(
+      document.querySelectorAll<HTMLElement>('.tutorial-highlight, .mobile-tutorial-highlight')
+    )
+    for (const el of highlighted) {
+      if (el === results || results.contains(el)) continue
+      if (overlaps(el.getBoundingClientRect())) return 'overlaps-highlight'
+    }
+    return 'clear'
   })
 }
 
@@ -466,10 +547,15 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
       .poll(() => tooltipClearsResults(page), { timeout: 10_000, intervals: [100] })
       .toBe('clear')
     await dismissMobileBlockers(page)
-    await composerTip.scrollIntoViewIfNeeded()
-    await expect.poll(() => footerDim(page), { timeout: 5_000, intervals: [100] }).toBe('dimmed')
     await expect
-      .poll(() => footerVeilMatchesOverlay(page), { timeout: 5_000, intervals: [100] })
+      .poll(() => tooltipFullyAboveFooter(page), { timeout: 8_000, intervals: [100] })
+      .toBe('clear')
+    await expect
+      .poll(() => footerFlowsWithPage(page), { timeout: 5_000, intervals: [100] })
+      .toBe('flow')
+    await expect.poll(() => userPromptCount(page), { timeout: 5_000, intervals: [100] }).toBe('1')
+    await expect
+      .poll(() => footerDimMatchesPage(page), { timeout: 12_000, intervals: [150] })
       .toBe('match')
     await expect
       .poll(() => tooltipClearsResults(page), { timeout: 5_000, intervals: [100] })
@@ -494,9 +580,7 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
 
     const followUpTip = tutorialTooltip(page).first()
     await expect(followUpTip).toBeVisible({ timeout: 25_000 })
-    await expect
-      .poll(() => tooltipAim(page), { timeout: 15_000, intervals: [100] })
-      .toBe('composer')
+    await expect.poll(() => tooltipAim(page), { timeout: 15_000, intervals: [100] }).toBe('results')
     await expect
       .poll(() => composerCutout(page), { timeout: 10_000, intervals: [100] })
       .toBe('cutout')
@@ -504,10 +588,15 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
       .poll(() => tooltipClearsResults(page), { timeout: 10_000, intervals: [100] })
       .toBe('clear')
     await dismissMobileBlockers(page)
-    await followUpTip.scrollIntoViewIfNeeded()
-    await expect.poll(() => footerDim(page), { timeout: 5_000, intervals: [100] }).toBe('dimmed')
     await expect
-      .poll(() => footerVeilMatchesOverlay(page), { timeout: 5_000, intervals: [100] })
+      .poll(() => tooltipFullyAboveFooter(page), { timeout: 8_000, intervals: [100] })
+      .toBe('clear')
+    await expect
+      .poll(() => footerFlowsWithPage(page), { timeout: 5_000, intervals: [100] })
+      .toBe('flow')
+    await expect.poll(() => userPromptCount(page), { timeout: 5_000, intervals: [100] }).toBe('2')
+    await expect
+      .poll(() => footerDimMatchesPage(page), { timeout: 12_000, intervals: [150] })
       .toBe('match')
     await expect
       .poll(() => tooltipClearsResults(page), { timeout: 5_000, intervals: [100] })

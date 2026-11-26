@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useLayoutEffect, useState } from 'react'
 
 import { isProviderPickerTutorialStep } from '../../data/tutorialStepPlan'
 import type { TutorialStep } from '../../hooks/useTutorial'
@@ -57,6 +57,32 @@ function placeCutout(box: { top: number; left: number; anchorX?: number; anchorY
   return { top: `${pos.top}px`, left: `${pos.left}px` }
 }
 
+/**
+ * Chromium does not paint a 0×0 SVG, even with overflow visible, so the dim
+ * never reached the footer. The box runs from the top of `.app` through the
+ * footer. It ends at the footer, so it does not extend the page.
+ */
+function readFollowUpDimBox(): { width: number; height: number } {
+  if (typeof document === 'undefined') return { width: 1, height: 1 }
+  const layer = document.querySelector('.tutorial-scroll-layer')
+  const app = document.querySelector('.app')
+  const nav = document.querySelector('nav[aria-label="Footer navigation"]')
+  const footer = nav?.closest('footer')
+  const origin = (layer ?? app)?.getBoundingClientRect()
+  const originTop = origin?.top ?? 0
+  const footerBottom = footer instanceof HTMLElement ? footer.getBoundingClientRect().bottom : 0
+  const bottom = Math.max(
+    footerBottom,
+    app?.getBoundingClientRect().bottom ?? 0,
+    originTop + window.innerHeight
+  )
+  const width = Math.max(document.documentElement.clientWidth, window.innerWidth)
+  return {
+    width: Math.max(1, Math.ceil(width - (origin?.left ?? 0))),
+    height: Math.max(1, Math.ceil(bottom - originTop)),
+  }
+}
+
 export function TutorialFollowUpDim({
   maskId,
   holes,
@@ -66,19 +92,42 @@ export function TutorialFollowUpDim({
   holes: Array<{ top: number; left: number; width: number; height: number; rx: number }>
   color: string
 }) {
-  // A 0×0 SVG with overflow visible paints in user units without growing
-  // scrollHeight. The holes are in scroll-content coordinates, so they move
-  // with the page.
+  const [box, setBox] = useState(readFollowUpDimBox)
+  useLayoutEffect(() => {
+    const measure = () => {
+      const next = readFollowUpDimBox()
+      setBox(prev => (prev.width === next.width && prev.height === next.height ? prev : next))
+    }
+    measure()
+    const app = document.querySelector('.app')
+    const nav = document.querySelector('nav[aria-label="Footer navigation"]')
+    const footer = nav?.closest('footer')
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    if (app) observer?.observe(app)
+    if (footer) observer?.observe(footer)
+    window.addEventListener('resize', measure)
+    // Padding that opens a gap for the tooltip moves the footer without a
+    // resize of the footer box. Keep the dim extended through it.
+    const interval = window.setInterval(measure, 200)
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', measure)
+      window.clearInterval(interval)
+    }
+  }, [])
   return (
     <svg
       className="tutorial-scroll-dim"
+      width={box.width}
+      height={box.height}
       style={{
         position: 'absolute',
         top: 0,
         left: 0,
-        width: 0,
-        height: 0,
-        overflow: 'visible',
+        width: box.width,
+        height: box.height,
+        maxWidth: 'none',
+        maxHeight: 'none',
         zIndex: 9998,
         pointerEvents: 'none',
       }}
@@ -86,7 +135,7 @@ export function TutorialFollowUpDim({
     >
       <defs>
         <mask id={maskId}>
-          <rect x={0} y={0} width={8000} height={20000} fill="white" />
+          <rect x={0} y={0} width={box.width} height={box.height} fill="white" />
           {holes.map(hole => (
             <rect
               key={`${hole.left}:${hole.top}`}
@@ -101,7 +150,14 @@ export function TutorialFollowUpDim({
           ))}
         </mask>
       </defs>
-      <rect x={0} y={0} width={8000} height={20000} fill={color} mask={`url(#${maskId})`} />
+      <rect
+        x={0}
+        y={0}
+        width={box.width}
+        height={box.height}
+        fill={color}
+        mask={`url(#${maskId})`}
+      />
     </svg>
   )
 }

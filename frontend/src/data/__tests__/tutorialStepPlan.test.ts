@@ -67,6 +67,19 @@ describe('tutorialStepPlan', () => {
     expect(isAdjacentProviderPickerTransition('select-starter-model-1', 'enter-prompt')).toBe(false)
   })
 
+  it('walks exactly one follow-up', () => {
+    for (const split of [true, false]) {
+      const runtime = buildTutorialRuntimeStepSequence(split)
+      expect(runtime.filter(step => step === 'follow-up')).toEqual(['follow-up'])
+      expect(runtime).not.toContain('enter-prompt-2')
+      expect(runtime).not.toContain('submit-comparison-2')
+      const visible = buildTutorialVisibleStepOrder(split)
+      expect(visible.filter(step => step === 'follow-up')).toEqual(['follow-up'])
+      expect(visible).not.toContain('enter-prompt-2')
+      expect(visible).not.toContain('submit-comparison-2')
+    }
+  })
+
   it('uses split provider steps when starter models span providers', () => {
     expect(tutorialUsesSplitModelSteps(REGISTRY)).toBe(true)
     const runtime = buildTutorialRuntimeStepSequence(true)

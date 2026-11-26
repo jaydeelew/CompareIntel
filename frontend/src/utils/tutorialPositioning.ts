@@ -300,9 +300,9 @@ export function streamingResultsTopInViewport(): number {
  * Instant scroll: the tooltip stays hidden until this finishes, and a smooth scroll
  * plus the fade timer is clamped on Mobile Safari.
  */
-/** Steps whose tooltip is glued under the composer so the card never covers the replies. */
+/** The follow-up card stays under the composer. Step 8 seats beside the results instead. */
 export function tutorialTooltipPrefersBelow(step: TutorialStep): boolean {
-  return step === 'follow-up' || step === 'view-follow-up-results'
+  return step === 'follow-up'
 }
 
 /**
@@ -319,12 +319,19 @@ export function followUpScrollDelta(args: {
   arrowSize: number
   preferred: 'above' | 'below'
   padding?: number
+  /** Top of the page footer in the viewport. The tooltip has to finish above it. */
+  footerTop?: number | null
 }): number {
   const padding = args.padding ?? 12
   const gap = 8
   if (args.preferred === 'below') {
     const needBelow = args.tooltipHeight + args.arrowSize + gap + padding
-    const spaceBelow = args.viewportHeight - args.composerBottom
+    const footerTop = args.footerTop
+    const limitBottom =
+      footerTop != null && footerTop > 0
+        ? Math.min(args.viewportHeight, footerTop)
+        : args.viewportHeight
+    const spaceBelow = limitBottom - args.composerBottom
     if (spaceBelow < needBelow) return needBelow - spaceBelow
     if (args.composerTop < padding) return args.composerTop - padding
     return 0
@@ -625,8 +632,8 @@ export function readTutorialSpotlightRect(
   }
 
   if (step === 'view-follow-up-results') {
-    // The results panel can stay framed. The tooltip always meets the composer.
-    return composerAnchorRect('follow-up')
+    // Step 8 points at the finished replies. The card sits above or below that panel.
+    return resultsAnchorRect()
   }
 
   return null
@@ -817,22 +824,132 @@ export function scrollBackDirectionForTarget(
   return targetOff
 }
 
+function pageFooterElement(): HTMLElement | null {
+  const nav = document.querySelector('nav[aria-label="Footer navigation"]')
+  const footer = nav?.closest('footer')
+  return footer instanceof HTMLElement ? footer : null
+}
+
+/** Laid-out tutorial card. A short estimate lets the real card run into the footer. */
+function laidOutTooltipHeight(): number {
+  let tallest = 0
+  for (const node of document.querySelectorAll('.tutorial-tooltip, .mobile-tutorial-tooltip')) {
+    if (!(node instanceof HTMLElement)) continue
+    const box = node.getBoundingClientRect()
+    const style = getComputedStyle(node)
+    if (box.height < 2 || style.visibility === 'hidden' || style.display === 'none') continue
+    tallest = Math.max(tallest, box.height)
+  }
+  return tallest
+}
+
+/**
+ * The footer follows `.app`. Padding on `.app` opens a gap the tooltip can
+ * occupy so the footer is not sitting on the card. Capped so a footer that
+ * does not move cannot grow the page without bound.
+ */
+function reserveTooltipGapBeforeFooter(needBelow: number, anchorBottom?: number): void {
+  const app = document.querySelector('.app')
+  const footer = pageFooterElement()
+  const anchor = anchorBottom ?? readPortaledFollowUpComposerRect()?.bottom
+  if (!(app instanceof HTMLElement) || !footer || anchor == null) return
+  const gap = footer.getBoundingClientRect().top - anchor
+  const deficit = Math.ceil(needBelow - gap)
+  if (deficit <= 0) return
+  const existing = Number(app.getAttribute(SCROLL_TAIL_ATTR) || '0')
+  const next = Math.min(existing + deficit, Math.ceil(needBelow + 80))
+  if (next <= existing + 1) return
+  app.setAttribute(SCROLL_TAIL_ATTR, String(next))
+  app.style.paddingBottom = `${next}px`
+}
+
 /** Scroll the below-results composer into place. Does nothing while it is still in the hero. */
 export function scrollFollowUpHighlightIntoView(options: FollowUpScrollOptions): void {
+  const padding = 12
+  const gap = 8
+  const tooltipHeight = Math.max(options.tooltipHeight, laidOutTooltipHeight())
+  if (options.preferred === 'below') {
+    reserveTooltipGapBeforeFooter(tooltipHeight + options.arrowSize + gap + padding)
+  }
   const composer = readPortaledFollowUpComposerRect()
   if (!composer) return
+  const footerBox = pageFooterElement()?.getBoundingClientRect()
   const delta = followUpScrollDelta({
     composerTop: composer.top,
     composerBottom: composer.bottom,
     viewportHeight: visibleViewportHeight(),
-    tooltipHeight: options.tooltipHeight,
+    tooltipHeight,
     arrowSize: options.arrowSize,
     preferred: options.preferred,
+    footerTop: footerBox && footerBox.height > 2 ? footerBox.top : null,
   })
   if (Math.abs(delta) < 1) return
   const root = getTutorialScrollRoot()
   const maxScroll = getTutorialScrollMax()
   root.scrollToTop(Math.max(0, Math.min(root.getScrollTop() + delta, maxScroll)), 'auto')
+}
+
+function reviewContentTop(): number {
+  const view = readVisualViewportBox()
+  const header = document.querySelector('.app-header-shell')
+  const headerBottom =
+    header instanceof HTMLElement ? header.getBoundingClientRect().bottom : view.top
+  return Math.max(view.top, headerBottom)
+}
+
+/**
+ * Box top of the step 8 card. The follow-up composer sits directly under the
+ * results, so the card always stays above the panel. `top` is the box top.
+ */
+export function placeReviewTooltip(args: {
+  frameTop: number
+  frameBottom: number
+  tooltipHeight: number
+  arrowSize: number
+  padding?: number
+}): TooltipBoxPlacement {
+  const padding = args.padding ?? MARGIN
+  const contentTop = reviewContentTop()
+  const view = readVisualViewportBox()
+  const placed = placeTooltipBoxAgainstFrame({
+    frameTop: args.frameTop - contentTop,
+    frameBottom: args.frameBottom - contentTop,
+    tooltipHeight: args.tooltipHeight,
+    arrowSize: args.arrowSize,
+    viewportHeight: Math.max(0, view.top + view.height - contentTop),
+    padding,
+    preferred: 'above',
+    lockSide: true,
+  })
+  return { top: placed.top + contentTop, arrowDirection: placed.arrowDirection }
+}
+
+/**
+ * Scroll so the step 8 card and the top edge of the results are both on screen.
+ * The card stays above the panel. Returns the delta applied. Zero means the
+ * current scroll already has room.
+ */
+export function scrollReviewTooltipBesideResults(options: {
+  tooltipHeight: number
+  arrowSize: number
+  padding?: number
+}): number {
+  if (readProcessingPanelBox()) return 0
+  const results = resultsAnchorRect()
+  if (!results) return 0
+  const padding = options.padding ?? 12
+  const tooltipHeight = Math.max(options.tooltipHeight, laidOutTooltipHeight())
+  const frameTop = results.top - TUTORIAL_FRAME_OUTSET_PX
+  const need = tooltipHeight + options.arrowSize + padding
+  const room = frameTop - reviewContentTop()
+  const delta = room >= need ? 0 : -(need - room)
+  if (Math.abs(delta) < 1) return 0
+  const root = getTutorialScrollRoot()
+  root.scrollToTop(
+    Math.max(0, Math.min(root.getScrollTop() + delta, getTutorialScrollMax())),
+    'auto'
+  )
+  return delta
 }
 
 /**
@@ -1124,6 +1241,20 @@ export function computeTooltipPosition(
   const frameTop = rect.top - TUTORIAL_FRAME_OUTSET_PX
   const frameBottom = rect.bottom + TUTORIAL_FRAME_OUTSET_PX
   const estimatedTooltipHeight = getEstimatedTooltipHeight()
+  const centerX = rect.left + rect.width / 2
+  const left = Math.max(180, Math.min(centerX, window.innerWidth - 180))
+  if (_step === 'view-follow-up-results') {
+    const placed = placeReviewTooltip({
+      frameTop,
+      frameBottom,
+      tooltipHeight: estimatedTooltipHeight,
+      arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+    })
+    if (placed.arrowDirection === 'down') {
+      return { top: placed.top + estimatedTooltipHeight, left, effectivePosition: 'top' }
+    }
+    return { top: placed.top, left, effectivePosition: 'bottom' }
+  }
   const lockBelow = tutorialTooltipPrefersBelow(_step)
   const placed = placeTooltipBoxAgainstFrame({
     frameTop,
@@ -1134,8 +1265,6 @@ export function computeTooltipPosition(
     preferred: lockBelow || config.position === 'bottom' ? 'below' : 'above',
     lockSide: lockBelow,
   })
-  const centerX = rect.left + rect.width / 2
-  const left = Math.max(180, Math.min(centerX, window.innerWidth - 180))
   if (placed.arrowDirection === 'down') {
     return {
       top: clampDesktopTooltipTop(
@@ -1251,16 +1380,14 @@ function rectIsResultsPanel(rect: DOMRect, results: DOMRect): boolean {
 }
 
 /**
- * The comparison results panel is never a tooltip anchor. While it is framed
- * and still streaming, the card is hidden. Once the round finishes, the card
- * meets the composer for both the first comparison and the follow-up.
+ * Other steps never anchor on the comparison results. Step 8 is the review
+ * step: its card points at that panel once streaming has finished.
  */
 export function tooltipRectOffResultsPanel(requested: DOMRect, step: TutorialStep): DOMRect {
+  if (step === 'view-follow-up-results') return requested
   const results = resultsAnchorRect()
-  const onResults =
-    step === 'view-follow-up-results' || (results != null && rectIsResultsPanel(requested, results))
-  if (!onResults) return requested
-  const composer = composerAnchorRect(step === 'view-follow-up-results' ? 'follow-up' : step)
+  if (results == null || !rectIsResultsPanel(requested, results)) return requested
+  const composer = composerAnchorRect(step)
   return composer ?? requested
 }
 
@@ -1292,6 +1419,7 @@ export function readTooltipAnchorAvoidingProcessingPanel(args: {
     args.requested == null ? null : tooltipRectOffResultsPanel(args.requested, args.step)
   const results = resultsAnchorRect()
   const spotlight = readTutorialSpotlightRect(args.step, args.providerNames)
+  const reviewResults = args.step === 'view-follow-up-results'
   const candidates: DOMRect[] = []
   const push = (rect: DOMRect | null | undefined) => {
     if (!rect || rect.width < 2 || rect.height < 2) return
@@ -1304,19 +1432,23 @@ export function readTooltipAnchorAvoidingProcessingPanel(args: {
     )
     if (!seen) candidates.push(rect)
   }
-  if (!(spotlight && results && rectIsResultsPanel(spotlight, results))) push(spotlight)
+  if (!(spotlight && results && rectIsResultsPanel(spotlight, results) && !reviewResults)) {
+    push(spotlight)
+  }
   if (!panel || !requested || !rectMostlyOnPanel(requested, panel)) {
-    if (!(requested && results && rectIsResultsPanel(requested, results))) push(requested)
+    if (!(requested && results && rectIsResultsPanel(requested, results) && !reviewResults)) {
+      push(requested)
+    }
   }
   if (
-    args.step === 'submit-comparison' ||
-    args.step === 'submit-comparison-2' ||
-    args.step === 'follow-up' ||
-    args.step === 'view-follow-up-results' ||
-    args.step === 'enter-prompt' ||
-    args.step === 'enter-prompt-2'
+    !reviewResults &&
+    (args.step === 'submit-comparison' ||
+      args.step === 'submit-comparison-2' ||
+      args.step === 'follow-up' ||
+      args.step === 'enter-prompt' ||
+      args.step === 'enter-prompt-2')
   ) {
-    push(composerAnchorRect(args.step === 'view-follow-up-results' ? 'follow-up' : args.step))
+    push(composerAnchorRect(args.step))
   }
 
   if (!panel) {
@@ -1514,80 +1646,3 @@ export function findTargetForStep(
 }
 
 export { getComposerElement, getComposerCutoutRects }
-
-function tutorialFooterElement(): HTMLElement | null {
-  const nav = document.querySelector('nav[aria-label="Footer navigation"]')
-  const footer = nav?.closest('footer')
-  return footer instanceof HTMLElement ? footer : null
-}
-
-function gradientEndColor(image: string): string {
-  const colors = image.match(/#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)/g)
-  return colors?.[colors.length - 1] ?? '#132044'
-}
-
-/** Drop the hero continuation painted onto the footer for the clipped tutorial dim. */
-export function clearTutorialFooterBackdrop(footer?: HTMLElement | null): void {
-  const el = footer ?? tutorialFooterElement()
-  if (!el) return
-  el.style.backgroundImage = ''
-  el.style.backgroundRepeat = ''
-  el.style.backgroundSize = ''
-  el.style.backgroundPosition = ''
-  el.style.backgroundColor = ''
-}
-
-/** The element whose background is actually painted just above the footer. */
-function backdropAboveFooter(footer: HTMLElement): HTMLElement | null {
-  const box = footer.getBoundingClientRect()
-  const y = Math.max(box.top - 3, 0)
-  const xs = [box.left + 12, box.left + box.width / 2, box.right - 12]
-  if (typeof document.elementFromPoint !== 'function') {
-    const hero = document.querySelector('.hero-section')
-    return hero instanceof HTMLElement ? hero : null
-  }
-  for (const x of xs) {
-    let node: Element | null = document.elementFromPoint(x, y)
-    while (node && node !== footer) {
-      if (node instanceof HTMLElement) {
-        const image = getComputedStyle(node).backgroundImage
-        if (image && image !== 'none') return node
-      }
-      node = node.parentElement
-    }
-  }
-  const hero = document.querySelector('.hero-section')
-  return hero instanceof HTMLElement ? hero : null
-}
-
-/**
- * The clipped dim paints over the page. The footer sits outside that clip, so
- * its veil used to darken a light panel and looked lighter than the page.
- * Continue the painted gradient across the footer, starting at the same row
- * that meets the footer. The veil stays the overlay color.
- */
-export function syncTutorialFooterWithHero(): void {
-  const footer = tutorialFooterElement()
-  if (!footer) return
-  const clipped = document.querySelector(
-    'svg.tutorial-scroll-dim, .tutorial-backdrop-cutout, .mobile-tutorial-backdrop-cutout'
-  )
-  if (!clipped) {
-    clearTutorialFooterBackdrop(footer)
-    return
-  }
-  const source = backdropAboveFooter(footer)
-  if (!source) return
-  const sourceStyle = getComputedStyle(source)
-  const sourceBox = source.getBoundingClientRect()
-  const footerBox = footer.getBoundingClientRect()
-  if (sourceBox.height < 2 || footerBox.height < 2 || sourceStyle.backgroundImage === 'none') {
-    return
-  }
-  const imageY = footerBox.top - sourceBox.top
-  footer.style.backgroundImage = sourceStyle.backgroundImage
-  footer.style.backgroundRepeat = 'no-repeat'
-  footer.style.backgroundSize = `${sourceBox.width}px ${sourceBox.height}px`
-  footer.style.backgroundPosition = `${sourceBox.left - footerBox.left}px ${-imageY}px`
-  footer.style.backgroundColor = gradientEndColor(sourceStyle.backgroundImage)
-}

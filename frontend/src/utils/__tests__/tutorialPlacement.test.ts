@@ -103,6 +103,20 @@ describe('placeTooltipBoxAgainstFrame', () => {
     expect(1000 - delta).toBe(844 - needBelow)
   })
 
+  it('stops the below-composer tooltip at the page footer', () => {
+    const delta = followUpScrollDelta({
+      composerTop: 420,
+      composerBottom: 500,
+      viewportHeight: 844,
+      tooltipHeight: 180,
+      arrowSize: 10,
+      preferred: 'below',
+      footerTop: 620,
+    })
+    const needBelow = 180 + 10 + 8 + 12
+    expect(delta).toBe(needBelow - (620 - 500))
+  })
+
   it('leaves a follow-up composer that already has room below it', () => {
     expect(
       followUpScrollDelta({
