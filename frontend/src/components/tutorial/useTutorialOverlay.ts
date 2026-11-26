@@ -1151,6 +1151,15 @@ export function useTutorialOverlay(
           return
         }
       }
+      // The arrow can already meet the composer while the card still runs
+      // under the footer. Keep opening room until the laid-out card fits.
+      if (tutorialTooltipPrefersBelow(step) && !userTookOver) {
+        scrollFollowUpHighlightIntoView({
+          tooltipHeight: tip.getBoundingClientRect().height,
+          arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+          preferred: 'below',
+        })
+      }
       const rect = readLayout()
       const pairOffScreen = followUpPairOffScreen()
       const decision = readTooltipAnchorAvoidingProcessingPanel({

@@ -4,10 +4,6 @@ import type { StarterModelEntry } from '../../data/tutorialStepPlan'
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 import type { User } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
-import {
-  clearTutorialFooterBackdrop,
-  syncTutorialFooterWithHero,
-} from '../../utils/tutorialPositioning'
 
 import { MobileTutorialController } from './MobileTutorialController'
 import { TutorialController } from './TutorialController'
@@ -84,23 +80,6 @@ export function TutorialManager({
   setTutorialHasSavedSelection,
   onTutorialWelcomeSkipped,
 }: TutorialManagerProps) {
-  useEffect(() => {
-    if (!tutorialState.isActive) {
-      clearTutorialFooterBackdrop()
-      return
-    }
-    const sync = () => syncTutorialFooterWithHero()
-    sync()
-    const id = window.setInterval(sync, 200)
-    window.addEventListener('scroll', sync, true)
-    window.addEventListener('resize', sync)
-    return () => {
-      window.clearInterval(id)
-      window.removeEventListener('scroll', sync, true)
-      window.removeEventListener('resize', sync)
-    }
-  }, [tutorialState.isActive, tutorialState.currentStep])
-
   const firstStarterProvider = tutorialStarterEntries[0]?.provider ?? ''
   const secondStarterProvider = tutorialStarterEntries[1]?.provider ?? ''
   const firstStarterProviderExpanded = Boolean(

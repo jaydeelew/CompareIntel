@@ -38,11 +38,11 @@ describe('tutorial toolbar highlight CSS (steps 7–8)', () => {
     )
   })
 
-  it('dims the page footer that sits outside the scroll-layer clip', () => {
+  it('does not give the page footer its own veil or fixed position', () => {
     const mobileCss = readFileSync(join(tutorialDir, 'MobileTutorialOverlay.css'), 'utf8')
-    expect(mobileCss).toMatch(/#tutorial-portal-root[\s\S]*footer::after/)
-    expect(mobileCss).toMatch(/#mobile-tutorial-portal-root[\s\S]*footer::after/)
-    expect(mobileCss).toMatch(/rgba\(0,\s*0,\s*0,\s*0\.6\)/)
-    expect(mobileCss).toMatch(/rgba\(0,\s*0,\s*0,\s*0\.65\)/)
+    expect(mobileCss).not.toMatch(/footer::after/)
+    expect(mobileCss).not.toMatch(/footer\s*\{[^}]*position:\s*(relative|fixed|sticky)/)
+    expect(mobileCss).toMatch(/body:has\(#tutorial-portal-root\) \.app/)
+    expect(mobileCss).toMatch(/overflow:\s*visible/)
   })
 })

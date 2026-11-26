@@ -18,8 +18,6 @@ const TUTORIAL_TAIL_STEPS: TutorialStep[] = [
   'enter-prompt',
   'submit-comparison',
   'follow-up',
-  'enter-prompt-2',
-  'submit-comparison-2',
   'view-follow-up-results',
   'history-dropdown',
   'save-selection',
