@@ -528,9 +528,20 @@ export function watchTutorialFrameSize(onChange: () => void): () => void {
     let changed = false
     for (const el of observed) {
       const key = contentKey(el)
-      if (lastSize.get(el) === key) continue
-      lastSize.set(el, key)
-      changed = true
+      const prev = lastSize.get(el)
+      if (prev == null) {
+        lastSize.set(el, key)
+        changed = true
+        continue
+      }
+      const before = prev.split(':').map(Number)
+      const after = key.split(':').map(Number)
+      // Keep the last reported box. A 1px flip from subpixel rounding then
+      // stays under the threshold, while a real move still accumulates.
+      if (before.some((value, index) => Math.abs(value - (after[index] ?? 0)) >= 2)) {
+        lastSize.set(el, key)
+        changed = true
+      }
     }
     return changed
   }

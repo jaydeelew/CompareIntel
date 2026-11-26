@@ -2026,8 +2026,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     tutorialStepFollowsComposer(step) &&
     !isLoadingStreamingPhase &&
     !isStepTransitioning
+  // A card that is still on screen keeps Skip. Replacing it as soon as the
+  // target slips off lets a tap's scroll-into-view unmount the button.
+  const tooltipBox = overlayRef.current?.getBoundingClientRect()
+  const tooltipView = readVisualViewportBox()
+  const tooltipOffScreen =
+    !tooltipBox ||
+    tooltipBox.width < 2 ||
+    tooltipBox.height < 2 ||
+    tooltipBox.bottom < tooltipView.top + 8 ||
+    tooltipBox.top > tooltipView.top + tooltipView.height - 8
   const genericOffScreen =
     isTargetOffScreen != null &&
+    tooltipOffScreen &&
     !isLoadingStreamingPhase &&
     !isStepTransitioning &&
     !stepKeepsTooltip
