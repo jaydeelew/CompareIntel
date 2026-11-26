@@ -555,7 +555,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    if (step !== 'follow-up') {
+    if (step !== 'follow-up' && step !== 'view-follow-up-results') {
       setFollowUpComposerHoleRect(null)
     }
 
@@ -599,7 +599,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
     queueAnchoredRect(setTargetRect, newTargetRect)
 
-    if (step === 'follow-up') {
+    if (step === 'follow-up' || step === 'view-follow-up-results') {
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
       const composer = getComposerElement()
       if (resultsSection) {
@@ -1493,8 +1493,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     // For submit steps and follow-up, highlight the composer (match step 3). Follow-up also highlights the hero mirror when present.
     if (
-      (step === 'submit-comparison' || step === 'submit-comparison-2' || step === 'follow-up') &&
-      (step !== 'follow-up' || isFollowUpComposerReady())
+      (step === 'submit-comparison' ||
+        step === 'submit-comparison-2' ||
+        step === 'follow-up' ||
+        step === 'view-follow-up-results') &&
+      (step !== 'follow-up' || isFollowUpComposerReady()) &&
+      (step !== 'view-follow-up-results' || !isLoading)
     ) {
       const composer = getComposerElement()
       if (composer) {
@@ -1541,7 +1545,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       // Step 7's ring is the same class. Stripping it when the target element
       // changes and putting it back starts translateY(20px) again after the
       // card is already opaque.
-      const keepFollowUpComposerRing = nextStep === 'follow-up'
+      const keepFollowUpComposerRing =
+        nextStep === 'follow-up' || nextStep === 'view-follow-up-results'
       getComposerElement()?.classList.remove('tutorial-dropdown-container-active')
       getHeroComposerForDropdownSteps()?.classList.remove('tutorial-dropdown-container-active')
       providerHighlights.forEach(el => {
@@ -1560,6 +1565,20 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
     }
   }, [targetElement, step])
+
+  // Step 8's card anchors on the composer once the follow-up stream finishes.
+  // The highlight effect above does not re-run when loading flips, so paint the
+  // composer ring here or the field stays under the dim with no cutout.
+  useEffect(() => {
+    if (step !== 'view-follow-up-results' || isLoading) return
+    const paint = () => {
+      if (stepRef.current !== 'view-follow-up-results' || isLoadingRef.current) return
+      getComposerElement()?.classList.add('mobile-tutorial-highlight')
+    }
+    paint()
+    const interval = window.setInterval(paint, 200)
+    return () => window.clearInterval(interval)
+  }, [step, isLoading])
 
   // Focus replaces the composer's className and drops the prompt glow. Put it back
   // while step 5 (and the follow-up prompt) is showing, including while the field is focused.
@@ -2148,7 +2167,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // During loading/streaming phase, use loadingStreamingRect; otherwise use normal cutout logic
   // Follow-up: dual clear rects (results + composer) are rendered as SVG — skip the single box-shadow cutout
   const useFollowUpDualCutout =
-    step === 'follow-up' && backdropRect && followUpComposerHoleRect && !isLoadingStreamingPhase
+    (step === 'follow-up' || step === 'view-follow-up-results') &&
+    backdropRect &&
+    followUpComposerHoleRect &&
+    !isLoadingStreamingPhase
   const keepFramedCutoutWhileOffScreen = tutorialStepUsesFramedCutoutShadow(step)
   const cutoutTarget: TargetRect | null = isLoadingStreamingPhase
     ? loadingStreamingRect

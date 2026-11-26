@@ -229,9 +229,11 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     )
   }
 
-  // Step 5: two inset blue frames (results + follow-up composer) and dim elsewhere; same accent as other steps
+  // Steps 7 and 8: two inset blue frames (results + composer) and dim elsewhere.
+  // The card anchors on the composer, so that composer has to be a real hole.
+  const composerAnchoredStep = step === 'follow-up' || step === 'view-follow-up-results'
   if (
-    step === 'follow-up' &&
+    composerAnchoredStep &&
     targetCutout &&
     textareaCutoutToUse &&
     !shouldExcludeTextarea &&
@@ -302,9 +304,15 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     )
   }
 
-  if (targetCutout && !shouldExcludeTextarea && !shouldExcludeDropdown && !useRoundedCutout) {
-    const usesInsetBlueRing =
-      isProviderPickerTutorialStep(step) || step === 'view-follow-up-results'
+  if (
+    targetCutout &&
+    !shouldExcludeTextarea &&
+    !shouldExcludeDropdown &&
+    !useRoundedCutout &&
+    step !== 'follow-up' &&
+    step !== 'view-follow-up-results'
+  ) {
+    const usesInsetBlueRing = isProviderPickerTutorialStep(step)
     return (
       <div
         className="tutorial-backdrop-cutout tutorial-backdrop-cutout--enter"
@@ -325,10 +333,10 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     )
   }
 
-  // Follow-up step requires the dual-hole SVG backdrop (results + composer). While
-  // those cutouts are being computed (e.g. during the step 4→5 transition), render
-  // nothing rather than a full-screen dim to avoid a jarring flash.
-  if (step === 'follow-up') {
+  // Steps 7 and 8 require the dual-hole SVG backdrop (results + composer). While
+  // those cutouts are being computed, render nothing rather than a results-only
+  // hole that leaves the composer under the dim.
+  if (step === 'follow-up' || step === 'view-follow-up-results') {
     return null
   }
 

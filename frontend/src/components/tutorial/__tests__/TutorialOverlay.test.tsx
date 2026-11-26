@@ -463,6 +463,11 @@ describe('TutorialOverlay comparison spotlight', () => {
         expect(
           document.querySelector('.results-section')?.classList.contains('tutorial-highlight')
         ).toBe(true)
+        const composer = document.querySelector(
+          '[data-after-results-composer-slot] .composer'
+        ) as HTMLElement | null
+        expect(composer?.classList.contains('tutorial-highlight')).toBe(true)
+        expect(document.querySelector('.tutorial-backdrop-follow-up-composer-ring')).toBeTruthy()
         const visualTop = tooltipVisualTop(tip as HTMLElement)
         expect(visualTop).toBeGreaterThanOrEqual(12)
         expect(viewportStyleTop(tip as HTMLElement)).toBeLessThanOrEqual(window.innerHeight - 12)

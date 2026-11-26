@@ -215,6 +215,42 @@ async function tooltipAim(page: Page): Promise<string> {
   })
 }
 
+/**
+ * The composer is a real hole in the dim, with its highlight ring, whenever
+ * the tooltip is aimed at it. A results-only box-shadow leaves the field gray.
+ */
+async function composerCutout(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const composer =
+      document.querySelector(
+        '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+      ) || document.querySelector('.composer:not(.composer-placeholder)')
+    if (!(composer instanceof HTMLElement)) return 'no-composer'
+    const box = composer.getBoundingClientRect()
+    if (box.width < 2 || box.height < 2) return 'no-composer'
+    const cx = box.left + box.width / 2
+    const cy = box.top + box.height / 2
+    const highlighted =
+      composer.classList.contains('tutorial-highlight') ||
+      composer.classList.contains('mobile-tutorial-highlight')
+    const rings = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.tutorial-backdrop-follow-up-composer-ring, .mobile-tutorial-backdrop-follow-up-composer-ring'
+      )
+    )
+    const insideRing = rings.some(ring => {
+      const ringBox = ring.getBoundingClientRect()
+      return (
+        cx >= ringBox.left + 2 &&
+        cx <= ringBox.right - 2 &&
+        cy >= ringBox.top + 2 &&
+        cy <= ringBox.bottom - 2
+      )
+    })
+    return highlighted && insideRing ? 'cutout' : 'dimmed'
+  })
+}
+
 /** No tutorial card is on screen. `framed` means the processing panel owns the highlight. */
 async function tooltipHiddenDuringProcessing(page: Page): Promise<string> {
   return page.evaluate(() => {
@@ -313,6 +349,9 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
     await expect
       .poll(() => tooltipAim(page), { timeout: 10_000, intervals: [100] })
       .toBe('composer')
+    await expect
+      .poll(() => composerCutout(page), { timeout: 10_000, intervals: [100] })
+      .toBe('cutout')
     await dismissMobileBlockers(page)
     await composerTip.scrollIntoViewIfNeeded()
     await page.screenshot({ path: `${shotDir}/composer-tooltip.png` })
@@ -338,6 +377,9 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
     await expect
       .poll(() => tooltipAim(page), { timeout: 15_000, intervals: [100] })
       .toBe('composer')
+    await expect
+      .poll(() => composerCutout(page), { timeout: 10_000, intervals: [100] })
+      .toBe('cutout')
     await dismissMobileBlockers(page)
     await followUpTip.scrollIntoViewIfNeeded()
     await page.screenshot({ path: `${shotDir}/follow-up-composer.png` })

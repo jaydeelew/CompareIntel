@@ -1302,7 +1302,9 @@ export function useTutorialOverlay(
         elementsToHighlight = [loadingSection]
       } else if (kind === 'results' && resultsSection) {
         elementsToHighlight = [resultsSection]
-        if (step === 'follow-up') {
+        // Step 7 and step 8 both anchor the card on the composer, so that
+        // composer gets the same ring as the results frame.
+        if (step === 'follow-up' || step === 'view-follow-up-results') {
           const composerElement = getComposerElement()
           if (composerElement) elementsToHighlight.push(composerElement)
         }
@@ -1329,8 +1331,9 @@ export function useTutorialOverlay(
       composerElement = getComposerElement()
       const cutout = composerElement ? computeTextareaCutout(composerElement) : null
       setTextareaCutout(cutout)
-    } else if (!isDropdownStep && step !== 'follow-up') {
-      // Only clear textarea cutout if we're not on a dropdown step
+    } else if (!isDropdownStep && step !== 'follow-up' && step !== 'view-follow-up-results') {
+      // Only clear textarea cutout if we're not on a dropdown step.
+      // Step 8 keeps the composer hole that step 7 opened.
       setTextareaCutout(null)
     }
 
@@ -1730,13 +1733,26 @@ export function useTutorialOverlay(
 
       if (step === 'view-follow-up-results') {
         const spotlight = applyStreamingComparisonHighlight(streamAnswerStartedRef.current)
-        if (spotlight === 'loading') return
+        const composerElement = getComposerElement()
+        // While replies are still streaming, the processing/results frame owns
+        // the ring. The composer hole and ring appear once that round is done.
+        if (spotlight === 'loading' || isLoadingRef.current) {
+          composerElement?.classList.remove('tutorial-highlight')
+          composerElement?.classList.remove('tutorial-textarea-active')
+          return
+        }
+        if (resultsSection && !resultsSection.classList.contains('tutorial-highlight')) {
+          resultsSection.classList.add('tutorial-highlight')
+          resultsSection.style.pointerEvents = 'auto'
+          resultsSection.style.position = 'relative'
+        }
+        if (composerElement) {
+          composerElement.classList.add('tutorial-textarea-active')
+          composerElement.classList.add('tutorial-highlight')
+          composerElement.style.pointerEvents = 'auto'
+          composerElement.style.position = 'relative'
+        }
         if (resultsSection) {
-          if (!resultsSection.classList.contains('tutorial-highlight')) {
-            resultsSection.classList.add('tutorial-highlight')
-            resultsSection.style.pointerEvents = 'auto'
-            resultsSection.style.position = 'relative'
-          }
           if (!spotlightSettledRef.current) {
             setTargetElement(resultsSection)
             if (!suppressReviewTooltipRevealRef.current) {
@@ -1844,23 +1860,6 @@ export function useTutorialOverlay(
       }
     }
   }, [step, streamAnswerStarted])
-
-  // Ensure the textarea is not kept above the backdrop on view-follow-up-results
-  // This step should only keep the results section visible
-  useEffect(() => {
-    if (step !== 'view-follow-up-results') {
-      return
-    }
-
-    const composerElement = getComposerElement()
-    if (composerElement) {
-      composerElement.classList.remove('tutorial-textarea-active')
-      composerElement.classList.remove('tutorial-highlight')
-      composerElement.style.pointerEvents = ''
-      composerElement.style.position = ''
-    }
-    setTextareaCutout(null)
-  }, [step])
 
   // Submit, review, and the first follow-up settle. The follow-up step does not
   // reveal until the composer portals, which waits for the stream to finish, so
@@ -2408,11 +2407,12 @@ export function useTutorialOverlay(
   // could paint mismatched rings. Use one DOM read + batched setState; composer ring uses the full
   // composer (header + input) to match .tutorial-highlight, not only input-wrapper/toolbar rects.
   useEffect(() => {
-    if (step !== 'follow-up') return
+    if (step !== 'follow-up' && step !== 'view-follow-up-results') return
 
     const syncFollowUpBackdropCutouts = () => {
       if (!spotlightSettledRef.current) return
-      if (stepRef.current !== 'follow-up') return
+      const current = stepRef.current
+      if (current !== 'follow-up' && current !== 'view-follow-up-results') return
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
       const composerElement = getComposerElement()
 
@@ -2444,14 +2444,13 @@ export function useTutorialOverlay(
   // Calculate target cutout for steps that don't have special cutout handling.
   // Uses viewport coordinates (getBoundingClientRect); TutorialBackdrop positions with fixed.
   useEffect(() => {
-    const needsTargetCutout =
-      isProviderPickerTutorialStep(step) || step === 'view-follow-up-results'
+    const needsTargetCutout = isProviderPickerTutorialStep(step)
 
     const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
 
     if (!needsTargetCutout && !isSubmitStep) {
-      // follow-up manages targetCutout (+ composer hole) via syncFollowUpBackdropCutouts — skip clear + updater.
-      if (step !== 'follow-up') {
+      // Follow-up and review manage both holes via syncFollowUpBackdropCutouts.
+      if (step !== 'follow-up' && step !== 'view-follow-up-results') {
         setTargetCutout(null)
       }
       return
@@ -2479,14 +2478,11 @@ export function useTutorialOverlay(
       const padding = 8
       const isProviderStep = isProviderPickerTutorialStep(step)
       /* Concentric outer radius: element radius + cutout padding (8px). */
-      const borderRadius =
-        step === 'view-follow-up-results'
-          ? 24 /* results area */
-          : isSubmitStep
-            ? 32 /* composer (match step 3–4) */
-            : isProviderStep
-              ? 20 /* --radius-xl (12px) + 8 */
-              : 12
+      const borderRadius = isSubmitStep
+        ? 32 /* composer (match step 3–4) */
+        : isProviderStep
+          ? 20 /* --radius-xl (12px) + 8 */
+          : 12
       const cutout = computeTargetCutout(elementsToUse, padding, borderRadius)
       setTargetCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))
     }
