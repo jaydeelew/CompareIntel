@@ -761,8 +761,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     // Place against the framed highlight, not a stale header or a clamped screen edge.
-    // Follow-up keeps the card below the composer. Step 8 sits beside the results
-    // panel, above or below whichever side has room, and never on the replies.
+    // Follow-up keeps the card below the composer. Step 8 sits above the results
+    // panel so it does not cover the replies or the highlighted composer.
     const reviewStep = step === 'view-follow-up-results' && !isLoadingRef.current
     if (reviewStep) {
       scrollReviewTooltipBesideResults({

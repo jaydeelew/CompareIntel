@@ -395,7 +395,10 @@ async function userPromptCount(page: Page): Promise<string> {
   })
 }
 
-/** The composer tooltip must not cover the results the step asks the user to read. */
+/**
+ * The card must not cover the results. On step 8 it also must not cover the
+ * highlighted follow-up composer or any other highlighted element.
+ */
 async function tooltipClearsResults(page: Page): Promise<string> {
   return page.evaluate(() => {
     const tip = Array.from(
@@ -413,10 +416,29 @@ async function tooltipClearsResults(page: Page): Promise<string> {
     const results = document.querySelector('.results-section')
     if (!tip || !(results instanceof HTMLElement)) return 'missing'
     const a = tip.getBoundingClientRect()
-    const b = results.getBoundingClientRect()
-    const overlapW = Math.min(a.right, b.right) - Math.max(a.left, b.left)
-    const overlapH = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
-    return overlapW > 1 && overlapH > 1 ? 'overlaps' : 'clear'
+    const overlaps = (box: DOMRect | undefined) => {
+      if (!box || box.width < 2 || box.height < 2) return false
+      const overlapW = Math.min(a.right, box.right) - Math.max(a.left, box.left)
+      const overlapH = Math.min(a.bottom, box.bottom) - Math.max(a.top, box.top)
+      return overlapW > 1 && overlapH > 1
+    }
+    if (overlaps(results.getBoundingClientRect())) return 'overlaps-results'
+    const review = /Review the New Responses/.test(tip.textContent ?? '')
+    if (!review) return 'clear'
+    const composer = document.querySelector(
+      '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+    )
+    if (composer instanceof HTMLElement && overlaps(composer.getBoundingClientRect())) {
+      return 'overlaps-composer'
+    }
+    const highlighted = Array.from(
+      document.querySelectorAll<HTMLElement>('.tutorial-highlight, .mobile-tutorial-highlight')
+    )
+    for (const el of highlighted) {
+      if (el === results || results.contains(el)) continue
+      if (overlaps(el.getBoundingClientRect())) return 'overlaps-highlight'
+    }
+    return 'clear'
   })
 }
 

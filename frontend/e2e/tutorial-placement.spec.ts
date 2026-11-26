@@ -150,9 +150,24 @@ async function readPlacement(page: Page): Promise<PlacementReport> {
           title,
         }
       }
-      const overlapW = Math.min(card.right, results.right) - Math.max(card.left, results.left)
-      const overlapH = Math.min(card.bottom, results.bottom) - Math.max(card.top, results.top)
-      const overlaps = overlapW > 1 && overlapH > 1
+      const overlapsBox = (box: DOMRect | undefined) => {
+        if (!box || box.width < 2 || box.height < 2) return false
+        const overlapW = Math.min(card.right, box.right) - Math.max(card.left, box.left)
+        const overlapH = Math.min(card.bottom, box.bottom) - Math.max(card.top, box.top)
+        return overlapW > 1 && overlapH > 1
+      }
+      const overlaps = overlapsBox(results)
+      const composer = document
+        .querySelector('[data-after-results-composer-slot] .composer:not(.composer-placeholder)')
+        ?.getBoundingClientRect()
+      const highlighted = Array.from(
+        document.querySelectorAll<HTMLElement>('.tutorial-highlight, .mobile-tutorial-highlight')
+      )
+        .filter(
+          el => el !== document.querySelector('.results-section') && !el.closest('.results-section')
+        )
+        .map(el => el.getBoundingClientRect())
+      const overlapsComposer = overlapsBox(composer) || highlighted.some(box => overlapsBox(box))
       const gapAbove = results.top - card.bottom
       const gapBelow = card.top - results.bottom
       const above = gapAbove >= -1 && gapAbove <= 36
@@ -163,12 +178,19 @@ async function readPlacement(page: Page): Promise<PlacementReport> {
       const tipGap = Math.min(Math.abs(tipY - results.top), Math.abs(tipY - results.bottom))
       const withinX = tipX >= results.left - 48 && tipX <= results.right + 48
       const cardInView = card.top >= -1 && card.bottom <= vh + 1
-      const reviewOk = !overlaps && beside && edgeInView && tipGap <= 36 && withinX && cardInView
+      const reviewOk =
+        !overlaps &&
+        !overlapsComposer &&
+        beside &&
+        edgeInView &&
+        tipGap <= 36 &&
+        withinX &&
+        cardInView
       return {
         ok: reviewOk,
         reason: reviewOk
           ? 'ok'
-          : `review overlaps=${overlaps} beside=${beside} edgeInView=${edgeInView} tipGap=${Math.round(tipGap)} cardTop=${Math.round(card.top)}`,
+          : `review overlaps=${overlaps} composer=${overlapsComposer} beside=${beside} edgeInView=${edgeInView} tipGap=${Math.round(tipGap)} cardTop=${Math.round(card.top)}`,
         arrowGap: tipGap,
         centerOffset,
         title,
@@ -223,11 +245,10 @@ async function expectStepPlacement(page: Page, testInfo: TestInfo, label: string
 test('tutorial highlight stays centered and the arrow touches it', async ({ page }, testInfo) => {
   test.setTimeout(180_000)
   const project = testInfo.project.name
-  const mobileChromium =
-    project === 'Mobile Chrome - Pixel 5' && process.env.TUTORIAL_MOBILE_CHROMIUM === '1'
+  const mobileChromium = project === 'Mobile Chrome - Pixel 5'
   test.skip(
     project !== 'chromium' && project !== 'Mobile Safari - iPhone 12' && !mobileChromium,
-    'desktop, Mobile Safari, and opted-in mobile Chromium'
+    'desktop, iPhone 12, and Pixel 5'
   )
   if (project === 'Mobile Chrome - Pixel 5') {
     await page.setViewportSize({ width: 393, height: 851 })

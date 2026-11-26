@@ -127,7 +127,7 @@ describe('streaming comparison spotlight', () => {
     expect(placed.top).toBeLessThanOrEqual(results.top)
   })
 
-  it('places the review tooltip below the results when the top has no room', () => {
+  it('keeps the review tooltip above the results when the composer fills the space below', () => {
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
     const results = box(40, 200)
@@ -136,8 +136,8 @@ describe('streaming comparison spotlight', () => {
       'view-follow-up-results',
       TUTORIAL_STEPS_CONFIG['view-follow-up-results']
     )
-    expect(placed.effectivePosition).toBe('bottom')
-    expect(placed.top).toBeGreaterThanOrEqual(results.bottom)
+    expect(placed.effectivePosition).toBe('top')
+    expect(placed.top).toBeLessThanOrEqual(results.top)
   })
 
   it('keeps the follow-up tooltip under the composer when the field is near the bottom', () => {

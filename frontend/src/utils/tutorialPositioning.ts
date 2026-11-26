@@ -897,46 +897,9 @@ function reviewContentTop(): number {
   return Math.max(view.top, headerBottom)
 }
 
-function reviewViewportBottom(contentTop: number): number {
-  const view = readVisualViewportBox()
-  const footer = pageFooterElement()?.getBoundingClientRect()
-  const footerInPlay = Boolean(footer && footer.height > 2 && footer.top > contentTop + 40)
-  return footerInPlay && footer
-    ? Math.min(view.top + view.height, footer.top)
-    : view.top + view.height
-}
-
-function reviewStructuralRoomBelow(frameBottom: number): number {
-  const footer = pageFooterElement()?.getBoundingClientRect()
-  if (!footer || footer.height <= 2) return Number.POSITIVE_INFINITY
-  return footer.top - frameBottom
-}
-
 /**
- * Step 8 picks the side of the results frame that can hold the card at the
- * current scroll. Below is unavailable when the footer sits on the panel.
- */
-function reviewTooltipPrefersAbove(args: {
-  frameTop: number
-  frameBottom: number
-  contentTop: number
-  viewBottom: number
-  structuralBelow: number
-  need: number
-}): boolean {
-  const roomAbove = args.frameTop - args.contentTop
-  const roomBelow = args.viewBottom - args.frameBottom
-  const belowOk = args.structuralBelow + 80 >= args.need
-  if (!belowOk) return true
-  if (roomAbove >= args.need && roomBelow >= args.need) return roomAbove >= roomBelow
-  if (roomAbove >= args.need) return true
-  if (roomBelow >= args.need) return false
-  return roomAbove >= roomBelow
-}
-
-/**
- * Box top of the step 8 card. The card stays entirely above or entirely below
- * the results frame, on the side that has room. `top` is the box top.
+ * Box top of the step 8 card. The follow-up composer sits directly under the
+ * results, so the card always stays above the panel. `top` is the box top.
  */
 export function placeReviewTooltip(args: {
   frameTop: number
@@ -947,32 +910,24 @@ export function placeReviewTooltip(args: {
 }): TooltipBoxPlacement {
   const padding = args.padding ?? MARGIN
   const contentTop = reviewContentTop()
-  const viewBottom = reviewViewportBottom(contentTop)
-  const need = args.tooltipHeight + args.arrowSize + padding
-  const above = reviewTooltipPrefersAbove({
-    frameTop: args.frameTop,
-    frameBottom: args.frameBottom,
-    contentTop,
-    viewBottom,
-    structuralBelow: reviewStructuralRoomBelow(args.frameBottom),
-    need,
-  })
+  const view = readVisualViewportBox()
   const placed = placeTooltipBoxAgainstFrame({
     frameTop: args.frameTop - contentTop,
     frameBottom: args.frameBottom - contentTop,
     tooltipHeight: args.tooltipHeight,
     arrowSize: args.arrowSize,
-    viewportHeight: Math.max(0, viewBottom - contentTop),
+    viewportHeight: Math.max(0, view.top + view.height - contentTop),
     padding,
-    preferred: above ? 'above' : 'below',
+    preferred: 'above',
     lockSide: true,
   })
   return { top: placed.top + contentTop, arrowDirection: placed.arrowDirection }
 }
 
 /**
- * Scroll just enough for the step 8 card to clear the results panel.
- * Returns the delta applied. Zero means the current scroll already has room.
+ * Scroll so the step 8 card and the top edge of the results are both on screen.
+ * The card stays above the panel. Returns the delta applied. Zero means the
+ * current scroll already has room.
  */
 export function scrollReviewTooltipBesideResults(options: {
   tooltipHeight: number
@@ -985,33 +940,9 @@ export function scrollReviewTooltipBesideResults(options: {
   const padding = options.padding ?? 12
   const tooltipHeight = Math.max(options.tooltipHeight, laidOutTooltipHeight())
   const frameTop = results.top - TUTORIAL_FRAME_OUTSET_PX
-  const frameBottom = results.bottom + TUTORIAL_FRAME_OUTSET_PX
   const need = tooltipHeight + options.arrowSize + padding
-  const contentTop = reviewContentTop()
-  const structuralBelow = reviewStructuralRoomBelow(frameBottom)
-  const above = reviewTooltipPrefersAbove({
-    frameTop,
-    frameBottom,
-    contentTop,
-    viewBottom: reviewViewportBottom(contentTop),
-    structuralBelow,
-    need,
-  })
-  if (!above && structuralBelow < need) {
-    reserveTooltipGapBeforeFooter(need, frameBottom)
-    return 0
-  }
-  const viewBottom = reviewViewportBottom(contentTop)
-  const sideAbove = reviewTooltipPrefersAbove({
-    frameTop,
-    frameBottom,
-    contentTop,
-    viewBottom,
-    structuralBelow: reviewStructuralRoomBelow(frameBottom),
-    need,
-  })
-  const room = sideAbove ? frameTop - contentTop : viewBottom - frameBottom
-  const delta = room >= need ? 0 : sideAbove ? -(need - room) : need - room
+  const room = frameTop - reviewContentTop()
+  const delta = room >= need ? 0 : -(need - room)
   if (Math.abs(delta) < 1) return 0
   const root = getTutorialScrollRoot()
   root.scrollToTop(
