@@ -190,7 +190,7 @@ const MOBILE_STEP_OVERRIDES: Partial<
       'Review the responses from both models above by selecting their tabs or swiping to the next model. Then, type a follow-up.',
   },
   'view-follow-up-results': {
-    position: 'top', // Step 6: mobile code places the card above or below the full results block
+    position: 'bottom', // Same seat as the follow-up card: under the composer, never on the results.
     description:
       'Read the latest replies from each model. Compare how they stay consistent with the conversation so far.',
   },
@@ -1689,6 +1689,24 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         holdFirstStream ||
         (current === 'follow-up' && !followUpStarted && !isFollowUpComposerReady())
       if (!active) {
+        if (isReview) {
+          const composer = document.querySelector(
+            '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+          )
+          if (composer instanceof HTMLElement && elementHasSpotlightBox(composer)) {
+            const box = composer.getBoundingClientRect()
+            const viewTop = window.visualViewport?.offsetTop ?? 0
+            const viewH = window.visualViewport?.height ?? window.innerHeight
+            const onScreen = box.top > viewTop + 24 && box.bottom < viewTop + viewH - 24
+            if (!onScreen) {
+              scrollFollowUpHighlightIntoView({
+                tooltipHeight: overlayRef.current?.getBoundingClientRect().height || 220,
+                arrowSize: MOBILE_TUTORIAL_ARROW_PX,
+                preferred: 'below',
+              })
+            }
+          }
+        }
         setLoadingStreamingRect(prev => (prev == null ? prev : null))
         return
       }
@@ -1790,6 +1808,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           !followUpRound &&
           !firstComparisonHandoff &&
           !holdFirstStream &&
+          !isReview &&
           !hasScrolledToResults &&
           canScroll
         ) {

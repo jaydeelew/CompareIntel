@@ -621,8 +621,8 @@ export function readTutorialSpotlightRect(
   }
 
   if (step === 'view-follow-up-results') {
-    const section = document.querySelector('.results-section') as HTMLElement | null
-    return section?.getBoundingClientRect() ?? null
+    // The results panel can stay framed. The tooltip always meets the composer.
+    return composerAnchorRect('follow-up')
   }
 
   return null
@@ -1237,6 +1237,29 @@ function resultsAnchorRect(): DOMRect | null {
   return rect.width > 2 && rect.height > 2 ? rect : null
 }
 
+function rectIsResultsPanel(rect: DOMRect, results: DOMRect): boolean {
+  return (
+    Math.abs(rect.top - results.top) < 4 &&
+    Math.abs(rect.left - results.left) < 4 &&
+    Math.abs(rect.width - results.width) < 8 &&
+    Math.abs(rect.height - results.height) < 8
+  )
+}
+
+/**
+ * The comparison results panel is never a tooltip anchor. While it is framed
+ * and still streaming, the card is hidden. Once the round finishes, the card
+ * meets the composer for both the first comparison and the follow-up.
+ */
+export function tooltipRectOffResultsPanel(requested: DOMRect, step: TutorialStep): DOMRect {
+  const results = resultsAnchorRect()
+  const onResults =
+    step === 'view-follow-up-results' || (results != null && rectIsResultsPanel(requested, results))
+  if (!onResults) return requested
+  const composer = composerAnchorRect(step === 'view-follow-up-results' ? 'follow-up' : step)
+  return composer ?? requested
+}
+
 export interface TooltipAnchorDecision {
   anchor: DOMRect
   /** The arrow would land on the processing panel, so the card floats instead. */
@@ -1261,6 +1284,9 @@ export function readTooltipAnchorAvoidingProcessingPanel(args: {
   padding?: number
 }): TooltipAnchorDecision | null {
   const panel = readProcessingPanelBox()
+  const requested =
+    args.requested == null ? null : tooltipRectOffResultsPanel(args.requested, args.step)
+  const results = resultsAnchorRect()
   const spotlight = readTutorialSpotlightRect(args.step, args.providerNames)
   const candidates: DOMRect[] = []
   const push = (rect: DOMRect | null | undefined) => {
@@ -1274,21 +1300,23 @@ export function readTooltipAnchorAvoidingProcessingPanel(args: {
     )
     if (!seen) candidates.push(rect)
   }
-  push(spotlight)
-  if (!panel || !args.requested || !rectMostlyOnPanel(args.requested, panel)) push(args.requested)
+  if (!(spotlight && results && rectIsResultsPanel(spotlight, results))) push(spotlight)
+  if (!panel || !requested || !rectMostlyOnPanel(requested, panel)) {
+    if (!(requested && results && rectIsResultsPanel(requested, results))) push(requested)
+  }
   if (
     args.step === 'submit-comparison' ||
     args.step === 'submit-comparison-2' ||
     args.step === 'follow-up' ||
+    args.step === 'view-follow-up-results' ||
     args.step === 'enter-prompt' ||
     args.step === 'enter-prompt-2'
   ) {
-    push(composerAnchorRect(args.step))
+    push(composerAnchorRect(args.step === 'view-follow-up-results' ? 'follow-up' : args.step))
   }
-  if (args.step === 'view-follow-up-results' || args.step === 'follow-up') push(resultsAnchorRect())
 
   if (!panel) {
-    const anchor = candidates[0] ?? args.requested
+    const anchor = candidates[0] ?? requested
     return anchor ? { anchor, hideArrow: false } : null
   }
 
@@ -1366,13 +1394,14 @@ export function desktopTooltipClearOfProcessingPanel(
   config: StepConfig,
   providerNames: readonly string[] = []
 ): DesktopTooltipPlacement {
+  const anchorRequested = tooltipRectOffResultsPanel(requested, step)
   const panel = readProcessingPanelBox()
   if (!panel) {
-    return { ...computeTooltipPosition(requested, step, config), hideArrow: false }
+    return { ...computeTooltipPosition(anchorRequested, step, config), hideArrow: false }
   }
   const preferred = config.position === 'bottom' ? 'below' : 'above'
   const decision = readTooltipAnchorAvoidingProcessingPanel({
-    requested,
+    requested: anchorRequested,
     step,
     providerNames,
     tooltipHeight: getEstimatedTooltipHeight(),

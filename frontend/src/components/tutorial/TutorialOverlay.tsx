@@ -147,9 +147,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // The follow-up card waits until that composer is the highlighted target.
   const followUpComposerPending = step === 'follow-up' && !isFollowUpComposerReady()
-  // No card while the processing panel is highlighted or replies are still streaming.
+  // No card while a comparison is still loading or its replies are still streaming.
+  // A results frame that stays up after the round finishes is not a reason to
+  // keep the card hidden: that card then sits on the composer.
   const hideTooltipWhileModelsWork =
-    isLoadingStreamingPhase ||
+    (isLoadingStreamingPhase && isLoading) ||
     ((step === 'submit-comparison' ||
       step === 'submit-comparison-2' ||
       step === 'follow-up' ||

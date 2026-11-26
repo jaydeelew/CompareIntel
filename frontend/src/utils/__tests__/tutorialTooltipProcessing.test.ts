@@ -85,7 +85,8 @@ describe('tooltip stays off the processing panel', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
     const panel = box(80, 180)
     const results = box(280, 500)
-    mount({ loading: panel, results, composer: box(40, 40, 40, 200) })
+    const composer = box(700, 80, 80, 480)
+    mount({ loading: panel, results, composer })
     const decision = readTooltipAnchorAvoidingProcessingPanel({
       requested: panel,
       step: 'view-follow-up-results',
@@ -97,7 +98,8 @@ describe('tooltip stays off the processing panel', () => {
       preferred: 'above',
     })
     expect(decision).not.toBeNull()
-    expect(decision?.anchor.top).not.toBe(panel.top)
-    expect(decision?.anchor.height).not.toBe(panel.height)
+    expect(decision?.hideArrow).toBe(false)
+    expect(decision?.anchor.top).toBe(700)
+    expect(decision?.anchor.height).toBe(80)
   })
 })

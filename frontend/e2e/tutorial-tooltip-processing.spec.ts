@@ -43,7 +43,11 @@ const TUTORIAL_MODEL_IDS = resolveStarterSelectionModelIds(MOCK_MODELS)
 const TUTORIAL_PROVIDERS = getProvidersForModelIds(MOCK_MODELS, TUTORIAL_MODEL_IDS)
 
 function projectAllowed(project: string): boolean {
-  return project === 'chromium' || project === 'Mobile Safari - iPhone 12'
+  return (
+    project === 'chromium' ||
+    project === 'Mobile Safari - iPhone 12' ||
+    project === 'Mobile Chrome - Pixel 5'
+  )
 }
 
 async function reachPromptStep(page: Page, testInfo: TestInfo): Promise<void> {
@@ -141,6 +145,76 @@ async function setStreamPhase(page: Page, phase: 'hold' | 'first' | 'rest'): Pro
   }, phase)
 }
 
+/**
+ * The visible tooltip's arrow meets the composer and stays off the results panel.
+ * `hidden` means no card is on screen.
+ */
+async function tooltipAim(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const tips = Array.from(
+      document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+    )
+    const tip = tips.find(node => {
+      const box = node.getBoundingClientRect()
+      if (box.width < 2 || box.height < 2) return false
+      const style = getComputedStyle(node)
+      return style.visibility !== 'hidden' && Number(style.opacity) > 0.05
+    })
+    if (!tip) return 'hidden'
+    if (
+      tip.classList.contains('tutorial-tooltip--unanchored') ||
+      tip.classList.contains('mobile-tutorial-tooltip--unanchored')
+    ) {
+      return 'unanchored'
+    }
+    const composer =
+      document.querySelector(
+        '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+      ) || document.querySelector('.composer:not(.composer-placeholder)')
+    const results = document.querySelector('.results-section')
+    if (!(composer instanceof HTMLElement)) return 'no-composer'
+    const composerBox = composer.getBoundingClientRect()
+    const arrow = tip.querySelector<HTMLElement>('.mobile-tutorial-arrow')
+    let tipX = 0
+    let tipY = 0
+    if (arrow) {
+      const arrowBox = arrow.getBoundingClientRect()
+      tipX = arrowBox.left + arrowBox.width / 2
+      const direction = Array.from(arrow.classList).find(name =>
+        name.startsWith('mobile-tutorial-arrow-')
+      )
+      tipY = direction?.endsWith('up') ? arrowBox.top : arrowBox.bottom
+      if (direction?.endsWith('left')) {
+        tipX = arrowBox.left
+        tipY = arrowBox.top + arrowBox.height / 2
+      } else if (direction?.endsWith('right')) {
+        tipX = arrowBox.right
+        tipY = arrowBox.top + arrowBox.height / 2
+      }
+    } else {
+      const box = tip.getBoundingClientRect()
+      const above = tip.classList.contains('tutorial-tooltip-top')
+      tipX = box.left + box.width / 2
+      tipY = above ? box.bottom : box.top
+    }
+    if (results instanceof HTMLElement) {
+      const resultsBox = results.getBoundingClientRect()
+      const insideResults =
+        tipX >= resultsBox.left + 8 &&
+        tipX <= resultsBox.right - 8 &&
+        tipY >= resultsBox.top + 8 &&
+        tipY <= resultsBox.bottom - 8
+      if (insideResults) return 'on-results'
+    }
+    const onComposer =
+      tipX >= composerBox.left - 48 &&
+      tipX <= composerBox.right + 48 &&
+      tipY >= composerBox.top - 56 &&
+      tipY <= composerBox.bottom + 56
+    return onComposer ? 'composer' : `off-composer ${Math.round(tipX)},${Math.round(tipY)}`
+  })
+}
+
 /** No tutorial card is on screen. `framed` means the processing panel owns the highlight. */
 async function tooltipHiddenDuringProcessing(page: Page): Promise<string> {
   return page.evaluate(() => {
@@ -176,8 +250,10 @@ async function submitComparison(page: Page, testInfo: TestInfo): Promise<void> {
 
 test.describe('tutorial tooltip stays hidden while models are working', () => {
   test.beforeEach(async ({ page }, testInfo) => {
-    test.skip(!projectAllowed(testInfo.project.name), 'desktop Chromium and Mobile Safari')
-    if (!isMobileE2eProject(testInfo.project.name)) {
+    test.skip(!projectAllowed(testInfo.project.name), 'desktop, iPhone, and Pixel')
+    if (testInfo.project.name === 'Mobile Chrome - Pixel 5') {
+      await page.setViewportSize({ width: 360, height: 800 })
+    } else if (!isMobileE2eProject(testInfo.project.name)) {
       await page.setViewportSize({ width: 1440, height: 900 })
     }
     await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
@@ -187,7 +263,11 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
     page,
   }, testInfo) => {
     test.setTimeout(180_000)
-    const folder = isMobileE2eProject(testInfo.project.name) ? 'iphone' : 'desktop'
+    const folder = testInfo.project.name.includes('iPhone')
+      ? 'iphone'
+      : testInfo.project.name.includes('Pixel')
+        ? 'pixel'
+        : 'desktop'
     const shotDir = `/opt/cursor/artifacts/tutorial-tooltip-processing/${folder}`
     fs.mkdirSync(shotDir, { recursive: true })
 
@@ -230,6 +310,9 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
     await expect(composerTip).toContainText('Continue the Conversation', {
       timeout: 25_000,
     })
+    await expect
+      .poll(() => tooltipAim(page), { timeout: 10_000, intervals: [100] })
+      .toBe('composer')
     await dismissMobileBlockers(page)
     await composerTip.scrollIntoViewIfNeeded()
     await page.screenshot({ path: `${shotDir}/composer-tooltip.png` })
@@ -244,5 +327,19 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
       .toBe('hidden-framed')
     await dismissMobileBlockers(page)
     await page.screenshot({ path: `${shotDir}/follow-up-processing.png` })
+
+    await setStreamPhase(page, 'first')
+    await expect.poll(() => tooltipAim(page), { timeout: 15_000, intervals: [100] }).toBe('hidden')
+    await page.screenshot({ path: `${shotDir}/follow-up-streaming.png` })
+    await setStreamPhase(page, 'rest')
+
+    const followUpTip = tutorialTooltip(page).first()
+    await expect(followUpTip).toBeVisible({ timeout: 25_000 })
+    await expect
+      .poll(() => tooltipAim(page), { timeout: 15_000, intervals: [100] })
+      .toBe('composer')
+    await dismissMobileBlockers(page)
+    await followUpTip.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: `${shotDir}/follow-up-composer.png` })
   })
 })
