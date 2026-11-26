@@ -109,7 +109,9 @@ async function nudgeScroll(page: Page): Promise<void> {
   await page.evaluate(() => {
     const app = document.querySelector('.app') as HTMLElement | null
     const scroller =
-      app && app.scrollHeight > app.clientHeight + 1
+      app &&
+      app.scrollHeight > app.clientHeight + 1 &&
+      app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
         ? app
         : ((document.scrollingElement as HTMLElement | null) ?? document.documentElement)
     scroller.scrollTop += 140

@@ -105,6 +105,54 @@ describe('ResultCard', () => {
       expect(screen.getByRole('button', { name: /raw/i })).toBeInTheDocument()
     })
 
+    it('places the swipe hint under the header and outside the response body', () => {
+      render(
+        <ResultCard
+          modelId={mockModel.id}
+          model={mockModel}
+          messages={mockMessages}
+          swipeHint={
+            <div data-testid="results-tab-swipe-hint">Swipe or tap ‹ › to switch models</div>
+          }
+        />
+      )
+      const hint = screen.getByTestId('results-tab-swipe-hint')
+      const header = document.querySelector('.result-header')
+      const body = document.querySelector('.conversation-content')
+      expect(header).toBeTruthy()
+      expect(body).toBeTruthy()
+      expect(header!.contains(hint)).toBe(false)
+      expect(body!.contains(hint)).toBe(false)
+      expect(header!.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(hint.compareDocumentPosition(body!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('places the model pager under the response, not inside it', () => {
+      render(
+        <ResultCard
+          modelId={mockModel.id}
+          model={mockModel}
+          messages={mockMessages}
+          swipeHint={<div data-testid="results-tab-swipe-hint">hint</div>}
+          modelPager={
+            <div data-testid="results-model-pager">
+              <button type="button">Previous model</button>
+              <span>2 / 3</span>
+              <button type="button">Next model</button>
+            </div>
+          }
+        />
+      )
+      const pager = screen.getByTestId('results-model-pager')
+      const hint = screen.getByTestId('results-tab-swipe-hint')
+      const body = document.querySelector('.conversation-content')
+      expect(body).toBeTruthy()
+      expect(body!.contains(pager)).toBe(false)
+      expect(body!.contains(hint)).toBe(false)
+      expect(body!.compareDocumentPosition(pager) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(hint.compareDocumentPosition(body!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
     it('should highlight Formatted tab by default', () => {
       render(<ResultCard modelId={mockModel.id} model={mockModel} messages={mockMessages} />)
       const formattedTab = screen.getByRole('button', { name: /formatted/i })

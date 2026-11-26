@@ -108,6 +108,16 @@ export function syncTutorialInteractionLock(): () => void {
     const resultsHighlighted = highlighted.some(
       el => el.classList.contains('results-section') || el.classList.contains('loading-section')
     )
+    // Step 5 focuses the prompt before the composer ring is on its className.
+    // A render then drops that class. Without the ring, the focused textarea
+    // itself is marked inert and WebKit will not accept the prompt.
+    const stepNow = readTutorialStep()
+    if (stepNow === 'enter-prompt' || stepNow === 'enter-prompt-2') {
+      document.querySelectorAll('.composer:not(.composer-placeholder)').forEach(node => {
+        if (!(node instanceof HTMLElement) || node.closest('.composer-hero-mirror')) return
+        if (!highlighted.includes(node)) highlighted.push(node)
+      })
+    }
     // The follow-up composer is portaled after the results block, so a results
     // highlight does not contain it. Keep it live until the review card is showing.
     if (slot && resultsHighlighted && !reviewStep) allowComposer(slot)

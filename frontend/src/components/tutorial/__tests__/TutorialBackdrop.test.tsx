@@ -171,7 +171,7 @@ describe('TutorialBackdrop', () => {
       />
     )
 
-    expect(document.querySelector('.tutorial-backdrop-follow-up-dim')).toBeInTheDocument()
+    expect(document.querySelector('svg.tutorial-scroll-dim')).toBeInTheDocument()
     expect(document.querySelector('.tutorial-backdrop-follow-up-results-ring')).toBeInTheDocument()
     expect(document.querySelector('.tutorial-backdrop-follow-up-composer-ring')).toBeInTheDocument()
   })

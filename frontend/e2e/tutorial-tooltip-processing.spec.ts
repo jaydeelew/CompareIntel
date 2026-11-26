@@ -141,8 +141,8 @@ async function setStreamPhase(page: Page, phase: 'hold' | 'first' | 'rest'): Pro
   }, phase)
 }
 
-/** Visible tutorial cards must not cover or point at the processing panel. */
-async function tooltipClearOfProcessingPanel(page: Page): Promise<string> {
+/** No tutorial card is on screen. `framed` means the processing panel owns the highlight. */
+async function tooltipHiddenDuringProcessing(page: Page): Promise<string> {
   return page.evaluate(() => {
     const panel = document.querySelector('.loading-section')
     if (!panel) return 'no-panel'
@@ -151,54 +151,16 @@ async function tooltipClearOfProcessingPanel(page: Page): Promise<string> {
     const highlighted =
       panel.classList.contains('tutorial-highlight') ||
       panel.classList.contains('mobile-tutorial-highlight')
-    const tips = Array.from(
+    const visible = Array.from(
       document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
-    ).filter(tip => {
+    ).some(tip => {
       const box = tip.getBoundingClientRect()
-      return box.width > 2 && box.height > 2
-    })
-    const framed = highlighted ? 'framed' : 'open'
-    if (tips.length === 0) return `missing-${framed}`
-    const anyVisible = tips.some(tip => {
+      if (box.width < 2 || box.height < 2) return false
       const style = getComputedStyle(tip)
       return style.visibility !== 'hidden' && Number(style.opacity) > 0.05
     })
-    for (const tip of tips) {
-      const tipBox = tip.getBoundingClientRect()
-      const overlapW = Math.min(tipBox.right, panelBox.right) - Math.max(tipBox.left, panelBox.left)
-      const overlapH = Math.min(tipBox.bottom, panelBox.bottom) - Math.max(tipBox.top, panelBox.top)
-      if (overlapW > 8 && overlapH > 8) return 'card-covers-panel'
-      const arrow = tip.querySelector<HTMLElement>('.tutorial-arrow, .mobile-tutorial-arrow')
-      if (!arrow) continue
-      const arrowStyle = getComputedStyle(arrow)
-      if (
-        arrowStyle.display === 'none' ||
-        arrowStyle.visibility === 'hidden' ||
-        Number(arrowStyle.opacity) === 0
-      ) {
-        continue
-      }
-      const arrowBox = arrow.getBoundingClientRect()
-      const down =
-        arrow.classList.contains('tutorial-arrow-top') ||
-        arrow.classList.contains('mobile-tutorial-arrow-down')
-      const up =
-        arrow.classList.contains('tutorial-arrow-bottom') ||
-        arrow.classList.contains('mobile-tutorial-arrow-up')
-      const tipX = arrowBox.left + Math.max(arrowBox.width, 1) / 2
-      const tipY = down
-        ? arrowBox.bottom + 2
-        : up
-          ? arrowBox.top - 2
-          : arrowBox.top + arrowBox.height / 2
-      const inside =
-        tipX >= panelBox.left - 4 &&
-        tipX <= panelBox.right + 4 &&
-        tipY >= panelBox.top - 4 &&
-        tipY <= panelBox.bottom + 4
-      if (inside) return 'arrow-on-panel'
-    }
-    return `${anyVisible ? 'clear' : 'hidden-clear'}-${framed}`
+    if (visible) return 'tooltip-visible'
+    return highlighted ? 'hidden-framed' : 'hidden-open'
   })
 }
 
@@ -212,7 +174,7 @@ async function submitComparison(page: Page, testInfo: TestInfo): Promise<void> {
   }
 }
 
-test.describe('tutorial tooltip never points at the processing panel', () => {
+test.describe('tutorial tooltip stays hidden while models are working', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     test.skip(!projectAllowed(testInfo.project.name), 'desktop Chromium and Mobile Safari')
     if (!isMobileE2eProject(testInfo.project.name)) {
@@ -221,7 +183,7 @@ test.describe('tutorial tooltip never points at the processing panel', () => {
     await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
   })
 
-  test('first comparison and follow-up keep the tooltip off the processing panel', async ({
+  test('hides the tooltip during processing and shows it on the composer', async ({
     page,
   }, testInfo) => {
     test.setTimeout(180_000)
@@ -238,32 +200,48 @@ test.describe('tutorial tooltip never points at the processing panel', () => {
     await submitComparison(page, testInfo)
 
     await expect
-      .poll(() => tooltipClearOfProcessingPanel(page), { timeout: 20_000, intervals: [100] })
-      .toMatch(/^(clear|hidden-clear)-framed$/)
-    await expect(tutorialTooltip(page).first()).toContainText('Run Your Comparison')
+      .poll(() => tooltipHiddenDuringProcessing(page), { timeout: 20_000, intervals: [100] })
+      .toBe('hidden-framed')
     await dismissMobileBlockers(page)
     await page.screenshot({ path: `${shotDir}/first-processing.png` })
 
     await setStreamPhase(page, 'first')
     await expect
-      .poll(() => tooltipClearOfProcessingPanel(page), { timeout: 15_000, intervals: [100] })
-      .toMatch(/^(clear|hidden-clear)-/)
+      .poll(async () => {
+        const duringStream = await page.evaluate(() => {
+          const tips = Array.from(
+            document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+          )
+          const visible = tips.some(tip => {
+            const box = tip.getBoundingClientRect()
+            if (box.width < 2 || box.height < 2) return false
+            const style = getComputedStyle(tip)
+            return style.visibility !== 'hidden' && Number(style.opacity) > 0.05
+          })
+          return visible ? 'visible' : 'hidden'
+        })
+        return duringStream
+      })
+      .toBe('hidden')
+    await page.screenshot({ path: `${shotDir}/first-streaming.png` })
     await setStreamPhase(page, 'rest')
 
-    await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation', {
+    const composerTip = tutorialTooltip(page).first()
+    await expect(composerTip).toContainText('Continue the Conversation', {
       timeout: 25_000,
     })
+    await dismissMobileBlockers(page)
+    await composerTip.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: `${shotDir}/composer-tooltip.png` })
+
     await setStreamPhase(page, 'hold')
     const followUp = page.getByTestId('comparison-input-textarea').filter({ visible: true }).first()
     await followUp.fill('Follow-up while the models are processing')
     await submitComparison(page, testInfo)
 
     await expect
-      .poll(() => tooltipClearOfProcessingPanel(page), { timeout: 20_000, intervals: [100] })
-      .toMatch(/^(clear|hidden-clear)-framed$/)
-    if (!isMobileE2eProject(testInfo.project.name)) {
-      await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation')
-    }
+      .poll(() => tooltipHiddenDuringProcessing(page), { timeout: 20_000, intervals: [100] })
+      .toBe('hidden-framed')
     await dismissMobileBlockers(page)
     await page.screenshot({ path: `${shotDir}/follow-up-processing.png` })
   })

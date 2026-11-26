@@ -145,18 +145,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     return null
   }
 
-  const shouldHideTooltipDuringFollowUpStream =
-    step === 'follow-up' && followUpSubmitStarted && streamAnswerStarted
-  // The composer is not "ready" while the processing panel is up, but that
-  // panel keeps this step's tooltip the same way the first comparison does.
-  const followUpComposerPending =
-    step === 'follow-up' && !isFollowUpComposerReady() && !(isLoading && !streamAnswerStarted)
-  // The processing panel keeps its cutout. The tooltip stays on the step's
-  // other target, or floats, so the review step still has a card.
-  const hideTooltipForStreamingCutout =
-    isLoadingStreamingPhase &&
-    !(isLoading && !streamAnswerStarted) &&
-    step !== 'view-follow-up-results'
+  // The follow-up card waits until that composer is the highlighted target.
+  const followUpComposerPending = step === 'follow-up' && !isFollowUpComposerReady()
+  // No card while the processing panel is highlighted or replies are still streaming.
+  const hideTooltipWhileModelsWork =
+    isLoadingStreamingPhase ||
+    ((step === 'submit-comparison' ||
+      step === 'submit-comparison-2' ||
+      step === 'follow-up' ||
+      step === 'view-follow-up-results') &&
+      isLoading) ||
+    (step === 'submit-comparison' && streamAnswerStarted) ||
+    (step === 'follow-up' && followUpSubmitStarted && streamAnswerStarted)
 
   const overlayUi = (
     <>
@@ -188,8 +188,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       )}
 
       {!scrollBack &&
-        !hideTooltipForStreamingCutout &&
-        !shouldHideTooltipDuringFollowUpStream &&
+        !hideTooltipWhileModelsWork &&
         !followUpComposerPending &&
         !shouldHideTooltip &&
         isVisible &&

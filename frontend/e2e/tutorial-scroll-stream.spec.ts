@@ -409,7 +409,9 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
       if (!composer) return 'no-composer'
       const app = document.querySelector('.app') as HTMLElement | null
       const scroller =
-        app && app.scrollHeight > app.clientHeight + 1
+        app &&
+        app.scrollHeight > app.clientHeight + 1 &&
+        app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
           ? app
           : (document.scrollingElement as HTMLElement | null)
       if (!scroller) return 'no-scroller'
@@ -431,7 +433,9 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
     await page.evaluate(() => {
       const app = document.querySelector('.app') as HTMLElement | null
       const scroller =
-        app && app.scrollHeight > app.clientHeight + 1
+        app &&
+        app.scrollHeight > app.clientHeight + 1 &&
+        app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
           ? app
           : (document.scrollingElement as HTMLElement | null)
       if (scroller) scroller.scrollTop = 0
@@ -628,9 +632,27 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
     await expect
       .poll(() => readProcessingFrame(page), { timeout: 15_000, intervals: [100] })
       .toBe('ok')
-    if (!isMobileE2eProject(project)) {
-      await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation')
-    }
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const tips = Array.from(
+            document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+          )
+          return tips.some(tip => {
+            const style = getComputedStyle(tip)
+            const box = tip.getBoundingClientRect()
+            return (
+              box.width > 2 &&
+              box.height > 2 &&
+              style.visibility !== 'hidden' &&
+              Number(style.opacity) > 0.05
+            )
+          })
+            ? 'visible'
+            : 'hidden'
+        })
+      )
+      .toBe('hidden')
     await dismissMobileBlockers(page)
     fs.mkdirSync(shotDir, { recursive: true })
     await page.screenshot({ path: `${shotDir}/processing.png` })
@@ -745,7 +767,9 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
       ) as HTMLElement | null
       const app = document.querySelector('.app') as HTMLElement | null
       const scroller =
-        app && app.scrollHeight > app.clientHeight + 1
+        app &&
+        app.scrollHeight > app.clientHeight + 1 &&
+        app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
           ? app
           : (document.scrollingElement as HTMLElement | null)
       if (!target || !scroller) return 'missing'
@@ -794,7 +818,9 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
           const sample = await page.evaluate(() => {
             const app = document.querySelector('.app') as HTMLElement | null
             const scroller =
-              app && app.scrollHeight > app.clientHeight + 1
+              app &&
+              app.scrollHeight > app.clientHeight + 1 &&
+              app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
                 ? app
                 : (document.scrollingElement as HTMLElement | null)
             const composer = document.querySelector(
@@ -821,7 +847,9 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
     const nudged = await page.evaluate(() => {
       const app = document.querySelector('.app') as HTMLElement | null
       const scroller =
-        app && app.scrollHeight > app.clientHeight + 1
+        app &&
+        app.scrollHeight > app.clientHeight + 1 &&
+        app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
           ? app
           : (document.scrollingElement as HTMLElement | null)
       const composer = document.querySelector(
@@ -875,7 +903,9 @@ test.describe('tutorial scroll-back and streaming highlight', () => {
     const pushed = await page.evaluate(() => {
       const app = document.querySelector('.app') as HTMLElement | null
       const scroller =
-        app && app.scrollHeight > app.clientHeight + 1
+        app &&
+        app.scrollHeight > app.clientHeight + 1 &&
+        app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
           ? app
           : (document.scrollingElement as HTMLElement | null)
       const composer = document.querySelector(
