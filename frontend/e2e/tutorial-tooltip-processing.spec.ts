@@ -281,6 +281,86 @@ async function footerDim(page: Page): Promise<string> {
   })
 }
 
+/** The composer tooltip must not cover the results the step asks the user to read. */
+async function tooltipClearsResults(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const tip = Array.from(
+      document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+    ).find(el => {
+      const box = el.getBoundingClientRect()
+      const style = getComputedStyle(el)
+      return (
+        box.width > 2 &&
+        box.height > 2 &&
+        style.visibility !== 'hidden' &&
+        Number(style.opacity) > 0.05
+      )
+    })
+    const results = document.querySelector('.results-section')
+    if (!tip || !(results instanceof HTMLElement)) return 'missing'
+    const a = tip.getBoundingClientRect()
+    const b = results.getBoundingClientRect()
+    const overlapW = Math.min(a.right, b.right) - Math.max(a.left, b.left)
+    const overlapH = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+    return overlapW > 4 && overlapH > 4 ? 'overlaps' : 'clear'
+  })
+}
+
+/**
+ * The footer veil uses the same black as the live overlay, and the footer
+ * continues the hero gradient the overlay darkens.
+ */
+async function footerVeilMatchesOverlay(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const nav = document.querySelector('nav[aria-label="Footer navigation"]')
+    const footer = nav?.closest('footer')
+    const hero = document.querySelector('.hero-section')
+    if (!(footer instanceof HTMLElement) || !(hero instanceof HTMLElement)) return 'missing'
+    const parse = (value: string): [number, number, number, number] | null => {
+      const probe = document.createElement('span')
+      probe.style.color = value
+      document.body.append(probe)
+      const got = getComputedStyle(probe).color
+      probe.remove()
+      const match =
+        /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/.exec(got)
+      if (!match) return null
+      return [
+        Number(match[1]),
+        Number(match[2]),
+        Number(match[3]),
+        match[4] == null ? 1 : Number(match[4]),
+      ]
+    }
+    const veil = getComputedStyle(footer, '::after').backgroundColor
+    const svgFill = document
+      .querySelector('svg.tutorial-scroll-dim rect[mask]')
+      ?.getAttribute('fill')
+    let overlay = svgFill ?? ''
+    if (!overlay) {
+      const cutout = document.querySelector<HTMLElement>(
+        '.tutorial-backdrop, .mobile-tutorial-backdrop, .tutorial-backdrop-cutout, .mobile-tutorial-backdrop-cutout'
+      )
+      if (cutout) {
+        const shadow = getComputedStyle(cutout).boxShadow
+        overlay = shadow.match(/rgba?\(\s*0\s*,\s*0\s*,\s*0\s*,\s*[\d.]+\)/)?.[0] ?? ''
+      }
+    }
+    const veilColor = parse(veil)
+    const overlayColor = overlay ? parse(overlay) : null
+    if (!veilColor || !overlayColor) return 'no-color'
+    const same =
+      veilColor[0] === overlayColor[0] &&
+      veilColor[1] === overlayColor[1] &&
+      veilColor[2] === overlayColor[2] &&
+      Math.abs(veilColor[3] - overlayColor[3]) < 0.02
+    if (!same) return 'color'
+    const footerImage = getComputedStyle(footer).backgroundImage
+    if (footerImage === 'none' || !footerImage.includes('gradient')) return 'base'
+    return 'match'
+  })
+}
+
 /** No tutorial card is on screen. `framed` means the processing panel owns the highlight. */
 async function tooltipHiddenDuringProcessing(page: Page): Promise<string> {
   return page.evaluate(() => {
@@ -382,9 +462,18 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
     await expect
       .poll(() => composerCutout(page), { timeout: 10_000, intervals: [100] })
       .toBe('cutout')
+    await expect
+      .poll(() => tooltipClearsResults(page), { timeout: 10_000, intervals: [100] })
+      .toBe('clear')
     await dismissMobileBlockers(page)
     await composerTip.scrollIntoViewIfNeeded()
     await expect.poll(() => footerDim(page), { timeout: 5_000, intervals: [100] }).toBe('dimmed')
+    await expect
+      .poll(() => footerVeilMatchesOverlay(page), { timeout: 5_000, intervals: [100] })
+      .toBe('match')
+    await expect
+      .poll(() => tooltipClearsResults(page), { timeout: 5_000, intervals: [100] })
+      .toBe('clear')
     await page.screenshot({ path: `${shotDir}/composer-tooltip.png` })
 
     await setStreamPhase(page, 'hold')
@@ -411,9 +500,18 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
     await expect
       .poll(() => composerCutout(page), { timeout: 10_000, intervals: [100] })
       .toBe('cutout')
+    await expect
+      .poll(() => tooltipClearsResults(page), { timeout: 10_000, intervals: [100] })
+      .toBe('clear')
     await dismissMobileBlockers(page)
     await followUpTip.scrollIntoViewIfNeeded()
     await expect.poll(() => footerDim(page), { timeout: 5_000, intervals: [100] }).toBe('dimmed')
+    await expect
+      .poll(() => footerVeilMatchesOverlay(page), { timeout: 5_000, intervals: [100] })
+      .toBe('match')
+    await expect
+      .poll(() => tooltipClearsResults(page), { timeout: 5_000, intervals: [100] })
+      .toBe('clear')
     await page.screenshot({ path: `${shotDir}/follow-up-composer.png` })
   })
 })

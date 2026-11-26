@@ -44,6 +44,7 @@ import {
   readHistoryComposerFrame,
   readHistoryComposerLift,
   scrollFollowUpHighlightIntoView,
+  tutorialTooltipPrefersBelow,
   scrollHistoryComposerPair,
   scrollTutorialElementToViewportY,
   streamingResultsTopInViewport,
@@ -761,7 +762,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Place against the framed highlight, not a stale header or a clamped screen edge.
     // Follow-up keeps the card below the composer. A short estimate lets the real
     // card flip upward and cover the responses the step is asking the user to read.
-    if (step === 'follow-up' && !spotlightSettledRef.current) {
+    if (tutorialTooltipPrefersBelow(step) && !spotlightSettledRef.current) {
       scrollFollowUpHighlightIntoView({
         tooltipHeight: tooltipHeight > 1 ? tooltipHeight : tooltipEstimatedHeight,
         arrowSize,
@@ -785,7 +786,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       viewportHeight,
       padding,
       preferred: preferredPosition === 'bottom' ? 'below' : 'above',
-      lockSide: step === 'follow-up',
+      lockSide: tutorialTooltipPrefersBelow(step),
     })
 
     // Composer steps must keep the card glued to the field, including while it
@@ -793,7 +794,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // cards pinned them in the viewport and the hint never appeared. Other
     // steps clamp so a card cannot sit above the URL bar or below the fold
     // while its highlight is still on screen.
-    const clampTooltip = !tutorialStepFollowsComposer(step)
+    const clampTooltip = !tutorialStepFollowsComposer(step) && !tutorialTooltipPrefersBelow(step)
     let tooltipTop = clampTooltip
       ? clampTooltipTop({
           top: placed.top,
@@ -869,7 +870,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         viewportTop: visualViewport.top,
         viewportHeight: visualViewport.height,
         preferred: preferredPosition === 'bottom' ? 'below' : 'above',
-        lockSide: step === 'follow-up',
+        lockSide: tutorialTooltipPrefersBelow(step),
         padding,
       })
       const anchorMoved =
@@ -898,7 +899,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           viewportHeight,
           padding,
           preferred: preferredPosition === 'bottom' ? 'below' : 'above',
-          lockSide: step === 'follow-up',
+          lockSide: tutorialTooltipPrefersBelow(step),
         })
         tooltipTop = clampTooltip
           ? clampTooltipTop({
@@ -1108,7 +1109,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     const scrollAndReveal = async () => {
-      if (currentStep === 'follow-up') {
+      if (tutorialTooltipPrefersBelow(currentStep)) {
         const placement = {
           tooltipHeight: tooltipEstimatedHeight,
           arrowSize: MOBILE_TUTORIAL_ARROW_PX,

@@ -114,32 +114,26 @@ describe('streaming comparison spotlight', () => {
     expect(readStreamingComparisonSpotlight(false)?.element).toBe(loading)
   })
 
-  it('pulls a tooltip that would sit above a tall results card back into the viewport', () => {
+  it('places the review tooltip under the composer so it does not cover the replies', () => {
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
+    const composer = box(520, 80)
     const placed = computeTooltipPosition(
-      box(16, 2400),
+      composer,
       'view-follow-up-results',
       TUTORIAL_STEPS_CONFIG['view-follow-up-results']
     )
-    const visualTop = placed.top - 210
-    expect(placed.effectivePosition).toBe('top')
-    expect(visualTop).toBeGreaterThanOrEqual(12)
-    expect(placed.top).toBeLessThanOrEqual(900 - 12)
+    expect(placed.effectivePosition).toBe('bottom')
+    expect(placed.top).toBeGreaterThanOrEqual(composer.bottom)
   })
 
-  it('does not move a tooltip that already meets a frame parked below the reserve', () => {
+  it('keeps the follow-up tooltip under the composer when the field is near the bottom', () => {
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
-    const minTop = desktopResultsTooltipMinTop()
-    const placed = computeTooltipPosition(
-      box(minTop, 2400),
-      'view-follow-up-results',
-      TUTORIAL_STEPS_CONFIG['view-follow-up-results']
-    )
-    const frameTop = minTop - 8
-    expect(placed.top).toBe(frameTop - 8)
-    expect(placed.top - 210).toBeGreaterThanOrEqual(12)
+    const composer = box(780, 80)
+    const placed = computeTooltipPosition(composer, 'follow-up', TUTORIAL_STEPS_CONFIG['follow-up'])
+    expect(placed.effectivePosition).toBe('bottom')
+    expect(placed.top).toBeGreaterThanOrEqual(composer.bottom)
   })
 
   it('puts streaming results under the header when the mobile card is hidden', () => {

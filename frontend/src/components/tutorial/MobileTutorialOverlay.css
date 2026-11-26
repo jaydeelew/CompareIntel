@@ -19,11 +19,16 @@
    footer, so it covers that block on every cutout step and scrolls with it.
    It is not a cutout and does not change the page's scroll height.
    A fixed full-viewport backdrop already covers the footer, so this stays off
-   then and the footer is not dimmed twice. */
+   then and the footer is not dimmed twice.
+   The veil color matches the overlay. The footer base continues the hero
+   gradient (see syncTutorialFooterWithHero) so the dimmed footer matches the
+   dimmed hero instead of a lighter panel. */
 body:has(#tutorial-portal-root):has(.tutorial-scroll-dim, .tutorial-backdrop-cutout) footer,
 body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
   footer {
   position: relative;
+  /* The inline border sits above the veil and reads as a light seam. */
+  border-top-width: 0 !important;
 }
 
 body:has(#tutorial-portal-root):has(.tutorial-scroll-dim, .tutorial-backdrop-cutout) footer::after,
@@ -31,7 +36,8 @@ body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutoria
   footer::after {
   content: '';
   position: absolute;
-  inset: 0;
+  /* Cover the 1px top border. It sits outside the padding box and stayed bright. */
+  inset: -1px 0 0 0;
   background: rgba(0, 0, 0, 0.6);
   pointer-events: none;
   z-index: 1;

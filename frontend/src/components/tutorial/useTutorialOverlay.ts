@@ -45,6 +45,7 @@ import {
   scrollContentOffset,
   scrollDeltaToFitTooltip,
   scrollFollowUpHighlightIntoView,
+  tutorialTooltipPrefersBelow,
   scrollTutorialElementToViewportY,
   streamingResultsTopInViewport,
   seatPortaledFollowUpComposer,
@@ -909,11 +910,15 @@ export function useTutorialOverlay(
       const el = layoutTarget()
       const rect = layoutRectForStep() ?? el?.getBoundingClientRect()
       if (!rect) return
-      centerTutorialStepRect(
-        step,
-        rect,
-        step === 'view-follow-up-results' ? desktopResultsTooltipMinTop() : undefined
-      )
+      if (tutorialTooltipPrefersBelow(step)) {
+        scrollFollowUpHighlightIntoView({
+          tooltipHeight: window.innerHeight < 700 ? 160 : 210,
+          arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+          preferred: 'below',
+        })
+      } else {
+        centerTutorialStepRect(step, rect)
+      }
     }
 
     const revealSettledStep = () => {
@@ -1156,7 +1161,12 @@ export function useTutorialOverlay(
         arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
         viewportTop: 0,
         viewportHeight: window.innerHeight,
-        preferred: TUTORIAL_STEPS_CONFIG[step].position === 'bottom' ? 'below' : 'above',
+        preferred: tutorialTooltipPrefersBelow(step)
+          ? 'below'
+          : TUTORIAL_STEPS_CONFIG[step].position === 'bottom'
+            ? 'below'
+            : 'above',
+        lockSide: tutorialTooltipPrefersBelow(step),
       })
       if (decision?.hideArrow) return
       const aim = decision?.anchor ?? rect
@@ -1180,20 +1190,20 @@ export function useTutorialOverlay(
           }
           const settled = readLayout()
           if (!settled) return
-          const preferred = TUTORIAL_STEPS_CONFIG[step].position === 'bottom' ? 'below' : 'above'
+          const preferred = tutorialTooltipPrefersBelow(step)
+            ? 'below'
+            : TUTORIAL_STEPS_CONFIG[step].position === 'bottom'
+              ? 'below'
+              : 'above'
           const tooltipHeight = window.innerHeight < 700 ? 160 : 210
-          if (step === 'follow-up') {
+          if (tutorialTooltipPrefersBelow(step)) {
             scrollFollowUpHighlightIntoView({
               tooltipHeight,
               arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
-              preferred,
+              preferred: 'below',
             })
           } else {
-            centerTutorialStepRect(
-              step,
-              settled,
-              step === 'view-follow-up-results' ? desktopResultsTooltipMinTop() : undefined
-            )
+            centerTutorialStepRect(step, settled)
             await waitForRectStable(readLayout, { timeoutMs: 240, quietMs: 60 })
             if (cancelled || stepRef.current !== step) return
             const centered = readLayout()

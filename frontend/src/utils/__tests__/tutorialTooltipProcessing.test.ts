@@ -2,9 +2,11 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { TUTORIAL_STEPS_CONFIG } from '../../data/tutorialSteps'
 import {
+  clearTutorialFooterBackdrop,
   computeTooltipPosition,
   desktopTooltipClearOfProcessingPanel,
   readTooltipAnchorAvoidingProcessingPanel,
+  syncTutorialFooterWithHero,
 } from '../tutorialPositioning'
 
 function box(top: number, height: number, left = 40, width = 640): DOMRect {
@@ -101,5 +103,43 @@ describe('tooltip stays off the processing panel', () => {
     expect(decision?.hideArrow).toBe(false)
     expect(decision?.anchor.top).toBe(700)
     expect(decision?.anchor.height).toBe(80)
+  })
+})
+
+describe('footer veil continues the hero under the overlay', () => {
+  const originalRect = HTMLElement.prototype.getBoundingClientRect
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+    HTMLElement.prototype.getBoundingClientRect = originalRect
+  })
+
+  it('copies the hero gradient onto the footer only while a clipped dim is up', () => {
+    const hero = document.createElement('section')
+    hero.className = 'hero-section'
+    hero.style.backgroundImage = 'linear-gradient(135deg, #132044 0%, #1e3a8a 50%, #132044 100%)'
+    const footer = document.createElement('footer')
+    const nav = document.createElement('nav')
+    nav.setAttribute('aria-label', 'Footer navigation')
+    footer.append(nav)
+    const cutout = document.createElement('div')
+    cutout.className = 'tutorial-backdrop-cutout'
+    document.body.append(hero, footer, cutout)
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect(
+      this: HTMLElement
+    ) {
+      if (this === hero) return new DOMRect(0, 0, 800, 600)
+      if (this === footer) return new DOMRect(0, 600, 800, 120)
+      return new DOMRect(0, 0, 0, 0)
+    }
+    syncTutorialFooterWithHero()
+    expect(footer.style.backgroundImage).toContain('linear-gradient')
+    expect(footer.style.backgroundSize).toBe('800px 600px')
+    expect(footer.style.backgroundPosition).toBe('0px -600px')
+    expect(footer.style.backgroundColor).toBe('rgb(19, 32, 68)')
+    cutout.remove()
+    syncTutorialFooterWithHero()
+    expect(footer.style.backgroundImage).toBe('')
+    clearTutorialFooterBackdrop()
   })
 })

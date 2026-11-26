@@ -300,11 +300,15 @@ export function streamingResultsTopInViewport(): number {
  * Instant scroll: the tooltip stays hidden until this finishes, and a smooth scroll
  * plus the fade timer is clamped on Mobile Safari.
  */
+/** Steps whose tooltip is glued under the composer so the card never covers the replies. */
+export function tutorialTooltipPrefersBelow(step: TutorialStep): boolean {
+  return step === 'follow-up' || step === 'view-follow-up-results'
+}
+
 /**
- * How far to scroll the below-results composer on step 7.
- * Mobile (tooltip below) only moves when the composer does not have room under it,
- * which is what kept that composer and the results on screen before the transition work.
- * Desktop parks the composer just under the tooltip. Positive scrolls content up.
+ * How far to scroll the below-results composer when the tooltip sits on it.
+ * Both composer-anchored steps keep the card underneath, and only move when
+ * that card would not fit. Positive scrolls content up.
  * The hero composer is not a target: passing its box scrolls the results off the bottom.
  */
 export function followUpScrollDelta(args: {
@@ -1120,13 +1124,15 @@ export function computeTooltipPosition(
   const frameTop = rect.top - TUTORIAL_FRAME_OUTSET_PX
   const frameBottom = rect.bottom + TUTORIAL_FRAME_OUTSET_PX
   const estimatedTooltipHeight = getEstimatedTooltipHeight()
+  const lockBelow = tutorialTooltipPrefersBelow(_step)
   const placed = placeTooltipBoxAgainstFrame({
     frameTop,
     frameBottom,
     tooltipHeight: estimatedTooltipHeight,
     arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
     viewportHeight: window.innerHeight,
-    preferred: config.position === 'bottom' ? 'below' : 'above',
+    preferred: lockBelow || config.position === 'bottom' ? 'below' : 'above',
+    lockSide: lockBelow,
   })
   const centerX = rect.left + rect.width / 2
   const left = Math.max(180, Math.min(centerX, window.innerWidth - 180))
@@ -1141,12 +1147,10 @@ export function computeTooltipPosition(
       effectivePosition: 'top',
     }
   }
+  const belowTop = frameBottom + DESKTOP_TUTORIAL_ARROW_PX
   return {
-    top: clampDesktopTooltipTop(
-      frameBottom + DESKTOP_TUTORIAL_ARROW_PX,
-      'bottom',
-      estimatedTooltipHeight
-    ),
+    // A locked card stays under the composer. Clamping it upward covers the replies.
+    top: lockBelow ? belowTop : clampDesktopTooltipTop(belowTop, 'bottom', estimatedTooltipHeight),
     left,
     effectivePosition: 'bottom',
   }
@@ -1399,7 +1403,8 @@ export function desktopTooltipClearOfProcessingPanel(
   if (!panel) {
     return { ...computeTooltipPosition(anchorRequested, step, config), hideArrow: false }
   }
-  const preferred = config.position === 'bottom' ? 'below' : 'above'
+  const lockBelow = tutorialTooltipPrefersBelow(step)
+  const preferred = lockBelow || config.position === 'bottom' ? 'below' : 'above'
   const decision = readTooltipAnchorAvoidingProcessingPanel({
     requested: anchorRequested,
     step,
@@ -1409,6 +1414,7 @@ export function desktopTooltipClearOfProcessingPanel(
     viewportTop: 0,
     viewportHeight: window.innerHeight,
     preferred,
+    lockSide: lockBelow,
   })
   if (!decision || decision.hideArrow) {
     const floated = floatTooltipClearOfProcessingPanel({
@@ -1508,3 +1514,80 @@ export function findTargetForStep(
 }
 
 export { getComposerElement, getComposerCutoutRects }
+
+function tutorialFooterElement(): HTMLElement | null {
+  const nav = document.querySelector('nav[aria-label="Footer navigation"]')
+  const footer = nav?.closest('footer')
+  return footer instanceof HTMLElement ? footer : null
+}
+
+function gradientEndColor(image: string): string {
+  const colors = image.match(/#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)/g)
+  return colors?.[colors.length - 1] ?? '#132044'
+}
+
+/** Drop the hero continuation painted onto the footer for the clipped tutorial dim. */
+export function clearTutorialFooterBackdrop(footer?: HTMLElement | null): void {
+  const el = footer ?? tutorialFooterElement()
+  if (!el) return
+  el.style.backgroundImage = ''
+  el.style.backgroundRepeat = ''
+  el.style.backgroundSize = ''
+  el.style.backgroundPosition = ''
+  el.style.backgroundColor = ''
+}
+
+/** The element whose background is actually painted just above the footer. */
+function backdropAboveFooter(footer: HTMLElement): HTMLElement | null {
+  const box = footer.getBoundingClientRect()
+  const y = Math.max(box.top - 3, 0)
+  const xs = [box.left + 12, box.left + box.width / 2, box.right - 12]
+  if (typeof document.elementFromPoint !== 'function') {
+    const hero = document.querySelector('.hero-section')
+    return hero instanceof HTMLElement ? hero : null
+  }
+  for (const x of xs) {
+    let node: Element | null = document.elementFromPoint(x, y)
+    while (node && node !== footer) {
+      if (node instanceof HTMLElement) {
+        const image = getComputedStyle(node).backgroundImage
+        if (image && image !== 'none') return node
+      }
+      node = node.parentElement
+    }
+  }
+  const hero = document.querySelector('.hero-section')
+  return hero instanceof HTMLElement ? hero : null
+}
+
+/**
+ * The clipped dim paints over the page. The footer sits outside that clip, so
+ * its veil used to darken a light panel and looked lighter than the page.
+ * Continue the painted gradient across the footer, starting at the same row
+ * that meets the footer. The veil stays the overlay color.
+ */
+export function syncTutorialFooterWithHero(): void {
+  const footer = tutorialFooterElement()
+  if (!footer) return
+  const clipped = document.querySelector(
+    'svg.tutorial-scroll-dim, .tutorial-backdrop-cutout, .mobile-tutorial-backdrop-cutout'
+  )
+  if (!clipped) {
+    clearTutorialFooterBackdrop(footer)
+    return
+  }
+  const source = backdropAboveFooter(footer)
+  if (!source) return
+  const sourceStyle = getComputedStyle(source)
+  const sourceBox = source.getBoundingClientRect()
+  const footerBox = footer.getBoundingClientRect()
+  if (sourceBox.height < 2 || footerBox.height < 2 || sourceStyle.backgroundImage === 'none') {
+    return
+  }
+  const imageY = footerBox.top - sourceBox.top
+  footer.style.backgroundImage = sourceStyle.backgroundImage
+  footer.style.backgroundRepeat = 'no-repeat'
+  footer.style.backgroundSize = `${sourceBox.width}px ${sourceBox.height}px`
+  footer.style.backgroundPosition = `${sourceBox.left - footerBox.left}px ${-imageY}px`
+  footer.style.backgroundColor = gradientEndColor(sourceStyle.backgroundImage)
+}
