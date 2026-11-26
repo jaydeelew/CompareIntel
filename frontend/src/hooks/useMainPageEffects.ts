@@ -182,11 +182,16 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
   }, [showWelcomeModal, isTouchDevice, currentView, tutorialState.isActive, attemptFocusTextarea])
 
   // History step starts collapsed. A list left open from an earlier click would
-  // sit at the bottom of the page with the tutorial card.
+  // sit at the bottom of the page with the tutorial card. Close it again when
+  // the step ends so the saved-selections control is the one on screen.
   const prevTutorialStepRef = useRef(tutorialState.currentStep)
   useLayoutEffect(() => {
     const step = tutorialState.currentStep
-    if (step === 'history-dropdown' && prevTutorialStepRef.current !== 'history-dropdown') {
+    const prev = prevTutorialStepRef.current
+    if (
+      (step === 'history-dropdown' && prev !== 'history-dropdown') ||
+      (prev === 'history-dropdown' && step !== 'history-dropdown')
+    ) {
       setShowHistoryDropdown(false)
     }
     prevTutorialStepRef.current = step
