@@ -176,6 +176,33 @@ describe('TutorialBackdrop', () => {
     expect(document.querySelector('.tutorial-backdrop-follow-up-composer-ring')).toBeInTheDocument()
   })
 
+  it('should render the review step with the same composer hole as follow-up', () => {
+    render(
+      <TutorialBackdrop
+        step="view-follow-up-results"
+        isLoadingStreamingPhase={false}
+        loadingStreamingCutout={null}
+        useRoundedCutout={false}
+        textareaCutoutToUse={{ top: 520, left: 40, width: 400, height: 88 }}
+        shouldExcludeTextarea={false}
+        shouldExcludeDropdown={false}
+        dropdownCutout={null}
+        targetCutout={{
+          top: 200,
+          left: 40,
+          width: 400,
+          height: 300,
+          borderRadius: 24,
+        }}
+        buttonCutout={null}
+      />
+    )
+
+    expect(document.querySelector('svg.tutorial-scroll-dim')).toBeInTheDocument()
+    expect(document.querySelector('.tutorial-backdrop-follow-up-results-ring')).toBeInTheDocument()
+    expect(document.querySelector('.tutorial-backdrop-follow-up-composer-ring')).toBeInTheDocument()
+  })
+
   it('should render default backdrop with button cutout when buttonCutout provided', () => {
     render(
       <TutorialBackdrop

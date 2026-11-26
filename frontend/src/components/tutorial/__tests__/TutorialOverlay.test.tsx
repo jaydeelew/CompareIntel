@@ -246,7 +246,10 @@ describe('TutorialOverlay comparison spotlight', () => {
         <button data-testid="comparison-submit-button" type="button">Submit</button>
       </div>
       <section class="loading-section">Processing responses from 2 AI models...</section>
-      <section class="results-section">Comparison Results</section>`
+      <section class="results-section">Comparison Results</section>
+      <div data-after-results-composer-slot>
+        <div class="composer" style="width:320px;min-height:80px"></div>
+      </div>`
     document.body.appendChild(wrap)
   }
 
@@ -279,6 +282,7 @@ describe('TutorialOverlay comparison spotlight', () => {
     ) {
       if (this.classList.contains('loading-section')) return new DOMRect(40, 120, 640, 140)
       if (this.classList.contains('results-section')) return resultsRect
+      if (this.closest('[data-after-results-composer-slot]')) return new DOMRect(40, 700, 320, 80)
       if (this.getAttribute('data-testid') === 'comparison-submit-button') {
         return new DOMRect(200, 480, 120, 40)
       }
@@ -315,7 +319,7 @@ describe('TutorialOverlay comparison spotlight', () => {
     return tip.classList.contains('tutorial-tooltip-top') ? cssTop - estimated : cssTop
   }
 
-  it('highlights the processing panel until the first streamed token, with its tooltip', async () => {
+  it('highlights the processing panel and hides the tooltip until streaming finishes', async () => {
     const view = render(
       <TutorialOverlay {...props} step="submit-comparison" isLoading streamAnswerStarted={false} />
     )
@@ -326,10 +330,7 @@ describe('TutorialOverlay comparison spotlight', () => {
         const results = document.querySelector('.results-section')
         expect(loading?.classList.contains('tutorial-highlight')).toBe(true)
         expect(results?.classList.contains('tutorial-highlight')).toBe(false)
-        const tip = document.querySelector('.tutorial-tooltip')
-        expect(tip?.textContent).toContain('Run Your Comparison')
-        expect(tip?.classList.contains('tutorial-tooltip--settling')).toBe(false)
-        expect(tooltipVisualTop(tip as HTMLElement)).toBeGreaterThanOrEqual(12)
+        expect(document.querySelector('.tutorial-tooltip')).toBeNull()
       },
       { timeout: 8000 }
     )
@@ -345,6 +346,7 @@ describe('TutorialOverlay comparison spotlight', () => {
         const results = document.querySelector('.results-section')
         expect(results?.classList.contains('tutorial-highlight')).toBe(true)
         expect(loading?.classList.contains('tutorial-highlight')).toBe(false)
+        expect(document.querySelector('.tutorial-tooltip')).toBeNull()
       },
       { timeout: 8000 }
     )
@@ -441,7 +443,7 @@ describe('TutorialOverlay comparison spotlight', () => {
     expect(visibleContinue).toHaveLength(0)
   })
 
-  it('renders the review tooltip on screen above a tall Comparison Results card', async () => {
+  it('renders the review tooltip on the composer, not the results panel', async () => {
     resultsRect = new DOMRect(40, 16, 640, 2400)
     render(
       <TutorialOverlay
@@ -457,14 +459,24 @@ describe('TutorialOverlay comparison spotlight', () => {
         const tip = document.querySelector('.tutorial-tooltip') as HTMLElement | null
         expect(tip?.textContent).toContain('Review the New Responses')
         expect(tip?.classList.contains('tutorial-tooltip--settling')).toBe(false)
+        expect(tip?.classList.contains('tutorial-tooltip--unanchored')).toBe(false)
         expect(
           document.querySelector('.results-section')?.classList.contains('tutorial-highlight')
         ).toBe(true)
+        const composer = document.querySelector(
+          '[data-after-results-composer-slot] .composer'
+        ) as HTMLElement | null
+        expect(composer?.classList.contains('tutorial-highlight')).toBe(true)
+        expect(document.querySelector('.tutorial-backdrop-follow-up-composer-ring')).toBeTruthy()
         const visualTop = tooltipVisualTop(tip as HTMLElement)
         expect(visualTop).toBeGreaterThanOrEqual(12)
         expect(viewportStyleTop(tip as HTMLElement)).toBeLessThanOrEqual(window.innerHeight - 12)
+        const left = Number.parseFloat(tip?.style.left ?? '')
+        const composerCenter = 40 + 320 / 2
+        const resultsCenter = resultsRect.left + resultsRect.width / 2
+        expect(Math.abs(left - composerCenter)).toBeLessThan(Math.abs(left - resultsCenter))
       },
       { timeout: 8000 }
     )
-  })
+  }, 12000)
 })
