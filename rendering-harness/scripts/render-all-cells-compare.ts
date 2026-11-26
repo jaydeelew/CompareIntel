@@ -154,6 +154,7 @@ async function main() {
     const changed: Array<Record<string, unknown>> = []
     let baseDomFlag = 0
     let headDomFlag = 0
+    let htmlMismatch = 0
     let compared = 0
 
     for (const cell of cells) {
@@ -164,8 +165,10 @@ async function main() {
       compared++
       if (b.rawMarkers.length > 0) baseDomFlag++
       if (h.rawMarkers.length > 0) headDomFlag++
-      const same = b.visible === h.visible && b.texKey === h.texKey
-      if (same) continue
+      const sameVisible = b.visible === h.visible && b.texKey === h.texKey
+      const sameHtml = b.html === h.html
+      if (sameVisible && sameHtml) continue
+      if (!sameHtml) htmlMismatch++
       const addedTex = h.texKey.split('\x1f').filter(t => t && !b.texKey.split('\x1f').includes(t))
       const removedRaw =
         b.rawMarkers.length > 0 && h.rawMarkers.length === 0
@@ -183,8 +186,9 @@ async function main() {
         addedTex: addedTex.slice(0, 5),
         visibleBefore: b.visible.slice(0, 200),
         visibleAfter: h.visible.slice(0, 200),
-        reason:
-          removedRaw.length > 0 || (b.rawMarkers.length && !h.rawMarkers.length)
+        reason: !sameHtml
+          ? 'Rendered DOM HTML changed'
+          : removedRaw.length > 0 || (b.rawMarkers.length && !h.rawMarkers.length)
             ? `Undelimited LaTeX in source rendered as KaTeX (was visible: ${b.rawMarkers.join(', ') || 'text change'})`
             : addedTex.length
               ? `New inline math: ${addedTex.join('; ')}`
@@ -198,6 +202,7 @@ async function main() {
       totalCells: cells.length,
       compared,
       changedCount: changed.length,
+      htmlMismatch,
       baseDomRawLatexCells: baseDomFlag,
       headDomRawLatexCells: headDomFlag,
       changed,

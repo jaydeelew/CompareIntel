@@ -10,6 +10,7 @@ interface LazyLatexRendererProps {
   children: string
   className?: string
   modelId?: string
+  streaming?: boolean
 }
 
 type LatexRendererComponent = React.ComponentType<LazyLatexRendererProps>
@@ -135,6 +136,8 @@ export interface MessageBubbleProps {
   /** Web-search inline link preview cards (formatted tab, assistant only). */
   linkPreviewsEnabled?: boolean
   deferLinkPreviews?: boolean
+  /** Latest assistant reply is still receiving tokens. */
+  streaming?: boolean
 }
 
 // Displays a single message in a conversation with formatted/raw rendering
@@ -153,6 +156,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   pendingGeneratedImage = false,
   linkPreviewsEnabled = false,
   deferLinkPreviews = false,
+  streaming = false,
 }) => {
   const [failedImageIndices, setFailedImageIndices] = useState<Set<number>>(new Set())
   const [LatexView, setLatexView] = useState<LatexRendererComponent | null>(() =>
@@ -362,14 +366,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 modelId={modelId}
                 enabled={linkPreviewsEnabled}
                 defer={deferLinkPreviews}
+                streaming={streaming}
               />
             ) : LatexView ? (
-              <LatexView className="result-output" modelId={modelId}>
+              <LatexView className="result-output" modelId={modelId} streaming={streaming}>
                 {safeContent}
               </LatexView>
             ) : (
-              <div className="result-output" aria-busy="true">
-                {safeContent}
+              <div className="result-output" aria-busy="true" data-renderer-pending="true">
+                {streaming ? null : safeContent}
               </div>
             )
           ) : (

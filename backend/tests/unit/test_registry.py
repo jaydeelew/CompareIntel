@@ -56,7 +56,6 @@ class TestCatalogLineup:
         "black-forest-labs/flux.2-max",
         "black-forest-labs/flux-3-image",
         "bytedance-seed/seedream-5-5",
-        "minimax/minimax-h3-image",
         "bytedance-seed/seedream-5-0-flash",
         "openai/gpt-image-2.6-sunburst",
         "openai/gpt-image-2.6-flare",
@@ -95,7 +94,7 @@ class TestCatalogLineup:
 
     def test_lineup_refresh_swaps_superseded_models(self):
         ids = registry.get_registry_model_ids()
-        assert len(ids) == 102
+        assert len(ids) == 101
         for model_id in (
             "deepseek/deepseek-v4.1-flash-1017",
             "tencent/hy4",
@@ -118,7 +117,7 @@ class TestCatalogLineup:
 
     def test_november_16_lineup_lands_at_101(self):
         ids = registry.get_registry_model_ids()
-        assert len(ids) == 102
+        assert len(ids) == 101
         assert "mistralai/mistral-medium-3.1" not in ids
         assert "google/gemini-4-argon" in ids
         for model_id in (
@@ -127,7 +126,6 @@ class TestCatalogLineup:
             "anthropic/claude-fable-5.2",
             "qwen/qwen4-max",
             "bytedance-seed/seedream-5-5",
-            "minimax/minimax-h3-image",
             "tencent/hy4-flash",
         ):
             assert model_id in ids
@@ -137,6 +135,7 @@ class TestCatalogLineup:
             "openai/gpt-5.6-luna",
             "openai/gpt-5.6-sol",
             "bytedance-seed/seedream-4.5",
+            "minimax/minimax-h3-image",
         ):
             assert model_id not in ids
         data = registry.load_registry()
@@ -144,8 +143,9 @@ class TestCatalogLineup:
         assert "tencent/hy4-flash" not in data["free_tier_additional_models"]
         assert "bytedance-seed/seedream-5-5" in data["free_tier_additional_models"]
         assert "bytedance-seed/seedream-5-5" in data["image_free_tier_additional_models"]
-        assert "minimax/minimax-h3-image" in data["free_tier_additional_models"]
-        assert "minimax/minimax-h3-image" in data["image_free_tier_additional_models"]
+        assert "minimax/minimax-h3-image" not in data["free_tier_additional_models"]
+        assert "minimax/minimax-h3-image" not in data["image_free_tier_additional_models"]
+        assert "minimax/minimax-h3-image" not in data["unregistered_tier_models"]
         assert "openai/gpt-5.6-luna" not in data["free_tier_additional_models"]
         assert "mistralai/mistral-medium-3.1" not in data["free_tier_additional_models"]
         assert "mistralai/mistral-medium-3.1" not in data["unregistered_tier_models"]
@@ -160,9 +160,9 @@ class TestCatalogLineup:
             assert model_id not in data["free_tier_additional_models"]
             assert model_id not in data["unregistered_tier_models"]
 
-    def test_november_23_lineup_lands_at_102(self):
+    def test_november_23_lineup_lands_at_101(self):
         ids = registry.get_registry_model_ids()
-        assert len(ids) == 102
+        assert len(ids) == 101
         for model_id in (
             "openai/gpt-6.2-astra",
             "openai/gpt-6.2-sol",
@@ -186,6 +186,7 @@ class TestCatalogLineup:
             "google/gemini-3-flash-preview",
             "google/gemini-3.1-pro-preview",
             "google/gemma-3-27b-it",
+            "minimax/minimax-h3-image",
         ):
             assert model_id not in ids
         data = registry.load_registry()

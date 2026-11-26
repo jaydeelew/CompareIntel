@@ -26,6 +26,7 @@
     "evidence-mermaid-rtl.ts",
     "phone-stack-shot.ts",
     "render-ready.ts",
+    "scripts/capture-streaming-artifacts.ts",
     "coverage-lib.ts",
     "generate-coverage.ts",
     "check-coverage.ts",

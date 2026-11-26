@@ -12,6 +12,7 @@ interface RenderRequest {
   modelId: string;
   content: string;
   generation: string;
+  streaming?: boolean;
 }
 
 function markFailed(reason: string) {
@@ -38,6 +39,7 @@ function HarnessApp() {
               modelId: String(event.data.modelId || 'test'),
               content: event.data.content,
               generation: String(event.data.generation || ''),
+              streaming: event.data.streaming === true,
             });
           }
         });
@@ -180,7 +182,11 @@ function HarnessApp() {
       <div className="results-grid">
         <article className="result-card conversation-card">
           <div className="message-content">
-            <LatexRenderer className="result-output" modelId={renderData.modelId}>
+            <LatexRenderer
+              className="result-output"
+              modelId={renderData.modelId}
+              streaming={renderData.streaming === true}
+            >
               {renderData.content}
             </LatexRenderer>
           </div>

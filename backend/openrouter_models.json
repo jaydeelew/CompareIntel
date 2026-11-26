@@ -3448,51 +3448,6 @@
       }
     },
     {
-      "id": "minimax/minimax-h3-image",
-      "canonical_slug": "minimax/minimax-h3-image-20261110",
-      "hugging_face_id": "MiniMaxAI/MiniMax-H3-Image",
-      "name": "MiniMax: MiniMax H3 Image",
-      "created": 1794340143,
-      "description": "MiniMax H3 Image is MiniMax's image generation and editing model. It creates images from text prompts and edits or composes images from 1 to 16 reference images, with output up...",
-      "context_length": 4096,
-      "architecture": {
-        "modality": "text+image->image",
-        "input_modalities": [
-          "text",
-          "image"
-        ],
-        "output_modalities": [
-          "image"
-        ],
-        "tokenizer": "Other",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.0000023",
-        "completion": "0",
-        "image_token": "0.0000038",
-        "image_output": "0.0000038"
-      },
-      "top_provider": {
-        "context_length": 4096,
-        "max_completion_tokens": 3686,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "max_tokens",
-        "temperature",
-        "top_p"
-      ],
-      "default_parameters": {},
-      "supported_voices": null,
-      "knowledge_cutoff": null,
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/minimax/minimax-h3-image-20261110/endpoints"
-      }
-    },
-    {
       "id": "minimax/minimax-m2.5",
       "canonical_slug": "minimax/minimax-m2.5-20260211",
       "hugging_face_id": "MiniMaxAI/MiniMax-M2.5",

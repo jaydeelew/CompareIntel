@@ -9,6 +9,7 @@ import { describe, it, expect, vi } from 'vitest'
 
 import { createMockConversationMessage } from '../../../__tests__/utils/test-factories'
 import { RESULT_TAB, createModelId } from '../../../types'
+import * as alignLatestUserPrompt from '../../../utils/alignLatestUserPrompt'
 import { ResultCard } from '../ResultCard'
 
 // Mock useResponsive hook
@@ -102,6 +103,47 @@ describe('ResultCard', () => {
       render(<ResultCard modelId={mockModel.id} model={mockModel} messages={mockMessages} />)
       expect(screen.getByRole('button', { name: /formatted/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /raw/i })).toBeInTheDocument()
+    })
+
+    it('places the swipe hint under the header and outside the response body', () => {
+      render(
+        <ResultCard
+          modelId={mockModel.id}
+          model={mockModel}
+          messages={mockMessages}
+          swipeHint={
+            <div data-testid="results-tab-swipe-hint">Swipe or tap ‹ › to switch models</div>
+          }
+        />
+      )
+      const hint = screen.getByTestId('results-tab-swipe-hint')
+      const header = document.querySelector('.result-header')
+      const body = document.querySelector('.conversation-content')
+      expect(header).toBeTruthy()
+      expect(body).toBeTruthy()
+      expect(header!.contains(hint)).toBe(false)
+      expect(body!.contains(hint)).toBe(false)
+      expect(header!.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(hint.compareDocumentPosition(body!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('keeps the swipe hint out of the response body', () => {
+      render(
+        <ResultCard
+          modelId={mockModel.id}
+          model={mockModel}
+          messages={mockMessages}
+          swipeHint={<div data-testid="results-tab-swipe-hint">hint</div>}
+        />
+      )
+      const hint = screen.getByTestId('results-tab-swipe-hint')
+      const card = document.querySelector('.result-card')
+      const body = document.querySelector('.conversation-content')
+      expect(card).toBeTruthy()
+      expect(body).toBeTruthy()
+      expect(card!.contains(hint)).toBe(true)
+      expect(body!.contains(hint)).toBe(false)
+      expect(hint.compareDocumentPosition(body!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     })
 
     it('should highlight Formatted tab by default', () => {
@@ -261,6 +303,83 @@ describe('ResultCard', () => {
         <ResultCard modelId={mockModel.id} model={mockModel} messages={messagesWithLongContent} />
       )
       expect(screen.getByText(/500 chars/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('follow-up prompt alignment', () => {
+    const followUpMessages = [
+      createMockConversationMessage({ type: 'user', content: 'First question' }),
+      createMockConversationMessage({ type: 'assistant', content: 'A'.repeat(500) }),
+      createMockConversationMessage({ type: 'user', content: 'Latest question' }),
+      createMockConversationMessage({ type: 'assistant', content: 'Second answer' }),
+    ]
+
+    it('aligns a follow-up card and leaves it after a manual scroll', () => {
+      const spy = vi
+        .spyOn(alignLatestUserPrompt, 'scrollContentToLatestUserPrompt')
+        .mockReturnValue(true)
+      const { rerender, container } = render(
+        <ResultCard modelId={mockModel.id} model={mockModel} messages={followUpMessages} />
+      )
+      expect(spy).toHaveBeenCalled()
+
+      const content = container.querySelector('.conversation-content')
+      expect(content).toBeTruthy()
+      content?.dispatchEvent(new WheelEvent('wheel', { deltaY: 30, bubbles: true }))
+      spy.mockClear()
+
+      rerender(
+        <ResultCard
+          modelId={mockModel.id}
+          model={mockModel}
+          messages={[
+            ...followUpMessages,
+            createMockConversationMessage({ type: 'assistant', content: 'Still the same round' }),
+          ]}
+        />
+      )
+      expect(spy).not.toHaveBeenCalled()
+      spy.mockRestore()
+      alignLatestUserPrompt.clearManualCardScroll(mockModel.id)
+    })
+
+    it('restores the saved scroll instead of jumping again when the card remounts', () => {
+      const spy = vi
+        .spyOn(alignLatestUserPrompt, 'scrollContentToLatestUserPrompt')
+        .mockReturnValue(true)
+      const first = render(
+        <ResultCard modelId={mockModel.id} model={mockModel} messages={followUpMessages} />
+      )
+      expect(spy).toHaveBeenCalled()
+      const content = first.container.querySelector('.conversation-content')
+      expect(content).toBeTruthy()
+      if (content instanceof HTMLElement) {
+        content.scrollTop = 180
+        content.dispatchEvent(new Event('scroll'))
+      }
+      first.unmount()
+      spy.mockClear()
+
+      const second = render(
+        <ResultCard modelId={mockModel.id} model={mockModel} messages={followUpMessages} />
+      )
+      expect(spy).not.toHaveBeenCalled()
+      expect(alignLatestUserPrompt.readCardScrollSnapshot(mockModel.id, 2)).toMatchObject({
+        opened: true,
+        scrollTop: 180,
+      })
+      second.unmount()
+      spy.mockRestore()
+      alignLatestUserPrompt.clearManualCardScroll(mockModel.id)
+    })
+
+    it('does not align the first comparison', () => {
+      const spy = vi
+        .spyOn(alignLatestUserPrompt, 'scrollContentToLatestUserPrompt')
+        .mockReturnValue(true)
+      render(<ResultCard modelId={mockModel.id} model={mockModel} messages={mockMessages} />)
+      expect(spy).not.toHaveBeenCalled()
+      spy.mockRestore()
     })
   })
 

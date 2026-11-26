@@ -218,7 +218,9 @@ test('results and history stay scrollable during their steps', async ({ page }, 
     )
     const app = document.querySelector('.app') as HTMLElement | null
     const scroller =
-      app && app.scrollHeight > app.clientHeight + 1
+      app &&
+      app.scrollHeight > app.clientHeight + 1 &&
+      app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
         ? app
         : (document.scrollingElement as HTMLElement | null)
     if (!zone || !scroller) return
@@ -251,7 +253,9 @@ test('results and history stay scrollable during their steps', async ({ page }, 
   const scrolled = await page.evaluate(() => {
     const app = document.querySelector('.app') as HTMLElement | null
     const scroller =
-      app && app.scrollHeight > app.clientHeight + 1
+      app &&
+      app.scrollHeight > app.clientHeight + 1 &&
+      app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
         ? app
         : (document.scrollingElement as HTMLElement)
     const before = scroller.scrollTop
@@ -281,7 +285,9 @@ test('results and history stay scrollable during their steps', async ({ page }, 
       )
     const app = document.querySelector('.app') as HTMLElement | null
     const scroller =
-      app && app.scrollHeight > app.clientHeight + 1
+      app &&
+      app.scrollHeight > app.clientHeight + 1 &&
+      app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
         ? app
         : (document.scrollingElement as HTMLElement | null)
     if (!list || !scroller) return

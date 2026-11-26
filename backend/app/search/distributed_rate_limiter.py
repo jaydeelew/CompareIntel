@@ -513,8 +513,12 @@ class DistributedSearchRateLimiter:
 
             # Decrement the concurrent counter
             concurrent_key = f"rate_limit:{provider_name}:concurrent"
-            current_value = sync_client.get(concurrent_key)
-            current_value = int(current_value) if current_value else 0
+            # Keep the raw GET reply in its own name. Redis 8 types get() as
+            # bytes | str | None, and reassigning that name to int() is dropped
+            # by mypy when the assignment error code is disabled, so the log
+            # f-string still sees bytes.
+            stored_value = sync_client.get(concurrent_key)
+            current_value = int(stored_value) if stored_value else 0
             new_value = sync_client.decr(concurrent_key)
 
             logger.debug(

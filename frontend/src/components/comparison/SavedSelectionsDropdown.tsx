@@ -194,11 +194,20 @@ export function SavedSelectionsDropdown({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
+      // The tutorial card sits outside this menu. A press on its Done button
+      // must not close the menu first: Firefox drops the click when the card
+      // moves between mousedown and mouseup, and the tour never finishes.
+      const onTutorialCard = Boolean(
+        target.closest(
+          '#tutorial-portal-root, #mobile-tutorial-portal-root, .tutorial-tooltip, .mobile-tutorial-tooltip'
+        )
+      )
       if (
         showDropdown &&
         containerRef.current &&
         !containerRef.current.contains(target) &&
-        !target.closest('.saved-selections-dropdown')
+        !target.closest('.saved-selections-dropdown') &&
+        !onTutorialCard
       ) {
         setShowDropdown(false)
         setIsInSaveMode(false)

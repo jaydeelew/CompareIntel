@@ -54,3 +54,4 @@ export {
   unescapeGfmTableCellCodePipes,
   unescapeMarkdownEscapesOutsideKatex,
 } from './protection'
+export { splitStreamingRender, streamingVisibleSource } from './streamingSplit'

@@ -503,7 +503,10 @@ export function Hero({
               <span className="hero-title-second-line">Side by Side</span>
             </span>
           </h1>
-          <p className="hero-subtitle">Where human intelligence judges artificial intelligence</p>
+          <p className="hero-subtitle">
+            <span className="hero-subtitle-first-line">Where human intelligence judges</span>{' '}
+            <span className="hero-subtitle-second-line">artificial intelligence</span>
+          </p>
 
           <div className="hero-capabilities-wrap">
             <div className={`hero-logo-flash ${showFlash ? 'active' : ''}`} aria-hidden="true">

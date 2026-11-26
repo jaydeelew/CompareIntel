@@ -239,7 +239,7 @@ class TestConfigGenerator(unittest.TestCase):
             }
         }
 
-        configs = self.generator.generate_configs(analysis_data)
+        configs = self.generator.generate_configs(analysis_data, preserve_existing=False)
 
         self.assertEqual(len(configs), 2)
         self.assertEqual(configs[0]["modelId"], "model-1")

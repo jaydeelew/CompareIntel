@@ -21,28 +21,37 @@ import {
   isFollowUpComposerUnavailable,
 } from '../../utils/followUpComposerReady'
 import {
+  advanceFollowUpStreamingRound,
+  clampTooltipTop,
   deferScroll,
   elementHasSpotlightBox,
+  ensureTutorialScrollLayer,
   getTutorialProviderStepLayout,
   getTutorialScrollRoot,
   MOBILE_TUTORIAL_ARROW_PX,
   placeTooltipBoxAgainstFrame,
   readPortaledFollowUpComposerRect,
   readTutorialSpotlightRect,
+  readTooltipAnchorAvoidingProcessingPanel,
+  floatTooltipClearOfProcessingPanel,
+  readVisualViewportBox,
   scrollDeltaToFitTooltip,
   scrollBackDirectionForTarget,
+  scrollContentOffset,
   centerTutorialStepRect,
   clearHistoryComposerLift,
   clearTutorialScrollTail,
   readHistoryComposerFrame,
   readHistoryComposerLift,
   scrollFollowUpHighlightIntoView,
+  tutorialTooltipPrefersBelow,
   scrollHistoryComposerPair,
   scrollTutorialElementToViewportY,
   streamingResultsTopInViewport,
   seatPortaledFollowUpComposer,
   setHistoryComposerLift,
   TUTORIAL_FRAME_OUTSET_PX,
+  withScrollAnchor,
   type TutorialProviderLayoutStep,
 } from '../../utils/tutorialPositioning'
 import {
@@ -53,8 +62,10 @@ import {
   waitForRectStable,
   waitForTutorialLayoutSettle,
   watchTutorialFrameSize,
+  watchTutorialLayout,
 } from '../../utils/tutorialSettle'
 
+import { TutorialFollowUpDim } from './TutorialBackdrop'
 import { useTutorialInteractionLock } from './tutorialInteractionLock'
 import { useTutorialSubmitAttention } from './tutorialSubmitAttention'
 import {
@@ -65,6 +76,13 @@ import {
   getPortaledHistoryList,
 } from './tutorialUtils'
 import './MobileTutorialOverlay.css'
+
+function isComparisonSubmitButton(el: Element): boolean {
+  return (
+    el.classList.contains('submit-button') ||
+    el.getAttribute('data-testid') === 'comparison-submit-button'
+  )
+}
 
 interface MobileTutorialOverlayProps {
   step: TutorialStep | null
@@ -87,6 +105,10 @@ interface TooltipPosition {
   arrowDirection: 'up' | 'down' | 'left' | 'right'
   arrowOffset: number // Percentage from left/top for arrow positioning
   useFullscreen: boolean
+  /** Arrow would land on the processing panel, so the card floats. */
+  hideArrow?: boolean
+  anchorX?: number
+  anchorY?: number
 }
 
 interface TargetRect {
@@ -96,6 +118,54 @@ interface TargetRect {
   height: number
   centerX: number
   centerY: number
+  anchorX?: number
+  anchorY?: number
+}
+
+function targetRectFromFrame(frame: {
+  top: number
+  left: number
+  width: number
+  height: number
+}): TargetRect {
+  return {
+    top: frame.top,
+    left: frame.left,
+    width: frame.width,
+    height: frame.height,
+    centerX: frame.left + frame.width / 2,
+    centerY: frame.top + frame.height / 2,
+  }
+}
+
+function commitAnchoredRect(prev: TargetRect | null, next: TargetRect): TargetRect {
+  // Stamp before queueing setState. React can run the updater after the page
+  // has scrolled, and stamping there pins the ring to the viewport.
+  const stamped = next.anchorX != null && next.anchorY != null ? next : withScrollAnchor(next)
+  if (!prev) return stamped
+  const prevAnchored = prev.anchorX != null && prev.anchorY != null
+  // Grafting a fresh origin onto an old viewport top pins the ring. A box
+  // that was never stamped is replaced by this measurement.
+  if (!prevAnchored) return stamped
+  const a = scrollContentOffset(prev)
+  const b = scrollContentOffset(stamped)
+  if (
+    Math.abs(a.top - b.top) < 0.5 &&
+    Math.abs(a.left - b.left) < 0.5 &&
+    Math.abs(prev.width - next.width) < 0.5 &&
+    Math.abs(prev.height - next.height) < 0.5
+  ) {
+    return prev
+  }
+  return stamped
+}
+
+function queueAnchoredRect(
+  setRect: (updater: (prev: TargetRect | null) => TargetRect | null) => void,
+  next: TargetRect
+) {
+  const stamped = withScrollAnchor(next)
+  setRect(prev => commitAnchoredRect(prev, stamped))
 }
 
 // Mobile-specific step configurations (can override desktop positions and descriptions)
@@ -121,7 +191,7 @@ const MOBILE_STEP_OVERRIDES: Partial<
       'Review the responses from both models above by selecting their tabs or swiping to the next model. Then, type a follow-up.',
   },
   'view-follow-up-results': {
-    position: 'top', // Step 6: mobile code places the card above or below the full results block
+    position: 'bottom', // Same seat as the follow-up card: under the composer, never on the results.
     description:
       'Read the latest replies from each model. Compare how they stay consistent with the conversation so far.',
   },
@@ -166,6 +236,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const isStepTransitioningRef = useRef(false)
   const spotlightSettledRef = useRef(false)
   const settledStepRef = useRef<TutorialStep | null>(null)
+  // Set synchronously when this step's card is shown. A later target search
+  // must not hide it again: that left step 1 highlighted with no tooltip.
+  const tooltipShownForStepRef = useRef<TutorialStep | null>(null)
   const prevIsLoadingRef = useRef(isLoading)
   const dropdownWasOpenedRef = useRef<boolean>(false)
   // Refs do not re-render. Done stays disabled until this state flips.
@@ -182,26 +255,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   streamAnswerStartedRef.current = streamAnswerStarted
   const followUpSubmitStartedRef = useRef(followUpSubmitStarted)
   followUpSubmitStartedRef.current = followUpSubmitStarted
+  /** True after step 7's own submit, so composer seating yields to the shared spotlight. */
+  const followUpStreamingRoundRef = useRef(false)
   const suppressReviewTooltipRevealRef = useRef(false)
   const prevStepForTooltipExitRef = useRef<TutorialStep | null>(null)
   // Survives the position effect's StrictMode re-run. Cleared by the interval itself.
   const revealTimerRef = useRef<number | null>(null)
 
-  // Render the tutorial UI in a portal attached to <body> so `position: fixed` is truly viewport-fixed.
-  // This avoids cases where an ancestor has `contain/transform` which can break fixed positioning or clip the tooltip.
+  // Inside `.app`, so absolute highlights share the page's scroll container.
   useEffect(() => {
     if (typeof document === 'undefined') return
 
-    const existing = document.getElementById('mobile-tutorial-portal-root') as HTMLElement | null
-    let el: HTMLElement | null = null
-    if (!existing) {
-      el = document.createElement('div')
-      el.id = 'mobile-tutorial-portal-root'
-      document.body.appendChild(el)
-      setPortalRoot(el)
-    } else {
-      setPortalRoot(existing)
-    }
+    const el = ensureTutorialScrollLayer('mobile-tutorial-portal-root')
+    setPortalRoot(el)
 
     return () => {
       if (el?.parentNode) el.parentNode.removeChild(el)
@@ -271,6 +337,22 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (step !== 'history-dropdown') clearHistoryComposerLift()
   }, [step])
 
+  // The history list closes on the same click that advances to save. That
+  // click also tears down the scroll watcher, so the ring kept the open-list
+  // height until the tooltip fade finished. Measure the composer frame before
+  // paint instead. Later panel open/close is handled by the frame watcher.
+  const publishHistoryComposerFrame = useCallback(() => {
+    const stepNow = stepRef.current
+    if (stepNow !== 'history-dropdown' && stepNow !== 'save-selection') return
+    const frame = readHistoryComposerFrame()
+    if (!frame) return
+    queueAnchoredRect(setDropdownRect, targetRectFromFrame(frame))
+  }, [])
+
+  useLayoutEffect(() => {
+    publishHistoryComposerFrame()
+  }, [step, publishHistoryComposerFrame])
+
   // Step 5 tooltip must vanish before step 6 paints; same pattern as desktop useTutorialOverlay.
   useLayoutEffect(() => {
     const prev = prevStepForTooltipExitRef.current
@@ -289,6 +371,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
     if (step && step !== prev) {
       previousStepRef.current = step
+      tooltipShownForStepRef.current = null
     }
     if (frozenPairRef.current && frozenPairRef.current.step !== step) {
       frozenPairRef.current = null
@@ -399,8 +482,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
       if (element && (element.offsetParent !== null || element.offsetWidth > 0)) {
         setTargetElement(element)
+        const alreadyShown = tooltipShownForStepRef.current === step
         if (step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current) {
           suppressReviewTooltipRevealRef.current = false
+          tooltipShownForStepRef.current = step
+          setIsVisible(true)
+        } else if (alreadyShown) {
+          // A provider list that arrives after the card is showing must not
+          // hide it. Step 1 did that and left only the highlighted row.
           setIsVisible(true)
         } else if (isPrimaryExpandProviderStep(step)) {
           setIsVisible(false)
@@ -418,21 +507,29 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       return false
     }
 
+    let cancelled = false
+    let retryTimer: number | null = null
     if (!findElement()) {
       let attempts = 0
       const maxAttempts = step === 'follow-up' ? 120 : 15
       const attemptDelay = step === 'follow-up' ? 100 : 300
       const tryFind = () => {
+        if (cancelled || stepRef.current !== step) return
         attempts++
         if (findElement()) return
         if (attempts < maxAttempts) {
-          setTimeout(tryFind, attemptDelay)
+          retryTimer = window.setTimeout(tryFind, attemptDelay)
         } else if (stepRef.current !== 'follow-up') {
           suppressReviewTooltipRevealRef.current = false
+          tooltipShownForStepRef.current = step
           setIsVisible(true) // Show tooltip anyway
         }
       }
-      setTimeout(tryFind, 300)
+      retryTimer = window.setTimeout(tryFind, 300)
+    }
+    return () => {
+      cancelled = true
+      if (retryTimer != null) window.clearTimeout(retryTimer)
     }
   }, [step, tutorialStarterEntries, tutorialSplitModelSteps, tutorialProviderNames])
 
@@ -459,7 +556,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    if (step !== 'follow-up') {
+    if (step !== 'follow-up' && step !== 'view-follow-up-results') {
       setFollowUpComposerHoleRect(null)
     }
 
@@ -477,6 +574,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         : targetElement.getBoundingClientRect())
     const placementRect = rect
     const viewportWidth = window.innerWidth
+    const visualViewport = readVisualViewportBox()
+    // Side choice stays on the layout viewport. Composer steps scroll the card
+    // with the field; measuring against the shorter visual viewport flipped the
+    // card and left it behind the composer.
     const viewportHeight = window.innerHeight
     const padding = 12 // Padding from screen edges
     const tooltipRect = overlayRef.current?.getBoundingClientRect()
@@ -497,14 +598,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       centerX: rect.left + rect.width / 2,
       centerY: rect.top + rect.height / 2,
     }
-    setTargetRect(newTargetRect)
+    queueAnchoredRect(setTargetRect, newTargetRect)
 
-    if (step === 'follow-up') {
+    if (step === 'follow-up' || step === 'view-follow-up-results') {
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
       const composer = getComposerElement()
       if (resultsSection) {
         const r = resultsSection.getBoundingClientRect()
-        setBackdropRect({
+        queueAnchoredRect(setBackdropRect, {
           top: r.top,
           left: r.left,
           width: r.width,
@@ -517,7 +618,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       if (composer) {
         const r = composer.getBoundingClientRect()
-        setFollowUpComposerHoleRect({
+        queueAnchoredRect(setFollowUpComposerHoleRect, {
           top: r.top,
           left: r.left,
           width: r.width,
@@ -542,7 +643,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         const maxBottom = Math.max(...rects.map(r => r.bottom))
         const width = maxRight - minLeft
         const height = maxBottom - minTop
-        setBackdropRect({
+        queueAnchoredRect(setBackdropRect, {
           top: minTop,
           left: minLeft,
           width,
@@ -568,7 +669,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         const maxBottom = Math.max(...rects.map(r => r.bottom))
         const width = maxRight - minLeft
         const height = maxBottom - minTop
-        setBackdropRect({
+        queueAnchoredRect(setBackdropRect, {
           top: minTop,
           left: minLeft,
           width,
@@ -582,7 +683,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     } else if (isProviderPickerTutorialStep(step)) {
       if (providerLayout?.layoutRect) {
         const r = providerLayout.layoutRect
-        setBackdropRect({
+        queueAnchoredRect(setBackdropRect, {
           top: r.top,
           left: r.left,
           width: r.width,
@@ -601,14 +702,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       // Same composer ring on both steps (input + toolbar, plus the open history list).
       const frame = readHistoryComposerFrame()
       if (frame) {
-        setDropdownRect({
-          top: frame.top,
-          left: frame.left,
-          width: frame.width,
-          height: frame.height,
-          centerX: frame.left + frame.width / 2,
-          centerY: frame.top + frame.height / 2,
-        })
+        queueAnchoredRect(setDropdownRect, targetRectFromFrame(frame))
       } else {
         setDropdownRect(null)
       }
@@ -616,10 +710,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       setDropdownRect(null)
     }
 
-    // Check if target is off-screen
-    if (rect.bottom < 0) {
+    // Check if target is off the visible viewport, not the layout viewport.
+    // A mobile URL bar makes those differ, and the card was treated as gone.
+    if (rect.bottom < visualViewport.top) {
       setIsTargetOffScreen('up')
-    } else if (rect.top > viewportHeight) {
+    } else if (rect.top > visualViewport.top + visualViewport.height) {
       setIsTargetOffScreen('down')
     } else {
       setIsTargetOffScreen(null)
@@ -667,7 +762,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Place against the framed highlight, not a stale header or a clamped screen edge.
     // Follow-up keeps the card below the composer. A short estimate lets the real
     // card flip upward and cover the responses the step is asking the user to read.
-    if (step === 'follow-up' && !spotlightSettledRef.current) {
+    if (tutorialTooltipPrefersBelow(step) && !spotlightSettledRef.current) {
       scrollFollowUpHighlightIntoView({
         tooltipHeight: tooltipHeight > 1 ? tooltipHeight : tooltipEstimatedHeight,
         arrowSize,
@@ -679,7 +774,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (spotlight) {
       newTargetRect.centerX = spotlight.left + spotlight.width / 2
       newTargetRect.centerY = spotlight.top + spotlight.height / 2
-      setTargetRect({ ...newTargetRect })
+      queueAnchoredRect(setTargetRect, { ...newTargetRect })
     }
     const mobileOverride = MOBILE_STEP_OVERRIDES[step]
     const preferredPosition = mobileOverride?.position ?? 'top'
@@ -691,10 +786,24 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       viewportHeight,
       padding,
       preferred: preferredPosition === 'bottom' ? 'below' : 'above',
-      lockSide: step === 'follow-up',
+      lockSide: tutorialTooltipPrefersBelow(step),
     })
 
-    let tooltipTop = placed.top
+    // Composer steps must keep the card glued to the field, including while it
+    // slides off screen so the scroll-back hint can replace it. Clamping those
+    // cards pinned them in the viewport and the hint never appeared. Other
+    // steps clamp so a card cannot sit above the URL bar or below the fold
+    // while its highlight is still on screen.
+    const clampTooltip = !tutorialStepFollowsComposer(step) && !tutorialTooltipPrefersBelow(step)
+    let tooltipTop = clampTooltip
+      ? clampTooltipTop({
+          top: placed.top,
+          height: tooltipHeight,
+          viewportTop: visualViewport.top,
+          viewportHeight: visualViewport.height,
+          padding,
+        })
+      : placed.top
     let tooltipLeft = 0
     let arrowDirection: 'up' | 'down' | 'left' | 'right' = placed.arrowDirection
     let arrowOffset = 50
@@ -739,24 +848,111 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
+    if (clampTooltip) {
+      tooltipTop = clampTooltipTop({
+        top: tooltipTop,
+        height: tooltipHeight,
+        viewportTop: visualViewport.top,
+        viewportHeight: visualViewport.height,
+        padding,
+      })
+    }
+
+    // The processing panel may stay framed. The card never points at it.
+    let hideArrow = false
+    if (!(pairStep && frozenPair)) {
+      const decision = readTooltipAnchorAvoidingProcessingPanel({
+        requested: frameSource,
+        step,
+        providerNames: tutorialProviderNamesRef.current,
+        tooltipHeight,
+        arrowSize,
+        viewportTop: visualViewport.top,
+        viewportHeight: visualViewport.height,
+        preferred: preferredPosition === 'bottom' ? 'below' : 'above',
+        lockSide: tutorialTooltipPrefersBelow(step),
+        padding,
+      })
+      const anchorMoved =
+        decision != null &&
+        (Math.abs(decision.anchor.top - frameSource.top) > 1 ||
+          Math.abs(decision.anchor.left - frameSource.left) > 1 ||
+          Math.abs(decision.anchor.height - frameSource.height) > 1)
+      if (decision?.hideArrow) {
+        const floated = floatTooltipClearOfProcessingPanel({
+          tooltipWidth,
+          tooltipHeight,
+          viewportTop: visualViewport.top,
+          viewportHeight: visualViewport.height,
+          viewportWidth,
+          padding,
+        })
+        tooltipTop = floated.top
+        tooltipLeft = floated.left
+        hideArrow = true
+      } else if (decision && anchorMoved) {
+        const next = placeTooltipBoxAgainstFrame({
+          frameTop: decision.anchor.top - TUTORIAL_FRAME_OUTSET_PX,
+          frameBottom: decision.anchor.bottom + TUTORIAL_FRAME_OUTSET_PX,
+          tooltipHeight,
+          arrowSize,
+          viewportHeight,
+          padding,
+          preferred: preferredPosition === 'bottom' ? 'below' : 'above',
+          lockSide: tutorialTooltipPrefersBelow(step),
+        })
+        tooltipTop = clampTooltip
+          ? clampTooltipTop({
+              top: next.top,
+              height: tooltipHeight,
+              viewportTop: visualViewport.top,
+              viewportHeight: visualViewport.height,
+              padding,
+            })
+          : next.top
+        const centerX = decision.anchor.left + decision.anchor.width / 2
+        tooltipLeft = centerX - tooltipWidth / 2
+        if (tooltipLeft < padding) tooltipLeft = padding
+        else if (tooltipLeft + tooltipWidth > viewportWidth - padding) {
+          tooltipLeft = viewportWidth - tooltipWidth - padding
+        }
+        arrowDirection = next.arrowDirection
+        const raw = ((centerX - tooltipLeft) / Math.max(tooltipWidth, 1)) * 100
+        arrowOffset = isSubmitTooltipStep
+          ? Math.max(4, Math.min(96, raw))
+          : Math.max(15, Math.min(85, raw))
+      }
+    }
+
+    const nextTooltip = withScrollAnchor({
+      top: tooltipTop,
+      left: tooltipLeft,
+      arrowDirection,
+      arrowOffset,
+      useFullscreen: false as const,
+      hideArrow,
+    })
     setTooltipPosition(prev => {
       if (
         prev &&
         !prev.useFullscreen &&
-        Math.abs(prev.top - tooltipTop) < 0.5 &&
-        Math.abs(prev.left - tooltipLeft) < 0.5 &&
         prev.arrowDirection === arrowDirection &&
-        Math.abs(prev.arrowOffset - arrowOffset) < 0.5
+        Math.abs(prev.arrowOffset - arrowOffset) < 0.5 &&
+        Boolean(prev.hideArrow) === hideArrow
       ) {
-        return prev
+        const prevPos =
+          prev.anchorX != null && prev.anchorY != null
+            ? scrollContentOffset(prev)
+            : { top: prev.top, left: prev.left }
+        const nextPos = scrollContentOffset(nextTooltip)
+        if (
+          Math.abs(prevPos.top - nextPos.top) < 0.5 &&
+          Math.abs(prevPos.left - nextPos.left) < 0.5
+        ) {
+          return prev.anchorY == null ? nextTooltip : prev
+        }
       }
-      return {
-        top: tooltipTop,
-        left: tooltipLeft,
-        arrowDirection,
-        arrowOffset,
-        useFullscreen: false,
-      }
+      return nextTooltip
     })
   }, [targetElement, step, tooltipEstimatedHeight])
 
@@ -884,6 +1080,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       // meets the frame. Top and left are not written after the fade starts.
       // A double rAF never ran on Mobile Safari while Playwright was waiting,
       // so the card stayed transparent until the sample window ended.
+      tooltipShownForStepRef.current = currentStep
       calculatePositions()
       setIsVisible(true)
       if (measureTimer != null) window.clearInterval(measureTimer)
@@ -912,7 +1109,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     const scrollAndReveal = async () => {
-      if (currentStep === 'follow-up') {
+      if (tutorialTooltipPrefersBelow(currentStep)) {
         const placement = {
           tooltipHeight: tooltipEstimatedHeight,
           arrowSize: MOBILE_TUTORIAL_ARROW_PX,
@@ -953,7 +1150,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         placeFollowUp()
         await waitForRectFrames(readComposerBox, { frames: 2, timeoutMs: 800 })
         if (cancelled || stepRef.current !== currentStep) return
-        if (!readComposerBox()) return
+        if (!readComposerBox()) {
+          tooltipShownForStepRef.current = currentStep
+        }
         revealSettledStep()
         return
       }
@@ -994,7 +1193,17 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         if (cancelled || stepRef.current !== currentStep) return
       }
       let rect = liveSpotlight()
-      if (!rect || rect.width < 2 || rect.height < 2) return
+      for (let attempt = 0; !rect || rect.width < 2 || rect.height < 2; attempt += 1) {
+        // The provider row can be highlighted before its box exists. Leaving
+        // here hid the tooltip for the rest of the step.
+        if (attempt >= 20 || cancelled || stepRef.current !== currentStep) {
+          tooltipShownForStepRef.current = currentStep
+          revealSettledStep()
+          return
+        }
+        await new Promise<void>(resolve => window.setTimeout(resolve, 80))
+        rect = liveSpotlight()
+      }
       centerTutorialStepRect(currentStep, rect)
       if (TEXTAREA_STEPS.includes(currentStep)) focusTutorialPromptTextarea()
       await waitForTutorialLayoutSettle({ timeoutMs: 240, quietMs: 48 })
@@ -1002,8 +1211,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       await waitForRectStable(liveSpotlight, { timeoutMs: 200, quietMs: 48 })
       if (cancelled || stepRef.current !== currentStep) return
       rect = liveSpotlight()
-      if (!rect) return
-      const viewH = window.innerHeight
+      if (!rect) {
+        revealSettledStep()
+        return
+      }
+      const fittedView = readVisualViewportBox()
+      const viewH = fittedView.top + fittedView.height
       const mid = rect.top + rect.height / 2
       if (rect.height <= viewH * 0.65 && Math.abs(mid - viewH / 2) > 36) {
         centerTutorialStepRect(currentStep, rect)
@@ -1011,7 +1224,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         await waitForRectStable(liveSpotlight, { timeoutMs: 120, quietMs: 32 })
         if (cancelled || stepRef.current !== currentStep) return
         rect = liveSpotlight()
-        if (!rect) return
+        if (!rect) {
+          revealSettledStep()
+          return
+        }
       }
       const tooltipHeight =
         overlayRef.current?.getBoundingClientRect().height || tooltipEstimatedHeight
@@ -1045,9 +1261,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       // StrictMode re-runs this effect while the reveal interval is still pending;
       // clearing the hide here would skip the sample that proves the card was hidden.
       if (revealTimerRef.current == null) {
+        tooltipShownForStepRef.current = currentStep
         isStepTransitioningRef.current = false
         setIsStepTransitioning(false)
         setTutorialSpotlightSettling(false)
+        setIsVisible(true)
         calculatePositions()
         const measureAgain = () => {
           if (cancelled || stepRef.current !== currentStep || isStepTransitioningRef.current) return
@@ -1093,14 +1311,94 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }, 48)
       }
     }
-    const detachFrameWatch = watchTutorialFrameSize(scheduleTrack)
-    // Touch, momentum, scroll ancestors, and visualViewport (keyboard open or
-    // closed). Hiding the card to remeasure drops the prompt hole on focus.
-    const stopMotion = trackTutorialMotion(trackLockedHighlight)
+    const syncScrollChrome = () => {
+      if (cancelled || stepRef.current !== currentStep) return
+      const stepNow = stepRef.current
+      if (!stepNow) return
+      if (stepNow === 'enter-prompt' || stepNow === 'enter-prompt-2') {
+        getComposerElement()?.classList.add('mobile-tutorial-highlight')
+      }
+      const frozen = frozenPairRef.current
+      if (
+        (stepNow === 'history-dropdown' || stepNow === 'save-selection') &&
+        spotlightSettledRef.current &&
+        pairFreezeReadyRef.current &&
+        frozen?.step === stepNow
+      ) {
+        const root = getTutorialScrollRoot()
+        if (Math.abs(root.getScrollTop() - frozen.scrollTop) > 0.5) {
+          root.scrollToTop(frozen.scrollTop, 'auto')
+        }
+        const composer = getComposerElement()
+        if (composer && Math.abs(readHistoryComposerLift(composer) - frozen.lift) > 0.5) {
+          setHistoryComposerLift(composer, frozen.lift)
+        }
+      }
+      if (!spotlightSettledRef.current || settledStepRef.current !== stepNow) return
+      if (isStepTransitioningRef.current) return
+      const spotlight = readTutorialSpotlightRect(stepNow, tutorialProviderNamesRef.current)
+      const visual = readVisualViewportBox()
+      if (spotlight) {
+        const off =
+          spotlight.bottom < visual.top
+            ? 'up'
+            : spotlight.top > visual.top + visual.height
+              ? 'down'
+              : null
+        setIsTargetOffScreen(prev => (prev === off ? prev : off))
+      }
+      if (!tutorialStepFollowsComposer(stepNow)) {
+        if (scrollBackActiveRef.current) {
+          scrollBackActiveRef.current = false
+          setScrollBackDirection(null)
+        }
+        return
+      }
+      const scrollTop = getTutorialScrollRoot().getScrollTop()
+      const composerRect =
+        stepNow === 'follow-up'
+          ? (getComposerElement()?.getBoundingClientRect() ?? spotlight)
+          : spotlight
+      if (!composerRect) return
+      const composerOff = scrollBackDirectionForTarget(composerRect, null, true)
+      if (!composerOff) {
+        promptScrollBaselineRef.current = scrollTop
+        if (scrollBackActiveRef.current) {
+          scrollBackActiveRef.current = false
+          setScrollBackDirection(null)
+        }
+        return
+      }
+      const scrolledAway =
+        promptScrollBaselineRef.current != null &&
+        Math.abs(scrollTop - promptScrollBaselineRef.current) > 24
+      const followUpLeft = stepNow === 'follow-up'
+      const nextScrollBack = scrolledAway
+        ? scrollBackDirectionForTarget(
+            composerRect,
+            followUpLeft ? null : (overlayRef.current?.getBoundingClientRect() ?? null),
+            followUpLeft ? true : scrollBackActiveRef.current
+          )
+        : null
+      scrollBackActiveRef.current = nextScrollBack != null
+      setScrollBackDirection(prev => (prev === nextScrollBack ? prev : nextScrollBack))
+    }
+    // Panel mount/unmount changes the composer frame even while the tooltip is
+    // still fading in. Update that ring immediately. Tooltip coordinates stay
+    // on the settled path so the card does not move during the fade.
+    const onFrameSized = () => {
+      publishHistoryComposerFrame()
+      scheduleTrack()
+    }
+    const detachFrameWatch = watchTutorialFrameSize(onFrameSized)
+    const detachLayoutWatch = watchTutorialLayout(onFrameSized)
+    // Scroll only toggles the hint and the history freeze. Coordinates stay put.
+    const stopMotion = trackTutorialMotion(syncScrollChrome)
 
     return () => {
       cancelled = true
       detachFrameWatch()
+      detachLayoutWatch()
       stopMotion()
       if (measureTimer != null) window.clearInterval(measureTimer)
       if (trackRaf !== 0) cancelAnimationFrame(trackRaf)
@@ -1115,7 +1413,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }
       }
     }
-  }, [targetElement, step, calculatePositions, tooltipEstimatedHeight])
+  }, [targetElement, step, calculatePositions, tooltipEstimatedHeight, publishHistoryComposerFrame])
 
   useEffect(() => {
     if (!step || (!isSelectModelTutorialStep(step) && step !== 'expand-starter-provider-2')) {
@@ -1164,13 +1462,20 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             ).highlights
           : [targetElement]
 
-    providerHighlights.forEach(el => el.classList.add('mobile-tutorial-highlight'))
+    providerHighlights.forEach(el => {
+      // The compare submit control is a circle. The shared highlight radius is a
+      // rounded square, and the settling pass clears that ring, so the mobile
+      // compare step was drawing a plain square. The green attention ring is the cue.
+      if (isComparisonSubmitButton(el)) return
+      el.classList.add('mobile-tutorial-highlight')
+    })
 
     // Add button pulsate when tooltip says "Tap the highlighted button" (same ring + pulse as submit step).
     // History and saved selections must not use targetElement here: it is still the
     // results section for a frame after the step changes, and the scale then pulses
-    // the whole results panel.
-    if (step === 'submit-comparison-2') {
+    // the whole results panel. The submit control must not scale either: that
+    // changes its size, and the attention ring already marks it.
+    if (step === 'submit-comparison-2' && !isComparisonSubmitButton(targetElement)) {
       targetElement.classList.add('mobile-tutorial-button-pulsate')
     }
 
@@ -1189,8 +1494,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     // For submit steps and follow-up, highlight the composer (match step 3). Follow-up also highlights the hero mirror when present.
     if (
-      (step === 'submit-comparison' || step === 'submit-comparison-2' || step === 'follow-up') &&
-      (step !== 'follow-up' || isFollowUpComposerReady())
+      (step === 'submit-comparison' ||
+        step === 'submit-comparison-2' ||
+        step === 'follow-up' ||
+        step === 'view-follow-up-results') &&
+      (step !== 'follow-up' || isFollowUpComposerReady()) &&
+      (step !== 'view-follow-up-results' || !isLoading)
     ) {
       const composer = getComposerElement()
       if (composer) {
@@ -1237,7 +1546,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       // Step 7's ring is the same class. Stripping it when the target element
       // changes and putting it back starts translateY(20px) again after the
       // card is already opaque.
-      const keepFollowUpComposerRing = nextStep === 'follow-up'
+      const keepFollowUpComposerRing =
+        nextStep === 'follow-up' || nextStep === 'view-follow-up-results'
       getComposerElement()?.classList.remove('tutorial-dropdown-container-active')
       getHeroComposerForDropdownSteps()?.classList.remove('tutorial-dropdown-container-active')
       providerHighlights.forEach(el => {
@@ -1256,6 +1566,20 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
     }
   }, [targetElement, step])
+
+  // Step 8's card anchors on the composer once the follow-up stream finishes.
+  // The highlight effect above does not re-run when loading flips, so paint the
+  // composer ring here or the field stays under the dim with no cutout.
+  useEffect(() => {
+    if (step !== 'view-follow-up-results' || isLoading) return
+    const paint = () => {
+      if (stepRef.current !== 'view-follow-up-results' || isLoadingRef.current) return
+      getComposerElement()?.classList.add('mobile-tutorial-highlight')
+    }
+    paint()
+    const interval = window.setInterval(paint, 200)
+    return () => window.clearInterval(interval)
+  }, [step, isLoading])
 
   // Focus replaces the composer's className and drops the prompt glow. Put it back
   // while step 5 (and the follow-up prompt) is showing, including while the field is focused.
@@ -1325,10 +1649,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let framedDuringLoad = false
     let resultsPinScroll: number | null = null
     let userMovedResults = false
+    let sawFollowUpIdle = false
+    let followUpRound = false
     const cancelDeferredScrolls: Array<() => void> = []
     let observed: Element | null = null
     const resizeObserver = new ResizeObserver(() => updateLoadingStreamingRect())
 
+    // Viewport and anchor are stamped together. A pure scroll is the same
+    // content box, so commitAnchoredRect keeps the previous ring. A layout
+    // change in this sample (the processing panel leaving) publishes the new box.
     const publish = (rect: DOMRect) => {
       const next: TargetRect = {
         top: rect.top,
@@ -1338,18 +1667,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         centerX: rect.left + rect.width / 2,
         centerY: rect.top + rect.height / 2,
       }
-      setLoadingStreamingRect(prev => {
-        if (
-          prev &&
-          Math.abs(prev.top - next.top) < 1 &&
-          Math.abs(prev.left - next.left) < 1 &&
-          Math.abs(prev.width - next.width) < 1 &&
-          Math.abs(prev.height - next.height) < 1
-        ) {
-          return prev
-        }
-        return next
-      })
+      queueAnchoredRect(setLoadingStreamingRect, next)
     }
 
     const updateLoadingStreamingRect = () => {
@@ -1363,6 +1681,23 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const followUpPost = current === 'follow-up' && followUpStarted
       const holdFirstStream =
         current === 'follow-up' && !followUpStarted && (loading || transitioning)
+      const followUpAdvance = advanceFollowUpStreamingRound({
+        step: current,
+        loading,
+        followUpSubmitStarted: followUpStarted,
+        streamAnswerStarted: started,
+        sawIdle: sawFollowUpIdle,
+        round: followUpRound,
+      })
+      sawFollowUpIdle = followUpAdvance.sawIdle
+      if (followUpAdvance.startedRound) {
+        hasScrolledToLoading = false
+        hasScrolledToResults = false
+        resultsPinScroll = null
+        userMovedResults = false
+      }
+      followUpRound = followUpAdvance.round
+      followUpStreamingRoundRef.current = followUpRound
       if (isSubmit && loading) framedDuringLoad = true
       const active =
         (isSubmit &&
@@ -1370,10 +1705,28 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             (current === 'submit-comparison' && started) ||
             (transitioning && framedDuringLoad))) ||
         (isReview && loading) ||
-        (followUpPost && (loading || started)) ||
+        (followUpRound && (loading || started)) ||
         holdFirstStream ||
         (current === 'follow-up' && !followUpStarted && !isFollowUpComposerReady())
       if (!active) {
+        if (isReview) {
+          const composer = document.querySelector(
+            '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+          )
+          if (composer instanceof HTMLElement && elementHasSpotlightBox(composer)) {
+            const box = composer.getBoundingClientRect()
+            const viewTop = window.visualViewport?.offsetTop ?? 0
+            const viewH = window.visualViewport?.height ?? window.innerHeight
+            const onScreen = box.top > viewTop + 24 && box.bottom < viewTop + viewH - 24
+            if (!onScreen) {
+              scrollFollowUpHighlightIntoView({
+                tooltipHeight: overlayRef.current?.getBoundingClientRect().height || 220,
+                arrowSize: MOBILE_TUTORIAL_ARROW_PX,
+                preferred: 'below',
+              })
+            }
+          }
+        }
         setLoadingStreamingRect(prev => (prev == null ? prev : null))
         return
       }
@@ -1453,24 +1806,29 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         // that is not ours is the user's: leave the panel where they put it.
         const firstComparisonHandoff =
           current === 'submit-comparison' || (current === 'follow-up' && !followUpStarted)
-        if (started && current === 'submit-comparison') {
-          if (!userMovedResults) {
-            const root = getTutorialScrollRoot()
-            const scrollTop = root.getScrollTop()
-            if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
-              userMovedResults = true
-            } else {
-              const desiredTop = streamingResultsTopInViewport()
-              const before = resultsSection.getBoundingClientRect()
-              if (Math.abs(before.top - desiredTop) > 12) {
-                scrollTutorialElementToViewportY(resultsSection, desiredTop)
-              }
-              resultsPinScroll = root.getScrollTop()
-            }
+        const pinStreamingResults =
+          started && (current === 'submit-comparison' || followUpRound || (isReview && loading))
+        if (pinStreamingResults && !userMovedResults) {
+          const root = getTutorialScrollRoot()
+          const scrollTop = root.getScrollTop()
+          const desiredTop = streamingResultsTopInViewport()
+          const before = resultsSection.getBoundingClientRect()
+          // Keep correcting until the card is actually at the top. A scroll
+          // that happens before that is the handoff, not the user.
+          if (Math.abs(before.top - desiredTop) > 12) {
+            scrollTutorialElementToViewportY(resultsSection, desiredTop)
+            resultsPinScroll = root.getScrollTop()
+          } else if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
+            userMovedResults = true
+          } else {
+            resultsPinScroll = scrollTop
           }
         } else if (
+          !pinStreamingResults &&
+          !followUpRound &&
           !firstComparisonHandoff &&
           !holdFirstStream &&
+          !isReview &&
           !hasScrolledToResults &&
           canScroll
         ) {
@@ -1508,13 +1866,16 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     updateLoadingStreamingRectRef.current = updateLoadingStreamingRect
     updateLoadingStreamingRect()
     const interval = window.setInterval(updateLoadingStreamingRect, 100)
-    const stopMotion = trackTutorialMotion(updateLoadingStreamingRect)
+    const stopMotion = trackTutorialMotion(() => {
+      updateLoadingStreamingRect()
+    })
 
     return () => {
       updateLoadingStreamingRectRef.current = () => {}
       window.clearInterval(interval)
       stopMotion()
       resizeObserver.disconnect()
+      followUpStreamingRoundRef.current = false
       for (const cancel of cancelDeferredScrolls) cancel()
       const next = stepRef.current
       const still =
@@ -1539,6 +1900,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const started = performance.now()
     const bringComposerBack = () => {
       if (stepRef.current !== 'follow-up' || performance.now() - started > 15000) {
+        window.clearInterval(intervalId)
+        return
+      }
+      // The follow-up request uses the same processing/results spotlight as the
+      // first comparison. Pulling the composer back would scroll that panel away.
+      if (followUpStreamingRoundRef.current) {
         window.clearInterval(intervalId)
         return
       }
@@ -1575,6 +1942,21 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   useEffect(() => {
     updateLoadingStreamingRectRef.current()
     const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
+    if (
+      followUpStreamingRoundRef.current &&
+      !streamAnswerStarted &&
+      loadingSection &&
+      elementHasSpotlightBox(loadingSection)
+    ) {
+      loadingSection.classList.add('mobile-tutorial-highlight')
+      loadingSection.style.pointerEvents = 'auto'
+      loadingSection.style.position = 'relative'
+      return () => {
+        loadingSection.classList.remove('mobile-tutorial-highlight')
+        loadingSection.style.pointerEvents = ''
+        loadingSection.style.position = ''
+      }
+    }
     const highlightFollowUp =
       step === 'follow-up' && followUpSubmitStarted && isLoading && !streamAnswerStarted
     const highlightReview = step === 'view-follow-up-results' && isLoading && !streamAnswerStarted
@@ -1618,7 +2000,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   if (
     !step ||
     !portalRoot ||
-    !(isVisible || isStepTransitioning || isProviderPickerTutorialStep(step))
+    !(
+      isVisible ||
+      isStepTransitioning ||
+      isProviderPickerTutorialStep(step) ||
+      // Follow-up hides the card while the composer is behind the processing
+      // panel. The same streaming cutout still has to paint.
+      loadingStreamingRect != null
+    )
   ) {
     return null
   }
@@ -1713,6 +2102,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     step === 'follow-up' &&
     !followUpSubmitStarted &&
     (isLoading || isStepTransitioning || followUpComposerPending)
+  // Step 8 opens on the first follow-up token, while the stream is still
+  // running. The mobile card stays hidden for that window, same as steps 6 and
+  // 7. A visible card is clamped to the top of the phone, and the results pin
+  // then sits the panel under the card instead of the header.
+  const reviewStillStreaming = step === 'view-follow-up-results' && isLoading
   const isLoadingStreamingPhase = Boolean(
     loadingStreamingRect &&
     ((isSubmitStep &&
@@ -1720,8 +2114,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         isStepTransitioning ||
         (step === 'submit-comparison' && streamAnswerStarted))) ||
       holdFirstComparisonFrame ||
-      (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)))
+      (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)) ||
+      reviewStillStreaming)
   )
+  const hideTooltipWhileModelsWork =
+    isLoadingStreamingPhase ||
+    ((isSubmitStep || step === 'follow-up' || step === 'view-follow-up-results') && isLoading) ||
+    (isSubmitStep && streamAnswerStarted) ||
+    (isFollowUpPostSubmit && streamAnswerStarted)
 
   // Render scroll indicator if target is off-screen
   // Only show when:
@@ -1742,8 +2142,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     tutorialStepFollowsComposer(step) &&
     !isLoadingStreamingPhase &&
     !isStepTransitioning
+  // A card that is still on screen keeps Skip. Replacing it as soon as the
+  // target slips off lets a tap's scroll-into-view unmount the button.
+  const tooltipBox = overlayRef.current?.getBoundingClientRect()
+  const tooltipView = readVisualViewportBox()
+  const tooltipOffScreen =
+    !tooltipBox ||
+    tooltipBox.width < 2 ||
+    tooltipBox.height < 2 ||
+    tooltipBox.bottom < tooltipView.top + 8 ||
+    tooltipBox.top > tooltipView.top + tooltipView.height - 8
   const genericOffScreen =
     isTargetOffScreen != null &&
+    tooltipOffScreen &&
     !isLoadingStreamingPhase &&
     !isStepTransitioning &&
     !stepKeepsTooltip
@@ -1757,7 +2168,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // During loading/streaming phase, use loadingStreamingRect; otherwise use normal cutout logic
   // Follow-up: dual clear rects (results + composer) are rendered as SVG — skip the single box-shadow cutout
   const useFollowUpDualCutout =
-    step === 'follow-up' && backdropRect && followUpComposerHoleRect && !isLoadingStreamingPhase
+    (step === 'follow-up' || step === 'view-follow-up-results') &&
+    backdropRect &&
+    followUpComposerHoleRect &&
+    !isLoadingStreamingPhase
   const keepFramedCutoutWhileOffScreen = tutorialStepUsesFramedCutoutShadow(step)
   const cutoutTarget: TargetRect | null = isLoadingStreamingPhase
     ? loadingStreamingRect
@@ -1774,12 +2188,20 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     'inset 0 0 0 3px var(--accent-color), inset 0 0 0 7px rgba(14, 165, 233, 0.25), 0 0 18px rgba(14, 165, 233, 0.45)'
   const tutorialDimShadow = '0 0 0 9999px rgba(0, 0, 0, 0.65)'
   const tutorialFramedDimShadow = `${tutorialFrameShadow}, ${tutorialDimShadow}`
+  const cutoutPlaced = cutoutTarget
+    ? scrollContentOffset({
+        top: cutoutTarget.top - cutoutPadding,
+        left: cutoutTarget.left - cutoutPadding,
+        anchorX: cutoutTarget.anchorX,
+        anchorY: cutoutTarget.anchorY,
+      })
+    : null
   const cutoutStyle =
-    cutoutTarget && showBackdrop
+    cutoutTarget && cutoutPlaced && showBackdrop
       ? {
-          position: 'fixed' as const,
-          top: `${cutoutTarget.top - cutoutPadding}px`,
-          left: `${cutoutTarget.left - cutoutPadding}px`,
+          position: 'absolute' as const,
+          top: `${cutoutPlaced.top}px`,
+          left: `${cutoutPlaced.left}px`,
           width: `${cutoutTarget.width + cutoutPadding * 2}px`,
           height: `${cutoutTarget.height + cutoutPadding * 2}px`,
           borderRadius: isLoadingStreamingPhase
@@ -1806,12 +2228,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }
       : undefined
 
-  const followUpDimMaskId = 'mobile-tutorial-follow-up-dim-mask'
   const followUpVResults =
     useFollowUpDualCutout && backdropRect
       ? {
-          top: backdropRect.top - cutoutPadding,
-          left: backdropRect.left - cutoutPadding,
+          ...scrollContentOffset({
+            top: backdropRect.top - cutoutPadding,
+            left: backdropRect.left - cutoutPadding,
+            anchorX: backdropRect.anchorX,
+            anchorY: backdropRect.anchorY,
+          }),
           width: backdropRect.width + cutoutPadding * 2,
           height: backdropRect.height + cutoutPadding * 2,
         }
@@ -1819,8 +2244,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const followUpVComposer =
     useFollowUpDualCutout && followUpComposerHoleRect
       ? {
-          top: followUpComposerHoleRect.top - cutoutPadding,
-          left: followUpComposerHoleRect.left - cutoutPadding,
+          ...scrollContentOffset({
+            top: followUpComposerHoleRect.top - cutoutPadding,
+            left: followUpComposerHoleRect.left - cutoutPadding,
+            anchorX: followUpComposerHoleRect.anchorX,
+            anchorY: followUpComposerHoleRect.anchorY,
+          }),
           width: followUpComposerHoleRect.width + cutoutPadding * 2,
           height: followUpComposerHoleRect.height + cutoutPadding * 2,
         }
@@ -1840,53 +2269,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         ) : !isLoadingStreamingPhase ? (
           useFollowUpDualCutout && followUpVResults && followUpVComposer ? (
             <>
-              <svg
-                className="mobile-tutorial-backdrop-follow-up-dim"
-                style={{
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  width: '100vw',
-                  height: '100vh',
-                  zIndex: 9998,
-                  pointerEvents: 'none',
-                }}
-                aria-hidden
-              >
-                <defs>
-                  <mask id={followUpDimMaskId}>
-                    <rect width="100%" height="100%" fill="white" />
-                    <rect
-                      x={followUpVResults.left}
-                      y={followUpVResults.top}
-                      width={followUpVResults.width}
-                      height={followUpVResults.height}
-                      rx={followUpBrResults}
-                      ry={followUpBrResults}
-                      fill="black"
-                    />
-                    <rect
-                      x={followUpVComposer.left}
-                      y={followUpVComposer.top}
-                      width={followUpVComposer.width}
-                      height={followUpVComposer.height}
-                      rx={followUpBrComposer}
-                      ry={followUpBrComposer}
-                      fill="black"
-                    />
-                  </mask>
-                </defs>
-                <rect
-                  width="100%"
-                  height="100%"
-                  fill="rgba(0, 0, 0, 0.65)"
-                  mask={`url(#${followUpDimMaskId})`}
-                />
-              </svg>
+              <TutorialFollowUpDim
+                maskId="mobile-tutorial-follow-up-dim-mask"
+                color="rgba(0, 0, 0, 0.65)"
+                holes={[
+                  { ...followUpVResults, rx: followUpBrResults },
+                  { ...followUpVComposer, rx: followUpBrComposer },
+                ]}
+              />
               <div
                 className="mobile-tutorial-backdrop-cutout mobile-tutorial-backdrop-cutout--enter mobile-tutorial-backdrop-follow-up-results-ring"
+                data-scroll-anchor-y={backdropRect?.anchorY ?? 0}
                 style={{
-                  position: 'fixed',
+                  position: 'absolute',
                   top: `${followUpVResults.top}px`,
                   left: `${followUpVResults.left}px`,
                   width: `${followUpVResults.width}px`,
@@ -1900,8 +2295,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               />
               <div
                 className="mobile-tutorial-backdrop-cutout mobile-tutorial-backdrop-cutout--enter mobile-tutorial-backdrop-follow-up-composer-ring"
+                data-scroll-anchor-y={followUpComposerHoleRect?.anchorY ?? 0}
                 style={{
-                  position: 'fixed',
+                  position: 'absolute',
                   top: `${followUpVComposer.top}px`,
                   left: `${followUpVComposer.left}px`,
                   width: `${followUpVComposer.width}px`,
@@ -1947,104 +2343,109 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       {/* Keep the card mounted during the results hold so its real width is
           known before the hide class comes off. Unmounting it forces the
           300px estimate, and the correction lands after the card is opaque. */}
-      {!shouldShowScrollIndicator && isVisible && tooltipPosition && (
-        <div
-          key={step}
-          ref={overlayRef}
-          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition || isLoadingStreamingPhase || followUpComposerPending ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
-          style={
-            tooltipPosition.useFullscreen
-              ? undefined
-              : {
-                  top: `${tooltipPosition.top}px`,
-                  left: `${tooltipPosition.left}px`,
-                }
-          }
-        >
-          <div className="mobile-tutorial-tooltip-content">
-            <div className="mobile-tutorial-tooltip-header">
-              <span className="mobile-tutorial-step-indicator">
-                Step {stepIndex} of {totalSteps}
-              </span>
-              <button
-                className="mobile-tutorial-close-button"
-                onClick={onSkip}
-                aria-label="Skip tutorial"
-              >
-                ×
-              </button>
-            </div>
-
-            <h3 className="mobile-tutorial-tooltip-title">{config.title}</h3>
-            <p className="mobile-tutorial-tooltip-description">{getDescription()}</p>
-
-            {/* Tap indicator for action steps (exclude step 2 - select-models) */}
-            {isActionStep && !showButton && !isSelectModelTutorialStep(step) && (
-              <div className="mobile-tutorial-tap-indicator">
-                <span>
-                  {step === 'submit-comparison' ||
-                  step === 'follow-up' ||
-                  step === 'submit-comparison-2'
-                    ? 'Tap the highlighted button'
-                    : 'Tap the highlighted area'}
+      {!shouldShowScrollIndicator &&
+        isVisible &&
+        tooltipPosition &&
+        !hideTooltipWhileModelsWork && (
+          <div
+            key={step}
+            ref={overlayRef}
+            className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${tooltipPosition.hideArrow ? ' mobile-tutorial-tooltip--unanchored' : ''}${fadeDuringTransition || followUpComposerPending ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
+            data-scroll-anchor-y={tooltipPosition.anchorY ?? 0}
+            style={
+              tooltipPosition.useFullscreen
+                ? undefined
+                : {
+                    position: 'absolute',
+                    top: `${scrollContentOffset(tooltipPosition).top}px`,
+                    left: `${scrollContentOffset(tooltipPosition).left}px`,
+                  }
+            }
+          >
+            <div className="mobile-tutorial-tooltip-content">
+              <div className="mobile-tutorial-tooltip-header">
+                <span className="mobile-tutorial-step-indicator">
+                  Step {stepIndex} of {totalSteps}
                 </span>
-              </div>
-            )}
-
-            {/* Action button */}
-            {showButton && (
-              <div className="mobile-tutorial-tooltip-actions">
                 <button
-                  className="mobile-tutorial-button mobile-tutorial-button-primary"
-                  onClick={() => {
-                    // Guard: only complete when button is enabled (e.g. save-selection needs dropdown opened)
-                    if (!isButtonDisabled()) {
-                      onComplete()
-                    }
-                  }}
-                  disabled={isButtonDisabled()}
+                  className="mobile-tutorial-close-button"
+                  onClick={onSkip}
+                  aria-label="Skip tutorial"
                 >
-                  {buttonText}
+                  ×
                 </button>
               </div>
-            )}
 
-            {/* Progress dots */}
-            <div className="mobile-tutorial-progress">
-              {tutorialVisibleStepOrder.map((s, i) => (
-                <div
-                  key={s}
-                  className={`mobile-tutorial-progress-dot ${i < progressDotIndex ? 'completed' : ''} ${i === progressDotIndex ? 'current' : ''}`}
-                />
-              ))}
+              <h3 className="mobile-tutorial-tooltip-title">{config.title}</h3>
+              <p className="mobile-tutorial-tooltip-description">{getDescription()}</p>
+
+              {/* Tap indicator for action steps (exclude step 2 - select-models) */}
+              {isActionStep && !showButton && !isSelectModelTutorialStep(step) && (
+                <div className="mobile-tutorial-tap-indicator">
+                  <span>
+                    {step === 'submit-comparison' ||
+                    step === 'follow-up' ||
+                    step === 'submit-comparison-2'
+                      ? 'Tap the highlighted button'
+                      : 'Tap the highlighted area'}
+                  </span>
+                </div>
+              )}
+
+              {/* Action button */}
+              {showButton && (
+                <div className="mobile-tutorial-tooltip-actions">
+                  <button
+                    className="mobile-tutorial-button mobile-tutorial-button-primary"
+                    onClick={() => {
+                      // Guard: only complete when button is enabled (e.g. save-selection needs dropdown opened)
+                      if (!isButtonDisabled()) {
+                        onComplete()
+                      }
+                    }}
+                    disabled={isButtonDisabled()}
+                  >
+                    {buttonText}
+                  </button>
+                </div>
+              )}
+
+              {/* Progress dots */}
+              <div className="mobile-tutorial-progress">
+                {tutorialVisibleStepOrder.map((s, i) => (
+                  <div
+                    key={s}
+                    className={`mobile-tutorial-progress-dot ${i < progressDotIndex ? 'completed' : ''} ${i === progressDotIndex ? 'current' : ''}`}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Arrow: sibling of content (not inside) so it is not clipped by content scroll/overflow; points at the step target */}
-          {!tooltipPosition.useFullscreen && (
-            <div
-              className={`mobile-tutorial-arrow mobile-tutorial-arrow-${tooltipPosition.arrowDirection}`}
-              style={{
-                left:
-                  tooltipPosition.arrowDirection === 'up' ||
-                  tooltipPosition.arrowDirection === 'down'
-                    ? `${tooltipPosition.arrowOffset}%`
-                    : undefined,
-                top:
-                  tooltipPosition.arrowDirection === 'left' ||
-                  tooltipPosition.arrowDirection === 'right'
-                    ? `${tooltipPosition.arrowOffset}%`
-                    : undefined,
-                transform:
-                  tooltipPosition.arrowDirection === 'up' ||
-                  tooltipPosition.arrowDirection === 'down'
-                    ? 'translateX(-50%)'
-                    : 'translateY(-50%)',
-              }}
-            />
-          )}
-        </div>
-      )}
+            {/* Arrow: sibling of content (not inside) so it is not clipped by content scroll/overflow; points at the step target */}
+            {!tooltipPosition.useFullscreen && !tooltipPosition.hideArrow && (
+              <div
+                className={`mobile-tutorial-arrow mobile-tutorial-arrow-${tooltipPosition.arrowDirection}`}
+                style={{
+                  left:
+                    tooltipPosition.arrowDirection === 'up' ||
+                    tooltipPosition.arrowDirection === 'down'
+                      ? `${tooltipPosition.arrowOffset}%`
+                      : undefined,
+                  top:
+                    tooltipPosition.arrowDirection === 'left' ||
+                    tooltipPosition.arrowDirection === 'right'
+                      ? `${tooltipPosition.arrowOffset}%`
+                      : undefined,
+                  transform:
+                    tooltipPosition.arrowDirection === 'up' ||
+                    tooltipPosition.arrowDirection === 'down'
+                      ? 'translateX(-50%)'
+                      : 'translateY(-50%)',
+                }}
+              />
+            )}
+          </div>
+        )}
     </>
   )
 

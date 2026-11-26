@@ -12,6 +12,10 @@ import type {
   ModelConversation,
   ActiveResultTabs,
 } from '../types'
+import {
+  contentSkipsPromptAlign,
+  scrollContentToLatestUserPrompt,
+} from '../utils/alignLatestUserPrompt'
 import { isErrorMessage } from '../utils/error'
 
 import type { CreditBalance } from './creditService'
@@ -153,6 +157,7 @@ export async function processComparisonStream(
   let streamError: Error | null = null
   let timeoutId: ReturnType<typeof setTimeout> | null = null
   let lastUpdateTime = Date.now()
+  let throttleTimer: ReturnType<typeof setTimeout> | null = null
   let hasScrolledToResults = false
   const listenersSetUp = new Set<string>()
 
@@ -238,111 +243,132 @@ export async function processComparisonStream(
   resetStreamingTimeout()
 
   const applyThrottledUpdate = (shouldUpdate: boolean) => {
+    if (!shouldUpdate) return
     const now = Date.now()
-    if (shouldUpdate && now - lastUpdateTime >= UPDATE_THROTTLE_MS) {
-      lastUpdateTime = now
-      setResponse({
-        results: { ...streamingResults },
-        metadata: {
-          input_length: input.length,
-          models_requested: selectedModels.length,
-          models_successful: 0,
-          models_failed: 0,
-          timestamp: new Date().toISOString(),
-          processing_time_ms: Date.now() - startTime,
-        },
-      })
+    const elapsed = now - lastUpdateTime
+    // A burst paints at most once per window. The trailing call still paints
+    // the latest tokens when the model pauses, instead of leaving them hidden
+    // until the next read.
+    if (elapsed < UPDATE_THROTTLE_MS) {
+      if (throttleTimer !== null) return
+      throttleTimer = setTimeout(() => {
+        throttleTimer = null
+        applyThrottledUpdate(true)
+      }, UPDATE_THROTTLE_MS - elapsed)
+      return
+    }
+    if (throttleTimer !== null) {
+      clearTimeout(throttleTimer)
+      throttleTimer = null
+    }
+    lastUpdateTime = now
+    setResponse({
+      results: { ...streamingResults },
+      metadata: {
+        input_length: input.length,
+        models_requested: selectedModels.length,
+        models_successful: 0,
+        models_failed: 0,
+        timestamp: new Date().toISOString(),
+        processing_time_ms: Date.now() - startTime,
+      },
+    })
 
-      if (!isFollowUpMode) {
-        setConversations(prev =>
-          prev.map(conv => {
-            let content = streamingResults[conv.modelId] || ''
-            const images = streamingImages[conv.modelId] || []
-            // Only show "No response received" when the model has completed but has no content or images.
-            // During streaming, models that haven't received content yet should not show this error.
-            if (!content.trim() && images.length === 0 && completedModels.has(conv.modelId)) {
-              content = EMPTY_RESPONSE_ERROR
-            }
+    if (!isFollowUpMode) {
+      setConversations(prev =>
+        prev.map(conv => {
+          let content = streamingResults[conv.modelId] || ''
+          const images = streamingImages[conv.modelId] || []
+          // Only show "No response received" when the model has completed but has no content or images.
+          // During streaming, models that haven't received content yet should not show this error.
+          if (!content.trim() && images.length === 0 && completedModels.has(conv.modelId)) {
+            content = EMPTY_RESPONSE_ERROR
+          }
+          const startT = modelStartTimes[conv.modelId]
+          const completionTime = modelCompletionTimes[conv.modelId]
+          return {
+            ...conv,
+            messages: conv.messages.map((msg, idx) => {
+              if (idx === 0 && msg.type === 'user') {
+                return { ...msg, timestamp: startT || msg.timestamp }
+              }
+              if (idx === 1 && msg.type === 'assistant') {
+                return {
+                  ...msg,
+                  content,
+                  images: images.length > 0 ? images : undefined,
+                  timestamp: completionTime || msg.timestamp,
+                }
+              }
+              return msg
+            }),
+          }
+        })
+      )
+    } else {
+      setConversations(prev =>
+        prev.map(conv => {
+          const content = streamingResults[conv.modelId]
+          const images = streamingImages[conv.modelId] || []
+          // Don't add follow-up to failed models: no content/images, error response, or empty/blank response
+          const hasContent = (content || '').trim().length > 0 || images.length > 0
+          if (content === undefined || isErrorMessage(content) || !hasContent) return conv
+          const hasNewUserMessage = conv.messages.some(
+            (msg, idx) =>
+              msg.type === 'user' && msg.content === input && idx >= conv.messages.length - 2
+          )
+          if (!hasNewUserMessage) {
             const startT = modelStartTimes[conv.modelId]
             const completionTime = modelCompletionTimes[conv.modelId]
             return {
               ...conv,
-              messages: conv.messages.map((msg, idx) => {
-                if (idx === 0 && msg.type === 'user') {
-                  return { ...msg, timestamp: startT || msg.timestamp }
-                }
-                if (idx === 1 && msg.type === 'assistant') {
-                  return {
+              messages: [
+                ...conv.messages,
+                createStreamingMessage('user', input, startT || userTimestamp),
+                {
+                  ...createStreamingMessage(
+                    'assistant',
+                    content || '',
+                    completionTime || new Date().toISOString()
+                  ),
+                  images: images.length > 0 ? images : undefined,
+                },
+              ],
+            }
+          }
+          const completionTime = modelCompletionTimes[conv.modelId]
+          return {
+            ...conv,
+            messages: conv.messages.map((msg, idx) =>
+              idx === conv.messages.length - 1 && msg.type === 'assistant'
+                ? {
                     ...msg,
-                    content,
+                    content: content || '',
                     images: images.length > 0 ? images : undefined,
                     timestamp: completionTime || msg.timestamp,
                   }
-                }
-                return msg
-              }),
-            }
-          })
-        )
-      } else {
-        setConversations(prev =>
-          prev.map(conv => {
-            const content = streamingResults[conv.modelId]
-            const images = streamingImages[conv.modelId] || []
-            // Don't add follow-up to failed models: no content/images, error response, or empty/blank response
-            const hasContent = (content || '').trim().length > 0 || images.length > 0
-            if (content === undefined || isErrorMessage(content) || !hasContent) return conv
-            const hasNewUserMessage = conv.messages.some(
-              (msg, idx) =>
-                msg.type === 'user' && msg.content === input && idx >= conv.messages.length - 2
-            )
-            if (!hasNewUserMessage) {
-              const startT = modelStartTimes[conv.modelId]
-              const completionTime = modelCompletionTimes[conv.modelId]
-              return {
-                ...conv,
-                messages: [
-                  ...conv.messages,
-                  createStreamingMessage('user', input, startT || userTimestamp),
-                  {
-                    ...createStreamingMessage(
-                      'assistant',
-                      content || '',
-                      completionTime || new Date().toISOString()
-                    ),
-                    images: images.length > 0 ? images : undefined,
-                  },
-                ],
-              }
-            }
-            const completionTime = modelCompletionTimes[conv.modelId]
-            return {
-              ...conv,
-              messages: conv.messages.map((msg, idx) =>
-                idx === conv.messages.length - 1 && msg.type === 'assistant'
-                  ? {
-                      ...msg,
-                      content: content || '',
-                      images: images.length > 0 ? images : undefined,
-                      timestamp: completionTime || msg.timestamp,
-                    }
-                  : msg
-              ),
-            }
-          })
-        )
-      }
-
-      requestAnimationFrame(() => {
-        if (isPageScrollingRef.current) return
-        Object.keys(streamingResults).forEach(modelId => {
-          if (completedModels.has(modelId) || autoScrollPausedRef.current.has(modelId)) return
-          const safeId = modelId.replace(/[^a-zA-Z0-9_-]/g, '-')
-          const el = document.querySelector(`#conversation-content-${safeId}`) as HTMLElement
-          if (el) el.scrollTop = el.scrollHeight
+                : msg
+            ),
+          }
         })
-      })
+      )
     }
+
+    requestAnimationFrame(() => {
+      if (isPageScrollingRef.current) return
+      Object.keys(streamingResults).forEach(modelId => {
+        if (completedModels.has(modelId) || autoScrollPausedRef.current.has(modelId)) return
+        const safeId = modelId.replace(/[^a-zA-Z0-9_-]/g, '-')
+        const el = document.querySelector(`#conversation-content-${safeId}`) as HTMLElement
+        if (!el) return
+        const userPrompts = el.querySelectorAll('.conversation-message.user').length
+        if (userPrompts >= 2) {
+          if (!contentSkipsPromptAlign(el, userPrompts)) scrollContentToLatestUserPrompt(el)
+          return
+        }
+        el.scrollTop = el.scrollHeight
+      })
+    })
   }
 
   let buffer = ''

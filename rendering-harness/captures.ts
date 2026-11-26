@@ -53,14 +53,15 @@ export async function renderOnPage(
   modelId: string,
   content: string,
   generation: string,
-  readyTimeoutMs = 30_000
+  readyTimeoutMs = 30_000,
+  streaming = false
 ): Promise<void> {
   await page.evaluate(
-    ({ modelId, content, generation }) => {
+    ({ modelId, content, generation, streaming }) => {
       document.querySelector('[data-render-container]')?.removeAttribute('data-render-complete')
-      window.postMessage({ type: 'render', modelId, content, generation }, '*')
+      window.postMessage({ type: 'render', modelId, content, generation, streaming }, '*')
     },
-    { modelId, content, generation }
+    { modelId, content, generation, streaming }
   )
   await page.waitForFunction(pageStateReady, generation, { timeout: readyTimeoutMs })
   const failed = await page.evaluate(() => {

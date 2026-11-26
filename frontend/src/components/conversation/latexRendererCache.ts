@@ -4,6 +4,7 @@ type LatexRendererComponent = ComponentType<{
   children: string
   className?: string
   modelId?: string
+  streaming?: boolean
 }>
 
 let loadedLatexRenderer: LatexRendererComponent | null = null

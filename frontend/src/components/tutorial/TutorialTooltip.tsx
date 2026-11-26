@@ -2,6 +2,7 @@ import React from 'react'
 
 import type { StepConfig } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
+import { scrollContentOffset } from '../../utils/tutorialPositioning'
 
 const STEPS_WITH_DYNAMIC_POSITION: TutorialStep[] = [
   'expand-provider',
@@ -28,8 +29,10 @@ export interface TutorialTooltipProps {
   saveSelectionDropdownOpened: boolean
   isHistoryDropdownOpened: boolean
   overlayRef: React.Ref<HTMLDivElement>
-  overlayPosition: { top: number; left: number }
+  overlayPosition: { top: number; left: number; anchorX?: number; anchorY?: number }
   effectivePosition: 'top' | 'bottom' | null
+  /** The arrow would land on the processing panel, so the card floats. */
+  hideArrow?: boolean
   positionStabilized: boolean
   /** True while the step scroll/viewport settle is in progress. The card fades in on opacity. */
   settling?: boolean
@@ -48,6 +51,7 @@ export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
   overlayRef,
   overlayPosition,
   effectivePosition,
+  hideArrow = false,
   positionStabilized,
   settling = false,
 }) => {
@@ -55,15 +59,18 @@ export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
     STEPS_WITH_DYNAMIC_POSITION.includes(step) && effectivePosition
       ? effectivePosition
       : config.position
+  const placed = scrollContentOffset(overlayPosition)
 
   return (
     <div
       ref={overlayRef}
-      className={`tutorial-tooltip tutorial-tooltip-${positionClass}${settling ? ' tutorial-tooltip--settling' : ''}`}
+      className={`tutorial-tooltip tutorial-tooltip-${positionClass}${hideArrow ? ' tutorial-tooltip--unanchored' : ''}${settling ? ' tutorial-tooltip--settling' : ''}`}
       data-position-stabilized={positionStabilized ? 'true' : 'false'}
+      data-scroll-anchor-y={overlayPosition.anchorY ?? 0}
       style={{
-        top: `${overlayPosition.top}px`,
-        left: `${overlayPosition.left}px`,
+        position: 'absolute',
+        top: `${placed.top}px`,
+        left: `${placed.left}px`,
         zIndex: 10000,
       }}
     >
@@ -141,7 +148,7 @@ export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
           )}
         </div>
       </div>
-      <div className={`tutorial-arrow tutorial-arrow-${positionClass}`} />
+      {!hideArrow && <div className={`tutorial-arrow tutorial-arrow-${positionClass}`} />}
     </div>
   )
 }

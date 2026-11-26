@@ -37,4 +37,12 @@ describe('tutorial toolbar highlight CSS (steps 7–8)', () => {
       /\.saved-selections-button\.mobile-tutorial-highlight\s*\{[^}]*box-shadow[^}]*\}/
     )
   })
+
+  it('dims the page footer that sits outside the scroll-layer clip', () => {
+    const mobileCss = readFileSync(join(tutorialDir, 'MobileTutorialOverlay.css'), 'utf8')
+    expect(mobileCss).toMatch(/#tutorial-portal-root[\s\S]*footer::after/)
+    expect(mobileCss).toMatch(/#mobile-tutorial-portal-root[\s\S]*footer::after/)
+    expect(mobileCss).toMatch(/rgba\(0,\s*0,\s*0,\s*0\.6\)/)
+    expect(mobileCss).toMatch(/rgba\(0,\s*0,\s*0,\s*0\.65\)/)
+  })
 })

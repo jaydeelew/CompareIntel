@@ -1,8 +1,20 @@
-import React, { useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { useResponsive } from '../../hooks'
 import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types'
 import { getSafeId } from '../../utils'
+import {
+  applyCardScrollSnapshot,
+  clearManualCardScroll,
+  clearPromptAlignPadding,
+  contentSkipsPromptAlign,
+  isVerticalCardScroll,
+  markManualCardScroll,
+  readCardScrollSnapshot,
+  scrollContentToLatestUserPrompt,
+  userManuallyScrolledCard,
+  writeCardScrollSnapshot,
+} from '../../utils/alignLatestUserPrompt'
 import { isErrorMessage } from '../../utils/error'
 import { humanizeModelId } from '../../utils/retiredConversationModels'
 import { MessageBubble } from '../conversation/MessageBubble'
@@ -51,6 +63,11 @@ export interface ResultCardProps {
   webSearchEnabled?: boolean
   /** Model is no longer in the catalog. Past messages stay readable. */
   retired?: boolean
+  /**
+   * Mobile model-switch hint. Rendered under the header and formatted/raw row,
+   * outside the scrolling response.
+   */
+  swipeHint?: React.ReactNode
 }
 
 // Single model result card with formatted/raw toggle
@@ -78,6 +95,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   streamAnswerStarted = false,
   webSearchEnabled = false,
   retired = false,
+  swipeHint = null,
 }) => {
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const lastAssistantIndex = safeMessages.reduce(
@@ -95,6 +113,102 @@ export const ResultCard: React.FC<ResultCardProps> = ({
 
   const { isSmallLayout } = useResponsive()
   const [showTooltip, setShowTooltip] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const userRound = safeMessages.reduce((count, message) => {
+    return message.type === 'user' ? count + 1 : count
+  }, 0)
+
+  useLayoutEffect(() => {
+    const content = contentRef.current
+    if (!content) return
+    if (userRound < 2) {
+      clearManualCardScroll(modelId)
+      content.removeAttribute('data-manual-scroll-round')
+      clearPromptAlignPadding(content)
+      return
+    }
+    const snap = readCardScrollSnapshot(modelId, userRound)
+    if (snap?.opened) {
+      if (userManuallyScrolledCard(modelId, userRound)) {
+        content.setAttribute('data-manual-scroll-round', String(userRound))
+      }
+      const restore = () => {
+        const current = readCardScrollSnapshot(modelId, userRound)
+        if (current) applyCardScrollSnapshot(content, current)
+      }
+      restore()
+      const observer = new ResizeObserver(restore)
+      observer.observe(content)
+      return () => {
+        writeCardScrollSnapshot(modelId, userRound, content)
+        observer.disconnect()
+      }
+    }
+    if (userManuallyScrolledCard(modelId, userRound)) {
+      content.setAttribute('data-manual-scroll-round', String(userRound))
+      return () => writeCardScrollSnapshot(modelId, userRound, content)
+    }
+    const align = () => {
+      if (contentSkipsPromptAlign(content, userRound)) return
+      if (!scrollContentToLatestUserPrompt(content)) return
+      writeCardScrollSnapshot(modelId, userRound, content, { opened: true })
+    }
+    align()
+    const observer = new ResizeObserver(align)
+    observer.observe(content)
+    for (const child of content.children) observer.observe(child)
+    return () => {
+      writeCardScrollSnapshot(modelId, userRound, content)
+      observer.disconnect()
+    }
+  }, [modelId, userRound])
+
+  useEffect(() => {
+    const content = contentRef.current
+    if (!content || userRound < 2) return
+    let touchStartX = 0
+    let touchStartY = 0
+    const mark = () => markManualCardScroll(modelId, userRound, content)
+    const remember = () => writeCardScrollSnapshot(modelId, userRound, content)
+    const onWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) < 1) return
+      mark()
+      remember()
+    }
+    const onTouchStart = (event: TouchEvent) => {
+      touchStartX = event.touches[0]?.clientX ?? 0
+      touchStartY = event.touches[0]?.clientY ?? 0
+    }
+    const onTouchMove = (event: TouchEvent) => {
+      const x = event.touches[0]?.clientX ?? touchStartX
+      const y = event.touches[0]?.clientY ?? touchStartY
+      const dx = Math.abs(x - touchStartX)
+      const dy = Math.abs(y - touchStartY)
+      // A sideways model-tab swipe can drift a few dozen pixels vertically.
+      // That gesture changes cards; it is not a scroll inside this card.
+      if (!isVerticalCardScroll(dx, dy)) return
+      mark()
+      remember()
+    }
+    const onMouseDown = (event: MouseEvent) => {
+      if (event.target !== content) return
+      mark()
+      remember()
+    }
+    const onScroll = () => remember()
+    content.addEventListener('wheel', onWheel, { passive: true })
+    content.addEventListener('touchstart', onTouchStart, { passive: true })
+    content.addEventListener('touchmove', onTouchMove, { passive: true })
+    content.addEventListener('mousedown', onMouseDown)
+    content.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      content.removeEventListener('wheel', onWheel)
+      content.removeEventListener('touchstart', onTouchStart)
+      content.removeEventListener('touchmove', onTouchMove)
+      content.removeEventListener('mousedown', onMouseDown)
+      content.removeEventListener('scroll', onScroll)
+    }
+  }, [modelId, userRound])
 
   const handleOutputLengthClick = () => {
     if (isSmallLayout) {
@@ -311,7 +425,13 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           <span className={`status ${statusClass}`}>{statusText}</span>
         </div>
       </div>
-      <div className="conversation-content" id={`conversation-content-${safeId}`}>
+      {swipeHint}
+      <div
+        ref={contentRef}
+        className="conversation-content"
+        id={`conversation-content-${safeId}`}
+        data-model-id={modelId}
+      >
         {safeMessages.map((message, index) => {
           const messageId = message.id ? String(message.id) : `msg-${index}`
           const uniqueKey = message.id ? `${String(message.id)}-${index}` : `msg-${index}`
@@ -345,6 +465,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                   showLinkPreviews && isLatestAssistant && activeTab === RESULT_TAB.FORMATTED
                 )}
                 deferLinkPreviews={isProcessing}
+                streaming={Boolean(isProcessing && isLatestAssistant)}
                 onCopyMessage={
                   onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
                 }

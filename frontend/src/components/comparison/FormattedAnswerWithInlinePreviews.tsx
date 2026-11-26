@@ -10,6 +10,7 @@ interface LazyLatexRendererProps {
   children: string
   className?: string
   modelId?: string
+  streaming?: boolean
 }
 
 type LatexRendererComponent = React.ComponentType<LazyLatexRendererProps>
@@ -27,6 +28,8 @@ export interface FormattedAnswerWithInlinePreviewsProps {
   modelId?: string
   enabled: boolean
   defer?: boolean
+  /** Latest reply is still receiving tokens. */
+  streaming?: boolean
 }
 
 /**
@@ -35,7 +38,7 @@ export interface FormattedAnswerWithInlinePreviewsProps {
  */
 export const FormattedAnswerWithInlinePreviews: React.FC<
   FormattedAnswerWithInlinePreviewsProps
-> = ({ content, modelId, enabled, defer = false }) => {
+> = ({ content, modelId, enabled, defer = false, streaming = false }) => {
   const [LatexView, setLatexView] = useState<LatexRendererComponent | null>(
     () => loadedLatexRenderer
   )
@@ -61,8 +64,12 @@ export const FormattedAnswerWithInlinePreviews: React.FC<
 
   if (!LatexView) {
     return (
-      <div className="result-output formatted-with-previews" aria-busy="true">
-        {content}
+      <div
+        className="result-output formatted-with-previews"
+        aria-busy="true"
+        data-renderer-pending="true"
+      >
+        {streaming ? null : content}
       </div>
     )
   }
@@ -74,7 +81,7 @@ export const FormattedAnswerWithInlinePreviews: React.FC<
     >
       {blocks.map((block, index) => (
         <div key={`block-${index}`} className="formatted-answer-block">
-          <LatexView className="formatted-answer-block__md" modelId={modelId}>
+          <LatexView className="formatted-answer-block__md" modelId={modelId} streaming={streaming}>
             {block.text}
           </LatexView>
           {enabled && !defer && block.previewUrls.length > 0 && (

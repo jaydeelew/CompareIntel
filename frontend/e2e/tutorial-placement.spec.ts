@@ -111,7 +111,9 @@ async function readPlacement(page: Page): Promise<PlacementReport> {
     }
     const app = document.querySelector('.app') as HTMLElement | null
     const scroller =
-      app && app.scrollHeight > app.clientHeight + 1
+      app &&
+      app.scrollHeight > app.clientHeight + 1 &&
+      app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
         ? app
         : (document.scrollingElement ?? document.documentElement)
     const scrollTop = scroller.scrollTop
@@ -134,6 +136,31 @@ async function readPlacement(page: Page): Promise<PlacementReport> {
     const centered = tall || centerOffset < 80 || !canScrollCloser
     const onScreen = closest.bottom > 8 && closest.top < vh - 8
     const arrowTouches = arrowGap <= 6
+    const review = (title ?? '').includes('Review the New Responses')
+    if (review) {
+      const composer = document
+        .querySelector('[data-after-results-composer-slot] .composer:not(.composer-placeholder)')
+        ?.getBoundingClientRect()
+      const composerInView = Boolean(
+        composer && composer.height > 20 && composer.top < vh - 24 && composer.bottom > 24
+      )
+      const tipX = arrowBox.left + arrowBox.width / 2
+      const composerEdge = composer ? (pointsDown ? composer.top : composer.bottom) : 0
+      const composerGap = composer ? Math.abs(tipY - composerEdge) : Number.POSITIVE_INFINITY
+      const aimedAtComposer = Boolean(
+        composer && tipX >= composer.left - 48 && tipX <= composer.right + 48 && composerGap <= 28
+      )
+      const reviewOk = composerInView && aimedAtComposer
+      return {
+        ok: reviewOk,
+        reason: reviewOk
+          ? 'ok'
+          : `review composerInView=${composerInView} aimed=${aimedAtComposer} gap=${Math.round(composerGap)}`,
+        arrowGap: composer ? composerGap : null,
+        centerOffset,
+        title,
+      }
+    }
     const followUp = (title ?? '').includes('Continue the Conversation')
     let resultsCovered = true
     if (followUp) {

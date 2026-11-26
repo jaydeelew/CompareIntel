@@ -61,6 +61,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     isVisible,
     portalRoot,
     effectivePosition,
+    tooltipHidesArrow,
     positionStabilized,
     spotlightSettling,
     dropdownCutout,
@@ -144,15 +145,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     return null
   }
 
-  const shouldHideTooltipDuringFollowUpStream =
-    step === 'follow-up' && followUpSubmitStarted && streamAnswerStarted
+  // The follow-up card waits until that composer is the highlighted target.
   const followUpComposerPending = step === 'follow-up' && !isFollowUpComposerReady()
-  // The processing panel keeps its own tooltip. The review step must too:
-  // hiding on any streaming cutout left that card with a ring and no popover.
-  const hideTooltipForStreamingCutout =
-    isLoadingStreamingPhase &&
-    !(isLoading && !streamAnswerStarted) &&
-    step !== 'view-follow-up-results'
+  // No card while a comparison is still loading or its replies are still streaming.
+  // A results frame that stays up after the round finishes is not a reason to
+  // keep the card hidden: that card then sits on the composer.
+  const hideTooltipWhileModelsWork =
+    (isLoadingStreamingPhase && isLoading) ||
+    ((step === 'submit-comparison' ||
+      step === 'submit-comparison-2' ||
+      step === 'follow-up' ||
+      step === 'view-follow-up-results') &&
+      isLoading) ||
+    (step === 'submit-comparison' && streamAnswerStarted) ||
+    (step === 'follow-up' && followUpSubmitStarted && streamAnswerStarted)
 
   const overlayUi = (
     <>
@@ -184,8 +190,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       )}
 
       {!scrollBack &&
-        !hideTooltipForStreamingCutout &&
-        !shouldHideTooltipDuringFollowUpStream &&
+        !hideTooltipWhileModelsWork &&
         !followUpComposerPending &&
         !shouldHideTooltip &&
         isVisible &&
@@ -203,6 +208,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             overlayRef={overlayRef}
             overlayPosition={overlayPosition}
             effectivePosition={effectivePosition}
+            hideArrow={tooltipHidesArrow}
             positionStabilized={positionStabilized}
             settling={spotlightSettling}
           />

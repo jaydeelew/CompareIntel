@@ -14,11 +14,44 @@
   /* Allow clicks to pass through to highlighted elements */
 }
 
-/* Cutout uses the same viewport coordinates as the fixed tooltip. Page content
-   scrolls inside `.app`, so `window` scroll stays 0 and absolute positioning
-   does not follow the highlight. */
+/* The page footer sits after `.app`. The scroll-layer dim is clipped by
+   `.app`'s overflow, so the footer stayed bright. This veil is part of the
+   footer, so it covers that block on every cutout step and scrolls with it.
+   It is not a cutout and does not change the page's scroll height.
+   A fixed full-viewport backdrop already covers the footer, so this stays off
+   then and the footer is not dimmed twice.
+   The veil color matches the overlay. The footer base continues the hero
+   gradient (see syncTutorialFooterWithHero) so the dimmed footer matches the
+   dimmed hero instead of a lighter panel. */
+body:has(#tutorial-portal-root):has(.tutorial-scroll-dim, .tutorial-backdrop-cutout) footer,
+body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
+  footer {
+  position: relative;
+  /* The inline border sits above the veil and reads as a light seam. */
+  border-top-width: 0 !important;
+}
+
+body:has(#tutorial-portal-root):has(.tutorial-scroll-dim, .tutorial-backdrop-cutout) footer::after,
+body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
+  footer::after {
+  content: '';
+  position: absolute;
+  /* Cover the 1px top border. It sits outside the padding box and stayed bright. */
+  inset: -1px 0 0 0;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 1;
+}
+
+body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
+  footer::after {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* Cutout is position:absolute in the `.app` scroll layer (content coordinates).
+   The compositor scrolls it with the target. Do not switch this back to fixed. */
 .mobile-tutorial-backdrop-cutout {
-  position: fixed;
+  position: absolute;
   border-radius: 12px;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
   z-index: 9998;
@@ -194,11 +227,11 @@ html[data-onboarding-tutorial-active] .mobile-composer-in-flow-wrapper .composer
 
 /* Mobile tooltip container - uses smart positioning. overflow: visible so the pointer arrow (positioned outside the card) is not clipped. */
 .mobile-tutorial-tooltip {
-  position: fixed;
+  position: absolute;
   z-index: 10000;
-  max-width: calc(100vw - 24px);
-  width: 100%;
-  max-width: 300px;
+  /* The scroll layer is 0×0, so a percentage width would collapse the card. */
+  width: min(300px, calc(100vw - 24px));
+  max-width: min(300px, calc(100vw - 24px));
   pointer-events: auto;
   overflow: visible;
   /* Top/left are set once per step. Opacity is not animated: Mobile Safari
@@ -233,8 +266,8 @@ html[data-onboarding-tutorial-active] .mobile-composer-in-flow-wrapper .composer
   animation: tutorial-frame-in 200ms ease;
 }
 
-html.tutorial-spotlight-settling .mobile-tutorial-highlight,
-html.tutorial-spotlight-settling .tutorial-highlight {
+html.tutorial-spotlight-settling .mobile-tutorial-highlight:not(.submit-button),
+html.tutorial-spotlight-settling .tutorial-highlight:not(.submit-button) {
   box-shadow: none !important;
 }
 
@@ -378,6 +411,10 @@ html.tutorial-spotlight-settling .tutorial-highlight:not(.composer) {
 }
 
 /* Arrow pointing to target - positioned dynamically */
+.mobile-tutorial-tooltip--unanchored .mobile-tutorial-arrow {
+  display: none;
+}
+
 .mobile-tutorial-arrow {
   position: absolute;
   width: 0;
@@ -472,6 +509,8 @@ html.tutorial-spotlight-settling .tutorial-highlight:not(.composer) {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
+  /* The scroll layer sets pointer-events: none, and that value is inherited. */
+  pointer-events: auto;
   background: var(--bg-primary);
   border: 2px solid var(--accent-color);
   border-radius: 24px;
@@ -667,4 +706,19 @@ body.mobile-tutorial-active {
       0 0 0 3px rgba(16, 185, 129, 0.85),
       0 4px 16px rgba(16, 185, 129, 0.4) !important;
   }
+}
+
+/* The shared highlight forces --radius-md (a rounded square) onto every target.
+   On the compare steps that target is the round submit control. Keep its
+   circle and its toolbar size, and let the green attention ring be the cue. */
+.submit-button.mobile-tutorial-highlight,
+.textarea-icon-button.submit-button.mobile-tutorial-highlight {
+  border-radius: 50% !important;
+  animation: tutorial-submit-attention 1.75s ease-out infinite !important;
+}
+
+html.tutorial-spotlight-settling .submit-button.mobile-tutorial-highlight,
+html.tutorial-spotlight-settling .textarea-icon-button.submit-button.mobile-tutorial-highlight {
+  border-radius: 50% !important;
+  animation: tutorial-submit-attention 1.75s ease-out infinite !important;
 }

@@ -1,13 +1,56 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  clampTooltipTop,
   deferScroll,
   followUpScrollDelta,
   historyPairScrollDelta,
   placeTooltipBoxAgainstFrame,
+  readTutorialContentOrigin,
+  scrollContentOffset,
   scrollDeltaToFitTooltip,
   visibleViewportHeight,
+  withScrollAnchor,
 } from '../tutorialPositioning'
+import { tutorialBoxesNearlyEqual } from '../tutorialSettle'
+
+describe('clampTooltipTop', () => {
+  it('pulls a card that sits above the visual viewport back into view', () => {
+    expect(
+      clampTooltipTop({
+        top: -240,
+        height: 180,
+        viewportTop: 40,
+        viewportHeight: 700,
+        padding: 12,
+      })
+    ).toBe(52)
+  })
+
+  it('pulls a card that sits under the browser chrome back up', () => {
+    expect(
+      clampTooltipTop({
+        top: 640,
+        height: 180,
+        viewportTop: 0,
+        viewportHeight: 700,
+        padding: 12,
+      })
+    ).toBe(508)
+  })
+
+  it('leaves a card that already fits', () => {
+    expect(
+      clampTooltipTop({
+        top: 120,
+        height: 180,
+        viewportTop: 0,
+        viewportHeight: 800,
+        padding: 12,
+      })
+    ).toBe(120)
+  })
+})
 
 describe('placeTooltipBoxAgainstFrame', () => {
   const frame = {
@@ -189,6 +232,32 @@ describe('deferScroll', () => {
     cancel()
     vi.runAllTimers()
     expect(scroll).not.toHaveBeenCalled()
+  })
+
+  it('keeps a scroll-layer box on the same content point after the viewport moves', () => {
+    const app = document.createElement('div')
+    app.className = 'app'
+    Object.defineProperty(app, 'scrollHeight', { value: 2000 })
+    Object.defineProperty(app, 'clientHeight', { value: 400 })
+    Object.defineProperty(app, 'clientTop', { value: 0 })
+    Object.defineProperty(app, 'clientLeft', { value: 0 })
+    app.scrollTop = 0
+    app.getBoundingClientRect = () => new DOMRect(0, 0, 400, 400)
+    document.body.appendChild(app)
+
+    const before = withScrollAnchor({ top: 500, left: 40 })
+    app.scrollTop = 280
+    const after = withScrollAnchor({ top: 220, left: 40 })
+    expect(scrollContentOffset(before)).toEqual({ top: 500, left: 40 })
+    expect(scrollContentOffset(after)).toEqual({ top: 500, left: 40 })
+    expect(readTutorialContentOrigin().y).toBe(-280)
+    expect(
+      tutorialBoxesNearlyEqual(
+        { ...before, width: 80, height: 40 },
+        { ...after, width: 80, height: 40 }
+      )
+    ).toBe(true)
+    app.remove()
   })
 
   it('does not scroll when cancelled after the frame but before the delay', () => {

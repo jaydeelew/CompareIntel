@@ -198,6 +198,29 @@ describe('tutorial interaction lock', () => {
     expect(submit.inert).toBe(false)
   })
 
+  it('keeps a focused prompt editable when the composer ring is missing', () => {
+    const w = window as Window & { __TUTORIAL_CURRENT_STEP__?: string }
+    w.__TUTORIAL_CURRENT_STEP__ = 'enter-prompt'
+    const composer = document.createElement('div')
+    composer.className = 'composer'
+    const textarea = document.createElement('textarea')
+    textarea.setAttribute('data-testid', 'comparison-input-textarea')
+    const toolbar = document.createElement('div')
+    toolbar.className = 'composer-toolbar'
+    const file = document.createElement('button')
+    file.className = 'file-upload-button'
+    toolbar.append(file)
+    composer.append(textarea, toolbar)
+    composer.getBoundingClientRect = () => rect(180, 8, 360, 140)
+    document.body.append(composer)
+    textarea.focus()
+
+    const stop = syncTutorialInteractionLock()
+    expect(textarea.closest('[inert]')).toBeNull()
+    expect(file.inert).toBe(true)
+    stop()
+  })
+
   it('keeps submit on the follow-up step and history on the history step', () => {
     const w = window as Window & { __TUTORIAL_CURRENT_STEP__?: string }
     w.__TUTORIAL_CURRENT_STEP__ = 'follow-up'

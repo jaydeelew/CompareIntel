@@ -97,6 +97,21 @@ button:focus-visible {
   z-index: 1;
 }
 
+/* Tutorial cutouts and tooltips live in the page scroller, at the content
+   origin, so a fast scroll moves them with their targets. Width and height
+   stay 0 so the layer does not extend scrollHeight; the painted holes and
+   cards overflow it. */
+.app > .tutorial-scroll-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  z-index: 9998;
+  pointer-events: none;
+}
+
 /* ═══════════════════════════════════════════════════════════
    LINKS
    ═══════════════════════════════════════════════════════════ */

@@ -7,7 +7,7 @@
     "rankings": "https://openrouter.ai/rankings (fetched 2026-10-25)",
     "compareintel_api": "UNREACHABLE (no response)"
   },
-  "model_count": 98,
+  "model_count": 97,
   "models": [
 {
       "id": "anthropic/claude-haiku-4.5",
@@ -2854,38 +2854,6 @@
       "price_per_image_usd": 0.008,
       "openrouter_created": "2026-11-12",
       "openrouter_url": "https://openrouter.ai/bytedance-seed/seedream-5-5",
-      "has_renderer_config": false,
-      "openrouter_rankings_position": null,
-      "in_openrouter": true
-    },
-    {
-      "id": "minimax/minimax-h3-image",
-      "slug": "minimax-h3-image",
-      "name": "Minimax H3 Image",
-      "provider": "Minimax",
-      "category": "Image",
-      "description_registry": "MiniMax H3 Image is MiniMax's image generation and editing model.",
-      "description_openrouter": "MiniMax H3 Image is MiniMax's image generation and editing model. It creates images from text prompts and edits or composes images from 1 to 16 reference images, with output up...",
-      "knowledge_cutoff": "N/A",
-      "supports_web_search": false,
-      "supports_vision": null,
-      "supports_image_generation": true,
-      "is_thinking_model": null,
-      "available": null,
-      "context_length": 4096,
-      "max_completion_tokens": 3686,
-      "input_modalities": [
-        "text",
-        "image"
-      ],
-      "output_modalities": [
-        "image"
-      ],
-      "price_input_usd_per_mtok": 2.3,
-      "price_output_usd_per_mtok": 0.0,
-      "price_per_image_usd": null,
-      "openrouter_created": "2026-11-10",
-      "openrouter_url": "https://openrouter.ai/minimax/minimax-h3-image",
       "has_renderer_config": false,
       "openrouter_rankings_position": null,
       "in_openrouter": true
