@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
+import sharp from 'sharp'
 
 import {
   getProvidersForModelIds,
@@ -268,6 +269,79 @@ async function footerFlowsWithPage(page: Page): Promise<string> {
 }
 
 /**
+ * The footer is covered by the same follow-up dim as the page around it.
+ * A light footer panel fails this even when a veil is absent.
+ */
+async function footerDimMatchesPage(page: Page): Promise<string> {
+  const sample = await page.evaluate(() => {
+    const nav = document.querySelector('nav[aria-label="Footer navigation"]')
+    const footer = nav?.closest('footer')
+    const svg = document.querySelector('svg.tutorial-scroll-dim')
+    if (!(footer instanceof HTMLElement)) return { status: 'missing-footer' as const }
+    if (!(svg instanceof SVGSVGElement)) {
+      const rings = document.querySelectorAll('.tutorial-backdrop-follow-up-composer-ring').length
+      const svgs = document.querySelectorAll('svg.tutorial-scroll-dim').length
+      return { status: `missing-svg:rings${rings}:svgs${svgs}` as const }
+    }
+    const foot = footer.getBoundingClientRect()
+    const dim = svg.getBoundingClientRect()
+    if (foot.height < 2 || dim.width < 2 || dim.height < 2) {
+      return {
+        status: `missing-size:${Math.round(dim.width)}x${Math.round(dim.height)}` as const,
+      }
+    }
+    const covers =
+      dim.left <= foot.left + 1 &&
+      dim.right >= foot.right - 1 &&
+      dim.top <= foot.top + 1 &&
+      dim.bottom >= foot.bottom - 1
+    if (!covers) {
+      const r = (b: DOMRect) =>
+        `${Math.round(b.left)},${Math.round(b.top)},${Math.round(b.right)},${Math.round(b.bottom)}`
+      return { status: `uncovered:dim${r(dim)}:foot${r(foot)}` as const }
+    }
+    const tips = Array.from(
+      document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+    ).map(el => el.getBoundingClientRect())
+    const inTip = (x: number, y: number) =>
+      tips.some(
+        box => x >= box.left - 2 && x <= box.right + 2 && y >= box.top - 2 && y <= box.bottom + 2
+      )
+    const aboveY = foot.top - 6
+    const footerY = Math.min(foot.top + 10, foot.bottom - 4)
+    const candidates = [8, 14, window.innerWidth - 14, window.innerWidth - 8]
+    const x = candidates.find(
+      px => px > 1 && px < window.innerWidth - 1 && !inTip(px, aboveY) && !inTip(px, footerY)
+    )
+    if (x == null) return { status: 'blocked' as const }
+    return {
+      status: 'ready' as const,
+      x: x + window.scrollX,
+      aboveY: aboveY + window.scrollY,
+      footerY: footerY + window.scrollY,
+    }
+  })
+  if (sample.status !== 'ready') return sample.status
+  const dpr = await page.evaluate(() => window.devicePixelRatio || 1)
+  const buf = await page.screenshot({ type: 'png', fullPage: true })
+  const { data, info } = await sharp(buf).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const pixel = (x: number, y: number) => {
+    const px = Math.min(info.width - 1, Math.max(0, Math.round(x * dpr)))
+    const py = Math.min(info.height - 1, Math.max(0, Math.round(y * dpr)))
+    const i = (py * info.width + px) * info.channels
+    return [data[i] ?? 0, data[i + 1] ?? 0, data[i + 2] ?? 0]
+  }
+  const above = pixel(sample.x, sample.aboveY)
+  const onFooter = pixel(sample.x, sample.footerY)
+  const delta = Math.max(
+    Math.abs(above[0] - onFooter[0]),
+    Math.abs(above[1] - onFooter[1]),
+    Math.abs(above[2] - onFooter[2])
+  )
+  return delta <= 22 ? 'match' : `mismatch:${delta}`
+}
+
+/**
  * The composer tooltip is fully inside the visual viewport and finishes above
  * the footer. `covered` means the footer overlaps the card.
  */
@@ -455,6 +529,9 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
       .toBe('flow')
     await expect.poll(() => userPromptCount(page), { timeout: 5_000, intervals: [100] }).toBe('1')
     await expect
+      .poll(() => footerDimMatchesPage(page), { timeout: 12_000, intervals: [150] })
+      .toBe('match')
+    await expect
       .poll(() => tooltipClearsResults(page), { timeout: 5_000, intervals: [100] })
       .toBe('clear')
     await page.screenshot({ path: `${shotDir}/composer-tooltip.png` })
@@ -494,6 +571,9 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
       .poll(() => footerFlowsWithPage(page), { timeout: 5_000, intervals: [100] })
       .toBe('flow')
     await expect.poll(() => userPromptCount(page), { timeout: 5_000, intervals: [100] }).toBe('2')
+    await expect
+      .poll(() => footerDimMatchesPage(page), { timeout: 12_000, intervals: [150] })
+      .toBe('match')
     await expect
       .poll(() => tooltipClearsResults(page), { timeout: 5_000, intervals: [100] })
       .toBe('clear')

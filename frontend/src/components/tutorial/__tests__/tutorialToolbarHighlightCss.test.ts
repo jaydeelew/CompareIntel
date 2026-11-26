@@ -42,6 +42,7 @@ describe('tutorial toolbar highlight CSS (steps 7–8)', () => {
     const mobileCss = readFileSync(join(tutorialDir, 'MobileTutorialOverlay.css'), 'utf8')
     expect(mobileCss).not.toMatch(/footer::after/)
     expect(mobileCss).not.toMatch(/footer\s*\{[^}]*position:\s*(relative|fixed|sticky)/)
+    expect(mobileCss).toMatch(/background-color:\s*transparent\s*!important/)
     expect(mobileCss).toMatch(/body:has\(#tutorial-portal-root\) \.app/)
     expect(mobileCss).toMatch(/overflow:\s*visible/)
   })
