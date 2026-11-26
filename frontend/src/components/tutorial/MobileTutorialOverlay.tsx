@@ -770,7 +770,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         arrowSize,
         padding,
       })
-    } else if (tutorialTooltipPrefersBelow(step) && !spotlightSettledRef.current) {
+    } else if (
+      tutorialTooltipPrefersBelow(step) &&
+      !followUpStreamingRoundRef.current &&
+      // After the card is shown, a late font wrap makes it taller than the gap
+      // reserved at settle. Keep opening that gap. Once the follow-up request
+      // is in flight, scrolling would pull the processing panel off screen.
+      (!spotlightSettledRef.current || !isLoadingRef.current)
+    ) {
       scrollFollowUpHighlightIntoView({
         tooltipHeight: tooltipHeight > 1 ? tooltipHeight : tooltipEstimatedHeight,
         arrowSize,
@@ -1938,13 +1945,40 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       const scrollTop = getTutorialScrollRoot().getScrollTop()
       const composer = readPortaledFollowUpComposerRect()
-      const viewportHeight = window.innerHeight
+      const view = readVisualViewportBox()
+      const viewBottom = view.top + view.height
       const onScreen =
         composer != null &&
         composer.height > 20 &&
-        composer.top < viewportHeight - 1 &&
-        composer.bottom > 1
-      if (onScreen) {
+        composer.top < viewBottom - 1 &&
+        composer.bottom > view.top + 1
+      const card = overlayRef.current?.getBoundingClientRect()
+      const footer = document
+        .querySelector('nav[aria-label="Footer navigation"]')
+        ?.closest('footer')
+      const foot = footer instanceof HTMLElement ? footer.getBoundingClientRect() : null
+      const cardStyle = overlayRef.current ? getComputedStyle(overlayRef.current) : null
+      const cardVisible = Boolean(
+        card &&
+        card.height > 2 &&
+        cardStyle &&
+        cardStyle.visibility !== 'hidden' &&
+        Number(cardStyle.opacity) > 0.05
+      )
+      const cardOffscreen = Boolean(
+        cardVisible && card && (card.top < view.top - 1 || card.bottom > viewBottom + 1)
+      )
+      const cardOnFooter = Boolean(
+        cardVisible &&
+        card &&
+        foot &&
+        foot.height > 2 &&
+        Math.min(card.right, foot.right) - Math.max(card.left, foot.left) > 1 &&
+        Math.min(card.bottom, foot.bottom) - Math.max(card.top, foot.top) > 1
+      )
+      // The composer can be on screen while the card under it hangs past the
+      // fold or sits on the footer. That is not seated yet.
+      if (onScreen && !cardOffscreen && !cardOnFooter) {
         seatedTop = scrollTop
         if (stableSince === 0) stableSince = performance.now()
         if (performance.now() - stableSince > 4000) window.clearInterval(intervalId)

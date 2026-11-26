@@ -138,25 +138,38 @@ async function readPlacement(page: Page): Promise<PlacementReport> {
     const arrowTouches = arrowGap <= 6
     const review = (title ?? '').includes('Review the New Responses')
     if (review) {
-      const composer = document
-        .querySelector('[data-after-results-composer-slot] .composer:not(.composer-placeholder)')
-        ?.getBoundingClientRect()
-      const composerInView = Boolean(
-        composer && composer.height > 20 && composer.top < vh - 24 && composer.bottom > 24
-      )
+      const results = document.querySelector('.results-section')?.getBoundingClientRect()
+      const card = tip.getBoundingClientRect()
       const tipX = arrowBox.left + arrowBox.width / 2
-      const composerEdge = composer ? (pointsDown ? composer.top : composer.bottom) : 0
-      const composerGap = composer ? Math.abs(tipY - composerEdge) : Number.POSITIVE_INFINITY
-      const aimedAtComposer = Boolean(
-        composer && tipX >= composer.left - 48 && tipX <= composer.right + 48 && composerGap <= 28
-      )
-      const reviewOk = composerInView && aimedAtComposer
+      if (!results || results.width < 20 || results.height < 20) {
+        return {
+          ok: false,
+          reason: 'review missing-results',
+          arrowGap: null,
+          centerOffset,
+          title,
+        }
+      }
+      const overlapW = Math.min(card.right, results.right) - Math.max(card.left, results.left)
+      const overlapH = Math.min(card.bottom, results.bottom) - Math.max(card.top, results.top)
+      const overlaps = overlapW > 1 && overlapH > 1
+      const gapAbove = results.top - card.bottom
+      const gapBelow = card.top - results.bottom
+      const above = gapAbove >= -1 && gapAbove <= 36
+      const below = gapBelow >= -1 && gapBelow <= 36
+      const beside = above || below
+      const edge = below && !above ? results.bottom : results.top
+      const edgeInView = edge > 8 && edge < vh - 8
+      const tipGap = Math.min(Math.abs(tipY - results.top), Math.abs(tipY - results.bottom))
+      const withinX = tipX >= results.left - 48 && tipX <= results.right + 48
+      const cardInView = card.top >= -1 && card.bottom <= vh + 1
+      const reviewOk = !overlaps && beside && edgeInView && tipGap <= 36 && withinX && cardInView
       return {
         ok: reviewOk,
         reason: reviewOk
           ? 'ok'
-          : `review composerInView=${composerInView} aimed=${aimedAtComposer} gap=${Math.round(composerGap)}`,
-        arrowGap: composer ? composerGap : null,
+          : `review overlaps=${overlaps} beside=${beside} edgeInView=${edgeInView} tipGap=${Math.round(tipGap)} cardTop=${Math.round(card.top)}`,
+        arrowGap: tipGap,
         centerOffset,
         title,
       }
