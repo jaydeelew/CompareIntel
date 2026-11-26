@@ -1265,8 +1265,14 @@ export function floatTooltipClearOfProcessingPanel(args: {
   }
   const width = Math.max(args.tooltipWidth, 1)
   const left = args.leftIsCenter
-    ? Math.max(width / 2 + padding, Math.min(args.viewportWidth / 2, args.viewportWidth - width / 2 - padding))
-    : Math.max(padding, Math.min((args.viewportWidth - width) / 2, args.viewportWidth - width - padding))
+    ? Math.max(
+        width / 2 + padding,
+        Math.min(args.viewportWidth / 2, args.viewportWidth - width / 2 - padding)
+      )
+    : Math.max(
+        padding,
+        Math.min((args.viewportWidth - width) / 2, args.viewportWidth - width - padding)
+      )
   return { top, left }
 }
 
