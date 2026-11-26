@@ -34,7 +34,6 @@
     "google/gemini-3.1-flash-image",
     "google/gemini-nano-banana-2.1",
     "microsoft/mai-image-2.7",
-    "minimax/minimax-h3-image",
     "openai/gpt-5-image",
     "openai/gpt-5-image-mini",
     "openai/gpt-image-2.6-flare",
@@ -2904,9 +2903,9 @@
     }
   },
   "totals": {
-    "registryModels": 102,
+    "registryModels": 101,
     "textModels": 82,
-    "imageModels": 20,
+    "imageModels": 19,
     "allowlisted": 17,
     "cells": 656,
     "pass": 259,

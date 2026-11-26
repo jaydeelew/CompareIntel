@@ -52,8 +52,6 @@ const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
   'sourceful/riverflow-v2.6-pro': { image_sizes: ['1K', '2K'] },
   // Qwen Image 2.1 Pro: 1K and 2K (4K not validated)
   'qwen/qwen-image-2.1-pro': { image_sizes: ['1K', '2K'] },
-  // MiniMax H3 Image: conservative 1K and 2K (4K not claimed; aspect ratios not probe-validated)
-  'minimax/minimax-h3-image': { image_sizes: ['1K', '2K'] },
   // MAI-Image-2.7: add-model fallback 1K and 2K. Aspect ratios and sizes were not probe-validated.
   'microsoft/mai-image-2.7': { image_sizes: ['1K', '2K'] },
   'sourceful/riverflow-v2-fast-preview': {
