@@ -471,6 +471,8 @@ html.tutorial-spotlight-settling .tutorial-highlight:not(.composer) {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
+  /* The scroll layer sets pointer-events: none, and that value is inherited. */
+  pointer-events: auto;
   background: var(--bg-primary);
   border: 2px solid var(--accent-color);
   border-radius: 24px;

@@ -86,16 +86,10 @@ function viewportMoved(previous: ViewportSnapshot | null, next: ViewportSnapshot
 
 function tutorialScrollTarget(): EventTarget {
   const app = document.querySelector('.app') as HTMLElement | null
-  if (!app) return window
-  const appOverflow = app.scrollHeight - app.clientHeight
-  if (appOverflow <= 1) return window
+  if (!app || app.scrollHeight <= app.clientHeight + 1) return window
   const viewH = window.visualViewport?.height ?? window.innerHeight
   if (app.clientHeight <= viewH + 1) return app
-  const doc = document.scrollingElement
-  const docOverflow =
-    doc instanceof HTMLElement ? doc.scrollHeight - doc.clientHeight : window.innerHeight
-  if (docOverflow > appOverflow + 1) return window
-  return app
+  return window
 }
 
 function readScrollTop(target: EventTarget): number {
@@ -511,14 +505,29 @@ export function watchTutorialFrameSize(onChange: () => void): () => void {
 
   const observed = new Set<Element>()
   const lastSize = new Map<Element, string>()
+  // Content coordinates, so a pure scroll does not count. A margin or a
+  // toolbar wrap moves the target without changing its border-box size, and
+  // ResizeObserver does not report that.
+  const contentKey = (el: Element) => {
+    const rect = el.getBoundingClientRect()
+    const host = document.querySelector('.app') as HTMLElement | null
+    const origin = host?.getBoundingClientRect()
+    const originX = origin ? origin.left + host!.clientLeft - host!.scrollLeft : 0
+    const originY = origin ? origin.top + host!.clientTop - host!.scrollTop : 0
+    return [
+      Math.round(rect.top - originY),
+      Math.round(rect.left - originX),
+      Math.round(rect.width),
+      Math.round(rect.height),
+    ].join(':')
+  }
   // Dropdown toggles re-render the composer. Remeasure only when a target's
   // box actually changes, or Firefox restarts the open animation and the list
   // never counts as visible.
   const noteSizeChange = () => {
     let changed = false
     for (const el of observed) {
-      const rect = el.getBoundingClientRect()
-      const key = `${Math.round(rect.width)}:${Math.round(rect.height)}`
+      const key = contentKey(el)
       if (lastSize.get(el) === key) continue
       lastSize.set(el, key)
       changed = true
@@ -551,7 +560,12 @@ export function watchTutorialFrameSize(onChange: () => void): () => void {
     bind()
     if (noteSizeChange()) schedule()
   })
-  mutationObserver.observe(host, { childList: true, subtree: true })
+  mutationObserver.observe(host, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['style', 'class'],
+  })
 
   return () => {
     if (raf !== 0) cancelAnimationFrame(raf)
