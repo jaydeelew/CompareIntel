@@ -443,8 +443,8 @@ describe('TutorialOverlay comparison spotlight', () => {
     expect(visibleContinue).toHaveLength(0)
   })
 
-  it('renders the review tooltip on the composer, not the results panel', async () => {
-    resultsRect = new DOMRect(40, 16, 640, 2400)
+  it('renders the review tooltip beside the results panel, not on top of it', async () => {
+    resultsRect = new DOMRect(40, 500, 640, 180)
     render(
       <TutorialOverlay
         {...props}
@@ -470,11 +470,18 @@ describe('TutorialOverlay comparison spotlight', () => {
         expect(document.querySelector('.tutorial-backdrop-follow-up-composer-ring')).toBeTruthy()
         const visualTop = tooltipVisualTop(tip as HTMLElement)
         expect(visualTop).toBeGreaterThanOrEqual(12)
-        expect(viewportStyleTop(tip as HTMLElement)).toBeLessThanOrEqual(window.innerHeight - 12)
+        const facing = viewportStyleTop(tip as HTMLElement)
+        expect(facing).toBeLessThanOrEqual(window.innerHeight - 12)
+        const above = tip?.classList.contains('tutorial-tooltip-top')
+        if (above) {
+          expect(facing).toBeLessThanOrEqual(resultsRect.top)
+        } else {
+          expect(visualTop).toBeGreaterThanOrEqual(resultsRect.bottom)
+        }
         const left = Number.parseFloat(tip?.style.left ?? '')
         const composerCenter = 40 + 320 / 2
         const resultsCenter = resultsRect.left + resultsRect.width / 2
-        expect(Math.abs(left - composerCenter)).toBeLessThan(Math.abs(left - resultsCenter))
+        expect(Math.abs(left - resultsCenter)).toBeLessThan(Math.abs(left - composerCenter))
       },
       { timeout: 8000 }
     )
