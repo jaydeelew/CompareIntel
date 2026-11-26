@@ -1853,6 +1853,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     step === 'follow-up' &&
     !followUpSubmitStarted &&
     (isLoading || isStepTransitioning || followUpComposerPending)
+  // Step 8 opens on the first follow-up token, while the stream is still
+  // running. The mobile card stays hidden for that window, same as steps 6 and
+  // 7. A visible card is clamped to the top of the phone, and the results pin
+  // then sits the panel under the card instead of the header.
+  const reviewStillStreaming = step === 'view-follow-up-results' && isLoading && streamAnswerStarted
   const isLoadingStreamingPhase = Boolean(
     loadingStreamingRect &&
     ((isSubmitStep &&
@@ -1860,7 +1865,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         isStepTransitioning ||
         (step === 'submit-comparison' && streamAnswerStarted))) ||
       holdFirstComparisonFrame ||
-      (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)))
+      (isFollowUpPostSubmit && (isLoading || streamAnswerStarted)) ||
+      reviewStillStreaming)
   )
 
   // Render scroll indicator if target is off-screen
