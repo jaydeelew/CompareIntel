@@ -51,7 +51,21 @@ function projectAllowed(project: string): boolean {
   )
 }
 
-async function reachPromptStep(page: Page, testInfo: TestInfo): Promise<void> {
+async function captureFooterDim(page: Page, path: string): Promise<void> {
+  const saved = await page.evaluate(() => {
+    const scrolling = document.scrollingElement
+    const top = scrolling?.scrollTop ?? 0
+    const footer = document.querySelector('nav[aria-label="Footer navigation"]')?.closest('footer')
+    footer?.scrollIntoView({ block: 'end', inline: 'nearest' })
+    return top
+  })
+  await page.screenshot({ path })
+  await page.evaluate(top => {
+    document.scrollingElement?.scrollTo({ top, left: 0, behavior: 'auto' })
+  }, saved)
+}
+
+async function reachPromptStep(page: Page, testInfo: TestInfo, step2Shot?: string): Promise<void> {
   await page.goto('/')
   await page.getByRole('button', { name: 'Start Tutorial' }).click()
   await tutorialTooltip(page).first().waitFor({ state: 'visible', timeout: 20_000 })
@@ -60,6 +74,11 @@ async function reachPromptStep(page: Page, testInfo: TestInfo): Promise<void> {
   const first = TUTORIAL_PROVIDERS[0]!
   const second = TUTORIAL_PROVIDERS[1]!
   await expandTutorialProvider(page, first, testInfo)
+  await expect(tutorialTooltip(page).first()).toContainText(/Select /, { timeout: 20_000 })
+  await expect
+    .poll(() => footerDimMatchesPage(page), { timeout: 12_000, intervals: [150] })
+    .toBe('match')
+  if (step2Shot) await captureFooterDim(page, step2Shot)
   await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[0]!, first, testInfo)
   await expandTutorialProvider(page, second, testInfo)
   await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[1]!, second, testInfo, {
@@ -273,56 +292,86 @@ async function footerFlowsWithPage(page: Page): Promise<string> {
 }
 
 /**
- * The footer is covered by the same follow-up dim as the page around it.
- * A light footer panel fails this even when a veil is absent.
+ * The rendered footer must share the page overlay with a dimmed model card.
+ * Samples a light patch of the footer panel and a dimmed provider card from
+ * the screenshot. A footer that is transparent over a dark fill fails this,
+ * because that patch is much darker than the dimmed white card.
  */
 async function footerDimMatchesPage(page: Page): Promise<string> {
+  await page.evaluate(() => {
+    document
+      .querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+      .forEach(el => {
+        el.dataset.dimSampleVisibility = el.style.visibility
+        el.style.visibility = 'hidden'
+      })
+  })
+  try {
+    return await readFooterDim(page)
+  } finally {
+    await page.evaluate(() => {
+      document
+        .querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+        .forEach(el => {
+          el.style.visibility = el.dataset.dimSampleVisibility ?? ''
+          delete el.dataset.dimSampleVisibility
+        })
+    })
+  }
+}
+
+async function readFooterDim(page: Page): Promise<string> {
   const sample = await page.evaluate(() => {
     const nav = document.querySelector('nav[aria-label="Footer navigation"]')
     const footer = nav?.closest('footer')
-    const svg = document.querySelector('svg.tutorial-scroll-dim')
     if (!(footer instanceof HTMLElement)) return { status: 'missing-footer' as const }
-    if (!(svg instanceof SVGSVGElement)) {
-      const rings = document.querySelectorAll('.tutorial-backdrop-follow-up-composer-ring').length
-      const svgs = document.querySelectorAll('svg.tutorial-scroll-dim').length
-      return { status: `missing-svg:rings${rings}:svgs${svgs}` as const }
-    }
     const foot = footer.getBoundingClientRect()
-    const dim = svg.getBoundingClientRect()
-    if (foot.height < 2 || dim.width < 2 || dim.height < 2) {
-      return {
-        status: `missing-size:${Math.round(dim.width)}x${Math.round(dim.height)}` as const,
-      }
-    }
-    const covers =
-      dim.left <= foot.left + 1 &&
-      dim.right >= foot.right - 1 &&
-      dim.top <= foot.top + 1 &&
-      dim.bottom >= foot.bottom - 1
-    if (!covers) {
-      const r = (b: DOMRect) =>
-        `${Math.round(b.left)},${Math.round(b.top)},${Math.round(b.right)},${Math.round(b.bottom)}`
-      return { status: `uncovered:dim${r(dim)}:foot${r(foot)}` as const }
-    }
-    const tips = Array.from(
-      document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+    if (foot.height < 24 || foot.width < 40) return { status: 'missing-footer' as const }
+    const holes = Array.from(
+      document.querySelectorAll<HTMLElement>('.tutorial-highlight, .mobile-tutorial-highlight')
     ).map(el => el.getBoundingClientRect())
-    const inTip = (x: number, y: number) =>
-      tips.some(
-        box => x >= box.left - 2 && x <= box.right + 2 && y >= box.top - 2 && y <= box.bottom + 2
-      )
-    const aboveY = foot.top - 6
-    const footerY = Math.min(foot.top + 10, foot.bottom - 4)
-    const candidates = [8, 14, window.innerWidth - 14, window.innerWidth - 8]
-    const x = candidates.find(
-      px => px > 1 && px < window.innerWidth - 1 && !inTip(px, aboveY) && !inTip(px, footerY)
-    )
-    if (x == null) return { status: 'blocked' as const }
+    const covered = (x: number, y: number) =>
+      holes.some(hole => x >= hole.left && x <= hole.right && y >= hole.top && y <= hole.bottom)
+    const pointsOn = (el: Element | null): Array<[number, number]> => {
+      if (!(el instanceof HTMLElement)) return []
+      const box = el.getBoundingClientRect()
+      if (box.width < 40 || box.height < 24) return []
+      const found: Array<[number, number]> = []
+      const xs = [14, box.width / 2, box.width - 14]
+      const ys = [12, box.height / 2, Math.max(12, box.height - 12)]
+      for (const dy of ys) {
+        for (const dx of xs) {
+          const x = box.left + dx
+          const y = box.top + dy
+          if (!covered(x, y)) found.push([x, y])
+        }
+      }
+      return found
+    }
+    const preferred = [
+      ...pointsOn(document.querySelector('.models-section')),
+      ...pointsOn(
+        Array.from(document.querySelectorAll('.provider-dropdown')).find(
+          el =>
+            !el.classList.contains('tutorial-highlight') &&
+            !el.classList.contains('mobile-tutorial-highlight')
+        ) ?? null
+      ),
+      ...pointsOn(document.querySelector('.input-section')),
+    ]
+    const footerY = foot.bottom - 8
+    const footerX = [16, foot.width / 2, foot.width - 16]
+      .map(offset => foot.left + offset)
+      .find(x => !covered(x, footerY))
+    if (preferred.length === 0) return { status: 'blocked-card' as const }
+    if (footerX == null) return { status: 'blocked-footer' as const }
+    const scrollX = window.scrollX
+    const scrollY = window.scrollY
     return {
       status: 'ready' as const,
-      x: x + window.scrollX,
-      aboveY: aboveY + window.scrollY,
-      footerY: footerY + window.scrollY,
+      cards: preferred.map(([x, y]) => ({ x: x + scrollX, y: y + scrollY })),
+      footerX: footerX + scrollX,
+      footerY: footerY + scrollY,
     }
   })
   if (sample.status !== 'ready') return sample.status
@@ -333,16 +382,31 @@ async function footerDimMatchesPage(page: Page): Promise<string> {
     const px = Math.min(info.width - 1, Math.max(0, Math.round(x * dpr)))
     const py = Math.min(info.height - 1, Math.max(0, Math.round(y * dpr)))
     const i = (py * info.width + px) * info.channels
-    return [data[i] ?? 0, data[i + 1] ?? 0, data[i + 2] ?? 0]
+    return [data[i] ?? 0, data[i + 1] ?? 0, data[i + 2] ?? 0] as const
   }
-  const above = pixel(sample.x, sample.aboveY)
-  const onFooter = pixel(sample.x, sample.footerY)
+  const rgb = (channels: readonly number[]) => channels.map(channel => channel).join(',')
+  const onFooter = pixel(sample.footerX, sample.footerY)
+  const neutral = sample.cards
+    .map(point => pixel(point.x, point.y))
+    .filter(channels => {
+      const max = Math.max(...channels)
+      const min = Math.min(...channels)
+      return max - min < 24 && max >= 60 && max <= 190
+    })
+  const onCard = neutral[0]
+  if (!onCard) {
+    const seen = sample.cards
+      .slice(0, 4)
+      .map(point => rgb(pixel(point.x, point.y)))
+      .join('|')
+    return `no-neutral-card:${seen}:footer=${rgb(onFooter)}`
+  }
   const delta = Math.max(
-    Math.abs(above[0] - onFooter[0]),
-    Math.abs(above[1] - onFooter[1]),
-    Math.abs(above[2] - onFooter[2])
+    Math.abs(onCard[0] - onFooter[0]),
+    Math.abs(onCard[1] - onFooter[1]),
+    Math.abs(onCard[2] - onFooter[2])
   )
-  return delta <= 22 ? 'match' : `mismatch:${delta}`
+  return delta <= 24 ? 'match' : `mismatch:${delta}:card=${rgb(onCard)}:footer=${rgb(onFooter)}`
 }
 
 /**
@@ -499,7 +563,7 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
     fs.mkdirSync(shotDir, { recursive: true })
 
     await installHeldComparisonStream(page)
-    await reachPromptStep(page, testInfo)
+    await reachPromptStep(page, testInfo, `${shotDir}/step2.png`)
     await completeTutorialPromptInput(page, 'Sqrt 3?', testInfo)
     await expect(tutorialTooltip(page).first()).toContainText('Run Your Comparison', {
       timeout: 20_000,
@@ -557,6 +621,7 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
     await expect
       .poll(() => footerDimMatchesPage(page), { timeout: 12_000, intervals: [150] })
       .toBe('match')
+    await captureFooterDim(page, `${shotDir}/step7.png`)
     await expect
       .poll(() => tooltipClearsResults(page), { timeout: 5_000, intervals: [100] })
       .toBe('clear')

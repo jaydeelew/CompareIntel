@@ -38,11 +38,12 @@ describe('tutorial toolbar highlight CSS (steps 7–8)', () => {
     )
   })
 
-  it('does not give the page footer its own veil or fixed position', () => {
+  it('does not give the page footer its own veil, fill, or fixed position', () => {
     const mobileCss = readFileSync(join(tutorialDir, 'MobileTutorialOverlay.css'), 'utf8')
     expect(mobileCss).not.toMatch(/footer::after/)
     expect(mobileCss).not.toMatch(/footer\s*\{[^}]*position:\s*(relative|fixed|sticky)/)
-    expect(mobileCss).toMatch(/background-color:\s*transparent\s*!important/)
+    expect(mobileCss).not.toMatch(/footer\s*\{[^}]*background/)
+    expect(mobileCss).not.toMatch(/#0f172a/)
     expect(mobileCss).toMatch(/body:has\(#tutorial-portal-root\) \.app/)
     expect(mobileCss).toMatch(/overflow:\s*visible/)
   })
