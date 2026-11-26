@@ -196,10 +196,18 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement
+      // Pressing the tutorial card must not collapse the list first.
+      // Firefox drops the click when that collapse moves the card.
+      const onTutorialCard = Boolean(
+        target.closest(
+          '#tutorial-portal-root, #mobile-tutorial-portal-root, .tutorial-tooltip, .mobile-tutorial-tooltip'
+        )
+      )
       if (
         showHistoryDropdown &&
         !target.closest('.history-toggle-button') &&
-        !target.closest('.history-inline-list')
+        !target.closest('.history-inline-list') &&
+        !onTutorialCard
       ) {
         setShowHistoryDropdown(false)
       }
