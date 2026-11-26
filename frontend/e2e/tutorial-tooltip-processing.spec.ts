@@ -251,6 +251,36 @@ async function composerCutout(page: Page): Promise<string> {
   })
 }
 
+/**
+ * The page footer is outside `.app`, so a clipped scroll-layer dim leaves it
+ * bright. `dimmed` means the footer veil covers it. `offscreen` means this
+ * viewport is not showing the footer.
+ */
+async function footerDim(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const nav = document.querySelector('nav[aria-label="Footer navigation"]')
+    const footer = nav?.closest('footer')
+    if (!(footer instanceof HTMLElement)) return 'missing'
+    const box = footer.getBoundingClientRect()
+    const onScreen =
+      box.height > 8 &&
+      box.bottom > 8 &&
+      box.top < window.innerHeight - 8 &&
+      box.left < window.innerWidth - 8 &&
+      box.right > 8
+    if (!onScreen) return 'offscreen'
+    const veil = getComputedStyle(footer, '::after')
+    const alpha = Number(/rgba?\([^)]+,\s*([\d.]+)\s*\)/.exec(veil.backgroundColor)?.[1] ?? '1')
+    const covers =
+      veil.content !== 'none' &&
+      veil.content !== 'normal' &&
+      veil.position === 'absolute' &&
+      alpha > 0.4 &&
+      /rgba?\(\s*0\s*,\s*0\s*,\s*0/.test(veil.backgroundColor)
+    return covers ? 'dimmed' : 'bright'
+  })
+}
+
 /** No tutorial card is on screen. `framed` means the processing panel owns the highlight. */
 async function tooltipHiddenDuringProcessing(page: Page): Promise<string> {
   return page.evaluate(() => {
@@ -354,6 +384,7 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
       .toBe('cutout')
     await dismissMobileBlockers(page)
     await composerTip.scrollIntoViewIfNeeded()
+    await expect.poll(() => footerDim(page), { timeout: 5_000, intervals: [100] }).toBe('dimmed')
     await page.screenshot({ path: `${shotDir}/composer-tooltip.png` })
 
     await setStreamPhase(page, 'hold')
@@ -382,6 +413,7 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
       .toBe('cutout')
     await dismissMobileBlockers(page)
     await followUpTip.scrollIntoViewIfNeeded()
+    await expect.poll(() => footerDim(page), { timeout: 5_000, intervals: [100] }).toBe('dimmed')
     await page.screenshot({ path: `${shotDir}/follow-up-composer.png` })
   })
 })

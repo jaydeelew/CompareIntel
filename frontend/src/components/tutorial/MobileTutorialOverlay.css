@@ -14,6 +14,34 @@
   /* Allow clicks to pass through to highlighted elements */
 }
 
+/* The page footer sits after `.app`. The scroll-layer dim is clipped by
+   `.app`'s overflow, so the footer stayed bright. This veil is part of the
+   footer, so it covers that block on every cutout step and scrolls with it.
+   It is not a cutout and does not change the page's scroll height.
+   A fixed full-viewport backdrop already covers the footer, so this stays off
+   then and the footer is not dimmed twice. */
+body:has(#tutorial-portal-root):has(.tutorial-scroll-dim, .tutorial-backdrop-cutout) footer,
+body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
+  footer {
+  position: relative;
+}
+
+body:has(#tutorial-portal-root):has(.tutorial-scroll-dim, .tutorial-backdrop-cutout) footer::after,
+body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
+  footer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 1;
+}
+
+body:has(#mobile-tutorial-portal-root):has(.tutorial-scroll-dim, .mobile-tutorial-backdrop-cutout)
+  footer::after {
+  background: rgba(0, 0, 0, 0.65);
+}
+
 /* Cutout is position:absolute in the `.app` scroll layer (content coordinates).
    The compositor scrolls it with the target. Do not switch this back to fixed. */
 .mobile-tutorial-backdrop-cutout {
