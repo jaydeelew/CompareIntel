@@ -12,16 +12,8 @@ import { RESULT_TAB, createModelId } from '../../../types'
 import { ResultsDisplay } from '../ResultsDisplay'
 
 vi.mock('../ResultCard', () => ({
-  ResultCard: ({
-    modelId,
-    swipeHint,
-    modelPager,
-  }: {
-    modelId: string
-    swipeHint?: React.ReactNode
-    modelPager?: React.ReactNode
-  }) => (
-    <div data-testid="result-card" data-model-id={modelId}>
+  ResultCard: ({ modelId, swipeHint }: { modelId: string; swipeHint?: React.ReactNode }) => (
+    <div data-testid="result-card" className="result-card" data-model-id={modelId}>
       <div className="result-header">header</div>
       {swipeHint}
       <div className="conversation-content">
@@ -30,7 +22,6 @@ vi.mock('../ResultCard', () => ({
           <code>wide code</code>
         </pre>
       </div>
-      {modelPager}
     </div>
   ),
 }))
@@ -282,9 +273,18 @@ describe('ResultsDisplay mobile tab swipe', () => {
 
     const previous = screen.getByRole('button', { name: 'Previous model' })
     const next = screen.getByRole('button', { name: 'Next model' })
+    const pager = screen.getByTestId('results-model-pager')
+    const card = screen.getByTestId('result-card')
+    const shell = document.querySelector('.results-tabs-container')
+    const chips = document.querySelector('.results-tabs-header')
     expect(previous).toBeDisabled()
     expect(next).toBeEnabled()
-    expect(screen.getByTestId('results-model-pager')).toHaveTextContent('1 / 3')
+    expect(pager).toHaveTextContent('1 / 3')
+    expect(card.contains(pager)).toBe(false)
+    expect(shell?.contains(pager)).toBe(true)
+    expect(shell?.contains(chips)).toBe(true)
+    expect(shell?.contains(card)).toBe(true)
+    expect(card.compareDocumentPosition(pager) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
     fireEvent.click(next)
     expect(screen.getAllByRole('tab')[1]).toHaveAttribute('aria-selected', 'true')

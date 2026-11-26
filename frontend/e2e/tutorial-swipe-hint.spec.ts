@@ -110,9 +110,22 @@ async function shot(page: Page, testInfo: TestInfo, width: number): Promise<void
       scroller.scrollTop += delta
     }
   })
+  await page.addStyleTag({
+    content:
+      '.tutorial-tooltip,.mobile-tutorial-tooltip,.tutorial-overlay,.mobile-tutorial-overlay,.tutorial-highlight-ring,.mobile-tutorial-scroll-indicator,.mobile-tutorial-backdrop{display:none !important;}',
+  })
   const card = page.locator('.result-card').first()
   await card.screenshot({
     path: `${root}/${folder}/results-${width}.png`,
+    animations: 'disabled',
+  })
+  const shell = page.locator('section.results-section').first()
+  await shell.screenshot({
+    path: `${root}/${folder}/shell-${width}.png`,
+    animations: 'disabled',
+  })
+  await page.locator('.results-tabs-container').screenshot({
+    path: `${root}/${folder}/tabs-${width}.png`,
     animations: 'disabled',
   })
   const pager = page.getByTestId('results-model-pager')
@@ -171,12 +184,20 @@ async function expectHintOutsideResponse(page: Page): Promise<void> {
     const body = document.querySelector('.conversation-content')
     const hint = document.querySelector('.results-tab-swipe-hint')
     const card = document.querySelector('.result-card')
-    if (!bar || !body || !hint || !card) return 'missing'
-    if (!card.contains(bar) || body.contains(bar)) return 'not-at-card-bottom'
+    const shell = document.querySelector('.results-tabs-container')
+    const chips = document.querySelector('.results-tabs-header')
+    if (!bar || !body || !hint || !card || !shell || !chips) return 'missing'
+    if (card.contains(bar) || body.contains(bar)) return 'inside-card'
+    if (!shell.contains(bar) || !shell.contains(chips) || !shell.contains(card)) {
+      return 'outside-chip-shell'
+    }
+    const cardBox = card.getBoundingClientRect()
+    const barBox = bar.getBoundingClientRect()
+    const gap = barBox.top - cardBox.bottom
+    if (gap < 0) return 'overlaps-card'
+    if (gap > 28) return 'too-far-below-card'
     const hintBeforeBody = hint.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING
-    const pagerAfterBody = body.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING
     if (!hintBeforeBody) return 'hint-not-above-response'
-    if (!pagerAfterBody) return 'pager-not-below-response'
     return 'ok'
   })
   expect(place).toBe('ok')

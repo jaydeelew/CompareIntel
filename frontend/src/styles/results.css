@@ -503,7 +503,7 @@
   }
 }
 
-/* Always-visible model switcher at the bottom of a tabbed mobile card. */
+/* Model switcher just under the result card, inside the tabbed shell with the chips. */
 .results-model-pager {
   display: flex;
   align-items: center;
@@ -511,7 +511,7 @@
   gap: 0.35rem;
   width: 100%;
   box-sizing: border-box;
-  margin: 0.15rem 0 0.35rem;
+  margin: 0.4rem 0 0.1rem;
   padding: 0 0.5rem;
   overflow-anchor: none;
   container-type: inline-size;

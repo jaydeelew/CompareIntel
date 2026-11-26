@@ -844,7 +844,6 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   showBreakoutButton={visibleConversations.length > 1 && !isError}
                   isTutorialActive={isTutorialActive}
                   swipeHint={showFingerSwipeOverlay ? <MobileModelSwipeHint /> : null}
-                  modelPager={modelPager}
                   streamingReasoning={getStreamingReasoningForModel(
                     activeConversation.modelId,
                     streamingReasoningByModel
@@ -859,6 +858,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               </div>
             ) : null}
           </div>
+          {!showAwaitingFirstPanel && activeConversation ? modelPager : null}
         </div>
       ) : (
         <div className="results-grid">
