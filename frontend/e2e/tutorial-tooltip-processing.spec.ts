@@ -147,7 +147,8 @@ async function setStreamPhase(page: Page, phase: 'hold' | 'first' | 'rest'): Pro
 }
 
 /**
- * The visible tooltip's arrow meets the composer and stays off the results panel.
+ * Where the visible tooltip's arrow lands.
+ * `results` means the tip meets the results panel and the card does not cover it.
  * `hidden` means no card is on screen.
  */
 async function tooltipAim(page: Page): Promise<string> {
@@ -200,12 +201,15 @@ async function tooltipAim(page: Page): Promise<string> {
     }
     if (results instanceof HTMLElement) {
       const resultsBox = results.getBoundingClientRect()
-      const insideResults =
-        tipX >= resultsBox.left + 8 &&
-        tipX <= resultsBox.right - 8 &&
-        tipY >= resultsBox.top + 8 &&
-        tipY <= resultsBox.bottom - 8
-      if (insideResults) return 'on-results'
+      const card = tip.getBoundingClientRect()
+      const overlapW = Math.min(card.right, resultsBox.right) - Math.max(card.left, resultsBox.left)
+      const overlapH = Math.min(card.bottom, resultsBox.bottom) - Math.max(card.top, resultsBox.top)
+      if (overlapW > 1 && overlapH > 1) return 'on-results'
+      const withinX = tipX >= resultsBox.left - 48 && tipX <= resultsBox.right + 48
+      const gapAbove = resultsBox.top - card.bottom
+      const gapBelow = card.top - resultsBox.bottom
+      const beside = (gapAbove >= -1 && gapAbove <= 40) || (gapBelow >= -1 && gapBelow <= 40)
+      if (beside && withinX) return 'results'
     }
     const onComposer =
       tipX >= composerBox.left - 48 &&
@@ -412,7 +416,7 @@ async function tooltipClearsResults(page: Page): Promise<string> {
     const b = results.getBoundingClientRect()
     const overlapW = Math.min(a.right, b.right) - Math.max(a.left, b.left)
     const overlapH = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
-    return overlapW > 4 && overlapH > 4 ? 'overlaps' : 'clear'
+    return overlapW > 1 && overlapH > 1 ? 'overlaps' : 'clear'
   })
 }
 
@@ -554,9 +558,7 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
 
     const followUpTip = tutorialTooltip(page).first()
     await expect(followUpTip).toBeVisible({ timeout: 25_000 })
-    await expect
-      .poll(() => tooltipAim(page), { timeout: 15_000, intervals: [100] })
-      .toBe('composer')
+    await expect.poll(() => tooltipAim(page), { timeout: 15_000, intervals: [100] }).toBe('results')
     await expect
       .poll(() => composerCutout(page), { timeout: 10_000, intervals: [100] })
       .toBe('cutout')

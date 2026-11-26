@@ -300,9 +300,9 @@ export function streamingResultsTopInViewport(): number {
  * Instant scroll: the tooltip stays hidden until this finishes, and a smooth scroll
  * plus the fade timer is clamped on Mobile Safari.
  */
-/** Steps whose tooltip is glued under the composer so the card never covers the replies. */
+/** The follow-up card stays under the composer. Step 8 seats beside the results instead. */
 export function tutorialTooltipPrefersBelow(step: TutorialStep): boolean {
-  return step === 'follow-up' || step === 'view-follow-up-results'
+  return step === 'follow-up'
 }
 
 /**
@@ -632,8 +632,8 @@ export function readTutorialSpotlightRect(
   }
 
   if (step === 'view-follow-up-results') {
-    // The results panel can stay framed. The tooltip always meets the composer.
-    return composerAnchorRect('follow-up')
+    // Step 8 points at the finished replies. The card sits above or below that panel.
+    return resultsAnchorRect()
   }
 
   return null
@@ -848,12 +848,12 @@ function laidOutTooltipHeight(): number {
  * occupy so the footer is not sitting on the card. Capped so a footer that
  * does not move cannot grow the page without bound.
  */
-function reserveTooltipGapBeforeFooter(needBelow: number): void {
+function reserveTooltipGapBeforeFooter(needBelow: number, anchorBottom?: number): void {
   const app = document.querySelector('.app')
   const footer = pageFooterElement()
-  const composer = readPortaledFollowUpComposerRect()
-  if (!(app instanceof HTMLElement) || !footer || !composer) return
-  const gap = footer.getBoundingClientRect().top - composer.bottom
+  const anchor = anchorBottom ?? readPortaledFollowUpComposerRect()?.bottom
+  if (!(app instanceof HTMLElement) || !footer || anchor == null) return
+  const gap = footer.getBoundingClientRect().top - anchor
   const deficit = Math.ceil(needBelow - gap)
   if (deficit <= 0) return
   const existing = Number(app.getAttribute(SCROLL_TAIL_ATTR) || '0')
@@ -887,6 +887,138 @@ export function scrollFollowUpHighlightIntoView(options: FollowUpScrollOptions):
   const root = getTutorialScrollRoot()
   const maxScroll = getTutorialScrollMax()
   root.scrollToTop(Math.max(0, Math.min(root.getScrollTop() + delta, maxScroll)), 'auto')
+}
+
+function reviewContentTop(): number {
+  const view = readVisualViewportBox()
+  const header = document.querySelector('.app-header-shell')
+  const headerBottom =
+    header instanceof HTMLElement ? header.getBoundingClientRect().bottom : view.top
+  return Math.max(view.top, headerBottom)
+}
+
+function reviewViewportBottom(contentTop: number): number {
+  const view = readVisualViewportBox()
+  const footer = pageFooterElement()?.getBoundingClientRect()
+  const footerInPlay = Boolean(footer && footer.height > 2 && footer.top > contentTop + 40)
+  return footerInPlay && footer
+    ? Math.min(view.top + view.height, footer.top)
+    : view.top + view.height
+}
+
+function reviewStructuralRoomBelow(frameBottom: number): number {
+  const footer = pageFooterElement()?.getBoundingClientRect()
+  if (!footer || footer.height <= 2) return Number.POSITIVE_INFINITY
+  return footer.top - frameBottom
+}
+
+/**
+ * Step 8 picks the side of the results frame that can hold the card at the
+ * current scroll. Below is unavailable when the footer sits on the panel.
+ */
+function reviewTooltipPrefersAbove(args: {
+  frameTop: number
+  frameBottom: number
+  contentTop: number
+  viewBottom: number
+  structuralBelow: number
+  need: number
+}): boolean {
+  const roomAbove = args.frameTop - args.contentTop
+  const roomBelow = args.viewBottom - args.frameBottom
+  const belowOk = args.structuralBelow + 80 >= args.need
+  if (!belowOk) return true
+  if (roomAbove >= args.need && roomBelow >= args.need) return roomAbove >= roomBelow
+  if (roomAbove >= args.need) return true
+  if (roomBelow >= args.need) return false
+  return roomAbove >= roomBelow
+}
+
+/**
+ * Box top of the step 8 card. The card stays entirely above or entirely below
+ * the results frame, on the side that has room. `top` is the box top.
+ */
+export function placeReviewTooltip(args: {
+  frameTop: number
+  frameBottom: number
+  tooltipHeight: number
+  arrowSize: number
+  padding?: number
+}): TooltipBoxPlacement {
+  const padding = args.padding ?? MARGIN
+  const contentTop = reviewContentTop()
+  const viewBottom = reviewViewportBottom(contentTop)
+  const need = args.tooltipHeight + args.arrowSize + padding
+  const above = reviewTooltipPrefersAbove({
+    frameTop: args.frameTop,
+    frameBottom: args.frameBottom,
+    contentTop,
+    viewBottom,
+    structuralBelow: reviewStructuralRoomBelow(args.frameBottom),
+    need,
+  })
+  const placed = placeTooltipBoxAgainstFrame({
+    frameTop: args.frameTop - contentTop,
+    frameBottom: args.frameBottom - contentTop,
+    tooltipHeight: args.tooltipHeight,
+    arrowSize: args.arrowSize,
+    viewportHeight: Math.max(0, viewBottom - contentTop),
+    padding,
+    preferred: above ? 'above' : 'below',
+    lockSide: true,
+  })
+  return { top: placed.top + contentTop, arrowDirection: placed.arrowDirection }
+}
+
+/**
+ * Scroll just enough for the step 8 card to clear the results panel.
+ * Returns the delta applied. Zero means the current scroll already has room.
+ */
+export function scrollReviewTooltipBesideResults(options: {
+  tooltipHeight: number
+  arrowSize: number
+  padding?: number
+}): number {
+  if (readProcessingPanelBox()) return 0
+  const results = resultsAnchorRect()
+  if (!results) return 0
+  const padding = options.padding ?? 12
+  const tooltipHeight = Math.max(options.tooltipHeight, laidOutTooltipHeight())
+  const frameTop = results.top - TUTORIAL_FRAME_OUTSET_PX
+  const frameBottom = results.bottom + TUTORIAL_FRAME_OUTSET_PX
+  const need = tooltipHeight + options.arrowSize + padding
+  const contentTop = reviewContentTop()
+  const structuralBelow = reviewStructuralRoomBelow(frameBottom)
+  const above = reviewTooltipPrefersAbove({
+    frameTop,
+    frameBottom,
+    contentTop,
+    viewBottom: reviewViewportBottom(contentTop),
+    structuralBelow,
+    need,
+  })
+  if (!above && structuralBelow < need) {
+    reserveTooltipGapBeforeFooter(need, frameBottom)
+    return 0
+  }
+  const viewBottom = reviewViewportBottom(contentTop)
+  const sideAbove = reviewTooltipPrefersAbove({
+    frameTop,
+    frameBottom,
+    contentTop,
+    viewBottom,
+    structuralBelow: reviewStructuralRoomBelow(frameBottom),
+    need,
+  })
+  const room = sideAbove ? frameTop - contentTop : viewBottom - frameBottom
+  const delta = room >= need ? 0 : sideAbove ? -(need - room) : need - room
+  if (Math.abs(delta) < 1) return 0
+  const root = getTutorialScrollRoot()
+  root.scrollToTop(
+    Math.max(0, Math.min(root.getScrollTop() + delta, getTutorialScrollMax())),
+    'auto'
+  )
+  return delta
 }
 
 /**
@@ -1178,6 +1310,20 @@ export function computeTooltipPosition(
   const frameTop = rect.top - TUTORIAL_FRAME_OUTSET_PX
   const frameBottom = rect.bottom + TUTORIAL_FRAME_OUTSET_PX
   const estimatedTooltipHeight = getEstimatedTooltipHeight()
+  const centerX = rect.left + rect.width / 2
+  const left = Math.max(180, Math.min(centerX, window.innerWidth - 180))
+  if (_step === 'view-follow-up-results') {
+    const placed = placeReviewTooltip({
+      frameTop,
+      frameBottom,
+      tooltipHeight: estimatedTooltipHeight,
+      arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+    })
+    if (placed.arrowDirection === 'down') {
+      return { top: placed.top + estimatedTooltipHeight, left, effectivePosition: 'top' }
+    }
+    return { top: placed.top, left, effectivePosition: 'bottom' }
+  }
   const lockBelow = tutorialTooltipPrefersBelow(_step)
   const placed = placeTooltipBoxAgainstFrame({
     frameTop,
@@ -1188,8 +1334,6 @@ export function computeTooltipPosition(
     preferred: lockBelow || config.position === 'bottom' ? 'below' : 'above',
     lockSide: lockBelow,
   })
-  const centerX = rect.left + rect.width / 2
-  const left = Math.max(180, Math.min(centerX, window.innerWidth - 180))
   if (placed.arrowDirection === 'down') {
     return {
       top: clampDesktopTooltipTop(
@@ -1305,16 +1449,14 @@ function rectIsResultsPanel(rect: DOMRect, results: DOMRect): boolean {
 }
 
 /**
- * The comparison results panel is never a tooltip anchor. While it is framed
- * and still streaming, the card is hidden. Once the round finishes, the card
- * meets the composer for both the first comparison and the follow-up.
+ * Other steps never anchor on the comparison results. Step 8 is the review
+ * step: its card points at that panel once streaming has finished.
  */
 export function tooltipRectOffResultsPanel(requested: DOMRect, step: TutorialStep): DOMRect {
+  if (step === 'view-follow-up-results') return requested
   const results = resultsAnchorRect()
-  const onResults =
-    step === 'view-follow-up-results' || (results != null && rectIsResultsPanel(requested, results))
-  if (!onResults) return requested
-  const composer = composerAnchorRect(step === 'view-follow-up-results' ? 'follow-up' : step)
+  if (results == null || !rectIsResultsPanel(requested, results)) return requested
+  const composer = composerAnchorRect(step)
   return composer ?? requested
 }
 
@@ -1346,6 +1488,7 @@ export function readTooltipAnchorAvoidingProcessingPanel(args: {
     args.requested == null ? null : tooltipRectOffResultsPanel(args.requested, args.step)
   const results = resultsAnchorRect()
   const spotlight = readTutorialSpotlightRect(args.step, args.providerNames)
+  const reviewResults = args.step === 'view-follow-up-results'
   const candidates: DOMRect[] = []
   const push = (rect: DOMRect | null | undefined) => {
     if (!rect || rect.width < 2 || rect.height < 2) return
@@ -1358,19 +1501,23 @@ export function readTooltipAnchorAvoidingProcessingPanel(args: {
     )
     if (!seen) candidates.push(rect)
   }
-  if (!(spotlight && results && rectIsResultsPanel(spotlight, results))) push(spotlight)
+  if (!(spotlight && results && rectIsResultsPanel(spotlight, results) && !reviewResults)) {
+    push(spotlight)
+  }
   if (!panel || !requested || !rectMostlyOnPanel(requested, panel)) {
-    if (!(requested && results && rectIsResultsPanel(requested, results))) push(requested)
+    if (!(requested && results && rectIsResultsPanel(requested, results) && !reviewResults)) {
+      push(requested)
+    }
   }
   if (
-    args.step === 'submit-comparison' ||
-    args.step === 'submit-comparison-2' ||
-    args.step === 'follow-up' ||
-    args.step === 'view-follow-up-results' ||
-    args.step === 'enter-prompt' ||
-    args.step === 'enter-prompt-2'
+    !reviewResults &&
+    (args.step === 'submit-comparison' ||
+      args.step === 'submit-comparison-2' ||
+      args.step === 'follow-up' ||
+      args.step === 'enter-prompt' ||
+      args.step === 'enter-prompt-2')
   ) {
-    push(composerAnchorRect(args.step === 'view-follow-up-results' ? 'follow-up' : args.step))
+    push(composerAnchorRect(args.step))
   }
 
   if (!panel) {

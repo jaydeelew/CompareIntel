@@ -114,17 +114,30 @@ describe('streaming comparison spotlight', () => {
     expect(readStreamingComparisonSpotlight(false)?.element).toBe(loading)
   })
 
-  it('places the review tooltip under the composer so it does not cover the replies', () => {
+  it('places the review tooltip above the results when that side has room', () => {
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
-    const composer = box(520, 80)
+    const results = box(640, 200)
     const placed = computeTooltipPosition(
-      composer,
+      results,
+      'view-follow-up-results',
+      TUTORIAL_STEPS_CONFIG['view-follow-up-results']
+    )
+    expect(placed.effectivePosition).toBe('top')
+    expect(placed.top).toBeLessThanOrEqual(results.top)
+  })
+
+  it('places the review tooltip below the results when the top has no room', () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
+    const results = box(40, 200)
+    const placed = computeTooltipPosition(
+      results,
       'view-follow-up-results',
       TUTORIAL_STEPS_CONFIG['view-follow-up-results']
     )
     expect(placed.effectivePosition).toBe('bottom')
-    expect(placed.top).toBeGreaterThanOrEqual(composer.bottom)
+    expect(placed.top).toBeGreaterThanOrEqual(results.bottom)
   })
 
   it('keeps the follow-up tooltip under the composer when the field is near the bottom', () => {

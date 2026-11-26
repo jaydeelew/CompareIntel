@@ -80,11 +80,11 @@ describe('tooltip stays off the processing panel', () => {
     expect(placed.top + 210).toBeLessThanOrEqual(900)
   })
 
-  it('does not choose the processing panel as the review anchor', () => {
+  it('points the finished review at the results panel, not the processing panel', () => {
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 900 })
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 })
-    const panel = box(80, 180)
-    const results = box(280, 500)
+    const panel = box(80, 100)
+    const results = box(420, 200)
     const composer = box(700, 80, 80, 480)
     mount({ loading: panel, results, composer })
     const decision = readTooltipAnchorAvoidingProcessingPanel({
@@ -99,7 +99,7 @@ describe('tooltip stays off the processing panel', () => {
     })
     expect(decision).not.toBeNull()
     expect(decision?.hideArrow).toBe(false)
-    expect(decision?.anchor.top).toBe(700)
-    expect(decision?.anchor.height).toBe(80)
+    expect(decision?.anchor.top).toBe(420)
+    expect(decision?.anchor.height).toBe(200)
   })
 })
