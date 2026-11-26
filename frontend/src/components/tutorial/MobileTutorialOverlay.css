@@ -14,11 +14,10 @@
   /* Allow clicks to pass through to highlighted elements */
 }
 
-/* Cutout uses the same viewport coordinates as the fixed tooltip. Page content
-   scrolls inside `.app`, so `window` scroll stays 0 and absolute positioning
-   does not follow the highlight. */
+/* Cutout is position:absolute in the `.app` scroll layer (content coordinates).
+   The compositor scrolls it with the target. Do not switch this back to fixed. */
 .mobile-tutorial-backdrop-cutout {
-  position: fixed;
+  position: absolute;
   border-radius: 12px;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
   z-index: 9998;
@@ -194,11 +193,11 @@ html[data-onboarding-tutorial-active] .mobile-composer-in-flow-wrapper .composer
 
 /* Mobile tooltip container - uses smart positioning. overflow: visible so the pointer arrow (positioned outside the card) is not clipped. */
 .mobile-tutorial-tooltip {
-  position: fixed;
+  position: absolute;
   z-index: 10000;
-  max-width: calc(100vw - 24px);
-  width: 100%;
-  max-width: 300px;
+  /* The scroll layer is 0×0, so a percentage width would collapse the card. */
+  width: min(300px, calc(100vw - 24px));
+  max-width: min(300px, calc(100vw - 24px));
   pointer-events: auto;
   overflow: visible;
   /* Top/left are set once per step. Opacity is not animated: Mobile Safari
@@ -472,6 +471,8 @@ html.tutorial-spotlight-settling .tutorial-highlight:not(.composer) {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
+  /* The scroll layer sets pointer-events: none, and that value is inherited. */
+  pointer-events: auto;
   background: var(--bg-primary);
   border: 2px solid var(--accent-color);
   border-radius: 24px;

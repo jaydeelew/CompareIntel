@@ -13,6 +13,8 @@ export interface TutorialBox {
   left: number
   width: number
   height: number
+  anchorX?: number
+  anchorY?: number
 }
 
 export function prefersReducedTutorialMotion(): boolean {
@@ -31,12 +33,31 @@ export function tutorialBoxesNearlyEqual(
   epsilon = 2
 ): boolean {
   if (a == null || b == null) return a == null && b == null
+  // Viewport tops change on every scroll. Content tops do not, so a scroll
+  // must not count as a move and rewrite the highlight.
+  const anchored = a.anchorY != null && b.anchorY != null && a.anchorX != null && b.anchorX != null
+  const aTop = anchored ? a.top - (a.anchorY as number) : a.top
+  const bTop = anchored ? b.top - (b.anchorY as number) : b.top
+  const aLeft = anchored ? a.left - (a.anchorX as number) : a.left
+  const bLeft = anchored ? b.left - (b.anchorX as number) : b.left
   return (
-    Math.abs(a.top - b.top) < epsilon &&
-    Math.abs(a.left - b.left) < epsilon &&
+    Math.abs(aTop - bTop) < epsilon &&
+    Math.abs(aLeft - bLeft) < epsilon &&
     Math.abs(a.width - b.width) < epsilon &&
     Math.abs(a.height - b.height) < epsilon
   )
+}
+
+/** Window and visualViewport size changes. Page scroll is intentionally not observed. */
+export function watchTutorialLayout(onChange: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const run = () => onChange()
+  window.addEventListener('resize', run)
+  window.visualViewport?.addEventListener('resize', run)
+  return () => {
+    window.removeEventListener('resize', run)
+    window.visualViewport?.removeEventListener('resize', run)
+  }
 }
 
 interface ViewportSnapshot {
@@ -65,7 +86,9 @@ function viewportMoved(previous: ViewportSnapshot | null, next: ViewportSnapshot
 
 function tutorialScrollTarget(): EventTarget {
   const app = document.querySelector('.app') as HTMLElement | null
-  if (app && app.scrollHeight > app.clientHeight + 1) return app
+  if (!app || app.scrollHeight <= app.clientHeight + 1) return window
+  const viewH = window.visualViewport?.height ?? window.innerHeight
+  if (app.clientHeight <= viewH + 1) return app
   return window
 }
 
@@ -482,17 +505,43 @@ export function watchTutorialFrameSize(onChange: () => void): () => void {
 
   const observed = new Set<Element>()
   const lastSize = new Map<Element, string>()
+  // Content coordinates, so a pure scroll does not count. A margin or a
+  // toolbar wrap moves the target without changing its border-box size, and
+  // ResizeObserver does not report that.
+  const contentKey = (el: Element) => {
+    const rect = el.getBoundingClientRect()
+    const host = document.querySelector('.app') as HTMLElement | null
+    const origin = host?.getBoundingClientRect()
+    const originX = origin ? origin.left + host!.clientLeft - host!.scrollLeft : 0
+    const originY = origin ? origin.top + host!.clientTop - host!.scrollTop : 0
+    return [
+      Math.round(rect.top - originY),
+      Math.round(rect.left - originX),
+      Math.round(rect.width),
+      Math.round(rect.height),
+    ].join(':')
+  }
   // Dropdown toggles re-render the composer. Remeasure only when a target's
   // box actually changes, or Firefox restarts the open animation and the list
   // never counts as visible.
   const noteSizeChange = () => {
     let changed = false
     for (const el of observed) {
-      const rect = el.getBoundingClientRect()
-      const key = `${Math.round(rect.width)}:${Math.round(rect.height)}`
-      if (lastSize.get(el) === key) continue
-      lastSize.set(el, key)
-      changed = true
+      const key = contentKey(el)
+      const prev = lastSize.get(el)
+      if (prev == null) {
+        lastSize.set(el, key)
+        changed = true
+        continue
+      }
+      const before = prev.split(':').map(Number)
+      const after = key.split(':').map(Number)
+      // Keep the last reported box. A 1px flip from subpixel rounding then
+      // stays under the threshold, while a real move still accumulates.
+      if (before.some((value, index) => Math.abs(value - (after[index] ?? 0)) >= 2)) {
+        lastSize.set(el, key)
+        changed = true
+      }
     }
     return changed
   }
@@ -522,7 +571,12 @@ export function watchTutorialFrameSize(onChange: () => void): () => void {
     bind()
     if (noteSizeChange()) schedule()
   })
-  mutationObserver.observe(host, { childList: true, subtree: true })
+  mutationObserver.observe(host, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['style', 'class'],
+  })
 
   return () => {
     if (raf !== 0) cancelAnimationFrame(raf)

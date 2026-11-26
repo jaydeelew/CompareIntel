@@ -11,6 +11,7 @@ describe('tutorialPositioning post-tutorial landing', () => {
   let app: HTMLElement
 
   beforeEach(() => {
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(800)
     app = document.createElement('div')
     app.className = 'app'
     Object.defineProperty(app, 'scrollHeight', { value: 2000, configurable: true })

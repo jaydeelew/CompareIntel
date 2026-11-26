@@ -111,7 +111,9 @@ async function readPlacement(page: Page): Promise<PlacementReport> {
     }
     const app = document.querySelector('.app') as HTMLElement | null
     const scroller =
-      app && app.scrollHeight > app.clientHeight + 1
+      app &&
+      app.scrollHeight > app.clientHeight + 1 &&
+      app.clientHeight <= (window.visualViewport?.height ?? window.innerHeight) + 1
         ? app
         : (document.scrollingElement ?? document.documentElement)
     const scrollTop = scroller.scrollTop
