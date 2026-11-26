@@ -1,0 +1,270 @@
+import fs from 'node:fs'
+
+import { expect, test, type Page, type TestInfo } from '@playwright/test'
+
+import {
+  getProvidersForModelIds,
+  resolveStarterSelectionModelIds,
+} from '../src/utils/starterSelectionModels'
+
+import { dismissMobileBlockers, isMobileE2eProject } from './helpers/modelCheckbox'
+import {
+  completeTutorialPromptInput,
+  expandTutorialProvider,
+  selectTutorialModelCheckbox,
+  tutorialTooltip,
+} from './helpers/tutorialFlow'
+
+const mockModel = (id: string, name: string, provider: string) => ({
+  id,
+  name,
+  description: `${name} test model`,
+  category: provider.toLowerCase(),
+  provider,
+  available: true,
+  tier_access: 'unregistered' as const,
+})
+
+const fillers = ['Amazon', 'Cohere', 'Google', 'Meta', 'Mistral']
+const MOCK_MODELS: Record<string, ReturnType<typeof mockModel>[]> = {
+  Anthropic: [mockModel('anthropic/claude-sonnet-5.5', 'Claude Sonnet 5.5', 'Anthropic')],
+}
+for (const name of fillers) {
+  MOCK_MODELS[name] = [mockModel(`${name.toLowerCase()}/filler`, `${name} Filler`, name)]
+}
+MOCK_MODELS.OpenAI = [mockModel('openai/gpt-5.2', 'GPT-5.2', 'OpenAI')]
+
+const MOCK_MODELS_RESPONSE = {
+  models: Object.values(MOCK_MODELS).flat(),
+  models_by_provider: MOCK_MODELS,
+}
+
+const TUTORIAL_MODEL_IDS = resolveStarterSelectionModelIds(MOCK_MODELS)
+const TUTORIAL_PROVIDERS = getProvidersForModelIds(MOCK_MODELS, TUTORIAL_MODEL_IDS)
+
+function projectAllowed(project: string): boolean {
+  return project === 'chromium' || project === 'Mobile Safari - iPhone 12'
+}
+
+async function reachPromptStep(page: Page, testInfo: TestInfo): Promise<void> {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Start Tutorial' }).click()
+  await tutorialTooltip(page).first().waitFor({ state: 'visible', timeout: 20_000 })
+  await dismissMobileBlockers(page)
+
+  const first = TUTORIAL_PROVIDERS[0]!
+  const second = TUTORIAL_PROVIDERS[1]!
+  await expandTutorialProvider(page, first, testInfo)
+  await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[0]!, first, testInfo)
+  await expandTutorialProvider(page, second, testInfo)
+  await selectTutorialModelCheckbox(page, TUTORIAL_MODEL_IDS[1]!, second, testInfo, {
+    requireMinSelected: 2,
+  })
+  await expect(tutorialTooltip(page).first()).toContainText('Enter Your Prompt', {
+    timeout: 20_000,
+  })
+}
+
+/** Hold compare-stream on the processing panel until the test releases it. */
+async function installHeldComparisonStream(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const win = window as Window & { __tutorialStreamPhase?: 'hold' | 'first' | 'rest' }
+    win.__tutorialStreamPhase = 'hold'
+    const original = window.fetch.bind(window)
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url =
+        typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+      if (!url.includes('compare-stream')) return original(input, init)
+      let models: string[] = []
+      try {
+        models = JSON.parse(String(init?.body ?? '{}')).models ?? []
+      } catch {
+        models = []
+      }
+      const encoder = new TextEncoder()
+      const starts = models.map(model => ({ model, type: 'start' }))
+      const firstChunks = models.map(model => ({
+        model,
+        type: 'chunk',
+        content: 'streaming-token-0 ',
+      }))
+      const rest = [
+        ...models.flatMap(model => [
+          { model, type: 'chunk', content: 'streaming-token-1 keeps going. ' },
+          { model, type: 'done', error: false },
+        ]),
+        {
+          type: 'complete',
+          metadata: {
+            input_length: 12,
+            models_requested: models.length,
+            models_successful: models.length,
+            models_failed: 0,
+            timestamp: new Date().toISOString(),
+            processing_time_ms: 4000,
+          },
+        },
+      ]
+      const send = (controller: ReadableStreamDefaultController<Uint8Array>, events: object[]) => {
+        for (const event of events) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
+        }
+      }
+      const stream = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          const startedAt = Date.now()
+          const waitFor = async (phase: 'first' | 'rest') => {
+            while (win.__tutorialStreamPhase !== phase && Date.now() - startedAt < 20000) {
+              await new Promise(resolve => window.setTimeout(resolve, 40))
+            }
+          }
+          await waitFor('first')
+          send(controller, starts)
+          await new Promise(resolve => window.setTimeout(resolve, 80))
+          send(controller, firstChunks)
+          await waitFor('rest')
+          send(controller, rest)
+          controller.close()
+        },
+      })
+      return new Response(stream, {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+      })
+    }
+  })
+}
+
+async function setStreamPhase(page: Page, phase: 'hold' | 'first' | 'rest'): Promise<void> {
+  await page.evaluate(next => {
+    ;(window as Window & { __tutorialStreamPhase?: string }).__tutorialStreamPhase = next
+  }, phase)
+}
+
+/** Visible tutorial cards must not cover or point at the processing panel. */
+async function tooltipClearOfProcessingPanel(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const panel = document.querySelector('.loading-section')
+    if (!panel) return 'no-panel'
+    const panelBox = panel.getBoundingClientRect()
+    if (panelBox.height < 20 || !/Processing/.test(panel.textContent ?? '')) return 'not-processing'
+    const highlighted =
+      panel.classList.contains('tutorial-highlight') ||
+      panel.classList.contains('mobile-tutorial-highlight')
+    const tips = Array.from(
+      document.querySelectorAll<HTMLElement>('.tutorial-tooltip, .mobile-tutorial-tooltip')
+    ).filter(tip => {
+      const box = tip.getBoundingClientRect()
+      return box.width > 2 && box.height > 2
+    })
+    const framed = highlighted ? 'framed' : 'open'
+    if (tips.length === 0) return `missing-${framed}`
+    const anyVisible = tips.some(tip => {
+      const style = getComputedStyle(tip)
+      return style.visibility !== 'hidden' && Number(style.opacity) > 0.05
+    })
+    for (const tip of tips) {
+      const tipBox = tip.getBoundingClientRect()
+      const overlapW = Math.min(tipBox.right, panelBox.right) - Math.max(tipBox.left, panelBox.left)
+      const overlapH = Math.min(tipBox.bottom, panelBox.bottom) - Math.max(tipBox.top, panelBox.top)
+      if (overlapW > 8 && overlapH > 8) return 'card-covers-panel'
+      const arrow = tip.querySelector<HTMLElement>('.tutorial-arrow, .mobile-tutorial-arrow')
+      if (!arrow) continue
+      const arrowStyle = getComputedStyle(arrow)
+      if (
+        arrowStyle.display === 'none' ||
+        arrowStyle.visibility === 'hidden' ||
+        Number(arrowStyle.opacity) === 0
+      ) {
+        continue
+      }
+      const arrowBox = arrow.getBoundingClientRect()
+      const down =
+        arrow.classList.contains('tutorial-arrow-top') ||
+        arrow.classList.contains('mobile-tutorial-arrow-down')
+      const up =
+        arrow.classList.contains('tutorial-arrow-bottom') ||
+        arrow.classList.contains('mobile-tutorial-arrow-up')
+      const tipX = arrowBox.left + Math.max(arrowBox.width, 1) / 2
+      const tipY = down
+        ? arrowBox.bottom + 2
+        : up
+          ? arrowBox.top - 2
+          : arrowBox.top + arrowBox.height / 2
+      const inside =
+        tipX >= panelBox.left - 4 &&
+        tipX <= panelBox.right + 4 &&
+        tipY >= panelBox.top - 4 &&
+        tipY <= panelBox.bottom + 4
+      if (inside) return 'arrow-on-panel'
+    }
+    return `${anyVisible ? 'clear' : 'hidden-clear'}-${framed}`
+  })
+}
+
+async function submitComparison(page: Page, testInfo: TestInfo): Promise<void> {
+  const submit = page.getByTestId('comparison-submit-button').filter({ visible: true }).first()
+  await expect(submit).toBeEnabled({ timeout: 20_000 })
+  if (isMobileE2eProject(testInfo.project.name)) {
+    await submit.tap({ force: true }).catch(() => submit.click({ force: true }))
+  } else {
+    await submit.click({ force: true })
+  }
+}
+
+test.describe('tutorial tooltip never points at the processing panel', () => {
+  test.beforeEach(async ({ page }, testInfo) => {
+    test.skip(!projectAllowed(testInfo.project.name), 'desktop Chromium and Mobile Safari')
+    if (!isMobileE2eProject(testInfo.project.name)) {
+      await page.setViewportSize({ width: 1440, height: 900 })
+    }
+    await page.route('**/api/models', route => route.fulfill({ json: MOCK_MODELS_RESPONSE }))
+  })
+
+  test('first comparison and follow-up keep the tooltip off the processing panel', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(180_000)
+    const folder = isMobileE2eProject(testInfo.project.name) ? 'iphone' : 'desktop'
+    const shotDir = `/opt/cursor/artifacts/tutorial-tooltip-processing/${folder}`
+    fs.mkdirSync(shotDir, { recursive: true })
+
+    await installHeldComparisonStream(page)
+    await reachPromptStep(page, testInfo)
+    await completeTutorialPromptInput(page, 'Sqrt 3?', testInfo)
+    await expect(tutorialTooltip(page).first()).toContainText('Run Your Comparison', {
+      timeout: 20_000,
+    })
+    await submitComparison(page, testInfo)
+
+    await expect
+      .poll(() => tooltipClearOfProcessingPanel(page), { timeout: 20_000, intervals: [100] })
+      .toMatch(/^(clear|hidden-clear)-framed$/)
+    await expect(tutorialTooltip(page).first()).toContainText('Run Your Comparison')
+    await dismissMobileBlockers(page)
+    await page.screenshot({ path: `${shotDir}/first-processing.png` })
+
+    await setStreamPhase(page, 'first')
+    await expect
+      .poll(() => tooltipClearOfProcessingPanel(page), { timeout: 15_000, intervals: [100] })
+      .toMatch(/^(clear|hidden-clear)-/)
+    await setStreamPhase(page, 'rest')
+
+    await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation', {
+      timeout: 25_000,
+    })
+    await setStreamPhase(page, 'hold')
+    const followUp = page.getByTestId('comparison-input-textarea').filter({ visible: true }).first()
+    await followUp.fill('Follow-up while the models are processing')
+    await submitComparison(page, testInfo)
+
+    await expect
+      .poll(() => tooltipClearOfProcessingPanel(page), { timeout: 20_000, intervals: [100] })
+      .toMatch(/^(clear|hidden-clear)-framed$/)
+    if (!isMobileE2eProject(testInfo.project.name)) {
+      await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation')
+    }
+    await dismissMobileBlockers(page)
+    await page.screenshot({ path: `${shotDir}/follow-up-processing.png` })
+  })
+})

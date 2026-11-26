@@ -378,6 +378,10 @@ html.tutorial-spotlight-settling .tutorial-highlight:not(.composer) {
 }
 
 /* Arrow pointing to target - positioned dynamically */
+.mobile-tutorial-tooltip--unanchored .mobile-tutorial-arrow {
+  display: none;
+}
+
 .mobile-tutorial-arrow {
   position: absolute;
   width: 0;

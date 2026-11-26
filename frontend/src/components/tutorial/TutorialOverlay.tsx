@@ -61,6 +61,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     isVisible,
     portalRoot,
     effectivePosition,
+    tooltipHidesArrow,
     positionStabilized,
     spotlightSettling,
     dropdownCutout,
@@ -150,8 +151,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   // panel keeps this step's tooltip the same way the first comparison does.
   const followUpComposerPending =
     step === 'follow-up' && !isFollowUpComposerReady() && !(isLoading && !streamAnswerStarted)
-  // The processing panel keeps its own tooltip. The review step must too:
-  // hiding on any streaming cutout left that card with a ring and no popover.
+  // The processing panel keeps its cutout. The tooltip stays on the step's
+  // other target, or floats, so the review step still has a card.
   const hideTooltipForStreamingCutout =
     isLoadingStreamingPhase &&
     !(isLoading && !streamAnswerStarted) &&
@@ -206,6 +207,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             overlayRef={overlayRef}
             overlayPosition={overlayPosition}
             effectivePosition={effectivePosition}
+            hideArrow={tooltipHidesArrow}
             positionStabilized={positionStabilized}
             settling={spotlightSettling}
           />

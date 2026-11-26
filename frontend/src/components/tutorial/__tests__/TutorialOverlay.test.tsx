@@ -323,6 +323,8 @@ describe('TutorialOverlay comparison spotlight', () => {
         const tip = document.querySelector('.tutorial-tooltip')
         expect(tip?.textContent).toContain('Run Your Comparison')
         expect(tip?.classList.contains('tutorial-tooltip--settling')).toBe(false)
+        expect(tip?.classList.contains('tutorial-tooltip--unanchored')).toBe(true)
+        expect(document.querySelector('.tutorial-arrow')).toBeNull()
         expect(tooltipVisualTop(tip as HTMLElement)).toBeGreaterThanOrEqual(12)
       },
       { timeout: 8000 }

@@ -31,6 +31,8 @@ import {
   placeTooltipBoxAgainstFrame,
   readPortaledFollowUpComposerRect,
   readTutorialSpotlightRect,
+  readTooltipAnchorAvoidingProcessingPanel,
+  floatTooltipClearOfProcessingPanel,
   readVisualViewportBox,
   scrollDeltaToFitTooltip,
   scrollBackDirectionForTarget,
@@ -97,6 +99,8 @@ interface TooltipPosition {
   arrowDirection: 'up' | 'down' | 'left' | 'right'
   arrowOffset: number // Percentage from left/top for arrow positioning
   useFullscreen: boolean
+  /** Arrow would land on the processing panel, so the card floats. */
+  hideArrow?: boolean
 }
 
 interface TargetRect {
@@ -798,6 +802,72 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       })
     }
 
+    // The processing panel may stay framed. The card never points at it.
+    let hideArrow = false
+    if (!(pairStep && frozenPair)) {
+      const decision = readTooltipAnchorAvoidingProcessingPanel({
+        requested: frameSource,
+        step,
+        providerNames: tutorialProviderNamesRef.current,
+        tooltipHeight,
+        arrowSize,
+        viewportTop: visualViewport.top,
+        viewportHeight: visualViewport.height,
+        preferred: preferredPosition === 'bottom' ? 'below' : 'above',
+        lockSide: step === 'follow-up',
+        padding,
+      })
+      const anchorMoved =
+        decision != null &&
+        (Math.abs(decision.anchor.top - frameSource.top) > 1 ||
+          Math.abs(decision.anchor.left - frameSource.left) > 1 ||
+          Math.abs(decision.anchor.height - frameSource.height) > 1)
+      if (decision?.hideArrow) {
+        const floated = floatTooltipClearOfProcessingPanel({
+          tooltipWidth,
+          tooltipHeight,
+          viewportTop: visualViewport.top,
+          viewportHeight: visualViewport.height,
+          viewportWidth,
+          padding,
+        })
+        tooltipTop = floated.top
+        tooltipLeft = floated.left
+        hideArrow = true
+      } else if (decision && anchorMoved) {
+        const next = placeTooltipBoxAgainstFrame({
+          frameTop: decision.anchor.top - TUTORIAL_FRAME_OUTSET_PX,
+          frameBottom: decision.anchor.bottom + TUTORIAL_FRAME_OUTSET_PX,
+          tooltipHeight,
+          arrowSize,
+          viewportHeight,
+          padding,
+          preferred: preferredPosition === 'bottom' ? 'below' : 'above',
+          lockSide: step === 'follow-up',
+        })
+        tooltipTop = clampTooltip
+          ? clampTooltipTop({
+              top: next.top,
+              height: tooltipHeight,
+              viewportTop: visualViewport.top,
+              viewportHeight: visualViewport.height,
+              padding,
+            })
+          : next.top
+        const centerX = decision.anchor.left + decision.anchor.width / 2
+        tooltipLeft = centerX - tooltipWidth / 2
+        if (tooltipLeft < padding) tooltipLeft = padding
+        else if (tooltipLeft + tooltipWidth > viewportWidth - padding) {
+          tooltipLeft = viewportWidth - tooltipWidth - padding
+        }
+        arrowDirection = next.arrowDirection
+        const raw = ((centerX - tooltipLeft) / Math.max(tooltipWidth, 1)) * 100
+        arrowOffset = isSubmitTooltipStep
+          ? Math.max(4, Math.min(96, raw))
+          : Math.max(15, Math.min(85, raw))
+      }
+    }
+
     setTooltipPosition(prev => {
       if (
         prev &&
@@ -805,7 +875,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         Math.abs(prev.top - tooltipTop) < 0.5 &&
         Math.abs(prev.left - tooltipLeft) < 0.5 &&
         prev.arrowDirection === arrowDirection &&
-        Math.abs(prev.arrowOffset - arrowOffset) < 0.5
+        Math.abs(prev.arrowOffset - arrowOffset) < 0.5 &&
+        Boolean(prev.hideArrow) === hideArrow
       ) {
         return prev
       }
@@ -815,6 +886,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         arrowDirection,
         arrowOffset,
         useFullscreen: false,
+        hideArrow,
       }
     })
   }, [targetElement, step, tooltipEstimatedHeight])
@@ -2097,7 +2169,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         <div
           key={step}
           ref={overlayRef}
-          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${fadeDuringTransition || isLoadingStreamingPhase || followUpComposerPending ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
+          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${tooltipPosition.hideArrow ? ' mobile-tutorial-tooltip--unanchored' : ''}${fadeDuringTransition || isLoadingStreamingPhase || followUpComposerPending ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
           style={
             tooltipPosition.useFullscreen
               ? undefined
@@ -2167,7 +2239,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           </div>
 
           {/* Arrow: sibling of content (not inside) so it is not clipped by content scroll/overflow; points at the step target */}
-          {!tooltipPosition.useFullscreen && (
+          {!tooltipPosition.useFullscreen && !tooltipPosition.hideArrow && (
             <div
               className={`mobile-tutorial-arrow mobile-tutorial-arrow-${tooltipPosition.arrowDirection}`}
               style={{

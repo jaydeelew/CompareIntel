@@ -1081,6 +1081,248 @@ export function computeTooltipPosition(
   }
 }
 
+interface ProcessingPanelBox {
+  top: number
+  left: number
+  right: number
+  bottom: number
+}
+
+function readProcessingPanelBox(): ProcessingPanelBox | null {
+  if (typeof document === 'undefined') return null
+  const panel = document.querySelector('.loading-section')
+  if (!(panel instanceof HTMLElement)) return null
+  const rect = panel.getBoundingClientRect()
+  if (rect.width < 2 || rect.height < 2) return null
+  return { top: rect.top, left: rect.left, right: rect.right, bottom: rect.bottom }
+}
+
+function rectMostlyOnPanel(rect: DOMRect, panel: ProcessingPanelBox): boolean {
+  const width = Math.min(rect.right, panel.right) - Math.max(rect.left, panel.left)
+  const height = Math.min(rect.bottom, panel.bottom) - Math.max(rect.top, panel.top)
+  if (width <= 0 || height <= 0) return false
+  const overlap = width * height
+  const rectArea = Math.max(rect.width * rect.height, 1)
+  return overlap / rectArea > 0.45
+}
+
+function placementHitsProcessingPanel(
+  rect: DOMRect,
+  panel: ProcessingPanelBox,
+  args: {
+    tooltipHeight: number
+    arrowSize: number
+    viewportHeight: number
+    preferred: 'above' | 'below'
+    lockSide?: boolean
+    padding?: number
+  }
+): boolean {
+  const frameTop = rect.top - TUTORIAL_FRAME_OUTSET_PX
+  const frameBottom = rect.bottom + TUTORIAL_FRAME_OUTSET_PX
+  const placed = placeTooltipBoxAgainstFrame({
+    frameTop,
+    frameBottom,
+    tooltipHeight: args.tooltipHeight,
+    arrowSize: args.arrowSize,
+    viewportHeight: args.viewportHeight,
+    padding: args.padding,
+    preferred: args.preferred,
+    lockSide: args.lockSide,
+  })
+  const edgeY = placed.arrowDirection === 'down' ? frameTop : frameBottom
+  const centerX = rect.left + rect.width / 2
+  const tipInside =
+    centerX >= panel.left - 4 &&
+    centerX <= panel.right + 4 &&
+    edgeY > panel.top - 2 &&
+    edgeY < panel.bottom + 2
+  const visualBottom = placed.top + args.tooltipHeight
+  const overlap = Math.min(visualBottom, panel.bottom) - Math.max(placed.top, panel.top)
+  return tipInside || overlap > 8
+}
+
+function rectInViewport(rect: DOMRect, viewportTop: number, viewportHeight: number): boolean {
+  const visible =
+    Math.min(rect.bottom, viewportTop + viewportHeight) - Math.max(rect.top, viewportTop)
+  return rect.width > 2 && rect.height > 2 && visible >= 24
+}
+
+function composerAnchorRect(step: TutorialStep): DOMRect | null {
+  if (step === 'follow-up') {
+    const portaled = readPortaledFollowUpComposerRect()
+    if (portaled) return portaled
+  }
+  const composer = getComposerElement()
+  if (!composer) return null
+  const rect = composer.getBoundingClientRect()
+  return rect.width > 2 && rect.height > 2 ? rect : null
+}
+
+function resultsAnchorRect(): DOMRect | null {
+  const results = document.querySelector('.results-section')
+  if (!(results instanceof HTMLElement)) return null
+  const rect = results.getBoundingClientRect()
+  return rect.width > 2 && rect.height > 2 ? rect : null
+}
+
+export interface TooltipAnchorDecision {
+  anchor: DOMRect
+  /** The arrow would land on the processing panel, so the card floats instead. */
+  hideArrow: boolean
+}
+
+/**
+ * Pick a tooltip anchor that is not the processing panel. The panel may still
+ * be the framed cutout. When every on-screen target would put the card or its
+ * arrow on that panel, hide the arrow and float the card.
+ */
+export function readTooltipAnchorAvoidingProcessingPanel(args: {
+  requested: DOMRect | null
+  step: TutorialStep
+  providerNames: readonly string[]
+  tooltipHeight: number
+  arrowSize: number
+  viewportTop: number
+  viewportHeight: number
+  preferred: 'above' | 'below'
+  lockSide?: boolean
+  padding?: number
+}): TooltipAnchorDecision | null {
+  const panel = readProcessingPanelBox()
+  const spotlight = readTutorialSpotlightRect(args.step, args.providerNames)
+  const candidates: DOMRect[] = []
+  const push = (rect: DOMRect | null | undefined) => {
+    if (!rect || rect.width < 2 || rect.height < 2) return
+    const seen = candidates.some(
+      existing =>
+        Math.abs(existing.top - rect.top) < 1 &&
+        Math.abs(existing.left - rect.left) < 1 &&
+        Math.abs(existing.width - rect.width) < 1 &&
+        Math.abs(existing.height - rect.height) < 1
+    )
+    if (!seen) candidates.push(rect)
+  }
+  push(spotlight)
+  if (!panel || !args.requested || !rectMostlyOnPanel(args.requested, panel)) push(args.requested)
+  if (
+    args.step === 'submit-comparison' ||
+    args.step === 'submit-comparison-2' ||
+    args.step === 'follow-up' ||
+    args.step === 'enter-prompt' ||
+    args.step === 'enter-prompt-2'
+  ) {
+    push(composerAnchorRect(args.step))
+  }
+  if (args.step === 'view-follow-up-results' || args.step === 'follow-up') push(resultsAnchorRect())
+
+  if (!panel) {
+    const anchor = candidates[0] ?? args.requested
+    return anchor ? { anchor, hideArrow: false } : null
+  }
+
+  const placeArgs = {
+    tooltipHeight: args.tooltipHeight,
+    arrowSize: args.arrowSize,
+    viewportHeight: args.viewportHeight,
+    preferred: args.preferred,
+    lockSide: args.lockSide,
+    padding: args.padding,
+  }
+  for (const anchor of candidates) {
+    if (rectMostlyOnPanel(anchor, panel)) continue
+    if (!rectInViewport(anchor, args.viewportTop, args.viewportHeight)) continue
+    if (placementHitsProcessingPanel(anchor, panel, placeArgs)) continue
+    return { anchor, hideArrow: false }
+  }
+  const fallback =
+    candidates.find(anchor => !rectMostlyOnPanel(anchor, panel)) ?? args.requested ?? null
+  return fallback ? { anchor: fallback, hideArrow: true } : null
+}
+
+/** Visual top/left of a tooltip that must not cover the processing panel. */
+export function floatTooltipClearOfProcessingPanel(args: {
+  tooltipWidth: number
+  tooltipHeight: number
+  viewportTop: number
+  viewportHeight: number
+  viewportWidth: number
+  padding?: number
+  /** Desktop `left` is the tooltip center because of translateX(-50%). */
+  leftIsCenter?: boolean
+}): { top: number; left: number } {
+  const padding = args.padding ?? MARGIN
+  const panel = readProcessingPanelBox()
+  const viewTop = args.viewportTop + padding
+  const viewBottom = args.viewportTop + args.viewportHeight - args.tooltipHeight - padding
+  let top = viewTop
+  if (panel) {
+    const below = panel.bottom + padding
+    const above = panel.top - padding - args.tooltipHeight
+    if (below <= viewBottom) top = below
+    else if (above >= viewTop) top = above
+    else top = Math.max(viewTop, Math.min(below, viewBottom))
+  }
+  const width = Math.max(args.tooltipWidth, 1)
+  const left = args.leftIsCenter
+    ? Math.max(width / 2 + padding, Math.min(args.viewportWidth / 2, args.viewportWidth - width / 2 - padding))
+    : Math.max(padding, Math.min((args.viewportWidth - width) / 2, args.viewportWidth - width - padding))
+  return { top, left }
+}
+
+export interface DesktopTooltipPlacement {
+  top: number
+  left: number
+  effectivePosition: 'top' | 'bottom'
+  hideArrow: boolean
+}
+
+/**
+ * Desktop tooltip placement. A requested rect that is the processing panel is
+ * replaced with the step's composer or results. When that would still cover
+ * the panel, the card floats and the arrow is omitted. `top` for a floating
+ * card is the visual top; the unanchored class turns off the -100% shift.
+ */
+export function desktopTooltipClearOfProcessingPanel(
+  requested: DOMRect,
+  step: TutorialStep,
+  config: StepConfig,
+  providerNames: readonly string[] = []
+): DesktopTooltipPlacement {
+  const panel = readProcessingPanelBox()
+  if (!panel) {
+    return { ...computeTooltipPosition(requested, step, config), hideArrow: false }
+  }
+  const preferred = config.position === 'bottom' ? 'below' : 'above'
+  const decision = readTooltipAnchorAvoidingProcessingPanel({
+    requested,
+    step,
+    providerNames,
+    tooltipHeight: getEstimatedTooltipHeight(),
+    arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+    viewportTop: 0,
+    viewportHeight: window.innerHeight,
+    preferred,
+  })
+  if (!decision || decision.hideArrow) {
+    const floated = floatTooltipClearOfProcessingPanel({
+      tooltipWidth: Math.min(340, Math.max(230, window.innerWidth - 32)),
+      tooltipHeight: getEstimatedTooltipHeight(),
+      viewportTop: 0,
+      viewportHeight: window.innerHeight,
+      viewportWidth: window.innerWidth,
+      leftIsCenter: true,
+    })
+    return {
+      top: floated.top,
+      left: floated.left,
+      effectivePosition: 'bottom',
+      hideArrow: true,
+    }
+  }
+  return { ...computeTooltipPosition(decision.anchor, step, config), hideArrow: false }
+}
+
 export function getScrollTargetForStep(
   _step: TutorialStep,
   targetElement: HTMLElement,

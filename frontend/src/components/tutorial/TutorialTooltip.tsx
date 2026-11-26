@@ -30,6 +30,8 @@ export interface TutorialTooltipProps {
   overlayRef: React.Ref<HTMLDivElement>
   overlayPosition: { top: number; left: number }
   effectivePosition: 'top' | 'bottom' | null
+  /** The arrow would land on the processing panel, so the card floats. */
+  hideArrow?: boolean
   positionStabilized: boolean
   /** True while the step scroll/viewport settle is in progress. The card fades in on opacity. */
   settling?: boolean
@@ -48,6 +50,7 @@ export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
   overlayRef,
   overlayPosition,
   effectivePosition,
+  hideArrow = false,
   positionStabilized,
   settling = false,
 }) => {
@@ -59,7 +62,7 @@ export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
   return (
     <div
       ref={overlayRef}
-      className={`tutorial-tooltip tutorial-tooltip-${positionClass}${settling ? ' tutorial-tooltip--settling' : ''}`}
+      className={`tutorial-tooltip tutorial-tooltip-${positionClass}${hideArrow ? ' tutorial-tooltip--unanchored' : ''}${settling ? ' tutorial-tooltip--settling' : ''}`}
       data-position-stabilized={positionStabilized ? 'true' : 'false'}
       style={{
         top: `${overlayPosition.top}px`,
@@ -141,7 +144,7 @@ export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
           )}
         </div>
       </div>
-      <div className={`tutorial-arrow tutorial-arrow-${positionClass}`} />
+      {!hideArrow && <div className={`tutorial-arrow tutorial-arrow-${positionClass}`} />}
     </div>
   )
 }

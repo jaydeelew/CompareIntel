@@ -30,8 +30,9 @@ import {
   clearTutorialScrollTail,
   computeDropdownCutout,
   computeTargetCutout,
-  computeTooltipPosition,
   desktopResultsTooltipMinTop,
+  desktopTooltipClearOfProcessingPanel,
+  readTooltipAnchorAvoidingProcessingPanel,
   elementHasSpotlightBox,
   getTutorialProviderDropdowns,
   getTutorialProviderStepLayout,
@@ -141,6 +142,7 @@ export function useTutorialOverlay(
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
   // Dynamic position for step 3 - can switch between 'top' and 'bottom' based on scroll
   const [effectivePosition, setEffectivePosition] = useState<'top' | 'bottom' | null>(null)
+  const [tooltipHidesArrow, setTooltipHidesArrow] = useState(false)
   // Suppress CSS transitions on the tooltip until initial placement is complete.
   // This prevents the tooltip from visibly animating through intermediate positions
   // during the scroll + post-scroll adjustment phase when changing steps.
@@ -301,6 +303,7 @@ export function useTutorialOverlay(
   useEffect(() => {
     tooltipClampAttemptsRef.current = 0
     setEffectivePosition(null)
+    setTooltipHidesArrow(false)
   }, [step])
 
   // Pull the card into the viewport. This runs while it is hidden and again if a
@@ -839,9 +842,16 @@ export function useTutorialOverlay(
         return
       }
       const rect = layoutRectForStep() ?? el.getBoundingClientRect()
-      const { top, left, effectivePosition: effPos } = computeTooltipPosition(rect, step, config)
-      setEffectivePosition(effPos)
-      setOverlayPosition({ top, left })
+      // The processing panel can own the cutout. The card never anchors to it.
+      const placed = desktopTooltipClearOfProcessingPanel(
+        rect,
+        step,
+        config,
+        tutorialProviderNamesRef.current
+      )
+      setEffectivePosition(placed.effectivePosition)
+      setTooltipHidesArrow(placed.hideArrow)
+      setOverlayPosition({ top: placed.top, left: placed.left })
     }
 
     let fadeStarted = false
@@ -1085,6 +1095,10 @@ export function useTutorialOverlay(
       // Step 7's own request uses the same processing/results spotlight as the
       // first comparison. Seating the composer here would scroll that panel away.
       if (step === 'follow-up' && followUpStreamingRoundRef.current) return
+      // The processing panel keeps the cutout. Do not drag the arrow back onto it.
+      if (readStreamingComparisonSpotlight(streamAnswerStartedRef.current)?.kind === 'loading') {
+        return
+      }
       const tip = document.querySelector('.tutorial-tooltip') as HTMLElement | null
       if (!tip || !(Number(getComputedStyle(tip).opacity) > 0.9)) return
       if (step === 'follow-up') {
@@ -1098,7 +1112,19 @@ export function useTutorialOverlay(
       }
       const rect = readLayout()
       const pairOffScreen = followUpPairOffScreen()
-      if (!rect || (!arrowMissesSpotlight(rect) && !pairOffScreen)) return
+      const decision = readTooltipAnchorAvoidingProcessingPanel({
+        requested: rect,
+        step,
+        providerNames: tutorialProviderNamesRef.current,
+        tooltipHeight: window.innerHeight < 700 ? 160 : 210,
+        arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+        viewportTop: 0,
+        viewportHeight: window.innerHeight,
+        preferred: TUTORIAL_STEPS_CONFIG[step].position === 'bottom' ? 'below' : 'above',
+      })
+      if (decision?.hideArrow) return
+      const aim = decision?.anchor ?? rect
+      if (!aim || (!arrowMissesSpotlight(aim) && !pairOffScreen)) return
       running = true
       tries += 1
       const scrollAtStart = getTutorialScrollRoot().getScrollTop()
@@ -1156,8 +1182,14 @@ export function useTutorialOverlay(
           if (cancelled || stepRef.current !== step) return
           const finalRect = readLayout()
           if (!finalRect) return
-          const placed = computeTooltipPosition(finalRect, step, TUTORIAL_STEPS_CONFIG[step])
+          const placed = desktopTooltipClearOfProcessingPanel(
+            finalRect,
+            step,
+            TUTORIAL_STEPS_CONFIG[step],
+            tutorialProviderNamesRef.current
+          )
           setEffectivePosition(placed.effectivePosition)
+          setTooltipHidesArrow(placed.hideArrow)
           setOverlayPosition({ top: placed.top, left: placed.left })
         } finally {
           if (!cancelled && stepRef.current === step) {
@@ -1908,8 +1940,14 @@ export function useTutorialOverlay(
         const currentStep = stepRef.current
         if (!currentStep) return
         const stepConfig = TUTORIAL_STEPS_CONFIG[currentStep]
-        const placed = computeTooltipPosition(rect, currentStep, stepConfig)
+        const placed = desktopTooltipClearOfProcessingPanel(
+          rect,
+          currentStep,
+          stepConfig,
+          tutorialProviderNamesRef.current
+        )
         setEffectivePosition(placed.effectivePosition)
+        setTooltipHidesArrow(placed.hideArrow)
         setOverlayPosition(prev =>
           Math.abs(prev.top - placed.top) < 1 && Math.abs(prev.left - placed.left) < 1
             ? prev
@@ -2470,6 +2508,7 @@ export function useTutorialOverlay(
     hasAttemptedElementFindRef,
     targetElement,
     overlayPosition,
+    tooltipHidesArrow,
     isVisible,
     portalRoot,
     effectivePosition,
