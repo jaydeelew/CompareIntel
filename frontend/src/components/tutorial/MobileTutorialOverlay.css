@@ -17,25 +17,11 @@
 /* `.app` is an overflow scroller, so the scroll-layer dim and a tooltip that
    hangs past the page are clipped, and the footer after `.app` stays put
    while that box scrolls. While the tutorial portal is mounted the document
-   is the scroller. The footer keeps its place in the flow and drops its own
-   panel so the page background continues through it. The same overlay then
-   paints across that background, including the footer. No footer veil. */
-body:has(#tutorial-portal-root),
-body:has(#mobile-tutorial-portal-root) {
-  background: linear-gradient(135deg, var(--bg-primary) 0%, #0f172a 100%);
-}
-
+   is the scroller. The footer keeps its own background and its place in the
+   flow. The same page overlay dims it. No footer fill or veil. */
 body:has(#tutorial-portal-root) .app,
 body:has(#mobile-tutorial-portal-root) .app {
   overflow: visible;
-  background: transparent;
-}
-
-body:has(#tutorial-portal-root) footer,
-body:has(#mobile-tutorial-portal-root) footer {
-  background-color: transparent !important;
-  background-image: none !important;
-  border-top-color: transparent !important;
 }
 
 /* Cutout is position:absolute in the `.app` scroll layer (content coordinates).
