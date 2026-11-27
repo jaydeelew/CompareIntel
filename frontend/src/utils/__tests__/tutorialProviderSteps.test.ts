@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { getTutorialProviderStepLayout, getUnionClientRect } from '../tutorialPositioning'
+import {
+  applyProviderPickerHighlight,
+  getTutorialProviderStepLayout,
+  getUnionClientRect,
+  tutorialFrameRadius,
+} from '../tutorialPositioning'
 
 function mockProviderDropdown(top: number, height: number, providerName: string): HTMLElement {
   const el = document.createElement('div')
@@ -59,6 +64,36 @@ describe('tutorial provider steps (step 2)', () => {
       dropdown.remove()
       document.documentElement.removeAttribute('data-tutorial-target-models')
     }
+  })
+
+  it('frames a model row with the same concentric radius formula as a provider card', () => {
+    const provider = document.createElement('div')
+    provider.style.borderTopLeftRadius = '12px'
+    const row = document.createElement('label')
+    row.style.borderTopLeftRadius = '8px'
+    document.body.append(provider, row)
+    expect(tutorialFrameRadius(provider, 8, 20)).toBe(20)
+    expect(tutorialFrameRadius(row, 8, 20)).toBe(16)
+    expect(tutorialFrameRadius(null, 8, 20)).toBe(20)
+    provider.remove()
+    row.remove()
+  })
+
+  it('moves the highlight from the provider card onto the model row', () => {
+    const provider = document.createElement('div')
+    provider.className = 'provider-dropdown tutorial-highlight'
+    const row = document.createElement('label')
+    row.className = 'model-option'
+    document.body.append(provider, row)
+
+    applyProviderPickerHighlight([row], 'tutorial-highlight')
+
+    expect(provider.classList.contains('tutorial-highlight')).toBe(false)
+    expect(row.classList.contains('tutorial-highlight')).toBe(true)
+    expect(row.style.position).toBe('relative')
+
+    provider.remove()
+    row.remove()
   })
 
   it('getUnionClientRect spans multiple provider cards', () => {

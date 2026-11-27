@@ -35,8 +35,11 @@ import {
   readTooltipAnchorAvoidingProcessingPanel,
   elementHasSpotlightBox,
   ensureTutorialScrollLayer,
+  applyProviderPickerHighlight,
+  clearProviderPickerHighlight,
   getTutorialProviderDropdowns,
   getTutorialProviderStepLayout,
+  tutorialFrameRadius,
   getTutorialScrollMax,
   getTutorialScrollRoot,
   DESKTOP_TUTORIAL_ARROW_PX,
@@ -251,6 +254,14 @@ export function useTutorialOverlay(
       clearTutorialScrollTail()
     }
   }, [step])
+
+  // Skip or finish while still on history/save unmounts this overlay without
+  // another step change. The scroll tail must not stay on the page.
+  useEffect(() => {
+    return () => {
+      clearTutorialScrollTail()
+    }
+  }, [])
 
   // Reset save-selection flag synchronously before paint when entering step 8
   // useLayoutEffect ensures user never sees Done enabled before they've clicked
@@ -1453,15 +1464,20 @@ export function useTutorialOverlay(
     }
     // If we're on a dropdown step, don't touch the cutout - let the continuous effect handle it
 
-    // Apply highlight to all elements
-    elementsToHighlight.forEach(el => {
-      if (el) {
-        el.classList.add('tutorial-highlight')
-        // Ensure the element is interactive
-        el.style.pointerEvents = 'auto'
-        el.style.position = 'relative'
-      }
-    })
+    // Apply highlight to all elements. Provider steps must drop the previous
+    // target (provider card vs model row) or both rings stay on screen.
+    if (isProviderPickerTutorialStep(step) && elementsToHighlight.length > 0) {
+      applyProviderPickerHighlight(elementsToHighlight, 'tutorial-highlight')
+    } else {
+      elementsToHighlight.forEach(el => {
+        if (el) {
+          el.classList.add('tutorial-highlight')
+          // Ensure the element is interactive
+          el.style.pointerEvents = 'auto'
+          el.style.position = 'relative'
+        }
+      })
+    }
     if (step === 'view-follow-up-results') {
       clearStep8ComposerSpotlight()
     }
@@ -1560,11 +1576,7 @@ export function useTutorialOverlay(
       )
       const primary = layout.highlights[0]
       if (!primary || !layout.anchor) return
-      if (!primary.classList.contains('tutorial-highlight')) {
-        primary.classList.add('tutorial-highlight')
-        primary.style.pointerEvents = 'auto'
-        primary.style.position = 'relative'
-      }
+      applyProviderPickerHighlight(layout.highlights, 'tutorial-highlight')
       const anchor = layout.anchor
       if (anchor) {
         setTargetElement(prev => (prev === anchor ? prev : anchor))
@@ -1579,11 +1591,7 @@ export function useTutorialOverlay(
       detachScrollResize()
       clearInterval(interval)
       if (!isPrimaryExpandProviderStep(stepRef.current)) {
-        getTutorialProviderDropdowns(tutorialProviderNamesRef.current).forEach(providerEl => {
-          providerEl.classList.remove('tutorial-highlight')
-          providerEl.style.pointerEvents = ''
-          providerEl.style.position = ''
-        })
+        clearProviderPickerHighlight('tutorial-highlight')
       }
     }
   }, [step, expandProviderEffectsReady, tutorialProviderNames])
@@ -1602,13 +1610,7 @@ export function useTutorialOverlay(
       )
       const { highlights } = layout
       if (highlights.length === 0) return
-      highlights.forEach(providerEl => {
-        if (!providerEl.classList.contains('tutorial-highlight')) {
-          providerEl.classList.add('tutorial-highlight')
-          providerEl.style.pointerEvents = 'auto'
-          providerEl.style.position = 'relative'
-        }
-      })
+      applyProviderPickerHighlight(highlights, 'tutorial-highlight')
       setTargetElement(prev => (prev === highlights[0] ? prev : highlights[0]))
       setHighlightedElements(prev =>
         prev.length === highlights.length && prev.every((el, i) => el === highlights[i])
@@ -1626,11 +1628,7 @@ export function useTutorialOverlay(
     return () => {
       detachScrollResize()
       clearInterval(interval)
-      getTutorialProviderDropdowns(tutorialProviderNamesRef.current).forEach(providerEl => {
-        providerEl.classList.remove('tutorial-highlight')
-        providerEl.style.pointerEvents = ''
-        providerEl.style.position = ''
-      })
+      clearProviderPickerHighlight('tutorial-highlight')
     }
   }, [step, tutorialProviderNames])
 
@@ -2547,7 +2545,7 @@ export function useTutorialOverlay(
       const borderRadius = isSubmitStep
         ? 32 /* composer (match step 3–4) */
         : isProviderStep
-          ? 20 /* --radius-xl (12px) + 8 */
+          ? tutorialFrameRadius(elementsToUse[0], padding, 20)
           : 12
       const cutout = computeTargetCutout(elementsToUse, padding, borderRadius)
       setTargetCutout(prev => (tutorialBoxesNearlyEqual(prev, cutout) ? prev : cutout))

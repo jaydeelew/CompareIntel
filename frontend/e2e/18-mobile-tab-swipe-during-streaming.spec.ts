@@ -44,22 +44,24 @@ test.describe('Mobile model-tab swipe while result content churns', () => {
     await expect(tabs.nth(0)).toHaveClass(/active/)
 
     const swipeZone = page.locator('.results-tab-content--swipe-zone')
-    await swipeZone.scrollIntoViewIfNeeded()
-    const box = await swipeZone.boundingBox()
+    const reply = swipeZone.locator('.conversation-message.assistant').first()
+    await reply.scrollIntoViewIfNeeded()
+    const box = await reply.boundingBox()
     expect(box).toBeTruthy()
 
     const churnHandle = await page.evaluate(() => {
       const zone = document.querySelector('.results-tab-content--swipe-zone')
       const host =
+        zone?.querySelector('.conversation-message.user .message-content') ??
         zone?.querySelector('.message-content') ??
         zone?.querySelector('.latex-content') ??
-        zone?.querySelector('[data-testid^="result-card-"]') ??
         zone
       if (!host) return null
-      // innerHTML detaches the node under the finger. Chrome then delivers
-      // neither touchend nor touchcancel, so the swipe cannot finish. Streaming
-      // updates text in place; do that, and keep tearing down a sibling so the
-      // panel DOM is still being replaced during the gesture.
+      // Streaming updates text in place. A sibling is torn down on each tick so
+      // the panel DOM is still being replaced during the gesture. The swipe
+      // itself stays on the assistant reply: after the formatted renderer
+      // mounts, 55% of the whole zone can land on this replaced sibling, and
+      // Chrome then delivers neither touchend nor touchcancel.
       let churn = host.querySelector('p.stream-churn')
       if (!churn) {
         churn = document.createElement('p')
@@ -79,9 +81,11 @@ test.describe('Mobile model-tab swipe while result content churns', () => {
     })
     expect(churnHandle, 'results panel host for streaming churn').not.toBeNull()
 
-    const midY = box!.y + box!.height * 0.55
-    const fromX = box!.x + box!.width * 0.75
-    const toX = box!.x + box!.width * 0.1
+    const viewport = page.viewportSize()
+    const viewH = viewport?.height ?? 727
+    const midY = Math.min(viewH - 24, Math.max(24, box!.y + Math.min(box!.height * 0.5, 48)))
+    const fromX = box!.x + box!.width * 0.8
+    const toX = box!.x + box!.width * 0.15
 
     await touchSwipe(page, fromX, midY, toX, midY)
     await page.waitForTimeout(200)

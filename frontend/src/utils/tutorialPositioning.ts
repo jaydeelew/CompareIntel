@@ -374,6 +374,23 @@ export function scrollTutorialRectToCenter(
 const SCROLL_TAIL_ATTR = 'data-tutorial-scroll-tail'
 
 /**
+ * Padding belongs on `.app`, the box the footer follows. On a tall page the
+ * document is the scroller (`.app` grows with its content), and padding on
+ * that scroller paints the body background below the footer. The same padding
+ * on `.app` still lengthens the document scroll range, and the extra room
+ * stays above the footer.
+ */
+function scrollTailHost(scroller: HTMLElement): HTMLElement {
+  // Phone layouts keep the previous scroller padding. Desktop is where the
+  // document-scroller padding shows up as a white band under the footer.
+  const desktop = window.matchMedia('(min-width: 769px)').matches
+  if (!desktop) return scroller
+  const app = document.querySelector('.app')
+  if (app instanceof HTMLElement) return app
+  return scroller
+}
+
+/**
  * History and saved selections sit at the end of the page. Extra padding lets
  * scrollTutorialRectToCenter place them in the vertical middle, the same way
  * earlier steps center a target that still has room below it.
@@ -383,6 +400,11 @@ export function ensureTutorialScrollTail(
   viewport?: { top?: number; height: number }
 ): void {
   const scroller = tutorialPageScroller()
+  const host = scrollTailHost(scroller)
+  if (host !== scroller && scroller.hasAttribute(SCROLL_TAIL_ATTR)) {
+    scroller.style.paddingBottom = ''
+    scroller.removeAttribute(SCROLL_TAIL_ATTR)
+  }
   const viewTop = viewport?.top ?? 0
   const viewH = viewport?.height ?? window.innerHeight
   const margin = 16
@@ -390,7 +412,7 @@ export function ensureTutorialScrollTail(
     rect.height >= viewH - margin * 2
       ? viewTop + margin
       : Math.max(viewTop + margin, viewTop + (viewH - rect.height) / 2)
-  const existing = Number(scroller.getAttribute(SCROLL_TAIL_ATTR) || '0')
+  const existing = Number(host.getAttribute(SCROLL_TAIL_ATTR) || '0')
   const documentTop = scroller.scrollTop + rect.top
   const desiredScroll = documentTop - desiredTop
   const maxWithoutTail = Math.max(0, scroller.scrollHeight - existing - scroller.clientHeight)
@@ -400,13 +422,15 @@ export function ensureTutorialScrollTail(
     return
   }
   if (Math.abs(next - existing) < 1) return
-  scroller.setAttribute(SCROLL_TAIL_ATTR, String(next))
-  scroller.style.paddingBottom = `${next}px`
+  host.setAttribute(SCROLL_TAIL_ATTR, String(next))
+  host.style.paddingBottom = `${next}px`
 }
 
 export function clearTutorialScrollTail(): void {
   const nodes = new Set<HTMLElement>()
   nodes.add(tutorialPageScroller())
+  nodes.add(document.documentElement)
+  if (document.body) nodes.add(document.body)
   const app = document.querySelector('.app')
   if (app instanceof HTMLElement) nodes.add(app)
   for (const node of nodes) {
@@ -1229,6 +1253,49 @@ export function getTutorialProviderStepLayout(
     highlights: [primary],
     layoutRect: primary.getBoundingClientRect(),
   }
+}
+
+/**
+ * Backdrop cutout corner: the highlighted element's own radius plus the frame
+ * padding, so the ring stays concentric. Provider cards are `--radius-xl` (12px)
+ * + 8px = 20px, which is the previous hardcoded provider radius.
+ */
+export function tutorialFrameRadius(
+  element: HTMLElement | null | undefined,
+  padding: number,
+  fallback: number
+): number {
+  if (!element || typeof getComputedStyle !== 'function') return fallback
+  const radius = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius)
+  if (!Number.isFinite(radius) || radius <= 0) return fallback
+  return Math.round(radius + padding)
+}
+
+/** Paint provider-picker highlights and drop the class from the previous target. */
+export function applyProviderPickerHighlight(
+  highlights: readonly HTMLElement[],
+  className: 'tutorial-highlight' | 'mobile-tutorial-highlight'
+): void {
+  const keep = new Set<HTMLElement>(highlights)
+  document
+    .querySelectorAll(`.provider-dropdown.${className}, .model-option.${className}`)
+    .forEach(node => {
+      if (!(node instanceof HTMLElement) || keep.has(node)) return
+      node.classList.remove(className)
+      node.style.pointerEvents = ''
+      node.style.position = ''
+    })
+  for (const el of highlights) {
+    el.classList.add(className)
+    el.style.pointerEvents = 'auto'
+    el.style.position = 'relative'
+  }
+}
+
+export function clearProviderPickerHighlight(
+  className: 'tutorial-highlight' | 'mobile-tutorial-highlight'
+): void {
+  applyProviderPickerHighlight([], className)
 }
 
 export function scrollLayoutForTutorialStep(step: TutorialStep | null): TutorialProviderLayoutStep {

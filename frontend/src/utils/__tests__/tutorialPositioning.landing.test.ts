@@ -42,6 +42,45 @@ describe('tutorialPositioning post-tutorial landing', () => {
     expect(app.style.paddingBottom).toBe('')
   })
 
+  it('pads .app when the document is the scroller so the gap stays above the footer', () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation(query => ({
+      matches: query === '(min-width: 769px)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+    Object.defineProperty(app, 'scrollHeight', { value: 2400, configurable: true })
+    Object.defineProperty(app, 'clientHeight', { value: 2400, configurable: true })
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      value: 2600,
+      configurable: true,
+    })
+    Object.defineProperty(document.documentElement, 'clientHeight', {
+      value: 800,
+      configurable: true,
+    })
+    Object.defineProperty(document.documentElement, 'scrollTop', {
+      value: 1600,
+      configurable: true,
+      writable: true,
+    })
+    const footer = document.createElement('footer')
+    document.body.appendChild(footer)
+
+    ensureTutorialScrollTail({ top: 640, height: 120 })
+
+    const tail = Number(app.getAttribute('data-tutorial-scroll-tail'))
+    expect(tail).toBeGreaterThan(0)
+    expect(app.style.paddingBottom).toBe(`${tail}px`)
+    expect(document.documentElement.style.paddingBottom).toBe('')
+    expect(document.documentElement.hasAttribute('data-tutorial-scroll-tail')).toBe(false)
+    expect(footer.previousElementSibling).toBe(app)
+  })
+
   it('focusFollowUpComposerTextarea prefers the below-results composer textarea', () => {
     const heroTextarea = document.createElement('textarea')
     heroTextarea.setAttribute('data-testid', 'comparison-input-textarea')

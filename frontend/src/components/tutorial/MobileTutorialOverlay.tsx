@@ -22,6 +22,8 @@ import {
 } from '../../utils/followUpComposerReady'
 import {
   advanceFollowUpStreamingRound,
+  applyProviderPickerHighlight,
+  clearProviderPickerHighlight,
   clampTooltipTop,
   deferScroll,
   elementHasSpotlightBox,
@@ -50,6 +52,7 @@ import {
   scrollHistoryComposerPair,
   scrollTutorialElementToViewportY,
   streamingResultsTopInViewport,
+  tutorialFrameRadius,
   seatPortaledFollowUpComposer,
   setHistoryComposerLift,
   TUTORIAL_FRAME_OUTSET_PX,
@@ -330,6 +333,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     reviewScrollSeatedRef.current = false
     followUpScrollSeatedRef.current = false
   }, [step])
+
+  // Skip or finish while still on history/save unmounts this overlay without
+  // another step change. The scroll tail must not stay on the page.
+  useEffect(() => {
+    return () => {
+      clearTutorialScrollTail()
+    }
+  }, [])
 
   // Reset save-selection flag synchronously before paint when entering step 8
   useLayoutEffect(() => {
@@ -1502,9 +1513,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         current as TutorialProviderLayoutStep,
         tutorialProviderNamesRef.current
       )
-      layout.highlights.forEach(el => {
-        el.classList.add('mobile-tutorial-highlight')
-      })
+      applyProviderPickerHighlight(layout.highlights, 'mobile-tutorial-highlight')
       const next = layout.highlights[0]
       if (next) setTargetElement(prev => (prev === next ? prev : next))
     }
@@ -1514,6 +1523,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     return () => {
       window.clearInterval(interval)
+      // Drop the row or card ring once the tour leaves the provider steps.
+      // stepRef is already the next step when this cleanup runs.
+      if (!isProviderPickerTutorialStep(stepRef.current)) {
+        clearProviderPickerHighlight('mobile-tutorial-highlight')
+      }
     }
   }, [step, tutorialProviderNames])
 
@@ -1521,24 +1535,26 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   useEffect(() => {
     if (!targetElement || !step) return
 
-    const providerHighlights =
-      step === 'select-models'
-        ? getTutorialProviderStepLayout('select-models', tutorialProviderNamesRef.current)
-            .highlights
-        : step === 'expand-provider' || step === 'expand-starter-provider-2'
-          ? getTutorialProviderStepLayout(
-              step as 'expand-provider' | 'expand-starter-provider-2',
-              tutorialProviderNamesRef.current
-            ).highlights
-          : [targetElement]
+    const providerHighlights = isProviderPickerTutorialStep(step)
+      ? getTutorialProviderStepLayout(
+          step as TutorialProviderLayoutStep,
+          tutorialProviderNamesRef.current
+        ).highlights
+      : [targetElement]
 
-    providerHighlights.forEach(el => {
-      // The compare submit control is a circle. The shared highlight radius is a
-      // rounded square, and the settling pass clears that ring, so the mobile
-      // compare step was drawing a plain square. The green attention ring is the cue.
-      if (isComparisonSubmitButton(el)) return
-      el.classList.add('mobile-tutorial-highlight')
-    })
+    if (isProviderPickerTutorialStep(step)) {
+      if (providerHighlights.length > 0) {
+        applyProviderPickerHighlight(providerHighlights, 'mobile-tutorial-highlight')
+      }
+    } else {
+      providerHighlights.forEach(el => {
+        // The compare submit control is a circle. The shared highlight radius is a
+        // rounded square, and the settling pass clears that ring, so the mobile
+        // compare step was drawing a plain square. The green attention ring is the cue.
+        if (isComparisonSubmitButton(el)) return
+        el.classList.add('mobile-tutorial-highlight')
+      })
+    }
 
     // Add button pulsate when tooltip says "Tap the highlighted button" (same ring + pulse as submit step).
     // History and saved selections must not use targetElement here: it is still the
@@ -1975,13 +1991,16 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         return
       }
       const scrollTop = getTutorialScrollRoot().getScrollTop()
-      // Once the card has faded in, leave the page alone. The interval used to
-      // pull the composer back for several seconds, which cancelled a scroll.
+      // The card can fade in before the formatted reply has its real height.
+      // That growth pushes the card past the iPhone fold or onto the footer.
+      // Keep correcting until it is clear, and stop as soon as the user scrolls.
       if (spotlightSettledRef.current) {
         if (seatedTop == null) seatedTop = scrollTop
-        else if (Math.abs(scrollTop - seatedTop) > 1) window.clearInterval(intervalId)
+        else if (Math.abs(scrollTop - seatedTop) > 1) {
+          window.clearInterval(intervalId)
+          return
+        }
         followUpScrollSeatedRef.current = true
-        return
       }
       const composer = readPortaledFollowUpComposerRect()
       const view = readVisualViewportBox()
@@ -2312,7 +2331,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                 step === 'save-selection'
               ? '32px'
               : isProviderPickerTutorialStep(step)
-                ? '20px'
+                ? `${tutorialFrameRadius(
+                    getTutorialProviderStepLayout(
+                      step as TutorialProviderLayoutStep,
+                      tutorialProviderNamesRef.current
+                    ).highlights[0],
+                    cutoutPadding,
+                    20
+                  )}px`
                 : step === 'follow-up' || step === 'view-follow-up-results'
                   ? '24px'
                   : '16px',
@@ -2466,6 +2492,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                   Step {stepIndex} of {totalSteps}
                 </span>
                 <button
+                  type="button"
                   className="mobile-tutorial-close-button"
                   onClick={onSkip}
                   aria-label="Skip tutorial"
