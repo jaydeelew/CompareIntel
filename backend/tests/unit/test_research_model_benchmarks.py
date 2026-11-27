@@ -1158,3 +1158,131 @@ class TestLineupSync:
 
         assert result["total_changes"] == 1
         assert ts_file.read_text(encoding="utf-8") == original
+
+
+class TestStrictVersionAliases:
+    """A score from one model version is never stored on a different version."""
+
+    def test_known_cross_version_pairs_are_rejected(self):
+        from scripts.benchmark_matching import alias_is_same_version
+
+        names = get_model_id_to_name_map()
+        pairs = [
+            ("minimax-2.1", "minimax/minimax-m2.5"),
+            ("glm-4.6", "z-ai/glm-5"),
+            ("codestral-2405", "mistralai/codestral-2508"),
+            ("Claude Opus 5", "anthropic/claude-opus-5.5"),
+            ("GPT-6 Astra (Max)", "openai/gpt-6.2-astra"),
+            ("GPT-6.2 Astra", "openai/gpt-6.2-astra-pro"),
+            ("Qwen3.8-Max", "qwen/qwen3.8-max-0902"),
+            ("GPT-Image-2.5 Sunburst", "openai/gpt-image-2.6-sunburst"),
+            ("Gemini 2.0 Flash", "google/gemini-2.5-flash"),
+        ]
+        for label, model_id in pairs:
+            assert alias_is_same_version(label, model_id, names.get(model_id)) is False
+
+    def test_merge_does_not_copy_another_versions_swe_score(self):
+        names = get_model_id_to_name_map()
+        for slug in ("minimax-2.1", "glm-4.6", "codestral-2405"):
+            result: dict = {}
+            _merge_swe_bench_pro_row(result, slug, 36.81, names)
+            assert result == {}
+
+    def test_code_arena_names_map_only_the_same_version(self):
+        from scripts.benchmark_matching import match_lineup_name
+
+        names = get_model_id_to_name_map()
+        assert match_lineup_name("Claude Fable 5.2 (xHigh)", names) == "anthropic/claude-fable-5.2"
+        assert match_lineup_name("Claude Opus 5.5 (Max)", names) == "anthropic/claude-opus-5.5"
+        assert match_lineup_name("Claude Opus 5 (High)", names) == "anthropic/claude-opus-5"
+        assert (
+            match_lineup_name("Claude Sonnet 5.5 (xHigh)", names) == "anthropic/claude-sonnet-5.5"
+        )
+        assert match_lineup_name("GPT-6.2 Astra (Max)", names) == "openai/gpt-6.2-astra"
+        assert match_lineup_name("GPT-6 Astra (Max)", names) is None
+        assert match_lineup_name("Qwen3.8-Max (0902)", names) == "qwen/qwen3.8-max-0902"
+        assert match_lineup_name("Qwen3.8-Max", names) is None
+        assert (
+            match_lineup_name("GPT-Image-2.6 Sunburst (Medium)", names)
+            == "openai/gpt-image-2.6-sunburst"
+        )
+        assert match_lineup_name("GPT-Image-2.5 Sunburst", names) is None
+        assert (
+            match_lineup_name("DeepSeek-V4.1-Flash-20261017 (Max)", names)
+            == "deepseek/deepseek-v4.1-flash-1017"
+        )
+        assert (
+            match_lineup_name("claude-opus-4-6 (thinking)*", names) == "anthropic/claude-opus-4.6"
+        )
+        assert match_lineup_name("qwen3-coder-480b-a35b", names) == "qwen/qwen3-coder"
+        assert match_lineup_name("Gemini 2.0 Flash", names) != "google/gemini-2.5-flash"
+
+    def test_every_explicit_alias_is_the_same_version(self):
+        from scripts.benchmark_matching import alias_is_same_version
+        from scripts.research_model_benchmarks import (
+            AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID,
+            LMSPEED_NAME_TO_MODEL_ID,
+            MATH_SLUG_TO_MODEL_ID,
+            MMLU_PRO_NAME_TO_MODEL_ID,
+            MRCR_NAME_TO_MODEL_ID,
+            SWE_BENCH_PRO_SLUG_TO_MODEL_ID,
+            TEXT_TO_IMAGE_NAME_TO_MODEL_ID,
+            VALS_TO_MODEL_ID,
+            VISION_ARENA_SLUG_TO_MODEL_ID,
+            WRITING_NAME_TO_MODEL_ID,
+        )
+
+        names = get_model_id_to_name_map()
+        aliases = [
+            SWE_BENCH_PRO_SLUG_TO_MODEL_ID,
+            MATH_SLUG_TO_MODEL_ID,
+            VALS_TO_MODEL_ID,
+            LMSPEED_NAME_TO_MODEL_ID,
+            MMLU_PRO_NAME_TO_MODEL_ID,
+            WRITING_NAME_TO_MODEL_ID,
+            VISION_ARENA_SLUG_TO_MODEL_ID,
+            TEXT_TO_IMAGE_NAME_TO_MODEL_ID,
+            MRCR_NAME_TO_MODEL_ID,
+            AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID,
+        ]
+        for table in aliases:
+            for label, model_id in table.items():
+                assert alias_is_same_version(label, model_id, names.get(model_id)), (
+                    f"{label!r} is not the same version as {model_id}"
+                )
+
+    def test_blend_keeps_primary_and_ranks_by_percentile(self):
+        from scripts.benchmark_matching import (
+            LeaderboardSlice,
+            blend_by_percentile,
+            score_percentile,
+        )
+
+        primary = LeaderboardSlice(
+            scores={"anthropic/claude-fable-5.2": (1822.0, "Code Arena: Arena Score 1822.")},
+            reference=[1000.0, 1500.0, 1822.0],
+        )
+        fallback = LeaderboardSlice(
+            scores={
+                "anthropic/claude-fable-5.2": (51.9, "SWE-Bench Pro public (Scale Labs): 51.90%."),
+                "openai/gpt-5": (41.78, "SWE-Bench Pro public (Scale Labs): 41.78%."),
+            },
+            reference=[10.0, 20.0, 41.78, 51.9],
+        )
+        blended = blend_by_percentile(primary, fallback)
+        assert blended["anthropic/claude-fable-5.2"][0] == 100.0
+        assert "Code Arena" in blended["anthropic/claude-fable-5.2"][1]
+        assert "SWE-Bench" not in blended["anthropic/claude-fable-5.2"][1]
+        expected = score_percentile(41.78, fallback.reference)
+        assert abs(blended["openai/gpt-5"][0] - expected) < 0.01
+        assert blended["openai/gpt-5"][1].startswith("Percentile")
+        assert "SWE-Bench Pro public" in blended["openai/gpt-5"][1]
+        assert blended["anthropic/claude-fable-5.2"][0] > blended["openai/gpt-5"][0]
+
+    def test_extract_prefers_percentile_then_arena_score(self):
+        blended = "Percentile 72.0% within this board. SWE-Bench Pro public (Scale Labs): 41.78%."
+        assert extract_primary_score("coding", blended) == 72.0
+        arena = (
+            "Creative Writing (LMArena text, arena.ai): Arena Score 1525 (published 2026-11-22)."
+        )
+        assert extract_primary_score("writing", arena) == 1525.0

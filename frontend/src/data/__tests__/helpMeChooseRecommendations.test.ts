@@ -45,6 +45,12 @@ function loadActiveLineupIds(): Set<string> {
 
 /** Extract primary numeric score from evidence for ordering checks. Returns null if no comparable score. */
 function extractPrimaryScore(categoryId: string, evidence: string): number | null {
+  // Blended boards lead with a within-board percentile, then the raw score.
+  const percentile = evidence.match(/Percentile\s+(\d+\.?\d*)\s*%/i)
+  if (percentile) return parseFloat(percentile[1])
+  const arenaScore = evidence.match(/Arena Score\s+(\d+\.?\d*)/i)
+  if (arenaScore) return parseFloat(arenaScore[1])
+
   // Percentage (SWE-Bench, MMLU-Pro, etc.)
   const pctMatch = evidence.match(/(\d+\.?\d*)\s*%/)
   if (pctMatch) return parseFloat(pctMatch[1])
@@ -93,9 +99,13 @@ function isSameScale(categoryId: string, scoreA: number, scoreB: number): boolea
     // Mazur: 0–10 scale; Elo: 1000+ scale
     const aMazur = scoreA < 20
     const bMazur = scoreB < 20
-    return aMazur === bMazur
+    if (aMazur !== bMazur) return false
   }
-  return true
+  // Arena Scores sit around 1000–2000. A leftover exam percent must not be
+  // ordered against one.
+  const aArena = scoreA >= 500
+  const bArena = scoreB >= 500
+  return aArena === bArena
 }
 
 /** Categories where lower score is better (e.g. cost-effective: cheaper first). */
