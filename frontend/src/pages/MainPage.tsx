@@ -770,7 +770,11 @@ export function MainPage() {
     {
       onCollapseAllDropdowns: collapseAllDropdowns,
       onSetIsModelsHidden: setIsModelsHidden,
-      onFocusTextarea: () => textareaRef.current?.focus(),
+      // The handler already scrolled to the top. preventScroll keeps a late focus
+      // from jumping to the after-results composer: by 800ms the field may have
+      // moved below the results, and the default focus scroll pulls the viewport
+      // down so a swipe on the open result misses.
+      onFocusTextarea: () => textareaRef.current?.focus({ preventScroll: true }),
     }
   )
 
