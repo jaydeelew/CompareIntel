@@ -68,6 +68,8 @@ function modelTabIsStillStreaming(
 /** Duration aligned with `.results-tab-content-slide--*` CSS in results.css (fallback if `animationend` does not fire). */
 const MODEL_TAB_SLIDE_ANIM_MS = 480
 
+const pagerGapSize = new WeakMap<HTMLElement, { message: number; conversation: number }>()
+
 /**
  * Bottom of the response box the reader can see, ignoring transforms that
  * are still running. `.conversation-message` fades in with translateY, and
@@ -92,6 +94,7 @@ function visibleResponseBottom(message: HTMLElement, boundary: HTMLElement): num
 }
 
 function clearMobilePagerGap(inner: HTMLElement): void {
+  pagerGapSize.delete(inner)
   inner.style.paddingBottom = ''
   const tabs = inner.querySelector('.results-tabs-container')
   if (tabs instanceof HTMLElement) tabs.style.marginBottom = ''
@@ -125,15 +128,39 @@ function equalizeMobilePagerGap(inner: HTMLElement): void {
   if (tabs instanceof HTMLElement) tabs.style.marginBottom = '0px'
   outer.style.paddingBottom = '0px'
 
+  const conversation = message.closest('.conversation-content')
+  const messageHeight = message.getBoundingClientRect().height
+  const conversationHeight =
+    conversation instanceof HTMLElement ? conversation.getBoundingClientRect().height : 0
+  const previous = pagerGapSize.get(inner)
+  // Scrolling the page does not change these heights, but it does change the
+  // rects. Rewriting padding from that noise moves the composer while a
+  // tutorial cutout is mid-scroll.
+  if (
+    previous &&
+    Math.abs(previous.message - messageHeight) < 1 &&
+    Math.abs(previous.conversation - conversationHeight) < 1
+  ) {
+    return
+  }
+
   const above = pager.getBoundingClientRect().top - visibleResponseBottom(message, inner)
   const below = outer.getBoundingClientRect().bottom - pager.getBoundingClientRect().bottom
   const delta = below - above
-  if (!Number.isFinite(delta) || Math.abs(delta) <= 0.5) return
+  if (!Number.isFinite(delta)) return
+  if (Math.abs(delta) <= 0.5) {
+    pagerGapSize.set(inner, { message: messageHeight, conversation: conversationHeight })
+    return
+  }
 
   const current = parseFloat(getComputedStyle(inner).paddingBottom) || 0
   const next = Math.max(0, current - delta)
-  if (Math.abs(next - current) <= 0.5) return
+  if (Math.abs(next - current) <= 0.5) {
+    pagerGapSize.set(inner, { message: messageHeight, conversation: conversationHeight })
+    return
+  }
   inner.style.paddingBottom = `${Math.round(next * 100) / 100}px`
+  pagerGapSize.set(inner, { message: messageHeight, conversation: conversationHeight })
 }
 
 /** Min horizontal swipe (px); scales slightly with viewport. */
