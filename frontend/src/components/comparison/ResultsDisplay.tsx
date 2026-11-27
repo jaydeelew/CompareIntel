@@ -269,6 +269,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     lastX: number
     lastY: number
     suppress: boolean
+    /** Fires if Chrome drops touchend after the node under the finger is replaced. */
+    fallback?: ReturnType<typeof window.setTimeout>
   } | null>(null)
   const goToModelTabRef = useRef<(nextIndex: number, source?: TabChangeSource) => void>(() => {})
   const activeTabIndexRef = useRef(activeTabIndex)
@@ -496,6 +498,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       if (!start || start.suppress || e.touches.length !== 1) return
       start.lastX = e.touches[0].clientX
       start.lastY = e.touches[0].clientY
+      armSwipeReleaseFallback()
     }
 
     // Replacing the node under the finger (streaming) drops the gesture: touchend
@@ -504,6 +507,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     const finishSwipe = (release: { x: number; y: number } | null, endGesture: boolean) => {
       const start = swipeTouchStartRef.current
       if (!start || start.suppress) return
+      if (start.fallback != null) {
+        window.clearTimeout(start.fallback)
+        start.fallback = undefined
+      }
       const endX = release ? release.x : start.lastX
       const endY = release ? release.y : start.lastY
       const dx = endX - start.x
@@ -527,6 +534,28 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       }
     }
 
+    // Replacing the formatted renderer (or a streaming node) can drop touchend
+    // and touchcancel. Once the drag is already horizontal, commit from the
+    // last move if the release never arrives.
+    const armSwipeReleaseFallback = () => {
+      const start = swipeTouchStartRef.current
+      if (!start || start.suppress) return
+      if (start.fallback != null) window.clearTimeout(start.fallback)
+      start.fallback = window.setTimeout(() => {
+        const current = swipeTouchStartRef.current
+        if (!current) return
+        current.fallback = undefined
+        const dx = current.lastX - current.x
+        const dy = current.lastY - current.y
+        const absDx = Math.abs(dx)
+        const threshold = mobileModelTabSwipeThreshold(viewportWidthRef.current)
+        // A pause before the drag is horizontal is not a release. Leave the
+        // gesture open so the next move can still finish it.
+        if (absDx < threshold || absDx < Math.abs(dy) * 1.35) return
+        finishSwipe({ x: current.lastX, y: current.lastY }, true)
+      }, 120)
+    }
+
     // Chrome drops the rest of a touch sequence (no touchend, no touchcancel)
     // once streaming replaces the node that received touchstart. Capturing the
     // pointer on the zone, which stays mounted, keeps the move and the release.
@@ -548,6 +577,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       if (!start || start.suppress || e.pointerType !== 'touch') return
       start.lastX = e.clientX
       start.lastY = e.clientY
+      armSwipeReleaseFallback()
     }
     const onPointerUp = (e: PointerEvent) => {
       if (e.pointerType !== 'touch') return
@@ -584,6 +614,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     window.addEventListener('touchcancel', onTouchRelease, { passive: true })
 
     return () => {
+      const pending = swipeTouchStartRef.current
+      if (pending?.fallback != null) {
+        window.clearTimeout(pending.fallback)
+        pending.fallback = undefined
+      }
       zone.removeEventListener('touchstart', onTouchStart)
       zone.removeEventListener('touchend', onTouchRelease)
       zone.removeEventListener('pointerdown', onPointerDown)
