@@ -113,6 +113,24 @@ html[data-onboarding-tutorial-active] .mobile-composer-in-flow-wrapper .composer
   transition: none !important;
 }
 
+/* Model rows use the same single cutout frame as provider cards. The generic
+   highlight ring would stack a sharper second border on the row. */
+.model-option.mobile-tutorial-highlight,
+.model-option.mobile-tutorial-highlight:hover,
+.model-option.mobile-tutorial-highlight:focus,
+.model-option.mobile-tutorial-highlight:focus-visible,
+.model-option.selected.mobile-tutorial-highlight,
+.model-option.selected.mobile-tutorial-highlight:hover {
+  border-radius: var(--radius-lg) !important;
+  border-color: var(--accent-color) !important;
+  outline: none !important;
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.08),
+    0 0 40px rgba(6, 182, 212, 0.04) !important;
+  animation: none !important;
+  transition: none !important;
+}
+
 /* Steps 7–8: same as desktop TutorialOverlay — .mobile-tutorial-highlight uses
    --radius-md; dropdown panels need 1.5rem bottom corners. The composer parent
    clips them via overflow:hidden + rounded all-around (see the dropdown-active

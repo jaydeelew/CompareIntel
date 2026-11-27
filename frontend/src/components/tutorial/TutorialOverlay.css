@@ -294,6 +294,27 @@ body:has(.tutorial-backdrop) .hero-section {
   transition: none !important;
 }
 
+/* Select steps frame a model row when the provider lists more than the tutorial
+   target. The generic .tutorial-highlight ring (3px accent, radius-md) stacks
+   inside the backdrop cutout and reads as a second, sharper border. Match the
+   provider card: the cutout is the only frame. Keep the row's own radius, and
+   lock hover/selected/focus so they cannot paint another blue edge. */
+.model-option.tutorial-highlight,
+.model-option.tutorial-highlight:hover,
+.model-option.tutorial-highlight:focus,
+.model-option.tutorial-highlight:focus-visible,
+.model-option.selected.tutorial-highlight,
+.model-option.selected.tutorial-highlight:hover {
+  border-radius: var(--radius-lg) !important;
+  border-color: var(--accent-color) !important;
+  outline: none !important;
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.08),
+    0 0 40px rgba(6, 182, 212, 0.04) !important;
+  animation: none !important;
+  transition: none !important;
+}
+
 @keyframes tutorial-pulse {
   0%,
   100% {

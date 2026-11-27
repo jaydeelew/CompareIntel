@@ -22,6 +22,7 @@ import {
 } from '../../utils/followUpComposerReady'
 import {
   advanceFollowUpStreamingRound,
+  applyProviderPickerHighlight,
   clampTooltipTop,
   deferScroll,
   elementHasSpotlightBox,
@@ -50,6 +51,7 @@ import {
   scrollHistoryComposerPair,
   scrollTutorialElementToViewportY,
   streamingResultsTopInViewport,
+  tutorialFrameRadius,
   seatPortaledFollowUpComposer,
   setHistoryComposerLift,
   TUTORIAL_FRAME_OUTSET_PX,
@@ -1496,9 +1498,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         current as TutorialProviderLayoutStep,
         tutorialProviderNamesRef.current
       )
-      layout.highlights.forEach(el => {
-        el.classList.add('mobile-tutorial-highlight')
-      })
+      applyProviderPickerHighlight(layout.highlights, 'mobile-tutorial-highlight')
       const next = layout.highlights[0]
       if (next) setTargetElement(prev => (prev === next ? prev : next))
     }
@@ -1515,24 +1515,26 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   useEffect(() => {
     if (!targetElement || !step) return
 
-    const providerHighlights =
-      step === 'select-models'
-        ? getTutorialProviderStepLayout('select-models', tutorialProviderNamesRef.current)
-            .highlights
-        : step === 'expand-provider' || step === 'expand-starter-provider-2'
-          ? getTutorialProviderStepLayout(
-              step as 'expand-provider' | 'expand-starter-provider-2',
-              tutorialProviderNamesRef.current
-            ).highlights
-          : [targetElement]
+    const providerHighlights = isProviderPickerTutorialStep(step)
+      ? getTutorialProviderStepLayout(
+          step as TutorialProviderLayoutStep,
+          tutorialProviderNamesRef.current
+        ).highlights
+      : [targetElement]
 
-    providerHighlights.forEach(el => {
-      // The compare submit control is a circle. The shared highlight radius is a
-      // rounded square, and the settling pass clears that ring, so the mobile
-      // compare step was drawing a plain square. The green attention ring is the cue.
-      if (isComparisonSubmitButton(el)) return
-      el.classList.add('mobile-tutorial-highlight')
-    })
+    if (isProviderPickerTutorialStep(step)) {
+      if (providerHighlights.length > 0) {
+        applyProviderPickerHighlight(providerHighlights, 'mobile-tutorial-highlight')
+      }
+    } else {
+      providerHighlights.forEach(el => {
+        // The compare submit control is a circle. The shared highlight radius is a
+        // rounded square, and the settling pass clears that ring, so the mobile
+        // compare step was drawing a plain square. The green attention ring is the cue.
+        if (isComparisonSubmitButton(el)) return
+        el.classList.add('mobile-tutorial-highlight')
+      })
+    }
 
     // Add button pulsate when tooltip says "Tap the highlighted button" (same ring + pulse as submit step).
     // History and saved selections must not use targetElement here: it is still the
@@ -2310,7 +2312,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                 step === 'save-selection'
               ? '32px'
               : isProviderPickerTutorialStep(step)
-                ? '20px'
+                ? `${tutorialFrameRadius(
+                    getTutorialProviderStepLayout(
+                      step as TutorialProviderLayoutStep,
+                      tutorialProviderNamesRef.current
+                    ).highlights[0],
+                    cutoutPadding,
+                    20
+                  )}px`
                 : step === 'follow-up' || step === 'view-follow-up-results'
                   ? '24px'
                   : '16px',
