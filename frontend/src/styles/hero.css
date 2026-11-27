@@ -1946,8 +1946,10 @@ video.capability-tile-image-lightbox-img {
   border-radius: 0;
 }
 
-/* History is toggle-only, and step 8 only reviews responses. Keep the field looking the same, but drop focus and typing. */
+/* Steps 8–10 keep the field looking the same, but drop focus and typing.
+   Step 9 is the history toggle. Step 10 is save selections. */
 .composer.tutorial-history-input-locked .hero-input-textarea,
+.composer.tutorial-save-input-locked .hero-input-textarea,
 .composer.tutorial-review-input-locked .hero-input-textarea {
   pointer-events: none;
   caret-color: transparent;
