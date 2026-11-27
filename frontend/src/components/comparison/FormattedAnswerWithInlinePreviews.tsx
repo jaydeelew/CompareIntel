@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 
 import { splitAnswerIntoBlocksWithPreviewUrls } from '../../utils/extractAnswerLinks'
+import { getLoadedLatexRenderer, loadLatexRenderer } from '../conversation/latexRendererCache'
 
 import { InlineLinkPreview } from './InlineLinkPreview'
 
@@ -14,14 +15,6 @@ interface LazyLatexRendererProps {
 }
 
 type LatexRendererComponent = React.ComponentType<LazyLatexRendererProps>
-
-let loadedLatexRenderer: LatexRendererComponent | null = null
-
-const loadLatexRenderer = () =>
-  import('../LatexRenderer').then(module => {
-    loadedLatexRenderer = module.default
-    return module.default
-  })
 
 export interface FormattedAnswerWithInlinePreviewsProps {
   content: string
@@ -39,18 +32,30 @@ export interface FormattedAnswerWithInlinePreviewsProps {
 export const FormattedAnswerWithInlinePreviews: React.FC<
   FormattedAnswerWithInlinePreviewsProps
 > = ({ content, modelId, enabled, defer = false, streaming = false }) => {
-  const [LatexView, setLatexView] = useState<LatexRendererComponent | null>(
-    () => loadedLatexRenderer
+  const [LatexView, setLatexView] = useState<LatexRendererComponent | null>(() =>
+    getLoadedLatexRenderer()
   )
 
   useEffect(() => {
     if (LatexView) return
     let cancelled = false
-    void loadLatexRenderer().then(Renderer => {
-      if (!cancelled) setLatexView(() => Renderer)
-    })
+    let retry: ReturnType<typeof setTimeout> | undefined
+    let delay = 300
+    const run = () => {
+      void loadLatexRenderer()
+        .then(Renderer => {
+          if (!cancelled) setLatexView(() => Renderer)
+        })
+        .catch(() => {
+          if (cancelled) return
+          retry = setTimeout(run, delay)
+          delay = Math.min(delay * 2, 4000)
+        })
+    }
+    run()
     return () => {
       cancelled = true
+      if (retry) clearTimeout(retry)
     }
   }, [LatexView])
 
@@ -68,9 +73,7 @@ export const FormattedAnswerWithInlinePreviews: React.FC<
         className="result-output formatted-with-previews"
         aria-busy="true"
         data-renderer-pending="true"
-      >
-        {streaming ? null : content}
-      </div>
+      />
     )
   }
 
