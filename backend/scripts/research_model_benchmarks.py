@@ -18,9 +18,11 @@ Single-model mode:
 Refresh-all mode (--refresh-all):
   Re-evaluates ALL registry models against ALL data-driven categories
   (cost-effective, fast, coding, math, reasoning, writing, long-context, legal,
-  multilingual, images/vision). Coding uses SWE-Bench Pro public (Scale Labs); models
-  without a Pro leaderboard row are dropped from Best for coding. Vision uses LMArena
-  Vision Arena scores. Run periodically to keep categories current as leaderboards update.
+  multilingual, images/vision, medical). Coding uses LMArena Code Arena, with
+  SWE-Bench Pro public only for lineup models Code Arena does not list. Other
+  capability categories use the public LMArena leaderboard dataset. Legal keeps
+  VALS LegalBench as the exam and fills newer models from LMArena. Vision uses
+  LMArena Vision Arena scores. Run periodically to keep categories current.
 
   Source-health guard: if a source returns 0 rows, or far fewer than the existing
   category, keep the previous entries, mark them stale, and log loudly. Do not
@@ -40,12 +42,27 @@ Only models with verifiable, publicly available benchmark data are added.
 
 import json
 import re
+import shutil
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
 import httpx
 from bs4 import BeautifulSoup
+
+# Support both `pytest` (backend/ on sys.path) and `python scripts/research_model_benchmarks.py`.
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+if str(_BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(_BACKEND_DIR))
+
+from scripts.benchmark_matching import (  # noqa: E402
+    LeaderboardSlice,
+    alias_is_same_version,
+    blend_by_percentile,
+    fetch_lmarena_slice,
+    match_lineup_name,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 RECOMMENDATIONS_PATH = PROJECT_ROOT / "frontend" / "src" / "data" / "helpMeChooseRecommendations.ts"
@@ -248,15 +265,22 @@ def is_plausible_score(category_id: str, score: float) -> bool:
         return 0 < score <= FAST_MAX_THROUGHPUT
     if category_id == "cost-effective":
         return score > 0
-    if category_id in {"coding", "math", "reasoning", "multilingual", "legal", "medical"}:
+    # Coding, legal, and long-context are ranked by within-board percentile.
+    if category_id in {"coding", "legal", "long-context"}:
         return 0 <= score <= 100
     if category_id == "writing":
-        # Mazur ~0–10 or Arena Elo ~1000–2000
+        # Mazur ~0–10, or Arena Elo / Arena Score ~1000–2000
         return (0 < score <= 10) or (500 <= score <= 2500)
-    if category_id in {"images", "image-generation"}:
-        return 500 <= score <= 2500
-    if category_id == "long-context":
-        return 0 <= score <= 100
+    if category_id in {
+        "math",
+        "reasoning",
+        "multilingual",
+        "medical",
+        "images",
+        "image-generation",
+    }:
+        # Arena Score (~1000–2000) or a legacy 0–100 exam percent.
+        return (0 <= score <= 100) or (500 <= score <= 2500)
     return True
 
 
@@ -286,6 +310,13 @@ def filter_plausible_scores(
 
 def extract_primary_score(category_id: str, evidence: str) -> float | None:
     """Extract primary numeric score from evidence for ordering. Returns None if no comparable score."""
+    # Blended categories lead with the within-board percentile, then the raw score.
+    percentile = re.search(r"Percentile\s+(\d+\.?\d*)\s*%", evidence, re.I)
+    if percentile:
+        return float(percentile.group(1))
+    arena_score = re.search(r"Arena Score\s+(\d+\.?\d*)", evidence, re.I)
+    if arena_score:
+        return float(arena_score.group(1))
     # Percentage (SWE-Bench, MMLU-Pro, etc.)
     pct = re.search(r"(\d+\.?\d*)\s*%", evidence)
     if pct:
@@ -377,7 +408,6 @@ MATH_SLUG_TO_MODEL_ID: dict[str, str] = {
     "gpt-oss-120b": "openai/gpt-oss-120b",
     "gemini-2-5-pro": "google/gemini-2.5-pro",
     "gemini-2-5-flash": "google/gemini-2.5-flash",
-    "deepseek-v3": "deepseek/deepseek-v3.2",
 }
 
 # VALS model slug (e.g. google_gemini-3-pro-preview) -> our registry model_id
@@ -387,37 +417,54 @@ VALS_TO_MODEL_ID: dict[str, str] = {
 }
 
 
+def fetch_legalbench_slice() -> LeaderboardSlice:
+    """VALS LegalBench scores. Reference is every published row, not only lineup hits."""
+    scores = fetch_legalbench_scores()
+    return LeaderboardSlice(
+        scores=scores,
+        reference=list(getattr(fetch_legalbench_scores, "last_reference", [])),
+    )
+
+
 def fetch_legalbench_scores() -> dict[str, tuple[float, str]]:
     """Fetch LegalBench scores from VALS.ai. Returns model_id -> (score, evidence)."""
     model_id_to_name = get_model_id_to_name_map()
-    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
 
     result: dict[str, tuple[float, str]] = {}
+    reference: list[float] = []
     try:
-        resp = httpx.get(VALS_LEGAL_BENCH_URL, timeout=15.0)
+        resp = httpx.get(
+            VALS_LEGAL_BENCH_URL,
+            timeout=20.0,
+            follow_redirects=True,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; CompareIntel/1.0)"},
+        )
         if resp.status_code != 200:
+            fetch_legalbench_scores.last_reference = reference  # type: ignore[attr-defined]
             return result
         text = resp.text
-        # VALS page: model links like /models/openai_gpt-5-2025-08-07 with "86.02%" nearby
-        # Pattern: href="/models/SLUG" ... (XX.XX%)
-        for m in re.finditer(
-            r'href="/models/([^"]+)"[^>]*>([^<]+)</a>.*?(\d+\.\d+)\s*%',
+        for match in re.finditer(
+            r'href="/models/([^"]+)"[^>]*>([^<]+)</a>\s*</th>\s*<td>(\d+\.?\d*)%',
             text,
-            re.DOTALL,
         ):
-            slug, display_name, score_str = m.group(1), m.group(2), m.group(3)
+            slug, display_name, score_str = match.group(1), match.group(2), match.group(3)
             try:
                 score = float(score_str)
             except ValueError:
                 continue
+            reference.append(score)
             mid = VALS_TO_MODEL_ID.get(slug)
+            if mid and not alias_is_same_version(slug, mid, model_id_to_name.get(mid)):
+                mid = None
             if not mid:
-                norm = _normalize_name_for_match(display_name.split("(")[0].strip())
-                mid = name_to_model_id.get(norm)
-            if mid:
+                mid = match_lineup_name(display_name, model_id_to_name)
+            if not mid:
+                mid = match_lineup_name(slug, model_id_to_name)
+            if mid and (mid not in result or score > result[mid][0]):
                 result[mid] = (score, f"LegalBench (vals.ai): {score}%.")
     except Exception as e:
         print(f"Warning: Could not fetch LegalBench scores: {e}", file=sys.stderr)
+    fetch_legalbench_scores.last_reference = reference  # type: ignore[attr-defined]
     return result
 
 
@@ -607,15 +654,17 @@ def _match_lmspeed_name(
     slug_to_model_id: dict[str, str],
 ) -> str | None:
     mid = LMSPEED_NAME_TO_MODEL_ID.get(model_name)
+    if mid and not alias_is_same_version(model_name, mid, model_id_to_name.get(mid)):
+        mid = None
+    if mid:
+        return mid
+    mid = match_lineup_name(model_name, model_id_to_name)
     if mid:
         return mid
     norm = _normalize_lmspeed_name(model_name)
-    mid = name_to_model_id.get(norm) or slug_to_model_id.get(norm)
-    if mid:
-        return mid
-    for pid, n in model_id_to_name.items():
-        if _normalize_name_for_match(n) == norm:
-            return pid
+    candidate = name_to_model_id.get(norm) or slug_to_model_id.get(norm)
+    if candidate and alias_is_same_version(model_name, candidate, model_id_to_name.get(candidate)):
+        return candidate
     return None
 
 
@@ -638,10 +687,14 @@ def _parse_lmspeed_html_table(html: str) -> dict[str, float]:
             except ValueError:
                 continue
             model_name = texts[1].strip()
-            # Cell sometimes concatenates display name + slug (gpt-oss-120bgpt-oss-120b)
-            slug_el = cells[1].find("span") or cells[1].find("code")
-            if slug_el:
-                model_name = slug_el.get_text(strip=True) or model_name
+            # Prefer the public slug (/model/claude-haiku-5-5) over the concatenated label.
+            link = cells[1].find("a")
+            if link and link.get("href"):
+                model_name = str(link["href"]).rstrip("/").split("/")[-1] or model_name
+            else:
+                slug_el = cells[1].find("span") or cells[1].find("code")
+                if slug_el:
+                    model_name = slug_el.get_text(strip=True) or model_name
             if not model_name or model_name.lower() in {"model", "rank"}:
                 continue
             if model_name not in best_by_name or tps > best_by_name[model_name]:
@@ -734,7 +787,6 @@ SWE_BENCH_PRO_SLUG_TO_MODEL_ID: dict[str, str] = {
     "gpt-5-2025-08-07 (High)": "openai/gpt-5",
     "claude-4-5-haiku": "anthropic/claude-haiku-4.5",
     "qwen3-coder-480b-a35b": "qwen/qwen3-coder",
-    "minimax-2.1": "minimax/minimax-m2.5",
     "gpt-5.2": "openai/gpt-5.2",
     "gpt-oss-120b": "openai/gpt-oss-120b",
     "claude-opus-5 (thinking)*": "anthropic/claude-opus-5",
@@ -742,8 +794,6 @@ SWE_BENCH_PRO_SLUG_TO_MODEL_ID: dict[str, str] = {
     "grok-4.5": "x-ai/grok-4.5",
     "kimi-k3": "moonshotai/kimi-k3",
     "llama4-maverick-17b-instruct": "meta-llama/llama-4-maverick",
-    "glm-4.6": "z-ai/glm-5",
-    "codestral-2405": "mistralai/codestral-2508",
 }
 
 # RSC-embedded JSON on labs.scale.com leaderboard pages
@@ -761,20 +811,34 @@ def _merge_swe_bench_pro_row(
     slug: str,
     score: float,
     model_id_to_name: dict[str, str],
+    reference: list[float] | None = None,
 ) -> None:
-    """Map leaderboard slug to registry model_id and keep best score per model."""
+    """Map leaderboard slug to registry model_id and keep best score per model.
+
+    Explicit aliases are ignored when they point at a different version.
+    Unmatched rows still count toward ``reference`` so percentiles use the
+    full public board.
+    """
+    if reference is not None:
+        reference.append(score)
     mid = SWE_BENCH_PRO_SLUG_TO_MODEL_ID.get(slug)
+    if mid and not alias_is_same_version(slug, mid, model_id_to_name.get(mid)):
+        mid = None
     if not mid:
-        base = slug.split("(")[0].strip().rstrip("*").strip()
-        base = _expand_hyphenated_minor_versions(base)
-        norm = _normalize_name_for_match(base)
-        name_to_model_id = {_normalize_name_for_match(n): m for m, n in model_id_to_name.items()}
-        mid = name_to_model_id.get(norm)
+        mid = match_lineup_name(slug, model_id_to_name)
     if not mid:
         return
     evidence = _swe_bench_pro_evidence(score)
     if mid not in result or score > result[mid][0]:
         result[mid] = (score, evidence)
+
+
+def fetch_swe_bench_pro_slice() -> LeaderboardSlice:
+    """SWE-Bench Pro public scores for lineup models, plus the full-board reference."""
+    return LeaderboardSlice(
+        scores=fetch_swe_bench_pro_scores(),
+        reference=list(getattr(fetch_swe_bench_pro_scores, "last_reference", [])),
+    )
 
 
 def fetch_swe_bench_pro_scores() -> dict[str, tuple[float, str]]:
@@ -783,11 +847,13 @@ def fetch_swe_bench_pro_scores() -> dict[str, tuple[float, str]]:
     Parses RSC-payload JSON embedded in the Next.js page. Falls back to the
     static GitHub Pages mirror if the primary page returns no entries.
 
-    Returns model_id -> (score, evidence).
+    Returns model_id -> (score, evidence). Every parsed score, matched or not,
+    is stored on ``fetch_swe_bench_pro_scores.last_reference`` for percentiles.
     """
     model_id_to_name = get_model_id_to_name_map()
 
     result: dict[str, tuple[float, str]] = {}
+    reference: list[float] = []
     try:
         resp = httpx.get(
             SWE_BENCH_PRO_URL,
@@ -802,12 +868,12 @@ def fetch_swe_bench_pro_scores() -> dict[str, tuple[float, str]]:
                 except ValueError:
                     continue
                 slug = slug.replace("\\/", "/")
-                _merge_swe_bench_pro_row(result, slug, score, model_id_to_name)
+                _merge_swe_bench_pro_row(result, slug, score, model_id_to_name, reference)
+            if reference:
+                fetch_swe_bench_pro_scores.last_reference = reference  # type: ignore[attr-defined]
+                return result
     except Exception as e:
         print(f"Warning: Could not fetch SWE-Bench Pro (labs): {e}", file=sys.stderr)
-
-    if result:
-        return result
 
     try:
         resp = httpx.get(
@@ -817,6 +883,7 @@ def fetch_swe_bench_pro_scores() -> dict[str, tuple[float, str]]:
             headers={"User-Agent": "Mozilla/5.0 (compatible; CompareIntel/1.0)"},
         )
         if resp.status_code != 200:
+            fetch_swe_bench_pro_scores.last_reference = reference  # type: ignore[attr-defined]
             return result
         soup = BeautifulSoup(resp.text, "html.parser")
         for row in soup.select("#leaderboardTable tbody tr[data-score]"):
@@ -829,9 +896,10 @@ def fetch_swe_bench_pro_scores() -> dict[str, tuple[float, str]]:
                 continue
             raw = name_el.get_text(strip=True)
             slug = re.sub(r"^SWE-Agent\s*\+\s*", "", raw, flags=re.I).strip()
-            _merge_swe_bench_pro_row(result, slug, score, model_id_to_name)
+            _merge_swe_bench_pro_row(result, slug, score, model_id_to_name, reference)
     except Exception as e:
         print(f"Warning: Could not fetch SWE-Bench Pro (fallback): {e}", file=sys.stderr)
+    fetch_swe_bench_pro_scores.last_reference = reference  # type: ignore[attr-defined]
     return result
 
 
@@ -880,10 +948,6 @@ def fetch_mmlu_pro_scores() -> dict[str, tuple[float, str]]:
 
 WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
     "Claude Opus 4 6": "anthropic/claude-opus-4.6",
-    "Grok 4 1 Fast Reasoning": "x-ai/grok-4.20",
-    "Grok 4.1 Thinking": "x-ai/grok-4.20",
-    "Grok 4.1": "x-ai/grok-4.20",
-    "Grok 3 Preview 02 24": "x-ai/grok-3-mini",
     "Claude Opus 5": "anthropic/claude-opus-5",
     "Grok 4.5": "x-ai/grok-4.5",
     "Kimi K3": "moonshotai/kimi-k3",
@@ -912,85 +976,42 @@ VISION_ARENA_SLUG_TO_MODEL_ID: dict[str, str] = {
     "gemini-2.5-pro": "google/gemini-2.5-pro",
     "gemini-2.5-flash": "google/gemini-2.5-flash",
     "gemini-2.5-flash-preview-09-2025": "google/gemini-2.5-flash",
-    "grok-4.20-beta-0309-reasoning": "x-ai/grok-4.20",
-    "grok-4.20-multi-agent-beta-0309": "x-ai/grok-4.20",
-    "grok-4.1-thinking": "x-ai/grok-4.20",
+    "grok-4.20": "x-ai/grok-4.20",
     "qwen3.5-397b-a17b": "qwen/qwen3.5-397b-a17b",
     "qwen3-vl-235b-a22b-thinking": "qwen/qwen3-vl-235b-a22b-thinking",
     "qwen3-vl-235b-a22b-instruct": "qwen/qwen3-vl-235b-a22b-instruct",
 }
 
 
-def _vision_arena_evidence(score: float) -> str:
-    return f"Vision Arena (lmarena.ai): {int(round(score))}."
+def _arena_evidence_with_publish(prefix: str, rating: float, slice_evidence: str) -> str:
+    """Keep the historical ``Arena: N.`` shape and the board's publish clause."""
+    published = ""
+    found = re.search(r"\(published [^)]+\)", slice_evidence)
+    if found:
+        published = " " + found.group(0)
+    return f"{prefix}: {int(round(rating))}{published}."
 
 
 def fetch_vision_arena_scores() -> dict[str, tuple[float, str]]:
-    """Fetch Vision Arena scores from lmarena-ai/leaderboard-dataset (Hugging Face).
+    """Style-controlled Vision Arena (overall), latest publish date only.
 
-    Uses the official LMArena vision subset (latest split, overall category).
-    Keeps the best score per registry model when multiple arena variants exist.
+    The unstyled ``vision`` config is an older snapshot. Style control is the
+    board LMArena shows by default.
     """
-    registry_ids = set(get_model_id_to_name_map().keys())
-    model_id_to_name = get_model_id_to_name_map()
-    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
-    slug_to_model_id: dict[str, str] = {}
-    for mid in model_id_to_name:
-        parts = mid.split("/")
-        if len(parts) == 2:
-            slug_to_model_id[parts[1].replace(".", "-")] = mid
-    for slug, mid in VISION_ARENA_SLUG_TO_MODEL_ID.items():
-        slug_to_model_id[slug] = mid
-
+    sliced = fetch_lmarena_slice(
+        "vision_style_control",
+        "overall",
+        "Vision Arena (lmarena.ai)",
+        get_model_id_to_name_map(),
+    )
     result: dict[str, tuple[float, str]] = {}
-    try:
-        offset = 0
-        page_size = 100
-        while True:
-            resp = httpx.get(
-                VISION_ARENA_DATASET_ROWS_URL,
-                params={
-                    "dataset": "lmarena-ai/leaderboard-dataset",
-                    "config": "vision",
-                    "split": "latest",
-                    "offset": offset,
-                    "length": page_size,
-                },
-                timeout=20.0,
-            )
-            if resp.status_code != 200:
-                break
-            data = resp.json()
-            rows = data.get("rows") or []
-            for item in rows:
-                row = item.get("row") or {}
-                if row.get("category") != "overall":
-                    continue
-                slug = row.get("model_name", "")
-                try:
-                    rating = float(row.get("rating", 0))
-                except (ValueError, TypeError):
-                    continue
-                if rating < VISION_MIN_ARENA:
-                    continue
-                mid = VISION_ARENA_SLUG_TO_MODEL_ID.get(slug)
-                if not mid:
-                    base = slug.split("(")[0].strip().rstrip("*").strip()
-                    base = _expand_hyphenated_minor_versions(base)
-                    mid = slug_to_model_id.get(base)
-                if not mid:
-                    norm = _normalize_name_for_match(base.replace("-", " "))
-                    mid = name_to_model_id.get(norm)
-                if mid and mid in registry_ids:
-                    evidence = _vision_arena_evidence(rating)
-                    if mid not in result or rating > result[mid][0]:
-                        result[mid] = (rating, evidence)
-            total = data.get("num_rows_total", 0)
-            offset += len(rows)
-            if offset >= total or not rows:
-                break
-    except Exception as e:
-        print(f"Warning: Could not fetch Vision Arena scores: {e}", file=sys.stderr)
+    for mid, (rating, evidence) in sliced.scores.items():
+        if rating < VISION_MIN_ARENA:
+            continue
+        result[mid] = (
+            rating,
+            _arena_evidence_with_publish("Vision Arena (lmarena.ai)", rating, evidence),
+        )
     return result
 
 
@@ -1017,14 +1038,12 @@ TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
     "riverflow-v2-standard-preview": "sourceful/riverflow-v2-standard-preview",
     "riverflow-v2-fast-preview": "sourceful/riverflow-v2-fast-preview",
     "riverflow-v2-pro": "sourceful/riverflow-v2-pro",
-    "gpt-image-1.5-high-fidelity": "openai/gpt-5-image",
-    "gpt-image-1": "openai/gpt-5-image",
-    "gpt-image-1-mini": "openai/gpt-5-image-mini",
+    "gpt-image-2.6-flare": "openai/gpt-image-2.6-flare",
     "gpt-image-2.6 sunburst": "openai/gpt-image-2.6-sunburst",
     "gemini nano banana 2.1": "google/gemini-nano-banana-2.1",
     "gemini 3.1 flash image": "google/gemini-3.1-flash-image",
     "gemini 3 pro image": "google/gemini-3-pro-image",
-    "gpt-image-1.5 (high fidelity)": "openai/gpt-5-image",
+    "gpt image 2.6 flare": "openai/gpt-image-2.6-flare",
     "flux.2 [max]": "black-forest-labs/flux.2-max",
     "flux.2 [flex]": "black-forest-labs/flux.2-flex",
     "flux.2 [pro]": "black-forest-labs/flux.2-pro",
@@ -1036,21 +1055,38 @@ TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
 }
 
 
+def _same_version_alias(label: str, model_id: str | None) -> str | None:
+    if not model_id:
+        return None
+    names = get_model_id_to_name_map()
+    if alias_is_same_version(label, model_id, names.get(model_id)):
+        return model_id
+    return None
+
+
 def _match_text_to_image_name(model_name: str, name_to_model_id: dict[str, str]) -> str | None:
     raw = model_name.strip()
+    names = get_model_id_to_name_map()
+    matched = match_lineup_name(raw, names)
+    if matched:
+        return matched
     slug = re.sub(r"\s+\([^)]+\)\s*$", "", raw).strip().lower().replace(" ", "-")
     mid = TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(slug) or TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(
         raw.lower()
     )
+    mid = _same_version_alias(raw, mid)
     if mid:
         return mid
     norm = _normalize_name_for_match(re.sub(r"\s+\([^)]+\)", "", raw))
-    mid = name_to_model_id.get(norm) or TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(norm)
+    explicit = name_to_model_id.get(norm) or TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(norm)
+    mid = _same_version_alias(raw, explicit)
     if mid:
         return mid
     # HF display names like "FLUX.2 [max]" / "Gemini 3 Pro Image (nano-banana-pro, 2K)"
     compact = _normalize_name_for_match(re.sub(r"[\[\](),]", " ", raw))
-    return TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(compact) or name_to_model_id.get(compact)
+    return _same_version_alias(
+        raw, TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(compact) or name_to_model_id.get(compact)
+    )
 
 
 def _fetch_text_to_image_from_html(html: str) -> dict[str, tuple[float, str]]:
@@ -1102,49 +1138,21 @@ def _fetch_text_to_image_from_html(html: str) -> dict[str, tuple[float, str]]:
 
 
 def _fetch_text_to_image_from_hf() -> dict[str, tuple[float, str]]:
-    """Official LMArena text-to-image leaderboard (Hugging Face dataset)."""
-    model_id_to_name = get_model_id_to_name_map()
-    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
-    registry_ids = set(model_id_to_name)
+    """Official LMArena text-to-image leaderboard, latest publish date only."""
+    sliced = fetch_lmarena_slice(
+        "text_to_image",
+        "overall",
+        "Text-to-Image Arena (lmarena.ai)",
+        get_model_id_to_name_map(),
+    )
     result: dict[str, tuple[float, str]] = {}
-    offset = 0
-    page_size = 100
-    while True:
-        resp = _http_get(
-            VISION_ARENA_DATASET_ROWS_URL,
-            params={
-                "dataset": "lmarena-ai/leaderboard-dataset",
-                "config": "text_to_image",
-                "split": "latest",
-                "offset": offset,
-                "length": page_size,
-            },
-            timeout=20.0,
+    for mid, (rating, evidence) in sliced.scores.items():
+        if rating < 900:
+            continue
+        result[mid] = (
+            rating,
+            _arena_evidence_with_publish("Text-to-Image Arena (lmarena.ai)", rating, evidence),
         )
-        if resp.status_code != 200:
-            break
-        data = resp.json()
-        rows = data.get("rows") or []
-        for item in rows:
-            row = item.get("row") or {}
-            if row.get("category") not in (None, "overall", "text_to_image"):
-                continue
-            name = row.get("model_name") or ""
-            try:
-                rating = float(row.get("rating", 0))
-            except (ValueError, TypeError):
-                continue
-            if rating < 900:
-                continue
-            mid = _match_text_to_image_name(name, name_to_model_id)
-            if mid and mid in registry_ids:
-                evidence = f"Text-to-Image Arena (lmarena.ai): {int(round(rating))}."
-                if mid not in result or rating > result[mid][0]:
-                    result[mid] = (rating, evidence)
-        total = data.get("num_rows_total", 0)
-        offset += len(rows)
-        if offset >= total or not rows:
-            break
     return result
 
 
@@ -1227,11 +1235,8 @@ def fetch_creative_writing_scores() -> dict[str, tuple[float, str]]:
     return result
 
 
-MRCR_NAME_TO_MODEL_ID: dict[str, str] = {
-    "Gemini 2.0 Flash": "google/gemini-2.5-flash",
-    "Gemini 2.0 Pro": "google/gemini-2.5-pro",
-    "Gemini 2.0 Flash-Lite": "google/gemini-2.5-flash",
-}
+# Same-version display names only. Gemini 2.0 is not Gemini 2.5.
+MRCR_NAME_TO_MODEL_ID: dict[str, str] = {}
 
 # Awesome Agents long-context: model display name -> registry model_id
 AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID: dict[str, str] = {
@@ -1552,6 +1557,7 @@ def determine_categories(
     text_to_image_scores: dict[str, tuple[float, str]] | None = None,
     math_scores: dict[str, tuple[float, str]] | None = None,
     vision_arena_scores: dict[str, tuple[float, str]] | None = None,
+    medical_scores: dict[str, tuple[float, str]] | None = None,
 ) -> list[dict]:
     """Determine which Help Me Choose categories this model qualifies for.
 
@@ -1603,6 +1609,9 @@ def determine_categories(
         score, evidence = vision_arena_scores[model_id]
         if score >= VISION_MIN_ARENA:
             entries.append({"category_id": "images", "evidence": evidence, "score": score})
+    if medical_scores and model_id in medical_scores:
+        score, evidence = medical_scores[model_id]
+        entries.append({"category_id": "medical", "evidence": evidence, "score": score})
     return entries
 
 
@@ -1715,8 +1724,71 @@ def rebuild_categories_ts(categories: list[dict]) -> str:
     return "\n".join(lines)
 
 
+CATEGORY_TOOLTIPS: dict[str, str] = {
+    "coding": (
+        "Ranked by percentile within each board so scores from different benchmarks "
+        "are not compared directly. Primary: LMArena Code Arena (webdev, human preference, "
+        "arena.ai). Fallback for models missing there: SWE-Bench Pro public (Scale Labs). "
+        "The note names the board the score came from."
+    ),
+    "writing": (
+        "Ranked by LMArena Creative Writing Arena Score (style-controlled text, "
+        "human preference). Higher is better."
+    ),
+    "math": (
+        "Ranked by LMArena math-prompt Arena Score (style-controlled text, human preference). "
+        "This is not a contest-math exam. Higher is better."
+    ),
+    "reasoning": (
+        "Ranked by LMArena hard-prompts Arena Score (style-controlled text, human preference). "
+        "Higher is better."
+    ),
+    "long-context": (
+        "Ranked by percentile within each board. Primary: LMArena Document Arena. Models "
+        "missing from that snapshot are filled from the LMArena longer-query category. "
+        "These are human preference scores, not a 1M-token recall exam. The note names the board."
+    ),
+    "cost-effective": (
+        "Ranked by average OpenRouter price per 1M tokens (prompt and completion). "
+        "Only models under $1/1M are listed. Lower is better."
+    ),
+    "fast": (
+        "Ranked by output tokens per second from LMSpeed (lmspeed.net/leaderboard/model-speed). "
+        "Higher is faster. Speed varies by provider and load."
+    ),
+    "multilingual": (
+        "Ranked by LMArena non-English Arena Score (style-controlled text, human preference "
+        "across non-English prompts). Higher is better."
+    ),
+    "legal": (
+        "Ranked by percentile within each board. Primary: VALS LegalBench (legal tasks). "
+        "Models missing there are filled from LMArena legal and government prompts. "
+        "The note names the board and the raw score."
+    ),
+    "images": (
+        "Ranked by LMArena Vision Arena Score (style-controlled, human preference on "
+        "image and text prompts). Higher is better."
+    ),
+    "image-generation": (
+        "Ranked by LMArena Text-to-Image Arena Score (human preference). Higher is better."
+    ),
+    "medical": (
+        "Ranked by LMArena medicine and healthcare prompt Arena Score (human preference). "
+        "This is not a physician-graded HealthBench score. Higher is better."
+    ),
+}
+
+
+def apply_category_tooltips(categories: list[dict]) -> None:
+    for cat in categories:
+        tip = CATEGORY_TOOLTIPS.get(cat["id"])
+        if tip:
+            cat["categoryInfoTooltip"] = tip
+
+
 def update_recommendations_file(categories: list[dict]) -> None:
     """Write updated categories back to the TS file, preserving the file structure."""
+    apply_category_tooltips(categories)
     content = RECOMMENDATIONS_PATH.read_text(encoding="utf-8")
 
     array_start = content.find("export const HELP_ME_CHOOSE_CATEGORIES")
@@ -1750,6 +1822,7 @@ def update_recommendations_file(categories: list[dict]) -> None:
     new_content = content[:bracket_start] + new_array_content + content[bracket_end + 1 :]
 
     RECOMMENDATIONS_PATH.write_text(new_content, encoding="utf-8")
+    _format_with_prettier(RECOMMENDATIONS_PATH)
 
 
 def update_methodology_last_updated() -> None:
@@ -1768,7 +1841,34 @@ def update_methodology_last_updated() -> None:
         return
     new_content = re.sub(pattern, r"\1" + date_str + r"\2", content)
     METHODOLOGY_PATH.write_text(new_content, encoding="utf-8")
+    _format_with_prettier(METHODOLOGY_PATH)
     print(f"  Updated methodology page: Last updated: {date_str}")
+
+
+def _format_with_prettier(path: Path) -> None:
+    """Keep generated frontend files on the Prettier style CI checks.
+
+    Temp files used by unit tests live outside ``frontend/`` and are left alone.
+    A missing Prettier install does not fail the refresh.
+    """
+    frontend = Path(__file__).resolve().parents[2] / "frontend"
+    try:
+        path.resolve().relative_to(frontend.resolve())
+    except ValueError:
+        return
+    npx = shutil.which("npx")
+    if not npx:
+        return
+    try:
+        subprocess.run(
+            [npx, "prettier", "--write", str(path)],
+            cwd=frontend,
+            check=False,
+            capture_output=True,
+            timeout=60,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        print(f"Warning: prettier did not format {path.name}: {exc}", file=sys.stderr)
 
 
 def research_and_update(model_id: str, dry_run: bool = False) -> dict:
@@ -1796,44 +1896,19 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
     print(
         f"PROGRESS:{json.dumps({'stage': 'researching', 'message': 'Fetching benchmark scores...', 'progress': 20})}"
     )
-    swe_bench_pro_scores = fetch_swe_bench_pro_scores()
-    if swe_bench_pro_scores:
-        print(f"  Fetched SWE-Bench Pro scores for {len(swe_bench_pro_scores)} models.")
-    legalbench_scores = fetch_legalbench_scores()
-    if legalbench_scores:
-        print(f"  Fetched LegalBench scores for {len(legalbench_scores)} models.")
-    openrouter_pricing = fetch_openrouter_pricing()
-    if openrouter_pricing:
-        print(f"  Fetched OpenRouter pricing for {len(openrouter_pricing)} models.")
-    lmspeed_scores = fetch_lmspeed_scores()
-    if lmspeed_scores:
-        print(f"  Fetched LMSpeed scores for {len(lmspeed_scores)} models.")
-    global_mmlu_scores = fetch_global_mmlu_scores()
-    if global_mmlu_scores:
-        print(f"  Fetched Global-MMLU scores for {len(global_mmlu_scores)} models.")
-    mmlu_pro_scores = fetch_mmlu_pro_scores()
-    if mmlu_pro_scores:
-        print(f"  Fetched MMLU-Pro scores for {len(mmlu_pro_scores)} models.")
-    creative_writing_scores = fetch_creative_writing_scores()
-    if creative_writing_scores:
-        print(f"  Fetched Creative Writing scores for {len(creative_writing_scores)} models.")
-    text_to_image_scores = fetch_text_to_image_arena_scores()
-    if text_to_image_scores:
-        print(f"  Fetched Text-to-Image Arena scores for {len(text_to_image_scores)} models.")
-    mrcr_scores = fetch_mrcr_scores()
-    awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
-    long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
-    if long_context_scores:
-        print(
-            f"  Fetched long-context scores for {len(long_context_scores)} models "
-            f"(MRCR 1M + Awesome Agents)."
-        )
-    math_scores = fetch_math_scores()
-    if math_scores:
-        print(f"  Fetched MATH/GSM8K scores for {len(math_scores)} models.")
-    vision_arena_scores = fetch_vision_arena_scores()
-    if vision_arena_scores:
-        print(f"  Fetched Vision Arena scores for {len(vision_arena_scores)} models.")
+    loaded = load_category_scores()
+    swe_bench_pro_scores = loaded["coding"]
+    legalbench_scores = loaded["legal"]
+    openrouter_pricing = loaded["cost-effective"]
+    lmspeed_scores = loaded["fast"]
+    global_mmlu_scores = loaded["multilingual"]
+    mmlu_pro_scores = loaded["reasoning"]
+    creative_writing_scores = loaded["writing"]
+    text_to_image_scores = loaded["image-generation"]
+    long_context_scores = loaded["long-context"]
+    math_scores = loaded["math"]
+    vision_arena_scores = loaded["images"]
+    medical_scores = loaded["medical"]
 
     print(
         f"PROGRESS:{json.dumps({'stage': 'researching', 'message': 'Determining category placements...', 'progress': 40})}"
@@ -1853,6 +1928,7 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         text_to_image_scores,
         math_scores,
         vision_arena_scores,
+        medical_scores,
     )
 
     if not category_entries:
@@ -1927,6 +2003,8 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
             evidence = math_scores[model_id][1]
         if cat_id == "images" and vision_arena_scores and model_id in vision_arena_scores:
             evidence = vision_arena_scores[model_id][1]
+        if cat_id == "medical" and medical_scores and model_id in medical_scores:
+            evidence = medical_scores[model_id][1]
         evidence = with_fetch_date(evidence)
         if add_model_to_category(categories, cat_id, model_id, evidence):
             added.append(cat_id)
@@ -1956,6 +2034,8 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         fetched_by_cat["math"] = math_scores
     if vision_arena_scores:
         fetched_by_cat["images"] = vision_arena_scores
+    if medical_scores:
+        fetched_by_cat["medical"] = medical_scores
     for cat in categories:
         if cat["id"] in added:
             fetched = fetched_by_cat.get(cat["id"])
@@ -2028,17 +2108,12 @@ def _sync_evidence_and_prune(
                 continue
             if not fetched:
                 continue
-            # Best for coding tracks SWE-Bench Pro only; drop entries without a Pro score.
-            if cat_id == "coding" and mid not in fetched:
-                to_remove.append(i)
-                removed.setdefault(cat_id, []).append(mid)
-                continue  # no SWE-Bench Pro public row for this registry model
-            # Best for vision tracks Vision Arena only; drop entries without an arena score.
-            if cat_id == "images" and mid not in fetched:
-                to_remove.append(i)
-                removed.setdefault(cat_id, []).append(mid)
-                continue
+            # A healthy fetch is the category's current evidence. Rows the board
+            # does not list are dropped so an old exam percent cannot sit beside
+            # a new Arena Score.
             if mid not in fetched:
+                to_remove.append(i)
+                removed.setdefault(cat_id, []).append(mid)
                 continue
             score, new_evidence = fetched[mid]
             if not is_plausible_score(cat_id, score):
@@ -2069,6 +2144,81 @@ def _sync_evidence_and_prune(
     return updated, removed
 
 
+def load_category_scores() -> dict[str, dict[str, tuple[float, str]]]:
+    """Fetch every Help Me Choose category from its current public source.
+
+    Blended categories (coding, legal, long-context) store a within-board
+    percentile so a raw exam percent is never sorted against an Arena Score.
+    Every other category stores the source's own number.
+    """
+    names = get_model_id_to_name_map()
+
+    def arena(config: str, category: str, label: str) -> LeaderboardSlice:
+        return fetch_lmarena_slice(config, category, label, names)
+
+    code_arena = arena("webdev", "overall", "Code Arena (LMArena webdev overall, arena.ai)")
+    swe = fetch_swe_bench_pro_slice()
+    coding = blend_by_percentile(code_arena, swe)
+
+    writing_slice = arena(
+        "text_style_control",
+        "creative_writing",
+        "Creative Writing (LMArena text, arena.ai)",
+    )
+    writing = writing_slice.scores or fetch_creative_writing_scores()
+
+    math = arena("text_style_control", "math", "Math (LMArena text, arena.ai)").scores
+    reasoning = arena(
+        "text_style_control",
+        "hard_prompts",
+        "Hard prompts (LMArena text, arena.ai)",
+    ).scores
+    multilingual = arena(
+        "text_style_control",
+        "non_english",
+        "Non-English (LMArena text, arena.ai)",
+    ).scores
+
+    document = arena("document", "overall", "Document Arena (LMArena, arena.ai)")
+    longer = arena(
+        "text_style_control",
+        "longer_query",
+        "Longer queries (LMArena text, arena.ai)",
+    )
+    long_context = blend_by_percentile(document, longer)
+
+    legal_arena = arena(
+        "text_style_control",
+        "industry_legal_and_government",
+        "Legal and government prompts (LMArena text, arena.ai)",
+    )
+    legal = blend_by_percentile(fetch_legalbench_slice(), legal_arena)
+
+    medical = arena(
+        "text_style_control",
+        "industry_medicine_and_healthcare",
+        "Medicine and healthcare prompts (LMArena text, arena.ai)",
+    ).scores
+
+    loaded = {
+        "coding": coding,
+        "writing": writing,
+        "math": math,
+        "reasoning": reasoning,
+        "multilingual": multilingual,
+        "long-context": long_context,
+        "legal": legal,
+        "medical": medical,
+        "images": fetch_vision_arena_scores(),
+        "image-generation": fetch_text_to_image_arena_scores(),
+        "cost-effective": fetch_openrouter_pricing(),
+        "fast": fetch_lmspeed_scores(),
+    }
+    for cat_id, scores in loaded.items():
+        print(f"  {cat_id}: {len(scores)} lineup models")
+    return loaded
+
+
 def refresh_all_categories(dry_run: bool = False) -> dict:
     """Re-evaluate ALL registry models for data-driven categories.
 
@@ -2088,33 +2238,19 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
 
     print(f"Refreshing categories for {len(all_model_ids)} registry models...")
     print("Fetching benchmark data from all sources...")
-
-    swe_bench_pro_scores = fetch_swe_bench_pro_scores()
-    print(f"  SWE-Bench Pro: {len(swe_bench_pro_scores)} models")
-    legalbench_scores = fetch_legalbench_scores()
-    print(f"  LegalBench: {len(legalbench_scores)} models")
-    openrouter_pricing = fetch_openrouter_pricing()
-    print(f"  OpenRouter pricing: {len(openrouter_pricing)} models")
-    lmspeed_scores = fetch_lmspeed_scores()
-    print(f"  LMSpeed: {len(lmspeed_scores)} models")
-    global_mmlu_scores = fetch_global_mmlu_scores()
-    print(f"  Global-MMLU: {len(global_mmlu_scores)} models")
-    mmlu_pro_scores = fetch_mmlu_pro_scores()
-    print(f"  MMLU-Pro: {len(mmlu_pro_scores)} models")
-    creative_writing_scores = fetch_creative_writing_scores()
-    print(f"  Creative Writing Arena: {len(creative_writing_scores)} models")
-    text_to_image_scores = fetch_text_to_image_arena_scores()
-    print(f"  Text-to-Image Arena: {len(text_to_image_scores)} models")
-    mrcr_scores = fetch_mrcr_scores()
-    print(f"  MRCR 1M: {len(mrcr_scores)} models")
-    awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
-    print(f"  Awesome Agents long-context: {len(awesome_agents_long_context)} models")
-    long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
-    print(f"  Long-context (merged): {len(long_context_scores)} models")
-    math_scores = fetch_math_scores()
-    print(f"  MATH/GSM8K: {len(math_scores)} models")
-    vision_arena_scores = fetch_vision_arena_scores()
-    print(f"  Vision Arena: {len(vision_arena_scores)} models")
+    loaded = load_category_scores()
+    swe_bench_pro_scores = loaded["coding"]
+    legalbench_scores = loaded["legal"]
+    openrouter_pricing = loaded["cost-effective"]
+    lmspeed_scores = loaded["fast"]
+    global_mmlu_scores = loaded["multilingual"]
+    mmlu_pro_scores = loaded["reasoning"]
+    creative_writing_scores = loaded["writing"]
+    text_to_image_scores = loaded["image-generation"]
+    long_context_scores = loaded["long-context"]
+    math_scores = loaded["math"]
+    vision_arena_scores = loaded["images"]
+    medical_scores = loaded["medical"]
 
     if not RECOMMENDATIONS_PATH.exists():
         print(f"Error: {RECOMMENDATIONS_PATH} not found", file=sys.stderr)
@@ -2140,6 +2276,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
         "math": math_scores,
         "images": vision_arena_scores,
         "long-context": long_context_scores,
+        "medical": medical_scores,
     }
     # Always register every source (including 0-row fetches) so the guard can fire.
     dated_fetched = {
@@ -2162,6 +2299,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     math_scores = fetched_by_cat.get("math", {})
     vision_arena_scores = fetched_by_cat.get("images", {})
     long_context_scores = fetched_by_cat.get("long-context", {})
+    medical_scores = fetched_by_cat.get("medical", {})
 
     # Step 1: Sync evidence and prune models that no longer qualify
     ev_updated, ev_removed = _sync_evidence_and_prune(categories, fetched_by_cat)
@@ -2204,6 +2342,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
             text_to_image_scores,
             math_scores,
             vision_arena_scores,
+            medical_scores,
         )
         for entry in entries:
             cat_id = entry["category_id"]

@@ -13,7 +13,7 @@ A "Help me choose" button sits next to the Advanced button in the model selectio
 ## Key Behaviors
 
 - **Immediate selection:** Checkboxes toggle models directly; no Apply button. Same behavior as the main model selection area.
-- **Evidence tooltips:** Hover over any model to see benchmark name, score, and source (e.g., "SWE-Bench Pro public (Scale Labs): 43.60%.").
+- **Evidence tooltips:** Hover over any model to see the board, the raw score, and the fetch date. Blended categories lead with a within-board percentile (e.g. "Percentile 99.4% within this board. Code Arena (LMArena webdev overall, arena.ai): Arena Score 1820 (published 2026-11-23, 5121 votes). Fetched 2026-11-27.").
 - **Tier restrictions:** Models unavailable to the user's tier are disabled with a lock icon and tooltip.
 - **Visual feedback:** Selected models use primary-tinted styling; category headers containing selected models are highlighted. On open, the dropdown scrolls to the first selected model.
 - **Mutual exclusivity:** Only one of Help me choose or Advanced can be open at a time.
@@ -44,22 +44,39 @@ Every ranking is labeled by its source type: **Public benchmark**, **CompareInte
 
 ## Evidence Sources
 
-| Category | Primary source | URL | Key metric | Automated? |
-|----------|---------------|-----|------------|------------|
-| **Coding** | SWE-Bench Pro public (Scale Labs) | https://labs.scale.com/leaderboard/swe_bench_pro_public | % Resolved (public split) | Yes |
-| **Writing** | Creative Writing Arena (KEAR blog snapshot) | https://blog.kearai.com/leaderboard/creative-writing | Elo rating | Yes |
-| **Math** | MATH, AIME-2025, GSM8K (llmdb) | https://llmdb.com/benchmarks/math, https://llmdb.com/benchmarks/aime-2025, https://llmdb.com/benchmarks/gsm8k | % (0–100) | Yes (sparse) |
-| **Reasoning** | MMLU-Pro | https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/ | Overall % | Yes |
-| **Long context** | MRCR 1M (llmdb) | https://llmdb.com/benchmarks/mrcr-1m | Score /100 | Yes (sparse) |
-| **Best value** | OpenRouter pricing API | https://openrouter.ai/api/v1/models?output_modalities=all | Avg $/1M tokens | Yes |
-| **Fastest responses** | LMSpeed model-speed | https://lmspeed.net/leaderboard/model-speed | Tokens/second | Yes |
-| **Multilingual** | Global-MMLU (llmdb) | https://llmdb.com/benchmarks/global-mmlu | 42-language score | Yes (sparse) |
-| **Legal** | LegalBench (VALS.ai) | https://www.vals.ai/benchmarks/legal_bench | % across 161 tasks | Yes |
-| **Best for vision** | Vision Arena (LMArena) | https://lmarena.ai/leaderboard/vision | Arena Score | Yes |
-| **Image generation** | Text-to-Image Arena (LMArena HF) | https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset | Arena Rating | Yes |
-| **Medical** | HealthBench (OpenAI) | https://openai.com/index/healthbench | Physician-rated % | **Manual only** |
+| Category | Primary source | Fallback | Key metric | Automated? |
+|----------|---------------|----------|------------|------------|
+| **Coding** | [LMArena Code Arena](https://arena.ai/leaderboard/code) (HF `webdev` / `overall`) | [SWE-Bench Pro public](https://labs.scale.com/leaderboard/swe_bench_pro_public) | Within-board percentile | Yes |
+| **Writing** | [LMArena Creative Writing](https://arena.ai/leaderboard/text/creative-writing) (`text_style_control` / `creative_writing`) | None | Arena Score | Yes |
+| **Math** | [LMArena math](https://arena.ai/leaderboard/text/math) (`math`) | None | Arena Score | Yes |
+| **Reasoning** | [LMArena hard prompts](https://arena.ai/leaderboard/text/hard-prompts) (`hard_prompts`) | None | Arena Score | Yes |
+| **Long context** | [LMArena Document Arena](https://arena.ai/leaderboard/document) (`document` / `overall`) | LMArena longer queries (`longer_query`) | Within-board percentile | Yes |
+| **Best value** | [OpenRouter pricing](https://openrouter.ai/api/v1/models?output_modalities=all) | None | Avg $/1M tokens | Yes |
+| **Fastest responses** | [LMSpeed model-speed](https://lmspeed.net/leaderboard/model-speed) | None | Tokens/second | Yes |
+| **Multilingual** | [LMArena non-English](https://arena.ai/leaderboard/text) (`non_english`) | None | Arena Score | Yes |
+| **Legal** | [VALS LegalBench](https://www.vals.ai/benchmarks/legal_bench) | LMArena legal and government prompts | Within-board percentile | Yes |
+| **Best for vision** | [Vision Arena](https://lmarena.ai/leaderboard/vision) (HF `vision_style_control` / `overall`) | None | Arena Score | Yes |
+| **Image generation** | [Text-to-Image Arena](https://lmarena.ai/leaderboard/text-to-image) (HF `text_to_image` / `overall`) | KEAR blog table if HF returns nothing | Arena Score | Yes |
+| **Medical** | LMArena medicine and healthcare prompts (`industry_medicine_and_healthcare`) | None | Arena Score | Yes |
 
-**Long context note:** MRCR 1M has sparse coverage (~7 models). See "Long context (MRCR 1M and alternatives)" in Manual Curation Guide for secondary sources: Awesome Agents (MRCR v2, LongBench v2), model announcements, LongBench v2, RULER.
+Machine-readable LMArena rows come from the public dataset [`lmarena-ai/leaderboard-dataset`](https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset) via the datasets-server filter API. Only the latest `leaderboard_publish_date` in the `latest` split is used. Arena categories are human-preference ratings published by LMArena. They are not CompareIntel user votes and not exam percents.
+
+**Blend rule:** Coding, legal, and long context keep the primary board when a model appears on both. A model that is only on the fallback gets that board's percentile, computed against every published row on that board, not only lineup models. The evidence string names the actual board, the raw score, the publish date, and the fetch date.
+
+**Sources that were evaluated and not used as the primary board:**
+
+| Source | Why it is not the primary |
+|--------|---------------------------|
+| SWE-bench Verified (swebench.com) | Submissions stop around February 2026. No Opus 5, GPT-6, or Gemini 4. |
+| Aider polyglot | Last meaningful runs around October 2025. |
+| LiveCodeBench | Public sets are problems, not a current frontier leaderboard. VALS LiveCodeBench is frozen and saturated. |
+| Terminal-Bench | Self-reported model-card scores. Misses the closed Claude, GPT, and Gemini models. |
+| Artificial Analysis coding index | Null for lineup models on the public OpenRouter payload. The AA API needs a key this repo does not ship. |
+| MathArena, GPQA, HLE, MMLU-Pro official HF boards | Self-reported, `verified=false`, and they omit the closed frontier models. |
+| EQ-Bench | No stable public JSON. Creative writing is covered by LMArena. |
+| Fiction.LiveBench, RULER, OpenAI MRCR | Public tables top out at 2025 models (o3, GPT-5, Grok 4, Gemini 2.5). |
+| HealthBench | The OpenAI page returns 403 and the Hugging Face leaderboard is empty. No physician score is invented. |
+| KEAR creative-writing snapshot | February 2026 blog table. LMArena's November 2026 board replaces it. |
 
 ## Technical Reference
 
@@ -86,7 +103,7 @@ python scripts/research_model_benchmarks.py --refresh-all [--dry-run]
 
 This command re-evaluates ALL registry models against ALL data-driven categories:
 
-1. **Fetches** current data from public sources (SWE-Bench Pro public, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MATH/AIME-2025/GSM8K, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU, Vision Arena, Text-to-Image Arena)
+1. **Fetches** current data from public sources (LMArena Code Arena, text, document, vision, and text-to-image boards; SWE-Bench Pro public as the coding fallback; VALS LegalBench; OpenRouter prices; LMSpeed)
 2. **Guards collapsed sources** — if a source returns 0 rows, or far fewer than the existing category (`SOURCE_COLLAPSE_RATIO`, default 50%), keep the previous entries, mark them `[stale as of YYYY-MM-DD]`, and log `SOURCE UNHEALTHY` to stderr. Do not empty a category because a scraper broke.
 3. **Syncs evidence** — updates evidence strings on existing models (e.g. price changes, new throughput data) and appends `Fetched YYYY-MM-DD.`
 4. **Prunes** models that no longer meet category thresholds, or whose stored score fails the sanity check (e.g. tokens/sec above `FAST_MAX_THROUGHPUT`)
@@ -113,15 +130,15 @@ Data-driven categories apply qualification thresholds to maintain quality:
 |----------|-----------|----------|
 | Best value | &lt; $1.00/1M tokens avg | `COST_EFFECTIVE_MAX_PRICE` |
 | Fastest responses | ≥ 50 and ≤ 2500 tokens/sec | `FAST_MIN_THROUGHPUT`, `FAST_MAX_THROUGHPUT` |
-| Coding | ≥ 1% SWE-Bench Pro public (% resolved; scores are much lower than SWE-Bench Verified) | `CODING_MIN_SWE_BENCH_PRO` |
-| Math | MATH or GSM8K ≥ 85% (when MATH not available) | `MATH_MIN_GSM8K` |
-| Reasoning | ≥ 80% MMLU-Pro | `REASONING_MIN_MMLU_PRO` |
-| Writing | ≥ 1390 Elo | `WRITING_MIN_ELO` |
-| Long context | ≥ 30/100 MRCR | `LONG_CONTEXT_MIN_MRCR` |
+| Coding | Percentile ≥ 1 within the board that supplied the row | `CODING_MIN_SWE_BENCH_PRO` |
+| Math | Every matched Arena Score (human preference, not an exam percent) | — |
+| Reasoning | Arena Score ≥ 80 (the old MMLU-Pro floor; Arena Scores are about 1000–1600, so it does not drop them) | `REASONING_MIN_MMLU_PRO` |
+| Writing | Arena Score ≥ 1390 (same numeric floor as the previous Elo cutoff) | `WRITING_MIN_ELO` |
+| Long context | Percentile ≥ 30 within the board that supplied the row | `LONG_CONTEXT_MIN_MRCR` |
 | Best for vision | ≥ 1060 Vision Arena score | `VISION_MIN_ARENA` |
-| Legal | No threshold (all scored models included) | — |
-| Multilingual | No threshold (all scored models included) | — |
-| Medical | Manual only — no scraper | — |
+| Legal | Every matched percentile | — |
+| Multilingual | Every matched Arena Score | — |
+| Medical | Every matched Arena Score. Not a HealthBench percent. | — |
 
 ### Scraper notes
 
@@ -129,14 +146,14 @@ Data-driven categories apply qualification thresholds to maintain quality:
 - **Sanity check:** `is_plausible_score` rejects scrape artifacts. Fastest-responses drops values above `FAST_MAX_THROUGHPUT` (2500 t/s). The old weekly LMSpeed board mixed unofficial proxy endpoints and produced Sonnet 4.6 at 13,496 t/s.
 - **Fetch date:** successful evidence updates append `Fetched YYYY-MM-DD.` The date lives on the evidence string so we do not need a new TypeScript field.
 - **LMSpeed:** `lmspeed.net/leaderboard/best-throughput-models-weekly` (and monthly) currently render "No leaderboard data yet" and are Cloudflare-protected (bare clients often get 403). The current public equivalent is [`/leaderboard/model-speed`](https://lmspeed.net/leaderboard/model-speed) (Benchize / Artificial Analysis, one row per model, sane t/s). A free LMSpeed JSON API exists but requires an API key we do not ship. When the HTML fetch 403s, the guard keeps the previous Fastest list and marks it stale.
-- **Creative Writing Arena:** `kearai.com/leaderboard/creative-writing` **404s**. Content moved to [blog.kearai.com/leaderboard/creative-writing](https://blog.kearai.com/leaderboard/creative-writing) (February 2026 snapshot, parseable HTML table). The live equivalent is [arena.ai/leaderboard/chat/text/creative-writing](https://arena.ai/leaderboard/chat/text/creative-writing) (JS-rendered; not scraped).
-- **Text-to-Image Arena:** `kearai.com/leaderboard/text-to-image` **404s**. The blog snapshot remains at [blog.kearai.com/leaderboard/text-to-image](https://blog.kearai.com/leaderboard/text-to-image). The scraper prefers the official LMArena Hugging Face dataset (`lmarena-ai/leaderboard-dataset`, `text_to_image` / `latest`) and falls back to the blog table.
-- **MATH / GSM8K / Global-MMLU / MRCR:** still on llmdb.com, but coverage is sparse and the old row-wide regex captured version numbers (`Gemini 2.0 Pro` → `2.0%`). The parser now reads the Score column only and does not map Gemini 2.0 → 2.5 or o1 → o3. Math also merges [AIME-2025](https://llmdb.com/benchmarks/aime-2025) for current registry models. When the mapped set is still far smaller than the curated list, the guard keeps the existing rows.
-- **LegalBench** URL changed from `/legal_bench-01-30-2025` to `/legal_bench` (no date suffix). The scraper follows redirects.
-- **Vision Arena** scores are fetched from the official `lmarena-ai/leaderboard-dataset` on Hugging Face (vision subset, latest split). Model slugs on the arena often differ from OpenRouter IDs; update `VISION_ARENA_SLUG_TO_MODEL_ID` when adding models.
-- **Name mapping dicts** (`SWE_BENCH_PRO_SLUG_TO_MODEL_ID`, `LMSPEED_NAME_TO_MODEL_ID`, `WRITING_NAME_TO_MODEL_ID`, `MMLU_PRO_NAME_TO_MODEL_ID`, `VISION_ARENA_SLUG_TO_MODEL_ID`, `AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID`, etc.) resolve leaderboard display names that don't match registry names. Update these when adding new models or when leaderboard names change.
-- **SWE-Bench Pro** leaderboard data is parsed from the Scale Labs Next.js page (RSC-embedded JSON); a static HTML fallback uses [scaleapi.github.io/SWE-bench_Pro-os](https://scaleapi.github.io/SWE-bench_Pro-os/) (subset of models).
-- **Long context** merges MRCR 1M (llmdb) with Awesome Agents (MRCR v2, LongBench v2). MRCR 1M is primary; Awesome Agents adds models not on the llmdb leaderboard. Threshold ≥ 30 applies to both sources.
+- **LMArena boards** are read from `lmarena-ai/leaderboard-dataset` (datasets-server filter, `latest` split, newest `leaderboard_publish_date` only). The arena.ai HTML pages are JavaScript and are not scraped. Vision uses `vision_style_control`, not the older unstyled `vision` config.
+- **Version matching** lives in `backend/scripts/benchmark_matching.py`. A leaderboard row is stored on a lineup model only when the version tokens match. `4.6` is not `4.7`, `5` is not `5.5`, `2.1` is not `2.5`, and release code `2405` is not `2508`. Effort tags and snapshot dates (`20251001`) are the same version. Explicit alias dicts are rejected by unit test when they point at a different version.
+- **Creative Writing:** the February 2026 KEAR blog is only a fallback if the LMArena fetch returns no rows.
+- **Text-to-Image Arena:** the scraper prefers the LMArena dataset and falls back to the KEAR blog table.
+- **LegalBench** is parsed from `https://www.vals.ai/benchmarks/legal_bench`. Models missing there are filled from LMArena legal and government prompts, as a percentile.
+- **SWE-Bench Pro** is the coding fallback, parsed from the Scale Labs page, with a static HTML fallback at [scaleapi.github.io/SWE-bench_Pro-os](https://scaleapi.github.io/SWE-bench_Pro-os/). Code Arena wins when a model is on both.
+- **Long context** no longer uses the sparse llmdb MRCR table. Document Arena is primary; longer-query fills models that snapshot does not list.
+- **Medical** uses LMArena medicine and healthcare prompts. HealthBench is not fetched: the OpenAI page returns 403 and there is no public leaderboard JSON. Do not copy blog numbers into this category by hand.
 
 ### Registry / lineup sync
 
@@ -154,47 +171,18 @@ Some categories cannot be fully automated because their data sources don't expos
 - When a benchmark source publishes updated results
 - When `--refresh-all` reports 0 models fetched for a category that should have data (indicates a broken scraper)
 
-### Categories requiring manual attention
+### Categories that used to be hand-maintained
 
-#### Medical (HealthBench)
-**Why manual:** OpenAI's HealthBench page returns 403 (no public API). Scores come from OpenAI's published research papers and blog posts.
+Medical, multilingual, and long context are fetched with the other categories. Do not paste HealthBench, Global-MMLU, or MRCR percents into those lists: a hand-copied exam percent would be sorted against an Arena Score or a percentile.
 
-**How to update:**
-1. Check https://openai.com/index/healthbench for updated results
-2. Search for "HealthBench" in recent model announcement blog posts
-3. Add entries to the `medical` category in `helpMeChooseRecommendations.ts`:
-   ```
-   { modelId: 'provider/model-id', evidence: 'HealthBench (OpenAI): XX%.' }
-   ```
-4. Run `python scripts/sync_help_me_choose_with_registry.py` to validate
+#### Medical
+`industry_medicine_and_healthcare` on the LMArena text board. The OpenAI HealthBench page returns 403 and the Hugging Face leaderboard is empty.
 
-#### Multilingual (Global-MMLU)
-**Why semi-manual:** The llmdb.com leaderboard has very sparse coverage (often only 1-2 models). The scraper works but most models aren't listed.
+#### Multilingual
+LMArena `non_english`. Global-MMLU on llmdb is too sparse, and the Artificial Analysis multilingual index still tops out at older models.
 
-**How to supplement:**
-1. Check https://llmdb.com/benchmarks/global-mmlu for new entries
-2. Check model release announcements for Global-MMLU scores
-3. Add entries with evidence like: `'Global-MMLU (llmdb.com): XX.X%.'`
-
-#### Long context (MRCR 1M and alternatives)
-**Why semi-manual:** The llmdb.com MRCR 1M (Michelangelo) leaderboard lists ~7 models, mostly from Google. Many strong long-context models—including those excelling at 256K context—are absent from this 1M-only benchmark. Non-Google and frontier models (OpenAI, Anthropic, xAI, etc.) often publish long-context scores only in announcements.
-
-**Determining factors for inclusion:**
-- **Primary automated source:** MRCR 1M (llmdb.com) — 0–100 scale; measures retrieval at 1M tokens. Threshold: ≥ 30/100.
-- **Secondary sources for manual curation** (when a model has no llmdb MRCR 1M entry):
-  1. **Awesome Agents Long-Context Leaderboard** (https://awesomeagents.ai/leaderboards/long-context-benchmarks-leaderboard/) — Curated table combining MRCR v2 (8-needle 1M, 4-needle 256K), RULER, and LongBench v2. Use published scores from model rows; evidence format: `'MRCR v2 8-needle 1M (awesomeagents.ai): XX%.'` or `'MRCR v2 4-needle 256K (awesomeagents.ai): XX%.'` for models strong at 256K.
-  2. **Model announcement blogs** — Anthropic, OpenAI, Google, xAI often publish MRCR, needle-in-a-haystack, or LongBench scores. Evidence: `'MRCR (OpenAI/Anthropic/Google): XX%.'` with source URL where possible.
-  3. **LongBench v2** (https://longbench2.github.io/) — Tsinghua benchmark; 503 questions at 8K–2M words. Evidence: `'LongBench v2 (longbench2.github.io): XX%.'`
-  4. **RULER** (NVIDIA) — Synthetic benchmark; 13 task types. Use if scores are published in papers or leaderboards.
-  5. **Stanford HELM Long Context** — When available, check https://crfm.stanford.edu/ for multi-benchmark evaluations.
-
-**Note on score scales:** MRCR 1M (llmdb) uses 0–100; MRCR v2 (Awesome Agents) typically uses 0–100%. When combining sources, preserve the original scale in the evidence string for clarity.
-
-**How to supplement:**
-1. Check https://llmdb.com/benchmarks/mrcr-1m for new entries
-2. Review https://awesomeagents.ai/leaderboards/long-context-benchmarks-leaderboard/ for models with MRCR v2 or LongBench v2 scores
-3. Search model release announcements for "MRCR", "needle-in-a-haystack", "LongBench", or "NIAH"
-4. Add entries with evidence like: `'MRCR 1M (llmdb.com): XX/100.'` or `'MRCR v2 4-needle 256K (awesomeagents.ai): XX%.'`
+#### Long context
+LMArena Document Arena, with the longer-query category filling models that snapshot does not list. Fiction.LiveBench, RULER, and the public MRCR tables do not include the 2026 frontier models.
 
 ### Manual curation workflow
 
@@ -216,7 +204,8 @@ Some categories cannot be fully automated because their data sources don't expos
 - Always include the source name and URL context: `'BenchmarkName (source.com): SCORE.'`
 - Use `%` for percentage scores: `'MMLU-Pro (awesomeagents.ai): 89.5%.'`
 - Use `%` for MRCR v2 / LongBench v2: `'MRCR v2 4-needle 256K (awesomeagents.ai): 98%.'`
-- Use `Elo` for arena rankings: `'Creative Writing Arena (kearai.com): 1478 Elo.'`
+- Use `Arena Score` for a single LMArena board: `'Creative Writing (LMArena text, arena.ai): Arena Score 1525 (published 2026-11-22).'`
+- Use a leading percentile when blending boards: `'Percentile 72.0% within this board. SWE-Bench Pro public (Scale Labs): 41.78%.'`
 - Use `/100` for normalized scores: `'MRCR 1M (llmdb.com): 93/100.'`
 - Use `$/1M tokens` for pricing: `'Avg. $0.22/1M tokens.'`
 - Use `t/s` for throughput: `'LMSpeed (lmspeed.net): 1742 t/s.'`
