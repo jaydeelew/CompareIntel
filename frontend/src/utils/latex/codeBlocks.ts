@@ -154,7 +154,12 @@ export function renderCodeBlock(language: string, code: string): string {
     return renderMermaidPlaceholder(cleanCode)
   }
 
-  const isRecognizedLanguage = lang && RECOGNIZED_LANGUAGES.has(lang.toLowerCase())
+  // Empty, text, plaintext, and any other unrecognized info string still have to
+  // use the same block shell as highlighted fences. The old light
+  // `.preformatted-text > code` box was restyled by the inline-code fallback
+  // (`white-space: nowrap`, 85% size, white on #f6f8fa), which collapsed the
+  // newlines into one unreadable scrolling line.
+  const isRecognizedLanguage = Boolean(lang) && RECOGNIZED_LANGUAGES.has(lang.toLowerCase())
 
   const prismLang = isRecognizedLanguage
     ? LANGUAGE_MAP[lang.toLowerCase()] || lang.toLowerCase()
@@ -165,24 +170,19 @@ export function renderCodeBlock(language: string, code: string): string {
   const base64Code =
     typeof btoa !== 'undefined' ? btoa(unescape(encodeURIComponent(cleanCode))) : ''
 
-  if (!isRecognizedLanguage) {
-    return `
-            <div class="preformatted-text" data-code-base64="${base64Code}" style="
-                background: #f6f8fa;
-                border: 1px solid #d0d7de;
-                border-radius: 6px;
-                padding: 16px;
-                margin: 16px 0;
-                overflow-x: auto;
-                font-size: 14px;
-                line-height: 1.5;
-                font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                color: #1f2328;
-            "><code style="font-family: inherit; background: none; padding: 0;">${escapedCode}</code></div>
-        `
-  }
+  const languageLabel = lang
+    ? `<span class="code-language-label" style="
+                        font-size: 11px;
+                        color: #7d8590;
+                        text-transform: uppercase;
+                        font-weight: 600;
+                        background: rgba(125, 133, 144, 0.15);
+                        padding: 0.25rem 0.5rem;
+                        border-radius: 3px;
+                        letter-spacing: 0.5px;
+                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    ">${lang}</span>`
+    : '<span></span>'
 
   return `
             <div class="code-block-direct" data-language="${lang}" data-code-base64="${base64Code}" style="
@@ -208,17 +208,7 @@ export function renderCodeBlock(language: string, code: string): string {
                     pointer-events: none;
                     z-index: 1;
                 ">
-                    <span class="code-language-label" style="
-                        font-size: 11px;
-                        color: #7d8590;
-                        text-transform: uppercase;
-                        font-weight: 600;
-                        background: rgba(125, 133, 144, 0.15);
-                        padding: 0.25rem 0.5rem;
-                        border-radius: 3px;
-                        letter-spacing: 0.5px;
-                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                    ">${lang}</span>
+                    ${languageLabel}
                     <button class="code-copy-btn" onclick="(function(btn){try{const base64=btn.parentElement.parentElement.getAttribute('data-code-base64');const code=decodeURIComponent(escape(atob(base64)));navigator.clipboard.writeText(code).then(()=>{const origHTML=btn.innerHTML;btn.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><polyline points=\\'20 6 9 17 4 12\\'></polyline></svg>';btn.style.color='#3fb950';setTimeout(()=>{btn.innerHTML=origHTML;btn.style.color='#7d8590';},2000);}).catch(e=>console.error(e));}catch(e){console.error('Copy error:',e);}})(this)" style="
                         pointer-events: auto;
                         background: none;
