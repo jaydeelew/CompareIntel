@@ -79,6 +79,30 @@ async function submitHit(page: Page): Promise<string> {
   }, point)
 }
 
+/** Shrinking the viewport scrolls the seated composer. Click after that scroll stops. */
+async function settledSubmitPoint(page: Page): Promise<{ x: number; y: number } | null> {
+  let previous: { x: number; y: number } | null = null
+  let still = 0
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const point = await submitPoint(page)
+    const hit = point ? await submitHit(page) : 'no button'
+    const same =
+      point != null &&
+      previous != null &&
+      Math.abs(point.x - previous.x) < 1 &&
+      Math.abs(point.y - previous.y) < 1
+    if (point && hit === 'submit' && same) {
+      still += 1
+      if (still >= 3) return point
+    } else {
+      still = 0
+    }
+    previous = point
+    await page.waitForTimeout(60)
+  }
+  return previous
+}
+
 test('step 6 submit tap works while the prompt is focused', async ({ page }, testInfo) => {
   test.setTimeout(180_000)
   const project = testInfo.project.name
@@ -117,14 +141,15 @@ test('step 6 submit tap works while the prompt is focused', async ({ page }, tes
   const size = page.viewportSize()
   expect(size).not.toBeNull()
   await page.setViewportSize({ width: size!.width, height: Math.max(480, size!.height - 280) })
-  await expect.poll(() => submitHit(page), { timeout: 5_000 }).toBe('submit')
 
   // The install banner and Done Selecting card are already suppressed for the
   // tutorial. Probing them here is an extra accessibility hit-test; on WebKit
   // that leaves the focused prompt as the gesture target and the coordinate
-  // click never reaches submit.
-  const point = await submitPoint(page)
+  // click never reaches submit. The short viewport also scrolls the seated
+  // composer; sample the button after that scroll has stopped.
+  const point = await settledSubmitPoint(page)
   expect(point).not.toBeNull()
+  expect(await submitHit(page)).toBe('submit')
   const compareStream = page.waitForResponse(
     res => res.url().includes('/api/compare-stream') && res.request().method() === 'POST',
     { timeout: 45_000 }
