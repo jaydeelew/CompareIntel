@@ -171,6 +171,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
   }) => {
     const blockPromptStepForTutorial =
       tutorialIsActive && (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
+    // Step 8 reviews the new responses. The composer stays on screen, but it
+    // must not take text, paste, drop, dictation, Enter, or a submit tap.
+    const lockReviewComposer = tutorialIsActive && tutorialStep === 'view-follow-up-results'
+    const lockReviewComposerRef = useRef(false)
+    lockReviewComposerRef.current = lockReviewComposer
 
     const allowHeroMirrorTutorialPointer =
       tutorialIsActive && (tutorialStep === 'history-dropdown' || tutorialStep === 'save-selection')
@@ -272,6 +277,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const handleSpeechResult = useCallback(
       (transcript: string, isFinal: boolean) => {
+        if (lockReviewComposerRef.current) return
         const isMobileMode =
           typeof navigator !== 'undefined' &&
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -303,6 +309,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       error: speechError,
       browserSupport: speechBrowserSupport,
     } = useSpeechRecognition(handleSpeechResult)
+
+    useEffect(() => {
+      if (!lockReviewComposer) return
+      textareaRef.current?.blur()
+      stopSpeechListening()
+    }, [lockReviewComposer, stopSpeechListening, textareaRef])
 
     useEffect(() => {
       if (speechError) showNotification(speechError, 'error')
@@ -391,9 +403,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       (buttonId: ComposerTooltipButtonId) => {
         switch (buttonId) {
           case 'add-file':
+            if (lockReviewComposerRef.current) break
             fileUploadRef.current?.openFilePicker()
             break
           case 'voice':
+            if (lockReviewComposerRef.current) break
             if (isSpeechListening) stopSpeechListening()
             else startSpeechListening()
             break
@@ -401,6 +415,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             if (!webSearchLocked) setWebSearchEnabled(true)
             break
           case 'submit':
+            if (lockReviewComposerRef.current) break
             if (isFollowUpMode) onContinueConversation()
             else onSubmitClick()
             break
@@ -566,6 +581,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         e.preventDefault()
         e.stopPropagation()
         resetPageFileDrag()
+        if (lockReviewComposerRef.current) return
         if (!dataTransferHasFiles(e.dataTransfer)) return
         const file = e.dataTransfer.files?.[0]
         if (!file) return
@@ -589,11 +605,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       const textarea = textareaRef.current
       if (!textarea) return undefined
       const listener = (event: Event) => {
+        if (lockReviewComposerRef.current) {
+          event.preventDefault()
+          return
+        }
         void processClipboardPaste(event)
       }
       textarea.addEventListener('paste', listener)
       return () => textarea.removeEventListener('paste', listener)
-    }, [processClipboardPaste, composerFloating, afterResultsComposerSlotTarget])
+    }, [processClipboardPaste, composerFloating, afterResultsComposerSlotTarget, textareaRef])
 
     const adjustTextareaHeight = useCallback(() => {
       if (!textareaRef.current) return
@@ -793,6 +813,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         !mirror && tutorialIsActive && tutorialStep === 'history-dropdown'
       const saveButtonSpotlight = !mirror && tutorialIsActive && tutorialStep === 'save-selection'
       const lockHistoryPrompt = !mirror && tutorialIsActive && tutorialStep === 'history-dropdown'
+      const lockComposerInput = lockHistoryPrompt || (!mirror && lockReviewComposer)
       const spotlightClass = (on: boolean) =>
         on ? (isMobileLayout ? 'mobile-tutorial-highlight' : 'tutorial-highlight') : ''
       const historyToggleClassName = [
@@ -817,6 +838,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         spotlightClass(historyComposerSpotlight || followUpComposerSpotlight),
         historyComposerSpotlight ? 'tutorial-dropdown-container-active' : '',
         lockHistoryPrompt ? 'tutorial-history-input-locked' : '',
+        !mirror && lockReviewComposer ? 'tutorial-review-input-locked' : '',
       ]
         .filter(Boolean)
         .join(' ')
@@ -839,18 +861,21 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 mirror ? mirrorTextareaRef : (textareaRef as React.RefObject<HTMLTextAreaElement>)
               }
               value={input}
-              onChange={mirror || lockHistoryPrompt ? undefined : e => setInput(e.target.value)}
-              onBeforeInput={lockHistoryPrompt ? event => event.preventDefault() : undefined}
-              onPaste={lockHistoryPrompt ? event => event.preventDefault() : undefined}
-              onFocus={lockHistoryPrompt ? event => event.currentTarget.blur() : undefined}
-              readOnly={mirror || lockHistoryPrompt}
+              onChange={mirror || lockComposerInput ? undefined : e => setInput(e.target.value)}
+              onBeforeInput={lockComposerInput ? event => event.preventDefault() : undefined}
+              onPaste={lockComposerInput ? event => event.preventDefault() : undefined}
+              onPointerDown={lockComposerInput ? event => event.preventDefault() : undefined}
+              onFocus={lockComposerInput ? event => event.currentTarget.blur() : undefined}
+              readOnly={mirror || lockComposerInput}
               disabled={!mirror && followUpUnavailable}
-              tabIndex={mirror || lockHistoryPrompt ? -1 : undefined}
+              tabIndex={mirror || lockComposerInput ? -1 : undefined}
+              inputMode={lockComposerInput ? 'none' : undefined}
+              aria-readonly={lockComposerInput || undefined}
               onKeyDown={
                 mirror
                   ? undefined
                   : e => {
-                      if (lockHistoryPrompt) {
+                      if (lockComposerInput) {
                         e.preventDefault()
                         return
                       }
@@ -963,12 +988,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 input={input}
                 setInput={setInput}
                 textareaRef={textareaRef}
-                disabled={isLoading}
+                disabled={isLoading || lockReviewComposer}
                 isMobileLayout={useTouchFirstComposerChrome}
                 hideTooltip={!showComposerStyledTooltips}
                 tooltipUsePortal={showComposerStyledTooltips}
                 onMobileButtonClick={
-                  useTouchFirstComposerChrome && !isLoading
+                  useTouchFirstComposerChrome && !isLoading && !lockReviewComposer
                     ? () => {
                         if (getTooltipModalSuppressed('add-file')) {
                           fileUploadRef.current?.openFilePicker()
@@ -1004,6 +1029,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   <button
                     type="button"
                     onClick={() => {
+                      if (lockReviewComposer) return
                       if (isSpeechListening) {
                         stopSpeechListening()
                       } else if (getTooltipModalSuppressed('voice')) {
@@ -1014,7 +1040,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     }}
                     className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
                     aria-label={voiceButtonAriaLabel}
-                    disabled={isLoading}
+                    disabled={isLoading || lockReviewComposer}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -1047,12 +1073,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     <button
                       type="button"
                       onClick={() => {
+                        if (lockReviewComposer) return
                         if (isSpeechListening) stopSpeechListening()
                         else startSpeechListening()
                       }}
                       className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
                       aria-label={voiceButtonAriaLabel}
-                      disabled={isLoading}
+                      disabled={isLoading || lockReviewComposer}
                     >
                       <svg
                         viewBox="0 0 24 24"
@@ -1082,12 +1109,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   <button
                     type="button"
                     onClick={() => {
+                      if (lockReviewComposer) return
                       if (isSpeechListening) stopSpeechListening()
                       else startSpeechListening()
                     }}
                     className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
                     aria-label={voiceButtonAriaLabel}
-                    disabled={isLoading}
+                    disabled={isLoading || lockReviewComposer}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -1183,7 +1211,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     event.preventDefault()
                   }}
                   onClick={() => {
-                    if (blockPromptStepForTutorial) return
+                    if (lockReviewComposer || blockPromptStepForTutorial) return
                     if (submitImageConfigBlocked && !hardSubmitDisabled) {
                       onImageGenerationSubmitBlockedTap?.()
                       return
@@ -1195,7 +1223,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       else onSubmitClick()
                     }
                   }}
-                  disabled={!isTouchDevice && hardSubmitDisabled}
+                  disabled={!isTouchDevice && (hardSubmitDisabled || lockReviewComposer)}
                   className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitProgressOutline ? 'submit-progress-outline' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
                     submitImageConfigBlocked && !hardSubmitDisabled
                       ? 'submit-blocked-image-config'
@@ -1203,7 +1231,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
                   data-testid={mirror ? undefined : 'comparison-submit-button'}
                   aria-label={submitButtonAriaLabel}
-                  aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
+                  aria-disabled={
+                    hardSubmitDisabled || submitImageConfigBlocked || lockReviewComposer
+                  }
                 >
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -1233,7 +1263,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                         event.preventDefault()
                       }}
                       onClick={() => {
-                        if (blockPromptStepForTutorial) return
+                        if (lockReviewComposer || blockPromptStepForTutorial) return
                         if (submitImageConfigBlocked && !hardSubmitDisabled) {
                           onImageGenerationSubmitBlockedTap?.()
                           return
@@ -1244,7 +1274,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                           else onSubmitClick()
                         }
                       }}
-                      disabled={!isTouchDevice && hardSubmitDisabled}
+                      disabled={!isTouchDevice && (hardSubmitDisabled || lockReviewComposer)}
                       className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${submitProgressOutline ? 'submit-progress-outline' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
                         submitImageConfigBlocked && !hardSubmitDisabled
                           ? 'submit-blocked-image-config'
@@ -1252,7 +1282,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
                       data-testid={mirror ? undefined : 'comparison-submit-button'}
                       aria-label={submitButtonAriaLabel}
-                      aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
+                      aria-disabled={
+                        hardSubmitDisabled || submitImageConfigBlocked || lockReviewComposer
+                      }
                     >
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
