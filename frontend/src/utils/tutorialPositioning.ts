@@ -941,49 +941,12 @@ export function chooseReviewTooltipSide(args: {
   return 'below'
 }
 
-export interface ReviewTooltipObstacle {
-  top: number
-  bottom: number
-}
-
-function readReviewComposerObstacle(): ReviewTooltipObstacle | null {
-  const rect = readPortaledFollowUpComposerRect()
-  if (!rect) return null
-  return { top: rect.top, bottom: rect.bottom }
-}
-
-/**
- * Vertical seat under the panel that does not cover the panel or the composer.
- * The composer is 0.5rem under the results, shorter than the card, so the card
- * sits in that gap when the gap can hold it and otherwise directly under the
- * composer. The arrow still points up.
- */
-export function reviewTooltipTopClearOfObstacle(args: {
-  idealTop: number
-  tooltipHeight: number
-  arrowSize: number
-  padding: number
-  frameTop: number
-  frameBottom: number
-  obstacle: ReviewTooltipObstacle | null
-}): number {
-  const { idealTop, tooltipHeight, obstacle } = args
-  if (!obstacle) return idealTop
-  const hits = (top: number, bandTop: number, bandBottom: number) =>
-    top + tooltipHeight > bandTop + 1 && top < bandBottom - 1
-  if (!hits(idealTop, obstacle.top, obstacle.bottom)) return idealTop
-  const gapTop = args.frameBottom + args.arrowSize
-  if (obstacle.top - args.padding - gapTop >= tooltipHeight) return gapTop
-  const under = obstacle.bottom + args.arrowSize + args.padding
-  if (hits(under, args.frameTop, args.frameBottom)) return idealTop
-  return under
-}
-
 /**
  * Box top of the step 8 card. The arrow points down at the panel's top edge
- * while that edge is on screen, and up at the panel once the edge has scrolled
- * away. `top` is the box top. Passing `stickySide` pins the hysteresis input
- * for tests; live callers keep the last side this function chose.
+ * while that edge is on screen, and up from just under the panel once that
+ * edge has scrolled away. The follow-up composer is dimmed on this step, so
+ * the card may cover it. `top` is the box top. Passing `stickySide` pins the
+ * hysteresis input for tests; live callers keep the last side this function chose.
  */
 export function placeReviewTooltip(args: {
   frameTop: number
@@ -993,11 +956,8 @@ export function placeReviewTooltip(args: {
   padding?: number
   viewportTop?: number
   viewportHeight?: number
-  /** Null skips the composer. Omit to read the portaled follow-up composer. */
-  obstacle?: ReviewTooltipObstacle | null
   stickySide?: ReviewTooltipSide
 }): TooltipBoxPlacement {
-  const padding = args.padding ?? MARGIN
   // Layout viewport, same as the other side choices. The visual viewport
   // shrinks when browser chrome moves and must not flip the card.
   const viewportTop = args.viewportTop ?? 0
@@ -1019,18 +979,10 @@ export function placeReviewTooltip(args: {
     }
   }
 
-  const obstacle = args.obstacle === undefined ? readReviewComposerObstacle() : args.obstacle
-  const clearanceHeight = Math.max(args.tooltipHeight, laidOutTooltipHeight())
-  const top = reviewTooltipTopClearOfObstacle({
-    idealTop: args.frameBottom + args.arrowSize,
-    tooltipHeight: clearanceHeight,
-    arrowSize: args.arrowSize,
-    padding,
-    frameTop: args.frameTop,
-    frameBottom: args.frameBottom,
-    obstacle,
-  })
-  return { top, arrowDirection: 'up' }
+  return {
+    top: args.frameBottom + args.arrowSize,
+    arrowDirection: 'up',
+  }
 }
 
 /**

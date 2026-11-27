@@ -648,7 +648,7 @@ test.describe('tutorial tooltip stays hidden while models are working', () => {
     await expect.poll(() => tooltipAim(page), { timeout: 15_000, intervals: [100] }).toBe('results')
     await expect
       .poll(() => composerCutout(page), { timeout: 10_000, intervals: [100] })
-      .toBe('cutout')
+      .toBe('dimmed')
     await expect
       .poll(() => tooltipClearsResults(page), { timeout: 10_000, intervals: [100] })
       .toBe('clear')

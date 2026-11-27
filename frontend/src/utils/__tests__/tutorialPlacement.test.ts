@@ -11,7 +11,6 @@ import {
   readTutorialContentOrigin,
   resetReviewTooltipSide,
   REVIEW_TOOLTIP_HYSTERESIS_PX,
-  reviewTooltipTopClearOfObstacle,
   scrollContentOffset,
   scrollDeltaToFitTooltip,
   visibleViewportHeight,
@@ -304,20 +303,18 @@ describe('step 8 review card follows the visible edge', () => {
       frameBottom: 900,
       ...card,
       ...view,
-      obstacle: null,
       stickySide: 'above',
     })
     expect(placed.arrowDirection).toBe('down')
     expect(placed.top + card.tooltipHeight + card.arrowSize).toBe(280)
   })
 
-  it('points up from below once the panel top has left the viewport', () => {
+  it('points up from just under the panel once the top edge has left', () => {
     const placed = placeReviewTooltip({
       frameTop: -80,
       frameBottom: 640,
       ...card,
       ...view,
-      obstacle: null,
       stickySide: 'above',
     })
     expect(placed.arrowDirection).toBe('up')
@@ -330,7 +327,6 @@ describe('step 8 review card follows the visible edge', () => {
       frameBottom: 700,
       ...card,
       ...view,
-      obstacle: null,
       stickySide: 'above',
     })
     expect(barelyGone.arrowDirection).toBe('down')
@@ -357,45 +353,16 @@ describe('step 8 review card follows the visible edge', () => {
     expect(clearlyBack).toBe('above')
   })
 
-  it('sits between the panel and the composer when that gap holds the card', () => {
-    const top = reviewTooltipTopClearOfObstacle({
-      idealTop: 500,
-      tooltipHeight: 180,
-      arrowSize: 10,
-      padding: 12,
-      frameTop: 40,
-      frameBottom: 490,
-      obstacle: { top: 720, bottom: 860 },
-    })
-    expect(top).toBe(500)
-    expect(top + 180).toBeLessThanOrEqual(720)
-  })
-
-  it('sits under the composer when the composer occupies the space below the panel', () => {
+  it('sits on the panel bottom even when the composer fills the space below', () => {
     const frameBottom = 490
-    const composer = { top: 498, bottom: 680 }
-    const top = reviewTooltipTopClearOfObstacle({
-      idealTop: frameBottom + 10,
-      tooltipHeight: 180,
-      arrowSize: 10,
-      padding: 12,
-      frameTop: 40,
-      frameBottom,
-      obstacle: composer,
-    })
-    expect(top).toBe(composer.bottom + 10 + 12)
-    expect(top).toBeGreaterThan(frameBottom)
-    expect(top).toBeGreaterThanOrEqual(composer.bottom)
     const placed = placeReviewTooltip({
       frameTop: -120,
       frameBottom,
       ...card,
       ...view,
-      obstacle: composer,
       stickySide: 'above',
     })
     expect(placed.arrowDirection).toBe('up')
-    expect(placed.top).toBeGreaterThan(composer.bottom)
-    expect(placed.top).toBeGreaterThan(frameBottom)
+    expect(placed.top).toBe(frameBottom + card.arrowSize)
   })
 })

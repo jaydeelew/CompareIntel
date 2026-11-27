@@ -60,8 +60,18 @@ interface ReviewCard {
   abovePanel: boolean
   clear: boolean
   overlap: string
+  gap: number | null
   scroll: number
   maxScroll: number
+}
+
+interface ComposerTreatment {
+  found: boolean
+  highlighted: boolean
+  lifted: boolean
+  ringCount: number
+  dimmed: boolean
+  readOnly: boolean
 }
 
 async function readScrollTop(page: Page): Promise<number> {
@@ -99,6 +109,7 @@ async function readReviewCard(page: Page): Promise<ReviewCard> {
         abovePanel: false,
         clear: false,
         overlap: 'missing-card',
+        gap: null,
         scroll,
         maxScroll,
       }
@@ -136,8 +147,49 @@ async function readReviewCard(page: Page): Promise<ReviewCard> {
       abovePanel,
       clear: overlap === 'clear',
       overlap,
+      gap: results ? card.top - results.bottom : null,
       scroll,
       maxScroll,
+    }
+  })
+}
+
+async function readComposerTreatment(page: Page): Promise<ComposerTreatment> {
+  return page.evaluate(() => {
+    const composer = document.querySelector(
+      '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+    ) as HTMLElement | null
+    const textarea = composer?.querySelector('textarea') as HTMLTextAreaElement | null
+    const style = composer ? getComputedStyle(composer) : null
+    const rings = document.querySelectorAll(
+      '.tutorial-backdrop-follow-up-composer-ring, .mobile-tutorial-backdrop-follow-up-composer-ring'
+    )
+    const cutout = document.querySelector(
+      '.tutorial-backdrop-follow-up-results-ring, .mobile-tutorial-backdrop-cutout, .tutorial-backdrop-cutout'
+    ) as HTMLElement | null
+    const box = composer?.getBoundingClientRect()
+    const hole = cutout?.getBoundingClientRect()
+    const centerInsideHole = Boolean(
+      box &&
+      hole &&
+      hole.width > 2 &&
+      hole.height > 2 &&
+      box.left + box.width / 2 >= hole.left &&
+      box.left + box.width / 2 <= hole.right &&
+      box.top + box.height / 2 >= hole.top &&
+      box.top + box.height / 2 <= hole.bottom
+    )
+    return {
+      found: Boolean(composer && box && box.height > 2),
+      highlighted: Boolean(
+        composer?.classList.contains('tutorial-highlight') ||
+        composer?.classList.contains('mobile-tutorial-highlight') ||
+        composer?.classList.contains('tutorial-textarea-active')
+      ),
+      lifted: style?.zIndex === '9999',
+      ringCount: rings.length,
+      dimmed: Boolean(cutout) && !centerInsideHole,
+      readOnly: Boolean(textarea?.readOnly),
     }
   })
 }
@@ -230,6 +282,9 @@ test('step 8 card flips below the results when their top edge scrolls away', asy
   await expect(tutorialTooltip(page).first()).toContainText('Continue the Conversation', {
     timeout: 25_000,
   })
+  await expect
+    .poll(async () => readComposerTreatment(page), { timeout: 5_000 })
+    .toMatchObject({ found: true, highlighted: true, ringCount: 1 })
   await runTutorialComparison(page, testInfo, 25_000, 'Follow-up for the step 8 flip test.')
 
   const review = tutorialTooltip(page).first()
@@ -239,6 +294,16 @@ test('step 8 card flips below the results when their top edge scrolls away', asy
     '[data-after-results-composer-slot] [data-testid="comparison-input-textarea"]'
   )
   await expect(composer).toHaveAttribute('readonly', '')
+  await expect
+    .poll(async () => readComposerTreatment(page), { timeout: 5_000 })
+    .toMatchObject({
+      found: true,
+      highlighted: false,
+      lifted: false,
+      ringCount: 0,
+      dimmed: true,
+      readOnly: true,
+    })
 
   await expect
     .poll(async () => readReviewCard(page), { timeout: 5_000 })
@@ -251,12 +316,41 @@ test('step 8 card flips below the results when their top edge scrolls away', asy
     seated + 200
   )
   await expect
-    .poll(async () => readReviewCard(page), { timeout: 5_000 })
-    .toMatchObject({ found: true, pointsUp: true, belowPanel: true, clear: true })
+    .poll(
+      async () => {
+        const card = await readReviewCard(page)
+        return {
+          found: card.found,
+          pointsUp: card.pointsUp,
+          belowPanel: card.belowPanel,
+          coversResults: card.overlap === 'overlaps-results',
+          seatedOnPanel: card.gap != null && card.gap >= -2 && card.gap <= 28,
+        }
+      },
+      { timeout: 5_000 }
+    )
+    .toMatchObject({
+      found: true,
+      pointsUp: true,
+      belowPanel: true,
+      coversResults: false,
+      seatedOnPanel: true,
+    })
   await expectScrollHolds(page, bottom, 'scrolled to the bottom')
   const stayedBelow = await readReviewCard(page)
   expect(stayedBelow.pointsUp, stayedBelow.overlap).toBe(true)
   expect(stayedBelow.belowPanel).toBe(true)
+  expect(stayedBelow.gap ?? 999, stayedBelow.overlap).toBeLessThanOrEqual(28)
+  await expect
+    .poll(async () => readComposerTreatment(page), { timeout: 5_000 })
+    .toMatchObject({
+      found: true,
+      highlighted: false,
+      lifted: false,
+      ringCount: 0,
+      dimmed: true,
+      readOnly: true,
+    })
   await saveShot(page, testInfo, 'below')
 
   // The hero sits above the results, so document scroll 0 hides the panel.

@@ -430,21 +430,15 @@ async function expectHighlightLockedDuringFastScroll(page: Page, label: string):
         ) {
           const dTip = tipAfter.top - tipBefore.top
           const dTgt = after[0].target.top - before[0].target.top
-          // Step 8 moves the card from above the results to below them once
-          // the panel's top edge leaves the viewport. That jump is the seat
-          // change, not the card drifting off its target. Same-side motion
-          // still has to match the panel.
+          // Step 8 moves the card from above the results to just under the
+          // panel once the top edge leaves the viewport. That jump is the
+          // seat change. Same-side motion still has to match the panel.
           const reviewFlip =
             document.documentElement.dataset.tutorialStep === 'view-follow-up-results' &&
             tipBefore.arrow !== '' &&
             tipAfter.arrow !== tipBefore.arrow
           if (reviewFlip) {
             const results = document.querySelector('.results-section')?.getBoundingClientRect()
-            const composer = document
-              .querySelector(
-                '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
-              )
-              ?.getBoundingClientRect()
             const overlaps = (box: DOMRect | undefined) => {
               if (!box || box.width < 2 || box.height < 2) return false
               const overlapW =
@@ -457,10 +451,11 @@ async function expectHighlightLockedDuringFastScroll(page: Page, label: string):
               problems.push(`${when} review flip lost the results panel`)
             } else if (overlaps(results)) {
               problems.push(`${when} review flip covers the results`)
-            } else if (composer && overlaps(composer)) {
-              problems.push(`${when} review flip covers the composer`)
-            } else if (tipAfter.arrow === 'up' && tipAfter.top < results.bottom - 2) {
-              problems.push(`${when} review flip arrow up but the card is not below the panel`)
+            } else if (tipAfter.arrow === 'up') {
+              const gap = tipAfter.top - results.bottom
+              if (gap < -2 || gap > 28) {
+                problems.push(`${when} review flip gap ${gap.toFixed(1)}`)
+              }
             } else if (tipAfter.arrow === 'down' && tipAfter.bottom > results.top + 2) {
               problems.push(`${when} review flip arrow down but the card is not above the panel`)
             }

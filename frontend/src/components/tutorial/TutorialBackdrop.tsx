@@ -285,9 +285,32 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     )
   }
 
-  // Steps 7 and 8: two inset blue frames (results + composer) and dim elsewhere.
+  // Step 8 reviews the results only. One framed hole, and the composer stays
+  // under the same dim as the rest of the page. No second ring and no hole.
+  if (step === 'view-follow-up-results') {
+    if (!targetCutout) return null
+    return (
+      <div
+        className="tutorial-backdrop-cutout tutorial-backdrop-cutout--enter tutorial-backdrop-follow-up-results-ring"
+        data-scroll-anchor-y={targetCutout.anchorY ?? 0}
+        style={{
+          position: CUTOUT_POSITION,
+          ...placeCutout(targetCutout),
+          width: `${targetCutout.width}px`,
+          height: `${targetCutout.height}px`,
+          borderRadius: `${targetCutout.borderRadius}px`,
+          boxShadow: TUTORIAL_FRAMED_DIM_SHADOW,
+          zIndex: 9998,
+          pointerEvents: 'none',
+        }}
+        onClick={e => handleBackdropClick(e, 'tutorial-backdrop-cutout')}
+      />
+    )
+  }
+
+  // Step 7: two inset blue frames (results + composer) and dim elsewhere.
   // The card anchors on the composer, so that composer has to be a real hole.
-  const composerAnchoredStep = step === 'follow-up' || step === 'view-follow-up-results'
+  const composerAnchoredStep = step === 'follow-up'
   if (
     composerAnchoredStep &&
     targetCutout &&
@@ -365,8 +388,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     !shouldExcludeTextarea &&
     !shouldExcludeDropdown &&
     !useRoundedCutout &&
-    step !== 'follow-up' &&
-    step !== 'view-follow-up-results'
+    step !== 'follow-up'
   ) {
     const usesInsetBlueRing = isProviderPickerTutorialStep(step)
     return (
@@ -389,10 +411,10 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     )
   }
 
-  // Steps 7 and 8 require the dual-hole SVG backdrop (results + composer). While
+  // Step 7 requires the dual-hole SVG backdrop (results + composer). While
   // those cutouts are being computed, render nothing rather than a results-only
   // hole that leaves the composer under the dim.
-  if (step === 'follow-up' || step === 'view-follow-up-results') {
+  if (step === 'follow-up') {
     return null
   }
 

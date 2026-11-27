@@ -78,6 +78,17 @@ import {
 } from './tutorialUtils'
 import { useTutorialCleanup } from './useTutorialCleanup'
 
+/** Step 8 does not use the composer. Drop the ring and the stacking lift so the page dim covers it. */
+function clearStep8ComposerSpotlight(): void {
+  const nodes = [getComposerElement(), getHeroMirrorComposerIfPresent()]
+  for (const node of nodes) {
+    if (!node) continue
+    node.classList.remove('tutorial-highlight', 'tutorial-textarea-active')
+    node.style.pointerEvents = ''
+    node.style.position = ''
+  }
+}
+
 interface HTMLElementWithTutorialProps extends HTMLElement {
   __tutorialHeightObserver?: MutationObserver
   __tutorialHeightInterval?: number
@@ -1362,9 +1373,9 @@ export function useTutorialOverlay(
         elementsToHighlight = [loadingSection]
       } else if (kind === 'results' && resultsSection) {
         elementsToHighlight = [resultsSection]
-        // Step 7 and step 8 both anchor the card on the composer, so that
-        // composer gets the same ring as the results frame.
-        if (step === 'follow-up' || step === 'view-follow-up-results') {
+        // Step 7 anchors the card on the composer, so that composer gets the
+        // same ring as the results frame. Step 8 leaves the composer dimmed.
+        if (step === 'follow-up') {
           const composerElement = getComposerElement()
           if (composerElement) elementsToHighlight.push(composerElement)
         }
@@ -1391,9 +1402,9 @@ export function useTutorialOverlay(
       composerElement = getComposerElement()
       const cutout = composerElement ? computeTextareaCutout(composerElement) : null
       setTextareaCutout(cutout)
-    } else if (!isDropdownStep && step !== 'follow-up' && step !== 'view-follow-up-results') {
+    } else if (!isDropdownStep && step !== 'follow-up') {
       // Only clear textarea cutout if we're not on a dropdown step.
-      // Step 8 keeps the composer hole that step 7 opened.
+      // Step 8 has no composer hole; the field stays under the page dim.
       setTextareaCutout(null)
     }
 
@@ -1451,6 +1462,9 @@ export function useTutorialOverlay(
         el.style.position = 'relative'
       }
     })
+    if (step === 'view-follow-up-results') {
+      clearStep8ComposerSpotlight()
+    }
 
     return () => {
       // Check current step from ref (always up-to-date)
@@ -1793,12 +1807,10 @@ export function useTutorialOverlay(
 
       if (step === 'view-follow-up-results') {
         const spotlight = applyStreamingComparisonHighlight(streamAnswerStartedRef.current)
-        const composerElement = getComposerElement()
-        // While replies are still streaming, the processing/results frame owns
-        // the ring. The composer hole and ring appear once that round is done.
+        // The composer is not part of this step. Keep the results frame, and
+        // leave the field under the same dim as the rest of the page.
         if (spotlight === 'loading' || isLoadingRef.current) {
-          composerElement?.classList.remove('tutorial-highlight')
-          composerElement?.classList.remove('tutorial-textarea-active')
+          clearStep8ComposerSpotlight()
           return
         }
         if (resultsSection && !resultsSection.classList.contains('tutorial-highlight')) {
@@ -1806,12 +1818,7 @@ export function useTutorialOverlay(
           resultsSection.style.pointerEvents = 'auto'
           resultsSection.style.position = 'relative'
         }
-        if (composerElement) {
-          composerElement.classList.add('tutorial-textarea-active')
-          composerElement.classList.add('tutorial-highlight')
-          composerElement.style.pointerEvents = 'auto'
-          composerElement.style.position = 'relative'
-        }
+        clearStep8ComposerSpotlight()
         if (resultsSection) {
           if (!spotlightSettledRef.current) {
             setTargetElement(resultsSection)
@@ -2463,10 +2470,8 @@ export function useTutorialOverlay(
     }
   }, [step])
 
-  // Step 5 (follow-up): keep results + composer backdrop holes in lockstep. Previously, separate
-  // effects/rAF callbacks updated targetCutout vs textareaCutout one after another, so fast scroll
-  // could paint mismatched rings. Use one DOM read + batched setState; composer ring uses the full
-  // composer (header + input) to match .tutorial-highlight, not only input-wrapper/toolbar rects.
+  // Step 7 keeps the results and composer holes in lockstep. Step 8 keeps only
+  // the results hole, so the composer stays under the page dim.
   useEffect(() => {
     if (step !== 'follow-up' && step !== 'view-follow-up-results') return
 
@@ -2475,7 +2480,7 @@ export function useTutorialOverlay(
       const current = stepRef.current
       if (current !== 'follow-up' && current !== 'view-follow-up-results') return
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
-      const composerElement = getComposerElement()
+      const composerElement = current === 'follow-up' ? getComposerElement() : null
 
       const targetCut = resultsSection != null ? computeTargetCutout([resultsSection], 8, 24) : null
 

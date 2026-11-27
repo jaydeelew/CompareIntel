@@ -627,7 +627,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       } else {
         setBackdropRect(null)
       }
-      if (composer) {
+      if (step === 'follow-up' && composer) {
         const r = composer.getBoundingClientRect()
         queueAnchoredRect(setFollowUpComposerHoleRect, {
           top: r.top,
@@ -1562,14 +1562,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    // For submit steps and follow-up, highlight the composer (match step 3). Follow-up also highlights the hero mirror when present.
+    // Submit and follow-up highlight the composer. Step 8 leaves it dimmed.
     if (
-      (step === 'submit-comparison' ||
-        step === 'submit-comparison-2' ||
-        step === 'follow-up' ||
-        step === 'view-follow-up-results') &&
-      (step !== 'follow-up' || isFollowUpComposerReady()) &&
-      (step !== 'view-follow-up-results' || !isLoading)
+      (step === 'submit-comparison' || step === 'submit-comparison-2' || step === 'follow-up') &&
+      (step !== 'follow-up' || isFollowUpComposerReady())
     ) {
       const composer = getComposerElement()
       if (composer) {
@@ -1615,9 +1611,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       // Step 7's ring is the same class. Stripping it when the target element
       // changes and putting it back starts translateY(20px) again after the
-      // card is already opaque.
-      const keepFollowUpComposerRing =
-        nextStep === 'follow-up' || nextStep === 'view-follow-up-results'
+      // card is already opaque. Step 8 drops that ring so the field dims.
+      const keepFollowUpComposerRing = nextStep === 'follow-up'
       getComposerElement()?.classList.remove('tutorial-dropdown-container-active')
       getHeroComposerForDropdownSteps()?.classList.remove('tutorial-dropdown-container-active')
       providerHighlights.forEach(el => {
@@ -1637,19 +1632,23 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
   }, [targetElement, step])
 
-  // Step 8's card anchors on the composer once the follow-up stream finishes.
-  // The highlight effect above does not re-run when loading flips, so paint the
-  // composer ring here or the field stays under the dim with no cutout.
+  // Step 7 leaves the composer ring on. Step 8 does not use the field, so take
+  // the ring off and let the page dim cover it. The field stays read-only.
   useEffect(() => {
-    if (step !== 'view-follow-up-results' || isLoading) return
-    const paint = () => {
-      if (stepRef.current !== 'view-follow-up-results' || isLoadingRef.current) return
-      getComposerElement()?.classList.add('mobile-tutorial-highlight')
+    if (step !== 'view-follow-up-results') return
+    const clear = () => {
+      if (stepRef.current !== 'view-follow-up-results') return
+      const composer = getComposerElement()
+      composer?.classList.remove('mobile-tutorial-highlight', 'tutorial-textarea-active')
+      if (composer) {
+        composer.style.pointerEvents = ''
+        composer.style.position = ''
+      }
     }
-    paint()
-    const interval = window.setInterval(paint, 200)
+    clear()
+    const interval = window.setInterval(clear, 200)
     return () => window.clearInterval(interval)
-  }, [step, isLoading])
+  }, [step])
 
   // Focus replaces the composer's className and drops the prompt glow. Put it back
   // while step 5 (and the follow-up prompt) is showing, including while the field is focused.
@@ -2270,10 +2269,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // During loading/streaming phase, use loadingStreamingRect; otherwise use normal cutout logic
   // Follow-up: dual clear rects (results + composer) are rendered as SVG — skip the single box-shadow cutout
   const useFollowUpDualCutout =
-    (step === 'follow-up' || step === 'view-follow-up-results') &&
-    backdropRect &&
-    followUpComposerHoleRect &&
-    !isLoadingStreamingPhase
+    step === 'follow-up' && backdropRect && followUpComposerHoleRect && !isLoadingStreamingPhase
   const keepFramedCutoutWhileOffScreen = tutorialStepUsesFramedCutoutShadow(step)
   const cutoutTarget: TargetRect | null = isLoadingStreamingPhase
     ? loadingStreamingRect
