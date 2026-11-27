@@ -146,7 +146,7 @@ describe('bare parenthetical LaTeX', () => {
 
     const untagged = renderReply('A sample:\n\n```\n(\\sqrt{2})\n```\n\nAfter the fence.')
     expect(untagged.querySelector('.katex')).toBeNull()
-    expect(untagged.querySelector('.preformatted-text code')?.textContent).toContain('(\\sqrt{2})')
+    expect(untagged.querySelector('.code-block-direct code')?.textContent).toContain('(\\sqrt{2})')
 
     const link = renderReply('See [the note](https://example.com/sqrt) and [docs](\\sqrt{2}).')
     expect(link.querySelector('.katex')).toBeNull()

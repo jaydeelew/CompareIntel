@@ -589,6 +589,7 @@
    Model-tab horizontal swipes are gated in shouldSuppressMobileModelTabSwipe. */
 .results-section-tabbed .message-content .latex-content .code-block,
 .results-section-tabbed .code-block-direct,
+.results-section-tabbed .preformatted-text,
 .results-section-tabbed pre.raw-output,
 .results-section-tabbed .latex-content .katex-display,
 .results-section-tabbed .latex-content .markdown-table-scroll {
@@ -1483,7 +1484,15 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   tab-size: 4;
 }
 
-.message-content .latex-content code:not(.inline-code):not(.code-block code) {
+/* Bare leftover <code>, not a fence. A fence's <code> — including language-less
+   `.preformatted-text` and any <pre> — must keep its own size, color, and
+   newlines. `white-space: nowrap` here collapsed untagged fences into one
+   pale scrolling line (white 85% text on the light preformatted background). */
+.message-content
+  .latex-content
+  code:not(.inline-code):not(.code-block code):not(.code-block-direct code):not(
+    .preformatted-text code
+  ):not(pre code) {
   background: rgba(60, 60, 60, 0.8);
   color: #ffffff;
   padding: 0.2em 0.4em;
@@ -1495,6 +1504,17 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   border: 1px solid rgba(110, 118, 129, 0.2);
   white-space: nowrap;
   display: inline;
+}
+
+.message-content .latex-content .preformatted-text code {
+  white-space: pre-wrap !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+  background: transparent !important;
+  display: block !important;
+  padding: 0 !important;
+  border: none !important;
 }
 
 .message-content .latex-content pre:not(.code-block) code {
@@ -2678,7 +2698,8 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
 
   .result-card .message-content .latex-content .code-block,
   .result-card .message-content .latex-content pre:not(.code-block),
-  .result-card .code-block-direct {
+  .result-card .code-block-direct,
+  .result-card .preformatted-text {
     max-width: 100%;
     box-sizing: border-box;
     overflow-x: auto !important;

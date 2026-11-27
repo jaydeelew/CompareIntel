@@ -18,27 +18,32 @@ export interface HarnessFixtureCell {
 export const CLIP_ARTIFACT_CELLS: HarnessFixtureCell[] = [
   {
     label: 'google/gemini-3.8-flash · 05-complex-scenarios',
-    jsonPath: 'rendering-harness/runs/2026-11-08-14/google_gemini-3.8-flash_05-complex-scenarios.json',
+    jsonPath:
+      'rendering-harness/runs/2026-11-08-14/google_gemini-3.8-flash_05-complex-scenarios.json',
   },
   {
     label: 'anthropic/claude-opus-5 · 04-mixed-markdown-latex',
-    jsonPath: 'rendering-harness/runs/2026-11-08-19/anthropic_claude-opus-5_04-mixed-markdown-latex.json',
+    jsonPath:
+      'rendering-harness/runs/2026-11-08-19/anthropic_claude-opus-5_04-mixed-markdown-latex.json',
   },
   {
     label: 'minimax/minimax-m3.1-flash · 05-complex-scenarios',
-    jsonPath: 'rendering-harness/runs/2026-11-08-05/minimax_minimax-m3.1-flash_05-complex-scenarios.json',
+    jsonPath:
+      'rendering-harness/runs/2026-11-08-05/minimax_minimax-m3.1-flash_05-complex-scenarios.json',
   },
 ]
 
 export const MOBILE_KATEX_FIXTURES: HarnessFixtureCell[] = [
   {
     label: 'google/gemini-3.8-flash · 04-mixed-markdown-latex',
-    jsonPath: 'rendering-harness/runs/2026-11-08-14/google_gemini-3.8-flash_04-mixed-markdown-latex.json',
+    jsonPath:
+      'rendering-harness/runs/2026-11-08-14/google_gemini-3.8-flash_04-mixed-markdown-latex.json',
   },
   ...CLIP_ARTIFACT_CELLS.slice(0, 1),
   {
     label: 'google/gemini-3.8-flash · 06-edge-cases-boundaries',
-    jsonPath: 'rendering-harness/runs/2026-11-08-14/google_gemini-3.8-flash_06-edge-cases-boundaries.json',
+    jsonPath:
+      'rendering-harness/runs/2026-11-08-14/google_gemini-3.8-flash_06-edge-cases-boundaries.json',
   },
   {
     label: 'qwen/qwen3-30b-a3b-instruct-2507 · 05-complex-scenarios',
@@ -49,12 +54,17 @@ export const MOBILE_KATEX_FIXTURES: HarnessFixtureCell[] = [
   CLIP_ARTIFACT_CELLS[2],
   {
     label: 'qwen/qwen3-coder-next · 05-complex-scenarios',
-    jsonPath: 'rendering-harness/runs/2026-11-08-06/qwen_qwen3-coder-next_05-complex-scenarios.json',
+    jsonPath:
+      'rendering-harness/runs/2026-11-08-06/qwen_qwen3-coder-next_05-complex-scenarios.json',
+    // The only display-sized formula is `$\begin{aligned}` inside a list-item
+    // ```html fence. That fence is code, so it must not become a KaTeX display.
+    minDisplayMath: 0,
   },
   CLIP_ARTIFACT_CELLS[1],
   {
     label: 'anthropic/claude-opus-5 · 05-complex-scenarios',
-    jsonPath: 'rendering-harness/runs/2026-11-08-19/anthropic_claude-opus-5_05-complex-scenarios.json',
+    jsonPath:
+      'rendering-harness/runs/2026-11-08-19/anthropic_claude-opus-5_05-complex-scenarios.json',
   },
 ]
 
@@ -243,7 +253,8 @@ export async function probeWideContentClip(page: Page): Promise<ClipProbe> {
 
         const elOx = getComputedStyle(htmlEl).overflowX
         const selfScrollable =
-          (elOx === 'auto' || elOx === 'scroll' || elOx === 'overlay') && scrollWidth > clientWidth + 2
+          (elOx === 'auto' || elOx === 'scroll' || elOx === 'overlay') &&
+          scrollWidth > clientWidth + 2
         if (selfScrollable && !outerClips) continue
 
         const widerThanVisible = scrollWidth > clientWidth + 2
@@ -355,7 +366,12 @@ export async function captureCardFullViewport(page: Page): Promise<Buffer> {
       const card = document.querySelector('.result-card') as HTMLElement | null
       if (!card) return null
       const r = card.getBoundingClientRect()
-      return { x: 0, y: Math.max(0, Math.floor(r.top)), width: 390, height: Math.min(Math.ceil(r.height) + 1, 2400) }
+      return {
+        x: 0,
+        y: Math.max(0, Math.floor(r.top)),
+        width: 390,
+        height: Math.min(Math.ceil(r.height) + 1, 2400),
+      }
     })
     if (!clip) throw new Error('No result card for viewport capture')
     return page.screenshot({ clip })
@@ -439,7 +455,9 @@ export async function auditMobileKatexOverflow(page: Page): Promise<KatexOverflo
     const docEl = document.documentElement
     const viewportWidth = docEl.clientWidth
     const documentScrollWidth = docEl.scrollWidth
-    const card = document.querySelector('.result-card.conversation-card, .result-card') as HTMLElement | null
+    const card = document.querySelector(
+      '.result-card.conversation-card, .result-card'
+    ) as HTMLElement | null
 
     if (documentScrollWidth > viewportWidth + 1) {
       return {

@@ -55,6 +55,34 @@ function isBlockquoteOnlyPrefix(prefix: string): boolean {
   return /^[ \t]{0,3}(?:>[ \t]*)+$/.test(prefix)
 }
 
+/**
+ * A fence indented past 3 spaces is still a fence when it sits in a list item.
+ * CommonMark measures that indent from the item's content column (`1.  ` is 4,
+ * `- ` is 2), and allows 0–3 more spaces. A top-level 4-space ``` is indented
+ * code, not a fence — treating it as one swallows the next real fence.
+ */
+function openListContentColumn(text: string, lineStart: number): number | null {
+  let end = lineStart
+  while (end > 0) {
+    const start = text.lastIndexOf('\n', end - 2) + 1
+    const line = text.slice(start, end - 1)
+    end = start
+    if (line.trim() === '') continue
+    const item = /^([ \t]*)(?:([-*•])|(\d+[.)]))([ \t]+)\S/.exec(line)
+    if (item) {
+      return item[1].length + (item[2] || item[3]).length + item[4].length
+    }
+    if (/^[ \t]+\S/.test(line)) continue
+    return null
+  }
+  return null
+}
+
+function stripFenceIndent(content: string, indent: number): string {
+  if (indent <= 0) return content
+  return content.replace(new RegExp(`^[ \\t]{0,${indent}}`, 'gm'), '')
+}
+
 function stripBlockquoteLinePrefix(line: string): string {
   return line.replace(/^[ \t]{0,3}(?:>[ \t]*)*/, '')
 }
@@ -68,14 +96,22 @@ function extractFencedCodeBlocks(
   let cursor = 0
   let out = ''
   while (cursor < text.length) {
-    const tick = text.indexOf('```', cursor)
-    if (tick === -1) {
+    const tickBack = text.indexOf('```', cursor)
+    const tickTilde = text.indexOf('~~~', cursor)
+    if (tickBack === -1 && tickTilde === -1) {
       out += text.slice(cursor)
       break
     }
+    const tick =
+      tickBack === -1 ? tickTilde : tickTilde === -1 ? tickBack : Math.min(tickBack, tickTilde)
+    const marker = tick === tickTilde ? '~~~' : '```'
     const prefix = linePrefix(text, tick)
+    const indent = /^[ \t]*$/.test(prefix) ? prefix.length : -1
+    const lineStartForList = text.lastIndexOf('\n', tick - 1) + 1
+    const listCol = indent > 3 ? openListContentColumn(text, lineStartForList) : null
+    const listFence = listCol !== null && indent >= listCol && indent <= listCol + 3
     const blockquoteFence = isBlockquoteOnlyPrefix(prefix)
-    if (!isFenceOpenerPrefix(prefix) && !blockquoteFence) {
+    if (!isFenceOpenerPrefix(prefix) && !blockquoteFence && !listFence) {
       out += text.slice(cursor, tick + 3)
       cursor = tick + 3
       continue
@@ -86,9 +122,9 @@ function extractFencedCodeBlocks(
       const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx
       const rawLine = text.slice(lineStart, lineEnd)
       const workLine = stripBlockquoteLinePrefix(rawLine)
-      const relTick = workLine.indexOf('```')
+      const relTick = workLine.indexOf(marker)
       const openerLine = relTick === -1 ? '' : workLine.slice(relTick)
-      const lineOpener = /^```([a-zA-Z0-9+#-]*)[ \t]*$/.exec(openerLine)
+      const lineOpener = new RegExp(`^${marker}([a-zA-Z0-9+#-]*)[ \\t]*$`).exec(openerLine)
       if (!lineOpener) {
         out += text.slice(cursor, tick + 3)
         cursor = tick + 3
@@ -98,13 +134,14 @@ function extractFencedCodeBlocks(
       const contentLines: string[] = []
       let scan = lineEnd < text.length ? lineEnd + 1 : text.length
       let closeEnd = -1
+      const quoteCloser = new RegExp(`^[ \\t]{0,3}${marker}[ \\t]*$`)
       while (scan < text.length) {
         const ls = scan
         const leIdx = text.indexOf('\n', scan)
         const le = leIdx === -1 ? text.length : leIdx
         const raw = text.slice(ls, le)
         const stripped = stripBlockquoteLinePrefix(raw)
-        if (/^[ \t]{0,3}```[ \t]*$/.test(stripped)) {
+        if (quoteCloser.test(stripped)) {
           closeEnd = leIdx === -1 ? text.length : le + 1
           break
         }
@@ -141,17 +178,20 @@ function extractFencedCodeBlocks(
     // Line-start fences keep PR 216's "rest of the line is the info string"
     // so ````markdown` is one opener. Mid-paragraph openers (Llama 3.3) may
     // only have a language token before the newline — prose after ``` is not a fence.
-    const lineStartFence = /^[ \t]{0,3}$/.test(prefix)
-    const openerRe = lineStartFence
-      ? /^```([a-zA-Z0-9+#-]*)[^\n]*\n/
-      : /^```([a-zA-Z0-9+#-]*)[ \t]*\n/
+    // `~~~` is the other CommonMark fence. A run of two tildes stays strikethrough.
+    const lineStartFence = indent >= 0 && indent <= 3
+    const openingFence = lineStartFence || listFence
+    const openerRe = openingFence
+      ? new RegExp(`^${marker}([a-zA-Z0-9+#-]*)[^\\n]*\\n`)
+      : new RegExp(`^${marker}([a-zA-Z0-9+#-]*)[ \\t]*\\n`)
     const opener = openerRe.exec(text.slice(tick))
     if (!opener) {
       out += text.slice(cursor, tick + 3)
       cursor = tick + 3
       continue
     }
-    const closerRe = /^[ \t]{0,3}```/gm
+    const maxCloserIndent = listFence ? (listCol ?? 0) + 3 : 3
+    const closerRe = new RegExp(`^[ \\t]{0,${maxCloserIndent}}${marker}`, 'gm')
     closerRe.lastIndex = tick + opener[0].length
     const closer = closerRe.exec(text)
     if (!closer) {
@@ -159,7 +199,8 @@ function extractFencedCodeBlocks(
       cursor = tick + 3
       continue
     }
-    const content = text.slice(tick + opener[0].length, closer.index)
+    let content = text.slice(tick + opener[0].length, closer.index)
+    if (listFence) content = stripFenceIndent(content, indent)
     const lang = (opener[1] || '').trim()
     const placeholder = nextPlaceholder()
     const block: CodeBlock = {
@@ -182,7 +223,10 @@ function extractFencedCodeBlocks(
  * Extract all code blocks from text and replace with placeholders
  *
  * Handles:
- * - Fenced code blocks (```language\ncontent\n```)
+ * - Fenced code blocks (```language or ~~~language)
+ * - Fences with no language, or language text / plaintext
+ * - Fences indented under a list item
+ * - CRLF and CR line endings (normalized to LF before scanning)
  * - Indented code blocks (4+ spaces)
  * - Nested code blocks
  * - Code blocks containing math-like content
@@ -194,7 +238,7 @@ function extractFencedCodeBlocks(
 export function extractCodeBlocks(text: string): CodeBlockExtraction {
   const blocks: CodeBlock[] = []
   const placeholderMap = new Map<string, CodeBlock>()
-  let processed = text
+  let processed = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
   let blockCounter = 0
 
   // A fenced block needs a newline after the info string and a closer at the
@@ -430,5 +474,9 @@ export function verifyCodeBlockPreservation(
  * @returns True if text contains code blocks
  */
 export function hasCodeBlocks(text: string): boolean {
-  return /```[\s\S]*?```/.test(text) || /(?:^|\n)(?: {4,}|\t+).*(?:\n(?: {4,}|\t+).*)*/m.test(text)
+  return (
+    /```[\s\S]*?```/.test(text) ||
+    /~~~[\s\S]*?~~~/.test(text) ||
+    /(?:^|\n)(?: {4,}|\t+).*(?:\n(?: {4,}|\t+).*)*/m.test(text)
+  )
 }

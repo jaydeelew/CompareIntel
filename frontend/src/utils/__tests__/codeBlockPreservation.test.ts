@@ -284,6 +284,114 @@ describe('codeBlockPreservation', () => {
     it('should return false for plain text', () => {
       expect(hasCodeBlocks('Just regular text with no code blocks')).toBe(false)
     })
+
+    it('detects tilde fences without treating strikethrough as a fence', () => {
+      expect(hasCodeBlocks('~~~\nplain\n~~~')).toBe(true)
+      expect(hasCodeBlocks('The old ~~name~~ stays.')).toBe(false)
+    })
+  })
+
+  describe('plain and alternate fences', () => {
+    const swapBody = 'Before: x=10, y=20\nAfter:  x=20, y=10'
+
+    it('keeps an untagged fence after a colon label, including internal spaces', () => {
+      const result = extractCodeBlocks(`Output:\n\`\`\`\n${swapBody}\n\`\`\`\n`)
+      expect(result.blocks).toHaveLength(1)
+      expect(result.blocks[0].language).toBe('')
+      expect(result.blocks[0].content).toBe(swapBody)
+      expect(result.text.startsWith('Output:\n__CODE_BLOCK_0__')).toBe(true)
+    })
+
+    it('extracts text and plaintext fences', () => {
+      const text = extractCodeBlocks('```text\nalpha = $1\nbeta = $2\n```')
+      const plain = extractCodeBlocks('```plaintext\nline one\nline two\n```')
+      expect(text.blocks[0].language).toBe('text')
+      expect(text.blocks[0].content).toBe('alpha = $1\nbeta = $2')
+      expect(plain.blocks[0].language).toBe('plaintext')
+      expect(plain.blocks[0].content).toBe('line one\nline two')
+    })
+
+    it('extracts tilde fences and leaves ~~strikethrough~~ alone', () => {
+      const fenced = extractCodeBlocks('Output:\n~~~\ntilde = $9\nstill = 1\n~~~\n')
+      expect(fenced.blocks).toHaveLength(1)
+      expect(fenced.blocks[0].language).toBe('')
+      expect(fenced.blocks[0].content).toBe('tilde = $9\nstill = 1')
+      const strike = extractCodeBlocks('The old ~~name~~ stays.')
+      expect(strike.blocks).toHaveLength(0)
+      expect(strike.text).toContain('~~name~~')
+    })
+
+    it('normalizes CRLF fences to LF inside the block', () => {
+      const result = extractCodeBlocks(`Output:\r\n\`\`\`\r\n${swapBody}\r\n\`\`\`\r\n`)
+      expect(result.blocks).toHaveLength(1)
+      expect(result.blocks[0].content).toBe(swapBody)
+      expect(result.blocks[0].content).not.toContain('\r')
+    })
+
+    it('keeps = and $ inside a fence instead of leaving them for math', () => {
+      const result = extractCodeBlocks('```\nprice = $50\nx = 10\n```')
+      expect(result.blocks[0].content).toBe('price = $50\nx = 10')
+      expect(result.text).not.toContain('$50')
+      expect(result.text).not.toContain('x = 10')
+    })
+
+    it('extracts a fence indented to a list item content column', () => {
+      const ordered = [
+        '1.  Swap them:',
+        '    ```',
+        '    Before: x=10, y=20',
+        '    After:  x=20, y=10',
+        '    ```',
+      ].join('\n')
+      const orderedResult = extractCodeBlocks(ordered)
+      expect(orderedResult.blocks).toHaveLength(1)
+      expect(orderedResult.blocks[0].content).toBe(swapBody)
+
+      const nested = [
+        '- Swap them:',
+        '    ```text',
+        '    Before: x=10, y=20',
+        '    After:  x=20, y=10',
+        '    ```',
+      ].join('\n')
+      const nestedResult = extractCodeBlocks(nested)
+      expect(nestedResult.blocks).toHaveLength(1)
+      expect(nestedResult.blocks[0].language).toBe('text')
+      expect(nestedResult.blocks[0].content).toBe(swapBody)
+    })
+
+    it('does not let a list-item fence swallow the math on the next line', () => {
+      const text = [
+        '- *Multiline math*: wrap in raw HTML:',
+        '    ```html',
+        '    <div>$\\begin{aligned}',
+        '      x &= 1',
+        '    \\end{aligned}$</div>',
+        '    ```',
+        '    $A = \\pi r^2$',
+      ].join('\n')
+      const result = extractCodeBlocks(text)
+      expect(result.blocks).toHaveLength(1)
+      expect(result.blocks[0].language).toBe('html')
+      expect(result.blocks[0].content).toContain('\\begin{aligned}')
+      expect(result.blocks[0].content).not.toContain('\\pi')
+      expect(result.text).toContain('$A = \\pi r^2$')
+    })
+
+    it('extracts a two-space fence under a dash item', () => {
+      const text = [
+        '- Swap them:',
+        '  ```',
+        '  Before: x=10, y=20',
+        '  After:  x=20, y=10',
+        '  ```',
+      ].join('\n')
+      const result = extractCodeBlocks(text)
+      expect(result.blocks).toHaveLength(1)
+      expect(result.blocks[0].content).toContain('Before: x=10, y=20')
+      expect(result.blocks[0].content).toContain('\n')
+      expect(result.blocks[0].content).toContain('After:  x=20, y=10')
+    })
   })
 
   describe('edge cases', () => {

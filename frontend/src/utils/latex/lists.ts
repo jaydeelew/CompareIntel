@@ -19,7 +19,7 @@ function isStructuralInterrupt(line: string): boolean {
   const t = line.trim()
   // A column-0 heading ends the list. An indented heading is a block inside the item.
   if (/^#{1,6}(?:\s|$)/.test(t)) return lineIndent(line) === 0
-  if (/^```/.test(t)) return true
+  if (/^(?:```|~~~)/.test(t)) return true
   if (/^(?:-{3,}|\*{3,}|_{3,})\s*$/.test(t)) return true
   if (/^<hr\b/i.test(t)) return true
   // A column-0 pipe line cannot open a table inside a list item: markdown-it
