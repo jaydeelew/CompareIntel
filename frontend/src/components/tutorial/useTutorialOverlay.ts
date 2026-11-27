@@ -875,9 +875,10 @@ export function useTutorialOverlay(
       ) {
         const root = getTutorialScrollRoot()
         if (Math.abs(root.getScrollTop() - frozen.scrollTop) > 0.5) {
-          root.scrollToTop(frozen.scrollTop, 'auto')
+          frozenPairScrollRef.current = null
+        } else {
+          return
         }
-        return
       }
       const rect = layoutRectForStep() ?? el.getBoundingClientRect()
       // The processing panel can own the cutout. The card never anchors to it.
@@ -1098,8 +1099,10 @@ export function useTutorialOverlay(
     let tries = 0
     // Scroll offset once the follow-up card is seated. A later user scroll must
     // not be treated as the results block pushing the composer off screen.
-    let seatedTop: number | null = null
     let userTookOver = false
+    // Scroll the page once to seat the card. Later ticks only place it.
+    let reviewScrollSeated = false
+    let followUpScrollSeated = false
 
     const readLayout = () => {
       const spot = readStreamingComparisonSpotlight(streamAnswerStartedRef.current)
@@ -1149,35 +1152,24 @@ export function useTutorialOverlay(
       const tip = document.querySelector('.tutorial-tooltip') as HTMLElement | null
       if (!tip || !(Number(getComputedStyle(tip).opacity) > 0.9)) return
       if (step === 'follow-up') {
-        const scrollTop = getTutorialScrollRoot().getScrollTop()
-        if (seatedTop == null) {
-          if (!followUpPairOffScreen()) seatedTop = scrollTop
-        } else if (Math.abs(scrollTop - seatedTop) > 24) {
-          userTookOver = true
-          return
-        }
-      }
-      // The arrow can already meet the composer while the card still runs
-      // under the footer. Keep opening room until the laid-out card fits.
-      // Step 8 uses the same loop to keep its card off the results panel.
-      if (step === 'view-follow-up-results' && !userTookOver) {
-        const scrollTop = getTutorialScrollRoot().getScrollTop()
-        if (seatedTop != null && Math.abs(scrollTop - seatedTop) > 24) {
-          userTookOver = true
-        } else {
-          const delta = scrollReviewTooltipBesideResults({
+        if (!followUpScrollSeated && tutorialTooltipPrefersBelow(step)) {
+          scrollFollowUpHighlightIntoView({
             tooltipHeight: tip.getBoundingClientRect().height,
             arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+            preferred: 'below',
           })
-          if (delta === 0) seatedTop = getTutorialScrollRoot().getScrollTop()
+          followUpScrollSeated = true
         }
+        return
       }
-      if (tutorialTooltipPrefersBelow(step) && !userTookOver) {
-        scrollFollowUpHighlightIntoView({
+      // Seat step 8 once so the card starts above the results. A later scroll
+      // repositions the card and must not move the page again.
+      if (step === 'view-follow-up-results' && !reviewScrollSeated) {
+        scrollReviewTooltipBesideResults({
           tooltipHeight: tip.getBoundingClientRect().height,
           arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
-          preferred: 'below',
         })
+        reviewScrollSeated = true
       }
       const rect = readLayout()
       const pairOffScreen = followUpPairOffScreen()
@@ -1209,10 +1201,9 @@ export function useTutorialOverlay(
         try {
           await waitForRectStable(readLayout, { timeoutMs: 800, quietMs: 160 })
           if (cancelled || stepRef.current !== step) return
-          if (
-            step === 'follow-up' &&
-            Math.abs(getTutorialScrollRoot().getScrollTop() - scrollAtStart) > 24
-          ) {
+          // Follow-up returns before this correction. The remaining step is
+          // the review card, which was seated once above.
+          if (Math.abs(getTutorialScrollRoot().getScrollTop() - scrollAtStart) > 24) {
             userTookOver = true
             return
           }
@@ -1225,16 +1216,20 @@ export function useTutorialOverlay(
               : 'above'
           const tooltipHeight = window.innerHeight < 700 ? 160 : 210
           if (step === 'view-follow-up-results') {
-            scrollReviewTooltipBesideResults({
-              tooltipHeight,
-              arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
-            })
-          } else if (tutorialTooltipPrefersBelow(step)) {
+            if (!reviewScrollSeated) {
+              scrollReviewTooltipBesideResults({
+                tooltipHeight,
+                arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+              })
+              reviewScrollSeated = true
+            }
+          } else if (tutorialTooltipPrefersBelow(step) && !followUpScrollSeated) {
             scrollFollowUpHighlightIntoView({
               tooltipHeight,
               arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
               preferred: 'below',
             })
+            followUpScrollSeated = true
           } else {
             centerTutorialStepRect(step, settled)
             await waitForRectStable(readLayout, { timeoutMs: 240, quietMs: 60 })
@@ -1275,9 +1270,6 @@ export function useTutorialOverlay(
             setPositionStabilized(true)
             setSpotlightSettling(false)
             setTutorialSpotlightSettling(false)
-            if (step === 'follow-up' && !userTookOver) {
-              seatedTop = getTutorialScrollRoot().getScrollTop()
-            }
           }
           running = false
         }
@@ -2067,7 +2059,7 @@ export function useTutorialOverlay(
           if (!userMovedLoading) {
             const root = getTutorialScrollRoot()
             const scrollTop = root.getScrollTop()
-            if (loadingPinScroll != null && Math.abs(scrollTop - loadingPinScroll) > 24) {
+            if (loadingPinScroll != null && Math.abs(scrollTop - loadingPinScroll) > 2) {
               userMovedLoading = true
             } else if (Math.abs(box.top - desiredTop) > 12) {
               scrollTutorialElementToViewportY(loadingSection, desiredTop)
@@ -2112,17 +2104,18 @@ export function useTutorialOverlay(
         if (pinStreamingResults && !userMovedResults) {
           const root = getTutorialScrollRoot()
           const scrollTop = root.getScrollTop()
-          const desiredTop = streamingResultsTopInViewport()
-          const before = resultsSection.getBoundingClientRect()
-          // Keep correcting until the card is actually at the top. A scroll
-          // that happens before that is the handoff, not the user.
-          if (Math.abs(before.top - desiredTop) > 12) {
-            scrollTutorialElementToViewportY(resultsSection, desiredTop)
-            resultsPinScroll = root.getScrollTop()
-          } else if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
+          // After the first pin, any further movement is the user's.
+          if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 2) {
             userMovedResults = true
           } else {
-            resultsPinScroll = scrollTop
+            const desiredTop = streamingResultsTopInViewport()
+            const before = resultsSection.getBoundingClientRect()
+            if (Math.abs(before.top - desiredTop) > 12) {
+              scrollTutorialElementToViewportY(resultsSection, desiredTop)
+              resultsPinScroll = root.getScrollTop()
+            } else {
+              resultsPinScroll = scrollTop
+            }
           }
         } else if (
           !pinStreamingResults &&
