@@ -273,11 +273,27 @@ async function expectHighlightLockedDuringFastScroll(page: Page, label: string):
       if (!tip) return null
       const r = tip.getBoundingClientRect()
       if (r.width < 8 || r.height < 8) return null
+      const arrow = tip.querySelector('.tutorial-arrow, .mobile-tutorial-arrow')
+      let arrowDir = ''
+      if (
+        arrow?.classList.contains('mobile-tutorial-arrow-up') ||
+        arrow?.classList.contains('tutorial-arrow-bottom')
+      ) {
+        arrowDir = 'up'
+      } else if (
+        arrow?.classList.contains('mobile-tutorial-arrow-down') ||
+        arrow?.classList.contains('tutorial-arrow-top')
+      ) {
+        arrowDir = 'down'
+      }
       return {
         top: r.top,
+        bottom: r.bottom,
         left: r.left,
+        right: r.right,
         position: getComputedStyle(tip).position,
         fullscreen: tip.classList.contains('mobile-tutorial-fullscreen-tooltip'),
+        arrow: arrowDir,
       }
     }
 
@@ -414,7 +430,41 @@ async function expectHighlightLockedDuringFastScroll(page: Page, label: string):
         ) {
           const dTip = tipAfter.top - tipBefore.top
           const dTgt = after[0].target.top - before[0].target.top
-          if (Math.abs(dTip - dTgt) > 2) {
+          // Step 8 moves the card from above the results to below them once
+          // the panel's top edge leaves the viewport. That jump is the seat
+          // change, not the card drifting off its target. Same-side motion
+          // still has to match the panel.
+          const reviewFlip =
+            document.documentElement.dataset.tutorialStep === 'view-follow-up-results' &&
+            tipBefore.arrow !== '' &&
+            tipAfter.arrow !== tipBefore.arrow
+          if (reviewFlip) {
+            const results = document.querySelector('.results-section')?.getBoundingClientRect()
+            const composer = document
+              .querySelector(
+                '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
+              )
+              ?.getBoundingClientRect()
+            const overlaps = (box: DOMRect | undefined) => {
+              if (!box || box.width < 2 || box.height < 2) return false
+              const overlapW =
+                Math.min(tipAfter.right, box.right) - Math.max(tipAfter.left, box.left)
+              const overlapH =
+                Math.min(tipAfter.bottom, box.bottom) - Math.max(tipAfter.top, box.top)
+              return overlapW > 1 && overlapH > 1
+            }
+            if (!results) {
+              problems.push(`${when} review flip lost the results panel`)
+            } else if (overlaps(results)) {
+              problems.push(`${when} review flip covers the results`)
+            } else if (composer && overlaps(composer)) {
+              problems.push(`${when} review flip covers the composer`)
+            } else if (tipAfter.arrow === 'up' && tipAfter.top < results.bottom - 2) {
+              problems.push(`${when} review flip arrow up but the card is not below the panel`)
+            } else if (tipAfter.arrow === 'down' && tipAfter.bottom > results.top + 2) {
+              problems.push(`${when} review flip arrow down but the card is not above the panel`)
+            }
+          } else if (Math.abs(dTip - dTgt) > 2) {
             problems.push(`${when} tooltip Δ ${dTip.toFixed(1)} target Δ ${dTgt.toFixed(1)}`)
           }
         }

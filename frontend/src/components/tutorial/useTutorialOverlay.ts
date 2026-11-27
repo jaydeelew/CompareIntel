@@ -365,10 +365,14 @@ export function useTutorialOverlay(
       dx = window.innerWidth - margin - rect.right
     }
 
-    // Follow-up is glued to the composer. After it settles, pulling the card
-    // back into the viewport leaves it stuck over the results.
-    const followComposer = step === 'follow-up' && !spotlightSettling
-    if (!followComposer) {
+    // Follow-up is glued to the composer. Step 8 is glued to the results
+    // edge: once that edge leaves the viewport the card moves below the
+    // panel, under the composer when the gap is shorter than the card.
+    // Pulling either card back into the viewport pins it on screen and
+    // leaves it covering the replies or the composer.
+    const gluedToAnchor =
+      (step === 'follow-up' || step === 'view-follow-up-results') && !spotlightSettling
+    if (!gluedToAnchor) {
       if (rect.top < margin) dy = margin - rect.top
       else if (rect.bottom > window.innerHeight - margin) {
         dy = window.innerHeight - margin - rect.bottom
