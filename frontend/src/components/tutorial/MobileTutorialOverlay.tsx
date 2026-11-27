@@ -309,6 +309,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   } | null>(null)
   // Capture only the position written when the card finishes fading in.
   const pairFreezeReadyRef = useRef(false)
+  // Step 7 and step 8 scroll once to seat the card. Later motion only moves the
+  // card. A scroll on every frame pulls the page back under the finger.
+  const reviewScrollSeatedRef = useRef(false)
+  const followUpScrollSeatedRef = useRef(false)
   // History → save keeps the composer cutout mounted. Replaying its opacity
   // transition (or swapping in the full-screen dim) leaves Mobile Safari at a
   // partial opacity, so step 10's ring paints fainter than step 9's.
@@ -323,6 +327,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (step !== 'history-dropdown' && step !== 'save-selection') {
       clearTutorialScrollTail()
     }
+    reviewScrollSeatedRef.current = false
+    followUpScrollSeatedRef.current = false
   }, [step])
 
   // Reset save-selection flag synchronously before paint when entering step 8
@@ -539,7 +545,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (!targetElement || !step) return
 
     const pairStep = step === 'history-dropdown' || step === 'save-selection'
-    const frozenPair =
+    let frozenPair =
       pairStep &&
       spotlightSettledRef.current &&
       pairFreezeReadyRef.current &&
@@ -549,11 +555,15 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (frozenPair) {
       const root = getTutorialScrollRoot()
       if (Math.abs(root.getScrollTop() - frozenPair.scrollTop) > 0.5) {
-        root.scrollToTop(frozenPair.scrollTop, 'auto')
-      }
-      const composer = getComposerElement()
-      if (composer && Math.abs(readHistoryComposerLift(composer) - frozenPair.lift) > 0.5) {
-        setHistoryComposerLift(composer, frozenPair.lift)
+        // The user moved the page. Drop the freeze and place the card again.
+        // Restoring the old offset is what made history and save fight the scroll.
+        frozenPairRef.current = null
+        frozenPair = null
+      } else {
+        const composer = getComposerElement()
+        if (composer && Math.abs(readHistoryComposerLift(composer) - frozenPair.lift) > 0.5) {
+          setHistoryComposerLift(composer, frozenPair.lift)
+        }
       }
     }
 
@@ -763,23 +773,29 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Place against the framed highlight, not a stale header or a clamped screen edge.
     // Follow-up keeps the card below the composer. Step 8 sits above the results
     // panel so it does not cover the replies or the highlighted composer.
+    // Each of those scrolls runs once, while the step is seating. After that the
+    // card moves with the highlight and the page stays where the user put it.
     const reviewStep = step === 'view-follow-up-results' && !isLoadingRef.current
-    if (reviewStep) {
-      scrollReviewTooltipBesideResults({
-        tooltipHeight: tooltipHeight > 1 ? tooltipHeight : tooltipEstimatedHeight,
-        arrowSize,
-        padding,
-      })
+    const tooltipForScroll = tooltipHeight > 1 ? tooltipHeight : tooltipEstimatedHeight
+    if (reviewStep && !reviewScrollSeatedRef.current) {
+      const results = document.querySelector('.results-section')
+      if (results instanceof HTMLElement && results.getBoundingClientRect().height > 2) {
+        scrollReviewTooltipBesideResults({
+          tooltipHeight: tooltipForScroll,
+          arrowSize,
+          padding,
+        })
+        reviewScrollSeatedRef.current = true
+      }
     } else if (
+      !followUpScrollSeatedRef.current &&
       tutorialTooltipPrefersBelow(step) &&
       !followUpStreamingRoundRef.current &&
-      // After the card is shown, a late font wrap makes it taller than the gap
-      // reserved at settle. Keep opening that gap. Once the follow-up request
-      // is in flight, scrolling would pull the processing panel off screen.
-      (!spotlightSettledRef.current || !isLoadingRef.current)
+      !spotlightSettledRef.current &&
+      !isLoadingRef.current
     ) {
       scrollFollowUpHighlightIntoView({
-        tooltipHeight: tooltipHeight > 1 ? tooltipHeight : tooltipEstimatedHeight,
+        tooltipHeight: tooltipForScroll,
         arrowSize,
         preferred: 'below',
       })
@@ -1373,11 +1389,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       ) {
         const root = getTutorialScrollRoot()
         if (Math.abs(root.getScrollTop() - frozen.scrollTop) > 0.5) {
-          root.scrollToTop(frozen.scrollTop, 'auto')
-        }
-        const composer = getComposerElement()
-        if (composer && Math.abs(readHistoryComposerLift(composer) - frozen.lift) > 0.5) {
-          setHistoryComposerLift(composer, frozen.lift)
+          frozenPairRef.current = null
+          calculatePositions()
+        } else {
+          const composer = getComposerElement()
+          if (composer && Math.abs(readHistoryComposerLift(composer) - frozen.lift) > 0.5) {
+            setHistoryComposerLift(composer, frozen.lift)
+          }
         }
       }
       if (!spotlightSettledRef.current || settledStepRef.current !== stepNow) return
@@ -1755,11 +1773,17 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         holdFirstStream ||
         (current === 'follow-up' && !followUpStarted && !isFollowUpComposerReady())
       if (!active) {
-        if (isReview) {
-          scrollReviewTooltipBesideResults({
-            tooltipHeight: overlayRef.current?.getBoundingClientRect().height || 220,
-            arrowSize: MOBILE_TUTORIAL_ARROW_PX,
-          })
+        // One seat when the review step leaves the processing panel. Repeating
+        // this on the motion sampler is the scroll that fights the finger.
+        if (isReview && !reviewScrollSeatedRef.current && !loading) {
+          const results = document.querySelector('.results-section')
+          if (results instanceof HTMLElement && results.getBoundingClientRect().height > 2) {
+            scrollReviewTooltipBesideResults({
+              tooltipHeight: overlayRef.current?.getBoundingClientRect().height || 220,
+              arrowSize: MOBILE_TUTORIAL_ARROW_PX,
+            })
+            reviewScrollSeatedRef.current = true
+          }
         }
         setLoadingStreamingRect(prev => (prev == null ? prev : null))
         return
@@ -1845,17 +1869,19 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         if (pinStreamingResults && !userMovedResults) {
           const root = getTutorialScrollRoot()
           const scrollTop = root.getScrollTop()
-          const desiredTop = streamingResultsTopInViewport()
-          const before = resultsSection.getBoundingClientRect()
-          // Keep correcting until the card is actually at the top. A scroll
-          // that happens before that is the handoff, not the user.
-          if (Math.abs(before.top - desiredTop) > 12) {
-            scrollTutorialElementToViewportY(resultsSection, desiredTop)
-            resultsPinScroll = root.getScrollTop()
-          } else if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 24) {
+          // After the first pin, any further movement is the user's. Correcting
+          // it again is the jitter.
+          if (resultsPinScroll != null && Math.abs(scrollTop - resultsPinScroll) > 2) {
             userMovedResults = true
           } else {
-            resultsPinScroll = scrollTop
+            const desiredTop = streamingResultsTopInViewport()
+            const before = resultsSection.getBoundingClientRect()
+            if (Math.abs(before.top - desiredTop) > 12) {
+              scrollTutorialElementToViewportY(resultsSection, desiredTop)
+              resultsPinScroll = root.getScrollTop()
+            } else {
+              resultsPinScroll = scrollTop
+            }
           }
         } else if (
           !pinStreamingResults &&
@@ -1944,6 +1970,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         return
       }
       const scrollTop = getTutorialScrollRoot().getScrollTop()
+      // Once the card has faded in, leave the page alone. The interval used to
+      // pull the composer back for several seconds, which cancelled a scroll.
+      if (spotlightSettledRef.current) {
+        if (seatedTop == null) seatedTop = scrollTop
+        else if (Math.abs(scrollTop - seatedTop) > 1) window.clearInterval(intervalId)
+        followUpScrollSeatedRef.current = true
+        return
+      }
       const composer = readPortaledFollowUpComposerRect()
       const view = readVisualViewportBox()
       const viewBottom = view.top + view.height
@@ -1976,16 +2010,17 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         Math.min(card.right, foot.right) - Math.max(card.left, foot.left) > 1 &&
         Math.min(card.bottom, foot.bottom) - Math.max(card.top, foot.top) > 1
       )
+      // A scroll that is not the one this interval just applied is the user's.
+      if (seatedTop != null && Math.abs(scrollTop - seatedTop) > 1) {
+        window.clearInterval(intervalId)
+        return
+      }
       // The composer can be on screen while the card under it hangs past the
       // fold or sits on the footer. That is not seated yet.
       if (onScreen && !cardOffscreen && !cardOnFooter) {
-        seatedTop = scrollTop
+        if (seatedTop == null) seatedTop = scrollTop
         if (stableSince === 0) stableSince = performance.now()
         if (performance.now() - stableSince > 4000) window.clearInterval(intervalId)
-        return
-      }
-      if (seatedTop != null && Math.abs(scrollTop - seatedTop) > 24) {
-        window.clearInterval(intervalId)
         return
       }
       stableSince = 0

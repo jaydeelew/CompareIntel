@@ -163,6 +163,11 @@ function tutorialPageScroller(): HTMLElement {
   const doc = (document.scrollingElement as HTMLElement | null) ?? document.documentElement
   const app = document.querySelector('.app') as HTMLElement | null
   if (!app || app.scrollHeight <= app.clientHeight + 1) return doc
+  // While the tutorial portal is mounted, `.app` is overflow:visible so the
+  // footer can scroll with the page. It is not a scroller then: writing
+  // scrollTop does nothing, and a finger on the dim is swallowed.
+  const overflowY = getComputedStyle(app).overflowY
+  if (overflowY !== 'auto' && overflowY !== 'scroll' && overflowY !== 'overlay') return doc
   // .app is the page scroller only when it is the viewport-sized box. When the
   // page grows, the document scrolls that tall box. An absolute tutorial card
   // can make .app's scrollHeight larger than the document's, and that sliver
