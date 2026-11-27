@@ -241,12 +241,20 @@ test.describe('Mobile Platform Tests', () => {
         await Promise.all(animations.map(a => a.finished))
       })
 
+      // The desktop bar folds again after a few seconds of inactivity. The
+      // checks above can outlast that timer, and a folded bar leaves Sign Up
+      // under `.app-main` (or above the viewport). A 10s click then spends
+      // the rest of its budget hitting the folded shell. Reopen the bar and
+      // use a short click so one attempt finishes before the next hide.
       const hasTouch = await page.evaluate(() => navigator.maxTouchPoints > 0)
-      if (hasTouch) {
-        await signUpButton.tap({ timeout: 10000 })
-      } else {
-        await signUpButton.click({ timeout: 10000 })
-      }
+      await expect(async () => {
+        await ensureUnfoldedNavbar(page)
+        if (hasTouch) {
+          await signUpButton.tap({ timeout: 3000 })
+        } else {
+          await signUpButton.click({ timeout: 3000 })
+        }
+      }).toPass({ timeout: 20000 })
 
       // Auth modal should appear
       const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
