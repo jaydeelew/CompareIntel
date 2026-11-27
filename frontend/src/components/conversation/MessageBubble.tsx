@@ -4,7 +4,7 @@ import { RESULT_TAB, type ResultTab } from '../../types'
 import { formatTime, getSafeId } from '../../utils'
 import { StyledTooltip } from '../shared'
 
-import { getLoadedLatexRenderer, setLoadedLatexRenderer } from './latexRendererCache'
+import { getLoadedLatexRenderer, loadLatexRenderer } from './latexRendererCache'
 
 interface LazyLatexRendererProps {
   children: string
@@ -15,24 +15,15 @@ interface LazyLatexRendererProps {
 
 type LatexRendererComponent = React.ComponentType<LazyLatexRendererProps>
 
-const loadLatexRenderer = () =>
-  import('../LatexRenderer').then(module => {
-    setLoadedLatexRenderer(module.default)
-    return module.default
-  })
-
-// The renderer (and KaTeX) sits past the app-main gzip budget. Fetch it after
-// first paint so formatted replies do not parse it on the critical path.
-// Skip module-level preload under Vitest — async import after env teardown fails the suite.
+// The renderer (and KaTeX) sits past the app-main gzip budget, so it stays a
+// separate chunk. Start that fetch as soon as this module evaluates — waiting
+// for an idle callback left the formatted tab painting the raw reply (LaTeX
+// delimiters and **bold**) after the stream had already finished.
+// Skip the preload under Vitest — an async import after env teardown fails the suite.
 if (typeof window !== 'undefined' && !import.meta.env.VITEST) {
-  const preloadLatexRenderer = () => {
-    void loadLatexRenderer()
-  }
-  if (typeof window.requestIdleCallback === 'function') {
-    window.requestIdleCallback(preloadLatexRenderer, { timeout: 4000 })
-  } else {
-    window.setTimeout(preloadLatexRenderer, 1500)
-  }
+  void loadLatexRenderer().catch(() => {
+    // The bubble effect retries. Swallow this so a 404 does not reject the page.
+  })
 }
 
 const BRAND_LOGO_SRC = '/brand/logo.svg'
@@ -169,11 +160,23 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   useEffect(() => {
     if (LatexView) return
     let cancelled = false
-    void loadLatexRenderer().then(Renderer => {
-      if (!cancelled) setLatexView(() => Renderer)
-    })
+    let retry: ReturnType<typeof setTimeout> | undefined
+    let delay = 300
+    const run = () => {
+      void loadLatexRenderer()
+        .then(Renderer => {
+          if (!cancelled) setLatexView(() => Renderer)
+        })
+        .catch(() => {
+          if (cancelled) return
+          retry = setTimeout(run, delay)
+          delay = Math.min(delay * 2, 4000)
+        })
+    }
+    run()
     return () => {
       cancelled = true
+      if (retry) clearTimeout(retry)
     }
   }, [LatexView])
 
@@ -373,9 +376,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 {safeContent}
               </LatexView>
             ) : (
-              <div className="result-output" aria-busy="true" data-renderer-pending="true">
-                {streaming ? null : safeContent}
-              </div>
+              <div className="result-output" aria-busy="true" data-renderer-pending="true" />
             )
           ) : (
             /* Raw text for immediate streaming display */
