@@ -5,7 +5,7 @@
  * production layout-regression baseline).
  */
 
-import { test, expect } from './fixtures'
+import { test, expect, ensureUnfoldedNavbar } from './fixtures'
 import { mockModelsApi } from './helpers/mockModels'
 
 const HEIGHTS = {
@@ -51,7 +51,9 @@ test.describe('Footer ends the desktop page', () => {
     await page.locator('.models-section').waitFor({ state: 'visible' })
     await page.locator('footer').waitFor({ state: 'attached' })
     await page.evaluate(() => document.fonts.ready)
-    await page.waitForTimeout(200)
+    // The desktop bar folds after 5s. Folded, the hero is 100vh (900) instead of
+    // 100vh minus the 64px bar (836). Hold it open so this stays the open-navbar baseline.
+    await ensureUnfoldedNavbar(page)
 
     const measured = await page.evaluate(() => {
       const height = (selector: string) => {
