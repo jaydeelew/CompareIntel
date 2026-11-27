@@ -23,6 +23,7 @@ import {
 import {
   advanceFollowUpStreamingRound,
   applyProviderPickerHighlight,
+  clearProviderPickerHighlight,
   clampTooltipTop,
   deferScroll,
   elementHasSpotlightBox,
@@ -1508,6 +1509,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     return () => {
       window.clearInterval(interval)
+      // Drop the row or card ring once the tour leaves the provider steps.
+      // stepRef is already the next step when this cleanup runs.
+      if (!isProviderPickerTutorialStep(stepRef.current)) {
+        clearProviderPickerHighlight('mobile-tutorial-highlight')
+      }
     }
   }, [step, tutorialProviderNames])
 
@@ -2473,6 +2479,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                   Step {stepIndex} of {totalSteps}
                 </span>
                 <button
+                  type="button"
                   className="mobile-tutorial-close-button"
                   onClick={onSkip}
                   aria-label="Skip tutorial"

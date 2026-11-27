@@ -79,7 +79,12 @@ export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
           <span className="tutorial-step-indicator">
             Step {stepIndex} of {totalSteps}
           </span>
-          <button className="tutorial-close-button" onClick={onSkip} aria-label="Skip tutorial">
+          <button
+            type="button"
+            className="tutorial-close-button"
+            onClick={onSkip}
+            aria-label="Skip tutorial"
+          >
             ×
           </button>
         </div>

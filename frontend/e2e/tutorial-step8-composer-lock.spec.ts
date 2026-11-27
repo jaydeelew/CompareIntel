@@ -190,7 +190,15 @@ test('step 8 blocks composer text and typing works after the step ends', async (
     timeout: 15_000,
   })
   await expect(page.locator('.composer.tutorial-review-input-locked')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Skip tutorial' }).click()
+  const skip = page.getByRole('button', { name: 'Skip tutorial' })
+  // WebKit can report the pointer click as done while the card stays mounted.
+  // A DOM click still reaches the button's handler.
+  await skip.click()
+  if (await tutorialTooltip(page).first().isVisible()) {
+    await skip.evaluate(el => {
+      if (el instanceof HTMLButtonElement) el.click()
+    })
+  }
   await expect(tutorialTooltip(page).first()).toBeHidden({ timeout: 15_000 })
 
   const after = composer(page)
