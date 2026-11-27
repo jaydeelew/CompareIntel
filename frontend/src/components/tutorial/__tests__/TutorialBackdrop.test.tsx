@@ -176,7 +176,7 @@ describe('TutorialBackdrop', () => {
     expect(document.querySelector('.tutorial-backdrop-follow-up-composer-ring')).toBeInTheDocument()
   })
 
-  it('should render the review step with the same composer hole as follow-up', () => {
+  it('should dim the review step around the results and leave the composer covered', () => {
     render(
       <TutorialBackdrop
         step="view-follow-up-results"
@@ -198,9 +198,13 @@ describe('TutorialBackdrop', () => {
       />
     )
 
-    expect(document.querySelector('svg.tutorial-scroll-dim')).toBeInTheDocument()
-    expect(document.querySelector('.tutorial-backdrop-follow-up-results-ring')).toBeInTheDocument()
-    expect(document.querySelector('.tutorial-backdrop-follow-up-composer-ring')).toBeInTheDocument()
+    const ring = document.querySelector('.tutorial-backdrop-follow-up-results-ring')
+    expect(ring).toBeInTheDocument()
+    expect((ring as HTMLElement).style.boxShadow).toContain('rgba(0, 0, 0, 0.6)')
+    expect(
+      document.querySelector('.tutorial-backdrop-follow-up-composer-ring')
+    ).not.toBeInTheDocument()
+    expect(document.querySelector('svg.tutorial-scroll-dim')).not.toBeInTheDocument()
   })
 
   it('should render default backdrop with button cutout when buttonCutout provided', () => {

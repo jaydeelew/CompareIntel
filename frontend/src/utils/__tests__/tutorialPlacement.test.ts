@@ -1,12 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  chooseReviewTooltipSide,
   clampTooltipTop,
   deferScroll,
   followUpScrollDelta,
   historyPairScrollDelta,
+  placeReviewTooltip,
   placeTooltipBoxAgainstFrame,
   readTutorialContentOrigin,
+  resetReviewTooltipSide,
+  REVIEW_TOOLTIP_HYSTERESIS_PX,
   scrollContentOffset,
   scrollDeltaToFitTooltip,
   visibleViewportHeight,
@@ -282,5 +286,83 @@ describe('deferScroll', () => {
     cancel()
     vi.advanceTimersByTime(100)
     expect(scroll).not.toHaveBeenCalled()
+  })
+})
+
+describe('step 8 review card follows the visible edge', () => {
+  const view = { viewportTop: 0, viewportHeight: 844 }
+  const card = { tooltipHeight: 180, arrowSize: 10, padding: 12 }
+
+  afterEach(() => {
+    resetReviewTooltipSide()
+  })
+
+  it('points down from above while the panel top is on screen', () => {
+    const placed = placeReviewTooltip({
+      frameTop: 280,
+      frameBottom: 900,
+      ...card,
+      ...view,
+      stickySide: 'above',
+    })
+    expect(placed.arrowDirection).toBe('down')
+    expect(placed.top + card.tooltipHeight + card.arrowSize).toBe(280)
+  })
+
+  it('points up from just under the panel once the top edge has left', () => {
+    const placed = placeReviewTooltip({
+      frameTop: -80,
+      frameBottom: 640,
+      ...card,
+      ...view,
+      stickySide: 'above',
+    })
+    expect(placed.arrowDirection).toBe('up')
+    expect(placed.top - card.arrowSize).toBe(640)
+  })
+
+  it('does not flip while the top edge is still inside the hysteresis band', () => {
+    const barelyGone = placeReviewTooltip({
+      frameTop: -(REVIEW_TOOLTIP_HYSTERESIS_PX - 4),
+      frameBottom: 700,
+      ...card,
+      ...view,
+      stickySide: 'above',
+    })
+    expect(barelyGone.arrowDirection).toBe('down')
+    const clearlyGone = chooseReviewTooltipSide({
+      frameTop: -(REVIEW_TOOLTIP_HYSTERESIS_PX + 4),
+      viewportTop: 0,
+      viewportBottom: 844,
+      previous: 'above',
+    })
+    expect(clearlyGone).toBe('below')
+    const barelyBack = chooseReviewTooltipSide({
+      frameTop: REVIEW_TOOLTIP_HYSTERESIS_PX - 4,
+      viewportTop: 0,
+      viewportBottom: 844,
+      previous: 'below',
+    })
+    expect(barelyBack).toBe('below')
+    const clearlyBack = chooseReviewTooltipSide({
+      frameTop: REVIEW_TOOLTIP_HYSTERESIS_PX + 4,
+      viewportTop: 0,
+      viewportBottom: 844,
+      previous: 'below',
+    })
+    expect(clearlyBack).toBe('above')
+  })
+
+  it('sits on the panel bottom even when the composer fills the space below', () => {
+    const frameBottom = 490
+    const placed = placeReviewTooltip({
+      frameTop: -120,
+      frameBottom,
+      ...card,
+      ...view,
+      stickySide: 'above',
+    })
+    expect(placed.arrowDirection).toBe('up')
+    expect(placed.top).toBe(frameBottom + card.arrowSize)
   })
 })

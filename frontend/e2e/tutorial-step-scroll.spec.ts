@@ -227,6 +227,9 @@ async function cardClearsHighlights(page: Page): Promise<string> {
     if (results instanceof HTMLElement && overlaps(results.getBoundingClientRect())) {
       return 'overlaps-results'
     }
+    const review = /Review the New Responses/.test(tip.textContent ?? '')
+    // Step 8 dims the composer and the flipped card may cover it.
+    if (review) return 'clear'
     const composer = document.querySelector(
       '[data-after-results-composer-slot] .composer:not(.composer-placeholder)'
     )
@@ -240,7 +243,7 @@ async function cardClearsHighlights(page: Page): Promise<string> {
 /**
  * A long scroll can take the highlight off the viewport. The existing hint
  * replaces the card then. A card that is still on screen must stay clear of
- * the results and the composer.
+ * the results. Step 7 also stays clear of the composer. Step 8 may cover it.
  */
 async function cardOrScrollHint(page: Page): Promise<string> {
   const placed = await cardClearsHighlights(page)
