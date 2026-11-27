@@ -213,6 +213,7 @@ test('the current repo coverage gate passes', () => {
     'mistralai/mistral-large-4-0',
     'qwen/qwen4-max',
     'tencent/hy4-flash',
+    'xiaomi/mimo-v2.6-pro',
   ])
   expect(manifest.allowlist.every(entry => entry.reason.trim().length > 0)).toBe(true)
   expect(manifest.promptHashes['08-casual-prose']).toBeTruthy()
