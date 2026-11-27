@@ -1201,10 +1201,9 @@ export function useTutorialOverlay(
         try {
           await waitForRectStable(readLayout, { timeoutMs: 800, quietMs: 160 })
           if (cancelled || stepRef.current !== step) return
-          if (
-            step === 'follow-up' &&
-            Math.abs(getTutorialScrollRoot().getScrollTop() - scrollAtStart) > 24
-          ) {
+          // Follow-up returns before this correction. The remaining step is
+          // the review card, which was seated once above.
+          if (Math.abs(getTutorialScrollRoot().getScrollTop() - scrollAtStart) > 24) {
             userTookOver = true
             return
           }
