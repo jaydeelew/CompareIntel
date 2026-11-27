@@ -81,6 +81,17 @@ import {
 } from './tutorialUtils'
 import { useTutorialCleanup } from './useTutorialCleanup'
 
+/** Step 8 does not use the composer. Drop the ring and the stacking lift so the page dim covers it. */
+function clearStep8ComposerSpotlight(): void {
+  const nodes = [getComposerElement(), getHeroMirrorComposerIfPresent()]
+  for (const node of nodes) {
+    if (!node) continue
+    node.classList.remove('tutorial-highlight', 'tutorial-textarea-active')
+    node.style.pointerEvents = ''
+    node.style.position = ''
+  }
+}
+
 interface HTMLElementWithTutorialProps extends HTMLElement {
   __tutorialHeightObserver?: MutationObserver
   __tutorialHeightInterval?: number
@@ -376,10 +387,14 @@ export function useTutorialOverlay(
       dx = window.innerWidth - margin - rect.right
     }
 
-    // Follow-up is glued to the composer. After it settles, pulling the card
-    // back into the viewport leaves it stuck over the results.
-    const followComposer = step === 'follow-up' && !spotlightSettling
-    if (!followComposer) {
+    // Follow-up is glued to the composer. Step 8 is glued to the results
+    // edge: once that edge leaves the viewport the card moves below the
+    // panel, under the composer when the gap is shorter than the card.
+    // Pulling either card back into the viewport pins it on screen and
+    // leaves it covering the replies or the composer.
+    const gluedToAnchor =
+      (step === 'follow-up' || step === 'view-follow-up-results') && !spotlightSettling
+    if (!gluedToAnchor) {
       if (rect.top < margin) dy = margin - rect.top
       else if (rect.bottom > window.innerHeight - margin) {
         dy = window.innerHeight - margin - rect.bottom
@@ -899,9 +914,21 @@ export function useTutorialOverlay(
         config,
         tutorialProviderNamesRef.current
       )
-      setEffectivePosition(placed.effectivePosition)
-      setTooltipHidesArrow(placed.hideArrow)
-      setOverlayPosition(placeOverlayPoint(placed.top, placed.left))
+      const nextPoint = placeOverlayPoint(placed.top, placed.left)
+      if (step === 'view-follow-up-results') {
+        // Scroll samples this every frame. Skip the write when the card's
+        // content box and arrow side have not changed, so the page does not
+        // repaint on a scroll that keeps the same edge.
+        setEffectivePosition(prev =>
+          prev === placed.effectivePosition ? prev : placed.effectivePosition
+        )
+        setTooltipHidesArrow(prev => (prev === placed.hideArrow ? prev : placed.hideArrow))
+        setOverlayPosition(prev => (overlayPointUnchanged(prev, nextPoint) ? prev : nextPoint))
+      } else {
+        setEffectivePosition(placed.effectivePosition)
+        setTooltipHidesArrow(placed.hideArrow)
+        setOverlayPosition(nextPoint)
+      }
     }
 
     let fadeStarted = false
@@ -1074,6 +1101,10 @@ export function useTutorialOverlay(
       // made the ring lag the content.
       if (step === 'history-dropdown' || step === 'save-selection') {
         updatePosition()
+      } else if (step === 'view-follow-up-results') {
+        // The page stays where the user put it. Only the card moves, from
+        // above the results to below them once the top edge leaves the view.
+        updatePosition()
       }
     }
 
@@ -1173,14 +1204,19 @@ export function useTutorialOverlay(
         }
         return
       }
-      // Seat step 8 once so the card starts above the results. A later scroll
-      // repositions the card and must not move the page again.
-      if (step === 'view-follow-up-results' && !reviewScrollSeated) {
-        scrollReviewTooltipBesideResults({
-          tooltipHeight: tip.getBoundingClientRect().height,
-          arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
-        })
-        reviewScrollSeated = true
+      // Seat step 8 once so the card starts above the results. Later ticks
+      // must not run: a scrolled card sits under the panel on purpose, and
+      // treating that as a missed arrow restarts the fade and moves the page.
+      if (step === 'view-follow-up-results') {
+        if (!reviewScrollSeated) {
+          scrollReviewTooltipBesideResults({
+            tooltipHeight: tip.getBoundingClientRect().height,
+            arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+          })
+          reviewScrollSeated = true
+        } else {
+          return
+        }
       }
       const rect = readLayout()
       const pairOffScreen = followUpPairOffScreen()
@@ -1348,9 +1384,9 @@ export function useTutorialOverlay(
         elementsToHighlight = [loadingSection]
       } else if (kind === 'results' && resultsSection) {
         elementsToHighlight = [resultsSection]
-        // Step 7 and step 8 both anchor the card on the composer, so that
-        // composer gets the same ring as the results frame.
-        if (step === 'follow-up' || step === 'view-follow-up-results') {
+        // Step 7 anchors the card on the composer, so that composer gets the
+        // same ring as the results frame. Step 8 leaves the composer dimmed.
+        if (step === 'follow-up') {
           const composerElement = getComposerElement()
           if (composerElement) elementsToHighlight.push(composerElement)
         }
@@ -1377,9 +1413,9 @@ export function useTutorialOverlay(
       composerElement = getComposerElement()
       const cutout = composerElement ? computeTextareaCutout(composerElement) : null
       setTextareaCutout(cutout)
-    } else if (!isDropdownStep && step !== 'follow-up' && step !== 'view-follow-up-results') {
+    } else if (!isDropdownStep && step !== 'follow-up') {
       // Only clear textarea cutout if we're not on a dropdown step.
-      // Step 8 keeps the composer hole that step 7 opened.
+      // Step 8 has no composer hole; the field stays under the page dim.
       setTextareaCutout(null)
     }
 
@@ -1441,6 +1477,9 @@ export function useTutorialOverlay(
           el.style.position = 'relative'
         }
       })
+    }
+    if (step === 'view-follow-up-results') {
+      clearStep8ComposerSpotlight()
     }
 
     return () => {
@@ -1766,12 +1805,10 @@ export function useTutorialOverlay(
 
       if (step === 'view-follow-up-results') {
         const spotlight = applyStreamingComparisonHighlight(streamAnswerStartedRef.current)
-        const composerElement = getComposerElement()
-        // While replies are still streaming, the processing/results frame owns
-        // the ring. The composer hole and ring appear once that round is done.
+        // The composer is not part of this step. Keep the results frame, and
+        // leave the field under the same dim as the rest of the page.
         if (spotlight === 'loading' || isLoadingRef.current) {
-          composerElement?.classList.remove('tutorial-highlight')
-          composerElement?.classList.remove('tutorial-textarea-active')
+          clearStep8ComposerSpotlight()
           return
         }
         if (resultsSection && !resultsSection.classList.contains('tutorial-highlight')) {
@@ -1779,12 +1816,7 @@ export function useTutorialOverlay(
           resultsSection.style.pointerEvents = 'auto'
           resultsSection.style.position = 'relative'
         }
-        if (composerElement) {
-          composerElement.classList.add('tutorial-textarea-active')
-          composerElement.classList.add('tutorial-highlight')
-          composerElement.style.pointerEvents = 'auto'
-          composerElement.style.position = 'relative'
-        }
+        clearStep8ComposerSpotlight()
         if (resultsSection) {
           if (!spotlightSettledRef.current) {
             setTargetElement(resultsSection)
@@ -2436,10 +2468,8 @@ export function useTutorialOverlay(
     }
   }, [step])
 
-  // Step 5 (follow-up): keep results + composer backdrop holes in lockstep. Previously, separate
-  // effects/rAF callbacks updated targetCutout vs textareaCutout one after another, so fast scroll
-  // could paint mismatched rings. Use one DOM read + batched setState; composer ring uses the full
-  // composer (header + input) to match .tutorial-highlight, not only input-wrapper/toolbar rects.
+  // Step 7 keeps the results and composer holes in lockstep. Step 8 keeps only
+  // the results hole, so the composer stays under the page dim.
   useEffect(() => {
     if (step !== 'follow-up' && step !== 'view-follow-up-results') return
 
@@ -2448,7 +2478,7 @@ export function useTutorialOverlay(
       const current = stepRef.current
       if (current !== 'follow-up' && current !== 'view-follow-up-results') return
       const resultsSection = document.querySelector('.results-section') as HTMLElement | null
-      const composerElement = getComposerElement()
+      const composerElement = current === 'follow-up' ? getComposerElement() : null
 
       const targetCut = resultsSection != null ? computeTargetCutout([resultsSection], 8, 24) : null
 

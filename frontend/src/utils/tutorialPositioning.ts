@@ -931,9 +931,46 @@ function reviewContentTop(): number {
   return Math.max(view.top, headerBottom)
 }
 
+/** Band around the viewport top so a slow scroll does not flip the step 8 card twice. */
+export const REVIEW_TOOLTIP_HYSTERESIS_PX = 32
+
+export type ReviewTooltipSide = 'above' | 'below'
+
+/** Side chosen on the previous measurement. Step entry resets this to above. */
+let reviewTooltipSide: ReviewTooltipSide = 'above'
+
+export function resetReviewTooltipSide(): void {
+  reviewTooltipSide = 'above'
+}
+
 /**
- * Box top of the step 8 card. The follow-up composer sits directly under the
- * results, so the card always stays above the panel. `top` is the box top.
+ * Above while the results panel's top edge is in view, below once that edge
+ * has left through the top of the viewport. The band keeps the two seats from
+ * trading places when the edge sits on the boundary.
+ */
+export function chooseReviewTooltipSide(args: {
+  frameTop: number
+  viewportTop: number
+  viewportBottom: number
+  previous: ReviewTooltipSide
+}): ReviewTooltipSide {
+  const band = REVIEW_TOOLTIP_HYSTERESIS_PX
+  if (args.previous === 'above') {
+    if (args.frameTop < args.viewportTop - band) return 'below'
+    return 'above'
+  }
+  if (args.frameTop > args.viewportTop + band && args.frameTop < args.viewportBottom - band) {
+    return 'above'
+  }
+  return 'below'
+}
+
+/**
+ * Box top of the step 8 card. The arrow points down at the panel's top edge
+ * while that edge is on screen, and up from just under the panel once that
+ * edge has scrolled away. The follow-up composer is dimmed on this step, so
+ * the card may cover it. `top` is the box top. Passing `stickySide` pins the
+ * hysteresis input for tests; live callers keep the last side this function chose.
  */
 export function placeReviewTooltip(args: {
   frameTop: number
@@ -941,21 +978,35 @@ export function placeReviewTooltip(args: {
   tooltipHeight: number
   arrowSize: number
   padding?: number
+  viewportTop?: number
+  viewportHeight?: number
+  stickySide?: ReviewTooltipSide
 }): TooltipBoxPlacement {
-  const padding = args.padding ?? MARGIN
-  const contentTop = reviewContentTop()
-  const view = readVisualViewportBox()
-  const placed = placeTooltipBoxAgainstFrame({
-    frameTop: args.frameTop - contentTop,
-    frameBottom: args.frameBottom - contentTop,
-    tooltipHeight: args.tooltipHeight,
-    arrowSize: args.arrowSize,
-    viewportHeight: Math.max(0, view.top + view.height - contentTop),
-    padding,
-    preferred: 'above',
-    lockSide: true,
+  // Layout viewport, same as the other side choices. The visual viewport
+  // shrinks when browser chrome moves and must not flip the card.
+  const viewportTop = args.viewportTop ?? 0
+  const viewportHeight =
+    args.viewportHeight ?? (typeof window === 'undefined' ? 0 : window.innerHeight)
+  const previous = args.stickySide ?? reviewTooltipSide
+  const side = chooseReviewTooltipSide({
+    frameTop: args.frameTop,
+    viewportTop,
+    viewportBottom: viewportTop + viewportHeight,
+    previous,
   })
-  return { top: placed.top + contentTop, arrowDirection: placed.arrowDirection }
+  reviewTooltipSide = side
+
+  if (side === 'above') {
+    return {
+      top: args.frameTop - args.tooltipHeight - args.arrowSize,
+      arrowDirection: 'down',
+    }
+  }
+
+  return {
+    top: args.frameBottom + args.arrowSize,
+    arrowDirection: 'up',
+  }
 }
 
 /**
@@ -968,6 +1019,10 @@ export function scrollReviewTooltipBesideResults(options: {
   arrowSize: number
   padding?: number
 }): number {
+  // This is the one seat on entering step 8. The card starts above the panel.
+  // A later scroll only repositions the card, so the sticky side must not
+  // remember a below seat from the previous visit.
+  resetReviewTooltipSide()
   if (readProcessingPanelBox()) return 0
   const results = resultsAnchorRect()
   if (!results) return 0
