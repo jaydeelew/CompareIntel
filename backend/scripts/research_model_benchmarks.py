@@ -42,6 +42,8 @@ Only models with verifiable, publicly available benchmark data are added.
 
 import json
 import re
+import shutil
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -1820,6 +1822,7 @@ def update_recommendations_file(categories: list[dict]) -> None:
     new_content = content[:bracket_start] + new_array_content + content[bracket_end + 1 :]
 
     RECOMMENDATIONS_PATH.write_text(new_content, encoding="utf-8")
+    _format_with_prettier(RECOMMENDATIONS_PATH)
 
 
 def update_methodology_last_updated() -> None:
@@ -1838,7 +1841,34 @@ def update_methodology_last_updated() -> None:
         return
     new_content = re.sub(pattern, r"\1" + date_str + r"\2", content)
     METHODOLOGY_PATH.write_text(new_content, encoding="utf-8")
+    _format_with_prettier(METHODOLOGY_PATH)
     print(f"  Updated methodology page: Last updated: {date_str}")
+
+
+def _format_with_prettier(path: Path) -> None:
+    """Keep generated frontend files on the Prettier style CI checks.
+
+    Temp files used by unit tests live outside ``frontend/`` and are left alone.
+    A missing Prettier install does not fail the refresh.
+    """
+    frontend = Path(__file__).resolve().parents[2] / "frontend"
+    try:
+        path.resolve().relative_to(frontend.resolve())
+    except ValueError:
+        return
+    npx = shutil.which("npx")
+    if not npx:
+        return
+    try:
+        subprocess.run(
+            [npx, "prettier", "--write", str(path)],
+            cwd=frontend,
+            check=False,
+            capture_output=True,
+            timeout=60,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        print(f"Warning: prettier did not format {path.name}: {exc}", file=sys.stderr)
 
 
 def research_and_update(model_id: str, dry_run: bool = False) -> dict:

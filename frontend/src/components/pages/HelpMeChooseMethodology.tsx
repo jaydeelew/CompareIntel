@@ -72,8 +72,7 @@ export const HelpMeChooseMethodology: React.FC = () => {
                     >
                       LMArena Code Arena
                     </a>{' '}
-                    (human preference on web-development tasks) is primary. Models missing there
-                    use{' '}
+                    (human preference on web-development tasks) is primary. Models missing there use{' '}
                     <a
                       href="https://labs.scale.com/leaderboard/swe_bench_pro_public"
                       target="_blank"
@@ -100,7 +99,11 @@ export const HelpMeChooseMethodology: React.FC = () => {
                 <tr>
                   <td>Best for math</td>
                   <td>
-                    <a href="https://arena.ai/leaderboard/text/math" target="_blank" rel="noopener noreferrer">
+                    <a
+                      href="https://arena.ai/leaderboard/text/math"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       LMArena math prompts
                     </a>{' '}
                     — style-controlled Arena Score. Human preference on math prompts, not a contest
@@ -249,8 +252,8 @@ export const HelpMeChooseMethodology: React.FC = () => {
                 head-to-head. The Arena Score is a human-preference rating, not a count of solved
                 GitHub issues. Models the Code Arena does not list yet fall back to SWE-Bench Pro
                 public (percent of repository tasks resolved). Those two numbers are ranked as
-                percentiles within their own boards, so a 50% SWE-Bench result is not sorted
-                against an Arena Score of 1800.
+                percentiles within their own boards, so a 50% SWE-Bench result is not sorted against
+                an Arena Score of 1800.
               </li>
               <li>
                 <strong>Creative Writing, math, hard prompts, non-English (LMArena text)</strong> —
@@ -294,15 +297,15 @@ export const HelpMeChooseMethodology: React.FC = () => {
             <p>
               Benchmarks are helpful, but they’re not perfect. They test specific skills under
               controlled conditions—your real-world tasks may differ. A model people prefer on Code
-              Arena may still diverge from your codebase; a “best for writing” model might not
-              match your preferred tone. Use these rankings as a starting point, then try the
-              models yourself.
+              Arena may still diverge from your codebase; a “best for writing” model might not match
+              your preferred tone. Use these rankings as a starting point, then try the models
+              yourself.
             </p>
             <p>
               Arena Scores are published human-preference ratings from LMArena. They are not
               CompareIntel user votes, and they are not exam percents. Where two boards are
-              combined, each model is ranked by its percentile on the board that supplied its
-              score. A model with no public row is left out rather than given an estimated score.
+              combined, each model is ranked by its percentile on the board that supplied its score.
+              A model with no public row is left out rather than given an estimated score.
             </p>
           </section>
 
