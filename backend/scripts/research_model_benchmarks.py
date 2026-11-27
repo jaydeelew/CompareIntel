@@ -644,6 +644,9 @@ def _normalize_lmspeed_name(name: str) -> str:
 # that automated matching can't resolve.
 LMSPEED_NAME_TO_MODEL_ID: dict[str, str] = {
     "claude-haiku-4-5-20251001": "anthropic/claude-haiku-4.5",
+    # Public model-speed slugs. "v2-6" is v2.6, not a different generation.
+    "mimo-v2-6-pro": "xiaomi/mimo-v2.6-pro",
+    "mimo-v2-6-flash": "xiaomi/mimo-v2.6-flash",
 }
 
 
