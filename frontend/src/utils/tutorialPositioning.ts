@@ -1200,6 +1200,49 @@ export function getTutorialProviderStepLayout(
   }
 }
 
+/**
+ * Backdrop cutout corner: the highlighted element's own radius plus the frame
+ * padding, so the ring stays concentric. Provider cards are `--radius-xl` (12px)
+ * + 8px = 20px, which is the previous hardcoded provider radius.
+ */
+export function tutorialFrameRadius(
+  element: HTMLElement | null | undefined,
+  padding: number,
+  fallback: number
+): number {
+  if (!element || typeof getComputedStyle !== 'function') return fallback
+  const radius = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius)
+  if (!Number.isFinite(radius) || radius <= 0) return fallback
+  return Math.round(radius + padding)
+}
+
+/** Paint provider-picker highlights and drop the class from the previous target. */
+export function applyProviderPickerHighlight(
+  highlights: readonly HTMLElement[],
+  className: 'tutorial-highlight' | 'mobile-tutorial-highlight'
+): void {
+  const keep = new Set<HTMLElement>(highlights)
+  document
+    .querySelectorAll(`.provider-dropdown.${className}, .model-option.${className}`)
+    .forEach(node => {
+      if (!(node instanceof HTMLElement) || keep.has(node)) return
+      node.classList.remove(className)
+      node.style.pointerEvents = ''
+      node.style.position = ''
+    })
+  for (const el of highlights) {
+    el.classList.add(className)
+    el.style.pointerEvents = 'auto'
+    el.style.position = 'relative'
+  }
+}
+
+export function clearProviderPickerHighlight(
+  className: 'tutorial-highlight' | 'mobile-tutorial-highlight'
+): void {
+  applyProviderPickerHighlight([], className)
+}
+
 export function scrollLayoutForTutorialStep(step: TutorialStep | null): TutorialProviderLayoutStep {
   if (step === 'select-models') return 'select-models'
   if (step === 'select-starter-model-2') return 'select-starter-model-2'
