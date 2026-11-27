@@ -171,11 +171,19 @@ export const ComparisonForm = memo<ComparisonFormProps>(
   }) => {
     const blockPromptStepForTutorial =
       tutorialIsActive && (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
-    // Step 8 reviews the new responses. The composer stays on screen, but it
-    // must not take text, paste, drop, dictation, Enter, or a submit tap.
+    // Step 8 reviews the new responses and also blocks submit. Steps 9 and 10
+    // keep the history and save controls, and the prompt stays read-only:
+    // typing, paste, drop, dictation, and Enter do not change the text.
     const lockReviewComposer = tutorialIsActive && tutorialStep === 'view-follow-up-results'
+    const lockComposerText =
+      tutorialIsActive &&
+      (tutorialStep === 'view-follow-up-results' ||
+        tutorialStep === 'history-dropdown' ||
+        tutorialStep === 'save-selection')
     const lockReviewComposerRef = useRef(false)
+    const lockComposerTextRef = useRef(false)
     lockReviewComposerRef.current = lockReviewComposer
+    lockComposerTextRef.current = lockComposerText
 
     const allowHeroMirrorTutorialPointer =
       tutorialIsActive && (tutorialStep === 'history-dropdown' || tutorialStep === 'save-selection')
@@ -277,7 +285,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const handleSpeechResult = useCallback(
       (transcript: string, isFinal: boolean) => {
-        if (lockReviewComposerRef.current) return
+        if (lockComposerTextRef.current) return
         const isMobileMode =
           typeof navigator !== 'undefined' &&
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -311,10 +319,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     } = useSpeechRecognition(handleSpeechResult)
 
     useEffect(() => {
-      if (!lockReviewComposer) return
+      if (!lockComposerText) return
       textareaRef.current?.blur()
       stopSpeechListening()
-    }, [lockReviewComposer, stopSpeechListening, textareaRef])
+    }, [lockComposerText, stopSpeechListening, textareaRef])
 
     useEffect(() => {
       if (speechError) showNotification(speechError, 'error')
@@ -403,11 +411,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       (buttonId: ComposerTooltipButtonId) => {
         switch (buttonId) {
           case 'add-file':
-            if (lockReviewComposerRef.current) break
+            if (lockComposerTextRef.current) break
             fileUploadRef.current?.openFilePicker()
             break
           case 'voice':
-            if (lockReviewComposerRef.current) break
+            if (lockComposerTextRef.current) break
             if (isSpeechListening) stopSpeechListening()
             else startSpeechListening()
             break
@@ -581,7 +589,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         e.preventDefault()
         e.stopPropagation()
         resetPageFileDrag()
-        if (lockReviewComposerRef.current) return
+        if (lockComposerTextRef.current) return
         if (!dataTransferHasFiles(e.dataTransfer)) return
         const file = e.dataTransfer.files?.[0]
         if (!file) return
@@ -605,7 +613,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       const textarea = textareaRef.current
       if (!textarea) return undefined
       const listener = (event: Event) => {
-        if (lockReviewComposerRef.current) {
+        if (lockComposerTextRef.current) {
           event.preventDefault()
           return
         }
@@ -813,7 +821,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         !mirror && tutorialIsActive && tutorialStep === 'history-dropdown'
       const saveButtonSpotlight = !mirror && tutorialIsActive && tutorialStep === 'save-selection'
       const lockHistoryPrompt = !mirror && tutorialIsActive && tutorialStep === 'history-dropdown'
-      const lockComposerInput = lockHistoryPrompt || (!mirror && lockReviewComposer)
+      const lockSavePrompt = !mirror && tutorialIsActive && tutorialStep === 'save-selection'
+      const lockComposerInput = !mirror && lockComposerText
       const spotlightClass = (on: boolean) =>
         on ? (isMobileLayout ? 'mobile-tutorial-highlight' : 'tutorial-highlight') : ''
       const historyToggleClassName = [
@@ -838,6 +847,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         spotlightClass(historyComposerSpotlight || followUpComposerSpotlight),
         historyComposerSpotlight ? 'tutorial-dropdown-container-active' : '',
         lockHistoryPrompt ? 'tutorial-history-input-locked' : '',
+        lockSavePrompt ? 'tutorial-save-input-locked' : '',
         !mirror && lockReviewComposer ? 'tutorial-review-input-locked' : '',
       ]
         .filter(Boolean)
@@ -1029,7 +1039,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   <button
                     type="button"
                     onClick={() => {
-                      if (lockReviewComposer) return
+                      if (lockComposerText) return
                       if (isSpeechListening) {
                         stopSpeechListening()
                       } else if (getTooltipModalSuppressed('voice')) {
@@ -1073,7 +1083,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     <button
                       type="button"
                       onClick={() => {
-                        if (lockReviewComposer) return
+                        if (lockComposerText) return
                         if (isSpeechListening) stopSpeechListening()
                         else startSpeechListening()
                       }}
@@ -1109,7 +1119,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   <button
                     type="button"
                     onClick={() => {
-                      if (lockReviewComposer) return
+                      if (lockComposerText) return
                       if (isSpeechListening) stopSpeechListening()
                       else startSpeechListening()
                     }}
