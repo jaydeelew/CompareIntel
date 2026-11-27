@@ -1970,13 +1970,16 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         return
       }
       const scrollTop = getTutorialScrollRoot().getScrollTop()
-      // Once the card has faded in, leave the page alone. The interval used to
-      // pull the composer back for several seconds, which cancelled a scroll.
+      // The card can fade in before the formatted reply has its real height.
+      // That growth pushes the card past the iPhone fold or onto the footer.
+      // Keep correcting until it is clear, and stop as soon as the user scrolls.
       if (spotlightSettledRef.current) {
         if (seatedTop == null) seatedTop = scrollTop
-        else if (Math.abs(scrollTop - seatedTop) > 1) window.clearInterval(intervalId)
+        else if (Math.abs(scrollTop - seatedTop) > 1) {
+          window.clearInterval(intervalId)
+          return
+        }
         followUpScrollSeatedRef.current = true
-        return
       }
       const composer = readPortaledFollowUpComposerRect()
       const view = readVisualViewportBox()
