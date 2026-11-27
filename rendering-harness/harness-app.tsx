@@ -87,6 +87,11 @@ function HarnessApp() {
       const text = (container.textContent || '').replace(/\s+/g, ' ').trim();
       if (!text) return false;
       if (container.querySelectorAll('.katex-html[style*="visibility: hidden"]').length > 0) return false;
+      if (container.querySelector('[data-mermaid-pending]')) return false;
+      const diagrams = Array.from(container.querySelectorAll('.mermaid-diagram'));
+      if (diagrams.some(diagram => !diagram.hasAttribute('data-mermaid-fallback') && !diagram.querySelector('svg'))) {
+        return false;
+      }
       const images = Array.from(container.querySelectorAll('img'));
       if (images.some(img => !img.complete)) return false;
       return true;
@@ -128,14 +133,21 @@ function HarnessApp() {
     if (!container) return;
     container.removeAttribute('data-render-complete');
 
+    // A load or error on an <img> does not mutate the DOM, so the observer
+    // never sees it. Arm the images that are already in the tree; otherwise a
+    // reply whose only late work is a broken image never reaches
+    // data-render-complete.
+    const armImages = (root: Element) => {
+      root.querySelectorAll('img').forEach(img => {
+        if (img.complete) return;
+        img.addEventListener('load', finishIfReady, { once: true });
+        img.addEventListener('error', finishIfReady, { once: true });
+      });
+    };
+
     const observer = new MutationObserver(() => {
       promoteHarnessImages(container);
-      container.querySelectorAll('img').forEach(img => {
-        if (!img.complete) {
-          img.addEventListener('load', finishIfReady, { once: true });
-          img.addEventListener('error', finishIfReady, { once: true });
-        }
-      });
+      armImages(container);
       finishIfReady();
     });
     observer.observe(container, {
@@ -144,6 +156,7 @@ function HarnessApp() {
       attributes: true,
       characterData: true,
     });
+    armImages(container);
     void document.fonts.ready.then(() => finishIfReady());
     finishIfReady();
     return () => {

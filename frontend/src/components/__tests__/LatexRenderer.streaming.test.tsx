@@ -2,7 +2,7 @@
  * Streaming replies keep closed blocks mounted and hide unclosed delimiters.
  * A finished reply (streaming unset) still uses the single-pass renderer.
  */
-import { render } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { initializeRegistry } from '../../config/loadModelConfigs'
@@ -93,5 +93,32 @@ describe('LatexRenderer streaming', () => {
     expect(text).not.toContain('| --- |')
     expect(text).not.toContain('\\begin')
     expect(text).not.toContain('y &=')
+  })
+
+  it('settles a closed mermaid fence without waiting for Prism', async () => {
+    const closed = [
+      'The quadratic formula is settled.',
+      '',
+      '```mermaid',
+      'graph TD',
+      '  A-->B',
+      '```',
+      '',
+      'After the fence.',
+    ].join('\n')
+    const { container } = render(
+      <LatexRenderer modelId="openai/gpt-4o-mini" streaming>
+        {closed}
+      </LatexRenderer>
+    )
+    await waitFor(() => {
+      const blocks = Array.from(container.querySelectorAll('[data-stream-block]'))
+      expect(blocks.length).toBeGreaterThan(0)
+      expect(blocks.every(block => block.getAttribute('data-stream-settled') === 'true')).toBe(true)
+    })
+    const text = visibleText(container)
+    expect(text).toContain('graph TD')
+    expect(text).toContain('After the fence.')
+    expect(text).not.toContain('```')
   })
 })

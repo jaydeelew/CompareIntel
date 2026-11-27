@@ -74,12 +74,20 @@ import {
   replaceAngleBracketAutolinksOutsideCode,
   replaceBareUrlsOutsideCode,
 } from '../utils/latex/autolinks'
+import { applyBlockDirection } from '../utils/latex/direction'
 import {
   replaceExactlyTwoStrong,
   replaceSingleStarEm,
   replaceSingleUnderscoreEm,
 } from '../utils/latex/emphasis'
 import { extractFootnoteDefinitions, renderFootnotes } from '../utils/latex/footnotes'
+import { renderMermaidFallback } from '../utils/latex/mermaidBlocks'
+import {
+  mermaidThemeFromDocument,
+  renderMermaidSvg,
+  shouldUpgradeMermaidDiagrams,
+  type MermaidThemeName,
+} from '../utils/mermaidRenderer'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
 
 import { StreamingLatex } from './StreamingLatex'
@@ -206,6 +214,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({
   // Initialize hooks that don't depend on renderLatex - MUST be called before any early returns
   const contentRef = useRef<HTMLDivElement>(null)
   const [prismLoaded, setPrismLoaded] = useState(false)
+  const [mermaidTheme, setMermaidTheme] = useState<MermaidThemeName>(() =>
+    mermaidThemeFromDocument()
+  )
 
   useRenderedCopyHandler(contentRef, isValidChildren ? children : undefined)
 
@@ -1209,6 +1220,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({
           const block = codeBlockExtraction.blocks[parseInt(index, 10)]
           return block ? renderCodeBlock(block.language, block.content) : ''
         })
+        processed = applyBlockDirection(processed)
 
         return processed
       } catch (error) {
@@ -1259,6 +1271,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({
           'c++': 'cpp',
           cs: 'csharp',
         }
+        if (lang === 'mermaid') continue
         languages.add(languageMap[lang] || lang)
       }
     }
@@ -1271,6 +1284,63 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({
       // Silently handle KaTeX CSS loading errors
     })
   }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+    const read = () => {
+      const next = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+      setMermaidTheme(current => (current === next ? current : next))
+    }
+    read()
+    const observer = new MutationObserver(read)
+    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const root = contentRef.current
+    if (!root || !shouldUpgradeMermaidDiagrams()) return
+    const nodes = Array.from(root.querySelectorAll<HTMLElement>('.mermaid-diagram'))
+    const jobs = nodes
+      .map(node => ({
+        node,
+        source: node.querySelector('code')?.textContent ?? '',
+      }))
+      .filter(
+        job =>
+          job.node.hasAttribute('data-mermaid-pending') ||
+          job.node.getAttribute('data-mermaid-theme') !== mermaidTheme
+      )
+    if (jobs.length === 0) return
+
+    let cancelled = false
+    void (async () => {
+      for (const job of jobs) {
+        if (cancelled || !job.node.isConnected) return
+        try {
+          const svg = await renderMermaidSvg(job.source, mermaidTheme)
+          if (cancelled || !job.node.isConnected) return
+          let host = job.node.querySelector<HTMLElement>('.mermaid-svg')
+          if (!host) {
+            host = document.createElement('div')
+            host.className = 'mermaid-svg'
+            job.node.appendChild(host)
+          }
+          host.innerHTML = svg
+          job.node.setAttribute('data-mermaid-theme', mermaidTheme)
+          job.node.setAttribute('data-mermaid-rendered', 'true')
+          job.node.removeAttribute('data-mermaid-pending')
+        } catch {
+          if (cancelled || !job.node.isConnected) return
+          job.node.outerHTML = renderMermaidFallback(job.source)
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [processedContent, mermaidTheme])
 
   // Load Prism.js dynamically when code blocks are detected
 

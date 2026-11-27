@@ -1,0 +1,8 @@
+## Mermaid and Chemistry
+
+```mermaid
+graph TD
+  A[Start] --> B[End]
+```
+
+KaTeX without the mhchem extension: $\ce{H2O}$ and $\ce{SO4^{2-}}$.

@@ -415,11 +415,27 @@ export function renderReferenceHtml(markdown: string): string {
     if (!block) return ''
     const escaped = block.content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     const lang = block.language ? ` class="language-${block.language}"` : ''
-    return `<pre><code${lang}>${escaped}</code></pre>`
+    // Mermaid is a diagram in the product renderer. The reference keeps the
+    // fence source in a code element (the signature compared against the
+    // product, which retains that source beside the SVG). RTL blocks use
+    // dir="auto" the same way the product does, so direction is comparable.
+    if (block.language.toLowerCase() === 'mermaid') {
+      return `<div class="mermaid-diagram" data-language="mermaid" dir="ltr"><pre class="mermaid-source" dir="ltr"><code class="language-mermaid" dir="ltr">${escaped}</code></pre></div>`
+    }
+    return `<pre dir="ltr"><code${lang} dir="ltr">${escaped}</code></pre>`
   }
   html = html.replace(/<p>%%F(\d+)%%<\/p>/g, (_m, i: string) => fenceHtml(i))
   html = html.replace(/%%F(\d+)%%/g, (_m, i: string) => fenceHtml(i))
   html = html.split(LITERAL).join('$')
+  html = applyReferenceBlockDirection(html)
 
   return replaceAutolinksOutsideCode(html)
+}
+
+/** Same per-block dir="auto" the product renderer applies to prose structure. */
+function applyReferenceBlockDirection(html: string): string {
+  return html.replace(
+    /<(p|li|td|th|h[1-6]|blockquote|ul|ol)\b(?![^>]*\bdir\s*=)/gi,
+    '<$1 dir="auto"'
+  )
 }

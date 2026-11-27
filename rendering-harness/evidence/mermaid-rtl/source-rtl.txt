@@ -1,0 +1,7 @@
+## Emoji, RTL, CJK, and Overflow
+
+Status emoji: ✅ and 🧪.  
+Arabic: مرحبا بالعالم  
+Chinese: 你好世界  
+Japanese: こんにちは  
+Unbroken token: UNBROKENxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

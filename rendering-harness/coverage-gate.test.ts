@@ -211,10 +211,6 @@ test('the current repo coverage gate passes', () => {
     'google/gemma-4-31b-it',
     'meta-llama/llama-4-scout',
     'mistralai/mistral-large-4-0',
-    'openai/gpt-6.2-astra',
-    'openai/gpt-6.2-astra-pro',
-    'openai/gpt-6.2-sol',
-    'openai/gpt-6.2-sol-pro',
     'qwen/qwen4-max',
     'tencent/hy4-flash',
   ])
@@ -234,8 +230,10 @@ test('the current repo coverage gate passes', () => {
   expect(result.missingModels).toEqual([])
   expect(result.badCells).toEqual([])
   expect(result.ok).toBe(true)
-  // 35 renderer-fail cells on allowlisted models (PR274 + W48 drift + PR320 new models).
-  expect(manifest.totals.fail).toBe(35)
+  // 20 renderer-fail cells remain on allowlisted models. The PR320 prompt-06
+  // mermaid/RTL fails, and the sol/sol-pro cells that never got a DOM result,
+  // are pass after the render-only remeasure.
+  expect(manifest.totals.fail).toBe(20)
   const allow = new Set(manifest.allowlist.map(entry => entry.modelId))
   for (const [modelId, row] of Object.entries(manifest.models)) {
     if (allow.has(modelId)) continue

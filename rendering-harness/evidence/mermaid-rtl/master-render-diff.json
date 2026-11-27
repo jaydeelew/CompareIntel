@@ -1,0 +1,45 @@
+{
+  "baseSha": "c1c8115ce5bee03657e64a74f0fa3324f658c16f",
+  "headSha": "979a9b004f36f8830026fe3b135cb4072264c70d",
+  "cells": 594,
+  "normalization": "SVG elements removed in the page, then whitespace-collapsed textContent. No OpenRouter calls.",
+  "same": 538,
+  "differBeforeSvgRemoval": 46,
+  "recheck": {
+    "cells": 56,
+    "sameAfterRemovingSvg": 23,
+    "boundarySpaceOnly": 23,
+    "readinessTimeouts": 10,
+    "contentDiffs": 0
+  },
+  "boundarySpaceNote": "Superseded by followUp. The heading-boundary separator is preserved, so those 23 cells match origin/master on SVG-stripped textContent. A selection that crosses the boundary copies the break.",
+  "timeoutNote": "Superseded by followUp. The ten cells were not a font/KaTeX hang and not a head-only regression.",
+  "followUp": {
+    "baseSha": "1f6fa0bd3de1696c8b928577f7cb2cf5f27d53f7",
+    "normalization": "SVG elements removed, then whitespace-collapsed textContent. innerText compared separately. No OpenRouter calls.",
+    "timeoutCells": {
+      "count": 10,
+      "prompt02": {
+        "count": 7,
+        "cause": "Each reply includes https://example.com/triangle.png. The harness attached image load/error listeners only from the mutation observer. An image already in the tree does not mutate when it finishes, so data-render-complete was never set. Master and this branch share that harness shell, so both sides timed out. Raising the wait cannot make the predicate true.",
+        "after": "Images already in the tree are armed before the first readiness check. All 7 cells then reached data-render-complete on origin/master and on this branch in about 220ms. textContent and innerText match."
+      },
+      "prompt08": {
+        "count": 3,
+        "cells": [
+          "google/gemini-4-carbon:08-casual-prose",
+          "tencent/hy4-flash:08-casual-prose",
+          "google/gemini-2.5-pro:08-casual-prose"
+        ],
+        "cause": "The saved replies are empty or whitespace only (two empty strings, one run of newlines). pageStateReady requires visible text, so data-render-complete is never set on either side.",
+        "after": "Both sides settle with fonts loaded, no hidden KaTeX, no pending images, and empty visible text. textContent and innerText match. This is not a head-only regression."
+      }
+    },
+    "boundaryAndCopy": {
+      "headingSelection": "On both origin/master and this branch, a selection from 99.99. through Display copies 99.99.\\nDisplay.",
+      "fullCopyAndExport": "Select-all inside the rendered answer and markdown/JSON export copy the source markdown, not textContent. A unit test locks both, plus a partial selection across the heading boundary and across a mermaid fence.",
+      "textContent": "The 23 heading-boundary cells and the nine prompt-06 mermaid cells that still differed after the first space fix now match origin/master once SVG elements are removed. Live innerText on those mermaid cells still includes the diagram's visible label text."
+    }
+  },
+  "pr320Prompt06": "openai/gpt-6.2-astra, astra-pro, sol, sol-pro, and google/gemini-4-neon prompt 06 all passed render-only validation after this change. gemini-4-neon prompt 05 stays incomplete because the saved reply hit the token cap."
+}

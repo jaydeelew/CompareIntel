@@ -73,7 +73,7 @@
     },
     {
       "modelId": "google/gemini-4-neon",
-      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost) — open renderer gaps, already seen in the W48 drift run. 05-complex-scenarios hit the 2048-token cap (1962 reasoning tokens; finish_reason=length) and ends mid-equation, so that cell is truncated/incomplete rather than a renderer bug. 07 and 08 were not part of this collection (optional prompts)."
+      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320). Mermaid fences and RTL blocks now render, so 06-edge-cases-boundaries is no longer a renderer gap. 05-complex-scenarios hit the 2048-token cap (1962 reasoning tokens; finish_reason=length) and ends mid-equation, so that cell stays incomplete. 07 and 08 were not part of this collection (optional prompts)."
     },
     {
       "modelId": "google/gemma-4-31b-it",
@@ -86,22 +86,6 @@
     {
       "modelId": "mistralai/mistral-large-4-0",
       "reason": "Eight drift replies collected 2026-11-23 (W48 group 0). 05-complex-scenarios and 06-edge-cases-boundaries truncated at the 2048 cap (05 fails code-blocks because the tail is an unclosed fence, not a renderer loss); coverage keeps the older complete 05 where the new attempt truncated. 07 fails table alignment, mermaid, and RTL. Open renderer gaps."
-    },
-    {
-      "modelId": "openai/gpt-6.2-astra",
-      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost). Open renderer gaps, already seen in the W48 drift run; 07 and 08 were not part of this collection (optional prompts)."
-    },
-    {
-      "modelId": "openai/gpt-6.2-astra-pro",
-      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost). Open renderer gaps, already seen in the W48 drift run; 07 and 08 were not part of this collection (optional prompts)."
-    },
-    {
-      "modelId": "openai/gpt-6.2-sol",
-      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost). Open renderer gaps, already seen in the W48 drift run; 07 and 08 were not part of this collection (optional prompts)."
-    },
-    {
-      "modelId": "openai/gpt-6.2-sol-pro",
-      "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320, head 75fca4cc). 06-edge-cases-boundaries fails harness DOM assertions (mermaid fence and RTL text lost). Open renderer gaps, already seen in the W48 drift run; 07 and 08 were not part of this collection (optional prompts)."
     },
     {
       "modelId": "qwen/qwen4-max",
@@ -883,7 +867,7 @@
         "replyPath": "runs/2026-11-23-pr320/google_gemini-4-neon_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/google_gemini-4-neon_06-edge-cases-boundaries.json"
       },
       "07-rare-formats": {
@@ -1937,7 +1921,7 @@
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-astra_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-astra_06-edge-cases-boundaries.json"
       },
       "07-rare-formats": {
@@ -1971,7 +1955,7 @@
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-astra-pro_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-astra-pro_06-edge-cases-boundaries.json"
       },
       "07-rare-formats": {
@@ -1985,27 +1969,27 @@
     },
     "openai/gpt-6.2-sol": {
       "01-math-basics": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol_06-edge-cases-boundaries.json"
       },
       "07-rare-formats": {
@@ -2019,27 +2003,27 @@
     },
     "openai/gpt-6.2-sol-pro": {
       "01-math-basics": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol-pro_01-math-basics.json"
       },
       "02-markdown-formatting": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol-pro_02-markdown-formatting.json"
       },
       "03-code-blocks": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol-pro_03-code-blocks.json"
       },
       "04-mixed-markdown-latex": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol-pro_04-mixed-markdown-latex.json"
       },
       "05-complex-scenarios": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol-pro_05-complex-scenarios.json"
       },
       "06-edge-cases-boundaries": {
-        "status": "fail",
+        "status": "pass",
         "replyPath": "runs/2026-11-23-pr320/openai_gpt-6.2-sol-pro_06-edge-cases-boundaries.json"
       },
       "07-rare-formats": {
@@ -2906,11 +2890,11 @@
     "registryModels": 101,
     "textModels": 82,
     "imageModels": 19,
-    "allowlisted": 17,
+    "allowlisted": 13,
     "cells": 656,
-    "pass": 259,
+    "pass": 274,
     "notCovered": 355,
-    "fail": 35,
+    "fail": 20,
     "incomplete": 7,
     "sourceIssue": 0,
     "missing": 144

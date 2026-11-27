@@ -1,3 +1,5 @@
+import { renderMermaidPlaceholder } from './mermaidBlocks'
+
 const RECOGNIZED_LANGUAGES = new Set([
   'javascript',
   'js',
@@ -147,6 +149,10 @@ const LANGUAGE_MAP: Record<string, string> = {
 export function renderCodeBlock(language: string, code: string): string {
   const lang = language || ''
   const cleanCode = code.replace(/^\n+|\n+$/g, '')
+
+  if (lang.toLowerCase() === 'mermaid') {
+    return renderMermaidPlaceholder(cleanCode)
+  }
 
   const isRecognizedLanguage = lang && RECOGNIZED_LANGUAGES.has(lang.toLowerCase())
 

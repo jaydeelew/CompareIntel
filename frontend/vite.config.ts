@@ -280,7 +280,14 @@ export default defineConfig({
         // Precache all static assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         // Don't precache source maps or large screenshots
-        globIgnores: ['**/node_modules/**', '**/*.map', '**/screenshot-*.png'],
+        globIgnores: [
+          '**/node_modules/**',
+          '**/*.map',
+          '**/screenshot-*.png',
+          // Mermaid is a lazy diagram chunk (~3MB). Keep it out of the precache
+          // so the service worker stays under Workbox's 2MB asset limit.
+          '**/vendor-mermaid*.js',
+        ],
         // Runtime caching strategies
         // Note: API routes (/api/*) are NOT cached - they need real-time data
         // (rate-limit-status, credits/balance). Caching caused Workbox "no-response"
@@ -421,6 +428,15 @@ export default defineConfig({
             }
             if (id.includes('katex')) {
               return 'vendor-katex'
+            }
+            // Mermaid and the packages only its dynamic import reaches. They must
+            // not join the initial `vendor` chunk (that chunk is on the critical path).
+            if (
+              /[\\/]node_modules[\\/](mermaid|@mermaid-js|cytoscape|cytoscape-fcose|cytoscape-cose-bilkent|dagre-d3-es|khroma|d3|d3-[^\\/]+|roughjs|@iconify|@braintree[\\/]sanitize-url|layout-base|cose-base|lodash-es|marked|dompurify|stylis|dayjs|uuid|ts-dedent|@upsetjs|es-toolkit|fastdom)[\\/]/.test(
+                id
+              )
+            ) {
+              return 'vendor-mermaid'
             }
             // React core / scheduler — tight paths so react-router-* and other /react-ish/ libs stay separate where needed
             if (

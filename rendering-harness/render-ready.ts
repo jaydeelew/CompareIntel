@@ -5,9 +5,10 @@
  * serializes the function into the browser. It must not close over Node
  * imports. Success is visible text, finished KaTeX (no hidden `.katex-html`
  * still measuring), and images the harness has promoted to eager loading and
- * waited on (complete or load/error). It is never a sleep and never
- * `networkidle`. A reply that mentions math but never produces KaTeX is still
- * ready: the assertions, not this wait, decide pass or fail.
+ * waited on (complete or load/error), and mermaid fences have a rendered SVG
+ * (or a parse-error code block). It is never a sleep and never `networkidle`.
+ * A reply that mentions math but never produces KaTeX is still ready: the
+ * assertions, not this wait, decide pass or fail.
  */
 export function harnessRenderReady(): boolean {
   const container = document.querySelector('[data-render-container]')
@@ -23,6 +24,13 @@ export function harnessRenderReady(): boolean {
   if (!text) return false
   if (container.querySelectorAll('.katex-html[style*="visibility: hidden"]').length > 0) {
     return false
+  }
+  // Inlined: Playwright serializes this function alone, so it cannot call a helper.
+  if (container.querySelector('[data-mermaid-pending]')) return false
+  const diagrams = container.querySelectorAll('.mermaid-diagram')
+  for (const diagram of diagrams) {
+    if (diagram.hasAttribute('data-mermaid-fallback')) continue
+    if (!diagram.querySelector('svg')) return false
   }
   return true
 }

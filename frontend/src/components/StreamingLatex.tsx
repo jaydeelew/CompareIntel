@@ -33,7 +33,12 @@ const StreamBlock = memo(
         inner = requestAnimationFrame(() => {
           if (cancelled || !ref.current) return
           const el = ref.current
-          const codes = el.querySelectorAll('code[class*="language-"]')
+          // Mermaid is drawn by its own renderer, not Prism. Waiting on
+          // language-mermaid would leave the block unsettled forever, because
+          // that grammar is never loaded.
+          const codes = Array.from(el.querySelectorAll('code[class*="language-"]')).filter(
+            code => !code.classList.contains('language-mermaid')
+          )
           if (codes.length > 0 && prismLoaded) {
             const Prism = getPrism()
             if (Prism?.highlightAllUnder) {

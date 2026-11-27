@@ -35,7 +35,7 @@ export function collectLayoutIssues(mode: string): LayoutIssue[] {
 
   const pageRight = document.documentElement.clientWidth
   const intendedSelector =
-    '.markdown-table-scroll, .code-block-direct, .preformatted-text, pre, .katex-display, code.inline-code'
+    '.markdown-table-scroll, .code-block-direct, .preformatted-text, pre, .katex-display, code.inline-code, .mermaid-diagram'
   const absorbs = (host: Element): boolean => {
     if (!host.matches(intendedSelector)) return false
     const overflow = getComputedStyle(host).overflowX

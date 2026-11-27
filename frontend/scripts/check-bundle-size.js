@@ -158,6 +158,7 @@ function checkBundleSize() {
     'latex-renderer',
     'LatexRenderer',
     'vendor-katex',
+    'vendor-mermaid',
     'vendor-sentry',
     'LoginForm',
     'RegisterForm',
