@@ -231,10 +231,11 @@ test('the current repo coverage gate passes', () => {
   expect(result.missingModels).toEqual([])
   expect(result.badCells).toEqual([])
   expect(result.ok).toBe(true)
-  // 20 renderer-fail cells remain on allowlisted models. The PR320 prompt-06
+  // 21 renderer-fail cells remain on allowlisted models. The PR320 prompt-06
   // mermaid/RTL fails, and the sol/sol-pro cells that never got a DOM result,
-  // are pass after the render-only remeasure.
-  expect(manifest.totals.fail).toBe(20)
+  // are pass after the render-only remeasure. PR365 adds one fail:
+  // xiaomi/mimo-v2.6-pro 04-mixed-markdown-latex (reference-checker table pipe).
+  expect(manifest.totals.fail).toBe(21)
   const allow = new Set(manifest.allowlist.map(entry => entry.modelId))
   for (const [modelId, row] of Object.entries(manifest.models)) {
     if (allow.has(modelId)) continue

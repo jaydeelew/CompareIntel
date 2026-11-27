@@ -1,0 +1,36 @@
+{
+  "modelId": "xiaomi/mimo-v2.6-pro",
+  "modelName": "Xiaomi: MiMo-V2.6-Pro",
+  "promptName": "05-complex-scenarios",
+  "promptText": "# Test Prompt: Complex Scenarios\n\nGenerate a response with challenging edge cases:\n\n## Scenario 1: Math in Lists with Formatting\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n## Scenario 2: Tables with Math\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n## Scenario 3: Code and Math Mixed\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n## Scenario 4: Horizontal Rules\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n## Scenario 5: Multiple Dollar Signs\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\nMath: The formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n",
+  "response": "# Complex Scenarios: Edge Case Handling\n\nHere's a thorough walkthrough of each scenario and the tricky formatting edge cases they present.\n\n---\n\n## Scenario 1: Math in Lists with Formatting\n\nNested lists with inline **bold**, *italic*, and LaTeX math require careful delimiter management:\n\n1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$\n2. For a *right triangle* with sides $a=3$ and $b=4$:\n   - Calculate: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$\n   - Therefore, $c = 5$ units\n\n> **Key challenge:** Inline formatting (`**bold**`, `*italic*`) must not conflict with LaTeX delimiters. The `*` in `*right triangle*` must not be confused with markdown emphasis inside math blocks.\n\n---\n\n## Scenario 2: Tables with Math\n\n| Formula | LaTeX | Result |\n|---------|-------|--------|\n| Quadratic | $ax^2 + bx + c = 0$ | $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ |\n| Sum | $\\sum_{i=1}^{n} i$ | $\\frac{n(n+1)}{2}$ |\n| Product | $\\prod_{i=1}^{n} i$ | $n!$ |\n\n> **Key challenge:** The `|` (pipe) character is used for table columns. LaTeX like `\\frac{}{}` or `\\pm` must not be mistaken for table delimiters. Every `$...$` block inside a cell is independent.\n\n---\n\n## Scenario 3: Code and Math Mixed\n\n```python\n# Calculate area of circle with radius r\nimport math\n\ndef circle_area(r):\n    # Formula: A = πr²\n    return math.pi * r**2\n\nprint(f\"Area: {circle_area(5)}\")\n```\n\nThe mathematical formula is $A = \\pi r^2$ where $r$ is the radius.\n\n> **Key challenge:** Inside code blocks, nothing should be rendered as LaTeX or markdown. The `#` is a Python comment, and `**2` is Python exponentiation — not markdown bold. Outside the code fence, `$A = \\pi r^2$` should render as proper math.\n\n---\n\n## Scenario 4: Horizontal Rules\n\nFirst section\n\n---\n\nSecond section with math: $\\int_{0}^{1} x\\, dx = \\frac{1}{2}$\n\n---\n\nThird section\n\n> **Key challenge:** The `---` rule and the `*` in `*some italic text*` nearby can conflict. Also, `---` can be ambiguous with YAML front matter or setext-style headers. A horizontal rule must be recognized even when separated by whitespace and math blocks.\n\n---\n\n## Scenario 5: Multiple Dollar Signs 🎯\n\nThis is the **hardest edge case**. Dollar signs serve two purposes:\n\n| Context | Example | Meaning |\n|---------|---------|---------|\n| **Currency** | `$1,200` | Literal dollar amount |\n| **LaTeX** | `$f(x)$` | Inline math delimiter |\n\n### Currency (no math):\nPrices: Computer costs $1,200, monitor $300, keyboard $50, mouse $25. Total: $1,575.\n\n### Math (paired delimiters):\nThe formula $f(x) = x^2$ evaluates to $f(5) = 25$.\n\n### Mixed in one sentence:\nA laptop costs $999 but the depreciation follows $V = P(1-r)^t$ where $P = 999$.\n\n> **Key challenge:** A single unpaired `$` (e.g., `$1,200`) is *currency*. A pair of `$...$` containing math-like content is *LaTeX*. The renderer must count and match `$` signs, look at the content between them, and decide. Fragments like `$50, mouse` must **not** be treated as math.\n\n---\n\n## Summary of Edge Cases\n\n| # | Edge Case | Risk |\n|---|-----------|------|\n| 1 | `*italic*` vs `*` in LaTeX | Formatting corruption |\n| 2 | `|` pipes vs LaTeX delimiters | Broken table |\n| 3 | `**` in code vs markdown bold | Code mangling |\n| 4 | `---` rules vs setext headers | Wrong element parsed |\n| 5 | `$` currency vs `$` math | Worst-case parsing ambiguity |\n\nScenario **5** is the classic case that trips up most markdown/LaTeX renderers — especially when prices and math appear in the *same paragraph*.",
+  "usage": {
+    "prompt_tokens": 439,
+    "completion_tokens": 1201,
+    "total_tokens": 1640,
+    "cost": 0.001110276,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.001110276,
+      "upstream_inference_prompt_cost": 0.000169893,
+      "upstream_inference_completions_cost": 0.000940383
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 178,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.001110276,
+  "actualCost": 0.001110276,
+  "timestamp": "2026-11-27T15:58:34.132Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

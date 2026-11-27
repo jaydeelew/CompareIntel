@@ -54,7 +54,7 @@
     },
     {
       "modelId": "xiaomi/mimo-v2.6-pro",
-      "reason": "Successor to delisted xiaomi/mimo-v2.5-pro, added 2026-11-27. Standard prompts 01-06 were not collected in this change, so there is no saved reply to render. The renderer config is cloned from xiaomi/mimo-v2.6-flash (same Xiaomi omnimodal family, already covered). Collect replies before treating its rendered output as checked."
+      "reason": "Six replies collected 2026-11-27 on the standard 01-06 new-model suite (PR 365; 5 pass). 04-mixed-markdown-latex is recorded as fail: the harness reference checker pairs dollar signs across table pipes in a row like | $0$ | \\$100$ |; our rendered table is visually correct, a known reference-checker gap, not a renderer change. 07 and 08 were not part of this collection."
     }
   ]
 }

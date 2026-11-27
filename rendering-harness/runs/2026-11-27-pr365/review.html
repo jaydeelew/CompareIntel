@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Model Rendering QA Review</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .summary {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .prompt-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .model-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafafa;
+    }
+    .model-card h4 {
+      margin-top: 0;
+    }
+    .screenshot {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .raw-response {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+    .feedback {
+      margin-top: 10px;
+    }
+    .feature-coverage {
+      font-size: 0.85em;
+      margin: 10px 0;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .feature-coverage .feature {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .feature-coverage .feature.yes {
+      background: #d4edda;
+      color: #155724;
+    }
+    .feature-coverage .feature.no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .feature-coverage .math-error {
+      color: #d32f2f;
+      font-weight: bold;
+      display: block;
+      margin-top: 4px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+    .export-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .export-btn:hover {
+      background: #0056b3;
+    }
+    .status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      text-transform: uppercase;
+    }
+    .status-pass { background: #d4edda; color: #155724; }
+    .status-not-covered { background: #fff3cd; color: #856404; }
+    .status-source-issue { background: #ffe8cc; color: #9a3412; }
+    .status-truncated { background: #e7e3ff; color: #3d348b; }
+    .status-incomplete { background: #ede7f6; color: #4a148c; }
+    .status-fail { background: #f8d7da; color: #721c24; }
+    .error {
+      color: red;
+      background: #fee;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .meta {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Model Rendering QA Review</h1>
+  
+  <div class="summary">
+    <h2>Summary</h2>
+    <p><strong>Run Date:</strong> 2026-11-27-pr365</p>
+    <p><strong>Models Tested:</strong> 1</p>
+    <p><strong>Prompts:</strong> 6</p>
+    <p><strong>API history records:</strong> 6
+       &nbsp;<strong>Unique coverage cells:</strong> 6</p>
+    <p><strong>History:</strong>
+       Passed 5
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 0
+       / Failed 1</p>
+    <p><strong>Unique coverage:</strong>
+       Passed 5
+       / Not covered 0
+       / Truncated 0
+       / Incomplete 0
+       / Failed 1
+       (complete attempts replace truncated/empty provenance; originals stay in history; incomplete cells are not concluded)</p>
+    <p><strong>Cumulative actual cost (all records):</strong> $0.004561</p>
+    <button class="export-btn" onclick="exportFeedback()">Export All Feedback as JSON</button>
+  </div>
+  
+  
+    <div class="prompt-section">
+      <h2>01-math-basics</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.6-Pro <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.6-pro<br>
+              Attempt: original · xiaomi_mimo-v2.6-pro_01-math-basics.json<br>
+              Tokens: 1063 (278 in / 785 out)<br>
+              Cost: $0.000722<br>
+              Finish: stop / stop<br>
+              Time: 11/27/2026, 3:58:17 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.6-pro_01-math-basics.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://en.wikipedia.org/wiki/Quadratic_formula</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Math Basics: A Comprehensive Overview
+
+## 1. The Quadratic Formula (Inline Math)
+
+The quadratic formula is one of the most fundamental results in algebra. For any quadratic equation of the form $ax^2 + bx + c = 0$ (where $a \neq 0$), the solutions for $x$ are given by:
+
+$$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$
+
+Here, the discriminant $D = b^2 - 4ac$ plays a crucial role. When $D &gt; 0$, there are two distinct real roots. When $D = 0$, there is exactly one repeated real root. When $D &lt; 0$, the roots are complex conjugates of the form $x = \frac{-b}{2a} \pm \frac{\sqrt{|D|}}{2a}\,i$.
+
+---
+
+## 2. Systems of Linear Equations (Aligned Display Math)
+
+Consider the following system of two equations in two unknowns:
+
+$$\begin{align}
+x + y &amp;= 5 \\
+2x - y &amp;= 1
+\end{align}$$
+
+We can solve this using substitution or elimination. Adding both equations gives $3x = 6$, so $x = 2$. Substituting back, $y = 3$. The unique solution is $(x, y) = (2, 3)$.
+
+---
+
+## 3. Matrices and Piecewise Functions
+
+The ...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.6-pro"
+                data-feedback-prompt="01-math-basics"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>02-markdown-formatting</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.6-Pro <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.6-pro<br>
+              Attempt: original · xiaomi_mimo-v2.6-pro_02-markdown-formatting.json<br>
+              Tokens: 799 (397 in / 402 out)<br>
+              Cost: $0.000468<br>
+              Finish: stop / stop<br>
+              Time: 11/27/2026, 3:58:19 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.6-pro_02-markdown-formatting.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature yes">Links</span>
+                    <span class="feature yes">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                    <div style="margin-top: 4px; font-size: 0.9em;">Links: https://example.com/lab-autolink, https://example.com/lab-bare-url/with/a/long/path, http://127.0.0.1:5174/?modelId=xiaomi%2Fmimo-v2.6-pro&content=%23%23%20Headers%0A%23%23%23%20This%20is%20H3%0A%23%23%23%23%20This%20is%20H4%0A%0A%23%23%20Text%20formatting%0A**Bold%20text**%20and%20*italic%20text*%20and%20***bold%20italic***%0A%0A%23%23%20Lists%0ANested%20unordered%20list%3A%0A-%20Level%201%20item%20A%0A%20%20-%20Level%202%20item%20A1%0A%20%20-%20Level%202%20item%20A2%0A%20%20%20%20-%20Level%203%20item%20A2a%0A-%20Level%201%20item%20B%0A%0ANested%20ordered%20list%3A%0A1.%20First%20item%0A%20%20%201.%20Nested%20first%0A%20%20%202.%20Nested%20second%0A2.%20Second%20item%0A3.%20Third%20item%0A%0A%23%23%20Tables%0A%7C%20Model%20%7C%20Context%20%7C%20Price%20%7C%0A%7C-------%7C---------%7C-------%7C%0A%7C%20GPT-4%20%7C%20128k%20%7C%20%240.03%20%7C%0A%7C%20Claude%20%7C%20200k%20%7C%20%240.02%20%7C%0A%0A%23%23%20Blockquotes%0A%3E%20This%20is%20a%20blockquote%0A%3E%20with%20multiple%20lines%0A%0A%23%23%20Strikethrough%2C%20task%20list%2C%20and%20an%20image%0AThe%20previous%20label%20was%20~~obsolete~~%20and%20should%20not%20be%20used.%0A-%20%5Bx%5D%20Calibrated%20the%20scale%0A-%20%5B%20%5D%20Recheck%20the%20blank%0AHere%20is%20a%20diagram%3A%20!%5Btriangle%20sketch%5D(https%3A%2F%2Fexample.com%2Ftriangle.png)%0A%0A%23%23%20Nested%20blockquote%2C%20autolink%2C%20bare%20URL%2C%20and%20a%20footnote%0A%3E%20Outer%20note%20from%20the%20lab.%0A%3E%0A%3E%20%3E%20Inner%20note%20with%20a%20nested%20list%3A%0A%3E%20%3E%20-%20nested%20aliquot%0A%3E%20%3E%20-%20nested%20blank%0A%0AAutolink%3A%20%3Chttps%3A%2F%2Fexample.com%2Flab-autolink%3E%0ABare%20URL%3A%20https%3A%2F%2Fexample.com%2Flab-bare-url%2Fwith%2Fa%2Flong%2Fpath%0AThe%20method%20needs%20a%20citation%5B%5Efmt2%5D.%0A%0A%5B%5Efmt2%5D%3A%20Recorded%20in%20the%20lab%20notebook%2C%20page%2012.%0A%0A%23%23%20Inline%20HTML%0AFirst%20line.%3Cbr%3ESecond%20line%20after%20an%20explicit%20break.%0AThe%20ion%20is%20written%20Na%3Csup%3E%2B%3C%2Fsup%3E%20in%20running%20text.#fn-fmt2...</div>
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response">## Headers
+### This is H3
+#### This is H4
+
+## Text formatting
+**Bold text** and *italic text* and ***bold italic***
+
+## Lists
+Nested unordered list:
+- Level 1 item A
+  - Level 2 item A1
+  - Level 2 item A2
+    - Level 3 item A2a
+- Level 1 item B
+
+Nested ordered list:
+1. First item
+   1. Nested first
+   2. Nested second
+2. Second item
+3. Third item
+
+## Tables
+| Model | Context | Price |
+|-------|---------|-------|
+| GPT-4 | 128k | $0.03 |
+| Claude | 200k | $0.02 |
+
+## Blockquotes
+&gt; This is a blockquote
+&gt; with multiple lines
+
+## Strikethrough, task list, and an image
+The previous label was ~~obsolete~~ and should not be used.
+- [x] Calibrated the scale
+- [ ] Recheck the blank
+Here is a diagram: ![triangle sketch](https://example.com/triangle.png)
+
+## Nested blockquote, autolink, bare URL, and a footnote
+&gt; Outer note from the lab.
+&gt;
+&gt; &gt; Inner note with a nested list:
+&gt; &gt; - nested aliquot
+&gt; &gt; - nested blank
+
+Autolink: &lt;https://example.com/lab-autolink&gt;
+Bare URL: https://example.com/lab-bar...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.6-pro"
+                data-feedback-prompt="02-markdown-formatting"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>03-code-blocks</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.6-Pro <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.6-pro<br>
+              Attempt: original · xiaomi_mimo-v2.6-pro_03-code-blocks.json<br>
+              Tokens: 632 (303 in / 329 out)<br>
+              Cost: $0.000375<br>
+              Finish: stop / stop<br>
+              Time: 11/27/2026, 3:58:20 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.6-pro_03-code-blocks.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature no">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature no">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Code Blocks Test
+
+Here is the response with the requested fenced code blocks:
+
+## Python code
+
+```python
+def quadratic_formula(a, b, c):
+    discriminant = b**2 - 4*a*c
+    x1 = (-b + discriminant**0.5) / (2*a)
+    x2 = (-b - discriminant**0.5) / (2*a)
+    return x1, x2
+
+# Example: solve x^2 - 5x + 6 = 0
+result = quadratic_formula(1, -5, 6)
+print(f&quot;Solutions: x = {result[0]}, x = {result[1]}&quot;)
+```
+
+
+
+## JavaScript code
+
+```javascript
+const fibonacci = (n) =&gt; {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+console.log(fibonacci(10)); // 55
+```
+
+
+
+## Inline code with math-like content
+
+The variable `x^2` should render as code, not math. Similarly `a_b` and `$price` should be code.
+
+## Shell code
+
+```bash
+echo &quot;price=$50&quot;
+python -c &quot;import math; print(math.sqrt(3))&quot;
+```
+
+## Long code line
+
+```text
+LONGCODELINE = &quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&quot;
+```</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.6-pro"
+                data-feedback-prompt="03-code-blocks"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>04-mixed-markdown-latex</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.6-Pro <span class="status status-fail">fail</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.6-pro<br>
+              Attempt: original · xiaomi_mimo-v2.6-pro_04-mixed-markdown-latex.json<br>
+              Tokens: 1192 (316 in / 876 out)<br>
+              Cost: $0.000808<br>
+              Finish: stop / stop<br>
+              Time: 11/27/2026, 3:58:25 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.6-pro_04-mixed-markdown-latex.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature no">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Mixed Markdown and LaTeX Demonstration
+
+## Problem Statement
+
+**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:
+
+1. The *derivative* $f&#039;(x)$
+2. The **integral** $\int f(x) \, dx$
+
+### Solution
+
+First, notice that $f(x) = (x+1)^2$. Using the **power rule** and *linearity* of differentiation:
+
+$$f&#039;(x) = \frac{d}{dx}\left(x^2 + 2x + 1\right) = 2x + 2 = 2(x + 1)$$
+
+For the **indefinite integral**, we apply the *sum rule* term by term:
+
+$$\int f(x) \, dx = \int x^2 \, dx + \int 2x \, dx + \int 1 \, dx = \frac{x^3}{3} + x^2 + x + C$$
+
+where $C$ is an arbitrary constant of integration.
+
+---
+
+## Linear Algebra with Lists
+
+Properties of the matrix $A = \begin{pmatrix} a &amp; b \\ c &amp; d \end{pmatrix}$:
+
+- **Determinant**: $\det(A) = ad - bc$
+- **Trace**: $\operatorname{tr}(A) = a + d$
+- **Eigenvalues**: roots of the *characteristic polynomial*
+  $$\lambda^2 - \operatorname{tr}(A)\lambda + \det(A) = 0$$
+  which gives
+  $$\lambda_{1,2} = \frac{(a+d) \pm \sqrt{(a-d)^2 + 4bc}}{2}$$
+- **...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.6-pro"
+                data-feedback-prompt="04-mixed-markdown-latex"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>05-complex-scenarios</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.6-Pro <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.6-pro<br>
+              Attempt: original · xiaomi_mimo-v2.6-pro_05-complex-scenarios.json<br>
+              Tokens: 1640 (439 in / 1201 out)<br>
+              Cost: $0.001110<br>
+              Finish: stop / stop<br>
+              Time: 11/27/2026, 3:58:34 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.6-pro_05-complex-scenarios.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature no">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature no">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Complex Scenarios: Edge Case Handling
+
+Here&#039;s a thorough walkthrough of each scenario and the tricky formatting edge cases they present.
+
+---
+
+## Scenario 1: Math in Lists with Formatting
+
+Nested lists with inline **bold**, *italic*, and LaTeX math require careful delimiter management:
+
+1. The **Pythagorean theorem** states that $a^2 + b^2 = c^2$
+2. For a *right triangle* with sides $a=3$ and $b=4$:
+   - Calculate: $c = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5$
+   - Therefore, $c = 5$ units
+
+&gt; **Key challenge:** Inline formatting (`**bold**`, `*italic*`) must not conflict with LaTeX delimiters. The `*` in `*right triangle*` must not be confused with markdown emphasis inside math blocks.
+
+---
+
+## Scenario 2: Tables with Math
+
+| Formula | LaTeX | Result |
+|---------|-------|--------|
+| Quadratic | $ax^2 + bx + c = 0$ | $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$ |
+| Sum | $\sum_{i=1}^{n} i$ | $\frac{n(n+1)}{2}$ |
+| Product | $\prod_{i=1}^{n} i$ | $n!$ |
+
+&gt; **Key challenge:** The `|`...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.6-pro"
+                data-feedback-prompt="05-complex-scenarios"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+    <div class="prompt-section">
+      <h2>06-edge-cases-boundaries</h2>
+      <div class="model-grid">
+        
+          <div class="model-card">
+            <h4>Xiaomi: MiMo-V2.6-Pro <span class="status status-pass">pass</span></h4>
+            <div class="meta">
+              Model ID: xiaomi/mimo-v2.6-pro<br>
+              Attempt: original · xiaomi_mimo-v2.6-pro_06-edge-cases-boundaries.json<br>
+              Tokens: 1688 (619 in / 1069 out)<br>
+              Cost: $0.001077<br>
+              Finish: stop / stop<br>
+              Time: 11/27/2026, 3:58:38 PM
+            </div>
+            
+            
+              <img src="xiaomi_mimo-v2.6-pro_06-edge-cases-boundaries.png" 
+                   class="screenshot" 
+                   alt="Rendered output"
+                   onerror="this.style.display='none'">
+              
+              
+                <div class="feature-coverage">
+                  <strong>Feature Coverage:</strong>
+                  <div>
+                    <span class="feature yes">Display Math</span>
+                    <span class="feature yes">Inline Math</span>
+                    <span class="feature yes">Code Blocks</span>
+                    <span class="feature yes">Tables</span>
+                    <span class="feature no">Links</span>
+                    <span class="feature no">Nested Lists</span>
+                    <span class="feature yes">Currency</span>
+                    <span class="feature yes">Code $</span>
+                  </div>
+                  
+                  
+                </div>
+              
+              
+              <details>
+                <summary>Raw Response</summary>
+                <div class="raw-response"># Delimiter Variants
+
+$$x^2 + y^2 = r^2$$
+
+\[E = mc^2\]
+
+$a + b = c$
+
+\(x = 5\)
+
+---
+
+# Nested Structures
+
+1. First item
+2. The equation is:
+
+   $$\int_0^1 x \, dx = \frac{1}{2}$$
+
+   And it evaluates to 0.5
+
+3. Third item
+
+---
+
+# Code with Math-like Syntax
+
+```python
+# This should stay as literal code
+price = $50
+formula = &quot;E = mc^2&quot;
+result = a**2 + b**2
+def calc(x):
+    return x**2
+```
+
+---
+
+# Currency and Escaped Dollars
+
+- Plain: The price is $100
+- Escaped: The budget is \$500
+- Multiple: Costs $25, $30, and $45
+- In sentence: I spent $50 at the store
+
+---
+
+# Tables with Math
+
+| Variable | Formula | Value |
+|----------|---------|-------|
+| Area | $A = \pi r^2$ | $78.54$ |
+| Volume | $V = \frac{4}{3}\pi r^3$ | $523.60$ |
+
+---
+
+# Raw Dollar Signs
+
+The shell variable $HOME is set. Price: $99.99.
+
+---
+
+# Display Math in the Middle of a Sentence
+
+The circle identity $$x^2 + y^2 = r^2$$ holds for every point on the circle, and the mass-energy relation \[E = mc^2\] is often quoted in the...</div>
+              </details>
+            
+            
+            <div class="feedback">
+              <label>Feedback:</label>
+              <textarea 
+                data-feedback-model="xiaomi/mimo-v2.6-pro"
+                data-feedback-prompt="06-edge-cases-boundaries"
+                placeholder="Note any rendering issues, bugs, or observations..."></textarea>
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  
+  
+  <script>
+    function exportFeedback() {
+      const feedback = {};
+      document.querySelectorAll('textarea[data-feedback-model]').forEach(textarea => {
+        const modelId = textarea.dataset.feedbackModel;
+        const promptName = textarea.dataset.feedbackPrompt;
+        const value = textarea.value.trim();
+        
+        if (value) {
+          if (!feedback[modelId]) {
+            feedback[modelId] = {};
+          }
+          feedback[modelId][promptName] = value;
+        }
+      });
+      
+      const json = JSON.stringify(feedback, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rendering-feedback-2026-11-27-pr365.json';
+      a.click();
+    }
+  </script>
+</body>
+</html>
