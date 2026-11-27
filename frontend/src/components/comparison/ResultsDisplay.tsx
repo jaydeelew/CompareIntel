@@ -68,6 +68,101 @@ function modelTabIsStillStreaming(
 /** Duration aligned with `.results-tab-content-slide--*` CSS in results.css (fallback if `animationend` does not fire). */
 const MODEL_TAB_SLIDE_ANIM_MS = 480
 
+const pagerGapSize = new WeakMap<HTMLElement, { message: number; conversation: number }>()
+
+/**
+ * Bottom of the response box the reader can see, ignoring transforms that
+ * are still running. `.conversation-message` fades in with translateY, and
+ * that moves the box toward the pager for 0.3s without a resize event.
+ * A tall reply also scrolls inside `.conversation-content`, so the message
+ * border can sit below that clip.
+ */
+function visibleResponseBottom(message: HTMLElement, boundary: HTMLElement): number {
+  let bottom = message.getBoundingClientRect().bottom
+  let node: HTMLElement | null = message
+  while (node) {
+    const transform = getComputedStyle(node).transform
+    if (transform && transform !== 'none') {
+      bottom -= new DOMMatrixReadOnly(transform).m42
+    }
+    if (node === boundary) break
+    node = node.parentElement
+  }
+  const conversation = message.closest('.conversation-content')
+  if (!(conversation instanceof HTMLElement)) return bottom
+  return Math.min(bottom, conversation.getBoundingClientRect().bottom)
+}
+
+function clearMobilePagerGap(inner: HTMLElement): void {
+  pagerGapSize.delete(inner)
+  inner.style.paddingBottom = ''
+  const tabs = inner.querySelector('.results-tabs-container')
+  if (tabs instanceof HTMLElement) tabs.style.marginBottom = ''
+  const outer = inner.parentElement?.closest('.results-section')
+  if (outer instanceof HTMLElement && outer !== inner) outer.style.paddingBottom = ''
+}
+
+/**
+ * The gap above the pager is whatever sits between the response box and the
+ * buttons (conversation padding plus the pager's top margin). Chrome and
+ * WebKit resolve that flex padding differently, so a fixed bottom padding
+ * cannot match both. Measure it and give the inner card the same amount
+ * under the pager, after the stacked mobile spacers are removed.
+ */
+function equalizeMobilePagerGap(inner: HTMLElement): void {
+  const outer = inner.parentElement?.closest('.results-section')
+  const tabs = inner.querySelector('.results-tabs-container')
+  const pager = inner.querySelector('.results-model-pager')
+  const messages = inner.querySelectorAll('.message-content')
+  const message = messages[messages.length - 1]
+  if (
+    !(outer instanceof HTMLElement) ||
+    outer === inner ||
+    !(pager instanceof HTMLElement) ||
+    !(message instanceof HTMLElement)
+  ) {
+    clearMobilePagerGap(inner)
+    return
+  }
+
+  if (tabs instanceof HTMLElement) tabs.style.marginBottom = '0px'
+  outer.style.paddingBottom = '0px'
+
+  const conversation = message.closest('.conversation-content')
+  const messageHeight = message.getBoundingClientRect().height
+  const conversationHeight =
+    conversation instanceof HTMLElement ? conversation.getBoundingClientRect().height : 0
+  const previous = pagerGapSize.get(inner)
+  // Scrolling the page does not change these heights, but it does change the
+  // rects. Rewriting padding from that noise moves the composer while a
+  // tutorial cutout is mid-scroll.
+  if (
+    previous &&
+    Math.abs(previous.message - messageHeight) < 1 &&
+    Math.abs(previous.conversation - conversationHeight) < 1
+  ) {
+    return
+  }
+
+  const above = pager.getBoundingClientRect().top - visibleResponseBottom(message, inner)
+  const below = outer.getBoundingClientRect().bottom - pager.getBoundingClientRect().bottom
+  const delta = below - above
+  if (!Number.isFinite(delta)) return
+  if (Math.abs(delta) <= 0.5) {
+    pagerGapSize.set(inner, { message: messageHeight, conversation: conversationHeight })
+    return
+  }
+
+  const current = parseFloat(getComputedStyle(inner).paddingBottom) || 0
+  const next = Math.max(0, current - delta)
+  if (Math.abs(next - current) <= 0.5) {
+    pagerGapSize.set(inner, { message: messageHeight, conversation: conversationHeight })
+    return
+  }
+  inner.style.paddingBottom = `${Math.round(next * 100) / 100}px`
+  pagerGapSize.set(inner, { message: messageHeight, conversation: conversationHeight })
+}
+
 /** Min horizontal swipe (px); scales slightly with viewport. */
 function mobileModelTabSwipeThreshold(width: number): number {
   return Math.max(64, Math.min(104, Math.round(width * 0.14)))
@@ -630,6 +725,49 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       window.removeEventListener('touchcancel', onTouchRelease)
     }
   }, [useTabbedMultiModelResults, visibleConversations.length, modelTabStripKey])
+
+  useLayoutEffect(() => {
+    const inner = sectionRef.current
+    if (!inner) return
+    if (!isMobileLayout || !useTabbedMultiModelResults) {
+      clearMobilePagerGap(inner)
+      return
+    }
+
+    let frame = 0
+    const run = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => equalizeMobilePagerGap(inner))
+    }
+    const observer = new ResizeObserver(run)
+    const watch = () => {
+      observer.observe(inner)
+      inner.querySelectorAll('.conversation-content, .message-content').forEach(node => {
+        observer.observe(node)
+      })
+    }
+    watch()
+    run()
+    // New message nodes and font swaps change the box without resizing the
+    // card that the observer was attached to.
+    const mutation = new MutationObserver(() => {
+      watch()
+      run()
+    })
+    mutation.observe(inner, { childList: true, subtree: true })
+    const fontsReady = document.fonts?.ready.then(() => {
+      if (!sectionRef.current) return
+      watch()
+      run()
+    })
+    return () => {
+      cancelAnimationFrame(frame)
+      void fontsReady
+      mutation.disconnect()
+      observer.disconnect()
+      clearMobilePagerGap(inner)
+    }
+  }, [isMobileLayout, useTabbedMultiModelResults, activeTabIndex])
 
   if (visibleConversations.length === 0) return null
 

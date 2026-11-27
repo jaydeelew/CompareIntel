@@ -559,6 +559,32 @@
   }
 }
 
+/*
+ * Phone cards stack three bottom spacers under the model pager that the gap
+ * above the pager does not have: this shell's 1rem margin, the inner results
+ * section's bottom padding, and the outer results card's bottom padding.
+ * Drop the shell margin and the outer rim. ResultsDisplay then sets the inner
+ * section's bottom padding so the pager sits halfway between the response box
+ * and the card edge. Desktop keeps the section padding.
+ */
+@media (max-width: 768px) {
+  .results-section-tabbed .results-tabs-container:has(.results-model-pager) {
+    margin-bottom: 0;
+  }
+
+  .results-section:not(.results-section-tabbed):has(.results-model-pager) {
+    padding-bottom: 0;
+  }
+
+  /* `.results-section` transitions `all`, which animates padding. The pager
+     gap is measured from the used padding, so a 0.3s padding transition
+     leaves the buttons off-center after the animation ends. Keep the hover
+     transitions; snap padding. */
+  .results-section:has(.results-model-pager) {
+    transition-property: box-shadow, border-color, background-color, transform, opacity;
+  }
+}
+
 /* Allow vertical pans to reach the page while overflow-x still scrolls wide code.
    Model-tab horizontal swipes are gated in shouldSuppressMobileModelTabSwipe. */
 .results-section-tabbed .message-content .latex-content .code-block,
