@@ -6840,138 +6840,13 @@
       }
     },
     {
-      "id": "xiaomi/mimo-v2.5",
-      "canonical_slug": "xiaomi/mimo-v2.5-20260422",
-      "hugging_face_id": "XiaomiMiMo/MiMo-V2.5",
-      "name": "Xiaomi: MiMo-V2.5",
-      "created": 1776874269,
-      "description": "MiMo-V2.5 is a native omnimodal model by Xiaomi. It delivers Pro-level agentic performance at roughly half the inference cost, while surpassing MiMo-V2-Omni in multimodal perception across image and video understanding...",
-      "context_length": 1048576,
-      "architecture": {
-        "modality": "text+image+audio+video->text",
-        "input_modalities": [
-          "text",
-          "audio",
-          "image",
-          "video"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "Other",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.00000014",
-        "completion": "0.00000028",
-        "input_cache_read": "0.0000000028"
-      },
-      "top_provider": {
-        "context_length": 1048576,
-        "max_completion_tokens": 131072,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "frequency_penalty",
-        "include_reasoning",
-        "max_tokens",
-        "presence_penalty",
-        "reasoning",
-        "response_format",
-        "stop",
-        "temperature",
-        "tool_choice",
-        "tools",
-        "top_p"
-      ],
-      "default_parameters": {
-        "temperature": 1,
-        "top_p": 0.95,
-        "top_k": null,
-        "frequency_penalty": null,
-        "presence_penalty": null,
-        "repetition_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": null,
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/xiaomi/mimo-v2.5-20260422/endpoints"
-      }
-    },
-    {
-      "id": "xiaomi/mimo-v2.5-pro",
-      "canonical_slug": "xiaomi/mimo-v2.5-pro-20260422",
-      "hugging_face_id": "XiaomiMiMo/MiMo-V2.5-Pro",
-      "name": "Xiaomi: MiMo-V2.5-Pro",
-      "created": 1776874273,
-      "description": "MiMo-V2.5-Pro is Xiaomi’s flagship model, delivering strong performance in general agentic capabilities, complex software engineering, and long-horizon tasks, with top rankings on benchmarks such as ClawEval, GDPVal, and SWE-bench Pro....",
-      "context_length": 1048576,
-      "architecture": {
-        "modality": "text->text",
-        "input_modalities": [
-          "text"
-        ],
-        "output_modalities": [
-          "text"
-        ],
-        "tokenizer": "Other",
-        "instruct_type": null
-      },
-      "pricing": {
-        "prompt": "0.000000435",
-        "completion": "0.00000087",
-        "input_cache_read": "0.0000000036"
-      },
-      "top_provider": {
-        "context_length": 1048576,
-        "max_completion_tokens": 131072,
-        "is_moderated": false
-      },
-      "per_request_limits": null,
-      "supported_parameters": [
-        "frequency_penalty",
-        "include_reasoning",
-        "logit_bias",
-        "max_tokens",
-        "min_p",
-        "presence_penalty",
-        "reasoning",
-        "repetition_penalty",
-        "response_format",
-        "seed",
-        "stop",
-        "structured_outputs",
-        "temperature",
-        "tool_choice",
-        "tools",
-        "top_k",
-        "top_p"
-      ],
-      "default_parameters": {
-        "temperature": 1,
-        "top_p": 0.95,
-        "top_k": null,
-        "frequency_penalty": null,
-        "presence_penalty": null,
-        "repetition_penalty": null
-      },
-      "supported_voices": null,
-      "knowledge_cutoff": null,
-      "expiration_date": null,
-      "links": {
-        "details": "/api/v1/models/xiaomi/mimo-v2.5-pro-20260422/endpoints"
-      }
-    },
-    {
       "id": "xiaomi/mimo-v2.6-flash",
       "canonical_slug": "xiaomi/mimo-v2.6-flash-20260921",
       "hugging_face_id": "XiaomiMiMo/MiMo-V2.6-Flash-RL",
       "name": "Xiaomi: MiMo-V2.6-Flash",
       "created": 1790021264,
       "description": "MiMo-V2.6-Flash is an open-source foundation model developed by Xiaomi. Built on a Mixture-of-Experts architecture with 309B total parameters and 15B activated per token, it employs a hybrid attention mechanism for...",
-      "context_length": 1050000,
+      "context_length": 1048576,
       "architecture": {
         "modality": "text+image+audio+video->text",
         "input_modalities": [
@@ -7033,9 +6908,163 @@
       "benchmarks": {
         "design_arena": [],
         "artificial_analysis": {
-          "intelligence_index": 37.9,
+          "intelligence_index": 26.8,
           "coding_index": null,
-          "agentic_index": null
+          "agentic_index": null,
+          "finance_and_accounting_index": 36.9,
+          "strategy_and_ops_index": 45.7,
+          "legal_index": 33.8,
+          "healthcare_and_medical_index": 35.1,
+          "engineering_index": 31.1,
+          "economics_index": 32.2,
+          "cyber_index": null,
+          "openness_index": 52.8,
+          "multilingual_index": null,
+          "decision_index": null
+        }
+      },
+      "reasoning": {
+        "mandatory": false
+      }
+    },
+    {
+      "id": "xiaomi/mimo-v2.6-pro",
+      "canonical_slug": "xiaomi/mimo-v2.6-pro-20260921",
+      "hugging_face_id": "XiaomiMiMo/MiMo-V2.6-Pro-RL",
+      "name": "Xiaomi: MiMo-V2.6-Pro",
+      "created": 1790021259,
+      "description": "MiMo-V2.6-Pro is the flagship foundation model developed by Xiaomi. Built at a scale of over 1T parameters, it is designed to push the ceiling of capability for the most demanding...",
+      "context_length": 1048576,
+      "architecture": {
+        "modality": "text+image+audio+video->text",
+        "input_modalities": [
+          "text",
+          "image",
+          "video",
+          "audio"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Other",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.000000435",
+        "completion": "0.00000087",
+        "input_cache_read": "0.0000000036"
+      },
+      "top_provider": {
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logit_bias",
+        "logprobs",
+        "max_tokens",
+        "min_p",
+        "presence_penalty",
+        "reasoning",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "default_parameters": {
+        "temperature": 1,
+        "top_p": 0.95,
+        "frequency_penalty": 0
+      },
+      "supported_voices": null,
+      "knowledge_cutoff": null,
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/xiaomi/mimo-v2.6-pro-20260921/endpoints"
+      },
+      "benchmarks": {
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "webapps",
+            "elo": 1261,
+            "win_rate": 58.2,
+            "rank": 13
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1304,
+            "win_rate": 57.4,
+            "rank": 19
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1367,
+            "win_rate": 53.5,
+            "rank": 16
+          },
+          {
+            "arena": "models",
+            "category": "dataviz",
+            "elo": 1333,
+            "win_rate": 59,
+            "rank": 9
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1295,
+            "win_rate": 53.4,
+            "rank": 18
+          },
+          {
+            "arena": "models",
+            "category": "svg",
+            "elo": 1335,
+            "win_rate": 53.4,
+            "rank": 14
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1327,
+            "win_rate": 58.1,
+            "rank": 13
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1359,
+            "win_rate": 51.8,
+            "rank": 14
+          }
+        ],
+        "artificial_analysis": {
+          "intelligence_index": 29.9,
+          "coding_index": null,
+          "agentic_index": null,
+          "finance_and_accounting_index": 38.9,
+          "strategy_and_ops_index": 46.9,
+          "legal_index": 35,
+          "healthcare_and_medical_index": 35.8,
+          "engineering_index": 34.3,
+          "economics_index": 36.1,
+          "cyber_index": 56.1,
+          "openness_index": 52.8,
+          "multilingual_index": null,
+          "decision_index": null
         }
       },
       "reasoning": {

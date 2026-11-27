@@ -51,6 +51,10 @@
     {
       "modelId": "google/gemini-4-neon",
       "reason": "Six replies collected 2026-11-23 on the standard 01-06 new-model suite (PR 320). Mermaid fences and RTL blocks now render, so 06-edge-cases-boundaries is no longer a renderer gap. 05-complex-scenarios hit the 2048-token cap (1962 reasoning tokens; finish_reason=length) and ends mid-equation, so that cell stays incomplete. 07 and 08 were not part of this collection (optional prompts)."
+    },
+    {
+      "modelId": "xiaomi/mimo-v2.6-pro",
+      "reason": "Successor to delisted xiaomi/mimo-v2.5-pro, added 2026-11-27. Standard prompts 01-06 were not collected in this change, so there is no saved reply to render. The renderer config is cloned from xiaomi/mimo-v2.6-flash (same Xiaomi omnimodal family, already covered). Collect replies before treating its rendered output as checked."
     }
   ]
 }
