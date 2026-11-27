@@ -403,19 +403,9 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
           'Percentile 55.3% within this board. Code Arena (LMArena webdev overall, arena.ai): Arena Score 1509 (published 2026-11-23, 9993 votes). Fetched 2026-11-27.',
       },
       {
-        modelId: 'xiaomi/mimo-v2.5-pro',
-        evidence:
-          'Percentile 49.1% within this board. Code Arena (LMArena webdev overall, arena.ai): Arena Score 1479 (published 2026-11-23, 21915 votes). Fetched 2026-11-27.',
-      },
-      {
         modelId: 'openai/gpt-5.4',
         evidence:
           'Percentile 46.0% within this board. Code Arena (LMArena webdev overall, arena.ai): Arena Score 1462 (published 2026-11-23, 1336 votes). Fetched 2026-11-27.',
-      },
-      {
-        modelId: 'xiaomi/mimo-v2.5',
-        evidence:
-          'Percentile 41.6% within this board. Code Arena (LMArena webdev overall, arena.ai): Arena Score 1438 (published 2026-11-23, 14575 votes). Fetched 2026-11-27.',
       },
       {
         modelId: 'z-ai/glm-5',
@@ -642,11 +632,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
           'Creative Writing (LMArena text, arena.ai): Arena Score 1436 (published 2026-11-22, 1117 votes). Fetched 2026-11-27.',
       },
       {
-        modelId: 'xiaomi/mimo-v2.5-pro',
-        evidence:
-          'Creative Writing (LMArena text, arena.ai): Arena Score 1433 (published 2026-11-22, 14306 votes). Fetched 2026-11-27.',
-      },
-      {
         modelId: 'moonshotai/kimi-k2.6',
         evidence:
           'Creative Writing (LMArena text, arena.ai): Arena Score 1432 (published 2026-11-22, 6188 votes). Fetched 2026-11-27.',
@@ -700,11 +685,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'google/gemini-2.5-flash',
         evidence:
           'Creative Writing (LMArena text, arena.ai): Arena Score 1394 (published 2026-11-22, 17516 votes). Fetched 2026-11-27.',
-      },
-      {
-        modelId: 'xiaomi/mimo-v2.5',
-        evidence:
-          'Creative Writing (LMArena text, arena.ai): Arena Score 1393 (published 2026-11-22, 7784 votes). Fetched 2026-11-27.',
       },
     ],
   },
@@ -839,11 +819,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'openai/gpt-6-luna',
         evidence:
           'Vision Arena (lmarena.ai): 1235 (published 2026-11-25, 8456 votes). Fetched 2026-11-27.',
-      },
-      {
-        modelId: 'xiaomi/mimo-v2.5',
-        evidence:
-          'Vision Arena (lmarena.ai): 1234 (published 2026-11-25, 29278 votes). Fetched 2026-11-27.',
       },
       {
         modelId: 'mistralai/mistral-large-4-0',
@@ -1059,11 +1034,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
           'Math (LMArena text, arena.ai): Arena Score 1479 (published 2026-11-22, 2045 votes). Fetched 2026-11-27.',
       },
       {
-        modelId: 'xiaomi/mimo-v2.5-pro',
-        evidence:
-          'Math (LMArena text, arena.ai): Arena Score 1479 (published 2026-11-22, 3655 votes). Fetched 2026-11-27.',
-      },
-      {
         modelId: 'stepfun/step-5-preview',
         evidence:
           'Math (LMArena text, arena.ai): Arena Score 1475 (published 2026-11-22, 603 votes). Fetched 2026-11-27.',
@@ -1137,11 +1107,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'google/gemini-2.5-pro',
         evidence:
           'Math (LMArena text, arena.ai): Arena Score 1439 (published 2026-11-22, 7755 votes). Fetched 2026-11-27.',
-      },
-      {
-        modelId: 'xiaomi/mimo-v2.5',
-        evidence:
-          'Math (LMArena text, arena.ai): Arena Score 1437 (published 2026-11-22, 2421 votes). Fetched 2026-11-27.',
       },
       {
         modelId: 'openai/gpt-5',
@@ -1348,11 +1313,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
           'Hard prompts (LMArena text, arena.ai): Arena Score 1496 (published 2026-11-22, 11014 votes). Fetched 2026-11-27.',
       },
       {
-        modelId: 'xiaomi/mimo-v2.5-pro',
-        evidence:
-          'Hard prompts (LMArena text, arena.ai): Arena Score 1494 (published 2026-11-22, 49773 votes). Fetched 2026-11-27.',
-      },
-      {
         modelId: 'x-ai/grok-4.5',
         evidence:
           'Hard prompts (LMArena text, arena.ai): Arena Score 1488 (published 2026-11-22, 25998 votes). Fetched 2026-11-27.',
@@ -1406,11 +1366,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'qwen/qwen3.5-397b-a17b',
         evidence:
           'Hard prompts (LMArena text, arena.ai): Arena Score 1463 (published 2026-11-22, 64043 votes). Fetched 2026-11-27.',
-      },
-      {
-        modelId: 'xiaomi/mimo-v2.5',
-        evidence:
-          'Hard prompts (LMArena text, arena.ai): Arena Score 1462 (published 2026-11-22, 31326 votes). Fetched 2026-11-27.',
       },
       {
         modelId: 'deepseek/deepseek-v4-flash',
@@ -1577,11 +1532,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
           'Percentile 91.1% within this board. Longer queries (LMArena text, arena.ai): Arena Score 1486 (published 2026-11-22, 24334 votes). Fetched 2026-11-27.',
       },
       {
-        modelId: 'xiaomi/mimo-v2.5-pro',
-        evidence:
-          'Percentile 90.8% within this board. Longer queries (LMArena text, arena.ai): Arena Score 1486 (published 2026-11-22, 33723 votes). Fetched 2026-11-27.',
-      },
-      {
         modelId: 'moonshotai/kimi-k3.1-pro',
         evidence:
           'Percentile 89.6% within this board. Longer queries (LMArena text, arena.ai): Arena Score 1484 (published 2026-11-22, 3032 votes). Fetched 2026-11-27.',
@@ -1655,11 +1605,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'qwen/qwen3.5-397b-a17b',
         evidence:
           'Percentile 77.5% within this board. Longer queries (LMArena text, arena.ai): Arena Score 1453 (published 2026-11-22, 42650 votes). Fetched 2026-11-27.',
-      },
-      {
-        modelId: 'xiaomi/mimo-v2.5',
-        evidence:
-          'Percentile 77.0% within this board. Longer queries (LMArena text, arena.ai): Arena Score 1452 (published 2026-11-22, 20863 votes). Fetched 2026-11-27.',
       },
       {
         modelId: 'openai/gpt-6-luna',
@@ -1911,11 +1856,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
           'Non-English (LMArena text, arena.ai): Arena Score 1451 (published 2026-11-22, 3684 votes). Fetched 2026-11-27.',
       },
       {
-        modelId: 'xiaomi/mimo-v2.5-pro',
-        evidence:
-          'Non-English (LMArena text, arena.ai): Arena Score 1450 (published 2026-11-22, 44484 votes). Fetched 2026-11-27.',
-      },
-      {
         modelId: 'moonshotai/kimi-k2.6',
         evidence:
           'Non-English (LMArena text, arena.ai): Arena Score 1449 (published 2026-11-22, 21500 votes). Fetched 2026-11-27.',
@@ -1974,11 +1914,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'deepseek/deepseek-v4-flash',
         evidence:
           'Non-English (LMArena text, arena.ai): Arena Score 1424 (published 2026-11-22, 28311 votes). Fetched 2026-11-27.',
-      },
-      {
-        modelId: 'xiaomi/mimo-v2.5',
-        evidence:
-          'Non-English (LMArena text, arena.ai): Arena Score 1411 (published 2026-11-22, 25562 votes). Fetched 2026-11-27.',
       },
       {
         modelId: 'qwen/qwen3-30b-a3b-instruct-2507',
@@ -2325,11 +2260,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
           'Percentile 37.3% within this board. LegalBench (vals.ai): 79.7%. Fetched 2026-11-27.',
       },
       {
-        modelId: 'xiaomi/mimo-v2.5',
-        evidence:
-          'Percentile 32.0% within this board. LegalBench (vals.ai): 78.89%. Fetched 2026-11-27.',
-      },
-      {
         modelId: 'meta-llama/llama-4-maverick',
         evidence:
           'Percentile 28.7% within this board. LegalBench (vals.ai): 77.81%. Fetched 2026-11-27.',
@@ -2338,11 +2268,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'x-ai/grok-4.20',
         evidence:
           'Percentile 28.0% within this board. LegalBench (vals.ai): 77.74%. Fetched 2026-11-27.',
-      },
-      {
-        modelId: 'xiaomi/mimo-v2.5-pro',
-        evidence:
-          'Percentile 25.3% within this board. LegalBench (vals.ai): 77.13%. Fetched 2026-11-27.',
       },
       {
         modelId: 'deepseek/deepseek-v3.2',
@@ -2469,11 +2394,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
           'Medicine and healthcare prompts (LMArena text, arena.ai): Arena Score 1488 (published 2026-11-22, 5343 votes). Fetched 2026-11-27.',
       },
       {
-        modelId: 'xiaomi/mimo-v2.5-pro',
-        evidence:
-          'Medicine and healthcare prompts (LMArena text, arena.ai): Arena Score 1486 (published 2026-11-22, 5368 votes). Fetched 2026-11-27.',
-      },
-      {
         modelId: 'deepseek/deepseek-v4-pro',
         evidence:
           'Medicine and healthcare prompts (LMArena text, arena.ai): Arena Score 1485 (published 2026-11-22, 3786 votes). Fetched 2026-11-27.',
@@ -2582,11 +2502,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'x-ai/grok-4.3',
         evidence:
           'Medicine and healthcare prompts (LMArena text, arena.ai): Arena Score 1451 (published 2026-11-22, 5204 votes). Fetched 2026-11-27.',
-      },
-      {
-        modelId: 'xiaomi/mimo-v2.5',
-        evidence:
-          'Medicine and healthcare prompts (LMArena text, arena.ai): Arena Score 1450 (published 2026-11-22, 3358 votes). Fetched 2026-11-27.',
       },
       {
         modelId: 'qwen/qwen3-next-80b-a3b-instruct',

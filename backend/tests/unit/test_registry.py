@@ -94,7 +94,7 @@ class TestCatalogLineup:
 
     def test_lineup_refresh_swaps_superseded_models(self):
         ids = registry.get_registry_model_ids()
-        assert len(ids) == 101
+        assert len(ids) == 100
         for model_id in (
             "deepseek/deepseek-v4.1-flash-1017",
             "tencent/hy4",
@@ -115,9 +115,9 @@ class TestCatalogLineup:
         assert "openai/gpt-image-2.6-sunburst" in data["image_free_tier_additional_models"]
         assert "openai/gpt-image-2.6-sunburst" not in data["free_tier_additional_models"]
 
-    def test_november_16_lineup_lands_at_101(self):
+    def test_november_16_lineup_lands_at_100(self):
         ids = registry.get_registry_model_ids()
-        assert len(ids) == 101
+        assert len(ids) == 100
         assert "mistralai/mistral-medium-3.1" not in ids
         assert "google/gemini-4-argon" in ids
         for model_id in (
@@ -160,9 +160,9 @@ class TestCatalogLineup:
             assert model_id not in data["free_tier_additional_models"]
             assert model_id not in data["unregistered_tier_models"]
 
-    def test_november_23_lineup_lands_at_101(self):
+    def test_november_23_lineup_lands_at_100(self):
         ids = registry.get_registry_model_ids()
-        assert len(ids) == 101
+        assert len(ids) == 100
         for model_id in (
             "openai/gpt-6.2-astra",
             "openai/gpt-6.2-sol",
@@ -208,6 +208,32 @@ class TestCatalogLineup:
         for model_id in paid:
             assert model_id not in data["free_tier_additional_models"]
             assert model_id not in data["unregistered_tier_models"]
+
+    def test_xiaomi_v26_replaces_delisted_v25(self):
+        ids = registry.get_registry_model_ids()
+        assert len(ids) == 100
+        assert "xiaomi/mimo-v2.6-flash" in ids
+        assert "xiaomi/mimo-v2.6-pro" in ids
+        assert "xiaomi/mimo-v2.5" not in ids
+        assert "xiaomi/mimo-v2.5-pro" not in ids
+        data = registry.load_registry()
+        assert "xiaomi/mimo-v2.6-flash" in data["unregistered_tier_models"]
+        assert "xiaomi/mimo-v2.6-flash" not in data["free_tier_additional_models"]
+        assert "xiaomi/mimo-v2.6-pro" in data["free_tier_additional_models"]
+        assert "xiaomi/mimo-v2.6-pro" not in data["unregistered_tier_models"]
+        for model_id in ("xiaomi/mimo-v2.5", "xiaomi/mimo-v2.5-pro"):
+            assert model_id not in data["free_tier_additional_models"]
+            assert model_id not in data["unregistered_tier_models"]
+            assert model_id not in data["image_free_tier_additional_models"]
+            assert model_id not in data["image_unregistered_tier_models"]
+        xiaomi = {model["id"]: model for model in data["models_by_provider"]["Xiaomi"]}
+        assert set(xiaomi) == {"xiaomi/mimo-v2.6-flash", "xiaomi/mimo-v2.6-pro"}
+        for model in xiaomi.values():
+            assert model["supports_web_search"] is True
+            assert model["is_thinking_model"] is True
+            assert model["supports_image_generation"] is False
+            assert model["knowledge_cutoff"] is None
+            assert "supports_vision_probed" not in model
 
     def test_qwen_image_model_is_image_only_and_text_qwen_is_not(self):
         """Qwen text and image models share a prefix, so image-only comes from metadata."""

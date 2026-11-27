@@ -1,0 +1,381 @@
+{
+  "kind": "paid-collection-manifest-v1",
+  "batchId": "paid-batch-2026-11-27-pr365",
+  "pr": 365,
+  "prHead": "c0511953d40590080d6d3a5de55b22fa6b898b7c",
+  "sourceWorktree": "/workspace/prism/pr365",
+  "maxUsd": 0.0191,
+  "dryRunHarnessEstimateUsd": 0.0173,
+  "durableGuardState": "/workspace/prism/collection-guard-global-state.json",
+  "historicalAcceptancePath": "/workspace/prism/historical-risk-acceptance-active.json",
+  "historicalAcceptanceId": "hist-risk-acc-2026-11-08-grok-tencent-global",
+  "maxTokens": 2048,
+  "requestOutputLimitField": "max_tokens",
+  "temperature": "omitted (matches harness)",
+  "models": [
+    "xiaomi/mimo-v2.6-pro"
+  ],
+  "promptHashes": [
+    {
+      "name": "01-math-basics",
+      "sha256": "e2dee4518b01956876d2a564e8a7dc4a3a521665348cdcea7db28faf511bd9dd",
+      "bytes": 778
+    },
+    {
+      "name": "02-markdown-formatting",
+      "sha256": "107ef5643c7f57c93dd34e188e838bf94bb5c33e349bae7282407dec89103be3",
+      "bytes": 1313
+    },
+    {
+      "name": "03-code-blocks",
+      "sha256": "1d59f473a47cb1e5e98a2c105cc3fb5d7c796c4a36a315cd2e14e8b6ed127bd9",
+      "bytes": 961
+    },
+    {
+      "name": "04-mixed-markdown-latex",
+      "sha256": "9f65cdc348965fefa46da51dd5ea67c2129606375f647fde8ba98e0f5265877f",
+      "bytes": 901
+    },
+    {
+      "name": "05-complex-scenarios",
+      "sha256": "7184718463487f0ba62914f32c755191170d1c51d54c88e825f2020cf395cfe0",
+      "bytes": 1195
+    },
+    {
+      "name": "06-edge-cases-boundaries",
+      "sha256": "793a5dd9a30fb17fe13b09f39f43d2198f351f72457e090655f5a3b2f728820e",
+      "bytes": 1892
+    }
+  ],
+  "plannedCalls": 6,
+  "attemptedCalls": 6,
+  "knownActualCost": 0.00456057,
+  "unknownCostCalls": 0,
+  "refusedCalls": 0,
+  "calls": [
+    {
+      "index": 1,
+      "modelId": "xiaomi/mimo-v2.6-pro",
+      "promptName": "01-math-basics",
+      "startedAt": "2026-11-27T15:58:11.039Z",
+      "reserveUsd": 0.0026676375000000002,
+      "reserveRates": {
+        "usd": 0.0026676375000000002,
+        "inputRate": 4.35e-7,
+        "outputRate": 8.7e-7,
+        "inputByteAllowance": 810,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.000722241,
+      "callId": "paid-batch-2026-11-27-pr365:1:xiaomi/mimo-v2.6-pro:01-math-basics",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-27T15:58:17.728Z",
+      "reportedUsageCost": 0.000722241,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 278,
+        "completion_tokens": 785,
+        "total_tokens": 1063,
+        "cost": 0.000722241,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000722241,
+          "upstream_inference_prompt_cost": 0.000107586,
+          "upstream_inference_completions_cost": 0.000614655
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 26,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.87e-7,
+        "output": 7.83e-7
+      }
+    },
+    {
+      "index": 2,
+      "modelId": "xiaomi/mimo-v2.6-pro",
+      "promptName": "02-markdown-formatting",
+      "startedAt": "2026-11-27T15:58:17.732Z",
+      "reserveUsd": 0.0029585437500000006,
+      "reserveRates": {
+        "usd": 0.0029585437500000006,
+        "inputRate": 4.35e-7,
+        "outputRate": 8.7e-7,
+        "inputByteAllowance": 1345,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.000468405,
+      "callId": "paid-batch-2026-11-27-pr365:2:xiaomi/mimo-v2.6-pro:02-markdown-formatting",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-27T15:58:19.467Z",
+      "reportedUsageCost": 0.000468405,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 397,
+        "completion_tokens": 402,
+        "total_tokens": 799,
+        "cost": 0.000468405,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000468405,
+          "upstream_inference_prompt_cost": 0.000153639,
+          "upstream_inference_completions_cost": 0.000314766
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 24,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.87e-7,
+        "output": 7.830000000000001e-7
+      }
+    },
+    {
+      "index": 3,
+      "modelId": "xiaomi/mimo-v2.6-pro",
+      "promptName": "03-code-blocks",
+      "startedAt": "2026-11-27T15:58:19.470Z",
+      "reserveUsd": 0.00276714375,
+      "reserveRates": {
+        "usd": 0.00276714375,
+        "inputRate": 4.35e-7,
+        "outputRate": 8.7e-7,
+        "inputByteAllowance": 993,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.000374868,
+      "callId": "paid-batch-2026-11-27-pr365:3:xiaomi/mimo-v2.6-pro:03-code-blocks",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-27T15:58:20.902Z",
+      "reportedUsageCost": 0.000374868,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 303,
+        "completion_tokens": 329,
+        "total_tokens": 632,
+        "cost": 0.000374868,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.000374868,
+          "upstream_inference_prompt_cost": 0.000117261,
+          "upstream_inference_completions_cost": 0.000257607
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 29,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.87e-7,
+        "output": 7.830000000000001e-7
+      }
+    },
+    {
+      "index": 4,
+      "modelId": "xiaomi/mimo-v2.6-pro",
+      "promptName": "04-mixed-markdown-latex",
+      "startedAt": "2026-11-27T15:58:20.903Z",
+      "reserveUsd": 0.00273451875,
+      "reserveRates": {
+        "usd": 0.00273451875,
+        "inputRate": 4.35e-7,
+        "outputRate": 8.7e-7,
+        "inputByteAllowance": 933,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.0008082,
+      "callId": "paid-batch-2026-11-27-pr365:4:xiaomi/mimo-v2.6-pro:04-mixed-markdown-latex",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-27T15:58:25.192Z",
+      "reportedUsageCost": 0.0008082,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 316,
+        "completion_tokens": 876,
+        "total_tokens": 1192,
+        "cost": 0.0008082,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0008082,
+          "upstream_inference_prompt_cost": 0.000122292,
+          "upstream_inference_completions_cost": 0.000685908
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 45,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.87e-7,
+        "output": 7.830000000000001e-7
+      }
+    },
+    {
+      "index": 5,
+      "modelId": "xiaomi/mimo-v2.6-pro",
+      "promptName": "05-complex-scenarios",
+      "startedAt": "2026-11-27T15:58:25.195Z",
+      "reserveUsd": 0.0028943812500000004,
+      "reserveRates": {
+        "usd": 0.0028943812500000004,
+        "inputRate": 4.35e-7,
+        "outputRate": 8.7e-7,
+        "inputByteAllowance": 1227,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.001110276,
+      "callId": "paid-batch-2026-11-27-pr365:5:xiaomi/mimo-v2.6-pro:05-complex-scenarios",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-27T15:58:34.132Z",
+      "reportedUsageCost": 0.001110276,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 439,
+        "completion_tokens": 1201,
+        "total_tokens": 1640,
+        "cost": 0.001110276,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.001110276,
+          "upstream_inference_prompt_cost": 0.000169893,
+          "upstream_inference_completions_cost": 0.000940383
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 178,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.87e-7,
+        "output": 7.830000000000001e-7
+      }
+    },
+    {
+      "index": 6,
+      "modelId": "xiaomi/mimo-v2.6-pro",
+      "promptName": "06-edge-cases-boundaries",
+      "startedAt": "2026-11-27T15:58:34.134Z",
+      "reserveUsd": 0.003273375,
+      "reserveRates": {
+        "usd": 0.003273375,
+        "inputRate": 4.35e-7,
+        "outputRate": 8.7e-7,
+        "inputByteAllowance": 1924,
+        "completionCap": 2048,
+        "reasoningPolicy": "Completion cap includes visible+reasoning once;25%margin;estimate not hardcap"
+      },
+      "requestOutputLimitField": "max_tokens",
+      "requestOutputLimit": 2048,
+      "actualCost": 0.00107658,
+      "callId": "paid-batch-2026-11-27-pr365:6:xiaomi/mimo-v2.6-pro:06-edge-cases-boundaries",
+      "httpStatus": 200,
+      "finishedAt": "2026-11-27T15:58:38.905Z",
+      "reportedUsageCost": 0.00107658,
+      "finishReason": "stop",
+      "nativeFinishReason": "stop",
+      "usage": {
+        "prompt_tokens": 619,
+        "completion_tokens": 1069,
+        "total_tokens": 1688,
+        "cost": 0.00107658,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00107658,
+          "upstream_inference_prompt_cost": 0.000239553,
+          "upstream_inference_completions_cost": 0.000837027
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 497,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      },
+      "truncated": false,
+      "error": null,
+      "observedRateAfterResponse": {
+        "input": 3.87e-7,
+        "output": 7.830000000000001e-7
+      }
+    }
+  ],
+  "budgetCaveat": "Estimate guard, not provider hard billing cap. Reserve uses catalog rates + 25% margin at completion cap 2048.",
+  "coverage": "Not assessed in collector; render-only / reference / layout / coverage run afterwards",
+  "startedAt": "2026-11-27T15:58:11.035Z",
+  "conservativeBatchReserve": 0.017295599999999998,
+  "status": "completed",
+  "finishedAt": "2026-11-27T15:58:38.907Z"
+}

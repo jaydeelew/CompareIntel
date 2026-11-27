@@ -1,0 +1,36 @@
+{
+  "modelId": "xiaomi/mimo-v2.6-pro",
+  "modelName": "Xiaomi: MiMo-V2.6-Pro",
+  "promptName": "04-mixed-markdown-latex",
+  "promptText": "# Test Prompt: Mixed Markdown and LaTeX\n\nGenerate a response that mixes markdown formatting with mathematical expressions:\n\n## Problem Statement\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) dx$\n\n### Solution\nThe derivative is:\n$$f'(x) = 2x + 2$$\n\nThe integral is:\n$$\\int f(x) dx = \\frac{x^3}{3} + x^2 + x + C$$\n\n## Linear Algebra with Lists\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n- Determinant: $\\det(A) = ad - bc$\n- Trace: $\\text{tr}(A) = a + d$\n- Inverse (if exists):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n## Real World Context\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means fixed costs are $100 and variable costs are $5 per unit.\n\nMoney context: If you buy 10 units, that's $100 fixed plus $50 variable = $150 total.\n",
+  "response": "# Mixed Markdown and LaTeX Demonstration\n\n## Problem Statement\n\n**Exercise 1**: Given the function $f(x) = x^2 + 2x + 1$, find:\n\n1. The *derivative* $f'(x)$\n2. The **integral** $\\int f(x) \\, dx$\n\n### Solution\n\nFirst, notice that $f(x) = (x+1)^2$. Using the **power rule** and *linearity* of differentiation:\n\n$$f'(x) = \\frac{d}{dx}\\left(x^2 + 2x + 1\\right) = 2x + 2 = 2(x + 1)$$\n\nFor the **indefinite integral**, we apply the *sum rule* term by term:\n\n$$\\int f(x) \\, dx = \\int x^2 \\, dx + \\int 2x \\, dx + \\int 1 \\, dx = \\frac{x^3}{3} + x^2 + x + C$$\n\nwhere $C$ is an arbitrary constant of integration.\n\n---\n\n## Linear Algebra with Lists\n\nProperties of the matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:\n\n- **Determinant**: $\\det(A) = ad - bc$\n- **Trace**: $\\operatorname{tr}(A) = a + d$\n- **Eigenvalues**: roots of the *characteristic polynomial*\n  $$\\lambda^2 - \\operatorname{tr}(A)\\lambda + \\det(A) = 0$$\n  which gives\n  $$\\lambda_{1,2} = \\frac{(a+d) \\pm \\sqrt{(a-d)^2 + 4bc}}{2}$$\n- **Inverse** (exists iff $\\det(A) \\neq 0$):\n  $$A^{-1} = \\frac{1}{ad - bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$$\n\n> **Key Identity**: $A \\cdot A^{-1} = I$, where $I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$ is the $2 \\times 2$ identity matrix.\n\n---\n\n## Real-World Context\n\n> **Note**: In economics, the cost function $C(q) = 100 + 5q$ means **fixed costs** are $\\$100$ and **variable costs** are $\\$5$ per unit.\n\n### Sample Calculations\n\n| Units ($q$) | Fixed Cost | Variable Cost | Total Cost |\n|:-----------:|:----------:|:-------------:|:----------:|\n| $0$ | $\\$100$ | $\\$0$ | $\\$100$ |\n| $10$ | $\\$100$ | $\\$50$ | $\\$150$ |\n| $50$ | $\\$100$ | $\\$250$ | $\\$350$ |\n\nThe **marginal cost** is constant at\n\n$$MC = \\frac{dC}{dq} = 5$$\n\nand the **average cost** is\n\n$$AC(q) = \\frac{C(q)}{q} = \\frac{100}{q} + 5$$\n\nAs $q \\to \\infty$, we have $AC(q) \\to 5$, meaning the average cost *approaches* the marginal cost from above.\n\n---\n\n### Summary\n\n- **Markdown** handles *structure* — headings, **bold**, *italics*, tables, lists, and blockquotes\n- **LaTeX** handles *mathematics* — inline $x^2 + y^2 = r^2$ and display-mode equations\n- Together, they form a **rich** typesetting system suitable for scientific and technical writing",
+  "usage": {
+    "prompt_tokens": 316,
+    "completion_tokens": 876,
+    "total_tokens": 1192,
+    "cost": 0.0008082,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0008082,
+      "upstream_inference_prompt_cost": 0.000122292,
+      "upstream_inference_completions_cost": 0.000685908
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 45,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "cost": 0.0008082,
+  "actualCost": 0.0008082,
+  "timestamp": "2026-11-27T15:58:25.192Z",
+  "finishReason": "stop",
+  "nativeFinishReason": "stop",
+  "error": null
+}

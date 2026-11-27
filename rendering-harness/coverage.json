@@ -94,6 +94,10 @@
     {
       "modelId": "tencent/hy4-flash",
       "reason": "Eight replies collected 2026-11-18. 02 and 07 fail renderer DOM assertions; 06-edge-cases-boundaries and 08-casual-prose produced no visible text (reasoning-only, hit the 2048 cap). Open renderer gaps."
+    },
+    {
+      "modelId": "xiaomi/mimo-v2.6-pro",
+      "reason": "Six replies collected 2026-11-27 on the standard 01-06 new-model suite (PR 365; 5 pass). 04-mixed-markdown-latex is recorded as fail: the harness reference checker pairs dollar signs across table pipes in a row like | $0$ | \\$100$ |; our rendered table is visually correct, a known reference-checker gap, not a renderer change. 07 and 08 were not part of this collection."
     }
   ],
   "models": {
@@ -2613,74 +2617,6 @@
         "replyPath": null
       }
     },
-    "xiaomi/mimo-v2.5": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-09/xiaomi_mimo-v2.5_06-edge-cases-boundaries.json"
-      },
-      "07-rare-formats": {
-        "status": "not-covered",
-        "replyPath": null
-      },
-      "08-casual-prose": {
-        "status": "not-covered",
-        "replyPath": null
-      }
-    },
-    "xiaomi/mimo-v2.5-pro": {
-      "01-math-basics": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_01-math-basics.json"
-      },
-      "02-markdown-formatting": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_02-markdown-formatting.json"
-      },
-      "03-code-blocks": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_03-code-blocks.json"
-      },
-      "04-mixed-markdown-latex": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_04-mixed-markdown-latex.json"
-      },
-      "05-complex-scenarios": {
-        "status": "pass",
-        "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_05-complex-scenarios.json"
-      },
-      "06-edge-cases-boundaries": {
-        "status": "not-covered",
-        "replyPath": "runs/2026-11-08-10/xiaomi_mimo-v2.5-pro_06-edge-cases-boundaries.json"
-      },
-      "07-rare-formats": {
-        "status": "not-covered",
-        "replyPath": null
-      },
-      "08-casual-prose": {
-        "status": "not-covered",
-        "replyPath": null
-      }
-    },
     "xiaomi/mimo-v2.6-flash": {
       "01-math-basics": {
         "status": "pass",
@@ -2705,6 +2641,40 @@
       "06-edge-cases-boundaries": {
         "status": "not-covered",
         "replyPath": "runs/2026-11-08-03/xiaomi_mimo-v2.6-flash_06-edge-cases-boundaries.json"
+      },
+      "07-rare-formats": {
+        "status": "not-covered",
+        "replyPath": null
+      },
+      "08-casual-prose": {
+        "status": "not-covered",
+        "replyPath": null
+      }
+    },
+    "xiaomi/mimo-v2.6-pro": {
+      "01-math-basics": {
+        "status": "pass",
+        "replyPath": "runs/2026-11-27-pr365/xiaomi_mimo-v2.6-pro_01-math-basics.json"
+      },
+      "02-markdown-formatting": {
+        "status": "pass",
+        "replyPath": "runs/2026-11-27-pr365/xiaomi_mimo-v2.6-pro_02-markdown-formatting.json"
+      },
+      "03-code-blocks": {
+        "status": "pass",
+        "replyPath": "runs/2026-11-27-pr365/xiaomi_mimo-v2.6-pro_03-code-blocks.json"
+      },
+      "04-mixed-markdown-latex": {
+        "status": "fail",
+        "replyPath": "runs/2026-11-27-pr365/xiaomi_mimo-v2.6-pro_04-mixed-markdown-latex.json"
+      },
+      "05-complex-scenarios": {
+        "status": "pass",
+        "replyPath": "runs/2026-11-27-pr365/xiaomi_mimo-v2.6-pro_05-complex-scenarios.json"
+      },
+      "06-edge-cases-boundaries": {
+        "status": "pass",
+        "replyPath": "runs/2026-11-27-pr365/xiaomi_mimo-v2.6-pro_06-edge-cases-boundaries.json"
       },
       "07-rare-formats": {
         "status": "not-covered",
@@ -2887,16 +2857,16 @@
     }
   },
   "totals": {
-    "registryModels": 101,
-    "textModels": 82,
+    "registryModels": 100,
+    "textModels": 81,
     "imageModels": 19,
-    "allowlisted": 13,
-    "cells": 656,
-    "pass": 274,
-    "notCovered": 355,
-    "fail": 20,
+    "allowlisted": 14,
+    "cells": 648,
+    "pass": 273,
+    "notCovered": 347,
+    "fail": 21,
     "incomplete": 7,
     "sourceIssue": 0,
-    "missing": 144
+    "missing": 142
   }
 }

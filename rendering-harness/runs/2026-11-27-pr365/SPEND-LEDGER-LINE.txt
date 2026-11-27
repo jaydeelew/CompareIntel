@@ -1,0 +1,3 @@
+PR 365 new-text-model rendering collection (xiaomi/mimo-v2.6-pro x prompts 01-06, 6 calls).
+Estimate $0.0173. Hard cap $0.0191. Actual $0.00456057. Unknown charges: 0.
+Date: 2026-11-27. Head: c0511953. No retries. Completion cap 2048. Cumulative known $6.9160.
