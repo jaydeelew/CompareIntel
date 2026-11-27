@@ -771,8 +771,9 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     // Place against the framed highlight, not a stale header or a clamped screen edge.
-    // Follow-up keeps the card below the composer. Step 8 sits above the results
-    // panel so it does not cover the replies or the highlighted composer.
+    // Follow-up keeps the card below the composer. Step 8 points down at the
+    // results while their top edge is on screen, and up from below that panel
+    // once the edge has scrolled away. It does not cover the replies or the composer.
     // Each of those scrolls runs once, while the step is seating. After that the
     // card moves with the highlight and the page stays where the user put it.
     const reviewStep = step === 'view-follow-up-results' && !isLoadingRef.current
@@ -1400,6 +1401,11 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       if (!spotlightSettledRef.current || settledStepRef.current !== stepNow) return
       if (isStepTransitioningRef.current) return
+      if (stepNow === 'view-follow-up-results' && reviewScrollSeatedRef.current) {
+        // Scroll and resize pick the visible edge. The seat already ran, so
+        // this only moves the card.
+        calculatePositions()
+      }
       const spotlight = readTutorialSpotlightRect(stepNow, tutorialProviderNamesRef.current)
       const visual = readVisualViewportBox()
       if (spotlight) {

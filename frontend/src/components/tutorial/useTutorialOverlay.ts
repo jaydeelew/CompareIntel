@@ -888,9 +888,21 @@ export function useTutorialOverlay(
         config,
         tutorialProviderNamesRef.current
       )
-      setEffectivePosition(placed.effectivePosition)
-      setTooltipHidesArrow(placed.hideArrow)
-      setOverlayPosition(placeOverlayPoint(placed.top, placed.left))
+      const nextPoint = placeOverlayPoint(placed.top, placed.left)
+      if (step === 'view-follow-up-results') {
+        // Scroll samples this every frame. Skip the write when the card's
+        // content box and arrow side have not changed, so the page does not
+        // repaint on a scroll that keeps the same edge.
+        setEffectivePosition(prev =>
+          prev === placed.effectivePosition ? prev : placed.effectivePosition
+        )
+        setTooltipHidesArrow(prev => (prev === placed.hideArrow ? prev : placed.hideArrow))
+        setOverlayPosition(prev => (overlayPointUnchanged(prev, nextPoint) ? prev : nextPoint))
+      } else {
+        setEffectivePosition(placed.effectivePosition)
+        setTooltipHidesArrow(placed.hideArrow)
+        setOverlayPosition(nextPoint)
+      }
     }
 
     let fadeStarted = false
@@ -1063,6 +1075,10 @@ export function useTutorialOverlay(
       // made the ring lag the content.
       if (step === 'history-dropdown' || step === 'save-selection') {
         updatePosition()
+      } else if (step === 'view-follow-up-results') {
+        // The page stays where the user put it. Only the card moves, from
+        // above the results to below them once the top edge leaves the view.
+        updatePosition()
       }
     }
 
@@ -1162,14 +1178,19 @@ export function useTutorialOverlay(
         }
         return
       }
-      // Seat step 8 once so the card starts above the results. A later scroll
-      // repositions the card and must not move the page again.
-      if (step === 'view-follow-up-results' && !reviewScrollSeated) {
-        scrollReviewTooltipBesideResults({
-          tooltipHeight: tip.getBoundingClientRect().height,
-          arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
-        })
-        reviewScrollSeated = true
+      // Seat step 8 once so the card starts above the results. Later ticks
+      // must not run: a scrolled card sits under the panel on purpose, and
+      // treating that as a missed arrow restarts the fade and moves the page.
+      if (step === 'view-follow-up-results') {
+        if (!reviewScrollSeated) {
+          scrollReviewTooltipBesideResults({
+            tooltipHeight: tip.getBoundingClientRect().height,
+            arrowSize: DESKTOP_TUTORIAL_ARROW_PX,
+          })
+          reviewScrollSeated = true
+        } else {
+          return
+        }
       }
       const rect = readLayout()
       const pairOffScreen = followUpPairOffScreen()
