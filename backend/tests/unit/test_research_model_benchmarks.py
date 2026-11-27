@@ -1177,6 +1177,14 @@ class TestStrictVersionAliases:
             ("Qwen3.8-Max", "qwen/qwen3.8-max-0902"),
             ("GPT-Image-2.5 Sunburst", "openai/gpt-image-2.6-sunburst"),
             ("Gemini 2.0 Flash", "google/gemini-2.5-flash"),
+            ("MiMo-V2.5-Pro", "xiaomi/mimo-v2.6-pro"),
+            ("MiMo-V2.5", "xiaomi/mimo-v2.6-flash"),
+            ("MiMo-V2.6-Pro", "xiaomi/mimo-v2.6-flash"),
+            ("MiMo-V2.6-Flash", "xiaomi/mimo-v2.6-pro"),
+            ("mimo-v2-5-pro", "xiaomi/mimo-v2.6-pro"),
+            ("mimo-v2-5", "xiaomi/mimo-v2.6-flash"),
+            ("mimo-v2-6-pro", "xiaomi/mimo-v2.6-flash"),
+            ("mimo-v2-6-flash", "xiaomi/mimo-v2.6-pro"),
         ]
         for label, model_id in pairs:
             assert alias_is_same_version(label, model_id, names.get(model_id)) is False
@@ -1216,6 +1224,16 @@ class TestStrictVersionAliases:
         )
         assert match_lineup_name("qwen3-coder-480b-a35b", names) == "qwen/qwen3-coder"
         assert match_lineup_name("Gemini 2.0 Flash", names) != "google/gemini-2.5-flash"
+        # Live LMArena rows. v2.5 is a different model and is not in the lineup.
+        assert match_lineup_name("MiMo-V2.6-Pro", names) == "xiaomi/mimo-v2.6-pro"
+        assert match_lineup_name("MiMo-V2.6-Flash", names) == "xiaomi/mimo-v2.6-flash"
+        assert match_lineup_name("mimo-v2-6-pro", names) == "xiaomi/mimo-v2.6-pro"
+        assert match_lineup_name("mimo-v2-6-flash", names) == "xiaomi/mimo-v2.6-flash"
+        assert match_lineup_name("MiMo-V2.5-Pro", names) is None
+        assert match_lineup_name("MiMo-V2.5", names) is None
+        assert match_lineup_name("mimo-v2-5-pro", names) is None
+        assert match_lineup_name("mimo-v2-5", names) is None
+        assert match_lineup_name("MiMo-V2-Pro", names) is None
 
     def test_every_explicit_alias_is_the_same_version(self):
         from scripts.benchmark_matching import alias_is_same_version

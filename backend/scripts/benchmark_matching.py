@@ -1,10 +1,11 @@
 """Strict leaderboard name matching and cross-board percentile blends.
 
 A leaderboard row may be stored on a lineup model only when the version tokens
-match. Hyphen versus dot (``4-6`` and ``4.6``), effort tags (``(High)``,
-``thinking``), and snapshot dates (``20251001``) are the same version.
-``4.6`` is not ``4.7``, ``5`` is not ``5.5``, ``2.1`` is not ``2.5``, and a
-release code such as ``2405`` is not ``2508``.
+match. Hyphen versus dot (``4-6`` and ``4.6``, and a letter-prefixed minor such
+as ``v2-6`` and ``v2.6``), effort tags (``(High)``, ``thinking``), and snapshot
+dates (``20251001``) are the same version. ``4.6`` is not ``4.7``, ``5`` is not
+``5.5``, ``2.1`` is not ``2.5``, ``v2.5`` is not ``v2.6``, and a release code
+such as ``2405`` is not ``2508``.
 """
 
 from __future__ import annotations
@@ -102,7 +103,9 @@ def _prepare_label(label: str) -> str:
     s = s.replace("*", " ").replace("_", " ").replace("/", " ")
     s = _expand_spaced_single_digits(s)
     # Scale-style claude-opus-4-6 → claude-opus-4.6. Single digits only.
+    # A letter glued to the major (LMSpeed "mimo-v2-6-pro") is the same minor.
     s = re.sub(r"-(\d)-(\d)(?=-|$|\s|\()", r"-\1.\2", s)
+    s = re.sub(r"([a-z])(\d)-(\d)(?=-|$|\s|\()", r"\1\2.\3", s)
     s = s.replace("-", " ")
     return s
 

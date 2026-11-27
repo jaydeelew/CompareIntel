@@ -550,20 +550,13 @@ jobs:
       - name: Install Playwright browsers
         # apt has hung in `playwright install --with-deps` until this job's
         # 45 minute timeout cancelled the run, before any test started.
-        # Bound each attempt so a stalled apt is retried.
+        # Bound each attempt so a stalled apt is retried. The helper also
+        # drops a Microsoft apt source that 403s and fails apt-get update.
         timeout-minutes: 28
         run: |
           cd frontend
           # Critical flows run on Chromium only (see grep below).
-          ok=0
-          for attempt in 1 2 3; do
-            if timeout 8m npx playwright install --with-deps chromium; then
-              ok=1
-              break
-            fi
-            echo "Playwright chromium install attempt ${attempt} did not finish; retrying"
-          done
-          test "$ok" = 1
+          bash ../.github/scripts/install-playwright-browsers.sh chromium
       
       - name: Initialize test database directory
         run: |
@@ -683,18 +676,22 @@ jobs:
             playwright-${{ runner.os }}-
       
       - name: Install Playwright browsers
+        # Mobile Chrome (Pixel 5) died here on apt-get update exit 100:
+        # packages.microsoft.com noble InRelease returned 403 Forbidden and
+        # "is no longer signed", before any test. Same helper as critical flows.
+        timeout-minutes: 28
         run: |
           cd frontend
           # Install appropriate browser based on project
           if [[ "${{ matrix.project }}" == "chromium" ]]; then
-            npx playwright install --with-deps chromium
+            bash ../.github/scripts/install-playwright-browsers.sh chromium
           elif [[ "${{ matrix.project }}" == "firefox" ]]; then
-            npx playwright install --with-deps firefox
+            bash ../.github/scripts/install-playwright-browsers.sh firefox
           elif [[ "${{ matrix.project }}" == "webkit" ]]; then
-            npx playwright install --with-deps webkit
+            bash ../.github/scripts/install-playwright-browsers.sh webkit
           else
             # Mobile projects use chromium or webkit
-            npx playwright install --with-deps chromium webkit
+            bash ../.github/scripts/install-playwright-browsers.sh chromium webkit
           fi
       
       - name: Initialize test database directory
@@ -790,9 +787,10 @@ jobs:
             playwright-${{ runner.os }}-
       
       - name: Install Playwright browsers
+        timeout-minutes: 28
         run: |
           cd frontend
-          npx playwright install --with-deps chromium
+          bash ../.github/scripts/install-playwright-browsers.sh chromium
       
       - name: Initialize test database directory
         run: |
@@ -900,9 +898,10 @@ jobs:
             playwright-${{ runner.os }}-
       
       - name: Install Playwright browsers
+        timeout-minutes: 28
         run: |
           cd frontend
-          npx playwright install --with-deps chromium
+          bash ../.github/scripts/install-playwright-browsers.sh chromium
       
       - name: Initialize test database directory
         run: |
@@ -1055,7 +1054,8 @@ jobs:
 
       - name: Install Playwright browsers
         working-directory: rendering-harness
-        run: npx playwright install chromium --with-deps
+        timeout-minutes: 28
+        run: bash ../.github/scripts/install-playwright-browsers.sh chromium
 
       - name: TypeScript check (harness core)
         working-directory: rendering-harness
@@ -1159,7 +1159,8 @@ jobs:
         run: npm ci
       - name: Install Playwright browsers
         working-directory: rendering-harness
-        run: npx playwright install chromium --with-deps
+        timeout-minutes: 28
+        run: bash ../.github/scripts/install-playwright-browsers.sh chromium
       - name: Phone and dark layout audit
         working-directory: rendering-harness
         run: npm run layout-audit
@@ -1238,7 +1239,8 @@ jobs:
             playwright-${{ runner.os }}-
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 28
+        run: bash ../.github/scripts/install-playwright-browsers.sh chromium
 
       # Same build production ships, including prerendered HTML (frontend-build skips prerender).
       - name: Build with prerendering
