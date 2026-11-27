@@ -331,6 +331,14 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     followUpScrollSeatedRef.current = false
   }, [step])
 
+  // Skip or finish while still on history/save unmounts this overlay without
+  // another step change. The scroll tail must not stay on the page.
+  useEffect(() => {
+    return () => {
+      clearTutorialScrollTail()
+    }
+  }, [])
+
   // Reset save-selection flag synchronously before paint when entering step 8
   useLayoutEffect(() => {
     if (step === 'save-selection') {
