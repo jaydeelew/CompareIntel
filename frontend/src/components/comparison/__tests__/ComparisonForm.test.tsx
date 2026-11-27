@@ -9,6 +9,7 @@ import React, { createRef } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { TutorialStep } from '../../../hooks/useTutorial'
 import { createModelId } from '../../../types'
 import { ComparisonForm } from '../ComparisonForm'
 import type { HistoryProps, SelectionProps } from '../ComparisonFormTypes'
@@ -212,5 +213,80 @@ describe('ComparisonForm', () => {
     expect(screen.getByRole('button', { name: /start voice input/i })).toBeInTheDocument()
     expect(screen.queryByTestId('voice-mode-toggle')).not.toBeInTheDocument()
     expect(screen.queryByTestId('voice-composer')).not.toBeInTheDocument()
+  })
+
+  it.each<[TutorialStep, string]>([
+    ['view-follow-up-results', 'tutorial-review-input-locked'],
+    ['history-dropdown', 'tutorial-history-input-locked'],
+    ['save-selection', 'tutorial-save-input-locked'],
+  ])('blocks composer text on tutorial step %s', (step, lockClass) => {
+    const setInput = vi.fn()
+    const onContinueConversation = vi.fn()
+    renderComparisonForm({
+      input: 'existing prompt',
+      setInput,
+      isFollowUpMode: true,
+      tutorialIsActive: true,
+      tutorialStep: step,
+      onContinueConversation,
+    })
+    const field = screen.getByTestId('comparison-input-textarea')
+    expect(field).toHaveProperty('readOnly', true)
+    expect(field).toHaveAttribute('aria-readonly', 'true')
+    expect(field).toHaveAttribute('inputMode', 'none')
+    expect(field.closest('.composer')).toHaveClass(lockClass)
+    fireEvent.change(field, { target: { value: 'typed over' } })
+    fireEvent.paste(field)
+    fireEvent.keyDown(field, { key: 'Enter', shiftKey: false })
+    expect(setInput).not.toHaveBeenCalled()
+    expect(onContinueConversation).not.toHaveBeenCalled()
+    expect(field).toHaveValue('existing prompt')
+  })
+
+  it('keeps the history and save composer rings while the prompt is locked', () => {
+    const { unmount } = renderComparisonForm({
+      tutorialIsActive: true,
+      tutorialStep: 'history-dropdown',
+    })
+    expect(screen.getByTestId('comparison-input-textarea').closest('.composer')).toHaveClass(
+      'tutorial-highlight'
+    )
+    unmount()
+    renderComparisonForm({
+      tutorialIsActive: true,
+      tutorialStep: 'save-selection',
+    })
+    const composer = screen.getByTestId('comparison-input-textarea').closest('.composer')
+    expect(composer).toHaveClass('tutorial-highlight')
+    expect(composer).toHaveClass('tutorial-save-input-locked')
+    expect(composer).not.toHaveClass('tutorial-review-input-locked')
+  })
+
+  it('keeps the composer editable on the prompt step and after the tutorial', () => {
+    const setInput = vi.fn()
+    const { unmount } = renderComparisonForm({
+      input: '',
+      setInput,
+      tutorialIsActive: true,
+      tutorialStep: 'enter-prompt',
+    })
+    const during = screen.getByTestId('comparison-input-textarea')
+    expect(during).toHaveProperty('readOnly', false)
+    fireEvent.change(during, { target: { value: 'hello' } })
+    expect(setInput).toHaveBeenCalledWith('hello')
+    unmount()
+
+    setInput.mockClear()
+    renderComparisonForm({
+      input: 'kept',
+      setInput,
+      tutorialIsActive: false,
+      tutorialStep: null,
+    })
+    const after = screen.getByTestId('comparison-input-textarea')
+    expect(after).toHaveProperty('readOnly', false)
+    expect(after.closest('.composer')).not.toHaveClass('tutorial-save-input-locked')
+    fireEvent.change(after, { target: { value: 'kept and edited' } })
+    expect(setInput).toHaveBeenCalledWith('kept and edited')
   })
 })
