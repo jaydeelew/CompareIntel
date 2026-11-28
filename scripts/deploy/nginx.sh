@@ -51,7 +51,7 @@ test_nginx_config() {
     return 1
 }
 
-# Validate the bind-mounted nginx.ssl.conf before compose down / reload.
+# Validate the bind-mounted nginx.ssl.conf before the container swap or reload.
 # The file is already on disk; nginx -t reads it without reloading.
 test_nginx_config_before_apply() {
     cd "$PROJECT_DIR" || return 1

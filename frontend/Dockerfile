@@ -26,8 +26,16 @@ COPY --from=core . ./packages/compare-core
 COPY --from=registry models_registry.json /data/models_registry.json
 ENV SEO_REGISTRY_PATH=/data/models_registry.json
 
-# Set environment variable to fix crypto issue
-ENV NODE_OPTIONS="--openssl-legacy-provider"
+# V8's default old-space on 64-bit Node is about 2 GB. On the 1.9 GB production
+# host that allocation fails inside `vite build`: a native [node] stack, then
+# "Aborted (core dumped)" (SIGABRT, exit 134). A 1024 MB cap still aborts
+# (live set is already ~1 GB). 1280 completes this app's Vite build and the
+# prerender that follows, and leaves RAM for the OS, BuildKit, and the
+# still-running stack during a one-at-a-time image build.
+# COMPAREINTEL_LOW_MEMORY_BUILD skips the gzip/brotli size passes that hold
+# a second copy of every chunk.
+ENV NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=1280"
+ENV COMPAREINTEL_LOW_MEMORY_BUILD=1
 
 # The build will use environment variables passed in at build time
 ARG VITE_API_URL=/api
