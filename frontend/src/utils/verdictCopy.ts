@@ -9,7 +9,9 @@ export const VERDICT_COST_HEADER = 'Cost (this run, via OpenRouter)'
 export const VERDICT_LATENCY_HEADER = 'Response time (this run)'
 export const VERDICT_CHEAPEST_PILL = 'Cheapest here'
 export const VERDICT_FASTEST_PILL = 'Fastest here'
-export const AGREEMENT_NEEDS_MODELS_TEXT = 'Needs 2+ models'
+export const VERDICT_YOUR_VERDICT = 'Your verdict'
+export const VERDICT_PICK_FAVORITE = 'Pick a favorite'
+export const VERDICT_POPULAR_RATING = 'Popular rating sites'
 
 export const VERDICT_COST_TOOLTIP =
   'USD billed for this CompareIntel run as reported by OpenRouter. Not model quality and not a platform-independent price.'

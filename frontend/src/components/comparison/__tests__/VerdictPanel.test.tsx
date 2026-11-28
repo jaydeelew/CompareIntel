@@ -1,5 +1,5 @@
 /**
- * VerdictPanel — honest labels, agreement empty state, collapse, docs link.
+ * VerdictPanel — your pick, public rating snapshot, this-run metrics.
  */
 /// <reference types="@testing-library/jest-dom" />
 
@@ -7,15 +7,14 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   createMockConversationMessage,
   createMockModelConversation,
 } from '../../../__tests__/utils'
 import { createModelId } from '../../../types'
-import { AGREEMENT_NEEDS_MODELS_TEXT, VERDICT_METHODOLOGY_PATH } from '../../../utils/verdictCopy'
-import { VERDICT_PANEL_EXPANDED_KEY } from '../../../utils/verdictPanelCollapse'
+import { VERDICT_METHODOLOGY_PATH } from '../../../utils/verdictCopy'
 import { VerdictPanel } from '../VerdictPanel'
 
 function renderPanel(ui: ReactElement) {
@@ -23,27 +22,19 @@ function renderPanel(ui: ReactElement) {
 }
 
 describe('VerdictPanel', () => {
-  beforeEach(() => {
-    localStorage.clear()
-    Object.defineProperty(window, 'innerWidth', {
-      configurable: true,
-      writable: true,
-      value: 1280,
-    })
-  })
-
-  afterEach(() => {
-    localStorage.clear()
-  })
-
-  it('highlights cheapest/fastest here and links to methodology', async () => {
+  it('shows your pick, the top rating-site model, and cheapest/fastest pills', async () => {
     const user = userEvent.setup()
     const gpt = createModelId('openai/gpt-5')
     const cheap = createModelId('openai/gpt-4o-mini')
     const onOpenHelpMeChoose = vi.fn()
+    const onPickFavorite = vi.fn()
 
     renderPanel(
       <VerdictPanel
+        open
+        onClose={vi.fn()}
+        favoriteModelName="GPT-4o mini"
+        onPickFavorite={onPickFavorite}
         conversations={[
           createMockModelConversation({
             modelId: gpt,
@@ -88,17 +79,26 @@ describe('VerdictPanel', () => {
       />
     )
 
-    expect(screen.getByTestId('verdict-panel')).toBeInTheDocument()
+    const panel = screen.getByTestId('verdict-panel')
+    expect(panel).toHaveAttribute('role', 'dialog')
+    expect(panel.tagName).not.toBe('ASIDE')
     expect(screen.getByRole('heading', { name: 'Verdict' })).toBeInTheDocument()
-    expect(screen.getByTestId('verdict-agreement')).toHaveTextContent('Agree')
-    expect(screen.getByText(/automatic heuristic/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Your verdict' })).toBeInTheDocument()
+    expect(screen.getByTestId('verdict-current-pick')).toHaveTextContent('GPT-4o mini')
+    expect(screen.queryByTestId('verdict-pick-favorite')).not.toBeInTheDocument()
+
+    expect(screen.getByRole('heading', { name: 'Popular rating sites' })).toBeInTheDocument()
+    expect(screen.getByTestId('verdict-popular-model')).toHaveTextContent('Claude Fable 5.2')
+    expect(screen.getByTestId('verdict-popular-source')).toHaveTextContent(/Code Arena/i)
+    expect(screen.getByTestId('verdict-popular-source')).not.toHaveTextContent(/votes/i)
+    expect(screen.getByTestId('verdict-popular-asof')).toHaveTextContent('As of 2026-11-27')
+    expect(screen.queryByText(/not enough votes/i)).not.toBeInTheDocument()
+
     expect(screen.getByText('this run, via OpenRouter')).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: /response time/i })).toBeInTheDocument()
     expect(screen.getByText('Cheapest here').closest('td')).toHaveTextContent('$0.0010')
     expect(screen.getByText('Fastest here').closest('td')).toHaveTextContent('800ms')
     expect(screen.getByText('List $0.38/1M')).toBeInTheDocument()
-    expect(screen.queryByText('Cheapest')).not.toBeInTheDocument()
-    expect(screen.queryByText('Fastest')).not.toBeInTheDocument()
 
     const docsLink = screen.getByTestId('verdict-how-this-works')
     expect(docsLink).toHaveTextContent('How this works')
@@ -110,10 +110,17 @@ describe('VerdictPanel', () => {
     expect(onOpenHelpMeChoose).toHaveBeenCalledWith({ scrollToCategoryId: 'coding' })
   })
 
-  it('shows Needs 2+ models and explains a dash cost with list price', () => {
+  it('prompts to pick a favorite and scrolls via the callback when nothing is selected', async () => {
+    const user = userEvent.setup()
+    const onPickFavorite = vi.fn()
     const modelId = createModelId('openai/gpt-4o-mini')
+
     renderPanel(
       <VerdictPanel
+        open
+        onClose={vi.fn()}
+        favoriteModelName={null}
+        onPickFavorite={onPickFavorite}
         conversations={[
           createMockModelConversation({
             modelId,
@@ -137,20 +144,29 @@ describe('VerdictPanel', () => {
       />
     )
 
-    expect(screen.getByTestId('verdict-agreement')).toHaveTextContent(AGREEMENT_NEEDS_MODELS_TEXT)
+    expect(screen.queryByTestId('verdict-current-pick')).not.toBeInTheDocument()
+    await user.click(screen.getByTestId('verdict-pick-favorite'))
+    expect(onPickFavorite).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('verdict-popular-rating')).toHaveTextContent(
+      /does not match a Help Me Choose category/i
+    )
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('List $0.38/1M')).toBeInTheDocument()
-    expect(screen.getByTitle(/did not report a cost/i)).toHaveTextContent('—')
-    expect(screen.getByTestId('verdict-help-me-choose')).toHaveTextContent('Help Me Choose')
     expect(screen.queryByText('Cheapest here')).not.toBeInTheDocument()
     expect(screen.queryByText('Fastest here')).not.toBeInTheDocument()
   })
 
-  it('toggles collapse with aria-expanded and remembers the choice', async () => {
+  it('uses a bottom-sheet class on mobile and closes from the close control', async () => {
     const user = userEvent.setup()
+    const onClose = vi.fn()
     const modelId = createModelId('openai/gpt-5')
     renderPanel(
       <VerdictPanel
+        open
+        onClose={onClose}
+        variant="sheet"
+        favoriteModelName={null}
+        onPickFavorite={vi.fn()}
         conversations={[
           createMockModelConversation({
             modelId,
@@ -164,45 +180,10 @@ describe('VerdictPanel', () => {
       />
     )
 
-    const toggle = screen.getByTestId('verdict-toggle')
-    expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByTestId('verdict-how-this-works')).toBeVisible()
-
-    await user.click(toggle)
-    expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    expect(localStorage.getItem(VERDICT_PANEL_EXPANDED_KEY)).toBe('false')
-    expect(screen.queryByTestId('verdict-how-this-works')).not.toBeVisible()
-
-    toggle.focus()
-    await user.keyboard('{Enter}')
-    expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    expect(localStorage.getItem(VERDICT_PANEL_EXPANDED_KEY)).toBe('true')
-  })
-
-  it('defaults to collapsed on mobile when nothing is stored', () => {
-    Object.defineProperty(window, 'innerWidth', {
-      configurable: true,
-      writable: true,
-      value: 375,
-    })
-    const modelId = createModelId('openai/gpt-5')
-    renderPanel(
-      <VerdictPanel
-        conversations={[
-          createMockModelConversation({
-            modelId,
-            messages: [
-              createMockConversationMessage({ type: 'user', content: 'hello there' }),
-              createMockConversationMessage({ type: 'assistant', content: 'Hi!' }),
-            ],
-          }),
-        ]}
-        allModels={[{ id: modelId, name: 'GPT-5' }]}
-      />
-    )
-
-    expect(screen.getByTestId('verdict-toggle')).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getByTestId('verdict-agreement')).toBeVisible()
-    expect(screen.queryByTestId('verdict-how-this-works')).not.toBeVisible()
+    expect(screen.getByTestId('verdict-panel')).toHaveClass('verdict-panel--sheet')
+    expect(screen.getByTestId('verdict-panel')).toHaveClass('verdict-panel--open')
+    expect(screen.getByTestId('verdict-sheet-scrim')).toBeInTheDocument()
+    await user.click(screen.getByTestId('verdict-close'))
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 })

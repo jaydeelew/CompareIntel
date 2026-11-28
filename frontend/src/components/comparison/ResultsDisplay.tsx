@@ -246,6 +246,10 @@ export interface ResultsDisplayProps {
   isComparisonLoading?: boolean
   /** Web search was enabled for the active comparison session. */
   webSearchEnabled?: boolean
+  /** Model ids that show a favorite control. Empty while the tutorial is active or fewer than two succeeded. */
+  favoriteModelIds?: ReadonlySet<string>
+  favoriteModelId?: string | null
+  onToggleFavorite?: (modelId: string) => void
 }
 
 type TabChangeSource = 'swipe-touch' | 'tab-click' | 'programmatic'
@@ -278,6 +282,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   capabilitySwipeHintNonce = 0,
   isComparisonLoading = false,
   webSearchEnabled = false,
+  favoriteModelIds,
+  favoriteModelId = null,
+  onToggleFavorite,
 }) => {
   const visibleConversations = useMemo(
     () => conversations.filter(conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)),
@@ -1027,6 +1034,13 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   )}
                   webSearchEnabled={webSearchEnabled}
                   retired={retiredModelIds.has(String(activeConversation.modelId))}
+                  showFavorite={favoriteModelIds?.has(activeConversation.modelId) ?? false}
+                  favoriteSelected={favoriteModelId === activeConversation.modelId}
+                  onToggleFavorite={
+                    onToggleFavorite
+                      ? () => onToggleFavorite(activeConversation.modelId)
+                      : undefined
+                  }
                 />
               </div>
             ) : null}
@@ -1072,6 +1086,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 )}
                 webSearchEnabled={webSearchEnabled}
                 retired={retiredModelIds.has(String(conversation.modelId))}
+                showFavorite={favoriteModelIds?.has(conversation.modelId) ?? false}
+                favoriteSelected={favoriteModelId === conversation.modelId}
+                onToggleFavorite={
+                  onToggleFavorite ? () => onToggleFavorite(conversation.modelId) : undefined
+                }
               />
             )
           })}

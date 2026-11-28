@@ -25,6 +25,7 @@ describe('sitemap canonical URLs', () => {
     const paths = getPublicPages().map(page => page.path)
     expect(paths).toContain('/privacy-policy')
     expect(paths).not.toContain('/privacy')
+    expect(paths).not.toContain('/verdict-methodology')
     for (const alias of aliases.keys()) {
       expect(paths).not.toContain(alias)
     }

@@ -52,4 +52,6 @@ export { LoadingSection } from './LoadingSection'
 
 export { ResultsSectionHeader } from './ResultsSectionHeader'
 export { VerdictPanel } from './VerdictPanel'
+export { VerdictButton } from './VerdictButton'
+export { FavoriteButton } from './FavoriteButton'
 export type { VerdictPanelProps } from './VerdictPanel'

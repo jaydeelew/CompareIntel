@@ -3,7 +3,9 @@ import type { Locator, Page, Response } from '@playwright/test'
 import { test, expect } from './fixtures'
 import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { ensureBackendMockMode } from './helpers/mockMode'
+import { MOCK_MODELS_RESPONSE } from './helpers/mockModels'
 import {
+  dismissMobileBlockers,
   isMobileE2eProject,
   selectSelectableTextModels,
   toggleModelCheckbox,
@@ -38,6 +40,172 @@ function allResultCards(page: Page): Locator {
   return page.locator(
     '.results-section .result-card.conversation-card, [data-testid^="result-card-"]'
   )
+}
+
+function favoriteModelName(label: string | null): string {
+  if (!label) return ''
+  if (label.startsWith('Clear favorite ')) return label.slice('Clear favorite '.length)
+  const prefix = 'Pick '
+  const suffix = ' as your favorite'
+  if (label.startsWith(prefix) && label.endsWith(suffix)) {
+    return label.slice(prefix.length, -suffix.length)
+  }
+  return label
+}
+
+async function countSuccessfulResultCards(page: Page): Promise<number> {
+  const tabs = page.locator('.results-section .results-tab-button')
+  const tabCount = await tabs.count()
+  if (tabCount > 0) {
+    let successes = 0
+    for (let index = 0; index < tabCount; index += 1) {
+      const failed = await tabs.nth(index).locator('.results-tab-error-indicator').count()
+      if (failed === 0) successes += 1
+    }
+    return successes
+  }
+
+  const statuses = page.locator('.results-section .result-card .status')
+  const statusCount = await statuses.count()
+  let successes = 0
+  for (let index = 0; index < statusCount; index += 1) {
+    const text = (await statuses.nth(index).innerText()).trim()
+    if (text === 'Success') successes += 1
+  }
+  return successes
+}
+
+async function pickSecondFavorite(page: Page, projectName: string): Promise<string | null> {
+  if (isMobileE2eProject(projectName)) {
+    const tabs = page.locator('.results-tab-button')
+    const tabCount = await tabs.count()
+    const successIndexes: number[] = []
+    for (let index = 0; index < tabCount; index += 1) {
+      const failed = await tabs.nth(index).locator('.results-tab-error-indicator').count()
+      if (failed === 0) successIndexes.push(index)
+    }
+    if (successIndexes.length < 2) return null
+
+    await tabs.nth(successIndexes[0]).click()
+    const first = page.getByTestId('favorite-button')
+    await expect(first).toHaveCount(1)
+    await first.click()
+
+    await tabs.nth(successIndexes[1]).click()
+    const second = page.getByTestId('favorite-button')
+    await expect(second).toHaveCount(1)
+    const name = favoriteModelName(await second.getAttribute('aria-label'))
+    await second.click()
+    return name
+  }
+
+  const buttons = page.getByTestId('favorite-button')
+  if ((await buttons.count()) < 2) return null
+  await buttons.nth(0).click()
+  const name = favoriteModelName(await buttons.nth(1).getAttribute('aria-label'))
+  await buttons.nth(1).click()
+  return name
+}
+
+async function resultsSectionBox(page: Page): Promise<{ height: number; top: number }> {
+  return page
+    .locator('.results-section')
+    .first()
+    .evaluate(element => ({
+      height: Math.round(element.getBoundingClientRect().height),
+      top: Math.round(element.getBoundingClientRect().top + window.scrollY),
+    }))
+}
+
+async function expectVerdictButtonOpens(page: Page): Promise<void> {
+  const button = page.getByTestId('verdict-button')
+  await expect(button).toBeVisible()
+  await button.click()
+  const panel = page.getByTestId('verdict-panel')
+  await expect(panel).toBeVisible()
+  await expect(panel.getByRole('heading', { name: 'Your verdict' })).toBeVisible()
+  await expect(panel.getByRole('heading', { name: 'Popular rating sites' })).toBeVisible()
+  await page.getByTestId('verdict-close').click()
+  await expect(panel).toBeHidden()
+}
+
+async function expectVerdictButtonFlow(page: Page, projectName: string): Promise<void> {
+  const button = page.getByTestId('verdict-button')
+  await expect(button).toBeVisible()
+  const secondName = await pickSecondFavorite(page, projectName)
+  expect(secondName, 'two successful models expose favorite buttons').toBeTruthy()
+
+  const before = await resultsSectionBox(page)
+  await button.click()
+  const panel = page.getByTestId('verdict-panel')
+  await expect(panel).toBeVisible()
+  await expect(page.getByTestId('verdict-current-pick')).toHaveText(secondName ?? '')
+  await expect(panel.getByRole('heading', { name: 'Your verdict' })).toBeVisible()
+  await expect(panel.getByRole('heading', { name: 'Popular rating sites' })).toBeVisible()
+
+  const during = await resultsSectionBox(page)
+  await page.getByTestId('verdict-close').click()
+  await expect(panel).toBeHidden()
+  const after = await resultsSectionBox(page)
+
+  expect(Math.abs(before.height - during.height)).toBeLessThan(2)
+  expect(Math.abs(before.top - during.top)).toBeLessThan(2)
+  expect(Math.abs(before.height - after.height)).toBeLessThan(2)
+  expect(Math.abs(before.top - after.top)).toBeLessThan(2)
+}
+
+function comparisonStreamWithLastModelFailed(models: string[]): string {
+  const events: object[] = []
+  models.forEach((model, index) => {
+    const failed = index === models.length - 1
+    events.push({ model, type: 'start' })
+    events.push({
+      model,
+      type: 'chunk',
+      content: failed ? 'Error: Model not available' : `Answer from ${model}. `,
+    })
+    events.push({ model, type: 'done', error: failed })
+  })
+  events.push({
+    type: 'complete',
+    metadata: {
+      input_length: 0,
+      models_requested: models.length,
+      models_successful: Math.max(0, models.length - 1),
+      models_failed: models.length > 0 ? 1 : 0,
+      timestamp: new Date().toISOString(),
+      processing_time_ms: 10,
+    },
+  })
+  return events.map(event => `data: ${JSON.stringify(event)}\n\n`).join('')
+}
+
+const MOCK_VERDICT_MODEL_IDS = ['openai/gpt-4o-mini', 'openai/gpt-3.5-turbo', 'openai/gpt-4.1-nano']
+
+/** Selects the mocked catalog's three text models without calling the real /api/models proxy. */
+async function selectMockVerdictModels(page: Page, projectName: string): Promise<void> {
+  await dismissMobileBlockers(page)
+  const header = page.locator('.provider-dropdown[data-provider-name="OpenAI"] .provider-header')
+  await expect(async () => {
+    if ((await header.getAttribute('aria-expanded')) !== 'true') {
+      await header.evaluate((element: HTMLElement) => {
+        element.scrollIntoView({ block: 'center', inline: 'nearest' })
+      })
+      await header.click({ timeout: 5000 })
+    }
+    await expect(header).toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
+  }, 'expand OpenAI provider').toPass({ timeout: 20000 })
+
+  for (const id of MOCK_VERDICT_MODEL_IDS) {
+    const checkbox = page.getByTestId(`model-checkbox-${id}`)
+    await expect(checkbox).toBeEnabled({ timeout: 10000 })
+    await expect(async () => {
+      if (!(await checkbox.isChecked())) {
+        await toggleModelCheckbox(checkbox, projectName)
+      }
+      await expect(checkbox).toBeChecked({ timeout: 2000 })
+    }, `select model ${id}`).toPass({ timeout: 20000 })
+  }
 }
 
 function isConversationsHistoryGet(res: Response): boolean {
@@ -171,11 +339,16 @@ test.describe('Results Display Regression Tests', () => {
         await submitAndAwaitCompareStream(authenticatedPage, { waitForCardAttachment: false })
 
         // Wait for results to appear (or error state)
-        const resultsGrid = authenticatedPage.locator('.results-grid')
+        const resultsSurface = authenticatedPage.locator(
+          '.results-section .results-grid, .results-section .results-tabs-container'
+        )
         const errorState = authenticatedPage.locator('.error-message, .api-error, [class*="error"]')
 
         // Wait for either results or error
-        const resultsVisible = await resultsGrid.isVisible({ timeout: 30000 }).catch(() => false)
+        const resultsVisible = await resultsSurface
+          .first()
+          .isVisible({ timeout: 30000 })
+          .catch(() => false)
         const errorVisible = await errorState
           .first()
           .isVisible({ timeout: 2000 })
@@ -195,12 +368,16 @@ test.describe('Results Display Regression Tests', () => {
 
           if (stillLoading) {
             // Wait a bit more for results
-            await resultsGrid.waitFor({ state: 'visible', timeout: 30000 }).catch(() => {})
+            await resultsSurface
+              .first()
+              .waitFor({ state: 'visible', timeout: 30000 })
+              .catch(() => {})
           }
         }
 
         // Re-check after waiting
-        const finalResultsVisible = await resultsGrid
+        const finalResultsVisible = await resultsSurface
+          .first()
           .isVisible({ timeout: 5000 })
           .catch(() => false)
 
@@ -225,20 +402,13 @@ test.describe('Results Display Regression Tests', () => {
           .locator('.loading-section')
           .waitFor({ state: 'hidden', timeout: 30000 })
           .catch(() => {})
-        const verdict = authenticatedPage.getByTestId('verdict-panel')
-        await expect(verdict).toBeVisible({ timeout: 45000 })
-        const toggle = verdict.getByTestId('verdict-toggle')
-        if ((await toggle.getAttribute('aria-expanded')) === 'false') {
-          await toggle.click()
+
+        const successes = await countSuccessfulResultCards(authenticatedPage)
+        if (successes >= 2) {
+          await expectVerdictButtonOpens(authenticatedPage)
+        } else {
+          await expect(authenticatedPage.getByTestId('verdict-button')).toHaveCount(0)
         }
-        await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-        await expect(
-          verdict.locator('.verdict-th-sub', { hasText: 'this run, via OpenRouter' })
-        ).toBeVisible()
-        await expect(verdict.getByTestId('verdict-how-this-works')).toHaveAttribute(
-          'href',
-          '/verdict-methodology'
-        )
       })
 
       await test.step('Verify result card structure', async () => {
@@ -258,6 +428,106 @@ test.describe('Results Display Regression Tests', () => {
         const copyBtn = resultCard.locator('.copy-response-btn, button[title*="Copy"]')
         await expect(copyBtn.first()).toBeVisible()
       })
+    })
+
+    test('verdict favorites and panel open without moving the results section', async ({
+      page,
+    }, testInfo) => {
+      await page.addInitScript(() => {
+        localStorage.setItem('compareintel_tutorial_completed', 'true')
+        localStorage.setItem('compareintel_welcome_dont_show_again', 'true')
+        localStorage.setItem('compareintel_welcome_dismissed', 'true')
+      })
+
+      // context.route covers the page and page.request, so model selection and the
+      // stream see the same catalog even when the dev proxy has no backend.
+      const context = page.context()
+      await context.route('**/*', async route => {
+        const url = new URL(route.request().url())
+        if (!url.pathname.startsWith('/api/')) {
+          await route.continue()
+          return
+        }
+        if (url.pathname === '/api/auth/me') {
+          await route.fulfill({
+            status: 401,
+            contentType: 'application/json',
+            body: JSON.stringify({ detail: 'Not authenticated' }),
+          })
+          return
+        }
+        if (url.pathname.startsWith('/api/credits/balance')) {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              credits_allocated: 50,
+              credits_remaining: 50,
+              period_type: 'daily',
+              subscription_tier: 'unregistered',
+            }),
+          })
+          return
+        }
+        if (url.pathname.startsWith('/api/models') && route.request().method() === 'GET') {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(MOCK_MODELS_RESPONSE),
+          })
+          return
+        }
+        if (url.pathname === '/api/compare-stream') {
+          let models: string[] = []
+          try {
+            models = (route.request().postDataJSON() as { models?: string[] })?.models ?? []
+          } catch {
+            models = []
+          }
+          await route.fulfill({
+            status: 200,
+            contentType: 'text/event-stream',
+            headers: { 'Cache-Control': 'no-cache' },
+            body: comparisonStreamWithLastModelFailed(models),
+          })
+          return
+        }
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ anonymous_mock_mode_enabled: false, is_development: true }),
+        })
+      })
+
+      await page.goto('/', { waitUntil: 'domcontentloaded' })
+      await dismissMobileBlockers(page)
+      const input = page.getByTestId('comparison-input-textarea')
+      await expect(input).toBeVisible()
+      await input.fill('Write a Python function that adds two numbers')
+      await selectMockVerdictModels(page, testInfo.project.name)
+      await dismissMobileBlockers(page)
+      await page.getByTestId('comparison-submit-button').click()
+
+      await expect(page.getByTestId('verdict-button')).toBeVisible({ timeout: 20000 })
+
+      if (isMobileE2eProject(testInfo.project.name)) {
+        const failedTab = page.locator('.results-tab-button').filter({
+          has: page.locator('.results-tab-error-indicator'),
+        })
+        await expect(failedTab).toHaveCount(1)
+        await failedTab.click()
+        await expect(page.locator('.result-card .status.error')).toHaveText('Failed')
+        await expect(page.getByTestId('favorite-button')).toHaveCount(0)
+      } else {
+        const failedCard = page.locator('.result-card').filter({
+          has: page.locator('.status.error'),
+        })
+        await expect(failedCard).toHaveCount(1)
+        await expect(failedCard.getByTestId('favorite-button')).toHaveCount(0)
+        await expect(page.getByTestId('favorite-button')).toHaveCount(2)
+      }
+
+      await expectVerdictButtonFlow(page, testInfo.project.name)
     })
 
     test('Result card shows formatted view by default', async ({ authenticatedPage }, testInfo) => {

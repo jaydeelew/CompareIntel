@@ -9,11 +9,21 @@
  * the results-related UI logic.
  */
 
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
 import { isVerdictPanelEnabled } from '../../config/featureFlags'
 import type { ExportFormat } from '../../hooks/useExport'
 import type { Model, ActiveResultTabs, ResultTab } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
-import { ResultsDisplay, ResultsSectionHeader, VerdictPanel } from '../comparison'
+import { modelDisplayLabel } from '../../utils/retiredConversationModels'
+import {
+  comparisonFinishedForVerdict,
+  successfulVerdictModelIds,
+  toggleFavorite,
+  verdictControlsVisible,
+  verdictTurnKey,
+} from '../../utils/verdictSession'
+import { ResultsDisplay, ResultsSectionHeader, VerdictButton, VerdictPanel } from '../comparison'
 import { ErrorBoundary } from '../shared'
 
 /** Breakout animation phase type */
@@ -118,6 +128,71 @@ export function ResultsArea({
   onOpenHelpMeChoose,
   webSearchEnabled = false,
 }: ResultsAreaProps) {
+  const verdictEnabled = isVerdictPanelEnabled()
+  const finished = comparisonFinishedForVerdict(
+    conversations,
+    modelProcessingStates,
+    isComparisonLoading
+  )
+  const successIds = useMemo(
+    () => successfulVerdictModelIds(conversations, modelErrorStates),
+    [conversations, modelErrorStates]
+  )
+  const showVerdictControls = verdictControlsVisible({
+    enabled: verdictEnabled,
+    tutorialActive: isTutorialActive,
+    finished,
+    successCount: successIds.length,
+  })
+  const turnKey = useMemo(() => verdictTurnKey(conversations), [conversations])
+  const [favoriteModelId, setFavoriteModelId] = useState<string | null>(null)
+  const [verdictOpen, setVerdictOpen] = useState(false)
+  const prevTurnKey = useRef(turnKey)
+
+  useEffect(() => {
+    if (prevTurnKey.current === turnKey) return
+    prevTurnKey.current = turnKey
+    setFavoriteModelId(null)
+    setVerdictOpen(false)
+  }, [turnKey])
+
+  useEffect(() => {
+    if (!showVerdictControls) setVerdictOpen(false)
+  }, [showVerdictControls])
+
+  const favoriteModelName = favoriteModelId
+    ? modelDisplayLabel(
+        favoriteModelId,
+        allModels,
+        conversations.find(conversation => conversation.modelId === favoriteModelId)?.modelName
+      )
+    : null
+
+  const scrollToResultCards = useCallback(() => {
+    const reduced =
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const target = document.querySelector('.results-display-host .result-card, .result-card')
+    target?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' })
+    setVerdictOpen(false)
+  }, [])
+
+  const toggleVerdict = useCallback(() => {
+    setVerdictOpen(open => !open)
+  }, [])
+
+  const closeVerdict = useCallback(() => {
+    setVerdictOpen(false)
+  }, [])
+
+  const onToggleFavorite = useCallback((modelId: string) => {
+    setFavoriteModelId(current => toggleFavorite(current, modelId))
+  }, [])
+
+  const favoriteModelIds = useMemo(
+    () => (showVerdictControls ? new Set(successIds) : new Set<string>()),
+    [showVerdictControls, successIds]
+  )
+
   return (
     <ErrorBoundary>
       <section className="results-section">
@@ -136,19 +211,26 @@ export function ResultsArea({
           onShowAllResults={onShowAllResults}
           isMobileLayout={isMobileLayout}
           isTutorialActive={isTutorialActive}
+          verdictButton={
+            showVerdictControls ? (
+              <VerdictButton open={verdictOpen} onToggle={toggleVerdict} />
+            ) : null
+          }
         />
 
-        {isVerdictPanelEnabled() &&
-          conversations.length > 0 &&
-          !isComparisonLoading &&
-          conversations.every(conversation => !modelProcessingStates[conversation.modelId]) && (
-            <VerdictPanel
-              conversations={conversations}
-              allModels={allModels}
-              modelErrorStates={modelErrorStates}
-              onOpenHelpMeChoose={onOpenHelpMeChoose}
-            />
-          )}
+        {showVerdictControls && (
+          <VerdictPanel
+            open={verdictOpen}
+            onClose={closeVerdict}
+            conversations={conversations}
+            allModels={allModels}
+            modelErrorStates={modelErrorStates}
+            favoriteModelName={favoriteModelId ? favoriteModelName : null}
+            onPickFavorite={scrollToResultCards}
+            variant={isMobileLayout ? 'sheet' : 'popover'}
+            onOpenHelpMeChoose={onOpenHelpMeChoose}
+          />
+        )}
 
         <div className="results-display-host">
           <ResultsDisplay
@@ -177,6 +259,9 @@ export function ResultsArea({
             tutorialSwipeHintNonce={tutorialSwipeHintNonce}
             capabilitySwipeHintNonce={capabilitySwipeHintNonce}
             webSearchEnabled={webSearchEnabled}
+            favoriteModelIds={favoriteModelIds}
+            favoriteModelId={showVerdictControls ? favoriteModelId : null}
+            onToggleFavorite={showVerdictControls ? onToggleFavorite : undefined}
           />
         </div>
       </section>
