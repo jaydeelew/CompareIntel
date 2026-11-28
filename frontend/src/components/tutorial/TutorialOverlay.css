@@ -666,3 +666,41 @@ html.tutorial-spotlight-settling .mobile-tutorial-highlight {
     gap: 0.375rem;
   }
 }
+
+/* Steps 9–10: menu rows use the same faded, not-allowed treatment as a disabled
+   Help me choose or Advanced toggle. Descendants do not receive hits, so the
+   click lands on the menu itself and cannot fall through onto the page.
+   Nested hosts (the model-search suggestion list) stay hittable. */
+[data-tutorial-dropdown-host] {
+  cursor: not-allowed;
+}
+
+[data-tutorial-dropdown-host] * {
+  pointer-events: none !important;
+}
+
+[data-tutorial-dropdown-host] [data-tutorial-dropdown-host] {
+  pointer-events: auto !important;
+}
+
+[data-tutorial-dropdown-locked],
+[data-tutorial-dropdown-locked]:hover,
+[data-tutorial-dropdown-locked]:focus,
+[data-tutorial-dropdown-locked]:focus-visible,
+[data-tutorial-dropdown-locked]:active {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  outline: none;
+}
+
+.history-inline-list .history-item[data-tutorial-dropdown-locked]:hover,
+.history-inline-list .history-item[data-tutorial-dropdown-locked]:active,
+.saved-selections-dropdown [data-tutorial-dropdown-locked]:hover,
+.help-me-choose [data-tutorial-dropdown-locked]:hover,
+.advanced-settings [data-tutorial-dropdown-locked]:hover,
+.provider-dropdown [data-tutorial-dropdown-locked]:hover,
+.model-search [data-tutorial-dropdown-locked]:hover {
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+}
