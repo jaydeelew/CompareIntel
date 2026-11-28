@@ -161,8 +161,14 @@ class TestLowMemoryImageBuild:
 
     def test_frontend_image_caps_node_heap_and_skips_size_passes(self):
         dockerfile = FRONTEND_DOCKERFILE.read_text()
-        assert "--max-old-space-size=1280" in dockerfile
-        assert "--openssl-legacy-provider" in dockerfile
+        run_at = dockerfile.find("RUN npm run build")
+        arg_at = dockerfile.find(
+            'ARG NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=2560"'
+        )
+        env_at = dockerfile.find("ENV NODE_OPTIONS=${NODE_OPTIONS}")
+        assert arg_at != -1 and env_at != -1 and run_at != -1
+        assert arg_at < env_at < run_at
+        assert "--max-old-space-size=1280" not in dockerfile
         assert "COMPAREINTEL_LOW_MEMORY_BUILD=1" in dockerfile
         vite = VITE_CONFIG.read_text()
         assert "COMPAREINTEL_LOW_MEMORY_BUILD" in vite
