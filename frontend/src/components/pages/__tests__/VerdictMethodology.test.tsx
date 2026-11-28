@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { VerdictMethodology } from '../VerdictMethodology'
 
 describe('VerdictMethodology', () => {
-  it('explains agreement, cost, latency, and what Verdict does not claim', () => {
+  it('explains your verdict, rating sites, cost, and latency', () => {
     render(
       <MemoryRouter>
         <VerdictMethodology />
@@ -13,9 +13,11 @@ describe('VerdictMethodology', () => {
     )
 
     expect(screen.getByRole('heading', { level: 1, name: 'How Verdict Works' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Agreement' })).toBeInTheDocument()
-    expect(screen.getByText(/Needs 2\+ models/)).toBeInTheDocument()
-    expect(screen.getByText(/not a judgment of correctness/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Your verdict' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Popular rating sites' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Agreement' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/not a judgment of correctness/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/not enough votes/i)).not.toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: 'Cost (this run, via OpenRouter)' })
     ).toBeInTheDocument()

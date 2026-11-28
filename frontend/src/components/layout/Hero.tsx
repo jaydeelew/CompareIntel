@@ -3,7 +3,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -13,6 +12,7 @@ import { createPortal } from 'react-dom'
 
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/useTheme'
+import { useExpandFromOrigin } from '../../hooks/useExpandFromOrigin'
 import { useHideHeroUtilityTiles } from '../../hooks/useHideHeroUtilityTiles'
 import { StyledTooltip } from '../shared'
 
@@ -34,9 +34,6 @@ export function useAnonCarousel(): boolean {
  * replace any hero capability video file so clients fetch the new bytes.
  */
 const CAPABILITY_VIDEO_CACHE_BUST = 'v=2'
-
-/** Matches .capability-tile transform transition in hero.css (0.7s) — keep stacking elevated until it finishes. */
-const CAPABILITY_FLIP_STACK_MS = 750
 
 /** First sentence of flipped-tile copy is styled as a header; remainder stays body text. */
 function splitCapabilityBackText(text: string): { lead: string; rest: string } {
@@ -91,19 +88,10 @@ function CapabilityTile({
   const [videoHasFrame, setVideoHasFrame] = useState(false)
   /** `canplay` fires repeatedly during playback; priming must run once or `currentTime = 0` would reset the video. */
   const videoPrimedRef = useRef(false)
-  /** True briefly after flip state changes so z-index stays above siblings/composer during CSS transition (esp. closing). */
-  const [stackElevated, setStackElevated] = useState(false)
-  const prevFlippedStackRef = useRef(isFlipped)
-
-  /* useLayoutEffect: on close, .flipped is removed before paint so stacking must update in the same frame
-     (useEffect runs after paint and one frame showed neighbors/composer on top). */
-  useLayoutEffect(() => {
-    if (prevFlippedStackRef.current === isFlipped) return
-    prevFlippedStackRef.current = isFlipped
-    setStackElevated(true)
-    const id = window.setTimeout(() => setStackElevated(false), CAPABILITY_FLIP_STACK_MS)
-    return () => window.clearTimeout(id)
-  }, [isFlipped])
+  /* Same useLayoutEffect + timer as useExpandFromOrigin: on close, .flipped is removed before
+     paint so stacking must update in the same frame (useEffect runs after paint and one frame
+     showed neighbors/composer on top). */
+  const { stackElevated } = useExpandFromOrigin(isFlipped)
 
   useEffect(() => {
     if (prevFlipped.current && !isFlipped) {

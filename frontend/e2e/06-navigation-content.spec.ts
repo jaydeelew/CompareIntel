@@ -286,7 +286,8 @@ test.describe('Navigation and Content Pages', () => {
     await expect(page.getByRole('heading', { level: 1, name: /how verdict works/i })).toBeVisible({
       timeout: 10000,
     })
-    await expect(page.getByText(/not a judgment of correctness/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /your verdict/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /popular rating sites/i })).toBeVisible()
     await expect(
       page.getByRole('heading', { name: /cost \(this run, via openrouter\)/i })
     ).toBeVisible()

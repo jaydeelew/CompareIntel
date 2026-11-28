@@ -64,15 +64,9 @@ cd frontend && npm run dev
 
 Open **http://localhost:5173**
 
-### Verdict panel (in development)
+### Verdict panel (dev server only)
 
-The comparison **Verdict** panel is **on** while you use `npm run dev`. Production builds hide it unless you opt in at build time:
-
-```bash
-VITE_ENABLE_VERDICT_PANEL=true npm run build
-```
-
-See `frontend/.env.example` for the `VITE_ENABLE_VERDICT_PANEL` variable.
+The comparison **Verdict** logo, favorites, and `/verdict-methodology` are on while you use `npm run dev`. Production builds and Cloudflare Pages preview builds never show them. There is no build-time environment override.
 
 ---
 

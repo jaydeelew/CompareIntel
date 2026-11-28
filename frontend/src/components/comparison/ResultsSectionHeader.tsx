@@ -45,6 +45,8 @@ interface ResultsSectionHeaderProps {
   isSharing?: boolean
   /** False until at least one model has a completed response */
   canShare?: boolean
+  /** Verdict logo, rendered in the actions row when the comparison is ready */
+  verdictButton?: React.ReactNode
 }
 
 export function ResultsSectionHeader({
@@ -62,6 +64,7 @@ export function ResultsSectionHeader({
   onShare,
   isSharing = false,
   canShare = true,
+  verdictButton = null,
 }: ResultsSectionHeaderProps) {
   const buttonsDisabled = isTutorialActive
   const shareDisabled = buttonsDisabled || isSharing || !canShare
@@ -197,6 +200,8 @@ export function ResultsSectionHeader({
               showStyledTooltip={showDesktopStyledTooltips}
             />
 
+            {verdictButton}
+
             {/* Show all results button for desktop */}
             {closedCardsCount > 0 && (
               <button
@@ -257,6 +262,8 @@ export function ResultsSectionHeader({
               disabled={buttonsDisabled}
               showStyledTooltip={false}
             />
+
+            {verdictButton}
 
             {/* Show all results button - icon only */}
             {closedCardsCount > 0 && (

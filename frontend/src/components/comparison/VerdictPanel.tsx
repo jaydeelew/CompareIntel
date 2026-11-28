@@ -1,16 +1,10 @@
-import { useCallback, useMemo, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 
+import { usePrefersReducedMotion } from '../../hooks/useExpandFromOrigin'
 import type { PerModelUsage } from '../../types/comparison'
 import type { ModelConversation } from '../../types/conversation'
 import {
-  AGREEMENT_HEURISTIC_NOTE,
-  AGREEMENT_LABEL_TEXT,
-  computeAgreement,
-} from '../../utils/verdictAgreement'
-import { mapPromptToHelpMeChooseCategory } from '../../utils/verdictCategory'
-import {
-  AGREEMENT_NEEDS_MODELS_TEXT,
   VERDICT_CHEAPEST_PILL,
   VERDICT_COST_HEADER,
   VERDICT_COST_MISSING,
@@ -21,6 +15,9 @@ import {
   VERDICT_LATENCY_TOOLTIP,
   VERDICT_METHODOLOGY_PATH,
   VERDICT_METRICS_HELP,
+  VERDICT_PICK_FAVORITE,
+  VERDICT_POPULAR_RATING,
+  VERDICT_YOUR_VERDICT,
 } from '../../utils/verdictCopy'
 import {
   formatListPricePerMillion,
@@ -34,16 +31,19 @@ import {
   formatVerdictLatency,
   highlightExtremes,
 } from '../../utils/verdictMetrics'
-import {
-  initialVerdictPanelExpanded,
-  writeVerdictPanelExpanded,
-} from '../../utils/verdictPanelCollapse'
+import { popularRatingForPrompt } from '../../utils/verdictPopularRating'
 
 export interface VerdictPanelProps {
+  open: boolean
+  onClose: () => void
   conversations: ModelConversation[]
   allModels: Array<{ id: string; name: string }>
   modelErrorStates?: Record<string, boolean>
   perModelUsage?: Record<string, PerModelUsage>
+  favoriteModelName: string | null
+  onPickFavorite: () => void
+  /** Desktop popover anchored to the results section, or a mobile bottom sheet. */
+  variant?: 'popover' | 'sheet'
   onOpenHelpMeChoose?: (options?: { scrollToCategoryId?: string }) => void
 }
 
@@ -54,99 +54,167 @@ function costTitle(costUsd: number | null, listPrice: number | null): string | u
 }
 
 export function VerdictPanel({
+  open,
+  onClose,
   conversations,
   allModels,
   modelErrorStates = {},
   perModelUsage,
+  favoriteModelName,
+  onPickFavorite,
+  variant = 'popover',
   onOpenHelpMeChoose,
 }: VerdictPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(initialVerdictPanelExpanded)
-
-  const toggleExpanded = useCallback(() => {
-    setIsExpanded(current => {
-      const next = !current
-      writeVerdictPanelExpanded(next)
-      return next
-    })
-  }, [])
+  const reducedMotion = usePrefersReducedMotion()
+  const panelRef = useRef<HTMLDivElement>(null)
 
   const rows = useMemo(
     () => collectVerdictModelRows(conversations, allModels, modelErrorStates, perModelUsage),
     [conversations, allModels, modelErrorStates, perModelUsage]
   )
   const { cheapestIds, fastestIds } = useMemo(() => highlightExtremes(rows), [rows])
-  const agreement = useMemo(
-    () =>
-      computeAgreement(
-        rows.filter(row => !row.isError && row.content.trim()).map(row => row.content)
-      ),
-    [rows]
-  )
   const prompt = useMemo(() => collectLatestPrompt(conversations), [conversations])
-  const categoryMatch = useMemo(() => mapPromptToHelpMeChooseCategory(prompt), [prompt])
+  const popular = useMemo(() => popularRatingForPrompt(prompt, allModels), [prompt, allModels])
 
-  const agreementText = agreement.label
-    ? AGREEMENT_LABEL_TEXT[agreement.label]
-    : AGREEMENT_NEEDS_MODELS_TEXT
-  const chooseHref = categoryMatch.categoryId
-    ? `/#help-me-choose=${encodeURIComponent(categoryMatch.categoryId)}`
+  const chooseHref = popular
+    ? `/#help-me-choose=${encodeURIComponent(popular.categoryId)}`
     : '/#help-me-choose'
-  const chooseLabel = categoryMatch.category?.label ?? 'Help Me Choose'
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    const onPointer = (event: globalThis.MouseEvent) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      if (panelRef.current?.contains(target)) return
+      if (target.closest('[data-testid="verdict-button"]')) return
+      if (target.closest('[data-testid="verdict-sheet-scrim"]')) return
+      onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onPointer)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onPointer)
+    }
+  }, [open, onClose])
 
   const handleChooseClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (!onOpenHelpMeChoose) return
+    if (!onOpenHelpMeChoose || !popular) return
     event.preventDefault()
-    onOpenHelpMeChoose(
-      categoryMatch.categoryId ? { scrollToCategoryId: categoryMatch.categoryId } : undefined
-    )
+    onOpenHelpMeChoose({ scrollToCategoryId: popular.categoryId })
   }
 
+  const className = [
+    'verdict-panel',
+    variant === 'sheet' ? 'verdict-panel--sheet' : 'verdict-panel--popover',
+    open ? 'verdict-panel--open' : '',
+    reducedMotion ? 'verdict-panel--instant' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <aside className="verdict-panel" data-testid="verdict-panel" aria-labelledby="verdict-heading">
-      <div className="verdict-panel-header">
-        <h3 className="verdict-heading">
+    <>
+      {variant === 'sheet' && open ? (
+        <button
+          type="button"
+          className="verdict-sheet-scrim"
+          data-testid="verdict-sheet-scrim"
+          aria-label="Close verdict"
+          onClick={onClose}
+        />
+      ) : null}
+      <div
+        ref={panelRef}
+        id="verdict-panel"
+        className={className}
+        role={open ? 'dialog' : undefined}
+        aria-modal={open && variant === 'sheet' ? true : undefined}
+        aria-labelledby="verdict-heading"
+        aria-hidden={!open}
+        data-testid="verdict-panel"
+      >
+        <div className="verdict-panel-toolbar">
+          <h2 id="verdict-heading" className="verdict-heading">
+            Verdict
+          </h2>
           <button
             type="button"
-            id="verdict-toggle"
-            className="verdict-toggle"
-            aria-expanded={isExpanded}
-            aria-controls="verdict-panel-content"
-            data-testid="verdict-toggle"
-            onClick={toggleExpanded}
+            className="verdict-close"
+            data-testid="verdict-close"
+            onClick={onClose}
+            aria-label="Close verdict"
           >
-            <span id="verdict-heading">Verdict</span>
-            <svg
-              className={`verdict-chevron${isExpanded ? ' expanded' : ''}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden
-            >
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
               <path
-                d="M7 10l5 5 5-5"
+                d="M6 6l12 12M18 6L6 18"
+                fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
-                strokeLinejoin="round"
               />
             </svg>
           </button>
-        </h3>
-        <p className="verdict-agreement">
-          <span className="verdict-agreement-label">Agreement</span>
-          <span
-            className={`verdict-badge${agreement.label ? ` verdict-badge--${agreement.label}` : ''}`}
-            data-testid="verdict-agreement"
-          >
-            {agreementText}
-          </span>
-        </p>
-      </div>
+        </div>
 
-      <div id="verdict-panel-content" className="verdict-panel-body" hidden={!isExpanded}>
-        <p className="verdict-note">{AGREEMENT_HEURISTIC_NOTE}</p>
+        <section className="verdict-section" data-testid="verdict-your-verdict">
+          <h3>{VERDICT_YOUR_VERDICT}</h3>
+          {favoriteModelName ? (
+            <p className="verdict-pick" data-testid="verdict-current-pick">
+              {favoriteModelName}
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="verdict-pick-prompt"
+              data-testid="verdict-pick-favorite"
+              onClick={onPickFavorite}
+            >
+              {VERDICT_PICK_FAVORITE}
+            </button>
+          )}
+        </section>
+
+        <section className="verdict-section" data-testid="verdict-popular-rating">
+          <h3>{VERDICT_POPULAR_RATING}</h3>
+          {popular ? (
+            <>
+              <p className="verdict-popular-model" data-testid="verdict-popular-model">
+                {popular.modelName}
+              </p>
+              <p className="verdict-popular-meta" data-testid="verdict-popular-source">
+                Source: {popular.source}
+              </p>
+              {popular.asOf ? (
+                <p className="verdict-popular-meta" data-testid="verdict-popular-asof">
+                  As of {popular.asOf}
+                </p>
+              ) : null}
+              <p className="verdict-choose">
+                Help Me Choose ·{' '}
+                <a
+                  href={chooseHref}
+                  onClick={handleChooseClick}
+                  data-testid="verdict-help-me-choose"
+                >
+                  {popular.categoryLabel}
+                </a>
+              </p>
+            </>
+          ) : (
+            <p className="verdict-popular-meta">
+              This prompt does not match a Help Me Choose category.{' '}
+              <a href="/#help-me-choose" data-testid="verdict-help-me-choose">
+                Help Me Choose
+              </a>
+            </p>
+          )}
+        </section>
+
         <p className="verdict-metrics-help">{VERDICT_METRICS_HELP}</p>
-
         <table className="verdict-metrics">
           <caption className="sr-only">
             {VERDICT_COST_HEADER} and {VERDICT_LATENCY_HEADER}
@@ -197,20 +265,12 @@ export function VerdictPanel({
           </tbody>
         </table>
 
-        <div className="verdict-footer">
-          <p className="verdict-choose">
-            Related:{' '}
-            <a href={chooseHref} onClick={handleChooseClick} data-testid="verdict-help-me-choose">
-              {chooseLabel}
-            </a>
-          </p>
-          <p className="verdict-docs">
-            <Link to={VERDICT_METHODOLOGY_PATH} data-testid="verdict-how-this-works">
-              {VERDICT_HOW_THIS_WORKS}
-            </Link>
-          </p>
-        </div>
+        <p className="verdict-docs">
+          <Link to={VERDICT_METHODOLOGY_PATH} data-testid="verdict-how-this-works">
+            {VERDICT_HOW_THIS_WORKS}
+          </Link>
+        </p>
       </div>
-    </aside>
+    </>
   )
 }

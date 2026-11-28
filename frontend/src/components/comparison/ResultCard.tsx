@@ -20,6 +20,7 @@ import { humanizeModelId } from '../../utils/retiredConversationModels'
 import { MessageBubble } from '../conversation/MessageBubble'
 import { StyledTooltip } from '../shared'
 
+import { FavoriteButton } from './FavoriteButton'
 import { ReasoningCollapsible } from './ReasoningCollapsible'
 
 export interface Model {
@@ -55,6 +56,10 @@ export interface ResultCardProps {
   className?: string
   /** When true, disables card action buttons (screenshot, copy, close, breakout, hide others, copy message) - not formatted/raw tabs */
   isTutorialActive?: boolean
+  /** Show the per-turn favorite control. Failed, empty, and tutorial cards leave this false. */
+  showFavorite?: boolean
+  favoriteSelected?: boolean
+  onToggleFavorite?: () => void
   /** Ephemeral streamed reasoning for the latest turn (not persisted). */
   streamingReasoning?: string
   /** True once visible answer tokens have arrived for this model in the current stream. */
@@ -68,6 +73,28 @@ export interface ResultCardProps {
    * outside the scrolling response.
    */
   swipeHint?: React.ReactNode
+}
+
+function FavoriteControl({
+  modelName,
+  selected,
+  onToggle,
+  useModalForTooltips,
+}: {
+  modelName: string
+  selected: boolean
+  onToggle: () => void
+  useModalForTooltips: boolean
+}) {
+  const button = <FavoriteButton modelName={modelName} selected={selected} onToggle={onToggle} />
+  // Touch layouts turn tooltips into a blocking "Got it" dialog. The star is the control,
+  // so a tap should only toggle the favorite.
+  if (useModalForTooltips) return button
+  return (
+    <StyledTooltip usePortal text={selected ? 'Clear favorite' : 'Pick as favorite'}>
+      {button}
+    </StyledTooltip>
+  )
 }
 
 // Single model result card with formatted/raw toggle
@@ -91,6 +118,9 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   style,
   className = '',
   isTutorialActive = false,
+  showFavorite = false,
+  favoriteSelected = false,
+  onToggleFavorite,
   streamingReasoning = '',
   streamAnswerStarted = false,
   webSearchEnabled = false,
@@ -111,7 +141,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   const statusText = isProcessing ? 'Process' : hasError ? 'Failed' : 'Success'
   const statusClass = isProcessing ? 'process' : hasError ? 'error' : 'success'
 
-  const { isSmallLayout } = useResponsive()
+  const { isSmallLayout, useModalForTooltips } = useResponsive()
   const [showTooltip, setShowTooltip] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const userRound = safeMessages.reduce((count, message) => {
@@ -278,6 +308,14 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                   </svg>
                 </button>
               </StyledTooltip>
+            )}
+            {showFavorite && !isTutorialActive && onToggleFavorite && (
+              <FavoriteControl
+                modelName={visibleName}
+                selected={favoriteSelected}
+                onToggle={onToggleFavorite}
+                useModalForTooltips={useModalForTooltips}
+              />
             )}
             {onCopyResponse && (
               <StyledTooltip usePortal text="Copy raw chat history">

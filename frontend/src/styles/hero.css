@@ -3,6 +3,14 @@
    Immersive dark design with subtle depth and glow effects
    ═══════════════════════════════════════════════════════════ */
 
+/* Shared with the verdict logo expand (useExpandFromOrigin). Values match
+   the previous capability-tile transition and 750ms stacking timer. */
+:root {
+  --expand-from-origin-duration: 0.7s;
+  --expand-from-origin-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --expand-from-origin-stack-ms: 750;
+}
+
 /* Hero theme toggle: shown only at phone widths (navbar keeps it wider).
    Align with max-width: 480px — watermark sits just below this row. */
 .hero-theme-toggle-mobile {
@@ -723,9 +731,12 @@
   padding: 1.25rem 1rem;
   text-align: center;
   transition:
-    transform 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transform var(--expand-from-origin-duration, 0.7s)
+      var(--expand-from-origin-easing, cubic-bezier(0.4, 0, 0.2, 1)),
+    box-shadow var(--expand-from-origin-duration, 0.7s)
+      var(--expand-from-origin-easing, cubic-bezier(0.4, 0, 0.2, 1)),
+    border-color var(--expand-from-origin-duration, 0.7s)
+      var(--expand-from-origin-easing, cubic-bezier(0.4, 0, 0.2, 1));
   box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -753,7 +764,8 @@
 @supports (-moz-appearance: none) {
   @media (min-width: 901px) {
     .capability-tile-wrapper {
-      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform var(--expand-from-origin-duration, 0.7s)
+        var(--expand-from-origin-easing, cubic-bezier(0.4, 0, 0.2, 1));
     }
 
     .capability-tile-wrapper:has(.flipped) {
@@ -2969,7 +2981,8 @@ video.capability-tile-image-lightbox-img {
   }
 
   .capability-tile-wrapper {
-    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform var(--expand-from-origin-duration, 0.7s)
+      var(--expand-from-origin-easing, cubic-bezier(0.4, 0, 0.2, 1));
   }
 
   .hero-capabilities .capability-tile-wrapper:first-child:has(.flipped) {
