@@ -22,6 +22,89 @@ type ToolbarMark = {
   pointerEvents: string
 }
 
+type DropdownControlMark = {
+  el: HTMLElement
+  wasInert: boolean
+  tabIndex: string | null
+  ariaDisabled: string | null
+}
+
+/**
+ * Steps 9 and 10 (Access Your History, Save Model Selections). The composer
+ * stays in the spotlight, which would otherwise leave every menu that is open
+ * inside that spotlight clickable.
+ */
+const DROPDOWN_LOCK_STEPS = new Set(['history-dropdown', 'save-selection'])
+
+/** Panels and toggles whose clickable contents stay inert on those steps. */
+const DROPDOWN_SCOPE_SELECTOR = [
+  '.history-inline-list',
+  '.saved-selections-dropdown',
+  '.help-me-choose',
+  '.advanced-settings',
+  '.provider-dropdown',
+  '.model-search',
+].join(',')
+
+/**
+ * Boxes that receive pointer hits. Descendants are `pointer-events: none`, so a
+ * click lands on the box instead of passing through an `inert` row.
+ * `display: contents` roots (Help me choose, Advanced) are not hosts; their
+ * toggle and panel are. The suggestion list is its own host because it is
+ * positioned outside the search box.
+ */
+const DROPDOWN_HOST_SELECTOR = [
+  '.history-inline-list',
+  '.saved-selections-dropdown',
+  '.help-me-choose-toggle-wrap',
+  '.help-me-choose-content',
+  '.advanced-settings-toggle',
+  '.advanced-settings-content',
+  '.provider-dropdown',
+  '.model-search',
+  '.model-search-suggestions',
+].join(',')
+
+const DROPDOWN_CONTROL_SELECTOR = [
+  'button',
+  'a[href]',
+  'input',
+  'select',
+  'textarea',
+  'label',
+  'summary',
+  '[role="button"]',
+  '[role="option"]',
+  '[role="radio"]',
+  '[role="checkbox"]',
+  '[role="menuitem"]',
+  '[role="switch"]',
+  '[role="slider"]',
+  '[role="tab"]',
+  '[role="combobox"]',
+  '.history-item',
+  '.saved-selection-item',
+  '.model-option',
+  '.help-me-choose-model-entry',
+].join(',')
+
+const DROPDOWN_EVENT_TYPES = [
+  'pointerdown',
+  'pointerup',
+  'mousedown',
+  'mouseup',
+  'click',
+  'dblclick',
+  'auxclick',
+  'keydown',
+  'keyup',
+  'beforeinput',
+  'input',
+  'change',
+  'touchstart',
+  'touchend',
+] as const
+
 function readTutorialStep(): string | null {
   if (typeof window === 'undefined') return null
   const fromWindow = (window as Window & { __TUTORIAL_CURRENT_STEP__?: string | null })
@@ -57,6 +140,41 @@ function writeInert(el: HTMLElement, inert: boolean): void {
   else el.removeAttribute('inert')
 }
 
+function isDropdownLockStep(step: string | null): boolean {
+  return step != null && DROPDOWN_LOCK_STEPS.has(step)
+}
+
+function eventElement(target: EventTarget | null): Element | null {
+  if (target instanceof Element) return target
+  if (target instanceof Node) return target.parentElement
+  return null
+}
+
+/**
+ * `inert` skips hit-testing, so a click on a menu row would land on whatever
+ * sits underneath. Hosts stay hittable (their descendants do not) and this
+ * capture listener drops the event. Controls inside the host are `inert` so
+ * the keyboard cannot activate them.
+ */
+function swallowLockedDropdownEvent(event: Event): void {
+  if (!isDropdownLockStep(readTutorialStep())) return
+  const el = eventElement(event.target)
+  if (!el) return
+  if (el.closest(PORTAL_SELECTOR)) return
+  if (
+    el.closest(
+      '.tutorial-tooltip, .mobile-tutorial-tooltip, .tutorial-close-button, .mobile-tutorial-close-button'
+    )
+  ) {
+    return
+  }
+  // The step target opens the menu. Items inside the menu stay locked.
+  if (el.closest('.history-toggle-button, .saved-selections-button')) return
+  if (!el.closest(DROPDOWN_SCOPE_SELECTOR) && !el.closest('[data-tutorial-dropdown-host]')) return
+  event.preventDefault()
+  event.stopPropagation()
+}
+
 /**
  * While a tutorial step is showing, block every control that is not the
  * highlighted target or part of the tutorial card. The shield swallows
@@ -66,6 +184,7 @@ function writeInert(el: HTMLElement, inert: boolean): void {
 export function syncTutorialInteractionLock(): () => void {
   const marked: InertMark[] = []
   const toolbarMarks: ToolbarMark[] = []
+  const dropdownControlMarks: DropdownControlMark[] = []
   let shield: SVGSVGElement | null = null
   let resizeObserver: ResizeObserver | null = null
   const observed = new Set<Element>()
@@ -124,6 +243,8 @@ export function syncTutorialInteractionLock(): () => void {
     const composerHighlighted = highlighted.some(el => el.classList.contains('composer'))
     if (slot && composerHighlighted) allowComposer(slot)
     if (composerHighlighted) {
+      // Keep the open history and saved menus inside the spotlight hole. Steps
+      // 9 and 10 lock the rows inside those menus separately.
       document.querySelectorAll('.history-inline-list, .saved-selections-dropdown').forEach(el => {
         if (el.closest('.composer-hero-mirror') || highlighted.includes(el)) return
         highlighted.push(el)
@@ -364,10 +485,130 @@ export function syncTutorialInteractionLock(): () => void {
     }
   }
 
+  const restoreDropdownControl = (mark: DropdownControlMark) => {
+    writeInert(mark.el, mark.wasInert)
+    if (mark.tabIndex == null) mark.el.removeAttribute('tabindex')
+    else mark.el.setAttribute('tabindex', mark.tabIndex)
+    if (mark.ariaDisabled == null) mark.el.removeAttribute('aria-disabled')
+    else mark.el.setAttribute('aria-disabled', mark.ariaDisabled)
+    mark.el.removeAttribute('data-tutorial-dropdown-locked')
+  }
+
+  const clearDropdownHosts = () => {
+    document.querySelectorAll('[data-tutorial-dropdown-host]').forEach(node => {
+      node.removeAttribute('data-tutorial-dropdown-host')
+    })
+  }
+
+  const restoreDropdownLock = () => {
+    for (const mark of dropdownControlMarks) restoreDropdownControl(mark)
+    dropdownControlMarks.length = 0
+    clearDropdownHosts()
+  }
+
+  const controlIsFocusable = (el: HTMLElement): boolean => {
+    const tag = el.tagName
+    if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return true
+    if (tag === 'A' && el.hasAttribute('href')) return true
+    if (el.hasAttribute('tabindex')) return true
+    const role = el.getAttribute('role')
+    return (
+      role === 'button' ||
+      role === 'option' ||
+      role === 'radio' ||
+      role === 'checkbox' ||
+      role === 'switch' ||
+      role === 'slider' ||
+      role === 'combobox' ||
+      role === 'tab' ||
+      role === 'menuitem'
+    )
+  }
+
+  const collectDropdownControls = (): HTMLElement[] => {
+    const controls: HTMLElement[] = []
+    document.querySelectorAll(DROPDOWN_SCOPE_SELECTOR).forEach(scope => {
+      if (!(scope instanceof HTMLElement) || scope.closest(PORTAL_SELECTOR)) return
+      scope.querySelectorAll(DROPDOWN_CONTROL_SELECTOR).forEach(node => {
+        if (!(node instanceof HTMLElement)) return
+        if (node.closest('.tutorial-tooltip, .mobile-tutorial-tooltip')) return
+        if (node.closest('.history-toggle-button, .saved-selections-button')) return
+        let parent = node.parentElement
+        while (parent && parent !== scope) {
+          if (parent.matches(DROPDOWN_CONTROL_SELECTOR)) return
+          parent = parent.parentElement
+        }
+        controls.push(node)
+      })
+    })
+    return controls
+  }
+
+  const syncDropdownLock = () => {
+    if (!isDropdownLockStep(readTutorialStep())) {
+      restoreDropdownLock()
+      return
+    }
+
+    const hostNodes = new Set<HTMLElement>()
+    document.querySelectorAll(DROPDOWN_HOST_SELECTOR).forEach(node => {
+      if (!(node instanceof HTMLElement) || node.closest(PORTAL_SELECTOR)) return
+      hostNodes.add(node)
+      node.setAttribute('data-tutorial-dropdown-host', '')
+    })
+    document.querySelectorAll('[data-tutorial-dropdown-host]').forEach(node => {
+      if (node instanceof HTMLElement && !hostNodes.has(node)) {
+        node.removeAttribute('data-tutorial-dropdown-host')
+      }
+    })
+
+    const desired = new Set(collectDropdownControls())
+    for (const mark of dropdownControlMarks) {
+      if (!desired.has(mark.el)) restoreDropdownControl(mark)
+    }
+    const next: DropdownControlMark[] = []
+    for (const el of desired) {
+      let mark = dropdownControlMarks.find(item => item.el === el)
+      if (!mark) {
+        mark = {
+          el,
+          wasInert: readInert(el),
+          tabIndex: el.getAttribute('tabindex'),
+          ariaDisabled: el.getAttribute('aria-disabled'),
+        }
+      }
+      next.push(mark)
+      // A host has to stay hittable so the click lands on the menu. Marking the
+      // host inert would send that click through to the page behind it.
+      const host = el.matches(DROPDOWN_HOST_SELECTOR)
+      if (host) {
+        if (readInert(el) && !mark.wasInert) writeInert(el, false)
+      } else if (!readInert(el)) {
+        writeInert(el, true)
+      }
+      if (controlIsFocusable(el)) el.setAttribute('tabindex', '-1')
+      el.setAttribute('aria-disabled', 'true')
+      el.setAttribute('data-tutorial-dropdown-locked', '')
+    }
+    dropdownControlMarks.length = 0
+    dropdownControlMarks.push(...next)
+
+    const active = document.activeElement
+    if (
+      active instanceof HTMLElement &&
+      active !== document.body &&
+      (active.closest(DROPDOWN_SCOPE_SELECTOR) != null ||
+        active.hasAttribute('data-tutorial-dropdown-locked'))
+    ) {
+      active.blur()
+    }
+  }
+
   const apply = () => {
     if (disposed) return
     applyInert()
     syncToolbar()
+    syncDropdownLock()
     updateHoles()
     bindResize()
   }
@@ -386,6 +627,10 @@ export function syncTutorialInteractionLock(): () => void {
         apply()
       }, 48)
     }
+  }
+
+  for (const type of DROPDOWN_EVENT_TYPES) {
+    document.addEventListener(type, swallowLockedDropdownEvent, true)
   }
 
   apply()
@@ -425,6 +670,10 @@ export function syncTutorialInteractionLock(): () => void {
     mutationObserver?.disconnect()
     resizeObserver?.disconnect()
     stopMotion()
+    for (const type of DROPDOWN_EVENT_TYPES) {
+      document.removeEventListener(type, swallowLockedDropdownEvent, true)
+    }
+    restoreDropdownLock()
     restoreToolbar()
     restoreInert()
     if (scrollRoot) scrollRoot.style.overflowAnchor = previousOverflowAnchor
