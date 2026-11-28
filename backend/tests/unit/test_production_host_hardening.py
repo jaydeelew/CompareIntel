@@ -141,8 +141,15 @@ class TestLowMemoryImageBuild:
         assert "up -d --build" not in text
         assert "build_images_sequentially" in text
         build_fn = text.split("build_images_sequentially()")[1].split("build_and_deploy()")[0]
-        assert "for service in backend frontend nginx" in build_fn
-        assert 'compose build "$service"' in build_fn
+        # Named `compose build` still builds every service on the production host.
+        assert "compose build" not in build_fn
+        assert "docker build" in build_fn
+        assert "--target prod" in build_fn
+        assert "--target build" in build_fn
+        assert build_fn.find("--target prod") < build_fn.find("backend/Dockerfile")
+        assert build_fn.find("backend/Dockerfile") < build_fn.find("--target build")
+        ssl = _load_compose(SSL_COMPOSE)
+        assert ssl["services"]["frontend"]["image"].startswith("compareintel-frontend:")
         deploy_fn = text.split("build_and_deploy()")[1]
         assert deploy_fn.find("build_images_sequentially") < deploy_fn.find(
             "promote_current_to_previous"

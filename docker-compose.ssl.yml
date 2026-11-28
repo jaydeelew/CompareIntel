@@ -49,6 +49,7 @@ services:
       - compareintel-network
 
   frontend:
+    image: compareintel-frontend:${IMAGE_TAG:-current}
     build:
       context: .
       dockerfile: frontend/Dockerfile

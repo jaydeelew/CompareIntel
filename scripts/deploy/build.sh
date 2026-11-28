@@ -28,20 +28,62 @@ EOF
     ok "Deployment state saved"
 }
 
-# One image at a time. `docker compose up --build` builds every service in
-# parallel, and on the SSL stack both `frontend` (target build) and `nginx`
-# (target prod) run `npm run build`. Two Vite processes plus the backend
-# image abort on a 2 GB host (exit 134). Backend first, then the frontend
-# Dockerfile's build stage, then nginx, which reuses that cached stage.
+# One Dockerfile at a time, via `docker build`. Do not call `docker compose build`.
+# On the production host `docker compose -f docker-compose.ssl.yml build nginx`
+# still starts nginx, frontend, and backend together. That is two Vite
+# processes (frontend target build, nginx target prod) plus the backend image.
+# Two Vite heaps do not fit in 1.9 GB plus swap: Vite aborts with SIGABRT,
+# exit 134. `docker build` of one Dockerfile cannot start the other images.
+#
+# `docker build --target prod` runs the Dockerfile's build stage once. The
+# later `--target build` is that same stage and is a cache hit, so it does
+# not run Vite again. Nginx first, while nothing else is compiling.
 build_images_sequentially() {
-    local service
-    for service in backend frontend nginx; do
-        msg "Building ${service} image..."
-        if ! compose build "$service"; then
-            err "Image build failed for ${service}. Running containers were not stopped."
-            return 1
-        fi
-    done
+    local sha="${IMAGE_TAG}"
+    msg "Building nginx image (one Vite process)..."
+    if ! DOCKER_BUILDKIT=1 docker build \
+        -f frontend/Dockerfile \
+        --target prod \
+        --build-arg VITE_API_URL=/api \
+        --build-arg "VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY:-}" \
+        --build-arg "VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}" \
+        --build-arg "VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT:-production}" \
+        --build-arg "VITE_SENTRY_RELEASE=${GIT_SHA:-}" \
+        --build-context core=./packages/compare-core \
+        --build-context registry=./backend/data \
+        -t "${IMAGE_NGINX}:${sha}" \
+        .; then
+        err "Image build failed for nginx. Running containers were not stopped."
+        return 1
+    fi
+
+    msg "Building backend image..."
+    if ! DOCKER_BUILDKIT=1 docker build \
+        -f backend/Dockerfile \
+        --build-arg ENVIRONMENT=production \
+        --build-arg "GIT_SHA=${GIT_SHA:-}" \
+        -t "${IMAGE_BACKEND}:${sha}" \
+        backend; then
+        err "Image build failed for backend. Running containers were not stopped."
+        return 1
+    fi
+
+    msg "Building frontend image from the cached Vite stage..."
+    if ! DOCKER_BUILDKIT=1 docker build \
+        -f frontend/Dockerfile \
+        --target build \
+        --build-arg VITE_API_URL=/api \
+        --build-arg "VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY:-}" \
+        --build-arg "VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}" \
+        --build-arg "VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT:-production}" \
+        --build-arg "VITE_SENTRY_RELEASE=${GIT_SHA:-}" \
+        --build-context core=./packages/compare-core \
+        --build-context registry=./backend/data \
+        -t "${IMAGE_FRONTEND}:${sha}" \
+        .; then
+        err "Image build failed for frontend. Running containers were not stopped."
+        return 1
+    fi
 }
 
 build_and_deploy() {
@@ -62,7 +104,7 @@ build_and_deploy() {
     IMAGE_TAG=$(git rev-parse --short HEAD 2>/dev/null || echo "current")
     msg "Git SHA: $GIT_SHA"
     msg "IMAGE_TAG: $IMAGE_TAG"
-    msg "Building images one at a time. Current containers stay up until every image succeeds."
+    msg "Building images one Dockerfile at a time. Current containers stay up until every image succeeds."
     if ! build_images_sequentially; then
         exit 1
     fi
