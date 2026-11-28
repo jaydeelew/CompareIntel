@@ -13,6 +13,9 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 PROD_COMPOSE = REPO_ROOT / "docker-compose.prod.yml"
 SSL_COMPOSE = REPO_ROOT / "docker-compose.ssl.yml"
 ENTRYPOINT = REPO_ROOT / "backend" / "entrypoint.sh"
+BUILD_SH = REPO_ROOT / "scripts" / "deploy" / "build.sh"
+FRONTEND_DOCKERFILE = REPO_ROOT / "frontend" / "Dockerfile"
+VITE_CONFIG = REPO_ROOT / "frontend" / "vite.config.ts"
 DEPLOY_SH = REPO_ROOT / "deploy-production.sh"
 UTILS_SH = REPO_ROOT / "scripts" / "deploy" / "utils.sh"
 CHECK_SH = REPO_ROOT / "scripts" / "deploy" / "check.sh"
@@ -126,3 +129,50 @@ class TestDeployResourceChecks:
         assert "verify_or_rollback" in rebuild
         assert "prune_dangling_docker_artifacts" in rebuild
         assert rebuild.find("verify_or_rollback") < rebuild.find("prune_dangling_docker_artifacts")
+
+
+class TestLowMemoryImageBuild:
+    """The 2 GB host must build one image at a time and stay up if that build fails."""
+
+    def test_images_build_sequentially_before_swap(self):
+        text = BUILD_SH.read_text()
+        assert "compose down\n" not in text
+        assert "compose down;" not in text
+        assert "up -d --build" not in text
+        assert "build_images_sequentially" in text
+        build_fn = text.split("build_images_sequentially()")[1].split("build_and_deploy()")[0]
+        # Named `compose build` still builds every service on the production host.
+        assert "compose build" not in build_fn
+        assert "docker build" in build_fn
+        assert "--target prod" in build_fn
+        assert "--target build" in build_fn
+        assert build_fn.find("--target prod") < build_fn.find("backend/Dockerfile")
+        assert build_fn.find("backend/Dockerfile") < build_fn.find("--target build")
+        ssl = _load_compose(SSL_COMPOSE)
+        assert ssl["services"]["frontend"]["image"].startswith("compareintel-frontend:")
+        deploy_fn = text.split("build_and_deploy()")[1]
+        assert deploy_fn.find("build_images_sequentially") < deploy_fn.find(
+            "promote_current_to_previous"
+        )
+        assert deploy_fn.find("promote_current_to_previous") < deploy_fn.find(
+            "compose up -d --no-build"
+        )
+        assert "Running containers were not stopped" in text
+
+    def test_frontend_image_caps_node_heap_and_skips_size_passes(self):
+        dockerfile = FRONTEND_DOCKERFILE.read_text()
+        run_at = dockerfile.find("RUN npm run build")
+        arg_at = dockerfile.find(
+            'ARG NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=2560"'
+        )
+        env_at = dockerfile.find("ENV NODE_OPTIONS=${NODE_OPTIONS}")
+        assert arg_at != -1 and env_at != -1 and run_at != -1
+        assert arg_at < env_at < run_at
+        assert "--max-old-space-size=1280" not in dockerfile
+        assert "COMPAREINTEL_LOW_MEMORY_BUILD=1" in dockerfile
+        vite = VITE_CONFIG.read_text()
+        assert "COMPAREINTEL_LOW_MEMORY_BUILD" in vite
+        assert "sourcemap: false" in vite
+        assert "reportCompressedSize: !lowMemoryBuild" in vite
+        assert "maxParallelFileOps: 2" in vite
+        assert "lowMemoryBuild" in vite and "? []" in vite

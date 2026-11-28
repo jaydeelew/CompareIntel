@@ -26,9 +26,6 @@ COPY --from=core . ./packages/compare-core
 COPY --from=registry models_registry.json /data/models_registry.json
 ENV SEO_REGISTRY_PATH=/data/models_registry.json
 
-# Set environment variable to fix crypto issue
-ENV NODE_OPTIONS="--openssl-legacy-provider"
-
 # The build will use environment variables passed in at build time
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=${VITE_API_URL}
@@ -47,8 +44,20 @@ ENV VITE_SENTRY_ENVIRONMENT=${VITE_SENTRY_ENVIRONMENT}
 ARG VITE_SENTRY_RELEASE
 ENV VITE_SENTRY_RELEASE=${VITE_SENTRY_RELEASE}
 
-# Build the app with prerendering (Playwright is available in this image)
+# Build the app with prerendering (Playwright is available in this image).
+# On the production host Node sizes the old space from free RAM. Vite then
+# dies inside build-with-prerender with
+# "FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed -
+# JavaScript heap out of memory" at about 935 MB (exit 134). A 1024 MB cap
+# still aborts. 2560 is the default, same as the server hot patch
+# `NODE_OPTIONS=--max-old-space-size=2560`. Override with
+# `--build-arg NODE_OPTIONS=...`.
+# COMPAREINTEL_LOW_MEMORY_BUILD skips the gzip/brotli size passes that hold
+# a second copy of every chunk.
 WORKDIR /repo/frontend
+ARG NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=2560"
+ENV NODE_OPTIONS=${NODE_OPTIONS}
+ENV COMPAREINTEL_LOW_MEMORY_BUILD=1
 RUN npm run build
 
 # For development (default)
