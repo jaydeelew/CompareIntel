@@ -1,5 +1,5 @@
 #!/bin/bash
-# Per-release Docker image tags for backend and nginx.
+# Per-release Docker image tags for backend, nginx, and the SSL frontend image.
 # Used by scripts/deploy/build.sh and scripts/rollback/rollback.sh.
 #
 # Tags:
@@ -11,6 +11,7 @@
 
 IMAGE_BACKEND="${IMAGE_BACKEND:-compareintel-backend}"
 IMAGE_NGINX="${IMAGE_NGINX:-compareintel-nginx}"
+IMAGE_FRONTEND="${IMAGE_FRONTEND:-compareintel-frontend}"
 IMAGE_KEEP_RELEASES="${IMAGE_KEEP_RELEASES:-3}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.ssl.yml}"
 
@@ -24,7 +25,7 @@ compose() {
 }
 
 release_image_repos() {
-    printf '%s\n' "$IMAGE_BACKEND" "$IMAGE_NGINX"
+    printf '%s\n' "$IMAGE_BACKEND" "$IMAGE_NGINX" "$IMAGE_FRONTEND"
 }
 
 image_exists() {
@@ -41,7 +42,7 @@ promote_current_to_previous() {
     done
 }
 
-# After compose builds :<sha>, also point :current at that image.
+# After docker build tags :<sha>, also point :current at that image.
 tag_sha_as_current() {
     local sha="$1"
     local repo

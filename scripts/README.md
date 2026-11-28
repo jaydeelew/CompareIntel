@@ -189,7 +189,7 @@ The build script saves deployment state before each deploy to `/home/ubuntu/.com
 - Docker image IDs
 - Timestamp
 
-Release images are tagged `compareintel-{backend,nginx}:<sha>`, `:current`, and `:previous`. `scripts/deploy/build.sh` no longer runs `docker image prune -f` before the build (that deleted the previous release once compose untagged it). Dangling-only prune still runs after a successful deploy; the last 3 SHA tags are kept.
+Release images are tagged `compareintel-{backend,nginx,frontend}:<sha>`, `:current`, and `:previous`. `scripts/deploy/build.sh` calls `docker build` for nginx, then backend, then the frontend stage, and does not stop running containers until every image has built. It does not call `docker compose build`, which on this host starts all three images at once. A failed image build leaves the current release serving. `compose up -d --no-build` then swaps to the new tags. The script no longer runs `docker image prune -f` before the build (that deleted the previous release once compose untagged it). Dangling-only prune still runs after a successful deploy; the last 3 SHA tags are kept.
 
 `scripts/rollback/rollback.sh previous` (and `./deploy-production.sh rollback`) redeploys `:previous` without rebuilding. `alembic downgrade` is opt-in (`--with-migrations`) and requires typing `DOWNGRADE`.
 

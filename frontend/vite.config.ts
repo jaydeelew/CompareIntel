@@ -25,6 +25,10 @@ function cfBeaconEnvPlugin(): Plugin {
 // Preview builds (CF_PAGES or VITE_DEPLOY_ENV=preview): mock API, no secrets.
 preparePreviewBuildEnv()
 
+// Production image builds on the ~2 GB host set this. CI and local `npm run build`
+// leave it unset so dist/stats.html is still generated.
+const lowMemoryBuild = process.env.COMPAREINTEL_LOW_MEMORY_BUILD === '1'
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 
@@ -121,16 +125,21 @@ export default defineConfig({
         return new URLSearchParams()
       },
     }),
-    // Bundle analyzer - generates stats.html in dist/ after build
+    // Bundle analyzer writes dist/stats.html. Skip it on the production image
+    // build: gzip and brotli of every chunk keep a second copy of the graph.
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - Plugin types may conflict between vite and vitest bundled vite
-    visualizer({
-      filename: 'dist/stats.html',
-      open: false,
-      gzipSize: true,
-      brotliSize: true,
-      template: 'treemap', // treemap, sunburst, network
-    }),
+    ...(lowMemoryBuild
+      ? []
+      : [
+          visualizer({
+            filename: 'dist/stats.html',
+            open: false,
+            gzipSize: true,
+            brotliSize: true,
+            template: 'treemap', // treemap, sunburst, network
+          }),
+        ]),
     // PWA - Progressive Web App support
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - Plugin types may conflict between vite and vitest bundled vite
@@ -413,6 +422,8 @@ export default defineConfig({
     cssMinify: true,
     // Optimize chunk splitting
     rollupOptions: {
+      // Fewer simultaneous file reads on the memory-capped production image build.
+      ...(lowMemoryBuild ? { maxParallelFileOps: 2 } : {}),
       output: {
         // Ensure JS files have content hashes for better caching
         entryFileNames: 'assets/[name].[hash].js',
@@ -496,8 +507,10 @@ export default defineConfig({
     // 2. scripts/check-bundle-size.js (CI/CD)
     // 3. Runtime monitoring via utils/performance.ts
     chunkSizeWarningLimit: 500,
-    // Report compressed size (gzip) for better visibility
-    reportCompressedSize: true,
+    // Gzip size reporting keeps every emitted chunk in memory. The production
+    // image build turns it off. Sourcemaps stay off in both modes: they
+    // duplicate the module graph and are not shipped.
+    reportCompressedSize: !lowMemoryBuild,
     // Reduce chunk size warnings threshold for better optimization awareness
     assetsInlineLimit: 4096, // Inline assets smaller than 4KB
   },

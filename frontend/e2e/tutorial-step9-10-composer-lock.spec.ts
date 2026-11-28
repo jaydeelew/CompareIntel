@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import {
   getProvidersForModelIds,
@@ -130,6 +130,114 @@ async function toggleHistory(page: Page): Promise<void> {
   })
 }
 
+const SEEDED_HISTORY_PROMPT = 'Seeded history prompt that must stay put'
+
+async function seedHistoryConversation(page: Page): Promise<void> {
+  await page.evaluate(prompt => {
+    const id = 'e2e-history-1'
+    // Newer than anything the tour saves, so the unregistered cap keeps this row.
+    const createdAt = new Date(Date.now() + 86_400_000).toISOString()
+    const summary = {
+      id,
+      input_data: prompt,
+      models_used: ['anthropic/claude-sonnet-5.5', 'openai/gpt-5.2'],
+      conversation_type: 'comparison',
+      created_at: createdAt,
+      message_count: 2,
+      client_source: 'web',
+      saved: false,
+    }
+    const record = {
+      input_data: prompt,
+      models_used: summary.models_used,
+      conversation_type: 'comparison',
+      created_at: createdAt,
+      messages: [
+        { role: 'user', content: prompt, created_at: createdAt },
+        {
+          role: 'assistant',
+          content: 'seeded reply',
+          created_at: createdAt,
+          model_id: 'anthropic/claude-sonnet-5.5',
+        },
+      ],
+    }
+    localStorage.setItem('compareintel_conversation_history', JSON.stringify([summary]))
+    localStorage.setItem(`compareintel_conversation_${id}`, JSON.stringify(record))
+  }, SEEDED_HISTORY_PROMPT)
+}
+
+/** Pointer or touch on a visible part of the control that is not the tutorial card. */
+async function activateAt(page: Page, locator: Locator): Promise<void> {
+  const point = await locator.evaluate(el => {
+    const rect = el.getBoundingClientRect()
+    if (rect.width < 2 || rect.height < 2) return null
+    const candidates = [
+      [rect.left + rect.width / 2, rect.top + Math.min(Math.max(rect.height / 2, 4), 18)],
+      [rect.left + Math.min(10, rect.width / 2), rect.top + Math.min(10, rect.height / 2)],
+      [rect.right - Math.min(10, rect.width / 2), rect.bottom - Math.min(10, rect.height / 2)],
+    ]
+    for (const [rawX, rawY] of candidates) {
+      const x = Math.min(window.innerWidth - 2, Math.max(1, rawX))
+      const y = Math.min(window.innerHeight - 2, Math.max(1, rawY))
+      const hit = document.elementFromPoint(x, y)
+      if (!hit) continue
+      if (
+        hit.closest(
+          '#tutorial-portal-root, #mobile-tutorial-portal-root, .tutorial-tooltip, .mobile-tutorial-tooltip, .tutorial-close-button, .mobile-tutorial-close-button'
+        )
+      ) {
+        continue
+      }
+      return { x, y }
+    }
+    return null
+  })
+  if (point) {
+    const hasTouch = await page.evaluate(() => navigator.maxTouchPoints > 0)
+    if (hasTouch) await page.touchscreen.tap(point.x, point.y)
+    else await page.mouse.click(point.x, point.y)
+    return
+  }
+  await locator.evaluate(el => {
+    el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+  })
+}
+
+async function pressActivationKeys(page: Page, locator: Locator): Promise<void> {
+  await locator.evaluate(el => {
+    if (!(el instanceof HTMLElement)) return
+    el.focus()
+    for (const key of ['Enter', ' ']) {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
+      el.dispatchEvent(new KeyboardEvent('keyup', { key, bubbles: true, cancelable: true }))
+    }
+  })
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Space')
+}
+
+async function expectLockedLook(locator: Locator): Promise<void> {
+  await expect(locator).toHaveAttribute('data-tutorial-dropdown-locked', '')
+  await expect(locator).toHaveCSS('opacity', '0.6')
+  await expect(locator).toHaveCSS('cursor', 'not-allowed')
+}
+
+async function showModelMenus(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const show = document.querySelector(
+      '[aria-label="Show model selection"]'
+    ) as HTMLButtonElement | null
+    show?.click()
+  })
+  await expect(page.locator('.advanced-settings-toggle').first()).toBeVisible({ timeout: 10_000 })
+}
+
+async function notificationCount(page: Page): Promise<number> {
+  return page.locator('[data-notification="true"]').count()
+}
+
 async function toggleSavedSelections(page: Page): Promise<void> {
   await page.evaluate(() => {
     const slotted = document.querySelector(
@@ -140,7 +248,7 @@ async function toggleSavedSelections(page: Page): Promise<void> {
   })
 }
 
-test('steps 9 and 10 block composer text and typing works after the tutorial', async ({
+test('steps 9 and 10 block composer text and dropdown items', async ({
   page,
 }, testInfo) => {
   test.setTimeout(240_000)
@@ -160,6 +268,7 @@ test('steps 9 and 10 block composer text and typing works after the tutorial', a
     localStorage.removeItem('compareintel_tutorial_completed')
     localStorage.removeItem('compareintel_tutorial_progress')
   })
+  await seedHistoryConversation(page)
   await page.reload()
   await page.getByRole('button', { name: 'Start Tutorial' }).click()
   await tutorialTooltip(page).first().waitFor({ state: 'visible', timeout: 20_000 })
@@ -197,6 +306,100 @@ test('steps 9 and 10 block composer text and typing works after the tutorial', a
     .poll(() => page.locator('.history-inline-list').count(), { timeout: 5_000 })
     .toBeGreaterThan(0)
   await expect(composer(page)).toHaveValue(step9Value)
+
+  const historyItem = page
+    .locator('.history-inline-list .history-item')
+    .filter({ hasText: SEEDED_HISTORY_PROMPT })
+    .first()
+  await expect(historyItem).toBeVisible()
+  await expectLockedLook(historyItem)
+  const historyCount = await page.locator('.history-inline-list .history-item').count()
+  const historySave = historyItem.locator('input[type="checkbox"]')
+  await expect(historySave).not.toBeChecked()
+  const notesOnStep9 = await notificationCount(page)
+  await activateAt(page, historyItem)
+  await activateAt(page, historyItem.locator('.history-item-delete'))
+  await activateAt(page, historySave)
+  await pressActivationKeys(page, historyItem)
+  await historyItem.evaluate(el => (el as HTMLElement).click())
+  await expect(composer(page)).toHaveValue(step9Value)
+  await expect(historySave).not.toBeChecked()
+  await expect(page.locator('.history-inline-list .history-item')).toHaveCount(historyCount)
+  expect(await notificationCount(page)).toBe(notesOnStep9)
+  await expect(tutorialTooltip(page).first()).toContainText('Access Your History')
+
+  await showModelMenus(page)
+  const advanced = page.locator('.advanced-settings-toggle').first()
+  const advancedExpanded = (await advanced.getAttribute('aria-expanded')) ?? 'false'
+  await expectLockedLook(advanced)
+  const temperature = page.locator('#temperature-slider')
+  const temperatureBefore = (await temperature.count()) > 0 ? await temperature.inputValue() : null
+  await activateAt(page, advanced)
+  if (temperatureBefore != null) {
+    await activateAt(page, temperature)
+    await pressActivationKeys(page, temperature)
+    await temperature.evaluate(el => {
+      el.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }))
+      el.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }))
+      ;(el as HTMLInputElement).click()
+    })
+  }
+  await pressActivationKeys(page, advanced)
+  await advanced.evaluate(el => (el as HTMLButtonElement).click())
+  await expect(advanced).toHaveAttribute('aria-expanded', advancedExpanded)
+  if (temperatureBefore != null) await expect(temperature).toHaveValue(temperatureBefore)
+  else await expect(temperature).toHaveCount(0)
+
+  const help = page.locator('.help-me-choose-toggle').first()
+  await expect(help).toHaveAttribute('aria-expanded', 'false')
+  await expectLockedLook(help)
+  await activateAt(page, help)
+  await pressActivationKeys(page, help)
+  await help.evaluate(el => (el as HTMLButtonElement).click())
+  await expect(help).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.locator('.help-me-choose-content')).toHaveCount(0)
+
+  const search = page.locator('.model-search-input').first()
+  await expectLockedLook(search)
+  await activateAt(page, search)
+  await pressActivationKeys(page, search)
+  await page.keyboard.type('claude')
+  await search.evaluate(el => {
+    el.dispatchEvent(
+      new InputEvent('beforeinput', {
+        bubbles: true,
+        cancelable: true,
+        data: 'claude',
+        inputType: 'insertText',
+      })
+    )
+    el.dispatchEvent(
+      new InputEvent('input', { bubbles: true, cancelable: true, data: 'claude' })
+    )
+  })
+  await expect(search).toHaveValue('')
+  await expect(page.locator('.model-search-suggestion')).toHaveCount(0)
+
+  const providerHeader = page.locator('.provider-header').first()
+  await expect(providerHeader).toBeVisible()
+  const providerExpanded = (await providerHeader.getAttribute('aria-expanded')) ?? 'false'
+  await expectLockedLook(providerHeader)
+  await activateAt(page, providerHeader)
+  await providerHeader.evaluate(el => (el as HTMLButtonElement).click())
+  await pressActivationKeys(page, providerHeader)
+  await expect(providerHeader).toHaveAttribute('aria-expanded', providerExpanded)
+
+  const modelBox = page.locator(`[data-testid="model-checkbox-${TUTORIAL_MODEL_IDS[0]}"]`).first()
+  if ((await modelBox.count()) > 0) {
+    const modelChecked = await modelBox.isChecked()
+    const modelOption = page.locator('.model-option').filter({ has: modelBox }).first()
+    await expectLockedLook(modelOption)
+    await activateAt(page, modelOption)
+    await modelOption.evaluate(el => (el as HTMLElement).click())
+    expect(await modelBox.isChecked()).toBe(modelChecked)
+  }
+  expect(await notificationCount(page)).toBe(notesOnStep9)
+
   await clickTutorialDoneButton(page, testInfo)
   await expect(tutorialTooltip(page).first()).toContainText('Save Model Selections', {
     timeout: 15_000,
@@ -212,11 +415,51 @@ test('steps 9 and 10 block composer text and typing works after the tutorial', a
     .poll(() => page.locator('.saved-selections-dropdown').count(), { timeout: 5_000 })
     .toBeGreaterThan(0)
   await expect(composer(page)).toHaveValue(step10Value)
+
+  const savedMenu = page.getByTestId('saved-selections-dropdown').filter({ visible: true }).first()
+  const savedItem = savedMenu
+    .locator('.saved-selection-item')
+    .filter({ hasText: 'Starter Selection' })
+    .first()
+  await expect(savedItem).toBeVisible()
+  await expectLockedLook(savedItem)
+  const savedCount = await savedMenu.locator('.saved-selection-item').count()
+  const defaultBox = savedItem.locator('.saved-selection-default-checkbox')
+  const defaultChecked = await defaultBox.isChecked()
+  const dialogs = await page.getByRole('dialog').count()
+  const notesOnStep10 = await notificationCount(page)
+  await activateAt(page, savedItem.locator('.saved-selection-info'))
+  await activateAt(page, savedItem.locator('.saved-selection-delete'))
+  await activateAt(page, defaultBox)
+  await pressActivationKeys(page, savedItem.locator('.saved-selection-info'))
+  await savedItem.locator('.saved-selection-info').evaluate(el => (el as HTMLElement).click())
+  const headerInfo = savedMenu.locator('.saved-selections-header-info').first()
+  await expectLockedLook(headerInfo)
+  await activateAt(page, headerInfo)
+  await headerInfo.evaluate(el => (el as HTMLButtonElement).click())
+  await expect(composer(page)).toHaveValue(step10Value)
+  await expect(savedMenu.locator('.saved-selection-item')).toHaveCount(savedCount)
+  expect(await defaultBox.isChecked()).toBe(defaultChecked)
+  expect(await notificationCount(page)).toBe(notesOnStep10)
+  expect(await page.getByRole('dialog').count()).toBe(dialogs)
+  await expect(page.locator('.saved-selections-dropdown')).toBeVisible()
+  await expect(tutorialTooltip(page).first()).toContainText('Save Model Selections')
+
   await clickTutorialDoneButton(page, testInfo)
   await expect(tutorialTooltip(page).first()).toBeHidden({ timeout: 15_000 })
 
+  await expect(page.locator('[data-tutorial-dropdown-locked]')).toHaveCount(0)
+  await expect(page.locator('[data-tutorial-dropdown-host]')).toHaveCount(0)
   await expect(page.locator('.composer.tutorial-history-input-locked')).toHaveCount(0)
   await expect(page.locator('.composer.tutorial-save-input-locked')).toHaveCount(0)
+  await showModelMenus(page)
+  const advancedAfter = page.locator('.advanced-settings-toggle').first()
+  const advancedWasOpen = (await advancedAfter.getAttribute('aria-expanded')) === 'true'
+  await advancedAfter.click()
+  await expect(advancedAfter).toHaveAttribute('aria-expanded', advancedWasOpen ? 'false' : 'true')
+  const helpAfter = page.locator('.help-me-choose-toggle').first()
+  await helpAfter.click()
+  await expect(helpAfter).toHaveAttribute('aria-expanded', 'true')
   const after = composer(page)
   await expect(after).toHaveJSProperty('readOnly', false)
   await after.click()
